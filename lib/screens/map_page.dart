@@ -1,0 +1,695 @@
+// ============================================================================
+// HARİTA SAYFASI - OPENSTREETMAP ENTEGRASYONU
+// ============================================================================
+
+import 'dart:async';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
+import '../core/app_colors.dart';
+import '../core/di/service_locator.dart';
+import '../core/services/location_service.dart';
+import '../domain/repositories/location_repository.dart';
+import 'countdown_screen.dart';
+
+class MapPage extends StatefulWidget {
+  const MapPage({super.key});
+
+  @override
+  State<MapPage> createState() => _MapPageState();
+}
+
+class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
+  // Services
+  final LocationRepository _locationRepository = serviceLocator<LocationRepository>();
+
+  // Map controller
+  final MapController _mapController = MapController();
+
+  // State
+  LatLng? _currentLocation;
+  bool _isLoading = true;
+  bool _isLocationSharing = false;
+  LocationStatus? _locationStatus;
+
+  // Animation
+  late AnimationController _pulseController;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    )..repeat(reverse: true);
+
+    // Get location on init
+    _initLocation();
+  }
+
+  @override
+  void dispose() {
+    _pulseController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _initLocation() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    // First try to get last known location (faster)
+    final lastKnown = await _locationRepository.getLastKnownLocation();
+
+    if (lastKnown.isSuccess && lastKnown.position != null) {
+      setState(() {
+        _currentLocation = lastKnown.position;
+        _locationStatus = lastKnown.status;
+      });
+    }
+
+    // Then get current location (more accurate)
+    final result = await _locationRepository.getCurrentLocation();
+
+    setState(() {
+      _isLoading = false;
+      _locationStatus = result.status;
+
+      if (result.isSuccess && result.position != null) {
+        _currentLocation = result.position;
+      } else {
+        // Use default location if failed
+        _currentLocation ??= LocationService.defaultLocation;
+      }
+    });
+
+    // Animate to location if map is ready
+    if (_currentLocation != null) {
+      _animateToLocation(_currentLocation!);
+    }
+  }
+
+  void _animateToLocation(LatLng location, {double zoom = 16.0}) {
+    try {
+      _mapController.move(location, zoom);
+    } catch (e) {
+      // Map might not be ready yet
+    }
+  }
+
+  Future<void> _centerOnMyLocation() async {
+    HapticFeedback.lightImpact();
+
+    setState(() => _isLoading = true);
+
+    final result = await _locationRepository.getCurrentLocation();
+
+    setState(() {
+      _isLoading = false;
+      _locationStatus = result.status;
+    });
+
+    if (result.isSuccess && result.position != null) {
+      setState(() {
+        _currentLocation = result.position;
+      });
+      _animateToLocation(result.position!);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Row(
+              children: [
+                Icon(Icons.my_location, color: Colors.white, size: 20),
+                SizedBox(width: 12),
+                Text("Konumunuz güncellendi", style: TextStyle(fontWeight: FontWeight.w600)),
+              ],
+            ),
+            backgroundColor: AppColors.success,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    } else {
+      _showPermissionError(result);
+    }
+  }
+
+  void _showPermissionError(LocationResult result) {
+    String title;
+    String message;
+    String buttonText;
+    VoidCallback onPressed;
+
+    switch (result.status) {
+      case LocationStatus.serviceDisabled:
+        title = "Konum Servisi Kapalı";
+        message = "Haritayı kullanmak için konum servisini açmanız gerekiyor.";
+        buttonText = "Ayarları Aç";
+        onPressed = () {
+          Navigator.pop(context);
+          _locationRepository.openLocationSettings();
+        };
+        break;
+      case LocationStatus.permissionDenied:
+        title = "Konum İzni Gerekli";
+        message = "Konumunuzu görmek için izin vermeniz gerekiyor.";
+        buttonText = "İzin Ver";
+        onPressed = () {
+          Navigator.pop(context);
+          _initLocation();
+        };
+        break;
+      case LocationStatus.permissionDeniedForever:
+        title = "İzin Kalıcı Olarak Reddedildi";
+        message = "Ayarlardan uygulamaya konum izni vermeniz gerekiyor.";
+        buttonText = "Ayarlara Git";
+        onPressed = () {
+          Navigator.pop(context);
+          _locationRepository.openAppSettings();
+        };
+        break;
+      default:
+        title = "Konum Alınamadı";
+        message = result.errorMessage ?? "Bilinmeyen bir hata oluştu.";
+        buttonText = "Tekrar Dene";
+        onPressed = () {
+          Navigator.pop(context);
+          _initLocation();
+        };
+    }
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        contentPadding: const EdgeInsets.all(28),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 70,
+              height: 70,
+              decoration: BoxDecoration(
+                color: AppColors.warning.withValues(alpha: 0.12),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.location_off_rounded, size: 36, color: AppColors.warning),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w800,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 14,
+                color: AppColors.textSecondary,
+                height: 1.4,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.textSecondary,
+                      side: const BorderSide(color: AppColors.border),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    child: const Text("İptal", style: TextStyle(fontWeight: FontWeight.w600)),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: onPressed,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    child: Text(buttonText, style: const TextStyle(fontWeight: FontWeight.w700)),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _toggleLocationSharing() {
+    HapticFeedback.mediumImpact();
+    setState(() => _isLocationSharing = !_isLocationSharing);
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            Icon(
+              _isLocationSharing ? Icons.share_location : Icons.location_disabled,
+              color: Colors.white,
+              size: 20,
+            ),
+            const SizedBox(width: 12),
+            Text(
+              _isLocationSharing ? "Konum paylaşımı başladı" : "Konum paylaşımı durduruldu",
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
+          ],
+        ),
+        backgroundColor: _isLocationSharing ? AppColors.success : AppColors.textSecondary,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Stack(
+        children: [
+          // Map
+          _buildMap(),
+          Positioned(
+            left: 12,
+            bottom: 130,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.6),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Text(
+                "© OpenStreetMap contributors",
+                style: TextStyle(fontSize: 10, color: Colors.white70),
+              ),
+            ),
+          ),
+
+          // Top gradient for status bar
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              height: MediaQuery.of(context).padding.top + 60,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.black.withValues(alpha: 0.3),
+                    Colors.transparent,
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          // App bar
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 10,
+            left: 16,
+            right: 16,
+            child: _buildCustomAppBar(),
+          ),
+
+          // Loading overlay
+          if (_isLoading) _buildLoadingOverlay(),
+
+          // Bottom controls
+          Positioned(
+            bottom: 24,
+            left: 16,
+            right: 16,
+            child: _buildBottomControls(),
+          ),
+
+          // My location FAB
+          Positioned(
+            bottom: 200,
+            right: 16,
+            child: _buildMyLocationFab(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMap() {
+    final center = _currentLocation ?? LocationService.defaultLocation;
+
+    return FlutterMap(
+      mapController: _mapController,
+      options: MapOptions(
+        initialCenter: center,
+        initialZoom: 15.0,
+        minZoom: 3.0,
+        maxZoom: 18.0,
+        interactionOptions: const InteractionOptions(
+          flags: InteractiveFlag.all,
+        ),
+      ),
+      children: [
+        // OpenStreetMap tile layer
+        TileLayer(
+          urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+          userAgentPackageName: 'com.guvendeyim.app',
+          maxZoom: 19,
+        ),
+
+        // My location marker
+        if (_currentLocation != null)
+          MarkerLayer(
+            markers: [
+              Marker(
+                point: _currentLocation!,
+                width: 120,
+                height: 120,
+                child: _buildMyLocationMarker(),
+              ),
+            ],
+          ),
+      ],
+    );
+  }
+
+  Widget _buildMyLocationMarker() {
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        // Pulse animation (accuracy circle simulation)
+        AnimatedBuilder(
+          animation: _pulseController,
+          builder: (context, child) {
+            return Container(
+              width: 80 + (_pulseController.value * 30),
+              height: 80 + (_pulseController.value * 30),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.primary.withValues(alpha: 0.15 - (_pulseController.value * 0.1)),
+              ),
+            );
+          },
+        ),
+
+        // Inner accuracy circle
+        Container(
+          width: 60,
+          height: 60,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: AppColors.primary.withValues(alpha: 0.2),
+          ),
+        ),
+
+        // Location dot
+        Container(
+          width: 24,
+          height: 24,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: AppColors.primary,
+            border: Border.all(color: Colors.white, width: 4),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primary.withValues(alpha: 0.4),
+                blurRadius: 10,
+                spreadRadius: 2,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCustomAppBar() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppColors.cardBg,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 20,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          const SizedBox(width: 12),
+          const Icon(Icons.map_rounded, color: AppColors.primary, size: 24),
+          const SizedBox(width: 10),
+          const Expanded(
+            child: Text(
+              "Harita",
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary,
+              ),
+            ),
+          ),
+
+          // Location sharing indicator
+          if (_isLocationSharing)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: AppColors.success.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.share_location, color: AppColors.success, size: 16),
+                  SizedBox(width: 4),
+                  Text(
+                    "Canlı",
+                    style: TextStyle(
+                      color: AppColors.success,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLoadingOverlay() {
+    return Container(
+      color: Colors.black.withValues(alpha: 0.3),
+      child: Center(
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: AppColors.cardBg,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.15),
+                blurRadius: 20,
+              ),
+            ],
+          ),
+          child: const Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircularProgressIndicator(
+                strokeWidth: 3,
+                valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+              ),
+              SizedBox(height: 16),
+              Text(
+                "Konum alınıyor...",
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMyLocationFab() {
+    return FloatingActionButton(
+      heroTag: "my_location",
+      onPressed: _centerOnMyLocation,
+      backgroundColor: AppColors.cardBg,
+      elevation: 4,
+      child: _isLoading
+          ? const SizedBox(
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(
+                strokeWidth: 2.5,
+                valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+              ),
+            )
+          : const Icon(Icons.my_location_rounded, color: AppColors.primary),
+    );
+  }
+
+  Widget _buildBottomControls() {
+    return Column(
+      children: [
+        // Status card
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppColors.cardBg,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.1),
+                blurRadius: 20,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: _locationStatus == LocationStatus.success
+                      ? AppColors.success.withValues(alpha: 0.12)
+                      : AppColors.warning.withValues(alpha: 0.12),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  _locationStatus == LocationStatus.success
+                      ? Icons.shield_rounded
+                      : Icons.location_searching_rounded,
+                  color: _locationStatus == LocationStatus.success
+                      ? AppColors.success
+                      : AppColors.warning,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _locationStatus == LocationStatus.success
+                          ? "Konumunuz Alındı"
+                          : "Konum Bekleniyor",
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      _currentLocation != null
+                          ? "${_currentLocation!.latitude.toStringAsFixed(4)}, ${_currentLocation!.longitude.toStringAsFixed(4)}"
+                          : "Konum alınıyor...",
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: AppColors.textSecondary,
+                        fontFamily: 'monospace',
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Sharing toggle
+              IconButton(
+                onPressed: _toggleLocationSharing,
+                icon: Icon(
+                  _isLocationSharing ? Icons.share_location : Icons.location_disabled_outlined,
+                  color: _isLocationSharing ? AppColors.success : AppColors.textSecondary,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 14),
+
+        // Action buttons
+        Row(
+          children: [
+            Expanded(
+              child: ElevatedButton.icon(
+                onPressed: _toggleLocationSharing,
+                icon: Icon(
+                  _isLocationSharing ? Icons.stop_rounded : Icons.share_location_rounded,
+                  color: Colors.white,
+                  size: 20,
+                ),
+                label: Text(
+                  _isLocationSharing ? "Paylaşımı Durdur" : "Konum Paylaş",
+                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _isLocationSharing ? AppColors.warning : AppColors.primary,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  elevation: 0,
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  HapticFeedback.heavyImpact();
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const CountdownScreen()),
+                  );
+                },
+                icon: const Icon(Icons.sos_rounded, color: Colors.white, size: 20),
+                label: const Text(
+                  "Acil Yardım",
+                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.emergency,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  elevation: 0,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
