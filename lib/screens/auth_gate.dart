@@ -8,6 +8,7 @@ import '../main.dart' show kFirebaseReady;
 import 'main_navigation.dart';
 import 'phone_auth_screen.dart';
 import 'pin_setup_screen.dart';
+import 'app_unlock_screen.dart';
 
 class AuthGate extends StatelessWidget {
   const AuthGate({super.key});
@@ -29,7 +30,7 @@ class AuthGate extends StatelessWidget {
                 const Icon(Icons.cloud_off_rounded, size: 48, color: AppColors.warning),
                 const SizedBox(height: 16),
                 const Text(
-                  "Baglanti kurulamadi",
+                  "Bağlantı kurulamadı",
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w800,
@@ -38,7 +39,7 @@ class AuthGate extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 const Text(
-                  "Firebase servisleri baslatilamadi.\nInternet baglantinizi kontrol edip uygulamayi yeniden baslatin.",
+                  "Firebase servisleri başlatılamadı.\nİnternet bağlantınızı kontrol edip uygulamayı yeniden başlatın.",
                   textAlign: TextAlign.center,
                   style: TextStyle(color: AppColors.textSecondary, height: 1.5),
                 ),
@@ -120,8 +121,8 @@ class AuthGate extends StatelessWidget {
           );
         }
         if (snapshot.data == null) {
-          debugPrint('>>> AuthGate: no user -> PhoneAuthScreen');
-          return const PhoneAuthScreen();
+          debugPrint('>>> AuthGate: no user -> NoUserGate');
+          return const _NoUserGate();
         }
 
         debugPrint('>>> AuthGate: user found -> PinCheckGate');
@@ -135,6 +136,61 @@ class AuthGate extends StatelessWidget {
   }
 }
 
+/// Kullanıcı yok - demo modu veya PhoneAuthScreen
+class _NoUserGate extends StatefulWidget {
+  const _NoUserGate();
+
+  @override
+  State<_NoUserGate> createState() => _NoUserGateState();
+}
+
+class _NoUserGateState extends State<_NoUserGate> {
+  bool _checking = true;
+  bool _demoMode = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkDemoMode();
+  }
+
+  Future<void> _checkDemoMode() async {
+    final prefs = await SharedPreferences.getInstance();
+    final demo = prefs.getBool(AppConstants.prefDemoMode) ?? false;
+    if (mounted) {
+      setState(() {
+        _demoMode = demo;
+        _checking = false;
+      });
+    }
+  }
+
+  void _enterDemoMode() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(AppConstants.prefDemoMode, true);
+    if (mounted) {
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const MainNavigation()),
+        (_) => false,
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_checking) {
+      return const Scaffold(
+        backgroundColor: AppColors.background,
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+    if (_demoMode) {
+      return const MainNavigation();
+    }
+    return PhoneAuthScreen(onDemoModeRequested: _enterDemoMode);
+  }
+}
+
 class _PinCheckGate extends StatefulWidget {
   const _PinCheckGate();
 
@@ -145,6 +201,7 @@ class _PinCheckGate extends StatefulWidget {
 class _PinCheckGateState extends State<_PinCheckGate> {
   bool _checking = true;
   bool _pinSetupDone = false;
+  bool _unlocked = false;
 
   @override
   void initState() {
@@ -163,6 +220,10 @@ class _PinCheckGateState extends State<_PinCheckGate> {
     }
   }
 
+  /// Anonymous giriş (SMS gelmezse devam et) -> doğrudan menü
+  bool get _isAnonymousUser =>
+      FirebaseAuth.instance.currentUser?.isAnonymous ?? false;
+
   @override
   Widget build(BuildContext context) {
     if (_checking) {
@@ -170,6 +231,11 @@ class _PinCheckGateState extends State<_PinCheckGate> {
         backgroundColor: AppColors.background,
         body: Center(child: CircularProgressIndicator()),
       );
+    }
+
+    // SMS gelmezse devam et (anonymous) -> doğrudan menüye git
+    if (_isAnonymousUser) {
+      return const MainNavigation();
     }
 
     if (!_pinSetupDone) {
@@ -241,6 +307,20 @@ class _PinCheckGateState extends State<_PinCheckGate> {
       );
     }
 
+    if (!_unlocked) {
+      return _buildUnlockGate();
+    }
+
     return const MainNavigation();
+  }
+
+  Widget _buildUnlockGate() {
+    return AppUnlockScreen(
+      onUnlocked: () {
+        if (mounted) {
+          setState(() => _unlocked = true);
+        }
+      },
+    );
   }
 }

@@ -1,0 +1,81 @@
+name: Deploy to Store
+
+on:
+  workflow_dispatch: # Manuel tetikleme (Secrets ayarlanana kadar)
+  push:
+    branches: [ main ]
+    tags:
+      - 'v*'
+
+jobs:
+  deploy_android:
+    name: Deploy Android to Play Store (Internal)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+          bundler-cache: true
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.x'
+          channel: 'stable'
+          cache: true
+
+      # Secrets Setup
+      - name: Setup Secrets
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEY_PROPERTIES: ${{ secrets.ANDROID_KEY_PROPERTIES }}
+          ANDROID_JSON_KEY_BASE64: ${{ secrets.ANDROID_JSON_KEY_BASE64 }}
+        run: |
+          # Decode Keystore
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > android/korubeni-release-key.jks
+          
+          # Create key.properties
+          echo "$ANDROID_KEY_PROPERTIES" > android/key.properties
+          
+          # Create Google Play API Key
+          mkdir -p android/fastlane
+          echo "$ANDROID_JSON_KEY_BASE64" | base64 --decode > android/fastlane/api.json
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Deploy to Play Store Internal Track
+        env:
+          ENCRYPTION_KEY: ${{ secrets.ENCRYPTION_KEY }}
+        run: |
+          cd android
+          bundle install
+          bundle exec fastlane internal
+
+  deploy_ios:
+    name: Deploy iOS to TestFlight
+    runs-on: macos-latest
+    needs: deploy_android # Android first (opsiyonel)
+    if: false # iOS sertifikaları hazır olana kadar devre dışı
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.x'
+          channel: 'stable'
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Deploy to TestFlight
+        env:
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          APP_STORE_CONNECT_API_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
+        run: |
+          cd ios
+          # Fastlane match kurulumu gerekecek
+          bundle install
+          bundle exec fastlane beta

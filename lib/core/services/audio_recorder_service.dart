@@ -16,8 +16,9 @@ class AudioRecorderService {
 
   bool get isRecording => _isRecording;
   String? get currentPath => _currentPath;
-  Duration get recordingDuration =>
-      _startTime != null ? DateTime.now().difference(_startTime!) : Duration.zero;
+  Duration get recordingDuration => _startTime != null
+      ? DateTime.now().difference(_startTime!)
+      : Duration.zero;
 
   /// Check if microphone permission is granted
   Future<bool> hasPermission() async {

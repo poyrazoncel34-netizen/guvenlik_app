@@ -12,8 +12,10 @@ import 'core/di/service_locator.dart';
 import 'package:provider/provider.dart';
 import 'core/app_theme.dart';
 import 'presentation/providers/providers.dart';
-import 'screens/auth_gate.dart';
+import 'screens/splash_screen.dart';
 import 'core/services/background_sync_service.dart';
+import 'core/services/offline_queue_service.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 /// Global flag - AuthGate checks this before using FirebaseAuth
 bool kFirebaseReady = false;
@@ -24,6 +26,7 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await EasyLocalization.ensureInitialized();
 
   // 0) ErrorWidget.builder MUST be set BEFORE runApp so ANY error is caught
   ErrorWidget.builder = (FlutterErrorDetails details) {
@@ -37,11 +40,19 @@ void main() async {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.error_outline_rounded, size: 48, color: Colors.amber),
+                const Icon(
+                  Icons.error_outline_rounded,
+                  size: 48,
+                  color: Colors.amber,
+                ),
                 const SizedBox(height: 16),
                 const Text(
                   "Bir sorun olustu",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.white),
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Text(
@@ -53,7 +64,7 @@ void main() async {
                 ),
                 const SizedBox(height: 16),
                 const Text(
-                  "Uygulamayi yeniden baslatin.",
+                  "Uygulamayı yeniden başlatın.",
                   style: TextStyle(color: Colors.white60),
                 ),
               ],
@@ -89,6 +100,14 @@ void main() async {
     debugPrint('>>> BackgroundSync FAILED: $e');
   }
 
+  // 4b) Offline queue
+  try {
+    await OfflineQueueService.instance.initialize();
+    debugPrint('>>> OfflineQueue OK');
+  } catch (e) {
+    debugPrint('>>> OfflineQueue FAILED: $e');
+  }
+
   // 4) Crashlytics (only if Firebase ready)
   if (kFirebaseReady) {
     try {
@@ -101,25 +120,36 @@ void main() async {
         FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
         return true;
       };
-      FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+      FirebaseMessaging.onBackgroundMessage(
+        _firebaseMessagingBackgroundHandler,
+      );
     } catch (e) {
       debugPrint('>>> Crashlytics setup FAILED: $e');
     }
   }
 
-  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-    statusBarColor: Colors.transparent,
-    statusBarIconBrightness: Brightness.light,
-    systemNavigationBarColor: Color(0xFF0A1B2A),
-    systemNavigationBarIconBrightness: Brightness.light,
-  ));
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.light,
+      systemNavigationBarColor: Color(0xFF0A1B2A),
+      systemNavigationBarIconBrightness: Brightness.light,
+    ),
+  );
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
 
   debugPrint('>>> Running app...');
-  runApp(const KoruBeniApp());
+  runApp(
+    EasyLocalization(
+      supportedLocales: const [Locale('tr', 'TR'), Locale('en', 'US')],
+      path: 'assets/translations',
+      fallbackLocale: const Locale('tr', 'TR'),
+      child: const KoruBeniApp(),
+    ),
+  );
 }
 
 // ============================================================================
@@ -138,9 +168,17 @@ class KoruBeniApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         title: 'KoruBeni',
         theme: AppTheme.lightTheme,
+        builder: (context, child) => Semantics(
+          label: 'KoruBeni güvenlik uygulaması',
+          hint: 'Acil durumlarda yardım çağırın, konum paylaşın',
+          child: child ?? const SizedBox.shrink(),
+        ),
         darkTheme: AppTheme.darkTheme,
         themeMode: ThemeMode.dark,
-        home: const AuthGate(),
+        localizationsDelegates: context.localizationDelegates,
+        supportedLocales: context.supportedLocales,
+        locale: context.locale,
+        home: const SplashScreen(),
       ),
     );
   }

@@ -22,7 +22,8 @@ class MapPage extends StatefulWidget {
 
 class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
   // Services
-  final LocationRepository _locationRepository = serviceLocator<LocationRepository>();
+  final LocationRepository _locationRepository =
+      serviceLocator<LocationRepository>();
 
   // Map controller
   final MapController _mapController = MapController();
@@ -124,12 +125,17 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
               children: [
                 Icon(Icons.my_location, color: Colors.white, size: 20),
                 SizedBox(width: 12),
-                Text("Konumunuz güncellendi", style: TextStyle(fontWeight: FontWeight.w600)),
+                Text(
+                  "Konumunuz güncellendi",
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
               ],
             ),
             backgroundColor: AppColors.success,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
             duration: const Duration(seconds: 2),
           ),
         );
@@ -198,7 +204,11 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
                 color: AppColors.warning.withValues(alpha: 0.12),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.location_off_rounded, size: 36, color: AppColors.warning),
+              child: const Icon(
+                Icons.location_off_rounded,
+                size: 36,
+                color: AppColors.warning,
+              ),
             ),
             const SizedBox(height: 24),
             Text(
@@ -229,9 +239,14 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
                       foregroundColor: AppColors.textSecondary,
                       side: const BorderSide(color: AppColors.border),
                       padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
-                    child: const Text("İptal", style: TextStyle(fontWeight: FontWeight.w600)),
+                    child: const Text(
+                      "İptal",
+                      style: TextStyle(fontWeight: FontWeight.w600),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -242,9 +257,14 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
                       backgroundColor: AppColors.primary,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
-                    child: Text(buttonText, style: const TextStyle(fontWeight: FontWeight.w700)),
+                    child: Text(
+                      buttonText,
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    ),
                   ),
                 ),
               ],
@@ -264,18 +284,24 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
         content: Row(
           children: [
             Icon(
-              _isLocationSharing ? Icons.share_location : Icons.location_disabled,
+              _isLocationSharing
+                  ? Icons.share_location
+                  : Icons.location_disabled,
               color: Colors.white,
               size: 20,
             ),
             const SizedBox(width: 12),
             Text(
-              _isLocationSharing ? "Konum paylaşımı başladı" : "Konum paylaşımı durduruldu",
+              _isLocationSharing
+                  ? "Konum paylaşımı başladı"
+                  : "Konum paylaşımı durduruldu",
               style: const TextStyle(fontWeight: FontWeight.w600),
             ),
           ],
         ),
-        backgroundColor: _isLocationSharing ? AppColors.success : AppColors.textSecondary,
+        backgroundColor: _isLocationSharing
+            ? AppColors.success
+            : AppColors.textSecondary,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         duration: const Duration(seconds: 2),
@@ -346,11 +372,7 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
           ),
 
           // My location FAB
-          Positioned(
-            bottom: 200,
-            right: 16,
-            child: _buildMyLocationFab(),
-          ),
+          Positioned(bottom: 200, right: 16, child: _buildMyLocationFab()),
         ],
       ),
     );
@@ -407,7 +429,9 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
               height: 80 + (_pulseController.value * 30),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppColors.primary.withValues(alpha: 0.15 - (_pulseController.value * 0.1)),
+                color: AppColors.primary.withValues(
+                  alpha: 0.15 - (_pulseController.value * 0.1),
+                ),
               ),
             );
           },
@@ -485,7 +509,11 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
               child: const Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.share_location, color: AppColors.success, size: 16),
+                  Icon(
+                    Icons.share_location,
+                    color: AppColors.success,
+                    size: 16,
+                  ),
                   SizedBox(width: 4),
                   Text(
                     "Canlı",
@@ -632,8 +660,12 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
               IconButton(
                 onPressed: _toggleLocationSharing,
                 icon: Icon(
-                  _isLocationSharing ? Icons.share_location : Icons.location_disabled_outlined,
-                  color: _isLocationSharing ? AppColors.success : AppColors.textSecondary,
+                  _isLocationSharing
+                      ? Icons.share_location
+                      : Icons.location_disabled_outlined,
+                  color: _isLocationSharing
+                      ? AppColors.success
+                      : AppColors.textSecondary,
                 ),
               ),
             ],
@@ -648,18 +680,27 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
               child: ElevatedButton.icon(
                 onPressed: _toggleLocationSharing,
                 icon: Icon(
-                  _isLocationSharing ? Icons.stop_rounded : Icons.share_location_rounded,
+                  _isLocationSharing
+                      ? Icons.stop_rounded
+                      : Icons.share_location_rounded,
                   color: Colors.white,
                   size: 20,
                 ),
                 label: Text(
                   _isLocationSharing ? "Paylaşımı Durdur" : "Konum Paylaş",
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: _isLocationSharing ? AppColors.warning : AppColors.primary,
+                  backgroundColor: _isLocationSharing
+                      ? AppColors.warning
+                      : AppColors.primary,
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
                   elevation: 0,
                 ),
               ),
@@ -674,15 +715,24 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
                     MaterialPageRoute(builder: (_) => const CountdownScreen()),
                   );
                 },
-                icon: const Icon(Icons.sos_rounded, color: Colors.white, size: 20),
+                icon: const Icon(
+                  Icons.sos_rounded,
+                  color: Colors.white,
+                  size: 20,
+                ),
                 label: const Text(
                   "Acil Yardım",
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.emergency,
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
                   elevation: 0,
                 ),
               ),

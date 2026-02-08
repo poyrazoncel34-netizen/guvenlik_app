@@ -1,0 +1,6 @@
+# Android Release Signing - COPY to key.properties and fill with real values
+# key.properties is in .gitignore - NEVER commit the real file
+storePassword=YOUR_KEYSTORE_PASSWORD
+keyPassword=YOUR_KEY_PASSWORD
+keyAlias=upload
+storeFile=path/to/your/upload-keystore.jks

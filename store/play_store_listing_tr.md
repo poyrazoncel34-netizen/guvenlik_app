@@ -54,6 +54,6 @@ KoruBeni — Güvenliğiniz bir dokunuş uzağınızda.
 **Category:** Tools / Safety
 **Content Rating:** Everyone
 **Contact Email:** destek@korubeni.com
-**Privacy Policy URL:** https://korubeni.com/privacy
+**Privacy Policy URL:** https://poyrazoncel34-netizen.github.io/korubeni-privacy/
 
 **Tags:** güvenlik, acil durum, panik butonu, konum paylaşımı, kadın güvenliği, SOS, acil yardım, sahte arama, kişisel güvenlik

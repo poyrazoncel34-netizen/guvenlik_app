@@ -23,7 +23,10 @@ class ContactsRepositoryImpl implements ContactsRepository {
   }
 
   @override
-  Future<void> savePrimaryEmergencyContact({required String name, required String phone}) {
+  Future<void> savePrimaryEmergencyContact({
+    required String name,
+    required String phone,
+  }) {
     return _local.savePrimaryEmergencyContact(name: name, phone: phone);
   }
 

@@ -43,43 +43,71 @@ class _ProfilePageState extends State<ProfilePage> {
                   height: 110,
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [AppColors.primary, AppColors.primaryLight]),
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [AppColors.primary, AppColors.primaryLight],
+                    ),
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                          color: AppColors.primary.withValues(alpha: 0.3),
-                          blurRadius: 20,
-                          offset: const Offset(0, 8)),
+                        color: AppColors.primary.withValues(alpha: 0.3),
+                        blurRadius: 20,
+                        offset: const Offset(0, 8),
+                      ),
                     ],
                   ),
-                  child: const Icon(Icons.person_rounded, size: 56, color: Colors.white),
+                  child: const Icon(
+                    Icons.person_rounded,
+                    size: 56,
+                    color: Colors.white,
+                  ),
                 ),
                 const SizedBox(height: 20),
-                Text(provider.profileName,
-                    style: TextStyle(
-                        fontSize: 26,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.textPrimary,
-                        letterSpacing: -0.5)),
+                Text(
+                  provider.profileName,
+                  style: TextStyle(
+                    fontSize: 26,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.textPrimary,
+                    letterSpacing: -0.5,
+                  ),
+                ),
                 const SizedBox(height: 6),
-                Text(provider.profileEmail,
-                    style: TextStyle(fontSize: 15, color: AppColors.textSecondary, fontWeight: FontWeight.w500)),
+                Text(
+                  provider.profileEmail,
+                  style: TextStyle(
+                    fontSize: 15,
+                    color: AppColors.textSecondary,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
               ],
             ),
           ),
           const SizedBox(height: 36),
           Container(
             decoration: BoxDecoration(
-                color: AppColors.cardBg,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColors.border)),
+              color: AppColors.cardBg,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.border),
+            ),
             child: Column(
               children: [
-                _buildSettingsItem(context, Icons.person_outline_rounded, "Kişisel Bilgiler"),
-                _buildSettingsItem(context, Icons.lock_outline_rounded, "Güvenlik & PIN"),
-                _buildSettingsItem(context, Icons.notifications_outlined, "Bildirimler"),
+                _buildSettingsItem(
+                  context,
+                  Icons.person_outline_rounded,
+                  "Kişisel Bilgiler",
+                ),
+                _buildSettingsItem(
+                  context,
+                  Icons.lock_outline_rounded,
+                  "Güvenlik & PIN",
+                ),
+                _buildSettingsItem(
+                  context,
+                  Icons.notifications_outlined,
+                  "Bildirimler",
+                ),
               ],
             ),
           ),
@@ -93,39 +121,56 @@ class _ProfilePageState extends State<ProfilePage> {
                 if (!context.mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: const Row(children: [
-                      Icon(Icons.logout_rounded, color: Colors.white),
-                      SizedBox(width: 12),
-                      Text("Çıkış yapıldı", style: TextStyle(fontWeight: FontWeight.w600)),
-                    ]),
+                    content: const Row(
+                      children: [
+                        Icon(Icons.logout_rounded, color: Colors.white),
+                        SizedBox(width: 12),
+                        Text(
+                          "Çıkış yapıldı",
+                          style: TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                      ],
+                    ),
                     backgroundColor: AppColors.emergency,
                     behavior: SnackBarBehavior.floating,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                 );
               },
               style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.emergency,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 18)),
-              child: const Text("Çıkış Yap", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                backgroundColor: AppColors.emergency,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 18),
+              ),
+              child: const Text(
+                "Çıkış Yap",
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+              ),
             ),
           ),
           const SizedBox(height: 28),
           Center(
             child: Column(
               children: [
-                Text("KoruBeni",
-                    style: TextStyle(
-                        fontSize: 13,
-                        color: AppColors.textSecondary.withValues(alpha: 0.7),
-                        fontWeight: FontWeight.w600)),
+                Text(
+                  "KoruBeni",
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: AppColors.textSecondary.withValues(alpha: 0.7),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
                 const SizedBox(height: 4),
-                Text("Sürüm 1.0.0",
-                    style: TextStyle(
-                        fontSize: 12,
-                        color: AppColors.textSecondary.withValues(alpha: 0.6),
-                        fontWeight: FontWeight.w500)),
+                Text(
+                  "Sürüm 1.0.0",
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: AppColors.textSecondary.withValues(alpha: 0.6),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
               ],
             ),
           ),
@@ -157,7 +202,12 @@ class _ProfilePageState extends State<ProfilePage> {
             });
           } else {
             Navigator.push(
-                context, MaterialPageRoute(builder: (context) => SettingsDetailPage(title: title, icon: icon)));
+              context,
+              MaterialPageRoute(
+                builder: (context) =>
+                    SettingsDetailPage(title: title, icon: icon),
+              ),
+            );
           }
         },
         child: Padding(
@@ -167,10 +217,20 @@ class _ProfilePageState extends State<ProfilePage> {
               Icon(icon, color: AppColors.textSecondary, size: 24),
               const SizedBox(width: 18),
               Expanded(
-                  child: Text(title,
-                      style: const TextStyle(
-                          fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textPrimary))),
-              const Icon(Icons.arrow_forward_ios_rounded, color: AppColors.textSecondary, size: 16),
+                child: Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ),
+              const Icon(
+                Icons.arrow_forward_ios_rounded,
+                color: AppColors.textSecondary,
+                size: 16,
+              ),
             ],
           ),
         ),

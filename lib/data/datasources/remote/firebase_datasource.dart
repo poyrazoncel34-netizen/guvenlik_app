@@ -23,10 +23,7 @@ class FirebaseRemoteDataSource {
     );
   }
 
-  Future<void> updateLocation({
-    required double lat,
-    required double lng,
-  }) {
+  Future<void> updateLocation({required double lat, required double lng}) {
     return _firebaseService.updateLocation(lat: lat, lng: lng);
   }
 }

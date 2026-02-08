@@ -10,7 +10,11 @@ class SettingsDetailPage extends StatelessWidget {
   final String title;
   final IconData icon;
 
-  const SettingsDetailPage({super.key, required this.title, required this.icon});
+  const SettingsDetailPage({
+    super.key,
+    required this.title,
+    required this.icon,
+  });
 
   List<_DetailSection> _sectionsForTitle() {
     switch (title) {
@@ -195,7 +199,9 @@ class SettingsDetailPage extends StatelessWidget {
       appBar: AppBar(
         title: Text(title),
         leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded), onPressed: () => Navigator.pop(context)),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
       body: ListView(
         padding: const EdgeInsets.all(20),
@@ -203,24 +209,38 @@ class SettingsDetailPage extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.06),
-                borderRadius: BorderRadius.circular(16)),
+              color: AppColors.primary.withValues(alpha: 0.06),
+              borderRadius: BorderRadius.circular(16),
+            ),
             child: Column(
               children: [
                 Container(
                   width: 70,
                   height: 70,
                   decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.15), shape: BoxShape.circle),
+                    color: AppColors.primary.withValues(alpha: 0.15),
+                    shape: BoxShape.circle,
+                  ),
                   child: Icon(icon, size: 36, color: AppColors.primary),
                 ),
                 const SizedBox(height: 16),
-                Text(title,
-                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.textPrimary)),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
                 const SizedBox(height: 8),
-                Text(_introForTitle(),
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(fontSize: 14, color: AppColors.textSecondary)),
+                Text(
+                  _introForTitle(),
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
               ],
             ),
           ),

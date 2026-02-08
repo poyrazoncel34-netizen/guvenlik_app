@@ -14,7 +14,8 @@ class ConnectivityService {
   bool _isOnline = true;
   bool get isOnline => _isOnline;
 
-  final StreamController<bool> _statusController = StreamController<bool>.broadcast();
+  final StreamController<bool> _statusController =
+      StreamController<bool>.broadcast();
   Stream<bool> get onStatusChange => _statusController.stream;
 
   /// Initialize and start monitoring
@@ -36,10 +37,12 @@ class ConnectivityService {
   }
 
   bool _hasConnection(List<ConnectivityResult> results) {
-    return results.any((r) =>
-        r == ConnectivityResult.mobile ||
-        r == ConnectivityResult.wifi ||
-        r == ConnectivityResult.ethernet);
+    return results.any(
+      (r) =>
+          r == ConnectivityResult.mobile ||
+          r == ConnectivityResult.wifi ||
+          r == ConnectivityResult.ethernet,
+    );
   }
 
   void dispose() {

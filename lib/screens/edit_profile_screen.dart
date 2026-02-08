@@ -21,7 +21,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(text: widget.name == 'Kullanici' ? '' : widget.name);
+    _nameController = TextEditingController(
+      text: widget.name == 'Kullanici' ? '' : widget.name,
+    );
     _emailController = TextEditingController(text: widget.email);
   }
 
@@ -75,7 +77,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           ),
           backgroundColor: AppColors.success,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
       );
     }
@@ -84,9 +88,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Kisisel Bilgiler"),
-      ),
+      appBar: AppBar(title: const Text("Kisisel Bilgiler")),
       body: Form(
         key: _formKey,
         child: ListView(
@@ -134,9 +136,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
                 ),
-                child: const Text("Kaydet", style: TextStyle(fontWeight: FontWeight.w700)),
+                child: const Text(
+                  "Kaydet",
+                  style: TextStyle(fontWeight: FontWeight.w700),
+                ),
               ),
             ),
           ],

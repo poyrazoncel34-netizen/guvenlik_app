@@ -20,7 +20,8 @@ class EmergencyMapScreen extends StatefulWidget {
 }
 
 class _EmergencyMapScreenState extends State<EmergencyMapScreen> {
-  final LocationRepository _locationRepository = serviceLocator<LocationRepository>();
+  final LocationRepository _locationRepository =
+      serviceLocator<LocationRepository>();
   final MapController _mapController = MapController();
 
   LatLng? _currentLocation;
@@ -71,11 +72,7 @@ class _EmergencyMapScreenState extends State<EmergencyMapScreen> {
       body: Stack(
         children: [
           _buildMap(),
-          Positioned(
-            left: 12,
-            bottom: 92,
-            child: _buildOsmAttribution(),
-          ),
+          Positioned(left: 12, bottom: 92, child: _buildOsmAttribution()),
           if (_isLoading)
             Container(
               color: Colors.black.withValues(alpha: 0.2),
@@ -98,7 +95,10 @@ class _EmergencyMapScreenState extends State<EmergencyMapScreen> {
                       _showSnack(context, "Konum paylaşıldı");
                     },
                     icon: const Icon(Icons.share_location, color: Colors.white),
-                    label: const Text("Konumu Paylaş", style: TextStyle(color: Colors.white)),
+                    label: const Text(
+                      "Konumu Paylaş",
+                      style: TextStyle(color: Colors.white),
+                    ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.success,
                       padding: const EdgeInsets.symmetric(vertical: 16),
@@ -112,11 +112,16 @@ class _EmergencyMapScreenState extends State<EmergencyMapScreen> {
                       HapticFeedback.heavyImpact();
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (_) => const CountdownScreen()),
+                        MaterialPageRoute(
+                          builder: (_) => const CountdownScreen(),
+                        ),
                       );
                     },
                     icon: const Icon(Icons.sos, color: Colors.white),
-                    label: const Text("Acil Yardım", style: TextStyle(color: Colors.white)),
+                    label: const Text(
+                      "Acil Yardım",
+                      style: TextStyle(color: Colors.white),
+                    ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.emergency,
                       padding: const EdgeInsets.symmetric(vertical: 16),
@@ -140,7 +145,9 @@ class _EmergencyMapScreenState extends State<EmergencyMapScreen> {
         initialZoom: 15,
         minZoom: 3,
         maxZoom: 18,
-        interactionOptions: const InteractionOptions(flags: InteractiveFlag.all),
+        interactionOptions: const InteractionOptions(
+          flags: InteractiveFlag.all,
+        ),
       ),
       children: [
         TileLayer(
@@ -161,7 +168,11 @@ class _EmergencyMapScreenState extends State<EmergencyMapScreen> {
                     shape: BoxShape.circle,
                   ),
                   child: const Center(
-                    child: Icon(Icons.location_on_rounded, color: AppColors.primary, size: 34),
+                    child: Icon(
+                      Icons.location_on_rounded,
+                      color: AppColors.primary,
+                      size: 34,
+                    ),
                   ),
                 ),
               ),

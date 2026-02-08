@@ -1,0 +1,6 @@
+app_identifier("com.poyrazoncel.korubeni") # The bundle identifier of your app
+apple_id(ENV['APPLE_ID'] || "poyrazoncel@gmail.com") # Your Apple Developer Account email
+
+# You can uncomment these if you have multiple teams
+# team_id("...") # Developer Portal Team ID
+# itc_team_id("...") # App Store Connect Team ID

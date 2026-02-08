@@ -26,20 +26,24 @@ class ShakeDetectorService {
     onShake = onShakeDetected;
     _isListening = true;
 
-    _subscription = accelerometerEventStream(
-      samplingPeriod: const Duration(milliseconds: 100),
-    ).listen((event) {
-      final magnitude = sqrt(
-        event.x * event.x + event.y * event.y + event.z * event.z,
-      );
+    _subscription =
+        accelerometerEventStream(
+          samplingPeriod: const Duration(milliseconds: 100),
+        ).listen(
+          (event) {
+            final magnitude = sqrt(
+              event.x * event.x + event.y * event.y + event.z * event.z,
+            );
 
-      // Subtract gravity (~9.8) and check threshold
-      if ((magnitude - 9.8).abs() > _shakeThreshold) {
-        _registerShake();
-      }
-    }, onError: (e) {
-      debugPrint('ShakeDetector error: $e');
-    });
+            // Subtract gravity (~9.8) and check threshold
+            if ((magnitude - 9.8).abs() > _shakeThreshold) {
+              _registerShake();
+            }
+          },
+          onError: (e) {
+            debugPrint('ShakeDetector error: $e');
+          },
+        );
   }
 
   void _registerShake() {

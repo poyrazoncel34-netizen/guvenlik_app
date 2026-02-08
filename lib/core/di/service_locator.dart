@@ -28,7 +28,9 @@ Future<void> setupServiceLocator() async {
   serviceLocator.registerSingleton<FirebaseAuth>(FirebaseAuth.instance);
   serviceLocator.registerSingleton<FirebaseService>(FirebaseService.instance);
   serviceLocator.registerSingleton<LocationService>(LocationService());
-  serviceLocator.registerLazySingleton<ContactsLocalDataSource>(() => ContactsLocalDataSource());
+  serviceLocator.registerLazySingleton<ContactsLocalDataSource>(
+    () => ContactsLocalDataSource(),
+  );
   serviceLocator.registerLazySingleton<FirebaseRemoteDataSource>(
     () => FirebaseRemoteDataSource(serviceLocator<FirebaseService>()),
   );
@@ -46,5 +48,7 @@ Future<void> setupServiceLocator() async {
     () => ContactsRepositoryImpl(serviceLocator<ContactsLocalDataSource>()),
   );
   serviceLocator.registerLazySingleton<SecureStorage>(() => SecureStorage());
-  serviceLocator.registerLazySingleton<EncryptionService>(() => EncryptionService());
+  serviceLocator.registerLazySingleton<EncryptionService>(
+    () => EncryptionService(),
+  );
 }

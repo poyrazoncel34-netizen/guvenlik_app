@@ -17,36 +17,40 @@ class FirebaseService {
       if (user == null) return;
 
       final token = await FirebaseMessaging.instance.getToken();
-      await _db.collection('users').doc(user.uid).set(
-        {
-          'uid': user.uid,
-          'phone': user.phoneNumber,
-          'fcmToken': token,
-          'lastActiveAt': FieldValue.serverTimestamp(),
-          'createdAt': FieldValue.serverTimestamp(),
-        },
-        SetOptions(merge: true),
-      );
+      await _db.collection('users').doc(user.uid).set({
+        'uid': user.uid,
+        'phone': user.phoneNumber,
+        'fcmToken': token,
+        'lastActiveAt': FieldValue.serverTimestamp(),
+        'createdAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
     } catch (e, stack) {
-      FirebaseCrashlytics.instance.recordError(e, stack, reason: 'upsertUserProfile failed');
+      FirebaseCrashlytics.instance.recordError(
+        e,
+        stack,
+        reason: 'upsertUserProfile failed',
+      );
     }
   }
 
   void listenForTokenUpdates() {
     _tokenSubscription?.cancel();
-    _tokenSubscription = FirebaseMessaging.instance.onTokenRefresh.listen((token) async {
+    _tokenSubscription = FirebaseMessaging.instance.onTokenRefresh.listen((
+      token,
+    ) async {
       try {
         final user = FirebaseAuth.instance.currentUser;
         if (user == null) return;
-        await _db.collection('users').doc(user.uid).set(
-          {
-            'fcmToken': token,
-            'lastActiveAt': FieldValue.serverTimestamp(),
-          },
-          SetOptions(merge: true),
-        );
+        await _db.collection('users').doc(user.uid).set({
+          'fcmToken': token,
+          'lastActiveAt': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
       } catch (e, stack) {
-        FirebaseCrashlytics.instance.recordError(e, stack, reason: 'tokenRefresh failed');
+        FirebaseCrashlytics.instance.recordError(
+          e,
+          stack,
+          reason: 'tokenRefresh failed',
+        );
       }
     });
   }
@@ -70,7 +74,11 @@ class FirebaseService {
         'status': 'active',
       });
     } catch (e, stack) {
-      FirebaseCrashlytics.instance.recordError(e, stack, reason: 'createEmergencyEvent failed');
+      FirebaseCrashlytics.instance.recordError(
+        e,
+        stack,
+        reason: 'createEmergencyEvent failed',
+      );
     }
   }
 
@@ -81,16 +89,17 @@ class FirebaseService {
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) return;
-      await _db.collection('locations').doc(user.uid).set(
-        {
-          'lat': lat,
-          'lng': lng,
-          'updatedAt': FieldValue.serverTimestamp(),
-        },
-        SetOptions(merge: true),
-      );
+      await _db.collection('locations').doc(user.uid).set({
+        'lat': lat,
+        'lng': lng,
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
     } catch (e, stack) {
-      FirebaseCrashlytics.instance.recordError(e, stack, reason: 'updateLocation failed');
+      FirebaseCrashlytics.instance.recordError(
+        e,
+        stack,
+        reason: 'updateLocation failed',
+      );
     }
   }
 
@@ -109,7 +118,11 @@ class FirebaseService {
         'timestamp': FieldValue.serverTimestamp(),
       });
     } catch (e, stack) {
-      FirebaseCrashlytics.instance.recordError(e, stack, reason: 'logActivity failed');
+      FirebaseCrashlytics.instance.recordError(
+        e,
+        stack,
+        reason: 'logActivity failed',
+      );
     }
   }
 

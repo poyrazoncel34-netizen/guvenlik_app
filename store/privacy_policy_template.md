@@ -8,6 +8,7 @@
 - Google Play Console → Store Listing → Privacy Policy URL
 - App Store Connect → App Information → Privacy Policy URL
 
-**Recommended URL:** `https://korubeni.com/privacy` or `https://poyrazoncel.github.io/korubeni-privacy/`
+**Canlı URL (GitHub Pages):** https://poyrazoncel34-netizen.github.io/korubeni-privacy/
+**İngilizce:** https://poyrazoncel34-netizen.github.io/korubeni-privacy/privacy_policy_en.html
 
 **Support Email:** destek@korubeni.com

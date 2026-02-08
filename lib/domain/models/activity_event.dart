@@ -70,12 +70,12 @@ class ActivityEvent {
   }
 
   Map<String, dynamic> toMap() => {
-        'id': id,
-        'type': type.name,
-        'title': title,
-        'description': description,
-        'timestamp': timestamp.toIso8601String(),
-      };
+    'id': id,
+    'type': type.name,
+    'title': title,
+    'description': description,
+    'timestamp': timestamp.toIso8601String(),
+  };
 
   factory ActivityEvent.fromMap(Map<String, dynamic> map) {
     return ActivityEvent(

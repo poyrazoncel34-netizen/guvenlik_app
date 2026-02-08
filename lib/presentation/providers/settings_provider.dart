@@ -26,7 +26,8 @@ class SettingsProvider extends ChangeNotifier {
     _profileEmail = prefs.getString(AppConstants.prefProfileEmail) ?? '';
 
     if (!_loaded) {
-      _notificationsEnabled = prefs.getBool(AppConstants.prefNotifications) ?? true;
+      _notificationsEnabled =
+          prefs.getBool(AppConstants.prefNotifications) ?? true;
       _locationEnabled = prefs.getBool(AppConstants.prefLocation) ?? true;
       _soundEnabled = prefs.getBool(AppConstants.prefSound) ?? true;
       _vibrationEnabled = prefs.getBool(AppConstants.prefVibration) ?? true;
@@ -35,7 +36,10 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> updateProfile({required String name, required String email}) async {
+  Future<void> updateProfile({
+    required String name,
+    required String email,
+  }) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(AppConstants.prefProfileName, name.trim());
     await prefs.setString(AppConstants.prefProfileEmail, email.trim());

@@ -5,7 +5,10 @@ import 'package:flutter/foundation.dart';
 /// Attaches Firebase auth token to every outgoing request.
 class AuthInterceptor extends Interceptor {
   @override
-  void onRequest(RequestOptions options, RequestInterceptorHandler handler) async {
+  void onRequest(
+    RequestOptions options,
+    RequestInterceptorHandler handler,
+  ) async {
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
@@ -41,8 +44,12 @@ class RetryInterceptor extends Interceptor {
     while (attempt < maxRetries) {
       attempt++;
       try {
-        debugPrint('RetryInterceptor: attempt $attempt for ${err.requestOptions.path}');
-        await Future.delayed(Duration(milliseconds: 500 * attempt)); // exponential backoff
+        debugPrint(
+          'RetryInterceptor: attempt $attempt for ${err.requestOptions.path}',
+        );
+        await Future.delayed(
+          Duration(milliseconds: 500 * attempt),
+        ); // exponential backoff
 
         final response = await dio.fetch(err.requestOptions);
         return handler.resolve(response);

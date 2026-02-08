@@ -2,36 +2,6 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<!-- Location Permissions for GPS -->
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>KoruBeni uygulaması konumunuzu acil durumlarda paylaşmak için kullanır.</string>
-	<!-- Contacts Permission -->
-	<key>NSContactsUsageDescription</key>
-	<string>Acil kişilerinizi rehberinizden seçebilmeniz için rehbere erişim gerekir.</string>
-	<!-- Photo Library Permission -->
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Sahte arama profil fotoğrafı seçebilmeniz için fotoğraflara erişim gerekir.</string>
-	<!-- Microphone Permission (for audio evidence recording) -->
-	<key>NSMicrophoneUsageDescription</key>
-	<string>Acil durumlarda ses kaydı yaparak kanıt toplamanız için mikrofon erişimi gerekir.</string>
-	<!-- Face ID Permission -->
-	<key>NSFaceIDUsageDescription</key>
-	<string>Hızlı ve güvenli giriş için Face ID kullanılır.</string>
-	<!-- Background Location Permission (Safe Walk feature) -->
-	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>Güvenli yürüyüş ve acil durum izleme için arka planda konum erişimi gerekir.</string>
-	<!-- Background Modes -->
-	<key>UIBackgroundModes</key>
-	<array>
-		<string>fetch</string>
-		<string>remote-notification</string>
-		<string>location</string>
-	</array>
-	<!-- Export Compliance (Encryption) -->
-	<key>ITSAppUsesNonExemptEncryption</key>
-	<true/>
-	<key>ITSEncryptionExportComplianceCode</key>
-	<string></string>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>CFBundleDevelopmentRegion</key>
@@ -54,8 +24,47 @@
 	<string>????</string>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>tr</string>
+		<string>en</string>
+	</array>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<true/>
+	<key>ITSEncryptionExportComplianceCode</key>
+	<string></string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>app-1-826866882826-ios-75a29b10cab916203342f3</string>
+			</array>
+			<key>CFBundleURLName</key>
+			<string>Firebase Auth reCAPTCHA</string>
+		</dict>
+	</array>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>tel</string>
+		<string>sms</string>
+	</array>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSContactsUsageDescription</key>
+	<string>Acil kişilerinizi rehberinizden seçebilmeniz için rehbere erişim gerekir.</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>Hızlı ve güvenli giriş için Face ID kullanılır.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Güvenli yürüyüş ve acil durum izleme için arka planda konum erişimi gerekir.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>KoruBeni uygulaması konumunuzu acil durumlarda paylaşmak için kullanır.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Acil durumlarda ses kaydı yaparak kanıt toplamanız için mikrofon erişimi gerekir.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Sahte arama profil fotoğrafı seçebilmeniz için fotoğraflara erişim gerekir.</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>
@@ -70,11 +79,6 @@
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
 		<string>UIInterfaceOrientationPortraitUpsideDown</string>
-	</array>
-	<key>LSApplicationQueriesSchemes</key>
-	<array>
-		<string>tel</string>
-		<string>sms</string>
 	</array>
 </dict>
 </plist>

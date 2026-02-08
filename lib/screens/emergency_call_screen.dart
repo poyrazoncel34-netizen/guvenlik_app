@@ -19,7 +19,8 @@ class EmergencyCallScreen extends StatefulWidget {
   State<EmergencyCallScreen> createState() => _EmergencyCallScreenState();
 }
 
-class _EmergencyCallScreenState extends State<EmergencyCallScreen> with SingleTickerProviderStateMixin {
+class _EmergencyCallScreenState extends State<EmergencyCallScreen>
+    with SingleTickerProviderStateMixin {
   late AnimationController _pulseController;
 
   @override
@@ -65,16 +66,36 @@ class _EmergencyCallScreenState extends State<EmergencyCallScreen> with SingleTi
                     Container(
                       width: 130,
                       height: 130,
-                      decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.grey[850]),
-                      child: const Icon(Icons.person_rounded, size: 70, color: Colors.white60),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.grey[850],
+                      ),
+                      child: const Icon(
+                        Icons.person_rounded,
+                        size: 70,
+                        color: Colors.white60,
+                      ),
                     ),
                     const SizedBox(height: 28),
                     Text(
-                        widget.name, style: const TextStyle(color: Colors.white, fontSize: 34, fontWeight: FontWeight.w600)),
+                      widget.name,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 34,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                     const SizedBox(height: 10),
                     Text(
-                        widget.phone.isEmpty ? "Arama başlatılıyor..." : widget.phone,
-                        style: const TextStyle(color: Colors.white54, fontSize: 19, fontWeight: FontWeight.w500)),
+                      widget.phone.isEmpty
+                          ? "Arama başlatılıyor..."
+                          : widget.phone,
+                      style: const TextStyle(
+                        color: Colors.white54,
+                        fontSize: 19,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
                     const SizedBox(height: 32),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -82,14 +103,23 @@ class _EmergencyCallScreenState extends State<EmergencyCallScreen> with SingleTi
                         Container(
                           padding: const EdgeInsets.all(6),
                           decoration: BoxDecoration(
-                              color: AppColors.success.withValues(alpha: 0.2), shape: BoxShape.circle),
-                          child: const Icon(Icons.phone_forwarded_rounded, color: AppColors.success, size: 20),
+                            color: AppColors.success.withValues(alpha: 0.2),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.phone_forwarded_rounded,
+                            color: AppColors.success,
+                            size: 20,
+                          ),
                         ),
                         const SizedBox(width: 10),
                         Text(
                           "çalıyor...",
                           style: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.75), fontSize: 17, fontWeight: FontWeight.w500),
+                            color: Colors.white.withValues(alpha: 0.75),
+                            fontSize: 17,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ],
                     ),
@@ -113,19 +143,34 @@ class _EmergencyCallScreenState extends State<EmergencyCallScreen> with SingleTi
                     Material(
                       color: Colors.transparent,
                       child: InkWell(
-                        onTap: () => Navigator.of(context).popUntil((route) => route.isFirst),
+                        onTap: () => Navigator.of(
+                          context,
+                        ).popUntil((route) => route.isFirst),
                         customBorder: const CircleBorder(),
                         child: Container(
                           width: 76,
                           height: 76,
-                          decoration: const BoxDecoration(color: AppColors.emergency, shape: BoxShape.circle),
-                          child: const Icon(Icons.call_end_rounded, color: Colors.white, size: 34),
+                          decoration: const BoxDecoration(
+                            color: AppColors.emergency,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.call_end_rounded,
+                            color: Colors.white,
+                            size: 34,
+                          ),
                         ),
                       ),
                     ),
                     const SizedBox(height: 14),
                     const Text(
-                        "Aramayı Sonlandır", style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600)),
+                      "Aramayı Sonlandır",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ],
                 ),
               ),

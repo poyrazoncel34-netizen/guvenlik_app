@@ -11,12 +11,17 @@ class ContactService {
   // Kişileri Kaydet
   static Future<void> saveContacts(List<String> numbers) async {
     final payload = jsonEncode(numbers);
-    await _secureStorage.write(key: SecureStorageKeys.contactsList, value: payload);
+    await _secureStorage.write(
+      key: SecureStorageKeys.contactsList,
+      value: payload,
+    );
   }
 
   // Kişileri Getir
   static Future<List<String>> getContacts() async {
-    final secureValue = await _secureStorage.read(key: SecureStorageKeys.contactsList);
+    final secureValue = await _secureStorage.read(
+      key: SecureStorageKeys.contactsList,
+    );
     if (secureValue != null && secureValue.isNotEmpty) {
       return _decodeList(secureValue);
     }
@@ -42,17 +47,31 @@ class ContactService {
   }
 
   // Birincil acil kişiyi kaydet (UI için)
-  static Future<void> savePrimaryEmergencyContact({required String name, required String phone}) async {
-    await _secureStorage.write(key: SecureStorageKeys.emergencyContactName, value: name);
-    await _secureStorage.write(key: SecureStorageKeys.emergencyContactPhone, value: phone);
+  static Future<void> savePrimaryEmergencyContact({
+    required String name,
+    required String phone,
+  }) async {
+    await _secureStorage.write(
+      key: SecureStorageKeys.emergencyContactName,
+      value: name,
+    );
+    await _secureStorage.write(
+      key: SecureStorageKeys.emergencyContactPhone,
+      value: phone,
+    );
   }
 
   // Acil kişiyi getir
   static Future<EmergencyContact?> getEmergencyContact() async {
-    final phone = await _secureStorage.read(key: SecureStorageKeys.emergencyContactPhone);
+    final phone = await _secureStorage.read(
+      key: SecureStorageKeys.emergencyContactPhone,
+    );
     if (phone != null && phone.isNotEmpty) {
       final name =
-          await _secureStorage.read(key: SecureStorageKeys.emergencyContactName) ?? _unknownNameFallback;
+          await _secureStorage.read(
+            key: SecureStorageKeys.emergencyContactName,
+          ) ??
+          _unknownNameFallback;
       return EmergencyContact(name: name, phone: phone);
     }
     // Legacy fallback
@@ -61,9 +80,16 @@ class ContactService {
     if (legacyPhone == null || legacyPhone.isEmpty) {
       return null;
     }
-    final legacyName = prefs.getString('emergency_contact_name') ?? _unknownNameFallback;
-    await _secureStorage.write(key: SecureStorageKeys.emergencyContactPhone, value: legacyPhone);
-    await _secureStorage.write(key: SecureStorageKeys.emergencyContactName, value: legacyName);
+    final legacyName =
+        prefs.getString('emergency_contact_name') ?? _unknownNameFallback;
+    await _secureStorage.write(
+      key: SecureStorageKeys.emergencyContactPhone,
+      value: legacyPhone,
+    );
+    await _secureStorage.write(
+      key: SecureStorageKeys.emergencyContactName,
+      value: legacyName,
+    );
     await prefs.remove('emergency_contact_phone');
     await prefs.remove('emergency_contact_name');
     return EmergencyContact(name: legacyName, phone: legacyPhone);
@@ -71,7 +97,9 @@ class ContactService {
 
   // Tüm acil telefon numaralarını getir
   static Future<List<String>> getAllEmergencyNumbers() async {
-    final secureValue = await _secureStorage.read(key: SecureStorageKeys.emergencyContactsList);
+    final secureValue = await _secureStorage.read(
+      key: SecureStorageKeys.emergencyContactsList,
+    );
     if (secureValue != null && secureValue.isNotEmpty) {
       final list = _decodeList(secureValue);
       if (list.isNotEmpty) return list;
