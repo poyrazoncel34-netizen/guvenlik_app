@@ -6,7 +6,8 @@ import 'package:flutter/material.dart';
 import 'app_colors.dart';
 
 class AppTheme {
-  static const _fontFamily = '.SF Pro Text'; // iOS system font, falls back on Android
+  static const _fontFamily =
+      '.SF Pro Text'; // iOS system font, falls back on Android
 
   static ThemeData get lightTheme {
     return ThemeData(
@@ -46,7 +47,9 @@ class AppTheme {
         style: ElevatedButton.styleFrom(
           elevation: 0,
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
           textStyle: const TextStyle(
             fontFamily: _fontFamily,
             fontSize: 16,

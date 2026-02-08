@@ -7,7 +7,9 @@ class BackgroundSyncService {
 
   @pragma('vm:entry-point')
   static void callbackDispatcher() {
-    debugPrint('BackgroundSync: Workmanager disabled due to compatibility issues');
+    debugPrint(
+      'BackgroundSync: Workmanager disabled due to compatibility issues',
+    );
   }
 
   static Future<void> initialize() async {

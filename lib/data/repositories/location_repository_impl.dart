@@ -18,7 +18,10 @@ class LocationRepositoryImpl implements LocationRepository {
   }
 
   @override
-  Stream<dynamic>? getPositionStream({bool highAccuracy = true, int distanceFilter = 10}) {
+  Stream<dynamic>? getPositionStream({
+    bool highAccuracy = true,
+    int distanceFilter = 10,
+  }) {
     return _locationService.getPositionStream(
       highAccuracy: highAccuracy,
       distanceFilter: distanceFilter,

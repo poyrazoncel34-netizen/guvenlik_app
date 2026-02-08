@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../core/app_colors.dart';
 import '../core/services/contact_service.dart';
+import '../core/services/biometric_service.dart';
 import '../core/di/service_locator.dart';
 import '../core/security/secure_storage.dart';
 import '../core/security/secure_storage_keys.dart';
@@ -22,17 +23,60 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
   String? _correctPin; // Loaded from secure storage
   EmergencyContact? _emergencyContact;
   late final SecureStorage _secureStorage = serviceLocator<SecureStorage>();
+  bool _biometricAvailable = false;
+  String _biometricLabel = 'Biyometrik';
 
   @override
   void initState() {
     super.initState();
     _loadPin();
     _loadEmergencyContact();
+    _checkBiometric();
     _startTimer();
   }
 
+  Future<void> _checkBiometric() async {
+    final available = await BiometricService.instance.isAvailable();
+    if (available && mounted) {
+      final label = await BiometricService.instance.getBiometricLabel();
+      setState(() {
+        _biometricAvailable = true;
+        _biometricLabel = label;
+      });
+      _authenticateWithBiometric();
+    }
+  }
+
+  Future<void> _authenticateWithBiometric() async {
+    final success = await BiometricService.instance.authenticate(
+      reason: 'Alarm iptali için kimliğinizi doğrulayın',
+    );
+    if (success && mounted) {
+      _timer?.cancel();
+      Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Güvendesiniz. Alarm iptal edildi."),
+          backgroundColor: AppColors.success,
+        ),
+      );
+    } else if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '$_biometricLabel doğrulaması başarısız. PIN ile iptal edebilirsiniz.',
+          ),
+          backgroundColor: AppColors.warning,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
   Future<void> _loadPin() async {
-    final secureValue = await _secureStorage.read(key: SecureStorageKeys.userPin);
+    final secureValue = await _secureStorage.read(
+      key: SecureStorageKeys.userPin,
+    );
     if (secureValue != null && secureValue.isNotEmpty) {
       if (mounted) setState(() => _correctPin = secureValue);
       return;
@@ -78,9 +122,9 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
       try {
         final launched = await launchUrl(url);
         if (!launched && mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Arama başlatılamadı")),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text("Arama başlatılamadı")));
         }
       } catch (e) {
         debugPrint("Arama hatası: $e");
@@ -149,17 +193,28 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
               decoration: BoxDecoration(
                 color: AppColors.emergency.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(30),
-                border: Border.all(color: AppColors.emergency.withValues(alpha: 0.4)),
+                border: Border.all(
+                  color: AppColors.emergency.withValues(alpha: 0.4),
+                ),
               ),
               child: const Text(
                 "GÜVENLİK DOĞRULAMASI",
-                style: TextStyle(color: AppColors.emergency, fontSize: 14, fontWeight: FontWeight.w800, letterSpacing: 1.2),
+                style: TextStyle(
+                  color: AppColors.emergency,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 1.2,
+                ),
               ),
             ),
             const SizedBox(height: 28),
             Text(
               "$_timeLeft",
-              style: const TextStyle(color: AppColors.textPrimary, fontSize: 80, fontWeight: FontWeight.w800),
+              style: const TextStyle(
+                color: AppColors.textPrimary,
+                fontSize: 80,
+                fontWeight: FontWeight.w800,
+              ),
             ),
             const Text(
               "saniye içinde PIN girilmezse\nACİL ARAMA YAPILACAK",
@@ -170,7 +225,10 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
             if (_emergencyContact != null)
               Text(
                 "Acil kişi: ${_emergencyContact!.name}",
-                style: const TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600),
+                style: const TextStyle(
+                  color: AppColors.textSecondary,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             const SizedBox(height: 10),
             const Text(
@@ -188,11 +246,37 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
                   height: 15,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: index < _enteredPin.length ? AppColors.emergency : AppColors.border,
+                    color: index < _enteredPin.length
+                        ? AppColors.emergency
+                        : AppColors.border,
                   ),
                 );
               }),
             ),
+            if (_biometricAvailable) ...[
+              const SizedBox(height: 12),
+              OutlinedButton.icon(
+                onPressed: _authenticateWithBiometric,
+                icon: Icon(
+                  _biometricLabel == 'Face ID'
+                      ? Icons.face_rounded
+                      : Icons.fingerprint_rounded,
+                  size: 22,
+                ),
+                label: Text('$_biometricLabel ile İptal Et'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.primary,
+                  side: const BorderSide(color: AppColors.primary, width: 1.5),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 14,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+              ),
+            ],
             const SizedBox(height: 40),
             // Numara Tuşları
             Expanded(
@@ -206,14 +290,21 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
                 ),
                 itemCount: 12,
                 itemBuilder: (context, index) {
-                  if (index == 9) return const SizedBox(); 
-                  if (index == 11) { // Silme Tuşu
+                  if (index == 9) return const SizedBox();
+                  if (index == 11) {
+                    // Silme Tuşu
                     return IconButton(
-                      icon: const Icon(Icons.backspace, color: AppColors.textPrimary),
+                      icon: const Icon(
+                        Icons.backspace,
+                        color: AppColors.textPrimary,
+                      ),
                       onPressed: () {
                         setState(() {
                           if (_enteredPin.isNotEmpty) {
-                            _enteredPin = _enteredPin.substring(0, _enteredPin.length - 1);
+                            _enteredPin = _enteredPin.substring(
+                              0,
+                              _enteredPin.length - 1,
+                            );
                           }
                         });
                       },
@@ -226,7 +317,13 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
                       shape: const CircleBorder(),
                     ),
                     onPressed: () => _onNumberPress(number),
-                    child: Text(number, style: const TextStyle(fontSize: 24, color: AppColors.textPrimary)),
+                    child: Text(
+                      number,
+                      style: const TextStyle(
+                        fontSize: 24,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
                   );
                 },
               ),

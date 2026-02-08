@@ -1,0 +1,21 @@
+default_platform(:ios)
+
+platform :ios do
+  desc "Push a new beta build to TestFlight"
+  lane :beta do
+    # Ensure Flutter assets are built
+    Dir.chdir("../..") do
+      sh "flutter build ios --release --no-codesign"
+    end
+    
+    # Archive and export the IPA
+    build_app(
+      workspace: "Runner.xcworkspace",
+      scheme: "Runner",
+      export_method: "app-store"
+    )
+    
+    # Upload to TestFlight
+    upload_to_testflight
+  end
+end

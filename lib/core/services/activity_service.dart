@@ -14,7 +14,9 @@ class ActivityService {
     if (raw == null || raw.isEmpty) return [];
     try {
       return raw
-          .map((e) => ActivityEvent.fromMap(jsonDecode(e) as Map<String, dynamic>))
+          .map(
+            (e) => ActivityEvent.fromMap(jsonDecode(e) as Map<String, dynamic>),
+          )
           .toList()
         ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
     } catch (_) {

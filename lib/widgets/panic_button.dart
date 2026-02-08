@@ -86,6 +86,15 @@ class _PanicButtonState extends State<PanicButton> with TickerProviderStateMixin
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.sizeOf(context);
+    final shortSide = size.shortestSide;
+    // Scale button to ~38% of shortest side, clamped for small phones and large tablets
+    final baseSize = (shortSide * 0.38).clamp(160.0, 240.0);
+    final buttonSize = _isArmed ? baseSize * 0.92 : baseSize;
+    final iconSize = (baseSize * 0.34).clamp(56.0, 88.0);
+    final titleFontSize = (baseSize * 0.092).clamp(14.0, 24.0);
+    final subtitleFontSize = (baseSize * 0.048).clamp(10.0, 13.0);
+
     return Semantics(
       label: 'Acil Durum Butonu',
       hint: 'Basılı tutarak acil yardım çağırın. İki saniye basılı tutun.',
@@ -97,17 +106,17 @@ class _PanicButtonState extends State<PanicButton> with TickerProviderStateMixin
         alignment: Alignment.center,
         children: [
           // Pulse rings (shown when NOT armed)
-          if (!_isArmed) ..._buildIdlePulseRings(),
+          if (!_isArmed) ..._buildIdlePulseRings(baseSize),
 
           // Armed pulse rings (shown when armed)
-          if (_isArmed) ..._buildArmedPulseRings(),
+          if (_isArmed) ..._buildArmedPulseRings(baseSize),
 
           // Main button
           AnimatedContainer(
             duration: const Duration(milliseconds: 150),
             curve: Curves.easeOut,
-            width: _isArmed ? 230 : 250,
-            height: _isArmed ? 230 : 250,
+            width: buttonSize,
+            height: buttonSize,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               gradient: LinearGradient(
@@ -139,22 +148,23 @@ class _PanicButtonState extends State<PanicButton> with TickerProviderStateMixin
                   child: Icon(
                     _isArmed ? Icons.warning_rounded : Icons.shield_rounded,
                     key: ValueKey(_isArmed),
-                    size: _isArmed ? 80 : 90,
+                    size: iconSize,
                     color: Colors.white,
                   ),
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: baseSize * 0.048),
 
                 // Text
                 AnimatedSwitcher(
                   duration: const Duration(milliseconds: 200),
                   child: Column(
                     key: ValueKey(_isArmed),
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
                         _isArmed ? "BIRAK = ACIL" : "BASILI TUT",
                         style: TextStyle(
-                          fontSize: _isArmed ? 18 : 24,
+                          fontSize: _isArmed ? titleFontSize * 0.75 : titleFontSize,
                           fontWeight: FontWeight.w900,
                           color: Colors.white,
                           letterSpacing: _isArmed ? 2.2 : 2.8,
@@ -164,7 +174,7 @@ class _PanicButtonState extends State<PanicButton> with TickerProviderStateMixin
                       Text(
                         _isArmed ? "10 SANIYE GERİ SAYIM" : "GÜVENDE OLANA KADAR",
                         style: TextStyle(
-                          fontSize: _isArmed ? 11 : 12,
+                          fontSize: _isArmed ? subtitleFontSize * 0.95 : subtitleFontSize,
                           fontWeight: FontWeight.w700,
                           color: Colors.white.withValues(alpha: 0.9),
                           letterSpacing: 0.8,
@@ -182,16 +192,18 @@ class _PanicButtonState extends State<PanicButton> with TickerProviderStateMixin
     );
   }
 
-  // Idle state pulse rings (blue/purple)
-  List<Widget> _buildIdlePulseRings() {
+  // Idle state pulse rings (blue/purple) - scaled to baseSize
+  List<Widget> _buildIdlePulseRings(double baseSize) {
+    final scale = baseSize / 250;
     return [
       AnimatedBuilder(
         animation: _pulseController,
         builder: (context, child) {
           final opacity = (0.18 - (_pulseController.value * 0.12)).clamp(0.0, 1.0);
+          final size = (270 + (_pulseController.value * 45)) * scale;
           return Container(
-            width: 270 + (_pulseController.value * 45),
-            height: 270 + (_pulseController.value * 45),
+            width: size,
+            height: size,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(
@@ -206,9 +218,10 @@ class _PanicButtonState extends State<PanicButton> with TickerProviderStateMixin
         animation: _pulseController,
         builder: (context, child) {
           final opacity = (0.14 - (_pulseController.value * 0.09)).clamp(0.0, 1.0);
+          final size = (290 + (_pulseController.value * 25)) * scale;
           return Container(
-            width: 290 + (_pulseController.value * 25),
-            height: 290 + (_pulseController.value * 25),
+            width: size,
+            height: size,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(
@@ -222,16 +235,18 @@ class _PanicButtonState extends State<PanicButton> with TickerProviderStateMixin
     ];
   }
 
-  // Armed state pulse rings (red - danger)
-  List<Widget> _buildArmedPulseRings() {
+  // Armed state pulse rings (red - danger) - scaled to baseSize
+  List<Widget> _buildArmedPulseRings(double baseSize) {
+    final scale = baseSize / 250;
     return [
       AnimatedBuilder(
         animation: _armedPulseController,
         builder: (context, child) {
           final value = _armedPulseController.value;
+          final size = (250 + (value * 30)) * scale;
           return Container(
-            width: 250 + (value * 30),
-            height: 250 + (value * 30),
+            width: size,
+            height: size,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(
@@ -246,9 +261,10 @@ class _PanicButtonState extends State<PanicButton> with TickerProviderStateMixin
         animation: _armedPulseController,
         builder: (context, child) {
           final value = _armedPulseController.value;
+          final size = (270 + (value * 40)) * scale;
           return Container(
-            width: 270 + (value * 40),
-            height: 270 + (value * 40),
+            width: size,
+            height: size,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(
@@ -263,9 +279,10 @@ class _PanicButtonState extends State<PanicButton> with TickerProviderStateMixin
         animation: _armedPulseController,
         builder: (context, child) {
           final value = _armedPulseController.value;
+          final size = (290 + (value * 50)) * scale;
           return Container(
-            width: 290 + (value * 50),
-            height: 290 + (value * 50),
+            width: size,
+            height: size,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(

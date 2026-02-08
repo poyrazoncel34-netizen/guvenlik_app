@@ -32,6 +32,8 @@ class CrashlyticsTestHelper {
   /// Özel log / analytics event testi.
   static Future<void> logTestEvent() async {
     if (kReleaseMode) return;
-    await FirebaseCrashlytics.instance.log('Test log from CrashlyticsTestHelper');
+    await FirebaseCrashlytics.instance.log(
+      'Test log from CrashlyticsTestHelper',
+    );
   }
 }

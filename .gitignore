@@ -45,6 +45,7 @@ app.*.map.json
 /android/app/release
 
 # Security - NEVER commit these
+key.properties
 android/key.properties
 *.jks
 *.keystore
@@ -53,6 +54,7 @@ ios/Runner/GoogleService-Info.plist
 ios/firebase_app_id_file.json
 .env
 *.env.*
+!.env.example
 
 # Sensitive documentation (may contain keys/secrets)
 BUILD_NOW.md

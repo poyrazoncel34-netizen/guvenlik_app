@@ -6,8 +6,5 @@ abstract class EmergencyRepository {
     required double? lng,
   });
 
-  Future<void> updateLocation({
-    required double lat,
-    required double lng,
-  });
+  Future<void> updateLocation({required double lat, required double lng});
 }

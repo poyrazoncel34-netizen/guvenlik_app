@@ -9,10 +9,7 @@
 class AppEnvironment {
   AppEnvironment._();
 
-  static const String _env = String.fromEnvironment(
-    'ENV',
-    defaultValue: 'dev',
-  );
+  static const String _env = String.fromEnvironment('ENV', defaultValue: 'dev');
 
   static bool get isProduction => _env == 'production';
   static bool get isDev => !isProduction;

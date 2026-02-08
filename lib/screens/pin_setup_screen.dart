@@ -30,7 +30,9 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
     if (key == "DEL") {
       setState(() {
         if (_isConfirming) {
-          if (_confirmPin.isNotEmpty) _confirmPin = _confirmPin.substring(0, _confirmPin.length - 1);
+          if (_confirmPin.isNotEmpty) {
+            _confirmPin = _confirmPin.substring(0, _confirmPin.length - 1);
+          }
         } else {
           if (_pin.isNotEmpty) _pin = _pin.substring(0, _pin.length - 1);
         }
@@ -94,10 +96,13 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
   @override
   Widget build(BuildContext context) {
     final currentPin = _isConfirming ? _confirmPin : _pin;
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: Padding(
+    return Semantics(
+      label: 'PIN kurulum ekranı',
+      hint: '4 haneli güvenlik PIN\'i belirleyin',
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        body: SafeArea(
+          child: Padding(
           padding: const EdgeInsets.all(24),
           child: Column(
             children: [
@@ -109,11 +114,17 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
                   color: AppColors.primary.withValues(alpha: 0.12),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.lock_rounded, size: 40, color: AppColors.primary),
+                child: const Icon(
+                  Icons.lock_rounded,
+                  size: 40,
+                  color: AppColors.primary,
+                ),
               ),
               const SizedBox(height: 24),
               Text(
-                _isConfirming ? "PIN'i Tekrar Girin" : "Guvenlik PIN'i Belirleyin",
+                _isConfirming
+                    ? "PIN'i Tekrar Girin"
+                    : "Guvenlik PIN'i Belirleyin",
                 style: const TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.w800,
@@ -126,12 +137,18 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
                     ? "Dogrulamak icin ayni PIN'i tekrar girin"
                     : "Acil durum iptali icin ${AppConstants.pinLength} haneli PIN belirleyin",
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 14, color: AppColors.textSecondary),
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: AppColors.textSecondary,
+                ),
               ),
               if (_errorMessage != null) ...[
                 const SizedBox(height: 16),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 10,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.emergency.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
@@ -157,7 +174,9 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
                     height: 20,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: index < currentPin.length ? AppColors.primary : AppColors.border,
+                      color: index < currentPin.length
+                          ? AppColors.primary
+                          : AppColors.border,
                     ),
                   );
                 }),
@@ -169,6 +188,7 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
           ),
         ),
       ),
+    ),
     );
   }
 

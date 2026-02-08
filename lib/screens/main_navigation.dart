@@ -36,9 +36,17 @@ class _MainNavigationState extends State<MainNavigation> {
   }
 
   Future<void> _initFirebaseServices() async {
-    await NotificationService.instance.initialize();
-    await FirebaseService.instance.upsertUserProfile();
-    FirebaseService.instance.listenForTokenUpdates();
+    try {
+      await NotificationService.instance.initialize();
+    } catch (e) {
+      debugPrint('NotificationService init failed (push may be disabled): $e');
+    }
+    try {
+      await FirebaseService.instance.upsertUserProfile();
+      FirebaseService.instance.listenForTokenUpdates();
+    } catch (e) {
+      debugPrint('FirebaseService init failed: $e');
+    }
   }
 
   void _showQuickHelp(BuildContext context) {
@@ -65,7 +73,11 @@ class _MainNavigationState extends State<MainNavigation> {
             const SizedBox(height: 20),
             const Text(
               "Nasıl Yardımcı Olabiliriz?",
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.textPrimary),
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.w800,
+                color: AppColors.textPrimary,
+              ),
             ),
             const SizedBox(height: 24),
             _buildHelpOption(
@@ -158,11 +170,12 @@ class _MainNavigationState extends State<MainNavigation> {
               Container(
                 width: 44,
                 height: 44,
-                decoration: BoxDecoration(
-                  color: color,
-                  shape: BoxShape.circle,
+                decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+                child: const Icon(
+                  Icons.call_rounded,
+                  color: Colors.white,
+                  size: 22,
                 ),
-                child: const Icon(Icons.call_rounded, color: Colors.white, size: 22),
               ),
             ],
           ),
@@ -176,10 +189,7 @@ class _MainNavigationState extends State<MainNavigation> {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      body: IndexedStack(
-        index: _selectedIndex,
-        children: _pages,
-      ),
+      body: IndexedStack(index: _selectedIndex, children: _pages),
       // Floating Action Button - Only on Home screen
       floatingActionButton: _selectedIndex == 0
           ? FloatingActionButton.extended(
@@ -192,7 +202,11 @@ class _MainNavigationState extends State<MainNavigation> {
               icon: const Icon(Icons.flash_on_rounded, color: Colors.white),
               label: const Text(
                 "Hızlı Yardım",
-                style: TextStyle(fontWeight: FontWeight.w800, color: Colors.white, letterSpacing: 0.3),
+                style: TextStyle(
+                  fontWeight: FontWeight.w800,
+                  color: Colors.white,
+                  letterSpacing: 0.3,
+                ),
               ),
             )
           : null,

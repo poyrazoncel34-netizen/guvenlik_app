@@ -95,7 +95,10 @@ class AnalyticsService {
   }
 
   // Generic event
-  static Future<void> _logEvent(String name, [Map<String, Object>? params]) async {
+  static Future<void> _logEvent(
+    String name, [
+    Map<String, Object>? params,
+  ]) async {
     try {
       await _analytics.logEvent(name: name, parameters: params);
     } catch (e) {

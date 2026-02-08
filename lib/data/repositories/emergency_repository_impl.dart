@@ -22,10 +22,7 @@ class EmergencyRepositoryImpl implements EmergencyRepository {
   }
 
   @override
-  Future<void> updateLocation({
-    required double lat,
-    required double lng,
-  }) {
+  Future<void> updateLocation({required double lat, required double lng}) {
     return _remote.updateLocation(lat: lat, lng: lng);
   }
 }

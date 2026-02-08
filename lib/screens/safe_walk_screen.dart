@@ -101,7 +101,10 @@ class _SafeWalkScreenState extends State<SafeWalkScreen> {
           children: [
             Icon(Icons.check_circle_rounded, color: Colors.white),
             SizedBox(width: 12),
-            Text("Guvende oldugunuz kaydedildi!", style: TextStyle(fontWeight: FontWeight.w600)),
+            Text(
+              "Guvende oldugunuz kaydedildi!",
+              style: TextStyle(fontWeight: FontWeight.w600),
+            ),
           ],
         ),
         backgroundColor: AppColors.success,
@@ -172,18 +175,30 @@ class _SafeWalkScreenState extends State<SafeWalkScreen> {
                   color: AppColors.accent.withValues(alpha: 0.12),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.directions_walk_rounded, size: 40, color: AppColors.accent),
+                child: const Icon(
+                  Icons.directions_walk_rounded,
+                  size: 40,
+                  color: AppColors.accent,
+                ),
               ),
               const SizedBox(height: 20),
               const Text(
                 "Guvenli Yuruyus",
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: AppColors.textPrimary),
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textPrimary,
+                ),
               ),
               const SizedBox(height: 10),
               const Text(
                 "Bir zamanlayici baslatin. Sure doldugunuzda\n'Guvendeyim' butonuna basmazsiniz, otomatik\nolarak acil kisilerinize bildirim gonderilir.",
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 14, color: AppColors.textSecondary, height: 1.5),
+                style: TextStyle(
+                  fontSize: 14,
+                  color: AppColors.textSecondary,
+                  height: 1.5,
+                ),
               ),
             ],
           ),
@@ -193,7 +208,11 @@ class _SafeWalkScreenState extends State<SafeWalkScreen> {
           alignment: Alignment.centerLeft,
           child: Text(
             "Sure Secin",
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.textPrimary),
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
+              color: AppColors.textPrimary,
+            ),
           ),
         ),
         const SizedBox(height: 14),
@@ -208,7 +227,10 @@ class _SafeWalkScreenState extends State<SafeWalkScreen> {
                 setState(() => _selectedMinutes = min);
               },
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 14,
+                ),
                 decoration: BoxDecoration(
                   color: isSelected ? AppColors.accent : AppColors.cardBg,
                   borderRadius: BorderRadius.circular(14),
@@ -243,7 +265,9 @@ class _SafeWalkScreenState extends State<SafeWalkScreen> {
               backgroundColor: AppColors.accent,
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(vertical: 18),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
               elevation: 0,
             ),
           ),
@@ -279,7 +303,9 @@ class _SafeWalkScreenState extends State<SafeWalkScreen> {
             Column(
               children: [
                 Icon(
-                  isUrgent ? Icons.warning_rounded : Icons.directions_walk_rounded,
+                  isUrgent
+                      ? Icons.warning_rounded
+                      : Icons.directions_walk_rounded,
                   size: 36,
                   color: isUrgent ? AppColors.emergency : AppColors.accent,
                 ),
@@ -289,7 +315,9 @@ class _SafeWalkScreenState extends State<SafeWalkScreen> {
                   style: TextStyle(
                     fontSize: 48,
                     fontWeight: FontWeight.w900,
-                    color: isUrgent ? AppColors.emergency : AppColors.textPrimary,
+                    color: isUrgent
+                        ? AppColors.emergency
+                        : AppColors.textPrimary,
                     letterSpacing: 2,
                   ),
                 ),
@@ -298,7 +326,9 @@ class _SafeWalkScreenState extends State<SafeWalkScreen> {
                   isUrgent ? "Acele edin!" : "Kalan sure",
                   style: TextStyle(
                     fontSize: 14,
-                    color: isUrgent ? AppColors.emergency : AppColors.textSecondary,
+                    color: isUrgent
+                        ? AppColors.emergency
+                        : AppColors.textSecondary,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -313,7 +343,9 @@ class _SafeWalkScreenState extends State<SafeWalkScreen> {
             decoration: BoxDecoration(
               color: AppColors.emergency.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: AppColors.emergency.withValues(alpha: 0.3)),
+              border: Border.all(
+                color: AppColors.emergency.withValues(alpha: 0.3),
+              ),
             ),
             child: const Row(
               children: [
@@ -346,7 +378,9 @@ class _SafeWalkScreenState extends State<SafeWalkScreen> {
               backgroundColor: AppColors.success,
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(vertical: 20),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
               elevation: 0,
             ),
           ),
@@ -356,7 +390,10 @@ class _SafeWalkScreenState extends State<SafeWalkScreen> {
           onPressed: _cancelWalk,
           child: const Text(
             "Iptal Et",
-            style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600),
+            style: TextStyle(
+              color: AppColors.textSecondary,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
         const SizedBox(height: 16),
@@ -370,7 +407,10 @@ class _SafeWalkScreenState extends State<SafeWalkScreen> {
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.cardBg,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text("Dikkat", style: TextStyle(color: AppColors.textPrimary)),
+        title: const Text(
+          "Dikkat",
+          style: TextStyle(color: AppColors.textPrimary),
+        ),
         content: const Text(
           "Guvenli yuruyus aktif. Cikarsiniz geri sayim devam eder ve sure dolunca acil durum tetiklenir.",
           style: TextStyle(color: AppColors.textSecondary),
@@ -386,7 +426,10 @@ class _SafeWalkScreenState extends State<SafeWalkScreen> {
               Navigator.pop(ctx);
               Navigator.pop(context);
             },
-            child: const Text("Iptal Et ve Cik", style: TextStyle(color: AppColors.emergency)),
+            child: const Text(
+              "Iptal Et ve Cik",
+              style: TextStyle(color: AppColors.emergency),
+            ),
           ),
         ],
       ),

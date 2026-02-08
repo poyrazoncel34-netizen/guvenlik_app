@@ -20,11 +20,7 @@ class LocationResult {
   final LatLng? position;
   final String? errorMessage;
 
-  LocationResult({
-    required this.status,
-    this.position,
-    this.errorMessage,
-  });
+  LocationResult({required this.status, this.position, this.errorMessage});
 
   bool get isSuccess => status == LocationStatus.success && position != null;
 }
@@ -86,7 +82,8 @@ class LocationService {
     if (permission == LocationPermission.deniedForever) {
       return LocationResult(
         status: LocationStatus.permissionDeniedForever,
-        errorMessage: 'Konum izni kalıcı olarak reddedildi. Ayarlardan izin verin.',
+        errorMessage:
+            'Konum izni kalıcı olarak reddedildi. Ayarlardan izin verin.',
       );
     }
 
@@ -95,20 +92,21 @@ class LocationService {
   }
 
   /// Mevcut konumu alır
-  Future<LocationResult> getCurrentLocation({
-    bool highAccuracy = true,
-  }) async {
+  Future<LocationResult> getCurrentLocation({bool highAccuracy = true}) async {
     try {
       // İzinleri kontrol et
       final permissionResult = await _handlePermissions();
-      if (!permissionResult.isSuccess && permissionResult.status != LocationStatus.success) {
+      if (!permissionResult.isSuccess &&
+          permissionResult.status != LocationStatus.success) {
         return permissionResult;
       }
 
       // Konum al
       final position = await Geolocator.getCurrentPosition(
         locationSettings: LocationSettings(
-          accuracy: highAccuracy ? LocationAccuracy.high : LocationAccuracy.medium,
+          accuracy: highAccuracy
+              ? LocationAccuracy.high
+              : LocationAccuracy.medium,
           timeLimit: const Duration(seconds: 10),
         ),
       );
@@ -116,10 +114,7 @@ class LocationService {
       final latLng = LatLng(position.latitude, position.longitude);
       _lastKnownPosition = latLng;
 
-      return LocationResult(
-        status: LocationStatus.success,
-        position: latLng,
-      );
+      return LocationResult(status: LocationStatus.success, position: latLng);
     } catch (e) {
       return LocationResult(
         status: LocationStatus.error,
@@ -133,7 +128,8 @@ class LocationService {
     try {
       // İzinleri kontrol et
       final permissionResult = await _handlePermissions();
-      if (!permissionResult.isSuccess && permissionResult.status != LocationStatus.success) {
+      if (!permissionResult.isSuccess &&
+          permissionResult.status != LocationStatus.success) {
         return permissionResult;
       }
 
@@ -143,10 +139,7 @@ class LocationService {
         final latLng = LatLng(position.latitude, position.longitude);
         _lastKnownPosition = latLng;
 
-        return LocationResult(
-          status: LocationStatus.success,
-          position: latLng,
-        );
+        return LocationResult(status: LocationStatus.success, position: latLng);
       }
 
       // Son konum yoksa mevcut konumu al
@@ -167,7 +160,9 @@ class LocationService {
     try {
       return Geolocator.getPositionStream(
         locationSettings: LocationSettings(
-          accuracy: highAccuracy ? LocationAccuracy.high : LocationAccuracy.medium,
+          accuracy: highAccuracy
+              ? LocationAccuracy.high
+              : LocationAccuracy.medium,
           distanceFilter: distanceFilter,
         ),
       );

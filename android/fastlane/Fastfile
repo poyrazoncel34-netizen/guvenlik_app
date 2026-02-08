@@ -1,0 +1,30 @@
+default_platform(:android)
+
+platform :android do
+  desc "Build AAB and deploy to Internal Test Track"
+  lane :internal do
+    # Build the AAB
+    # We use sh to run flutter build from the root directory
+    Dir.chdir("../..") do
+      sh "flutter build appbundle --release --dart-define=ENV=production"
+    end
+    
+    # Upload to Play Store
+    upload_to_play_store(
+      track: 'internal',
+      aab: '../build/app/outputs/bundle/release/app-release.aab',
+      skip_upload_metadata: false,
+      skip_upload_images: false,
+      skip_upload_screenshots: false
+    )
+  end
+
+  desc "Promote Internal to Production"
+  lane :promote_to_production do
+    upload_to_play_store(
+      track: 'production',
+      aab: '../build/app/outputs/bundle/release/app-release.aab',
+      track_promote_to: 'production'
+    )
+  end
+end

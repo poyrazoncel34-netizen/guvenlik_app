@@ -1,5 +1,6 @@
 import 'dart:async';
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:fluttercontactpicker_plus/fluttercontactpicker_plus.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -7,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/services/activity_service.dart';
 import '../../core/services/contact_service.dart';
 import '../../core/di/service_locator.dart';
+import '../../core/utils/permission_helper.dart';
 import '../../core/services/location_service.dart';
 import '../../domain/models/activity_event.dart' as app_activity;
 import '../../domain/repositories/contacts_repository.dart';
@@ -18,9 +20,12 @@ class HomeProvider extends ChangeNotifier {
   static const String onboardingKey = "onboarding_dismissed";
 
   // late: serviceLocator'a ilk kullanımda erişilir (constructor'da değil)
-  late final LocationService _locationService = serviceLocator<LocationService>();
-  late final ContactsRepository _contactsRepository = serviceLocator<ContactsRepository>();
-  late final EmergencyRepository _emergencyRepository = serviceLocator<EmergencyRepository>();
+  late final LocationService _locationService =
+      serviceLocator<LocationService>();
+  late final ContactsRepository _contactsRepository =
+      serviceLocator<ContactsRepository>();
+  late final EmergencyRepository _emergencyRepository =
+      serviceLocator<EmergencyRepository>();
 
   EmergencyContact? _emergencyContact;
   bool _contactsPermissionGranted = false;
@@ -63,9 +68,13 @@ class HomeProvider extends ChangeNotifier {
   Future<void> _loadPermissionsStatus() async {
     final serviceEnabled = await _locationService.isLocationServiceEnabled();
     final permission = await _locationService.checkPermission();
-    final locationGranted = serviceEnabled &&
-        (permission == LocationPermission.always || permission == LocationPermission.whileInUse);
-    final contactsGranted = kIsWeb ? false : await FlutterContactPicker.hasPermission();
+    final locationGranted =
+        serviceEnabled &&
+        (permission == LocationPermission.always ||
+            permission == LocationPermission.whileInUse);
+    final contactsGranted = kIsWeb
+        ? false
+        : await FlutterContactPicker.hasPermission();
 
     _locationPermissionGranted = locationGranted;
     _contactsPermissionGranted = contactsGranted;
@@ -86,7 +95,13 @@ class HomeProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<String?> requestLocationPermission() async {
+  /// Request location permission. Pass BuildContext for "Ayarlara Git" dialogs.
+  Future<String?> requestLocationPermission({BuildContext? context}) async {
+    if (context != null && context.mounted) {
+      final granted = await PermissionHelper.requestLocationPermission(context);
+      await _loadPermissionsStatus();
+      return granted ? null : "Konum izni verilemedi";
+    }
     final serviceEnabled = await _locationService.isLocationServiceEnabled();
     if (!serviceEnabled) {
       await _locationService.openLocationSettings();
@@ -110,7 +125,9 @@ class HomeProvider extends ChangeNotifier {
     _locationShareEndAt = DateTime.now().add(Duration(minutes: minutes));
     _isLocationSharing = true;
     _locationShareTimer?.cancel();
-    _locationShareTimer = Timer.periodic(const Duration(seconds: 30), (timer) async {
+    _locationShareTimer = Timer.periodic(const Duration(seconds: 30), (
+      timer,
+    ) async {
       if (_locationShareEndAt == null) return;
       final remaining = _locationShareEndAt!.difference(DateTime.now());
       if (remaining.isNegative || remaining.inSeconds == 0) {

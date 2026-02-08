@@ -13,10 +13,13 @@ import '../core/security/secure_storage.dart';
 import '../core/security/secure_storage_keys.dart';
 import '../core/app_colors.dart';
 import '../core/services/contact_service.dart';
+import '../core/services/biometric_service.dart';
 import '../domain/repositories/contacts_repository.dart';
 import '../domain/repositories/emergency_repository.dart';
 import '../domain/repositories/location_repository.dart';
 import '../core/services/activity_service.dart';
+import '../core/services/connectivity_service.dart';
+import '../core/services/offline_queue_service.dart';
 import '../domain/models/activity_event.dart';
 import 'emergency_call_screen.dart';
 
@@ -29,29 +32,79 @@ class CountdownScreen extends StatefulWidget {
   State<CountdownScreen> createState() => _CountdownScreenState();
 }
 
-class _CountdownScreenState extends State<CountdownScreen> with TickerProviderStateMixin {
+class _CountdownScreenState extends State<CountdownScreen>
+    with TickerProviderStateMixin {
   int _countdown = 10;
   Timer? _timer;
   String _pin = "";
   String? _correctPin; // null until loaded - no default fallback
   late AnimationController _shakeController;
   EmergencyContact? _emergencyContact;
-  late final LocationRepository _locationRepository = serviceLocator<LocationRepository>();
-  late final ContactsRepository _contactsRepository = serviceLocator<ContactsRepository>();
-  late final EmergencyRepository _emergencyRepository = serviceLocator<EmergencyRepository>();
+  late final LocationRepository _locationRepository =
+      serviceLocator<LocationRepository>();
+  late final ContactsRepository _contactsRepository =
+      serviceLocator<ContactsRepository>();
+  late final EmergencyRepository _emergencyRepository =
+      serviceLocator<EmergencyRepository>();
   late final SecureStorage _secureStorage = serviceLocator<SecureStorage>();
+  bool _biometricAvailable = false;
+  String _biometricLabel = 'Biyometrik';
 
   @override
   void initState() {
     super.initState();
-    _shakeController = AnimationController(vsync: this, duration: const Duration(milliseconds: 500));
+    _shakeController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    );
     _loadPin();
     _loadEmergencyContact();
+    _checkBiometric();
     _startCountdown();
   }
 
+  Future<void> _checkBiometric() async {
+    final available = await BiometricService.instance.isAvailable();
+    if (available && mounted) {
+      final label = await BiometricService.instance.getBiometricLabel();
+      setState(() {
+        _biometricAvailable = true;
+        _biometricLabel = label;
+      });
+      // Auto-prompt biometric on entry
+      _authenticateWithBiometric();
+    }
+  }
+
+  Future<void> _authenticateWithBiometric() async {
+    final success = await BiometricService.instance.authenticate(
+      reason: 'Acil uyarıyı iptal etmek için kimliğinizi doğrulayın',
+    );
+    if (success && mounted) {
+      _timer?.cancel();
+      ActivityService.logEvent(
+        type: ActivityType.emergencyCancelled,
+        title: "Acil Uyari Iptal Edildi",
+        description: "$_biometricLabel ile iptal edildi",
+      );
+      Navigator.pop(context);
+    } else if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '$_biometricLabel doğrulaması başarısız. PIN ile iptal edebilirsiniz.',
+          ),
+          backgroundColor: AppColors.warning,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
   Future<void> _loadPin() async {
-    final secureValue = await _secureStorage.read(key: SecureStorageKeys.userPin);
+    final secureValue = await _secureStorage.read(
+      key: SecureStorageKeys.userPin,
+    );
     if (secureValue != null && secureValue.isNotEmpty) {
       if (mounted) setState(() => _correctPin = secureValue);
       return;
@@ -91,7 +144,10 @@ class _CountdownScreenState extends State<CountdownScreen> with TickerProviderSt
     if (widget.isTestMode) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Test tamamlandı. Gerçek arama yapılmadı."), backgroundColor: AppColors.success),
+          const SnackBar(
+            content: Text("Test tamamlandı. Gerçek arama yapılmadı."),
+            backgroundColor: AppColors.success,
+          ),
         );
         Navigator.pop(context);
       }
@@ -101,9 +157,9 @@ class _CountdownScreenState extends State<CountdownScreen> with TickerProviderSt
     final numbers = await _contactsRepository.getAllEmergencyNumbers();
     if (numbers.isEmpty) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Acil kişi seçilmedi")),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text("Acil kişi seçilmedi")));
         Navigator.pop(context);
       }
       return;
@@ -116,18 +172,41 @@ class _CountdownScreenState extends State<CountdownScreen> with TickerProviderSt
         ? "ACİL DURUM! Konumum: https://www.google.com/maps/search/?api=1&query=$lat,$lng"
         : "ACİL DURUM! Konumum paylaşılamadı. Lütfen bana ulaşın.";
 
-    if (lat != null && lng != null) {
-      await _emergencyRepository.updateLocation(lat: lat, lng: lng);
-    }
-    try {
-      await _emergencyRepository.createEmergencyEvent(
-        title: "Acil Durum",
-        message: message,
-        lat: lat,
-        lng: lng,
+    final isOnline = ConnectivityService.instance.isOnline;
+    if (!isOnline) {
+      await OfflineQueueService.instance.enqueue(
+        OfflineEvent(
+          type: 'emergency',
+          title: 'Acil Durum',
+          description: message,
+          data: {'message': message, 'lat': lat, 'lng': lng},
+        ),
       );
-    } catch (_) {
-      // Continue even if Firebase fails - emergency must proceed
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text(
+              "Çevrimdışı - kaydedildi, bağlantı gelince gönderilecek",
+            ),
+            backgroundColor: AppColors.warning,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } else {
+      if (lat != null && lng != null) {
+        await _emergencyRepository.updateLocation(lat: lat, lng: lng);
+      }
+      try {
+        await _emergencyRepository.createEmergencyEvent(
+          title: "Acil Durum",
+          message: message,
+          lat: lat,
+          lng: lng,
+        );
+      } catch (_) {
+        // Continue even if Firebase fails - emergency must proceed
+      }
     }
 
     await ActivityService.logEvent(
@@ -145,7 +224,8 @@ class _CountdownScreenState extends State<CountdownScreen> with TickerProviderSt
       await launchUrl(smsUri);
     }
 
-    final primaryNumber = _emergencyContact?.phone ?? (numbers.isNotEmpty ? numbers.first : null);
+    final primaryNumber =
+        _emergencyContact?.phone ?? (numbers.isNotEmpty ? numbers.first : null);
     if (primaryNumber != null && primaryNumber.isNotEmpty) {
       final uri = Uri(scheme: 'tel', path: primaryNumber);
       try {
@@ -177,7 +257,9 @@ class _CountdownScreenState extends State<CountdownScreen> with TickerProviderSt
     HapticFeedback.lightImpact();
 
     if (key == "DEL") {
-      if (_pin.isNotEmpty) setState(() => _pin = _pin.substring(0, _pin.length - 1));
+      if (_pin.isNotEmpty) {
+        setState(() => _pin = _pin.substring(0, _pin.length - 1));
+      }
       return;
     }
 
@@ -197,7 +279,9 @@ class _CountdownScreenState extends State<CountdownScreen> with TickerProviderSt
           _shakeController.forward(from: 0);
           HapticFeedback.vibrate();
           Future.delayed(const Duration(milliseconds: 300), () {
-            if (mounted) setState(() => _pin = "");
+            if (mounted) {
+              setState(() => _pin = "");
+            }
           });
         }
       }
@@ -219,16 +303,27 @@ class _CountdownScreenState extends State<CountdownScreen> with TickerProviderSt
                 decoration: BoxDecoration(
                   color: AppColors.emergency.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(18),
-                  border: Border.all(color: AppColors.emergency.withValues(alpha: 0.3), width: 2),
+                  border: Border.all(
+                    color: AppColors.emergency.withValues(alpha: 0.3),
+                    width: 2,
+                  ),
                 ),
                 child: const Row(
                   children: [
-                    Icon(Icons.warning_rounded, color: AppColors.emergency, size: 26),
+                    Icon(
+                      Icons.warning_rounded,
+                      color: AppColors.emergency,
+                      size: 26,
+                    ),
                     SizedBox(width: 16),
                     Expanded(
                       child: Text(
                         "Acil uyarı devreye giriyor",
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.textPrimary),
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.textPrimary,
+                        ),
                       ),
                     ),
                   ],
@@ -237,15 +332,24 @@ class _CountdownScreenState extends State<CountdownScreen> with TickerProviderSt
               if (widget.isTestMode) ...[
                 const SizedBox(height: 10),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.success.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: AppColors.success.withValues(alpha: 0.3)),
+                    border: Border.all(
+                      color: AppColors.success.withValues(alpha: 0.3),
+                    ),
                   ),
                   child: const Text(
                     "TEST MODU: Gerçek arama yapılmaz",
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.success),
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.success,
+                    ),
                   ),
                 ),
               ],
@@ -261,7 +365,10 @@ class _CountdownScreenState extends State<CountdownScreen> with TickerProviderSt
                       strokeWidth: 14,
                       backgroundColor: AppColors.border,
                       valueColor: AlwaysStoppedAnimation<Color>(
-                          _countdown > 5 ? AppColors.warning : AppColors.emergency),
+                        _countdown > 5
+                            ? AppColors.warning
+                            : AppColors.emergency,
+                      ),
                       strokeCap: StrokeCap.round,
                     ),
                   ),
@@ -272,7 +379,9 @@ class _CountdownScreenState extends State<CountdownScreen> with TickerProviderSt
                         style: TextStyle(
                           fontSize: 70,
                           fontWeight: FontWeight.w900,
-                          color: _countdown > 5 ? AppColors.warning : AppColors.emergency,
+                          color: _countdown > 5
+                              ? AppColors.warning
+                              : AppColors.emergency,
                           height: 1,
                         ),
                       ),
@@ -280,7 +389,10 @@ class _CountdownScreenState extends State<CountdownScreen> with TickerProviderSt
                       const Text(
                         "saniye",
                         style: TextStyle(
-                            fontSize: 15, color: AppColors.textSecondary, fontWeight: FontWeight.w600),
+                          fontSize: 15,
+                          color: AppColors.textSecondary,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ],
                   ),
@@ -289,13 +401,21 @@ class _CountdownScreenState extends State<CountdownScreen> with TickerProviderSt
               const SizedBox(height: 50),
               const Text(
                 "İptal için PIN kodunuzu girin",
-                style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800, color: AppColors.textPrimary),
+                style: TextStyle(
+                  fontSize: 19,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textPrimary,
+                ),
               ),
               if (_emergencyContact != null) ...[
                 const SizedBox(height: 6),
                 Text(
                   "Acil kişi: ${_emergencyContact!.name}",
-                  style: const TextStyle(fontSize: 13, color: AppColors.textSecondary, fontWeight: FontWeight.w600),
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: AppColors.textSecondary,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ],
               const SizedBox(height: 10),
@@ -303,6 +423,33 @@ class _CountdownScreenState extends State<CountdownScreen> with TickerProviderSt
                 "Resmi kurumlara ulaşmak kullanıcı sorumluluğundadır.",
                 style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
               ),
+              if (_biometricAvailable) ...[
+                const SizedBox(height: 16),
+                OutlinedButton.icon(
+                  onPressed: _authenticateWithBiometric,
+                  icon: Icon(
+                    _biometricLabel == 'Face ID'
+                        ? Icons.face_rounded
+                        : Icons.fingerprint_rounded,
+                    size: 22,
+                  ),
+                  label: Text('$_biometricLabel ile İptal Et'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.primary,
+                    side: const BorderSide(
+                      color: AppColors.primary,
+                      width: 1.5,
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 14,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                ),
+              ],
               const Spacer(),
               AnimatedBuilder(
                 animation: _shakeController,
@@ -322,7 +469,9 @@ class _CountdownScreenState extends State<CountdownScreen> with TickerProviderSt
                       height: 18,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: index < _pin.length ? AppColors.primary : AppColors.border,
+                        color: index < _pin.length
+                            ? AppColors.primary
+                            : AppColors.border,
                       ),
                     );
                   }),
@@ -363,7 +512,10 @@ class _CountdownScreenState extends State<CountdownScreen> with TickerProviderSt
           child: Text(
             value,
             style: const TextStyle(
-                fontSize: 30, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+              fontSize: 30,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary,
+            ),
           ),
           onTap: () => _handlePinInput(value),
         );

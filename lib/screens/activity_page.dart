@@ -42,11 +42,8 @@ class _ActivityPageState extends State<ActivityPage> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _events.isEmpty
-              ? _buildEmptyState()
-              : RefreshIndicator(
-                  onRefresh: _loadEvents,
-                  child: _buildEventsList(),
-                ),
+          ? _buildEmptyState()
+          : RefreshIndicator(onRefresh: _loadEvents, child: _buildEventsList()),
     );
   }
 
@@ -64,7 +61,11 @@ class _ActivityPageState extends State<ActivityPage> {
                 color: AppColors.primary.withValues(alpha: 0.08),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.history_rounded, size: 48, color: AppColors.primary),
+              child: const Icon(
+                Icons.history_rounded,
+                size: 48,
+                color: AppColors.primary,
+              ),
             ),
             const SizedBox(height: 24),
             const Text(
@@ -98,7 +99,11 @@ class _ActivityPageState extends State<ActivityPage> {
       final now = DateTime.now();
       final today = DateTime(now.year, now.month, now.day);
       final yesterday = today.subtract(const Duration(days: 1));
-      final eventDay = DateTime(event.timestamp.year, event.timestamp.month, event.timestamp.day);
+      final eventDay = DateTime(
+        event.timestamp.year,
+        event.timestamp.month,
+        event.timestamp.day,
+      );
 
       String label;
       if (eventDay == today) {
@@ -163,7 +168,11 @@ class _ActivityPageState extends State<ActivityPage> {
               borderRadius: BorderRadius.circular(16),
               border: Border.all(color: AppColors.border),
               boxShadow: [
-                BoxShadow(color: AppColors.shadow, blurRadius: 6, offset: const Offset(0, 2)),
+                BoxShadow(
+                  color: AppColors.shadow,
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
+                ),
               ],
             ),
             child: Row(
@@ -193,7 +202,10 @@ class _ActivityPageState extends State<ActivityPage> {
                       const SizedBox(height: 4),
                       Text(
                         event.description,
-                        style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: AppColors.textSecondary,
+                        ),
                       ),
                       const SizedBox(height: 6),
                       Text(

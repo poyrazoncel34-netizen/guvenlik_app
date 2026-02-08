@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -5,6 +6,8 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 class NotificationService {
   NotificationService._();
   static final NotificationService instance = NotificationService._();
+
+  StreamSubscription<RemoteMessage>? _messageSubscription;
 
   final FlutterLocalNotificationsPlugin _localNotifications =
       FlutterLocalNotificationsPlugin();
@@ -17,15 +20,21 @@ class NotificationService {
   );
 
   Future<void> initialize() async {
-    const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const androidSettings = AndroidInitializationSettings(
+      '@mipmap/ic_launcher',
+    );
     const iosSettings = DarwinInitializationSettings();
-    const initSettings = InitializationSettings(android: androidSettings, iOS: iosSettings);
+    const initSettings = InitializationSettings(
+      android: androidSettings,
+      iOS: iosSettings,
+    );
     await _localNotifications.initialize(initSettings);
 
     if (Platform.isAndroid) {
       await _localNotifications
           .resolvePlatformSpecificImplementation<
-              AndroidFlutterLocalNotificationsPlugin>()
+            AndroidFlutterLocalNotificationsPlugin
+          >()
           ?.createNotificationChannel(_channel);
     }
 
@@ -33,11 +42,14 @@ class NotificationService {
 
     if (Platform.isIOS) {
       await _localNotifications
-          .resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>()
+          .resolvePlatformSpecificImplementation<
+            IOSFlutterLocalNotificationsPlugin
+          >()
           ?.requestPermissions(alert: true, badge: true, sound: true);
     }
 
-    FirebaseMessaging.onMessage.listen((message) {
+    _messageSubscription?.cancel();
+    _messageSubscription = FirebaseMessaging.onMessage.listen((message) {
       final notification = message.notification;
       if (notification == null) return;
       _localNotifications.show(
@@ -56,5 +68,10 @@ class NotificationService {
         ),
       );
     });
+  }
+
+  void dispose() {
+    _messageSubscription?.cancel();
+    _messageSubscription = null;
   }
 }

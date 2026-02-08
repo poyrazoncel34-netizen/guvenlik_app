@@ -13,7 +13,10 @@ class ContactsLocalDataSource {
     return ContactService.getEmergencyContact();
   }
 
-  Future<void> savePrimaryEmergencyContact({required String name, required String phone}) {
+  Future<void> savePrimaryEmergencyContact({
+    required String name,
+    required String phone,
+  }) {
     return ContactService.savePrimaryEmergencyContact(name: name, phone: phone);
   }
 
