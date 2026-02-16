@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../core/app_colors.dart';
 import '../core/di/service_locator.dart';
 import '../core/services/location_service.dart';
@@ -59,7 +60,7 @@ class _EmergencyMapScreenState extends State<EmergencyMapScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Acil Durum Haritası"),
+        title: Text("emergency_map_title".tr()),
         actions: [
           IconButton(
             icon: const Icon(Icons.my_location),
@@ -92,12 +93,12 @@ class _EmergencyMapScreenState extends State<EmergencyMapScreen> {
                   child: ElevatedButton.icon(
                     onPressed: () {
                       HapticFeedback.lightImpact();
-                      _showSnack(context, "Konum paylaşıldı");
+                      _showSnack(context, "emergency_map_shared".tr());
                     },
                     icon: const Icon(Icons.share_location, color: Colors.white),
-                    label: const Text(
-                      "Konumu Paylaş",
-                      style: TextStyle(color: Colors.white),
+                    label: Text(
+                      "emergency_map_share_btn".tr(),
+                      style: const TextStyle(color: Colors.white),
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.success,
@@ -118,9 +119,9 @@ class _EmergencyMapScreenState extends State<EmergencyMapScreen> {
                       );
                     },
                     icon: const Icon(Icons.sos, color: Colors.white),
-                    label: const Text(
-                      "Acil Yardım",
-                      style: TextStyle(color: Colors.white),
+                    label: Text(
+                      "emergency_map_help".tr(),
+                      style: const TextStyle(color: Colors.white),
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.emergency,

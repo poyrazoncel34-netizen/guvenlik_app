@@ -1,5 +1,5 @@
 name: guvenlik_app
-description: "A new Flutter project."
+description: "KoruBeni – Acil durum ve güvenlik uygulaması. Panik butonu, konum paylaşımı, acil kişiler."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -30,6 +30,7 @@ environment:
 dependencies:
   shared_preferences: ^2.2.2
   url_launcher: ^6.2.4
+  flutter_direct_caller_plugin: ^0.0.4
   google_fonts: ^6.2.1
   fluttercontactpicker_plus: ^5.1.1
   image_picker: ^1.1.2
@@ -63,10 +64,12 @@ dependencies:
   record: ^6.2.0
   # Connectivity check
   connectivity_plus: ^6.1.4
+  wakelock_plus: ^1.2.8
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
   easy_localization: ^3.0.8
+  package_info_plus: ^8.1.3
 
 dev_dependencies:
   flutter_test:

@@ -1,6 +1,10 @@
-# Android Release Signing - COPY to key.properties and fill with real values
-# key.properties is in .gitignore - NEVER commit the real file
+# Android Release Signing - REFERANS
+# Gercek dosya: android/key.properties (Gradle root = android/ icin rootProject.file("key.properties"))
+# Proje kokunde key.properties KULLANILMAZ. Sadece android/key.properties kullanilir.
+# Kurulum: cp android/key.properties.example android/key.properties  (sonra degerleri duzenleyin)
+# key.properties .gitignore'da - gercek dosyayi ASLA commit etmeyin.
 storePassword=YOUR_KEYSTORE_PASSWORD
 keyPassword=YOUR_KEY_PASSWORD
-keyAlias=upload
-storeFile=path/to/your/upload-keystore.jks
+keyAlias=korubeni
+storeFile=korubeni-release-key.jks
+

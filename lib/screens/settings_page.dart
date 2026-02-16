@@ -4,15 +4,14 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart' show defaultTargetPlatform, TargetPlatform;
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:provider/provider.dart';
-import '../core/di/service_locator.dart';
-import '../core/security/secure_storage.dart';
-import '../core/security/secure_storage_keys.dart';
+import 'package:easy_localization/easy_localization.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../core/app_colors.dart';
-import '../core/services/activity_service.dart';
-import '../domain/models/activity_event.dart';
+import '../core/utils/pin_settings_helper.dart';
 import 'profile_page.dart';
 import 'settings_detail_page.dart';
 import '../presentation/providers/settings_provider.dart';
@@ -25,12 +24,65 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
+  String _appVersion = '';
+  String _buildNumber = '';
+
   @override
   void initState() {
     super.initState();
+    _loadVersionInfo();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<SettingsProvider>().loadProfile();
     });
+  }
+
+  Future<void> _loadVersionInfo() async {
+    final info = await PackageInfo.fromPlatform();
+    if (mounted) {
+      setState(() {
+        _appVersion = info.version;
+        _buildNumber = info.buildNumber;
+      });
+    }
+  }
+
+  Future<void> _shareApp() async {
+    final shareText = defaultTargetPlatform == TargetPlatform.iOS
+        ? 'settings_share_text_ios'.tr()
+        : 'settings_share_text'.tr();
+    final uri = Uri(
+      scheme: 'sms',
+      path: '',
+      queryParameters: {'body': shareText},
+    );
+    try {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } catch (_) {
+      // Fallback: copy to clipboard
+      await Clipboard.setData(ClipboardData(text: shareText));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('link_copied'.tr()),
+            backgroundColor: AppColors.success,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _rateApp() async {
+    final url = defaultTargetPlatform == TargetPlatform.iOS
+        ? 'https://apps.apple.com/app/id6738228832'
+        : 'https://play.google.com/store/apps/details?id=com.poyrazoncel.korubeni';
+    final uri = Uri.parse(url);
+    try {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } catch (e) {
+      debugPrint('Could not open store: $e');
+    }
   }
 
   @override
@@ -38,7 +90,7 @@ class _SettingsPageState extends State<SettingsPage> {
     final provider = context.watch<SettingsProvider>();
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Ayarlar"),
+        title: Text("settings".tr()),
       ),
       body: ListView(
         padding: const EdgeInsets.all(20),
@@ -48,14 +100,14 @@ class _SettingsPageState extends State<SettingsPage> {
           const SizedBox(height: 28),
 
           // Security settings
-          _buildSectionTitle("Güvenlik"),
+          _buildSectionTitle("settings_security".tr()),
           const SizedBox(height: 14),
           _buildSettingsCard([
             _buildSwitchTile(
               icon: Icons.notifications_rounded,
               iconColor: AppColors.warning,
-              title: "Bildirimler",
-              subtitle: "Acil durum bildirimleri",
+              title: "settings_notifications_title".tr(),
+              subtitle: "settings_notifications_subtitle".tr(),
               value: provider.notificationsEnabled,
               onChanged: provider.setNotifications,
             ),
@@ -63,8 +115,8 @@ class _SettingsPageState extends State<SettingsPage> {
             _buildSwitchTile(
               icon: Icons.location_on_rounded,
               iconColor: AppColors.info,
-              title: "Konum Servisi",
-              subtitle: "Konum takibi aktif",
+              title: "settings_location_title".tr(),
+              subtitle: "settings_location_subtitle".tr(),
               value: provider.locationEnabled,
               onChanged: provider.setLocation,
             ),
@@ -72,22 +124,22 @@ class _SettingsPageState extends State<SettingsPage> {
             _buildNavigationTile(
               icon: Icons.lock_rounded,
               iconColor: AppColors.primary,
-              title: "PIN Ayarları",
-              subtitle: "Güvenlik PIN'inizi değiştirin",
+              title: "settings_pin_title".tr(),
+              subtitle: "settings_pin_subtitle".tr(),
               onTap: () => _showPinSettings(context),
             ),
           ]),
           const SizedBox(height: 28),
 
           // Sound & Vibration
-          _buildSectionTitle("Ses & Titreşim"),
+          _buildSectionTitle("settings_sound_vibration".tr()),
           const SizedBox(height: 14),
           _buildSettingsCard([
             _buildSwitchTile(
               icon: Icons.volume_up_rounded,
               iconColor: AppColors.success,
-              title: "Ses Efektleri",
-              subtitle: "Siren ve uyarı sesleri",
+              title: "settings_sound_title".tr(),
+              subtitle: "settings_sound_subtitle".tr(),
               value: provider.soundEnabled,
               onChanged: provider.setSound,
             ),
@@ -95,8 +147,8 @@ class _SettingsPageState extends State<SettingsPage> {
             _buildSwitchTile(
               icon: Icons.vibration_rounded,
               iconColor: AppColors.emergency,
-              title: "Titreşim",
-              subtitle: "Dokunsal geri bildirim",
+              title: "settings_vibration_title".tr(),
+              subtitle: "settings_vibration_subtitle".tr(),
               value: provider.vibrationEnabled,
               onChanged: provider.setVibration,
             ),
@@ -104,31 +156,49 @@ class _SettingsPageState extends State<SettingsPage> {
           const SizedBox(height: 28),
 
           // About section
-          _buildSectionTitle("Hakkında"),
+          _buildSectionTitle("settings_about".tr()),
           const SizedBox(height: 14),
           _buildSettingsCard([
             _buildNavigationTile(
               icon: Icons.info_outline_rounded,
               iconColor: AppColors.textSecondary,
-              title: "Uygulama Hakkında",
-              subtitle: "Sürüm 1.0.0",
-              onTap: () => _openDetail(context, "Uygulama Hakkında", Icons.info_outline_rounded),
+              title: "settings_about_app".tr(),
+              subtitle: _appVersion.isNotEmpty
+                  ? "settings_version".tr(namedArgs: {"version": _appVersion, "build": _buildNumber})
+                  : "...",
+              onTap: () => _openDetail(context, "settings_about_app".tr(), 'settings_about_app', Icons.info_outline_rounded),
             ),
             _buildDivider(),
             _buildNavigationTile(
               icon: Icons.description_outlined,
               iconColor: AppColors.textSecondary,
-              title: "Gizlilik Politikası",
-              subtitle: "Verileriniz güvende",
-              onTap: () => _openDetail(context, "Gizlilik Politikası", Icons.description_outlined),
+              title: "settings_privacy_policy".tr(),
+              subtitle: "settings_privacy_subtitle".tr(),
+              onTap: () => _openDetail(context, "settings_privacy_policy".tr(), 'settings_privacy_policy', Icons.description_outlined),
             ),
             _buildDivider(),
             _buildNavigationTile(
               icon: Icons.help_outline_rounded,
               iconColor: AppColors.textSecondary,
-              title: "Yardım & Destek",
-              subtitle: "SSS ve iletişim",
-              onTap: () => _openDetail(context, "Yardım & Destek", Icons.help_outline_rounded),
+              title: "settings_help".tr(),
+              subtitle: "settings_help_subtitle".tr(),
+              onTap: () => _openDetail(context, "settings_help".tr(), 'settings_help', Icons.help_outline_rounded),
+            ),
+            _buildDivider(),
+            _buildNavigationTile(
+              icon: Icons.share_rounded,
+              iconColor: AppColors.accent,
+              title: "settings_share_app".tr(),
+              subtitle: "settings_share_subtitle".tr(),
+              onTap: _shareApp,
+            ),
+            _buildDivider(),
+            _buildNavigationTile(
+              icon: Icons.star_rounded,
+              iconColor: AppColors.warning,
+              title: "settings_rate_app".tr(),
+              subtitle: "settings_rate_subtitle".tr(),
+              onTap: _rateApp,
             ),
           ]),
           const SizedBox(height: 28),
@@ -142,7 +212,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 _showLogoutDialog(context);
               },
               icon: const Icon(Icons.logout_rounded, size: 20),
-              label: const Text("Çıkış Yap", style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+              label: Text("settings_logout".tr(), style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.emergency,
                 foregroundColor: Colors.white,
@@ -159,7 +229,7 @@ class _SettingsPageState extends State<SettingsPage> {
             child: Column(
               children: [
                 Text(
-                  "KoruBeni",
+                  "app_name".tr(),
                   style: TextStyle(
                     fontSize: 13,
                     color: AppColors.textSecondary.withValues(alpha: 0.7),
@@ -168,7 +238,9 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  "Sürüm 1.0.0 (Build 1)",
+                  _appVersion.isNotEmpty
+                      ? "settings_version".tr(namedArgs: {"version": _appVersion, "build": _buildNumber})
+                      : "...",
                   style: TextStyle(
                     fontSize: 12,
                     color: AppColors.textSecondary.withValues(alpha: 0.5),
@@ -231,7 +303,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   children: [
                     Text(
                       provider.profileName,
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: Colors.white,
                         fontSize: 20,
                         fontWeight: FontWeight.w800,
@@ -263,10 +335,10 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  void _openDetail(BuildContext context, String title, IconData icon) {
+  void _openDetail(BuildContext context, String title, String sectionKey, IconData icon) {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => SettingsDetailPage(title: title, icon: icon)),
+      MaterialPageRoute(builder: (_) => SettingsDetailPage(title: title, sectionKey: sectionKey, icon: icon)),
     );
   }
 
@@ -420,133 +492,7 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   void _showPinSettings(BuildContext context) {
-    final oldController = TextEditingController();
-    final newController = TextEditingController();
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        decoration: const BoxDecoration(
-          color: AppColors.cardBg,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: AppColors.border,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(height: 24),
-            Container(
-              width: 70,
-              height: 70,
-              decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.12),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.lock_rounded, size: 36, color: AppColors.primary),
-            ),
-            const SizedBox(height: 20),
-            const Text(
-              "PIN Ayarları",
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.textPrimary),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              "Güvenliğiniz için PIN'inizi düzenli olarak güncelleyin.",
-              style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
-            ),
-            const SizedBox(height: 20),
-            TextField(
-              controller: oldController,
-              obscureText: true,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                hintText: "Eski PIN",
-                prefixIcon: Icon(Icons.lock_outline_rounded),
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: newController,
-              obscureText: true,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                hintText: "Yeni PIN (4 hane)",
-                prefixIcon: Icon(Icons.lock_rounded),
-              ),
-            ),
-            const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () async {
-                  final secureStorage = serviceLocator<SecureStorage>();
-                  final prefs = await SharedPreferences.getInstance();
-                  // Load PIN from secure storage (no hardcoded fallback)
-                  String? currentPin = await secureStorage.read(key: SecureStorageKeys.userPin);
-                  // Legacy migration from SharedPreferences
-                  if (currentPin == null || currentPin.isEmpty) {
-                    final legacy = prefs.getString(SecureStorageKeys.userPin);
-                    if (legacy != null && legacy.isNotEmpty) {
-                      await secureStorage.write(key: SecureStorageKeys.userPin, value: legacy);
-                      await prefs.remove(SecureStorageKeys.userPin);
-                      currentPin = legacy;
-                    }
-                  }
-                  if (!context.mounted) return;
-                  if (currentPin == null || currentPin.isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("PIN bulunamadı. Lütfen yeniden oluşturun."), backgroundColor: AppColors.warning),
-                    );
-                    return;
-                  }
-                  if (oldController.text != currentPin) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("Eski PIN yanlış"), backgroundColor: AppColors.emergency),
-                    );
-                    return;
-                  }
-                  if (newController.text.length != 4) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("PIN 4 hane olmalıdır"), backgroundColor: AppColors.warning),
-                    );
-                    return;
-                  }
-                  await secureStorage.write(key: SecureStorageKeys.userPin, value: newController.text);
-                  await prefs.remove(SecureStorageKeys.userPin);
-                  await ActivityService.logEvent(
-                    type: ActivityType.pinChanged,
-                    title: "PIN Degistirildi",
-                    description: "Guvenlik PIN'iniz basariyla guncellendi",
-                  );
-                  if (context.mounted) {
-                    Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("PIN güncellendi"), backgroundColor: AppColors.success),
-                    );
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                ),
-                child: const Text("Kaydet", style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
-              ),
-            ),
-            const SizedBox(height: 16),
-          ],
-        ),
-      ),
-    );
+    PinSettingsHelper.showPinChangeSheet(context);
   }
 
   void _showLogoutDialog(BuildContext context) {
@@ -569,15 +515,15 @@ class _SettingsPageState extends State<SettingsPage> {
               child: const Icon(Icons.logout_rounded, size: 36, color: AppColors.emergency),
             ),
             const SizedBox(height: 24),
-            const Text(
-              "Çıkış Yap",
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.textPrimary),
+            Text(
+              "settings_logout".tr(),
+              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.textPrimary),
             ),
             const SizedBox(height: 12),
-            const Text(
-              "Hesabınızdan çıkış yapmak istediğinizden emin misiniz?",
+            Text(
+              "settings_logout_confirm".tr(),
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 15, color: AppColors.textSecondary, height: 1.4),
+              style: const TextStyle(fontSize: 15, color: AppColors.textSecondary, height: 1.4),
             ),
             const SizedBox(height: 28),
             Row(
@@ -591,7 +537,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
-                    child: const Text("İptal", style: TextStyle(fontWeight: FontWeight.w700)),
+                    child: Text("settings_cancel".tr(), style: const TextStyle(fontWeight: FontWeight.w700)),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -599,15 +545,17 @@ class _SettingsPageState extends State<SettingsPage> {
                   child: ElevatedButton(
                     onPressed: () async {
                       Navigator.pop(context);
-                      await FirebaseAuth.instance.signOut();
+                      try {
+                        await FirebaseAuth.instance.signOut();
+                      } catch (_) {}
                       if (!context.mounted) return;
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: const Row(
+                          content: Row(
                             children: [
-                              Icon(Icons.check_circle_rounded, color: Colors.white),
-                              SizedBox(width: 12),
-                              Text("Çıkış yapıldı", style: TextStyle(fontWeight: FontWeight.w600)),
+                              const Icon(Icons.check_circle_rounded, color: Colors.white),
+                              const SizedBox(width: 12),
+                              Text("settings_logout_success".tr(), style: const TextStyle(fontWeight: FontWeight.w600)),
                             ],
                           ),
                           backgroundColor: AppColors.success,
@@ -622,7 +570,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
-                    child: const Text("Çıkış Yap", style: TextStyle(fontWeight: FontWeight.w700)),
+                    child: Text("settings_logout".tr(), style: const TextStyle(fontWeight: FontWeight.w700)),
                   ),
                 ),
               ],

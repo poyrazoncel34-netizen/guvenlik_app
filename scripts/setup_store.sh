@@ -44,11 +44,8 @@ if [ ! -f "android/korubeni-release-key.jks" ]; then
     echo "cd android"
     echo "keytool -genkey -v -keystore korubeni-release-key.jks -keyalg RSA -keysize 2048 -validity 10000 -alias korubeni"
     echo ""
-    echo "Sonra key.properties dosyasını oluştur:"
-    echo "storePassword=ŞİFREN"
-    echo "keyPassword=ŞİFREN"
-    echo "keyAlias=korubeni"
-    echo "storeFile=korubeni-release-key.jks"
+    echo "Sonra android/key.properties oluştur: cp android/key.properties.example android/key.properties"
+    echo "Ardından storePassword, keyPassword vb. düzenle."
     echo ""
 else
     echo "✅ Keystore mevcut"

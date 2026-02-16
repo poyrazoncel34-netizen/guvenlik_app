@@ -3,6 +3,7 @@
 // ============================================================================
 
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../core/app_colors.dart';
 
 class EmergencyCallScreen extends StatefulWidget {
@@ -11,7 +12,7 @@ class EmergencyCallScreen extends StatefulWidget {
 
   const EmergencyCallScreen({
     super.key,
-    this.name = "Acil Kişi",
+    this.name = "",
     this.phone = "",
   });
 
@@ -78,7 +79,7 @@ class _EmergencyCallScreenState extends State<EmergencyCallScreen>
                     ),
                     const SizedBox(height: 28),
                     Text(
-                      widget.name,
+                      widget.name.isEmpty ? "pin_verify_emergency_contact".tr() : widget.name,
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 34,
@@ -88,7 +89,7 @@ class _EmergencyCallScreenState extends State<EmergencyCallScreen>
                     const SizedBox(height: 10),
                     Text(
                       widget.phone.isEmpty
-                          ? "Arama başlatılıyor..."
+                          ? "emergency_call_dialing".tr()
                           : widget.phone,
                       style: const TextStyle(
                         color: Colors.white54,
@@ -114,7 +115,7 @@ class _EmergencyCallScreenState extends State<EmergencyCallScreen>
                         ),
                         const SizedBox(width: 10),
                         Text(
-                          "çalıyor...",
+                          "emergency_call_ringing".tr(),
                           style: TextStyle(
                             color: Colors.white.withValues(alpha: 0.75),
                             fontSize: 17,
@@ -127,14 +128,14 @@ class _EmergencyCallScreenState extends State<EmergencyCallScreen>
                 ),
               ),
               const Spacer(),
-              const Text(
-                "İstediğiniz an aramayı sonlandırabilirsiniz.",
-                style: TextStyle(color: Colors.white54, fontSize: 13),
+              Text(
+                "emergency_call_end_note".tr(),
+                style: const TextStyle(color: Colors.white54, fontSize: 13),
               ),
               const SizedBox(height: 8),
-              const Text(
-                "Resmi kurumlara ulaşmak kullanıcı sorumluluğundadır.",
-                style: TextStyle(color: Colors.white54, fontSize: 12),
+              Text(
+                "emergency_call_disclaimer".tr(),
+                style: const TextStyle(color: Colors.white54, fontSize: 12),
               ),
               Padding(
                 padding: const EdgeInsets.only(bottom: 70),
@@ -163,9 +164,9 @@ class _EmergencyCallScreenState extends State<EmergencyCallScreen>
                       ),
                     ),
                     const SizedBox(height: 14),
-                    const Text(
-                      "Aramayı Sonlandır",
-                      style: TextStyle(
+                    Text(
+                      "emergency_call_end".tr(),
+                      style: const TextStyle(
                         color: Colors.white,
                         fontSize: 15,
                         fontWeight: FontWeight.w600,

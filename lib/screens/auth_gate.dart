@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -17,52 +18,10 @@ class AuthGate extends StatelessWidget {
   Widget build(BuildContext context) {
     debugPrint('>>> AuthGate.build() - firebaseReady=$kFirebaseReady');
 
-    // If Firebase failed, show error instead of crashing
+    // If Firebase failed, skip auth entirely — go straight to app
     if (!kFirebaseReady) {
-      return Scaffold(
-        backgroundColor: AppColors.background,
-        body: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.cloud_off_rounded, size: 48, color: AppColors.warning),
-                const SizedBox(height: 16),
-                const Text(
-                  "Bağlantı kurulamadı",
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  "Firebase servisleri başlatılamadı.\nİnternet bağlantınızı kontrol edip uygulamayı yeniden başlatın.",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: AppColors.textSecondary, height: 1.5),
-                ),
-                const SizedBox(height: 24),
-                ElevatedButton.icon(
-                  onPressed: () {
-                    // Force restart the app
-                    WidgetsBinding.instance.reassembleApplication();
-                  },
-                  icon: const Icon(Icons.refresh_rounded),
-                  label: const Text("Tekrar Dene"),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
+      debugPrint('>>> AuthGate: Firebase unavailable — skipping auth');
+      return const MainNavigation();
     }
 
     return StreamBuilder<User?>(
@@ -80,9 +39,9 @@ class AuthGate extends StatelessWidget {
                 children: [
                   const Icon(Icons.error_outline_rounded, size: 48, color: AppColors.warning),
                   const SizedBox(height: 16),
-                  const Text(
-                    "Oturum hatasi",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+                  Text(
+                    "session_error".tr(),
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
                   ),
                   const SizedBox(height: 8),
                   Text(
@@ -97,18 +56,18 @@ class AuthGate extends StatelessWidget {
         }
 
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(
+          return Scaffold(
             backgroundColor: AppColors.background,
             body: Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  CircularProgressIndicator(
+                  const CircularProgressIndicator(
                     valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
                   ),
-                  SizedBox(height: 16),
+                  const SizedBox(height: 16),
                   Text(
-                    "KoruBeni",
+                    "app_name".tr(),
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.w800,
@@ -257,19 +216,19 @@ class _PinCheckGateState extends State<_PinCheckGate> {
                   child: const Icon(Icons.shield_rounded, size: 50, color: AppColors.primary),
                 ),
                 const SizedBox(height: 28),
-                const Text(
-                  "Hosgeldiniz!",
-                  style: TextStyle(
+                Text(
+                  "welcome_title".tr(),
+                  style: const TextStyle(
                     fontSize: 26,
                     fontWeight: FontWeight.w800,
                     color: AppColors.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 12),
-                const Text(
-                  "Guvenliginiz icin bir PIN kodu belirlemeniz gerekiyor.\nBu PIN, acil durumlari iptal etmek icin kullanilacak.",
+                Text(
+                  "welcome_pin_message".tr(),
                   textAlign: TextAlign.center,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 15,
                     color: AppColors.textSecondary,
                     height: 1.5,
@@ -294,9 +253,9 @@ class _PinCheckGateState extends State<_PinCheckGate> {
                       padding: const EdgeInsets.symmetric(vertical: 18),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                     ),
-                    child: const Text(
-                      "PIN Belirle",
-                      style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+                    child: Text(
+                      "pin_setup_button".tr(),
+                      style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
                     ),
                   ),
                 ),

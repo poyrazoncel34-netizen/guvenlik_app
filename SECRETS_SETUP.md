@@ -4,13 +4,16 @@ Bu dosya production build için gerekli gizli değerlerin nasıl ayarlanacağın
 
 ## 1. Android Release Signing (key.properties)
 
+**ÖNEMLİ:** Release imzası için **sadece** `android/key.properties` kullanılır. Gradle, Flutter build sırasında `android/` dizinini root kabul ettiği için `rootProject.file("key.properties")` ile `android/key.properties` dosyasını okur. Proje köküne (`key.properties`) kopyalamayın; release imzası bulunamaz ve build hata verir.
+
 ```bash
-cp key.properties.example key.properties
-# key.properties dosyasını düzenleyin - gerçek değerleri girin
+cp android/key.properties.example android/key.properties
+# android/key.properties dosyasını düzenleyin - gerçek değerleri girin
 ```
 
 - `key.properties` zaten `.gitignore`'da
-- Keystore oluşturmak: `keytool -genkey -v -keystore upload-keystore.jks -keyalg RSA -keysize 2048 -validity 10000 -alias upload`
+- Keystore'u android/ içinde oluşturun: `cd android && keytool -genkey -v -keystore korubeni-release-key.jks -keyalg RSA -keysize 2048 -validity 10000 -alias korubeni`
+- `storeFile=korubeni-release-key.jks` (android/ içindeki dosyayı işaret eder; asıl dosya **android/key.properties** olmalı)
 
 ## 2. Şifreleme Anahtarı (ENCRYPTION_KEY)
 

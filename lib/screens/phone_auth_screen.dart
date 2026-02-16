@@ -1,5 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../core/app_colors.dart';
@@ -32,28 +32,28 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
 
   String? _validatePhone(String? value) {
     if (value == null || value.trim().isEmpty) {
-      return 'Telefon numarasi zorunludur';
+      return 'phone_required'.tr();
     }
     final cleaned = value.replaceAll(RegExp(r'[\s\-\(\)]'), '');
     if (!cleaned.startsWith('+')) {
-      return 'Ulke kodu ile baslayiniz (orn. +90)';
+      return 'phone_country_code'.tr();
     }
     if (cleaned.length < 10) {
-      return 'Gecerli bir telefon numarasi girin';
+      return 'phone_invalid'.tr();
     }
     final phoneRegex = RegExp(r'^\+[1-9]\d{7,14}$');
     if (!phoneRegex.hasMatch(cleaned)) {
-      return 'Gecerli bir telefon numarasi girin';
+      return 'phone_invalid'.tr();
     }
     return null;
   }
 
   String? _validateCode(String? value) {
     if (value == null || value.trim().isEmpty) {
-      return 'Dogrulama kodu zorunludur';
+      return 'code_required'.tr();
     }
     if (value.trim().length < 6) {
-      return 'Kod 6 hane olmalidir';
+      return 'code_6_digits'.tr();
     }
     return null;
   }
@@ -67,21 +67,21 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
   String _mapVerificationError(FirebaseAuthException e) {
     switch (e.code) {
       case 'invalid-phone-number':
-        return 'Gecersiz telefon numarasi. +90 ile baslayip ulke kodunu kontrol edin.';
+        return 'auth_phone_invalid'.tr();
       case 'too-many-requests':
-        return 'Cok fazla istek. Lutfen 1 saat sonra tekrar deneyin.';
+        return 'auth_too_many_requests'.tr();
       case 'network-request-failed':
-        return 'İnternet bağlantınızı kontrol edin.';
+        return 'auth_network_failed'.tr();
       case 'captcha-check-failed':
       case 'missing-client-identifier':
-        return 'Dogrulama basarisiz. Uygulamayi kapatip tekrar acmayi deneyin.';
+        return 'auth_verification_failed'.tr();
       case 'internal-error':
       case 'invalid-verification-id':
-        return 'Bir hata olustu. Tekrar deneyin.';
+        return 'auth_generic_retry'.tr();
       case 'quota-exceeded':
-        return 'Gunluk limit asildi. Yarın tekrar deneyin.';
+        return 'auth_quota_exceeded'.tr();
       default:
-        return e.message ?? 'Dogrulama basarisiz. Tekrar deneyin.';
+        return e.message ?? 'auth_default_failed'.tr();
     }
   }
 
@@ -103,7 +103,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
             await FirebaseAuth.instance.signInWithCredential(credential);
           } catch (e) {
             _safeSetState(() {
-              _errorMessage = 'Otomatik dogrulama basarisiz. SMS kodunu girin.';
+              _errorMessage = 'auth_auto_verify_failed'.tr();
               _isSending = false;
             });
           }
@@ -138,8 +138,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
     } catch (e, stack) {
       debugPrint('Phone auth error: $e\n$stack');
       _safeSetState(() {
-        _errorMessage =
-            'Beklenmeyen hata. İnternet bağlantınızı kontrol edip tekrar deneyin. SMS gelmezse aşağıdaki "SMS gelmezse devam et" butonunu kullanabilirsiniz.';
+        _errorMessage = 'auth_unexpected_error'.tr();
         _isSending = false;
       });
     }
@@ -259,10 +258,10 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                   ),
                 ),
                 const SizedBox(height: 24),
-                const Text(
-                  "KoruBeni",
+                Text(
+                  "app_name".tr(),
                   textAlign: TextAlign.center,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.w900,
                     color: AppColors.textPrimary,
@@ -326,10 +325,10 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                       RegExp(r'[\d\+\s\-\(\)]'),
                     ),
                   ],
-                  decoration: const InputDecoration(
-                    hintText: "+90 5XX XXX XX XX",
+                  decoration: InputDecoration(
+                    hintText: "phone_hint".tr(),
                     prefixIcon: Icon(Icons.phone_outlined),
-                    labelText: "Telefon Numarasi",
+                    labelText: "auth_phone_label".tr(),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -343,10 +342,10 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                       FilteringTextInputFormatter.digitsOnly,
                       LengthLimitingTextInputFormatter(6),
                     ],
-                    decoration: const InputDecoration(
-                      hintText: "6 haneli SMS kodu",
+                    decoration: InputDecoration(
+                      hintText: "code_hint".tr(),
                       prefixIcon: Icon(Icons.lock_outline),
-                      labelText: "Dogrulama Kodu",
+                      labelText: "auth_code_label".tr(),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -363,9 +362,9 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                                 _errorMessage = null;
                               });
                             },
-                      child: const Text(
-                        "Numarayi degistir",
-                        style: TextStyle(
+                      child: Text(
+                        "auth_change_number".tr(),
+                        style: const TextStyle(
                           color: AppColors.primary,
                           fontWeight: FontWeight.w600,
                         ),
@@ -404,7 +403,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                             ),
                           )
                         : Text(
-                            _codeSent ? "Kodu Dogrula" : "Kod Gonder",
+                            _codeSent ? "auth_verify_code".tr() : "auth_send_code".tr(),
                             style: const TextStyle(
                               fontWeight: FontWeight.w700,
                               fontSize: 16,

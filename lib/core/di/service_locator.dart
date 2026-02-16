@@ -16,6 +16,7 @@ import '../../domain/repositories/location_repository.dart';
 import '../network/api_client.dart';
 import '../security/encryption_service.dart';
 import '../security/secure_storage.dart';
+import '../../main.dart' show kFirebaseReady;
 
 final GetIt serviceLocator = GetIt.instance;
 
@@ -25,21 +26,26 @@ Future<void> setupServiceLocator() async {
   }
   final dio = ApiClient.build();
   serviceLocator.registerSingleton<Dio>(dio);
-  serviceLocator.registerSingleton<FirebaseAuth>(FirebaseAuth.instance);
-  serviceLocator.registerSingleton<FirebaseService>(FirebaseService.instance);
+
+  // Firebase-dependent services - only register if Firebase initialized
+  if (kFirebaseReady) {
+    serviceLocator.registerSingleton<FirebaseAuth>(FirebaseAuth.instance);
+    serviceLocator.registerSingleton<FirebaseService>(FirebaseService.instance);
+    serviceLocator.registerLazySingleton<FirebaseRemoteDataSource>(
+      () => FirebaseRemoteDataSource(serviceLocator<FirebaseService>()),
+    );
+    serviceLocator.registerLazySingleton<AuthRepository>(
+      () => AuthRepositoryImpl(serviceLocator<FirebaseAuth>()),
+    );
+    serviceLocator.registerLazySingleton<EmergencyRepository>(
+      () => EmergencyRepositoryImpl(serviceLocator<FirebaseRemoteDataSource>()),
+    );
+  }
+
+  // Non-Firebase services - always available
   serviceLocator.registerSingleton<LocationService>(LocationService());
   serviceLocator.registerLazySingleton<ContactsLocalDataSource>(
     () => ContactsLocalDataSource(),
-  );
-  serviceLocator.registerLazySingleton<FirebaseRemoteDataSource>(
-    () => FirebaseRemoteDataSource(serviceLocator<FirebaseService>()),
-  );
-
-  serviceLocator.registerLazySingleton<AuthRepository>(
-    () => AuthRepositoryImpl(serviceLocator<FirebaseAuth>()),
-  );
-  serviceLocator.registerLazySingleton<EmergencyRepository>(
-    () => EmergencyRepositoryImpl(serviceLocator<FirebaseRemoteDataSource>()),
   );
   serviceLocator.registerLazySingleton<LocationRepository>(
     () => LocationRepositoryImpl(serviceLocator<LocationService>()),
@@ -52,3 +58,4 @@ Future<void> setupServiceLocator() async {
     () => EncryptionService(),
   );
 }
+

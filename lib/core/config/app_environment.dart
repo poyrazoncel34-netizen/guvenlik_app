@@ -15,11 +15,14 @@ class AppEnvironment {
   static bool get isDev => !isProduction;
   static String get name => _env;
 
-  /// API base URL - production'da gerçek backend, dev'de mock/placeholder
+  /// API base URL - production'da gerçek backend, dev'de mock/placeholder.
+  /// NOT: Şu an Dio register edilmiş ancak aktif REST çağrısı yapılmıyor.
+  /// Tüm veri akışı Firebase/Firestore üzerinden gerçekleşiyor.
+  /// İleride REST API eklendiğinde bu URL'ler kullanılacak.
   static String get apiBaseUrl {
     if (isProduction) {
-      return 'https://api.korubeni.com'; // Production backend
+      return 'https://api.korubeni.com'; // Production backend (henüz aktif değil)
     }
-    return 'https://api.example.com'; // Dev/test
+    return 'https://api.example.com'; // Dev/test placeholder
   }
 }

@@ -1,14 +1,16 @@
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/foundation.dart';
+import '../../main.dart' show kFirebaseReady;
 
 /// Centralized analytics event tracking.
 class AnalyticsService {
-  static final FirebaseAnalytics _analytics = FirebaseAnalytics.instance;
+  static FirebaseAnalytics? get _analytics =>
+      kFirebaseReady ? FirebaseAnalytics.instance : null;
 
   // Screen tracking
   static Future<void> logScreenView(String screenName) async {
     try {
-      await _analytics.logScreenView(screenName: screenName);
+      await _analytics?.logScreenView(screenName: screenName);
     } catch (e) {
       debugPrint('Analytics screen error: $e');
     }
@@ -80,7 +82,7 @@ class AnalyticsService {
   // Auth
   static Future<void> logLogin() async {
     try {
-      await _analytics.logLogin(loginMethod: 'phone');
+      await _analytics?.logLogin(loginMethod: 'phone');
     } catch (e) {
       debugPrint('Analytics login error: $e');
     }
@@ -88,7 +90,7 @@ class AnalyticsService {
 
   static Future<void> logSignUp() async {
     try {
-      await _analytics.logSignUp(signUpMethod: 'phone');
+      await _analytics?.logSignUp(signUpMethod: 'phone');
     } catch (e) {
       debugPrint('Analytics signup error: $e');
     }
@@ -100,9 +102,10 @@ class AnalyticsService {
     Map<String, Object>? params,
   ]) async {
     try {
-      await _analytics.logEvent(name: name, parameters: params);
+      await _analytics?.logEvent(name: name, parameters: params);
     } catch (e) {
       debugPrint('Analytics event error ($name): $e');
     }
   }
 }
+

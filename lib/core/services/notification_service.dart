@@ -38,7 +38,11 @@ class NotificationService {
           ?.createNotificationChannel(_channel);
     }
 
-    await FirebaseMessaging.instance.requestPermission();
+    try {
+      await FirebaseMessaging.instance.requestPermission();
+    } catch (_) {
+      // Firebase not available — skip FCM
+    }
 
     if (Platform.isIOS) {
       await _localNotifications
@@ -48,26 +52,30 @@ class NotificationService {
           ?.requestPermissions(alert: true, badge: true, sound: true);
     }
 
-    _messageSubscription?.cancel();
-    _messageSubscription = FirebaseMessaging.onMessage.listen((message) {
-      final notification = message.notification;
-      if (notification == null) return;
-      _localNotifications.show(
-        notification.hashCode,
-        notification.title,
-        notification.body,
-        NotificationDetails(
-          android: AndroidNotificationDetails(
-            _channel.id,
-            _channel.name,
-            channelDescription: _channel.description,
-            importance: Importance.high,
-            priority: Priority.high,
+    try {
+      _messageSubscription?.cancel();
+      _messageSubscription = FirebaseMessaging.onMessage.listen((message) {
+        final notification = message.notification;
+        if (notification == null) return;
+        _localNotifications.show(
+          notification.hashCode,
+          notification.title,
+          notification.body,
+          NotificationDetails(
+            android: AndroidNotificationDetails(
+              _channel.id,
+              _channel.name,
+              channelDescription: _channel.description,
+              importance: Importance.high,
+              priority: Priority.high,
+            ),
+            iOS: const DarwinNotificationDetails(),
           ),
-          iOS: const DarwinNotificationDetails(),
-        ),
-      );
-    });
+        );
+      });
+    } catch (_) {
+      // Firebase not available — skip FCM listener
+    }
   }
 
   void dispose() {

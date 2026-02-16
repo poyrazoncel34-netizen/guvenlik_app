@@ -8,6 +8,7 @@ import 'package:flutter/foundation.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:fluttercontactpicker_plus/fluttercontactpicker_plus.dart';
 import 'package:provider/provider.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../core/app_colors.dart';
 import '../presentation/providers/contacts_provider.dart';
 
@@ -32,7 +33,7 @@ class _ContactsPageState extends State<ContactsPage> {
     final provider = context.watch<ContactsProvider>();
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Acil Kişiler"),
+        title: Text("contacts_emergency_title".tr()),
         actions: [
           IconButton(
             icon: Container(
@@ -64,8 +65,8 @@ class _ContactsPageState extends State<ContactsPage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                "Güvenlik Ağım",
+              Text(
+                "contacts_network_title".tr(),
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.w800,
@@ -76,7 +77,7 @@ class _ContactsPageState extends State<ContactsPage> {
               TextButton.icon(
                 onPressed: () => _showEmergencyPicker(context),
                 icon: const Icon(Icons.shield_rounded, size: 18),
-                label: const Text("Acil kişi seç"),
+                label: Text("contacts_select_emergency".tr()),
                 style: TextButton.styleFrom(
                   foregroundColor: AppColors.accent,
                   textStyle: const TextStyle(fontWeight: FontWeight.w700),
@@ -99,10 +100,10 @@ class _ContactsPageState extends State<ContactsPage> {
 
           if (provider.isAtLimit) ...[
             const SizedBox(height: 8),
-            const Text(
-              "Maksimum kisi sayisina ulastiniz",
+            Text(
+              "contacts_max_reached".tr(),
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+              style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
             ),
           ],
 
@@ -115,9 +116,15 @@ class _ContactsPageState extends State<ContactsPage> {
 
   Future<void> _dialNumber(String number) async {
     final uri = Uri(scheme: 'tel', path: number);
-    final canLaunch = await launchUrl(uri);
-    if (!canLaunch && mounted) {
-      _showSnack("Arama başlatılamadı");
+    try {
+      final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      if (!launched && mounted) {
+        _showSnack("contacts_call_failed".tr());
+      }
+    } catch (_) {
+      if (mounted) {
+        _showSnack("contacts_call_failed".tr());
+      }
     }
   }
 
@@ -155,13 +162,13 @@ class _ContactsPageState extends State<ContactsPage> {
       ),
       child: Column(
         children: [
-          const Row(
+          Row(
             children: [
-              Icon(Icons.emergency_rounded, color: Colors.white, size: 24),
-              SizedBox(width: 12),
+              const Icon(Icons.emergency_rounded, color: Colors.white, size: 24),
+              const SizedBox(width: 12),
               Text(
-                "Hızlı Arama",
-                style: TextStyle(
+                "contacts_quick_dial".tr(),
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 18,
                   fontWeight: FontWeight.w800,
@@ -173,15 +180,15 @@ class _ContactsPageState extends State<ContactsPage> {
           Row(
             children: [
               Expanded(
-                child: _buildQuickDialButton("155", "Polis", Icons.local_police_rounded),
+                child: _buildQuickDialButton("155", "contacts_police".tr(), Icons.local_police_rounded),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: _buildQuickDialButton("112", "Ambulans", Icons.medical_services_rounded),
+                child: _buildQuickDialButton("112", "contacts_ambulance".tr(), Icons.medical_services_rounded),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: _buildQuickDialButton("110", "İtfaiye", Icons.fire_truck_rounded),
+                child: _buildQuickDialButton("110", "contacts_fire".tr(), Icons.fire_truck_rounded),
               ),
             ],
           ),
@@ -293,9 +300,9 @@ class _ContactsPageState extends State<ContactsPage> {
                                 color: AppColors.emergency.withValues(alpha: 0.12),
                                 borderRadius: BorderRadius.circular(6),
                               ),
-                              child: const Text(
-                                "ACİL",
-                                style: TextStyle(
+                              child: Text(
+                                "contacts_emergency_badge".tr(),
+                                style: const TextStyle(
                                   fontSize: 9,
                                   fontWeight: FontWeight.w800,
                                   color: AppColors.emergency,
@@ -394,10 +401,10 @@ class _ContactsPageState extends State<ContactsPage> {
                   child: ElevatedButton.icon(
                     onPressed: () {
                       Navigator.pop(context);
-                      _showSnack("Mesaj taslağı hazırlandı");
+                      _showSnack("contacts_message_draft_ready".tr());
                     },
                     icon: const Icon(Icons.message_rounded, size: 20),
-                    label: const Text("Mesaj", style: TextStyle(fontWeight: FontWeight.w700)),
+                    label: Text("contacts_message".tr(), style: const TextStyle(fontWeight: FontWeight.w700)),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
                       foregroundColor: Colors.white,
@@ -414,7 +421,7 @@ class _ContactsPageState extends State<ContactsPage> {
                       _dialNumber(contact.phone);
                     },
                     icon: const Icon(Icons.call_rounded, size: 20),
-                    label: const Text("Ara", style: TextStyle(fontWeight: FontWeight.w700)),
+                    label: Text("contacts_call".tr(), style: const TextStyle(fontWeight: FontWeight.w700)),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.success,
                       foregroundColor: Colors.white,
@@ -435,7 +442,7 @@ class _ContactsPageState extends State<ContactsPage> {
                   _showSnack("Acil kişi seçildi: ${contact.name}");
                 },
                 icon: const Icon(Icons.shield_rounded, size: 20),
-                label: const Text("Acil Kişi Seç", style: TextStyle(fontWeight: FontWeight.w700)),
+                label: Text("contacts_select_emergency_btn".tr(), style: const TextStyle(fontWeight: FontWeight.w700)),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppColors.accent,
                   side: const BorderSide(color: AppColors.accent),
@@ -471,25 +478,25 @@ class _ContactsPageState extends State<ContactsPage> {
             child: const Icon(Icons.people_outline_rounded, size: 36, color: AppColors.primary),
           ),
           const SizedBox(height: 16),
-          const Text(
-            "Henuz acil kisi eklenmedi",
-            style: TextStyle(
+          Text(
+            "contacts_empty".tr(),
+            style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w700,
               color: AppColors.textPrimary,
             ),
           ),
           const SizedBox(height: 8),
-          const Text(
-            "Rehberinizden guvendiginiz kisileri\nacil kisi olarak ekleyin.",
+          Text(
+            "contacts_empty_subtitle".tr(),
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 13, color: AppColors.textSecondary, height: 1.4),
+            style: const TextStyle(fontSize: 13, color: AppColors.textSecondary, height: 1.4),
           ),
           const SizedBox(height: 20),
           ElevatedButton.icon(
             onPressed: () => _pickContactFromDevice(),
             icon: const Icon(Icons.person_add_rounded, size: 18),
-            label: const Text("Kisi Ekle", style: TextStyle(fontWeight: FontWeight.w700)),
+            label: Text("contacts_add_person".tr(), style: const TextStyle(fontWeight: FontWeight.w700)),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
@@ -510,14 +517,14 @@ class _ContactsPageState extends State<ContactsPage> {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.info.withValues(alpha: 0.12)),
       ),
-      child: const Row(
+      child: Row(
         children: [
-          Icon(Icons.info_rounded, color: AppColors.info, size: 22),
-          SizedBox(width: 16),
+          const Icon(Icons.info_rounded, color: AppColors.info, size: 22),
+          const SizedBox(width: 16),
           Expanded(
             child: Text(
-              "Acil durumlarda bu kişiler otomatik olarak bilgilendirilecek",
-              style: TextStyle(
+              "contacts_info_text".tr(),
+              style: const TextStyle(
                 fontSize: 14,
                 color: AppColors.textSecondary,
                 fontWeight: FontWeight.w500,
@@ -565,15 +572,15 @@ class _ContactsPageState extends State<ContactsPage> {
                 child: const Icon(Icons.person_add_rounded, size: 36, color: AppColors.primary),
               ),
               const SizedBox(height: 20),
-              const Text(
-                "Yeni Kişi Ekle",
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.textPrimary),
+              Text(
+                "contacts_add_new".tr(),
+                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.textPrimary),
               ),
               const SizedBox(height: 16),
-              const Text(
-                "Rehberinizden kişi seçerek acil kişilerinize ekleyin.",
+              Text(
+                "contacts_add_new_subtitle".tr(),
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
+                style: const TextStyle(fontSize: 14, color: AppColors.textSecondary),
               ),
               const SizedBox(height: 24),
               SizedBox(
@@ -589,7 +596,7 @@ class _ContactsPageState extends State<ContactsPage> {
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                   ),
-                  child: const Text("Rehberden Seç", style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+                  child: Text("contacts_pick_from_contacts".tr(), style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
                 ),
               ),
               const SizedBox(height: 16),
@@ -603,25 +610,25 @@ class _ContactsPageState extends State<ContactsPage> {
   Future<void> _pickContactFromDevice() async {
     try {
       if (kIsWeb) {
-        _showSnack("Web sürümünde rehber seçimi desteklenmiyor");
+        _showSnack("contacts_web_picker_unsupported".tr());
         return;
       }
       final contact = await FlutterContactPicker.pickPhoneContact(askForPermission: true);
       if (!mounted) return;
       final name = (contact.fullName?.trim().isNotEmpty ?? false)
           ? contact.fullName!.trim()
-          : "Bilinmeyen Kişi";
+          : "contacts_unknown".tr();
       final phone = contact.phoneNumber?.number?.trim() ?? "";
 
       if (phone.isEmpty) {
-        _showSnack("Seçilen kişide telefon numarası yok");
+        _showSnack("contacts_no_phone".tr());
         return;
       }
 
       final provider = context.read<ContactsProvider>();
       final added = await provider.addContact(name: name, phone: phone);
       if (!added) {
-        _showSnack("Bu kişi zaten listede");
+        _showSnack("contacts_already_in_list".tr());
         return;
       }
 
@@ -630,7 +637,7 @@ class _ContactsPageState extends State<ContactsPage> {
     } on UserCancelledPickingException {
       // kullanıcı vazgeçti
     } catch (_) {
-      _showSnack("Rehbere erişilemedi");
+      _showSnack("contacts_picker_failed".tr());
     }
   }
 
@@ -657,9 +664,9 @@ class _ContactsPageState extends State<ContactsPage> {
               ),
             ),
             const SizedBox(height: 18),
-            const Text(
-              "Acil Kişi Seç",
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.textPrimary),
+            Text(
+              "contacts_select_emergency_btn".tr(),
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.textPrimary),
             ),
             const SizedBox(height: 12),
             ...provider.emergencyContacts.map((contact) {

@@ -1,0 +1,7 @@
+# Android Release Signing - COPY to key.properties IN THIS DIRECTORY (android/)
+# build.gradle.kts uses rootProject.file("key.properties") = android/key.properties
+# key.properties is in .gitignore - NEVER commit the real file
+storePassword=YOUR_KEYSTORE_PASSWORD
+keyPassword=YOUR_KEY_PASSWORD
+keyAlias=korubeni
+storeFile=korubeni-release-key.jks

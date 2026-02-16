@@ -1,11 +1,17 @@
 default_platform(:ios)
 
+# Production dart-defines for Flutter (set ENCRYPTION_KEY in CI or shell before running lanes)
+def flutter_dart_defines
+  enc = ENV['ENCRYPTION_KEY'] || ''
+  "--dart-define=ENV=production --dart-define=ENCRYPTION_KEY=#{enc}"
+end
+
 platform :ios do
   desc "Push a new beta build to TestFlight"
   lane :beta do
-    # Ensure Flutter assets are built
+    # Ensure Flutter assets are built (production + encryption key)
     Dir.chdir("../..") do
-      sh "flutter build ios --release --no-codesign"
+      sh "flutter build ios --release --no-codesign #{flutter_dart_defines}"
     end
     
     # Archive and export the IPA
@@ -16,6 +22,53 @@ platform :ios do
     )
     
     # Upload to TestFlight
-    upload_to_testflight
+    upload_to_testflight(
+      skip_waiting_for_build_processing: true,
+      distribute_external: false,
+      notify_external_testers: false
+    )
+  end
+
+  desc "Generate screenshots for App Store"
+  lane :screenshots do
+    capture_screenshots(
+      project: "Runner.xcodeproj",
+      scheme: "Runner",
+      output_directory: "./screenshots",
+      clear_previous_screenshots: true,
+      concurrent_simulators: true,
+      stop_after_first_error: false,
+      skip_open_summary: true,
+      localize_simulator: true
+    )
+  end
+
+  desc "Upload to App Store Connect for review"
+  lane :release do
+    Dir.chdir("../..") do
+      sh "flutter build ios --release --no-codesign #{flutter_dart_defines}"
+    end
+
+    build_app(
+      workspace: "Runner.xcworkspace",
+      scheme: "Runner",
+      export_method: "app-store"
+    )
+
+    upload_to_app_store(
+      submit_for_review: false,
+      automatic_release: false,
+      skip_screenshots: true,
+      skip_metadata: true,
+      force: true
+    )
+  end
+
+  desc "Sync certificates using match"
+  lane :certificates do
+    match(
+      type: "appstore",
+      readonly: true
+    )
   end
 end

@@ -20,6 +20,10 @@
     <uses-permission android:name="android.permission.USE_BIOMETRIC" />
     <!-- Vibration for shake feedback -->
     <uses-permission android:name="android.permission.VIBRATE" />
+    <!-- Direct call for emergency (without dialer confirmation) -->
+    <uses-permission android:name="android.permission.CALL_PHONE" />
+    <!-- Direct SMS for emergency (background send without user confirmation) -->
+    <uses-permission android:name="android.permission.SEND_SMS" />
     
     <application
         android:label="KoruBeni"

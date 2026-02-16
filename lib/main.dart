@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'firebase_options.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'core/di/service_locator.dart';
 import 'package:provider/provider.dart';
@@ -15,13 +16,16 @@ import 'presentation/providers/providers.dart';
 import 'screens/splash_screen.dart';
 import 'core/services/background_sync_service.dart';
 import 'core/services/offline_queue_service.dart';
+import 'core/services/data_migration_service.dart';
 import 'package:easy_localization/easy_localization.dart';
 
 /// Global flag - AuthGate checks this before using FirebaseAuth
 bool kFirebaseReady = false;
 
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  await Firebase.initializeApp();
+  try {
+    await Firebase.initializeApp();
+  } catch (_) {}
 }
 
 void main() async {
@@ -31,6 +35,9 @@ void main() async {
   // 0) ErrorWidget.builder MUST be set BEFORE runApp so ANY error is caught
   ErrorWidget.builder = (FlutterErrorDetails details) {
     debugPrint('ErrorWidget caught: ${details.exception}');
+    // Use tr() for localized error text (locale from EasyLocalization.ensureInitialized)
+    final errorTitle = 'error_title'.tr();
+    final errorRestart = 'error_restart'.tr();
     return MaterialApp(
       home: Scaffold(
         backgroundColor: const Color(0xFF0A1B2A),
@@ -46,9 +53,9 @@ void main() async {
                   color: Colors.amber,
                 ),
                 const SizedBox(height: 16),
-                const Text(
-                  "Bir sorun olustu",
-                  style: TextStyle(
+                Text(
+                  errorTitle,
+                  style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
                     color: Colors.white,
@@ -63,9 +70,9 @@ void main() async {
                   style: const TextStyle(color: Colors.white70, fontSize: 12),
                 ),
                 const SizedBox(height: 16),
-                const Text(
-                  "Uygulamayı yeniden başlatın.",
-                  style: TextStyle(color: Colors.white60),
+                Text(
+                  errorRestart,
+                  style: const TextStyle(color: Colors.white60),
                 ),
               ],
             ),
@@ -75,9 +82,9 @@ void main() async {
     );
   };
 
-  // 1) Firebase MUST initialize FIRST
+  // 1) Firebase MUST initialize FIRST (platform-specific options for Web support)
   try {
-    await Firebase.initializeApp();
+    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
     kFirebaseReady = true;
     debugPrint('>>> Firebase OK');
   } catch (e) {
@@ -90,6 +97,14 @@ void main() async {
     debugPrint('>>> ServiceLocator OK');
   } catch (e) {
     debugPrint('>>> ServiceLocator FAILED: $e');
+  }
+
+  // 2b) Data migration
+  try {
+    await DataMigrationService.migrate();
+    debugPrint('>>> DataMigration OK');
+  } catch (e) {
+    debugPrint('>>> DataMigration FAILED: $e');
   }
 
   // 3) Background sync

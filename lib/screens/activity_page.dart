@@ -4,6 +4,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../core/app_colors.dart';
 import '../core/services/activity_service.dart';
 import '../domain/models/activity_event.dart';
@@ -38,7 +39,7 @@ class _ActivityPageState extends State<ActivityPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Gecmis")),
+      appBar: AppBar(title: Text("activity_history".tr())),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _events.isEmpty
@@ -68,8 +69,8 @@ class _ActivityPageState extends State<ActivityPage> {
               ),
             ),
             const SizedBox(height: 24),
-            const Text(
-              "Henuz bir aktivite yok",
+            Text(
+              "activity_empty".tr(),
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w800,
@@ -77,8 +78,8 @@ class _ActivityPageState extends State<ActivityPage> {
               ),
             ),
             const SizedBox(height: 8),
-            const Text(
-              "Uygulamayi kullandikca acil durum,\nkonum paylasimi ve diger islemleriniz\nburada gorunecek.",
+            Text(
+              "activity_empty_desc".tr(),
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14,
@@ -107,9 +108,9 @@ class _ActivityPageState extends State<ActivityPage> {
 
       String label;
       if (eventDay == today) {
-        label = "Bugun";
+        label = "activity_today".tr();
       } else if (eventDay == yesterday) {
-        label = "Dun";
+        label = "activity_yesterday".tr();
       } else {
         label =
             "${event.timestamp.day.toString().padLeft(2, '0')}.${event.timestamp.month.toString().padLeft(2, '0')}.${event.timestamp.year}";

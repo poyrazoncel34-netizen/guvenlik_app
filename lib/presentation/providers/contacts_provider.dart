@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import '../../core/app_colors.dart';
 import '../../core/constants/app_constants.dart';
@@ -55,7 +56,7 @@ class ContactsProvider extends ChangeNotifier {
       // Saved as phone numbers; try to get name from emergency contact
       _emergencyContacts.add(
         ContactItem(
-          name: 'Kişi ${i + 1}',
+          name: "contacts_person_label".tr(namedArgs: {'index': '${i + 1}'}),
           phone: saved[i],
           icon: Icons.person_rounded,
           color: _getColorForIndex(i),

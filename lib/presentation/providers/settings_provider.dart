@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/constants/app_constants.dart';
@@ -16,7 +17,7 @@ class SettingsProvider extends ChangeNotifier {
   bool get locationEnabled => _locationEnabled;
   bool get soundEnabled => _soundEnabled;
   bool get vibrationEnabled => _vibrationEnabled;
-  String get profileName => _profileName.isEmpty ? 'Kullanıcı' : _profileName;
+  String get profileName => _profileName.isEmpty ? "settings_default_user".tr() : _profileName;
   String get profileEmail => _profileEmail.isEmpty ? '' : _profileEmail;
   bool get hasProfile => _profileName.isNotEmpty;
 

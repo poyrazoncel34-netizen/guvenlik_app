@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../core/app_colors.dart';
 import '../presentation/providers/settings_provider.dart';
 
@@ -22,7 +23,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   void initState() {
     super.initState();
     _nameController = TextEditingController(
-      text: widget.name == 'Kullanici' ? '' : widget.name,
+      text: widget.name == "settings_default_user".tr() ? '' : widget.name,
     );
     _emailController = TextEditingController(text: widget.email);
   }
@@ -36,10 +37,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   String? _validateName(String? value) {
     if (value == null || value.trim().isEmpty) {
-      return 'Ad Soyad zorunludur';
+      return "edit_profile_name_required".tr();
     }
     if (value.trim().length < 2) {
-      return 'Ad en az 2 karakter olmalidir';
+      return "edit_profile_name_min_length".tr();
     }
     return null;
   }
@@ -50,7 +51,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     }
     final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
     if (!emailRegex.hasMatch(value.trim())) {
-      return 'Gecerli bir e-posta adresi girin';
+      return "edit_profile_email_invalid".tr();
     }
     return null;
   }
@@ -68,11 +69,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       Navigator.pop(context, true);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Row(
+          content: Row(
             children: [
-              Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
-              SizedBox(width: 10),
-              Text("Profil guncellendi"),
+              const Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
+              const SizedBox(width: 10),
+              Text("edit_profile_success".tr()),
             ],
           ),
           backgroundColor: AppColors.success,
@@ -88,7 +89,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Kisisel Bilgiler")),
+      appBar: AppBar(title: Text("edit_profile_title".tr())),
       body: Form(
         key: _formKey,
         child: ListView(
@@ -107,10 +108,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     controller: _nameController,
                     validator: _validateName,
                     textCapitalization: TextCapitalization.words,
-                    decoration: const InputDecoration(
-                      hintText: "Ad Soyad",
-                      prefixIcon: Icon(Icons.person_outline_rounded),
-                      labelText: "Ad Soyad",
+                    decoration: InputDecoration(
+                      hintText: "edit_profile_name_hint".tr(),
+                      prefixIcon: const Icon(Icons.person_outline_rounded),
+                      labelText: "edit_profile_name_label".tr(),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -118,10 +119,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
                     validator: _validateEmail,
-                    decoration: const InputDecoration(
-                      hintText: "E-posta (istege bagli)",
-                      prefixIcon: Icon(Icons.email_outlined),
-                      labelText: "E-posta",
+                    decoration: InputDecoration(
+                      hintText: "edit_profile_email_hint".tr(),
+                      prefixIcon: const Icon(Icons.email_outlined),
+                      labelText: "edit_profile_email_label".tr(),
                     ),
                   ),
                 ],
@@ -140,9 +141,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     borderRadius: BorderRadius.circular(14),
                   ),
                 ),
-                child: const Text(
-                  "Kaydet",
-                  style: TextStyle(fontWeight: FontWeight.w700),
+                child: Text(
+                  "save".tr(),
+                  style: const TextStyle(fontWeight: FontWeight.w700),
                 ),
               ),
             ),

@@ -4,6 +4,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:easy_localization/easy_localization.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../core/app_colors.dart';
 import '../core/services/firebase_service.dart';
 import '../core/services/notification_service.dart';
@@ -49,6 +51,15 @@ class _MainNavigationState extends State<MainNavigation> {
     }
   }
 
+  Future<void> _makeCall(String number) async {
+    final uri = Uri(scheme: 'tel', path: number);
+    try {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } catch (e) {
+      debugPrint('Could not launch $uri: $e');
+    }
+  }
+
   void _showQuickHelp(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -71,9 +82,9 @@ class _MainNavigationState extends State<MainNavigation> {
               ),
             ),
             const SizedBox(height: 20),
-            const Text(
-              "Nasıl Yardımcı Olabiliriz?",
-              style: TextStyle(
+            Text(
+              "how_can_we_help".tr(),
+              style: const TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.w800,
                 color: AppColors.textPrimary,
@@ -83,25 +94,34 @@ class _MainNavigationState extends State<MainNavigation> {
             _buildHelpOption(
               icon: Icons.local_police_rounded,
               color: AppColors.info,
-              title: "Polisi Ara",
+              title: "call_police".tr(),
               subtitle: "155",
-              onTap: () => Navigator.pop(context),
+              onTap: () {
+                Navigator.pop(context);
+                _makeCall('155');
+              },
             ),
             const SizedBox(height: 12),
             _buildHelpOption(
               icon: Icons.medical_services_rounded,
               color: AppColors.emergency,
-              title: "Ambulans Çağır",
+              title: "call_ambulance".tr(),
               subtitle: "112",
-              onTap: () => Navigator.pop(context),
+              onTap: () {
+                Navigator.pop(context);
+                _makeCall('112');
+              },
             ),
             const SizedBox(height: 12),
             _buildHelpOption(
               icon: Icons.fire_truck_rounded,
               color: AppColors.warning,
-              title: "İtfaiye",
+              title: "call_fire".tr(),
               subtitle: "110",
-              onTap: () => Navigator.pop(context),
+              onTap: () {
+                Navigator.pop(context);
+                _makeCall('110');
+              },
             ),
             const SizedBox(height: 16),
           ],
@@ -200,9 +220,9 @@ class _MainNavigationState extends State<MainNavigation> {
               backgroundColor: AppColors.emergency,
               elevation: 8,
               icon: const Icon(Icons.flash_on_rounded, color: Colors.white),
-              label: const Text(
-                "Hızlı Yardım",
-                style: TextStyle(
+              label: Text(
+                "quick_help".tr(),
+                style: const TextStyle(
                   fontWeight: FontWeight.w800,
                   color: Colors.white,
                   letterSpacing: 0.3,
@@ -234,25 +254,25 @@ class _MainNavigationState extends State<MainNavigation> {
                   index: 0,
                   iconOff: Icons.home_outlined,
                   iconOn: Icons.home_rounded,
-                  label: "Ana Sayfa",
+                  label: "nav_home".tr(),
                 ),
                 _buildNavItem(
                   index: 1,
                   iconOff: Icons.map_outlined,
                   iconOn: Icons.map_rounded,
-                  label: "Harita",
+                  label: "nav_map".tr(),
                 ),
                 _buildNavItem(
                   index: 2,
                   iconOff: Icons.people_outline_rounded,
                   iconOn: Icons.people_rounded,
-                  label: "Kişiler",
+                  label: "nav_contacts".tr(),
                 ),
                 _buildNavItem(
                   index: 3,
                   iconOff: Icons.settings_outlined,
                   iconOn: Icons.settings_rounded,
-                  label: "Ayarlar",
+                  label: "nav_settings".tr(),
                 ),
               ],
             ),

@@ -1,12 +1,30 @@
 #!/bin/bash
 
-# KoruBeni - Production Build Script
-# Kullanım: ./scripts/build_production.sh
+# KoruBeni - Production Build Script (Play Store AAB + optional iOS)
+# Kullanım: ENCRYPTION_KEY='base64key' ./scripts/build_production.sh
+# Key üretmek: openssl rand -base64 32
 
 set -e
 
 echo "🏗️  KoruBeni Production Build Başlıyor..."
 echo ""
+
+# Pre-flight: android/key.properties (release signing)
+# Dosya MUTLAKA android/key.properties olmali (proje kokune kopyalamayin)
+if [ ! -f "android/key.properties" ]; then
+    echo "❌ android/key.properties bulunamadı!"
+    echo "   cp android/key.properties.example android/key.properties"
+    echo "   Sonra storePassword, keyPassword, keyAlias, storeFile düzenle."
+    echo "   (Dosya android/ klasöründe olmalı; kökteki key.properties kullanılmaz.)"
+    exit 1
+fi
+
+# Pre-flight: google-services.json (Firebase)
+if [ ! -f "android/app/google-services.json" ]; then
+    echo "❌ android/app/google-services.json bulunamadı!"
+    echo "   Firebase Console > Project Settings > Android app > indir, bu yola koy."
+    exit 1
+fi
 
 # Encryption key kontrolü
 if [ -z "$ENCRYPTION_KEY" ]; then
@@ -58,6 +76,12 @@ fi
 
 # iOS Build (opsiyonel - sadece Mac'te)
 if [[ "$OSTYPE" == "darwin"* ]]; then
+    if [ ! -f "ios/Runner/GoogleService-Info.plist" ]; then
+        echo "⚠️  ios/Runner/GoogleService-Info.plist bulunamadı!"
+        echo "   iOS'ta Firebase kullanmak için Firebase Console > Project Settings > iOS app > indir, ios/Runner/ altına koy."
+        echo "   Devam ediliyor (Firebase olmadan build alınacak)..."
+        echo ""
+    fi
     echo "🍎 iOS build başlıyor..."
     flutter build ios --release \
       --dart-define=ENV=production \
