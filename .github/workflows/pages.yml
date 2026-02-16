@@ -3,7 +3,7 @@ name: Deploy Privacy Policy
 on:
   push:
     branches: [main]
-    paths: ['docs/**']
+    paths: ['.gh-pages-publish/**']
   workflow_dispatch:
 
 permissions:
@@ -24,7 +24,7 @@ jobs:
 
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: docs
+          path: .gh-pages-publish
 
       - name: Deploy to GitHub Pages
         id: deployment
