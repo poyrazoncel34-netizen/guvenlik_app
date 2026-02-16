@@ -34,61 +34,53 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Check secrets availability
+      - name: Setup signing & secrets
         id: check-secrets
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
           ENCRYPTION_KEY: ${{ secrets.ENCRYPTION_KEY }}
           GOOGLE_SERVICES: ${{ secrets.ANDROID_GOOGLE_SERVICES_JSON_BASE64 }}
-        run: |
-          if [ -n "$KEYSTORE_BASE64" ]; then
-            echo "has_keystore=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "has_keystore=false" >> "$GITHUB_OUTPUT"
-            echo "::warning::KEYSTORE_BASE64 secret yok — release build atlanacak"
-          fi
-          if [ -n "$ENCRYPTION_KEY" ]; then
-            echo "has_encryption_key=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "has_encryption_key=false" >> "$GITHUB_OUTPUT"
-            echo "::warning::ENCRYPTION_KEY secret yok — release build atlanacak"
-          fi
-          if [ -n "$GOOGLE_SERVICES" ]; then
-            echo "has_google_services=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "has_google_services=false" >> "$GITHUB_OUTPUT"
-            echo "::warning::ANDROID_GOOGLE_SERVICES_JSON_BASE64 secret yok — dummy google-services.json kullanılacak"
-          fi
-
-      - name: Decode keystore
-        if: steps.check-secrets.outputs.has_keystore == 'true'
-        env:
-          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
-        run: |
-          echo "$KEYSTORE_BASE64" | base64 -d > android/korubeni-release-key.jks
-
-      - name: Create key.properties
-        if: steps.check-secrets.outputs.has_keystore == 'true'
-        env:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
           STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
         run: |
-          cat > android/key.properties << EOF
+          SIGN_OK=false
+
+          # Keystore decode
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            if echo "$KEYSTORE_BASE64" | base64 -d > android/korubeni-release-key.jks 2>/dev/null && [ -s android/korubeni-release-key.jks ]; then
+              echo "✅ Keystore decode başarılı"
+              # key.properties oluştur
+              cat > android/key.properties << KPEOF
           storePassword=$STORE_PASSWORD
           keyPassword=$KEY_PASSWORD
           keyAlias=$KEY_ALIAS
           storeFile=korubeni-release-key.jks
-          EOF
-
-      - name: Create google-services.json
-        env:
-          B64: ${{ secrets.ANDROID_GOOGLE_SERVICES_JSON_BASE64 }}
-        run: |
-          if [ -n "$B64" ]; then
-            echo "$B64" | base64 -d > android/app/google-services.json
+          KPEOF
+              SIGN_OK=true
+            else
+              echo "::warning::KEYSTORE_BASE64 secret var ama geçersiz base64 verisi — release build atlanacak"
+              rm -f android/korubeni-release-key.jks
+            fi
           else
-            echo "Dummy google-services.json oluşturuluyor (CI build için)..."
+            echo "::warning::KEYSTORE_BASE64 secret yok — release build atlanacak"
+          fi
+
+          echo "can_sign=$SIGN_OK" >> "$GITHUB_OUTPUT"
+
+          if [ -n "$ENCRYPTION_KEY" ] && [ "$SIGN_OK" = "true" ]; then
+            echo "can_build_release=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "can_build_release=false" >> "$GITHUB_OUTPUT"
+            [ -z "$ENCRYPTION_KEY" ] && echo "::warning::ENCRYPTION_KEY secret yok — release build atlanacak"
+          fi
+
+          # google-services.json
+          if [ -n "$GOOGLE_SERVICES" ]; then
+            echo "$GOOGLE_SERVICES" | base64 -d > android/app/google-services.json 2>/dev/null || true
+          fi
+          if [ ! -s "android/app/google-services.json" ]; then
+            echo "::warning::Dummy google-services.json oluşturuluyor (CI build için)"
             cat > android/app/google-services.json << 'GSJSON'
           {
             "project_info": {
@@ -97,25 +89,18 @@ jobs:
               "project_id": "dummy-project",
               "storage_bucket": "dummy-project.appspot.com"
             },
-            "client": [
-              {
-                "client_info": {
-                  "mobilesdk_app_id": "1:000000000000:android:0000000000000000",
-                  "android_client_info": {
-                    "package_name": "com.poyrazoncel.korubeni"
-                  }
-                },
-                "api_key": [
-                  {
-                    "current_key": "AIzaSyDummy000000000000000000000000000"
-                  }
-                ]
-              }
-            ],
+            "client": [{
+              "client_info": {
+                "mobilesdk_app_id": "1:000000000000:android:0000000000000000",
+                "android_client_info": { "package_name": "com.poyrazoncel.korubeni" }
+              },
+              "api_key": [{ "current_key": "AIzaSyDummy000000000000000000000000000" }]
+            }],
             "configuration_version": "1"
           }
           GSJSON
           fi
+
 
       - name: Flutter pub get
         run: flutter pub get
@@ -127,7 +112,7 @@ jobs:
         run: flutter test
 
       - name: Build AAB (release)
-        if: steps.check-secrets.outputs.has_keystore == 'true' && steps.check-secrets.outputs.has_encryption_key == 'true'
+        if: steps.check-secrets.outputs.can_build_release == 'true'
         env:
           ENCRYPTION_KEY: ${{ secrets.ENCRYPTION_KEY }}
         run: |
@@ -136,7 +121,7 @@ jobs:
             --dart-define=ENCRYPTION_KEY="$ENCRYPTION_KEY"
 
       - name: Upload AAB
-        if: steps.check-secrets.outputs.has_keystore == 'true' && steps.check-secrets.outputs.has_encryption_key == 'true'
+        if: steps.check-secrets.outputs.can_build_release == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: app-release-aab
