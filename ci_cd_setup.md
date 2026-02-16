@@ -8,7 +8,7 @@ Repo'nuzda **Settings > Secrets and variables > Actions** bölümüne şu secret
 
 ```bash
 # Keystore dosyasını base64'e çevirin:
-base64 -i android/upload-keystore.jks | pbcopy
+base64 -i android/korubeni-release-key.jks | pbcopy
 ```
 
 | Secret Adı | Değer |
