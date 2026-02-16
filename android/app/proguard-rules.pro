@@ -2,6 +2,11 @@
 # KORUBENI - PROGUARD RULES
 # ============================================================================
 
+# Flutter - Play Core split install (deferred components) kullanılmıyorsa R8 uyarısını kapat
+-dontwarn com.google.android.play.core.splitcompat.SplitCompatApplication
+-dontwarn com.google.android.play.core.splitinstall.**
+-dontwarn com.google.android.play.core.tasks.**
+
 # Flutter
 -keep class io.flutter.** { *; }
 -keep class io.flutter.plugins.** { *; }

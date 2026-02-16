@@ -2,6 +2,7 @@
 // PIN KURULUM EKRANI - ILK KULLANIM ICIN ZORUNLU
 // ============================================================================
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -72,7 +73,7 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
     if (_pin != _confirmPin) {
       HapticFeedback.vibrate();
       setState(() {
-        _errorMessage = "PIN'ler uyusmuyor. Tekrar deneyin.";
+        _errorMessage = 'pin_mismatch'.tr();
         _confirmPin = "";
         _isConfirming = false;
         _pin = "";
@@ -97,8 +98,8 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
   Widget build(BuildContext context) {
     final currentPin = _isConfirming ? _confirmPin : _pin;
     return Semantics(
-      label: 'PIN kurulum ekranı',
-      hint: '4 haneli güvenlik PIN\'i belirleyin',
+      label: 'pin_screen_semantics'.tr(),
+      hint: 'pin_screen_hint_semantics'.tr(),
       child: Scaffold(
         backgroundColor: AppColors.background,
         body: SafeArea(
@@ -123,8 +124,8 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
               const SizedBox(height: 24),
               Text(
                 _isConfirming
-                    ? "PIN'i Tekrar Girin"
-                    : "Guvenlik PIN'i Belirleyin",
+                    ? 'pin_confirm_title'.tr()
+                    : 'pin_setup_title'.tr(),
                 style: const TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.w800,
@@ -134,8 +135,8 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
               const SizedBox(height: 8),
               Text(
                 _isConfirming
-                    ? "Dogrulamak icin ayni PIN'i tekrar girin"
-                    : "Acil durum iptali icin ${AppConstants.pinLength} haneli PIN belirleyin",
+                    ? 'pin_confirm_hint'.tr()
+                    : 'pin_setup_hint'.tr(namedArgs: {'count': '${AppConstants.pinLength}'}),
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                   fontSize: 14,

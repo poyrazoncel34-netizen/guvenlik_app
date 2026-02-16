@@ -1,10 +1,11 @@
 // ============================================================================
-// GUVENLI YURUYUS EKRANI
+// GÜVENLİ YÜRÜYÜŞ EKRANI
 // ============================================================================
 
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../core/app_colors.dart';
 import '../core/services/activity_service.dart';
 import '../core/services/analytics_service.dart';
@@ -44,8 +45,8 @@ class _SafeWalkScreenState extends State<SafeWalkScreen> {
     AnalyticsService.logSafeWalkStarted(minutes: _selectedMinutes);
     ActivityService.logEvent(
       type: ActivityType.locationShared,
-      title: "Guvenli Yuruyus Basladi",
-      description: "$_selectedMinutes dakikalik guvenli yuruyus aktif",
+      title: "safe_walk_started_activity".tr(),
+      description: "safe_walk_started_desc".tr(namedArgs: {"minutes": "$_selectedMinutes"}),
     );
 
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
@@ -85,8 +86,8 @@ class _SafeWalkScreenState extends State<SafeWalkScreen> {
     AnalyticsService.logSafeWalkCompleted();
     ActivityService.logEvent(
       type: ActivityType.safetyCheck,
-      title: "Guvenli Yuruyus Tamamlandi",
-      description: "Guvenli sekilde hedefe ulastiniz",
+      title: "safe_walk_completed_activity".tr(),
+      description: "safe_walk_completed_desc".tr(),
     );
 
     setState(() {
@@ -97,13 +98,13 @@ class _SafeWalkScreenState extends State<SafeWalkScreen> {
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: const Row(
+        content: Row(
           children: [
-            Icon(Icons.check_circle_rounded, color: Colors.white),
-            SizedBox(width: 12),
+            const Icon(Icons.check_circle_rounded, color: Colors.white),
+            const SizedBox(width: 12),
             Text(
-              "Guvende oldugunuz kaydedildi!",
-              style: TextStyle(fontWeight: FontWeight.w600),
+              "safe_walk_safe_recorded".tr(),
+              style: const TextStyle(fontWeight: FontWeight.w600),
             ),
           ],
         ),
@@ -135,7 +136,7 @@ class _SafeWalkScreenState extends State<SafeWalkScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text("Guvenli Yuruyus"),
+        title: Text("safe_walk_title".tr()),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded),
           onPressed: () {
@@ -182,19 +183,19 @@ class _SafeWalkScreenState extends State<SafeWalkScreen> {
                 ),
               ),
               const SizedBox(height: 20),
-              const Text(
-                "Guvenli Yuruyus",
-                style: TextStyle(
+              Text(
+                "safe_walk_title".tr(),
+                style: const TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.w800,
                   color: AppColors.textPrimary,
                 ),
               ),
               const SizedBox(height: 10),
-              const Text(
-                "Bir zamanlayici baslatin. Sure doldugunuzda\n'Guvendeyim' butonuna basmazsiniz, otomatik\nolarak acil kisilerinize bildirim gonderilir.",
+              Text(
+                "safe_walk_desc".tr(),
                 textAlign: TextAlign.center,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 14,
                   color: AppColors.textSecondary,
                   height: 1.5,
@@ -204,11 +205,11 @@ class _SafeWalkScreenState extends State<SafeWalkScreen> {
           ),
         ),
         const SizedBox(height: 28),
-        const Align(
+        Align(
           alignment: Alignment.centerLeft,
           child: Text(
-            "Sure Secin",
-            style: TextStyle(
+            "safe_walk_select_duration".tr(),
+            style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w800,
               color: AppColors.textPrimary,
@@ -240,7 +241,7 @@ class _SafeWalkScreenState extends State<SafeWalkScreen> {
                   ),
                 ),
                 child: Text(
-                  "$min dk",
+                  "safe_walk_minutes".tr(namedArgs: {"min": "$min"}),
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
@@ -257,9 +258,9 @@ class _SafeWalkScreenState extends State<SafeWalkScreen> {
           child: ElevatedButton.icon(
             onPressed: _startSafeWalk,
             icon: const Icon(Icons.play_arrow_rounded, size: 24),
-            label: const Text(
-              "Yuruyuse Basla",
-              style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+            label: Text(
+              "safe_walk_start".tr(),
+              style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
             ),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.accent,
@@ -323,7 +324,7 @@ class _SafeWalkScreenState extends State<SafeWalkScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  isUrgent ? "Acele edin!" : "Kalan sure",
+                  isUrgent ? "safe_walk_hurry".tr() : "safe_walk_remaining".tr(),
                   style: TextStyle(
                     fontSize: 14,
                     color: isUrgent
@@ -347,14 +348,14 @@ class _SafeWalkScreenState extends State<SafeWalkScreen> {
                 color: AppColors.emergency.withValues(alpha: 0.3),
               ),
             ),
-            child: const Row(
+            child: Row(
               children: [
-                Icon(Icons.warning_amber_rounded, color: AppColors.emergency),
-                SizedBox(width: 12),
+                const Icon(Icons.warning_amber_rounded, color: AppColors.emergency),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    "Sure dolmak uzere! 'Guvendeyim' butonuna basin.",
-                    style: TextStyle(
+                    "safe_walk_urgent_warning".tr(),
+                    style: const TextStyle(
                       color: AppColors.emergency,
                       fontWeight: FontWeight.w600,
                       fontSize: 13,
@@ -370,9 +371,9 @@ class _SafeWalkScreenState extends State<SafeWalkScreen> {
           child: ElevatedButton.icon(
             onPressed: _checkIn,
             icon: const Icon(Icons.check_circle_rounded, size: 24),
-            label: const Text(
-              "Guvendeyim",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+            label: Text(
+              "safe_walk_safe".tr(),
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
             ),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.success,
@@ -388,9 +389,9 @@ class _SafeWalkScreenState extends State<SafeWalkScreen> {
         const SizedBox(height: 12),
         TextButton(
           onPressed: _cancelWalk,
-          child: const Text(
-            "Iptal Et",
-            style: TextStyle(
+          child: Text(
+            "safe_walk_cancel".tr(),
+            style: const TextStyle(
               color: AppColors.textSecondary,
               fontWeight: FontWeight.w600,
             ),
@@ -407,18 +408,18 @@ class _SafeWalkScreenState extends State<SafeWalkScreen> {
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.cardBg,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text(
-          "Dikkat",
-          style: TextStyle(color: AppColors.textPrimary),
+        title: Text(
+          "safe_walk_exit_title".tr(),
+          style: const TextStyle(color: AppColors.textPrimary),
         ),
-        content: const Text(
-          "Guvenli yuruyus aktif. Cikarsiniz geri sayim devam eder ve sure dolunca acil durum tetiklenir.",
-          style: TextStyle(color: AppColors.textSecondary),
+        content: Text(
+          "safe_walk_exit_message".tr(),
+          style: const TextStyle(color: AppColors.textSecondary),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text("Kal"),
+            child: Text("safe_walk_exit_stay".tr()),
           ),
           TextButton(
             onPressed: () {
@@ -426,9 +427,9 @@ class _SafeWalkScreenState extends State<SafeWalkScreen> {
               Navigator.pop(ctx);
               Navigator.pop(context);
             },
-            child: const Text(
-              "Iptal Et ve Cik",
-              style: TextStyle(color: AppColors.emergency),
+            child: Text(
+              "safe_walk_exit_cancel".tr(),
+              style: const TextStyle(color: AppColors.emergency),
             ),
           ),
         ],

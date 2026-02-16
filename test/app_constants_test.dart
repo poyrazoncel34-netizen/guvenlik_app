@@ -6,6 +6,9 @@ void main() {
     test('appName is KoruBeni', () {
       expect(AppConstants.appName, 'KoruBeni');
     });
+    test('supportEmail is defined', () {
+      expect(AppConstants.supportEmail, 'destek@korubeni.com');
+    });
     test('pinLength is 4', () {
       expect(AppConstants.pinLength, 4);
     });

@@ -1,7 +1,7 @@
 class AppConstants {
   static const String appName = 'KoruBeni';
-  static const String appVersion = '1.0.0';
-  static const int buildNumber = 1;
+  // Sürüm bilgisi artık package_info_plus ile alınıyor (PackageInfo.fromPlatform()).
+  // Sabit appVersion/buildNumber kaldırıldı – tek kaynak pubspec.yaml.
   static const String supportEmail = 'destek@korubeni.com';
 
   /// Encryption key is loaded from dart-define at build time.

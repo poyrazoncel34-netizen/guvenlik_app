@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_direct_caller_plugin/flutter_direct_caller_plugin.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../core/app_colors.dart';
 import '../core/services/contact_service.dart';
 import '../core/services/biometric_service.dart';
@@ -8,6 +10,7 @@ import '../core/di/service_locator.dart';
 import '../core/security/secure_storage.dart';
 import '../core/security/secure_storage_keys.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'emergency_call_screen.dart';
 
 class PinVerificationScreen extends StatefulWidget {
   const PinVerificationScreen({super.key});
@@ -29,6 +32,7 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
   @override
   void initState() {
     super.initState();
+    WakelockPlus.enable(); // Ekran açık kalsın - cepte olsa bile geri sayım tamamlansın
     _loadPin();
     _loadEmergencyContact();
     _checkBiometric();
@@ -49,14 +53,14 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
 
   Future<void> _authenticateWithBiometric() async {
     final success = await BiometricService.instance.authenticate(
-      reason: 'Alarm iptali için kimliğinizi doğrulayın',
+      reason: "pin_verify_biometric_reason".tr(),
     );
     if (success && mounted) {
       _timer?.cancel();
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Güvendesiniz. Alarm iptal edildi."),
+        SnackBar(
+          content: Text("pin_verify_safe_cancelled".tr()),
           backgroundColor: AppColors.success,
         ),
       );
@@ -64,7 +68,7 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            '$_biometricLabel doğrulaması başarısız. PIN ile iptal edebilirsiniz.',
+            "pin_verify_biometric_fail".tr(namedArgs: {"label": _biometricLabel}),
           ),
           backgroundColor: AppColors.warning,
           behavior: SnackBarBehavior.floating,
@@ -111,35 +115,40 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
     });
   }
 
-  // --- ARANACAK NUMARAYI BUL VE ARA ---
+  // --- ARANACAK NUMARAYI BUL VE DOĞRUDAN ARA (onay penceresi olmadan) ---
   Future<void> _triggerSOS() async {
-    // 1. Kayıtlı numarayı getir
     final emergencyNumber = await ContactService.getEmergencyNumber();
 
-    // 2. Numara varsa aramayı başlat
     if (emergencyNumber != null && emergencyNumber.isNotEmpty) {
-      final Uri url = Uri(scheme: 'tel', path: emergencyNumber);
       try {
-        final launched = await launchUrl(url);
-        if (!launched && mounted) {
-          ScaffoldMessenger.of(
+        FlutterDirectCallerPlugin.callNumber(emergencyNumber);
+        if (mounted) {
+          Navigator.pushReplacement(
             context,
-          ).showSnackBar(const SnackBar(content: Text("Arama başlatılamadı")));
+            MaterialPageRoute(
+              builder: (context) => EmergencyCallScreen(
+                name: _emergencyContact?.name ?? "pin_verify_emergency_contact".tr(),
+                phone: emergencyNumber,
+              ),
+            ),
+          );
         }
       } catch (e) {
         debugPrint("Arama hatası: $e");
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("pin_verify_call_failed".tr())),
+          );
+          Navigator.pop(context);
+        }
       }
     } else {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Aranacak kayıtlı numara yok!")),
+          SnackBar(content: Text("pin_verify_no_number".tr())),
         );
+        Navigator.pop(context);
       }
-    }
-
-    // İşlem bitince ekranı kapat
-    if (mounted) {
-      Navigator.pop(context);
     }
   }
 
@@ -155,8 +164,8 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
         _timer?.cancel();
         Navigator.pop(context); // Şifre doğru, iptal et
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Güvendesiniz. Alarm iptal edildi."),
+          SnackBar(
+            content: Text("pin_verify_safe_cancelled".tr()),
             backgroundColor: AppColors.success,
           ),
         );
@@ -165,8 +174,8 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
           _enteredPin = ""; // Yanlış şifre
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("PIN eşleşmedi, tekrar deneyin."),
+          SnackBar(
+            content: Text("pin_mismatch".tr()),
             backgroundColor: AppColors.emergency,
           ),
         );
@@ -177,6 +186,7 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
   @override
   void dispose() {
     _timer?.cancel();
+    WakelockPlus.disable();
     super.dispose();
   }
 
@@ -197,8 +207,8 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
                   color: AppColors.emergency.withValues(alpha: 0.4),
                 ),
               ),
-              child: const Text(
-                "GÜVENLİK DOĞRULAMASI",
+              child: Text(
+                "pin_verify_title".tr(),
                 style: TextStyle(
                   color: AppColors.emergency,
                   fontSize: 14,

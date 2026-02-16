@@ -6,7 +6,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
+import 'package:easy_localization/easy_localization.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import '../core/app_colors.dart';
+import '../core/utils/pin_settings_helper.dart';
 import 'edit_profile_screen.dart';
 import 'settings_detail_page.dart';
 import '../presentation/providers/settings_provider.dart';
@@ -19,19 +22,29 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
+  String _appVersion = '';
+
   @override
   void initState() {
     super.initState();
+    _loadVersionInfo();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<SettingsProvider>().loadProfile();
     });
+  }
+
+  Future<void> _loadVersionInfo() async {
+    final info = await PackageInfo.fromPlatform();
+    if (mounted) {
+      setState(() => _appVersion = info.version);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<SettingsProvider>();
     return Scaffold(
-      appBar: AppBar(title: const Text("Profil")),
+      appBar: AppBar(title: Text("profile_title".tr())),
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
@@ -96,17 +109,17 @@ class _ProfilePageState extends State<ProfilePage> {
                 _buildSettingsItem(
                   context,
                   Icons.person_outline_rounded,
-                  "Kişisel Bilgiler",
+                  "profile_personal_info",
                 ),
                 _buildSettingsItem(
                   context,
                   Icons.lock_outline_rounded,
-                  "Güvenlik & PIN",
+                  "profile_security_pin",
                 ),
                 _buildSettingsItem(
                   context,
                   Icons.notifications_outlined,
-                  "Bildirimler",
+                  "profile_notifications",
                 ),
               ],
             ),
@@ -117,17 +130,19 @@ class _ProfilePageState extends State<ProfilePage> {
             child: ElevatedButton(
               onPressed: () async {
                 HapticFeedback.mediumImpact();
-                await FirebaseAuth.instance.signOut();
+                try {
+                  await FirebaseAuth.instance.signOut();
+                } catch (_) {}
                 if (!context.mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: const Row(
+                    content: Row(
                       children: [
-                        Icon(Icons.logout_rounded, color: Colors.white),
-                        SizedBox(width: 12),
+                        const Icon(Icons.logout_rounded, color: Colors.white),
+                        const SizedBox(width: 12),
                         Text(
-                          "Çıkış yapıldı",
-                          style: TextStyle(fontWeight: FontWeight.w600),
+                          "profile_logout_success".tr(),
+                          style: const TextStyle(fontWeight: FontWeight.w600),
                         ),
                       ],
                     ),
@@ -144,9 +159,9 @@ class _ProfilePageState extends State<ProfilePage> {
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 18),
               ),
-              child: const Text(
-                "Çıkış Yap",
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+              child: Text(
+                "profile_logout".tr(),
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
               ),
             ),
           ),
@@ -155,7 +170,7 @@ class _ProfilePageState extends State<ProfilePage> {
             child: Column(
               children: [
                 Text(
-                  "KoruBeni",
+                  "app_name".tr(),
                   style: TextStyle(
                     fontSize: 13,
                     color: AppColors.textSecondary.withValues(alpha: 0.7),
@@ -164,7 +179,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  "Sürüm 1.0.0",
+                  _appVersion.isNotEmpty ? "profile_version".tr(namedArgs: {"version": _appVersion}) : "...",
                   style: TextStyle(
                     fontSize: 12,
                     color: AppColors.textSecondary.withValues(alpha: 0.6),
@@ -179,13 +194,14 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _buildSettingsItem(BuildContext context, IconData icon, String title) {
+  Widget _buildSettingsItem(BuildContext context, IconData icon, String itemKey) {
+    final title = itemKey.tr();
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: () {
           HapticFeedback.lightImpact();
-          if (title == "Kişisel Bilgiler") {
+          if (itemKey == "profile_personal_info") {
             final provider = context.read<SettingsProvider>();
             Navigator.push(
               context,
@@ -196,16 +212,22 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
               ),
             ).then((value) {
+              if (!mounted) return;
               if (value == true) {
                 provider.loadProfile();
               }
             });
-          } else {
+          } else if (itemKey == "profile_security_pin") {
+            PinSettingsHelper.showPinChangeSheet(context);
+          } else if (itemKey == "profile_notifications") {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) =>
-                    SettingsDetailPage(title: title, icon: icon),
+                builder: (context) => SettingsDetailPage(
+                  title: title,
+                  sectionKey: 'settings_notifications',
+                  icon: icon,
+                ),
               ),
             );
           }

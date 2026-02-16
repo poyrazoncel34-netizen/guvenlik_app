@@ -2,199 +2,152 @@
 // AYARLAR DETAY SAYFASI
 // ============================================================================
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import '../core/app_colors.dart';
-import '../core/constants/app_constants.dart';
 
+/// Section keys used for content lookup (locale-independent).
+/// Must match the keys passed from settings_page (e.g. settings_about_app).
 class SettingsDetailPage extends StatelessWidget {
   final String title;
+  final String sectionKey;
   final IconData icon;
 
   const SettingsDetailPage({
     super.key,
     required this.title,
+    required this.sectionKey,
     required this.icon,
   });
 
-  List<_DetailSection> _sectionsForTitle() {
-    switch (title) {
-      case "Uygulama Hakkında":
+  List<_DetailSection> _sectionsForTitle({String? version, String? buildNumber}) {
+    final ver = version ?? '-';
+    final build = buildNumber ?? '-';
+    switch (sectionKey) {
+      case 'settings_about_app':
         return [
-          const _DetailSection(
-            heading: "Misyonumuz",
-            body:
-                "KoruBeni, kisisel guvenligi guclendirmek icin tasarlanmis bir acil durum platformudur. Amacimiz, "
-                "kritik anlarda hizli aksiyon almanizi ve guven aginiza tek dokunusla ulasmanizi saglamaktir.",
+          _DetailSection(
+            heading: "detail_about_heading_mission".tr(),
+            body: "detail_about_body_mission".tr(),
           ),
-          const _DetailSection(
-            heading: "Temel Ozellikler",
-            body:
-                "• Panik Butonu: Basili tutarak acil cagrı baslatma\n"
-                "• Acil Kisiler: 5 kisiye kadar acil kisi kaydi\n"
-                "• Konum Paylasimi: Gercek zamanli konum paylasimi\n"
-                "• Sahte Cagri: Guvenliginiz icin sahte arama simulasyonu\n"
-                "• Siren: Yuksek sesli alarm\n"
-                "• Hizli Mesaj: Tek dokunusla acil mesaj gonderimi\n"
-                "• Guvenli Yuruyus: Zamanlayicili guvenlik kontrolu",
+          _DetailSection(
+            heading: "detail_about_heading_features".tr(),
+            body: "detail_about_body_features".tr(),
           ),
-          const _DetailSection(
-            heading: "Surum Bilgisi",
-            body:
-                "Surum: ${AppConstants.appVersion}\n"
-                "Build: ${AppConstants.buildNumber}\n"
-                "Platform: iOS & Android\n"
-                "Gelistirici: KoruBeni Team",
+          _DetailSection(
+            heading: "detail_about_heading_version".tr(),
+            body: "detail_about_body_version".tr(namedArgs: {'version': ver, 'build': build}),
           ),
-          const _DetailSection(
-            heading: "Sorumluluk",
-            body:
-                "Uygulama, acil durumlarda destekleyici bir aractir. Operator/kurum yanit sureleri ve iletisim "
-                "altyapisi, uygulama kontrolu disindadir. Gercek tehlike durumlarinda 112, 155 veya 110 numaralarini "
-                "dogrudan aramaniz onerilir.",
+          _DetailSection(
+            heading: "detail_about_heading_disclaimer".tr(),
+            body: "detail_about_body_disclaimer".tr(),
           ),
         ];
-      case "Gizlilik Politikası":
-        return const [
+      case 'settings_privacy_policy':
+        return [
           _DetailSection(
-            heading: "1. Genel Bakis",
-            body:
-                "KoruBeni olarak gizliliginize onem veriyoruz. Bu politika, uygulamamizi kullanirken "
-                "toplanan, kullanilan ve korunan kisisel verileri aciklar. Uygulamayi kullanarak bu "
-                "politikayi kabul etmis sayilirsiniz.",
+            heading: "detail_privacy_heading_1".tr(),
+            body: "detail_privacy_body_1".tr(),
           ),
           _DetailSection(
-            heading: "2. Toplanan Veriler",
-            body:
-                "• Telefon Numarasi: Firebase Authentication ile giris icin\n"
-                "• Konum Verileri: Acil durumlarda paylasim icin (izin ile)\n"
-                "• Acil Kisi Bilgileri: Cihazda guvenli depolama ile saklanir\n"
-                "• PIN Kodu: Sifrelenerek cihazda saklanir, sunucuya gonderilmez\n"
-                "• Aktivite Gecmisi: Uygulama icindeki islemlerinizin yerel kaydi\n"
-                "• Cihaz Bilgileri: Cokme raporlari icin (Firebase Crashlytics)",
+            heading: "detail_privacy_heading_2".tr(),
+            body: "detail_privacy_body_2".tr(),
           ),
           _DetailSection(
-            heading: "3. Konum Kullanimi",
-            body:
-                "Konum verileri yalnizca asagidaki durumlarda kullanilir:\n"
-                "• Acil durum butonuna basildiginda konum paylasimi\n"
-                "• Kullanicinin konum paylasimini aktif etmesi durumunda\n"
-                "• Harita gorunumunde mevcut konumun gosterilmesi\n\n"
-                "Konum verileri arka planda toplanmaz. Konum paylasimini istediginiz zaman "
-                "ayarlardan kapatabilirsiniz.",
+            heading: "detail_privacy_heading_3".tr(),
+            body: "detail_privacy_body_3".tr(),
           ),
           _DetailSection(
-            heading: "4. Veri Guvenligi",
-            body:
-                "• Hassas veriler (PIN, acil kisiler) AES sifreleme ile korunur\n"
-                "• Veriler cihazin guvenli depolama alaninda saklanir (iOS Keychain / Android Keystore)\n"
-                "• Firebase iletisimi SSL/TLS ile sifrelidir\n"
-                "• Sunucu tarafinda erisimsiz veriler duzeli olarak temizlenir",
+            heading: "detail_privacy_heading_4".tr(),
+            body: "detail_privacy_body_4".tr(),
           ),
           _DetailSection(
-            heading: "5. Ucuncu Taraf Hizmetleri",
-            body:
-                "Uygulama asagidaki ucuncu taraf hizmetlerini kullanir:\n"
-                "• Firebase Authentication: Kullanici kimlik dogrulamasi\n"
-                "• Firebase Firestore: Acil durum kayitlari\n"
-                "• Firebase Crashlytics: Uygulama cokme raporlari\n"
-                "• Firebase Analytics: Anonim kullanim istatistikleri\n"
-                "• Firebase Cloud Messaging: Bildirimler\n\n"
-                "Bu hizmetlerin gizlilik politikalari icin Google'in gizlilik politikasina basvurun.",
+            heading: "detail_privacy_heading_5".tr(),
+            body: "detail_privacy_body_5".tr(),
           ),
           _DetailSection(
-            heading: "6. Veri Saklama ve Silme",
-            body:
-                "• Yerel veriler: Uygulamayi silerseniz tum yerel veriler silinir\n"
-                "• Sunucu verileri: Hesabinizi sildiginizde sunucu verileri 30 gun icinde silinir\n"
-                "• Aktivite gecmisi: Yalnizca cihazda saklanir, maksimum 50 kayit\n"
-                "• Cikmis yaptiginizda oturum verileri hemen silinir",
+            heading: "detail_privacy_heading_6".tr(),
+            body: "detail_privacy_body_6".tr(),
           ),
           _DetailSection(
-            heading: "7. Kullanici Haklari",
-            body:
-                "Asagidaki haklara sahipsiniz:\n"
-                "• Verilerinize erisim isteme\n"
-                "• Verilerinizin duzeltilmesini isteme\n"
-                "• Verilerinizin silinmesini isteme\n"
-                "• Veri islemeye itiraz etme\n\n"
-                "Bu haklarinizi kullanmak icin destek@korubeni.com adresine ulasabilirsiniz.",
+            heading: "detail_privacy_heading_7".tr(),
+            body: "detail_privacy_body_7".tr(namedArgs: {'rights_contact': "support_contact_rights".tr()}),
           ),
           _DetailSection(
-            heading: "8. Iletisim",
-            body:
-                "Gizlilik ile ilgili sorulariniz icin:\n"
-                "E-posta: destek@korubeni.com\n\n"
-                "Bu politika en son 7 Subat 2026 tarihinde guncellenmistir.",
+            heading: "detail_privacy_heading_8".tr(),
+            body: "detail_privacy_body_8".tr(namedArgs: {'email_line': "support_email_line".tr()}),
           ),
         ];
-      case "Yardım & Destek":
-        return const [
+      case 'settings_help':
+        return [
           _DetailSection(
-            heading: "Nasil Kullanilir?",
-            body:
-                "1. Acil Kisi Secin: Kisiler sekmesinden guvendiginiz kisileri ekleyin\n"
-                "2. PIN Belirleyin: Ilk giriste otomatik olarak istenir\n"
-                "3. Izinleri Verin: Konum ve rehber izinlerini aktif edin\n"
-                "4. Panik Butonu: Ana sayfada butonu basili tutun, biraktiktan sonra geri sayim baslar\n"
-                "5. PIN ile Iptal: Yanlis alarm ise 10 saniye icinde PIN girin",
+            heading: "detail_help_heading_howto".tr(),
+            body: "detail_help_body_howto".tr(),
           ),
           _DetailSection(
-            heading: "Sik Sorulan Sorular",
-            body:
-                "S: PIN'imi unuttum, ne yapmaliyim?\n"
-                "C: Cikis yapip tekrar giris yapin, yeni PIN olusturmaniz istenecektir.\n\n"
-                "S: Konum paylasimi pil tuketiyor mu?\n"
-                "C: Hayir, konum yalnizca aktif olarak paylastiginizda kullanilir. Arka planda calismaz.\n\n"
-                "S: Sahte cagri gercek mi gorunuyor?\n"
-                "C: Evet, gercek bir arama ekrani gibi gorunur. Istediginiz isim ve numarayi girebilirsiniz.\n\n"
-                "S: Acil kisilerim bildirim aliyor mu?\n"
-                "C: Panik butonu tetiklendiginde acil kisilerinize SMS gonderilir ve birincil kisi aranir.",
+            heading: "detail_help_heading_faq".tr(),
+            body: "detail_help_body_faq".tr(),
           ),
           _DetailSection(
-            heading: "Destek Kanallari",
-            body:
-                "E-posta: destek@korubeni.com\n\n"
-                "Teknik sorunlar, oneriler ve geri bildirimler icin destek ekibimize ulasabilirsiniz. "
-                "Yanit suresi genellikle 24 saat icerisindedir.",
+            heading: "detail_help_heading_support".tr(),
+            body: "detail_help_body_support".tr(namedArgs: {'email_line': "support_email_line".tr()}),
           ),
           _DetailSection(
-            heading: "Acil Durum Notu",
-            body:
-                "Bu uygulama acil durumlarda yardimci bir aractir. Gercek bir tehlike durumunda:\n"
-                "• 112 - Genel Acil Yardim\n"
-                "• 155 - Polis\n"
-                "• 110 - Itfaiye\n"
-                "numaralarini dogrudan aramaniz onerilir.",
+            heading: "detail_help_heading_emergency".tr(),
+            body: "detail_help_body_emergency".tr(),
+          ),
+        ];
+      case 'settings_notifications':
+        return [
+          _DetailSection(
+            heading: "settings_notifications_info_heading".tr(),
+            body: "settings_notifications_info_body".tr(),
           ),
         ];
       default:
-        return const [
+        return [
           _DetailSection(
-            heading: "Bilgilendirme",
-            body:
-                "Bu bolum, yakin zamanda ayrintili iceriklerle guncellenecektir. "
-                "Geri bildirimlerinizi bizimle paylasabilirsiniz.",
+            heading: "detail_default_heading".tr(),
+            body: "detail_default_body".tr(),
           ),
         ];
     }
   }
 
   String _introForTitle() {
-    switch (title) {
-      case "Uygulama Hakkında":
-        return "Kurumsal guvenlik yaklasimimiz ve urun vizyonumuz hakkinda genel bilgi.";
-      case "Gizlilik Politikası":
-        return "KVKK ve GDPR uyumlu kisisel verilerin korunmasi politikamiz.";
-      case "Yardım & Destek":
-        return "Kullanim rehberi, SSS ve destek kanallari.";
+    switch (sectionKey) {
+      case 'settings_about_app':
+        return "detail_intro_about".tr();
+      case 'settings_privacy_policy':
+        return "detail_intro_privacy".tr();
+      case 'settings_help':
+        return "detail_intro_help".tr();
+      case 'settings_notifications':
+        return "settings_notifications_info_intro".tr();
       default:
-        return "Bu bolumle ilgili bilgilere buradan erisebilirsiniz.";
+        return "detail_intro_default".tr();
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    if (sectionKey == 'settings_about_app') {
+      return FutureBuilder<PackageInfo>(
+        future: PackageInfo.fromPlatform(),
+        builder: (context, snapshot) {
+          final version = snapshot.data?.version;
+          final buildNumber = snapshot.data?.buildNumber;
+          final sections = _sectionsForTitle(version: version, buildNumber: buildNumber);
+          return _buildBody(context, sections);
+        },
+      );
+    }
     final sections = _sectionsForTitle();
+    return _buildBody(context, sections);
+  }
+
+  Widget _buildBody(BuildContext context, List<_DetailSection> sections) {
     return Scaffold(
       appBar: AppBar(
         title: Text(title),

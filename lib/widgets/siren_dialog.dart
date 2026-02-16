@@ -3,6 +3,7 @@
 // ============================================================================
 
 import 'dart:async';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:audioplayers/audioplayers.dart';
@@ -117,19 +118,19 @@ class _SirenDialogState extends State<SirenDialog> with TickerProviderStateMixin
                     },
                   ),
                   const SizedBox(height: 28),
-                  const Text(
-                    "🚨 SİREN AKTİF 🚨",
-                    style: TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: 2),
+                  Text(
+                    "siren_active".tr(),
+                    style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: 2),
                   ),
                   const SizedBox(height: 16),
-                  const Text(
-                    "YÜKSEK SESLİ ALARM ÇALIYOR",
+                  Text(
+                    "siren_loud_alarm".tr(),
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white, letterSpacing: 1),
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white, letterSpacing: 1),
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    "$_duration saniye",
+                    "siren_duration".tr(namedArgs: {"seconds": _duration.toString()}),
                     style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Colors.white),
                   ),
                   const SizedBox(height: 32),
@@ -139,8 +140,8 @@ class _SirenDialogState extends State<SirenDialog> with TickerProviderStateMixin
                       onPressed: () {
                         ActivityService.logEvent(
                           type: ActivityType.sirenUsed,
-                          title: "Siren Kullanildi",
-                          description: "Siren $_duration saniye aktif kaldi",
+                          title: "siren_activity_title".tr(),
+                          description: "siren_activity_desc".tr(namedArgs: {"seconds": _duration.toString()}),
                         );
                         Navigator.pop(context);
                       },
@@ -151,9 +152,9 @@ class _SirenDialogState extends State<SirenDialog> with TickerProviderStateMixin
                         elevation: 0,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                       ),
-                      child: const Text(
-                        "SİRENİ DURDUR",
-                        style: TextStyle(fontWeight: FontWeight.w900, fontSize: 17, letterSpacing: 1),
+                      child: Text(
+                        "siren_stop".tr(),
+                        style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 17, letterSpacing: 1),
                       ),
                     ),
                   ),

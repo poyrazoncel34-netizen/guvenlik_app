@@ -1,11 +1,12 @@
 import 'dart:convert';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../di/service_locator.dart';
 import '../security/secure_storage.dart';
 import '../security/secure_storage_keys.dart';
 
 class ContactService {
-  static const String _unknownNameFallback = 'Acil Kişi';
+  static String get _unknownNameFallback => "contacts_fallback_name".tr();
   static final SecureStorage _secureStorage = serviceLocator<SecureStorage>();
 
   // Kişileri Kaydet

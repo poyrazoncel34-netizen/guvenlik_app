@@ -3,6 +3,7 @@
 // ============================================================================
 
 import 'dart:io';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:image_picker/image_picker.dart';
@@ -26,8 +27,8 @@ class _FakeCallScreenState extends State<FakeCallScreen> with SingleTickerProvid
   late AnimationController _pulseController;
   final AudioPlayer _audioPlayer = AudioPlayer();
   final ImagePicker _imagePicker = ImagePicker();
-  String _callerName = "Arkadaşım";
-  String _callerNumber = "+90 555 XXX XX XX";
+  String _callerName = "";
+  String _callerNumber = "";
   String? _avatarPath;
   final SecureStorage _secureStorage = serviceLocator<SecureStorage>();
 
@@ -60,8 +61,8 @@ class _FakeCallScreenState extends State<FakeCallScreen> with SingleTickerProvid
     final avatar = await _secureStorage.read(key: _keyAvatar);
     if (mounted) {
       setState(() {
-        _callerName = name ?? _callerName;
-        _callerNumber = number ?? _callerNumber;
+        _callerName = name ?? "fake_call_default_name".tr();
+        _callerNumber = number ?? "fake_call_default_number".tr();
         _avatarPath = avatar;
       });
     }
@@ -90,13 +91,30 @@ class _FakeCallScreenState extends State<FakeCallScreen> with SingleTickerProvid
         _avatarPath = legacyAvatar ?? _avatarPath;
       });
     }
+    // Ensure defaults are set if still empty after legacy migration
+    if (mounted && _callerName.isEmpty) {
+      setState(() {
+        _callerName = "fake_call_default_name".tr();
+        _callerNumber = _callerNumber.isEmpty ? "fake_call_default_number".tr() : _callerNumber;
+      });
+    }
   }
 
   Future<void> _startRingtone() async {
     try {
+      // Set volume to maximum
+      await _audioPlayer.setVolume(1.0);
       await _audioPlayer.setReleaseMode(ReleaseMode.loop);
+      
+      // Play the ringtone asset
       await _audioPlayer.play(AssetSource('sounds/ringtone.wav'));
-    } catch (_) {}
+      
+      // Log success for debugging
+      debugPrint('FakeCallScreen: Ringtone started playing');
+    } catch (e) {
+      debugPrint('FakeCallScreen: Error playing ringtone (asset may be missing): $e');
+      // Safe fallback: skip playback so app does not crash
+    }
   }
 
   Future<void> _stopRingtone() async {
@@ -135,7 +153,7 @@ class _FakeCallScreenState extends State<FakeCallScreen> with SingleTickerProvid
                     TextButton.icon(
                       onPressed: _showCustomizeDialog,
                       icon: const Icon(Icons.tune_rounded, color: Colors.white70, size: 18),
-                      label: const Text("Ayarla", style: TextStyle(color: Colors.white70)),
+                      label: Text("fake_call_settings".tr(), style: const TextStyle(color: Colors.white70)),
                     ),
                   ],
                 ),
@@ -184,7 +202,7 @@ class _FakeCallScreenState extends State<FakeCallScreen> with SingleTickerProvid
                         ),
                         const SizedBox(width: 10),
                         Text(
-                          "sizi arıyor...",
+                          "fake_call_calling".tr(),
                           style: TextStyle(
                               color: Colors.white.withValues(alpha: 0.75), fontSize: 17, fontWeight: FontWeight.w500),
                         ),
@@ -199,21 +217,21 @@ class _FakeCallScreenState extends State<FakeCallScreen> with SingleTickerProvid
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    _buildCallButton(AppColors.emergency, Icons.call_end_rounded, "Reddet", () {
+                    _buildCallButton(AppColors.emergency, Icons.call_end_rounded, "fake_call_decline".tr(), () {
                       _stopRingtone();
                       ActivityService.logEvent(
                         type: ActivityType.fakeCallUsed,
-                        title: "Sahte Cagri Kullanildi",
-                        description: "$_callerName'den gelen sahte cagri reddedildi",
+                        title: "fake_call_activity_title".tr(),
+                        description: "fake_call_declined_desc".tr(namedArgs: {"name": _callerName}),
                       );
                       Navigator.pop(context);
                     }),
-                    _buildCallButton(AppColors.success, Icons.call_rounded, "Kabul Et", () {
+                    _buildCallButton(AppColors.success, Icons.call_rounded, "fake_call_accept".tr(), () {
                       _stopRingtone();
                       ActivityService.logEvent(
                         type: ActivityType.fakeCallUsed,
-                        title: "Sahte Cagri Kullanildi",
-                        description: "$_callerName'den gelen sahte cagri kabul edildi",
+                        title: "fake_call_activity_title".tr(),
+                        description: "fake_call_accepted_desc".tr(namedArgs: {"name": _callerName}),
                       );
                       Navigator.pop(context);
                     }),
@@ -277,16 +295,16 @@ class _FakeCallScreenState extends State<FakeCallScreen> with SingleTickerProvid
                 ),
               ),
               const SizedBox(height: 18),
-              const Text(
-                "Sahte Çağrı Ayarları",
-                style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700),
+              Text(
+                "fake_call_settings_title".tr(),
+                style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700),
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: nameController,
                 style: const TextStyle(color: Colors.white),
                 decoration: InputDecoration(
-                  hintText: "Arayan adı",
+                  hintText: "fake_call_caller_name".tr(),
                   hintStyle: const TextStyle(color: Colors.white54),
                   filled: true,
                   fillColor: const Color(0xFF0B1F32),
@@ -303,7 +321,7 @@ class _FakeCallScreenState extends State<FakeCallScreen> with SingleTickerProvid
                 child: OutlinedButton.icon(
                   onPressed: _pickProfileImage,
                   icon: const Icon(Icons.photo_library_outlined),
-                  label: const Text("Galeriden Fotoğraf Seç"),
+                  label: Text("fake_call_pick_photo".tr()),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: Colors.white,
                     side: const BorderSide(color: Colors.white24),
@@ -317,7 +335,7 @@ class _FakeCallScreenState extends State<FakeCallScreen> with SingleTickerProvid
                 controller: phoneController,
                 style: const TextStyle(color: Colors.white),
                 decoration: InputDecoration(
-                  hintText: "Telefon numarası",
+                  hintText: "fake_call_phone_number".tr(),
                   hintStyle: const TextStyle(color: Colors.white54),
                   filled: true,
                   fillColor: const Color(0xFF0B1F32),
@@ -334,8 +352,8 @@ class _FakeCallScreenState extends State<FakeCallScreen> with SingleTickerProvid
                 child: ElevatedButton(
                   onPressed: () async {
                     setState(() {
-                      _callerName = nameController.text.isEmpty ? "Arkadaşım" : nameController.text;
-                      _callerNumber = phoneController.text.isEmpty ? "+90 555 XXX XX XX" : phoneController.text;
+                      _callerName = nameController.text.isEmpty ? "fake_call_default_name".tr() : nameController.text;
+                      _callerNumber = phoneController.text.isEmpty ? "fake_call_default_number".tr() : phoneController.text;
                     });
                     await _secureStorage.write(key: _keyName, value: _callerName);
                     await _secureStorage.write(key: _keyNumber, value: _callerNumber);
@@ -351,7 +369,7 @@ class _FakeCallScreenState extends State<FakeCallScreen> with SingleTickerProvid
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                   ),
-                  child: const Text("Kaydet", style: TextStyle(fontWeight: FontWeight.w700)),
+                  child: Text("save".tr(), style: const TextStyle(fontWeight: FontWeight.w700)),
                 ),
               ),
             ],

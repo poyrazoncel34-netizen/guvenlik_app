@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../core/app_colors.dart';
 import '../core/di/service_locator.dart';
 import '../core/services/location_service.dart';
@@ -121,13 +122,13 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Row(
+            content: Row(
               children: [
-                Icon(Icons.my_location, color: Colors.white, size: 20),
-                SizedBox(width: 12),
+                const Icon(Icons.my_location, color: Colors.white, size: 20),
+                const SizedBox(width: 12),
                 Text(
-                  "Konumunuz güncellendi",
-                  style: TextStyle(fontWeight: FontWeight.w600),
+                  "map_location_updated".tr(),
+                  style: const TextStyle(fontWeight: FontWeight.w600),
                 ),
               ],
             ),
@@ -153,36 +154,36 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
 
     switch (result.status) {
       case LocationStatus.serviceDisabled:
-        title = "Konum Servisi Kapalı";
-        message = "Haritayı kullanmak için konum servisini açmanız gerekiyor.";
-        buttonText = "Ayarları Aç";
+        title = "map_location_off".tr();
+        message = "map_permission_message".tr();
+        buttonText = "map_open_settings".tr();
         onPressed = () {
           Navigator.pop(context);
           _locationRepository.openLocationSettings();
         };
         break;
       case LocationStatus.permissionDenied:
-        title = "Konum İzni Gerekli";
-        message = "Konumunuzu görmek için izin vermeniz gerekiyor.";
-        buttonText = "İzin Ver";
+        title = "map_permission_required".tr();
+        message = "map_permission_message".tr();
+        buttonText = "map_grant_permission".tr();
         onPressed = () {
           Navigator.pop(context);
           _initLocation();
         };
         break;
       case LocationStatus.permissionDeniedForever:
-        title = "İzin Kalıcı Olarak Reddedildi";
-        message = "Ayarlardan uygulamaya konum izni vermeniz gerekiyor.";
-        buttonText = "Ayarlara Git";
+        title = "map_permission_denied".tr();
+        message = "map_permission_message".tr();
+        buttonText = "map_go_settings".tr();
         onPressed = () {
           Navigator.pop(context);
           _locationRepository.openAppSettings();
         };
         break;
       default:
-        title = "Konum Alınamadı";
-        message = result.errorMessage ?? "Bilinmeyen bir hata oluştu.";
-        buttonText = "Tekrar Dene";
+        title = "map_location_failed".tr();
+        message = result.errorMessage ?? "map_permission_message".tr();
+        buttonText = "map_retry".tr();
         onPressed = () {
           Navigator.pop(context);
           _initLocation();
@@ -243,9 +244,9 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    child: const Text(
-                      "İptal",
-                      style: TextStyle(fontWeight: FontWeight.w600),
+                    child: Text(
+                      "map_cancel".tr(),
+                      style: const TextStyle(fontWeight: FontWeight.w600),
                     ),
                   ),
                 ),
@@ -293,8 +294,8 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
             const SizedBox(width: 12),
             Text(
               _isLocationSharing
-                  ? "Konum paylaşımı başladı"
-                  : "Konum paylaşımı durduruldu",
+                  ? "map_share_started".tr()
+                  : "map_share_stopped".tr(),
               style: const TextStyle(fontWeight: FontWeight.w600),
             ),
           ],
@@ -487,10 +488,10 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
           const SizedBox(width: 12),
           const Icon(Icons.map_rounded, color: AppColors.primary, size: 24),
           const SizedBox(width: 10),
-          const Expanded(
+          Expanded(
             child: Text(
-              "Harita",
-              style: TextStyle(
+              "map_title".tr(),
+              style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
                 color: AppColors.textPrimary,
@@ -506,18 +507,18 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
                 color: AppColors.success.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(20),
               ),
-              child: const Row(
+              child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(
+                  const Icon(
                     Icons.share_location,
                     color: AppColors.success,
                     size: 16,
                   ),
-                  SizedBox(width: 4),
+                  const SizedBox(width: 4),
                   Text(
-                    "Canlı",
-                    style: TextStyle(
+                    "map_live".tr(),
+                    style: const TextStyle(
                       color: AppColors.success,
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
@@ -634,8 +635,8 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
                   children: [
                     Text(
                       _locationStatus == LocationStatus.success
-                          ? "Konumunuz Alındı"
-                          : "Konum Bekleniyor",
+                          ? "map_location_received".tr()
+                          : "map_location_waiting".tr(),
                       style: const TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
@@ -646,7 +647,7 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
                     Text(
                       _currentLocation != null
                           ? "${_currentLocation!.latitude.toStringAsFixed(4)}, ${_currentLocation!.longitude.toStringAsFixed(4)}"
-                          : "Konum alınıyor...",
+                          : "map_location_loading".tr(),
                       style: const TextStyle(
                         fontSize: 12,
                         color: AppColors.textSecondary,
@@ -687,7 +688,7 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
                   size: 20,
                 ),
                 label: Text(
-                  _isLocationSharing ? "Paylaşımı Durdur" : "Konum Paylaş",
+                  _isLocationSharing ? "map_stop_sharing".tr() : "map_share_location".tr(),
                   style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.w700,
@@ -720,9 +721,9 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
                   color: Colors.white,
                   size: 20,
                 ),
-                label: const Text(
-                  "Acil Yardım",
-                  style: TextStyle(
+                label: Text(
+                  "map_emergency_help".tr(),
+                  style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.w700,
                   ),

@@ -75,14 +75,14 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             if (!online) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: const Row(
+                  content: Row(
                     children: [
-                      Icon(
+                      const Icon(
                         Icons.wifi_off_rounded,
                         color: Colors.white,
                         size: 20,
                       ),
-                      SizedBox(width: 10),
+                      const SizedBox(width: 10),
                       Text(
                         "no_internet_connection".tr(),
                         style: const TextStyle(fontWeight: FontWeight.w600),
@@ -155,12 +155,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
   void _showMessageTemplates(BuildContext context, HomeProvider provider) {
     final templates = [
-    final templates = [
       "help_needed_template".tr(),
       "unsafe_template".tr(),
       "emergency_template".tr(),
       "harassment_template".tr(),
-    ];
     ];
 
     showDialog(
@@ -168,11 +166,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       builder: (context) => AlertDialog(
         backgroundColor: AppColors.cardBg,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: const Row(
+        title: Row(
           children: [
-            Icon(Icons.message_rounded, color: AppColors.primary),
-            SizedBox(width: 12),
-            Text("Hızlı Mesaj"),
+            const Icon(Icons.message_rounded, color: AppColors.primary),
+            const SizedBox(width: 12),
+            Text("quick_message_dialog_title".tr()),
           ],
         ),
         content: Column(
@@ -220,26 +218,26 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               ),
             ),
             const SizedBox(height: 16),
-            const Text(
-              "Bildirimler",
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
+            Text(
+              "notifications".tr(),
+              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: 24),
             _buildNotificationItem(
-              "Güvenlik Kontrolü",
-              "Günlük kontrol tamamlandı",
+              "security_check".tr(),
+              "daily_check_complete".tr(),
               Icons.check_circle,
               const Color(0xFF34C759),
             ),
             _buildNotificationItem(
-              "Konum Güncellemesi",
-              "Konumunuz paylaşıldı",
+              "location_update".tr(),
+              "location_shared".tr(),
               Icons.location_on,
               const Color(0xFF007AFF),
             ),
             _buildNotificationItem(
-              "Sistem Bildirimi",
-              "Yeni özellikler eklendi",
+              "system_notification".tr(),
+              "new_features_added".tr(),
               Icons.new_releases,
               const Color(0xFFFF9500),
             ),
@@ -361,7 +359,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                               color: AppColors.warning.withValues(alpha: 0.3),
                             ),
                           ),
-                          child: const Row(
+                          child: Row(
                             children: [
                               Icon(
                                 Icons.wifi_off_rounded,
@@ -371,7 +369,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                               SizedBox(width: 8),
                               Text(
                                 "offline_mode_warning".tr(),
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 12,
                                   color: AppColors.warning,
                                   fontWeight: FontWeight.w600,

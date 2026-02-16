@@ -29,10 +29,11 @@
 		<string>tr</string>
 		<string>en</string>
 	</array>
+	<!-- AES encryption is used (EncryptionService). Non-exempt = true.
+	     ITSEncryptionExportComplianceCode is managed in App Store Connect;
+	     do NOT set an empty value here to avoid ITMS-90592 errors. -->
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<true/>
-	<key>ITSEncryptionExportComplianceCode</key>
-	<string></string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>

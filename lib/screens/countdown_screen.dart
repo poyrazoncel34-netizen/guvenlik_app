@@ -6,14 +6,18 @@ import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_direct_caller_plugin/flutter_direct_caller_plugin.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/di/service_locator.dart';
+import '../main.dart' show kFirebaseReady;
 import '../core/security/secure_storage.dart';
 import '../core/security/secure_storage_keys.dart';
 import '../core/app_colors.dart';
 import '../core/services/contact_service.dart';
 import '../core/services/biometric_service.dart';
+import '../core/services/sms_service.dart';
 import '../domain/repositories/contacts_repository.dart';
 import '../domain/repositories/emergency_repository.dart';
 import '../domain/repositories/location_repository.dart';
@@ -44,11 +48,11 @@ class _CountdownScreenState extends State<CountdownScreen>
       serviceLocator<LocationRepository>();
   late final ContactsRepository _contactsRepository =
       serviceLocator<ContactsRepository>();
-  late final EmergencyRepository _emergencyRepository =
-      serviceLocator<EmergencyRepository>();
+  EmergencyRepository? get _emergencyRepository =>
+      kFirebaseReady ? serviceLocator<EmergencyRepository>() : null;
   late final SecureStorage _secureStorage = serviceLocator<SecureStorage>();
   bool _biometricAvailable = false;
-  String _biometricLabel = 'Biyometrik';
+  String _biometricLabel = 'Biometric';
 
   @override
   void initState() {
@@ -78,21 +82,21 @@ class _CountdownScreenState extends State<CountdownScreen>
 
   Future<void> _authenticateWithBiometric() async {
     final success = await BiometricService.instance.authenticate(
-      reason: 'Acil uyarıyı iptal etmek için kimliğinizi doğrulayın',
+      reason: "countdown_biometric_reason".tr(),
     );
     if (success && mounted) {
       _timer?.cancel();
       ActivityService.logEvent(
         type: ActivityType.emergencyCancelled,
-        title: "Acil Uyari Iptal Edildi",
-        description: "$_biometricLabel ile iptal edildi",
+        title: "countdown_cancelled_title".tr(),
+        description: "countdown_cancelled_biometric".tr(namedArgs: {"label": _biometricLabel}),
       );
       Navigator.pop(context);
     } else if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            '$_biometricLabel doğrulaması başarısız. PIN ile iptal edebilirsiniz.',
+            "countdown_biometric_fail".tr(namedArgs: {"label": _biometricLabel}),
           ),
           backgroundColor: AppColors.warning,
           behavior: SnackBarBehavior.floating,
@@ -144,8 +148,8 @@ class _CountdownScreenState extends State<CountdownScreen>
     if (widget.isTestMode) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Test tamamlandı. Gerçek arama yapılmadı."),
+          SnackBar(
+            content: Text("countdown_test_complete".tr()),
             backgroundColor: AppColors.success,
           ),
         );
@@ -159,7 +163,7 @@ class _CountdownScreenState extends State<CountdownScreen>
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(const SnackBar(content: Text("Acil kişi seçilmedi")));
+        ).showSnackBar(SnackBar(content: Text("countdown_no_contact".tr())));
         Navigator.pop(context);
       }
       return;
@@ -169,15 +173,15 @@ class _CountdownScreenState extends State<CountdownScreen>
     final lat = locationResult.position?.latitude;
     final lng = locationResult.position?.longitude;
     final message = locationResult.isSuccess && lat != null && lng != null
-        ? "ACİL DURUM! Konumum: https://www.google.com/maps/search/?api=1&query=$lat,$lng"
-        : "ACİL DURUM! Konumum paylaşılamadı. Lütfen bana ulaşın.";
+        ? "countdown_emergency_msg".tr(namedArgs: {"lat": "$lat", "lng": "$lng"})
+        : "countdown_emergency_msg_no_loc".tr();
 
     final isOnline = ConnectivityService.instance.isOnline;
     if (!isOnline) {
       await OfflineQueueService.instance.enqueue(
         OfflineEvent(
           type: 'emergency',
-          title: 'Acil Durum',
+          title: "countdown_emergency_title".tr(),
           description: message,
           data: {'message': message, 'lat': lat, 'lng': lng},
         ),
@@ -185,8 +189,8 @@ class _CountdownScreenState extends State<CountdownScreen>
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text(
-              "Çevrimdışı - kaydedildi, bağlantı gelince gönderilecek",
+            content: Text(
+              "countdown_offline_saved".tr(),
             ),
             backgroundColor: AppColors.warning,
             behavior: SnackBarBehavior.floating,
@@ -195,11 +199,11 @@ class _CountdownScreenState extends State<CountdownScreen>
       }
     } else {
       if (lat != null && lng != null) {
-        await _emergencyRepository.updateLocation(lat: lat, lng: lng);
+        await _emergencyRepository?.updateLocation(lat: lat, lng: lng);
       }
       try {
-        await _emergencyRepository.createEmergencyEvent(
-          title: "Acil Durum",
+        await _emergencyRepository?.createEmergencyEvent(
+          title: "countdown_emergency_title".tr(),
           message: message,
           lat: lat,
           lng: lng,
@@ -211,26 +215,30 @@ class _CountdownScreenState extends State<CountdownScreen>
 
     await ActivityService.logEvent(
       type: ActivityType.emergencyTriggered,
-      title: "Acil Durum Tetiklendi",
-      description: "Acil kisilerinize bildirim gonderildi",
+      title: "countdown_emergency_title".tr(),
+      description: "countdown_emergency_desc".tr(),
     );
 
-    for (final number in numbers) {
-      final smsUri = Uri(
-        scheme: 'sms',
-        path: number,
-        queryParameters: {'body': message},
-      );
-      await launchUrl(smsUri);
-    }
+    await SmsService.sendSms(numbers: numbers, message: message);
 
     final primaryNumber =
         _emergencyContact?.phone ?? (numbers.isNotEmpty ? numbers.first : null);
     if (primaryNumber != null && primaryNumber.isNotEmpty) {
-      final uri = Uri(scheme: 'tel', path: primaryNumber);
+      bool callMade = false;
       try {
-        await launchUrl(uri);
-      } catch (_) {}
+        // Direct call — dials immediately without user confirmation (Android)
+        await FlutterDirectCallerPlugin.callNumber(primaryNumber);
+        callMade = true;
+      } catch (_) {
+        callMade = false;
+      }
+      if (!callMade) {
+        // Fallback: open dialer with the number pre-filled
+        try {
+          final telUri = Uri(scheme: 'tel', path: primaryNumber);
+          await launchUrl(telUri, mode: LaunchMode.externalApplication);
+        } catch (_) {}
+      }
     }
 
     if (mounted) {
@@ -238,7 +246,7 @@ class _CountdownScreenState extends State<CountdownScreen>
         context,
         MaterialPageRoute(
           builder: (context) => EmergencyCallScreen(
-            name: _emergencyContact?.name ?? "Acil Kişi",
+            name: _emergencyContact?.name ?? "countdown_emergency_label".tr(),
             phone: primaryNumber ?? "",
           ),
         ),
@@ -271,8 +279,8 @@ class _CountdownScreenState extends State<CountdownScreen>
           _timer?.cancel();
           ActivityService.logEvent(
             type: ActivityType.emergencyCancelled,
-            title: "Acil Uyari Iptal Edildi",
-            description: "PIN kodu ile iptal edildi",
+            title: "countdown_cancelled_title".tr(),
+            description: "countdown_cancelled_pin".tr(),
           );
           Navigator.pop(context);
         } else {
@@ -308,18 +316,18 @@ class _CountdownScreenState extends State<CountdownScreen>
                     width: 2,
                   ),
                 ),
-                child: const Row(
+                child: Row(
                   children: [
-                    Icon(
+                    const Icon(
                       Icons.warning_rounded,
                       color: AppColors.emergency,
                       size: 26,
                     ),
-                    SizedBox(width: 16),
+                    const SizedBox(width: 16),
                     Expanded(
                       child: Text(
-                        "Acil uyarı devreye giriyor",
-                        style: TextStyle(
+                        "countdown_warning_title".tr(),
+                        style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w800,
                           color: AppColors.textPrimary,
@@ -343,9 +351,9 @@ class _CountdownScreenState extends State<CountdownScreen>
                       color: AppColors.success.withValues(alpha: 0.3),
                     ),
                   ),
-                  child: const Text(
-                    "TEST MODU: Gerçek arama yapılmaz",
-                    style: TextStyle(
+                  child: Text(
+                    "countdown_test_mode".tr(),
+                    style: const TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
                       color: AppColors.success,
@@ -386,9 +394,9 @@ class _CountdownScreenState extends State<CountdownScreen>
                         ),
                       ),
                       const SizedBox(height: 4),
-                      const Text(
-                        "saniye",
-                        style: TextStyle(
+                      Text(
+                        "countdown_seconds".tr(),
+                        style: const TextStyle(
                           fontSize: 15,
                           color: AppColors.textSecondary,
                           fontWeight: FontWeight.w600,
@@ -399,9 +407,9 @@ class _CountdownScreenState extends State<CountdownScreen>
                 ],
               ),
               const SizedBox(height: 50),
-              const Text(
-                "İptal için PIN kodunuzu girin",
-                style: TextStyle(
+              Text(
+                "countdown_enter_pin".tr(),
+                style: const TextStyle(
                   fontSize: 19,
                   fontWeight: FontWeight.w800,
                   color: AppColors.textPrimary,
@@ -410,7 +418,7 @@ class _CountdownScreenState extends State<CountdownScreen>
               if (_emergencyContact != null) ...[
                 const SizedBox(height: 6),
                 Text(
-                  "Acil kişi: ${_emergencyContact!.name}",
+                  "countdown_emergency_contact".tr(namedArgs: {"name": _emergencyContact!.name}),
                   style: const TextStyle(
                     fontSize: 13,
                     color: AppColors.textSecondary,
@@ -419,9 +427,9 @@ class _CountdownScreenState extends State<CountdownScreen>
                 ),
               ],
               const SizedBox(height: 10),
-              const Text(
-                "Resmi kurumlara ulaşmak kullanıcı sorumluluğundadır.",
-                style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+              Text(
+                "countdown_disclaimer".tr(),
+                style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
               ),
               if (_biometricAvailable) ...[
                 const SizedBox(height: 16),
@@ -433,7 +441,7 @@ class _CountdownScreenState extends State<CountdownScreen>
                         : Icons.fingerprint_rounded,
                     size: 22,
                   ),
-                  label: Text('$_biometricLabel ile İptal Et'),
+                  label: Text("countdown_biometric_cancel".tr(namedArgs: {"label": _biometricLabel})),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppColors.primary,
                     side: const BorderSide(

@@ -33,6 +33,7 @@
 - [x] ProGuard kurallari aktif
 - [ ] Data Safety form doldur (Play Console)
 - [ ] Internal Testing track'e yukle
+- **Detay:** [PLAY_CONSOLE_CHECKLIST.md](PLAY_CONSOLE_CHECKLIST.md) – Privacy Policy URL, Data Safety, Content rating, AAB adimlari
 
 ### iOS
 - [x] Signing & provisioning yapilandi (Team ID set)

@@ -4,6 +4,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../core/app_colors.dart';
 import '../screens/pin_verification_screen.dart';
 
@@ -23,11 +24,12 @@ class _PanicButtonState extends State<PanicButton> with TickerProviderStateMixin
   void initState() {
     super.initState();
 
-    // Idle pulse animation (when not pressed)
+    // Idle pulse animation (disabled to prevent unwanted movement)
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1400),
-    )..repeat(reverse: true);
+      value: 0.5, // Static position - no animation
+    );
 
     // Armed pulse animation (when pressed/holding)
     _armedPulseController = AnimationController(
@@ -96,8 +98,8 @@ class _PanicButtonState extends State<PanicButton> with TickerProviderStateMixin
     final subtitleFontSize = (baseSize * 0.048).clamp(10.0, 13.0);
 
     return Semantics(
-      label: 'Acil Durum Butonu',
-      hint: 'Basılı tutarak acil yardım çağırın. İki saniye basılı tutun.',
+      label: "panic_button_semantics_label".tr(),
+      hint: "panic_button_semantics_hint".tr(),
       button: true,
       child: GestureDetector(
         onLongPressStart: _onPressStart,
@@ -192,45 +194,31 @@ class _PanicButtonState extends State<PanicButton> with TickerProviderStateMixin
     );
   }
 
-  // Idle state pulse rings (blue/purple) - scaled to baseSize
+  // Idle state static rings (no animation) - scaled to baseSize
   List<Widget> _buildIdlePulseRings(double baseSize) {
     final scale = baseSize / 250;
     return [
-      AnimatedBuilder(
-        animation: _pulseController,
-        builder: (context, child) {
-          final opacity = (0.18 - (_pulseController.value * 0.12)).clamp(0.0, 1.0);
-          final size = (270 + (_pulseController.value * 45)) * scale;
-          return Container(
-            width: size,
-            height: size,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: AppColors.primary.withValues(alpha: opacity),
-                width: 2.5,
-              ),
-            ),
-          );
-        },
+      Container(
+        width: 285 * scale,
+        height: 285 * scale,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: AppColors.primary.withValues(alpha: 0.12),
+            width: 2.5,
+          ),
+        ),
       ),
-      AnimatedBuilder(
-        animation: _pulseController,
-        builder: (context, child) {
-          final opacity = (0.14 - (_pulseController.value * 0.09)).clamp(0.0, 1.0);
-          final size = (290 + (_pulseController.value * 25)) * scale;
-          return Container(
-            width: size,
-            height: size,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: AppColors.primary.withValues(alpha: opacity),
-                width: 2,
-              ),
-            ),
-          );
-        },
+      Container(
+        width: 305 * scale,
+        height: 305 * scale,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: AppColors.primary.withValues(alpha: 0.08),
+            width: 2,
+          ),
+        ),
       ),
     ];
   }

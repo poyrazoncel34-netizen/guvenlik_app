@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../di/service_locator.dart';
@@ -23,7 +24,7 @@ class OfflineQueueService {
     if (_initialized) return;
     _initialized = true;
 
-    _connectivitySubscription =     _connectivitySubscription = ConnectivityService.instance.onStatusChange.listen((online) {
+    _connectivitySubscription = ConnectivityService.instance.onStatusChange.listen((online) {
       if (online) {
         syncPendingEvents();
       }
@@ -109,11 +110,15 @@ class OfflineQueueService {
     debugPrint('OfflineQueue: Processing ${event.type} - ${event.title}');
 
     if (event.type == 'emergency') {
+      if (!serviceLocator.isRegistered<EmergencyRepository>()) {
+        debugPrint('OfflineQueue: EmergencyRepository not available (Firebase off)');
+        return false; // Keep in queue for retry
+      }
       try {
         final repo = serviceLocator<EmergencyRepository>();
         final data = event.data ?? {};
         final message =
-            data['message'] as String? ?? event.description ?? 'Acil Durum';
+            data['message'] as String? ?? event.description ?? 'default_emergency_message'.tr();
         final lat = (data['lat'] as num?)?.toDouble();
         final lng = (data['lng'] as num?)?.toDouble();
         if (lat != null && lng != null) {

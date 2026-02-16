@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import '../app_colors.dart';
@@ -15,10 +16,9 @@ class PermissionHelper {
       final shouldOpen = await _showDialog(
         context,
         icon: Icons.location_off_rounded,
-        title: 'Konum Servisi Kapalı',
-        message:
-            'Acil durumlarda konumunuzu paylaşmak için konum servisini açmanız gerekiyor.',
-        actionText: 'Ayarlara Git',
+        title: 'perm_location_service_off'.tr(),
+        message: 'perm_location_service_off_msg'.tr(),
+        actionText: 'perm_go_settings'.tr(),
       );
       if (shouldOpen == true) {
         await Geolocator.openLocationSettings();
@@ -36,10 +36,9 @@ class PermissionHelper {
       final shouldOpen = await _showDialog(
         context,
         icon: Icons.location_disabled_rounded,
-        title: 'Konum İzni Reddedildi',
-        message:
-            'Konum izni kalıcı olarak reddedilmiş. Uygulamanın düzgün çalışması için lütfen ayarlardan konum iznini açın.',
-        actionText: 'Ayarlara Git',
+        title: 'perm_location_denied'.tr(),
+        message: 'perm_location_denied_msg'.tr(),
+        actionText: 'perm_go_settings'.tr(),
       );
       if (shouldOpen == true) {
         await Geolocator.openAppSettings();
@@ -60,9 +59,9 @@ class PermissionHelper {
     final result = await _showDialog(
       context,
       icon: Icons.block_rounded,
-      title: '$permissionName İzni Gerekli',
+      title: 'perm_required'.tr(namedArgs: {'name': permissionName}),
       message: reason,
-      actionText: 'Ayarlara Git',
+      actionText: 'perm_go_settings'.tr(),
     );
     if (result == true) {
       await Geolocator.openAppSettings();
@@ -124,9 +123,9 @@ class PermissionHelper {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: const Text(
-                'Vazgeç',
-                style: TextStyle(color: AppColors.textSecondary),
+              child: Text(
+                'perm_cancel'.tr(),
+                style: const TextStyle(color: AppColors.textSecondary),
               ),
             ),
             Semantics(
@@ -150,3 +149,4 @@ class PermissionHelper {
     );
   }
 }
+

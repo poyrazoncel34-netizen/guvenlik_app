@@ -1,9 +1,10 @@
 import 'dart:async';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:fluttercontactpicker_plus/fluttercontactpicker_plus.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:url_launcher/url_launcher.dart';
+import '../../core/services/sms_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/services/activity_service.dart';
 import '../../core/services/contact_service.dart';
@@ -13,6 +14,7 @@ import '../../core/services/location_service.dart';
 import '../../domain/models/activity_event.dart' as app_activity;
 import '../../domain/repositories/contacts_repository.dart';
 import '../../domain/repositories/emergency_repository.dart';
+import '../../main.dart' show kFirebaseReady;
 
 class HomeProvider extends ChangeNotifier {
   HomeProvider();
@@ -24,8 +26,8 @@ class HomeProvider extends ChangeNotifier {
       serviceLocator<LocationService>();
   late final ContactsRepository _contactsRepository =
       serviceLocator<ContactsRepository>();
-  late final EmergencyRepository _emergencyRepository =
-      serviceLocator<EmergencyRepository>();
+  EmergencyRepository? get _emergencyRepository =>
+      kFirebaseReady ? serviceLocator<EmergencyRepository>() : null;
 
   EmergencyContact? _emergencyContact;
   bool _contactsPermissionGranted = false;
@@ -100,7 +102,7 @@ class HomeProvider extends ChangeNotifier {
     if (context != null && context.mounted) {
       final granted = await PermissionHelper.requestLocationPermission(context);
       await _loadPermissionsStatus();
-      return granted ? null : "Konum izni verilemedi";
+      return granted ? null : "home_location_permission_denied".tr();
     }
     final serviceEnabled = await _locationService.isLocationServiceEnabled();
     if (!serviceEnabled) {
@@ -114,7 +116,7 @@ class HomeProvider extends ChangeNotifier {
 
   Future<String?> requestContactsPermission() async {
     if (kIsWeb) {
-      return "Rehber izni web üzerinde desteklenmiyor.";
+      return "home_contacts_web_unsupported".tr();
     }
     await FlutterContactPicker.requestPermission();
     await _loadPermissionsStatus();
@@ -139,8 +141,8 @@ class HomeProvider extends ChangeNotifier {
     notifyListeners();
     ActivityService.logEvent(
       type: app_activity.ActivityType.locationShared,
-      title: "Konum Paylasildi",
-      description: "Guvenlik aginizla $minutes dakika paylasiliyor",
+      title: "home_location_shared_title".tr(),
+      description: "home_location_shared_desc".tr(namedArgs: {'minutes': '$minutes'}),
     );
     return await _sendLocationShareSms();
   }
@@ -150,7 +152,7 @@ class HomeProvider extends ChangeNotifier {
     _locationShareEndAt = null;
     _isLocationSharing = false;
     if (!manual) {
-      _pendingMessage = "Konum paylaşımı sona erdi";
+      _pendingMessage = "home_location_sharing_ended".tr();
     }
     notifyListeners();
   }
@@ -164,44 +166,31 @@ class HomeProvider extends ChangeNotifier {
   Future<String?> sendQuickMessage(String message) async {
     final numbers = await _contactsRepository.getAllEmergencyNumbers();
     if (numbers.isEmpty) {
-      return "Acil kişi bulunamadı";
+      return 'emergency_contact_not_found'.tr();
     }
-    return _launchSms(numbers, message);
+    return SmsService.sendSms(numbers: numbers, message: message);
   }
 
   Future<String?> _sendLocationShareSms() async {
     final numbers = await _contactsRepository.getAllEmergencyNumbers();
     if (numbers.isEmpty) {
-      return "Acil kişi bulunamadı";
+      return 'emergency_contact_not_found'.tr();
     }
 
     final result = await _locationService.getCurrentLocation();
     if (!result.isSuccess || result.position == null) {
-      return "Konum alınamadı";
+      return 'location_unavailable'.tr();
     }
 
     final lat = result.position!.latitude;
     final lng = result.position!.longitude;
-    await _emergencyRepository.updateLocation(lat: lat, lng: lng);
-    final message =
-        "Konumum paylaşılıyor, beni takip et: https://www.google.com/maps/search/?api=1&query=$lat,$lng";
-    return _launchSms(numbers, message);
+    await _emergencyRepository?.updateLocation(lat: lat, lng: lng);
+    final url = 'https://www.google.com/maps/search/?api=1&query=$lat,$lng';
+    final message = 'location_share_message'.tr(namedArgs: {'url': url});
+    return SmsService.sendSms(numbers: numbers, message: message);
   }
 
-  Future<String?> _launchSms(List<String> numbers, String message) async {
-    if (kIsWeb) {
-      return "SMS gönderimi web üzerinde desteklenmiyor";
-    }
-    for (final number in numbers) {
-      final uri = Uri(
-        scheme: 'sms',
-        path: number,
-        queryParameters: {'body': message},
-      );
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    }
-    return null;
-  }
+
 
   @override
   void dispose() {
