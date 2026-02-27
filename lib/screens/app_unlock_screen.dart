@@ -4,6 +4,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../core/app_colors.dart';
 import '../core/constants/app_constants.dart';
 import '../core/di/service_locator.dart';
@@ -24,7 +25,7 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> {
   String _pin = '';
   String? _correctPin;
   bool _biometricAvailable = false;
-  String _biometricLabel = 'Biyometrik';
+  String _biometricLabel = 'Biometric'; // Updated by _loadAndCheckBiometric()
   bool _loading = true;
 
   late final SecureStorage _secureStorage = serviceLocator<SecureStorage>();
@@ -63,7 +64,7 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> {
 
   Future<void> _tryBiometric() async {
     final success = await BiometricService.instance.authenticate(
-      reason: 'Uygulamaya girmek için kimliğinizi doğrulayın',
+      reason: 'unlock_biometric_reason'.tr(),
     );
     if (success && mounted) {
       widget.onUnlocked();
@@ -88,8 +89,8 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> {
         HapticFeedback.vibrate();
         setState(() => _pin = '');
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Yanlış PIN. Tekrar deneyin.'),
+          SnackBar(
+            content: Text('unlock_wrong_pin'.tr()),
             backgroundColor: AppColors.emergency,
             behavior: SnackBarBehavior.floating,
           ),
@@ -101,7 +102,7 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> {
   @override
   Widget build(BuildContext context) {
     return Semantics(
-      label: 'Uygulama kilidi. PIN veya biyometrik ile açın.',
+      label: 'unlock_semantics'.tr(),
       child: Scaffold(
         backgroundColor: AppColors.background,
         body: SafeArea(
@@ -124,9 +125,9 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> {
                   ),
                 ),
                 const SizedBox(height: 24),
-                const Text(
-                  'KoruBeni',
-                  style: TextStyle(
+                Text(
+                  'unlock_title'.tr(),
+                  style: const TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.w800,
                     color: AppColors.textPrimary,
@@ -134,7 +135,7 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Giriş yapmak için doğrulayın',
+                  'unlock_subtitle'.tr(),
                   style: TextStyle(
                     fontSize: 15,
                     color: AppColors.textSecondary.withValues(alpha: 0.9),
@@ -156,7 +157,7 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> {
                             : Icons.fingerprint_rounded,
                         size: 24,
                       ),
-                      label: Text('$_biometricLabel ile Aç'),
+                      label: Text('unlock_biometric_btn'.tr(namedArgs: {'label': _biometricLabel})),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: AppColors.primary,
                         side: const BorderSide(color: AppColors.primary),

@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:local_auth/local_auth.dart';
 
 class BiometricService {
@@ -31,10 +32,11 @@ class BiometricService {
   }
 
   /// Authenticate user with biometrics
-  Future<bool> authenticate({String reason = 'Kimliginizi dogrulayin'}) async {
+  Future<bool> authenticate({String? reason}) async {
+    final localizedReason = reason ?? 'biometric_auth_reason'.tr();
     try {
       return await _auth.authenticate(
-        localizedReason: reason,
+        localizedReason: localizedReason,
         options: const AuthenticationOptions(
           stickyAuth: true,
           biometricOnly: false, // Allow PIN/pattern fallback
@@ -50,8 +52,8 @@ class BiometricService {
   Future<String> getBiometricLabel() async {
     final types = await getAvailableBiometrics();
     if (types.contains(BiometricType.face)) return 'Face ID';
-    if (types.contains(BiometricType.fingerprint)) return 'Parmak Izi';
+    if (types.contains(BiometricType.fingerprint)) return 'biometric_fingerprint'.tr();
     if (types.contains(BiometricType.iris)) return 'Iris';
-    return 'Biyometrik';
+    return 'biometric_default'.tr();
   }
 }

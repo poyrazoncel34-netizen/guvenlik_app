@@ -1,37 +1,41 @@
-#!/bin/bash
-# KoruBeni - Privacy Policy Yayınlama
-# GitHub Pages veya benzeri statik hosting için hazırlık
+#!/usr/bin/env bash
+# KoruBeni - Privacy Policy GitHub Pages Yayınlama
+# Plan Madde 2: Privacy Policy'i yayınlayıp URL'yi Play Console'a yaz
+# Kullanım: ./scripts/publish_privacy_policy.sh
 
 set -e
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
-PUBLISH_DIR="$PROJECT_ROOT/.gh-pages-publish"
 
-echo "📄 Privacy Policy yayın hazırlığı..."
+echo "═══════════════════════════════════════════════════════════"
+echo "  KoruBeni - Privacy Policy Yayınlama"
+echo "═══════════════════════════════════════════════════════════"
 echo ""
 
-# .gh-pages-publish güncelle
-mkdir -p "$PUBLISH_DIR"
-cp "$PROJECT_ROOT/store/privacy_policy_en.html" "$PUBLISH_DIR/" 2>/dev/null || true
-cp "$PROJECT_ROOT/store/privacy_policy.html" "$PUBLISH_DIR/" 2>/dev/null || true
+# 1. Senkronize et
+./scripts/sync_privacy_policy.sh
+echo ""
 
-# index.html zaten mevcut - ana sayfa TR gizlilik politikası
-# privacy_policy_en.html - İngilizce sürüm (store gereksinimi)
+# 2. Git commit ve push
+echo "Git commit ve push yapılıyor..."
+git add .gh-pages-publish
+git status
+echo ""
+read -p "Commit ve push yapılsın mı? (y/n) " -n 1 -r
+echo
+if [[ $REPLY =~ ^[Yy]$ ]]; then
+    git commit -m "chore: sync privacy policy for Play Store" || echo "Nothing to commit"
+    git push
+    echo ""
+    echo "✅ Push tamamlandı. GitHub Actions .gh-pages-publish deploy edecek."
+else
+    echo "Manuel: git add .gh-pages-publish && git commit -m 'chore: sync privacy policy' && git push"
+fi
 
-echo "✅ .gh-pages-publish güncellendi"
 echo ""
-echo "═══════════════════════════════════════════════════════"
-echo "GitHub Pages ile yayınlamak için:"
-echo "═══════════════════════════════════════════════════════"
+echo "═══════════════════════════════════════════════════════════"
+echo "  Sonraki Adım: Play Console"
+echo "═══════════════════════════════════════════════════════════"
 echo ""
-echo "1. GitHub repo Settings > Pages > Source: Deploy from a branch"
-echo "2. Branch: gh-pages (veya main) / Folder: /.gh-pages-publish"
-echo "   VEYA gh-pages branch oluştur:"
+echo "URL: https://poyrazoncel34-netizen.github.io/guvenlik_app/privacy_policy.html"
 echo ""
-echo "   npx gh-pages -d .gh-pages-publish"
-echo ""
-echo "3. URL: https://<username>.github.io/<repo>/"
-echo "   Privacy (EN): https://<username>.github.io/<repo>/privacy_policy_en.html"
-echo ""
-echo "Alternatif: Netlify/Vercel ile .gh-pages-publish klasörünü deploy edin."
+echo "Play Console → Store presence → Store listing → Privacy policy alanına yukarıdaki URL'yi yaz."
 echo ""

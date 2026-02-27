@@ -35,7 +35,10 @@ Future<void> setupServiceLocator() async {
       () => FirebaseRemoteDataSource(serviceLocator<FirebaseService>()),
     );
     serviceLocator.registerLazySingleton<AuthRepository>(
-      () => AuthRepositoryImpl(serviceLocator<FirebaseAuth>()),
+      () => AuthRepositoryImpl(
+        serviceLocator<FirebaseAuth>(),
+        serviceLocator<FirebaseRemoteDataSource>(),
+      ),
     );
     serviceLocator.registerLazySingleton<EmergencyRepository>(
       () => EmergencyRepositoryImpl(serviceLocator<FirebaseRemoteDataSource>()),

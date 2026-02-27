@@ -65,6 +65,16 @@ dependencies:
   # Connectivity check
   connectivity_plus: ^6.1.4
   wakelock_plus: ^1.2.8
+  vibration: ^2.0.0
+  # Foreground service for keeping app alive in background
+  flutter_background_service: ^5.1.0
+  flutter_background_service_android: ^6.2.7
+  # Battery optimization exemption
+  optimize_battery: ^0.0.4
+  # Permissions handling
+  permission_handler: ^11.3.1
+  # Battery status
+  battery_plus: ^6.0.3
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
@@ -73,6 +83,8 @@ dependencies:
 
 dev_dependencies:
   flutter_test:
+    sdk: flutter
+  integration_test:
     sdk: flutter
 
   # The "flutter_lints" package below contains a set of recommended lints to
@@ -107,6 +119,7 @@ flutter:
   assets:
     - assets/translations/
     - assets/sounds/ringtone.wav
+    - assets/sounds/siren.wav
 
   # To add assets to your application, add an assets section, like this:
   # assets:

@@ -15,6 +15,7 @@ import '../core/utils/pin_settings_helper.dart';
 import 'profile_page.dart';
 import 'settings_detail_page.dart';
 import '../presentation/providers/settings_provider.dart';
+import 'battery_optimization_wizard.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -88,7 +89,10 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<SettingsProvider>();
-    return Scaffold(
+    return Semantics(
+      label: "semantics_settings_page".tr(),
+      hint: "semantics_settings_page_hint".tr(),
+      child: Scaffold(
       appBar: AppBar(
         title: Text("settings".tr()),
       ),
@@ -131,6 +135,27 @@ class _SettingsPageState extends State<SettingsPage> {
           ]),
           const SizedBox(height: 28),
 
+          // Battery Optimization (Android only)
+          if (defaultTargetPlatform == TargetPlatform.android) ...[
+            _buildSectionTitle("battery_wizard_title".tr()),
+            const SizedBox(height: 14),
+            _buildSettingsCard([
+              _buildNavigationTile(
+                icon: Icons.battery_saver_rounded,
+                iconColor: AppColors.warning,
+                title: "settings_battery_title".tr(),
+                subtitle: "settings_battery_subtitle".tr(),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const BatteryOptimizationWizard()),
+                  );
+                },
+              ),
+            ]),
+            const SizedBox(height: 28),
+          ],
+
           // Sound & Vibration
           _buildSectionTitle("settings_sound_vibration".tr()),
           const SizedBox(height: 14),
@@ -152,6 +177,17 @@ class _SettingsPageState extends State<SettingsPage> {
               value: provider.vibrationEnabled,
               onChanged: provider.setVibration,
             ),
+            if (defaultTargetPlatform == TargetPlatform.android) ...[
+              _buildDivider(),
+              _buildSwitchTile(
+                icon: Icons.volume_down_rounded,
+                iconColor: AppColors.primary,
+                title: "settings_volume_trigger_title".tr(),
+                subtitle: "settings_volume_trigger_subtitle".tr(),
+                value: provider.volumeTriggerEnabled,
+                onChanged: provider.setVolumeTrigger,
+              ),
+            ],
           ]),
           const SizedBox(height: 28),
 
@@ -252,6 +288,7 @@ class _SettingsPageState extends State<SettingsPage> {
           const SizedBox(height: 20),
         ],
       ),
+    ),
     );
   }
 

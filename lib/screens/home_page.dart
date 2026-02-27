@@ -1,14 +1,17 @@
 // ============================================================================
-// ANA SAYFA (İSTATİSTİKLER VE YENİ ÖZELLİKLER EKLENDİ)
+// ANA SAYFA (PREMIUM UX – STAGGERED ANİMASYONLAR + GLASSMORPHİSM)
 // ============================================================================
 
 import 'dart:async';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import '../core/app_colors.dart';
 import '../core/services/shake_detector_service.dart';
+import '../core/services/volume_trigger_service.dart';
+import '../core/services/haptic_service.dart';
 import '../core/services/audio_recorder_service.dart';
 import '../core/services/connectivity_service.dart';
 import '../core/services/analytics_service.dart';
@@ -21,6 +24,9 @@ import 'fake_call_screen.dart';
 import 'contacts_page.dart';
 import 'countdown_screen.dart';
 import 'safe_walk_screen.dart';
+import 'safety_timeline_screen.dart';
+import 'check_in_screen.dart';
+import '../widgets/network_error_retry.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -31,22 +37,63 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   late AnimationController _headerController;
+  late AnimationController _cardsController;
   final ShakeDetectorService _shakeDetector = ShakeDetectorService();
   bool _isRecording = false;
   bool _isOffline = false;
   StreamSubscription<bool>? _connectivitySubscription;
+
+  // Staggered card animations
+  final List<Animation<double>> _cardFadeAnimations = [];
+  final List<Animation<Offset>> _cardSlideAnimations = [];
+  static const int _totalCards = 8;
 
   @override
   void initState() {
     super.initState();
     _headerController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1000),
+      duration: const Duration(milliseconds: 800),
     );
+
+    // ── Staggered card animations ──
+    _cardsController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    );
+    for (int i = 0; i < _totalCards; i++) {
+      final start = (i * 0.08).clamp(0.0, 0.7);
+      final end = (start + 0.35).clamp(0.0, 1.0);
+      _cardFadeAnimations.add(
+        Tween<double>(begin: 0.0, end: 1.0).animate(
+          CurvedAnimation(
+            parent: _cardsController,
+            curve: Interval(start, end, curve: Curves.easeOut),
+          ),
+        ),
+      );
+      _cardSlideAnimations.add(
+        Tween<Offset>(
+          begin: const Offset(0, 0.15),
+          end: Offset.zero,
+        ).animate(
+          CurvedAnimation(
+            parent: _cardsController,
+            curve: Interval(start, end, curve: Curves.easeOutCubic),
+          ),
+        ),
+      );
+    }
+
     _headerController.forward();
+    Future.delayed(const Duration(milliseconds: 300), () {
+      if (mounted) _cardsController.forward();
+    });
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<HomeProvider>().initialize();
       _initShakeDetection();
+      _initVolumeTrigger();
       _initConnectivity();
     });
     AnalyticsService.logScreenView('home');
@@ -66,40 +113,38 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     );
   }
 
+  Future<void> _initVolumeTrigger() async {
+    if (!VolumeTriggerService.isSupported) return;
+    await VolumeTriggerService.instance.loadPreference();
+    VolumeTriggerService.instance.startListening(
+      onPanicTriggered: () {
+        if (!mounted) return;
+        HapticService.volumePanicTrigger();
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const CountdownScreen()),
+        );
+      },
+    );
+  }
+
   void _initConnectivity() {
     ConnectivityService.instance.initialize();
-    _connectivitySubscription = ConnectivityService.instance.onStatusChange
-        .listen((online) {
-          if (mounted) {
-            setState(() => _isOffline = !online);
-            if (!online) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Row(
-                    children: [
-                      const Icon(
-                        Icons.wifi_off_rounded,
-                        color: Colors.white,
-                        size: 20,
-                      ),
-                      const SizedBox(width: 10),
-                      Text(
-                        "no_internet_connection".tr(),
-                        style: const TextStyle(fontWeight: FontWeight.w600),
-                      ),
-                    ],
-                  ),
-                  backgroundColor: AppColors.warning,
-                  behavior: SnackBarBehavior.floating,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  duration: const Duration(seconds: 3),
-                ),
-              );
-            }
-          }
-        });
+    _connectivitySubscription =
+        ConnectivityService.instance.onStatusChange.listen((online) {
+      if (mounted) {
+        setState(() => _isOffline = !online);
+        if (!online) {
+          showNetworkErrorSnackBar(
+            context,
+            message: "no_internet_connection",
+            onRetry: () {
+              ConnectivityService.instance.initialize();
+            },
+          );
+        }
+      }
+    });
   }
 
   Future<void> _toggleRecording() async {
@@ -113,13 +158,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             content: Text(
               path != null ? "recording_saved".tr() : "recording_failed".tr(),
             ),
-            backgroundColor: path != null
-                ? AppColors.success
-                : AppColors.emergency,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
+            backgroundColor:
+                path != null ? AppColors.success : AppColors.emergency,
           ),
         );
       }
@@ -127,17 +167,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       final started = await recorder.startRecording();
       if (mounted) {
         setState(() => _isRecording = started);
-        if (started) {
-          AnalyticsService.logAudioRecordingStarted();
-        } else {
+        if (!started) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text("microphone_permission_required".tr()),
               backgroundColor: AppColors.warning,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
             ),
           );
         }
@@ -149,7 +183,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   void dispose() {
     _connectivitySubscription?.cancel();
     _headerController.dispose();
+    _cardsController.dispose();
     _shakeDetector.dispose();
+    VolumeTriggerService.instance.stopListening();
     super.dispose();
   }
 
@@ -220,7 +256,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             const SizedBox(height: 16),
             Text(
               "notifications".tr(),
-              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
+              style:
+                  const TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: 24),
             _buildNotificationItem(
@@ -298,7 +335,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     }
     final size = MediaQuery.sizeOf(context);
     final padding = MediaQuery.paddingOf(context);
-    final horizontalPadding = size.width > 400 ? 24.0 : (size.width > 340 ? 20.0 : 16.0);
+    final horizontalPadding =
+        size.width > 400 ? 24.0 : (size.width > 340 ? 20.0 : 16.0);
     final shortScreen = size.height < 700;
     final spacing = shortScreen ? 8.0 : 14.0;
     final sectionSpacing = shortScreen ? 12.0 : 20.0;
@@ -342,7 +380,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               ),
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+                  padding:
+                      EdgeInsets.symmetric(horizontal: horizontalPadding),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -350,13 +389,15 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 14,
-                            vertical: 8,
+                            vertical: 10,
                           ),
                           decoration: BoxDecoration(
-                            color: AppColors.warning.withValues(alpha: 0.12),
+                            color:
+                                AppColors.warning.withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(10),
                             border: Border.all(
-                              color: AppColors.warning.withValues(alpha: 0.3),
+                              color: AppColors.warning
+                                  .withValues(alpha: 0.3),
                             ),
                           ),
                           child: Row(
@@ -366,13 +407,32 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                                 color: AppColors.warning,
                                 size: 18,
                               ),
-                              SizedBox(width: 8),
-                              Text(
-                                "offline_mode_warning".tr(),
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: AppColors.warning,
-                                  fontWeight: FontWeight.w600,
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.start,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      "offline_mode_warning".tr(),
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: AppColors.warning,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      "offline_sync_pending".tr(),
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: AppColors.warning
+                                            .withValues(alpha: 0.85),
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ],
@@ -387,10 +447,12 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                             vertical: 8,
                           ),
                           decoration: BoxDecoration(
-                            color: AppColors.emergency.withValues(alpha: 0.12),
+                            color: AppColors.emergency
+                                .withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(10),
                             border: Border.all(
-                              color: AppColors.emergency.withValues(alpha: 0.3),
+                              color: AppColors.emergency
+                                  .withValues(alpha: 0.3),
                             ),
                           ),
                           child: Row(
@@ -532,7 +594,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                         decoration: BoxDecoration(
                           color: AppColors.emergency,
                           shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 2),
+                          border:
+                              Border.all(color: Colors.white, width: 2),
                         ),
                       ),
                     ),
@@ -582,7 +645,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    hasContact ? "emergency_contact_ready".tr() : "emergency_contact_not_selected".tr(),
+                    hasContact
+                        ? "emergency_contact_ready".tr()
+                        : "emergency_contact_not_selected".tr(),
                     style: const TextStyle(
                       fontSize: 13,
                       color: AppColors.textSecondary,
@@ -590,7 +655,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    hasContact ? "$name • $phone" : "tap_to_select_contact".tr(),
+                    hasContact
+                        ? "$name • $phone"
+                        : "tap_to_select_contact".tr(),
                     style: const TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
@@ -612,8 +679,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   }
 
   Widget _buildReadinessCard(HomeProvider provider) {
-    final allReady =
-        provider.locationPermissionGranted &&
+    final allReady = provider.locationPermissionGranted &&
         provider.contactsPermissionGranted &&
         provider.emergencyContact != null;
     final title = allReady ? "ready".tr() : "setup_incomplete".tr();
@@ -637,15 +703,17 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 width: 36,
                 height: 36,
                 decoration: BoxDecoration(
-                  color: (allReady ? AppColors.success : AppColors.warning)
-                      .withValues(alpha: 0.15),
+                  color:
+                      (allReady ? AppColors.success : AppColors.warning)
+                          .withValues(alpha: 0.15),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
                   allReady
                       ? Icons.check_circle_rounded
                       : Icons.error_outline_rounded,
-                  color: allReady ? AppColors.success : AppColors.warning,
+                  color:
+                      allReady ? AppColors.success : AppColors.warning,
                   size: 18,
                 ),
               ),
@@ -713,21 +781,21 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: (isOk ? AppColors.success : AppColors.warning).withValues(
-            alpha: 0.12,
-          ),
+          color: (isOk ? AppColors.success : AppColors.warning)
+              .withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(999),
           border: Border.all(
-            color: (isOk ? AppColors.success : AppColors.warning).withValues(
-              alpha: 0.3,
-            ),
+            color: (isOk ? AppColors.success : AppColors.warning)
+                .withValues(alpha: 0.3),
           ),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
-              isOk ? Icons.check_circle_rounded : Icons.error_outline_rounded,
+              isOk
+                  ? Icons.check_circle_rounded
+                  : Icons.error_outline_rounded,
               size: 14,
               color: isOk ? AppColors.success : AppColors.warning,
             ),
@@ -748,15 +816,16 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
   Future<void> _requestLocationPermission() async {
     final provider = context.read<HomeProvider>();
-    final message = await provider.requestLocationPermission(context: context);
+    final message =
+        await provider.requestLocationPermission(context: context);
     if (message != null && mounted) _showSnack(message);
   }
 
   Future<void> _requestContactsPermission() async {
     if (kIsWeb) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Rehber izni web üzerinde desteklenmiyor."),
+        SnackBar(
+          content: Text("home_contacts_web_unsupported".tr()),
         ),
       );
       return;
@@ -906,8 +975,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       style: OutlinedButton.styleFrom(
         foregroundColor: AppColors.primary,
         side: const BorderSide(color: AppColors.primary),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        padding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14)),
       ),
     );
   }
@@ -934,6 +1005,74 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     final provider = context.read<HomeProvider>();
     final shortScreen = MediaQuery.sizeOf(context).height < 700;
     final gap = shortScreen ? 10.0 : 14.0;
+
+    // Define all action cards data
+    final actions = [
+      _ActionData(
+        "fake_call".tr(),
+        Icons.phone_in_talk_rounded,
+        AppColors.primary,
+        () {
+          AnalyticsService.logFakeCallUsed();
+          Navigator.push(context,
+              MaterialPageRoute(builder: (_) => const FakeCallScreen()));
+        },
+      ),
+      _ActionData(
+        "siren".tr(),
+        Icons.notifications_active_rounded,
+        AppColors.warning,
+        _activateSiren,
+      ),
+      _ActionData(
+        "safe_walk".tr(),
+        Icons.directions_walk_rounded,
+        AppColors.accent,
+        () {
+          Navigator.push(context,
+              MaterialPageRoute(builder: (_) => const SafeWalkScreen()));
+        },
+      ),
+      _ActionData(
+        _isRecording ? "stop_recording".tr() : "voice_record".tr(),
+        _isRecording ? Icons.stop_circle_rounded : Icons.mic_rounded,
+        _isRecording ? AppColors.emergency : const Color(0xFF9B59B6),
+        _toggleRecording,
+      ),
+      _ActionData(
+        "quick_message".tr(),
+        Icons.message_rounded,
+        AppColors.success,
+        () => _showMessageTemplates(context, provider),
+      ),
+      _ActionData(
+        "contacts".tr(),
+        Icons.people_rounded,
+        AppColors.info,
+        _openContacts,
+      ),
+      _ActionData(
+        "timeline".tr(),
+        Icons.timeline_rounded,
+        AppColors.accent,
+        () {
+          Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (_) => const SafetyTimelineScreen()));
+        },
+      ),
+      _ActionData(
+        "check_in".tr(),
+        Icons.verified_user_rounded,
+        AppColors.success,
+        () {
+          Navigator.push(context,
+              MaterialPageRoute(builder: (_) => const CheckInScreen()));
+        },
+      ),
+    ];
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -947,83 +1086,47 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           ),
         ),
         SizedBox(height: gap),
-        Row(
-          children: [
-            Expanded(
-              child: _buildActionCard(
-                "fake_call".tr(),
-                Icons.phone_in_talk_rounded,
-                AppColors.primary,
-                () {
-                  AnalyticsService.logFakeCallUsed();
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const FakeCallScreen()),
-                  );
-                },
+        // Build rows of 2 cards with staggered animations
+        for (int row = 0; row < 4; row++) ...[
+          if (row > 0) SizedBox(height: gap),
+          Row(
+            children: [
+              Expanded(
+                child: _buildAnimatedActionCard(
+                  actions[row * 2],
+                  row * 2,
+                ),
               ),
-            ),
-            SizedBox(width: gap),
-            Expanded(
-              child: _buildActionCard(
-                "siren".tr(),
-                Icons.notifications_active_rounded,
-                AppColors.warning,
-                _activateSiren,
+              SizedBox(width: gap),
+              Expanded(
+                child: _buildAnimatedActionCard(
+                  actions[row * 2 + 1],
+                  row * 2 + 1,
+                ),
               ),
-            ),
-          ],
-        ),
-        SizedBox(height: gap),
-        Row(
-          children: [
-            Expanded(
-              child: _buildActionCard(
-                "safe_walk".tr(),
-                Icons.directions_walk_rounded,
-                AppColors.accent,
-                () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const SafeWalkScreen()),
-                  );
-                },
-              ),
-            ),
-            SizedBox(width: gap),
-            Expanded(
-              child: _buildActionCard(
-                _isRecording ? "stop_recording".tr() : "voice_record".tr(),
-                _isRecording ? Icons.stop_circle_rounded : Icons.mic_rounded,
-                _isRecording ? AppColors.emergency : const Color(0xFF9B59B6),
-                _toggleRecording,
-              ),
-            ),
-          ],
-        ),
-        SizedBox(height: gap),
-        Row(
-          children: [
-            Expanded(
-              child: _buildActionCard(
-                "quick_message".tr(),
-                Icons.message_rounded,
-                AppColors.success,
-                () => _showMessageTemplates(context, provider),
-              ),
-            ),
-            SizedBox(width: gap),
-            Expanded(
-              child: _buildActionCard(
-                "contacts".tr(),
-                Icons.people_rounded,
-                AppColors.info,
-                _openContacts,
-              ),
-            ),
-          ],
-        ),
+            ],
+          ),
+        ],
       ],
+    );
+  }
+
+  Widget _buildAnimatedActionCard(_ActionData data, int index) {
+    if (index >= _cardFadeAnimations.length) {
+      return _buildActionCard(data.title, data.icon, data.color, data.onTap);
+    }
+    return AnimatedBuilder(
+      animation: _cardsController,
+      builder: (context, child) {
+        return FadeTransition(
+          opacity: _cardFadeAnimations[index],
+          child: SlideTransition(
+            position: _cardSlideAnimations[index],
+            child: child,
+          ),
+        );
+      },
+      child: _buildActionCard(data.title, data.icon, data.color, data.onTap),
     );
   }
 
@@ -1034,56 +1137,75 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     VoidCallback onTap,
   ) {
     final shortScreen = MediaQuery.sizeOf(context).height < 700;
-    final padding = shortScreen ? 14.0 : 20.0;
+    final cardPadding = shortScreen ? 14.0 : 20.0;
     final iconSize = shortScreen ? 44.0 : 52.0;
     final iconInnerSize = shortScreen ? 22.0 : 26.0;
     final fontSize = shortScreen ? 12.0 : 13.0;
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () {
-          HapticFeedback.lightImpact();
-          onTap();
-        },
+    return _ScaleTapCard(
+      onTap: () {
+        HapticFeedback.lightImpact();
+        onTap();
+      },
+      child: ClipRRect(
         borderRadius: BorderRadius.circular(16),
-        child: Container(
-          padding: EdgeInsets.symmetric(vertical: padding),
-          decoration: BoxDecoration(
-            color: AppColors.cardBg,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.border, width: 1),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.shadow,
-                blurRadius: 8,
-                offset: const Offset(0, 2),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+          child: Container(
+            padding: EdgeInsets.symmetric(vertical: cardPadding),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  AppColors.cardBg.withValues(alpha: 0.85),
+                  AppColors.cardBg.withValues(alpha: 0.6),
+                ],
               ),
-            ],
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                width: iconSize,
-                height: iconSize,
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.12),
-                  shape: BoxShape.circle,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: color.withValues(alpha: 0.15),
+                width: 1,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: color.withValues(alpha: 0.06),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
                 ),
-                child: Icon(icon, color: color, size: iconInnerSize),
-              ),
-              SizedBox(height: shortScreen ? 8 : 12),
-              Text(
-                title,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: fontSize,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
-                  letterSpacing: -0.2,
+              ],
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  width: iconSize,
+                  height: iconSize,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        color.withValues(alpha: 0.18),
+                        color.withValues(alpha: 0.08),
+                      ],
+                    ),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(icon, color: color, size: iconInnerSize),
                 ),
-              ),
-            ],
+                SizedBox(height: shortScreen ? 8 : 12),
+                Text(
+                  title,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: fontSize,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                    letterSpacing: -0.2,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -1148,8 +1270,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 Text(
                   provider.isLocationSharing
                       ? provider.locationShareEndAt != null
-                            ? "${"sharing".tr()} • ${_formatRemaining(provider.locationShareEndAt)}"
-                            : "your_location_is_sharing".tr()
+                          ? "${"sharing".tr()} • ${_formatRemaining(provider.locationShareEndAt)}"
+                          : "your_location_is_sharing".tr()
                       : "share_location_with_network".tr(),
                   style: const TextStyle(
                     fontSize: 13,
@@ -1186,7 +1308,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       builder: (context) => Container(
         decoration: const BoxDecoration(
           color: AppColors.cardBg,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          borderRadius:
+              BorderRadius.vertical(top: Radius.circular(24)),
         ),
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -1267,8 +1390,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       SnackBar(
         content: Text(message),
         backgroundColor: AppColors.primary,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
   }
@@ -1280,7 +1401,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       decoration: BoxDecoration(
         color: AppColors.primary.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.primary.withValues(alpha: 0.12)),
+        border: Border.all(
+            color: AppColors.primary.withValues(alpha: 0.12)),
       ),
       child: Row(
         children: [
@@ -1323,6 +1445,66 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ── Helper data class ──
+class _ActionData {
+  final String title;
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
+  const _ActionData(this.title, this.icon, this.color, this.onTap);
+}
+
+// ── Scale-bounce tap card ──
+class _ScaleTapCard extends StatefulWidget {
+  final Widget child;
+  final VoidCallback onTap;
+  const _ScaleTapCard({required this.child, required this.onTap});
+
+  @override
+  State<_ScaleTapCard> createState() => _ScaleTapCardState();
+}
+
+class _ScaleTapCardState extends State<_ScaleTapCard>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scale;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 120),
+      reverseDuration: const Duration(milliseconds: 200),
+    );
+    _scale = Tween<double>(begin: 1.0, end: 0.95).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => _controller.forward(),
+      onTapUp: (_) {
+        _controller.reverse();
+        widget.onTap();
+      },
+      onTapCancel: () => _controller.reverse(),
+      child: ScaleTransition(
+        scale: _scale,
+        child: widget.child,
       ),
     );
   }

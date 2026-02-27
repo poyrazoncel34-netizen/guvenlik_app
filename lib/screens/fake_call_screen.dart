@@ -4,6 +4,7 @@
 
 import 'dart:io';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:image_picker/image_picker.dart';
@@ -106,8 +107,14 @@ class _FakeCallScreenState extends State<FakeCallScreen> with SingleTickerProvid
       await _audioPlayer.setVolume(1.0);
       await _audioPlayer.setReleaseMode(ReleaseMode.loop);
       
-      // Play the ringtone asset
-      await _audioPlayer.play(AssetSource('sounds/ringtone.wav'));
+      if (kIsWeb) {
+        // On web, AssetSource paths resolve differently.
+        // Use UrlSource with the correct Flutter web asset path.
+        await _audioPlayer.play(UrlSource('assets/assets/sounds/ringtone.wav'));
+      } else {
+        // Play the ringtone asset on native platforms
+        await _audioPlayer.play(AssetSource('sounds/ringtone.wav'));
+      }
       
       // Log success for debugging
       debugPrint('FakeCallScreen: Ringtone started playing');
@@ -125,7 +132,10 @@ class _FakeCallScreenState extends State<FakeCallScreen> with SingleTickerProvid
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return Semantics(
+      label: "semantics_fake_call".tr(),
+      hint: "semantics_fake_call_hint".tr(),
+      child: Scaffold(
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -173,7 +183,7 @@ class _FakeCallScreenState extends State<FakeCallScreen> with SingleTickerProvid
                       width: 130,
                       height: 130,
                       decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.grey[850]),
-                      child: _avatarPath != null && File(_avatarPath!).existsSync()
+                      child: !kIsWeb && _avatarPath != null && File(_avatarPath!).existsSync()
                           ? ClipOval(
                               child: Image.file(
                                 File(_avatarPath!),
@@ -242,6 +252,7 @@ class _FakeCallScreenState extends State<FakeCallScreen> with SingleTickerProvid
           ),
         ),
       ),
+    ),
     );
   }
 
@@ -380,6 +391,7 @@ class _FakeCallScreenState extends State<FakeCallScreen> with SingleTickerProvid
   }
 
   Future<void> _pickProfileImage() async {
+    if (kIsWeb) return; // File picking not supported on web
     try {
       final picked = await _imagePicker.pickImage(source: ImageSource.gallery, imageQuality: 85);
       if (picked == null) return;

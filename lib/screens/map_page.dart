@@ -312,7 +312,10 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return Semantics(
+      label: "semantics_map_page".tr(),
+      hint: "semantics_map_page_hint".tr(),
+      child: Scaffold(
       body: Stack(
         children: [
           // Map
@@ -376,6 +379,7 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
           Positioned(bottom: 200, right: 16, child: _buildMyLocationFab()),
         ],
       ),
+    ),
     );
   }
 
@@ -548,7 +552,7 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
               ),
             ],
           ),
-          child: const Column(
+          child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               CircularProgressIndicator(
@@ -557,7 +561,7 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
               ),
               SizedBox(height: 16),
               Text(
-                "Konum alınıyor...",
+                "map_loading_location".tr(),
                 style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w600,

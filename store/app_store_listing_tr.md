@@ -36,6 +36,6 @@ KoruBeni, güvenliğinizi her an yanınızda taşır.
 **Category:** Utilities / Lifestyle
 **Age Rating:** 12+
 
-**Support URL:** https://korubeni.com/support
-**Privacy Policy URL:** https://poyrazoncel34-netizen.github.io/korubeni-privacy/
+**Support URL:** https://poyrazoncel34-netizen.github.io/guvenlik_app/privacy_policy.html
+**Privacy Policy URL:** https://poyrazoncel34-netizen.github.io/guvenlik_app/privacy_policy.html
 **Contact Email:** destek@korubeni.com

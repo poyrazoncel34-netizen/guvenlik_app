@@ -4,6 +4,7 @@
 
 import 'dart:async';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:audioplayers/audioplayers.dart';
@@ -49,11 +50,20 @@ class _SirenDialogState extends State<SirenDialog> with TickerProviderStateMixin
 
   Future<void> _startSirenSound() async {
     try {
+      await _audioPlayer.setVolume(1.0);
       await _audioPlayer.setReleaseMode(ReleaseMode.loop);
-      // Reuse ringtone asset as siren to avoid missing file errors
-      await _audioPlayer.play(AssetSource('sounds/ringtone.wav'));
+
+      if (kIsWeb) {
+        // On web, AssetSource paths resolve differently.
+        // Use UrlSource with the correct Flutter web asset path.
+        await _audioPlayer.play(UrlSource('assets/assets/sounds/siren.wav'));
+      } else {
+        await _audioPlayer.play(AssetSource('sounds/siren.wav'));
+      }
+
+      debugPrint('SirenDialog: Siren sound started');
     } catch (e) {
-      debugPrint("Ses çalma hatası: $e");
+      debugPrint("SirenDialog: Ses çalma hatası: $e");
     }
   }
 

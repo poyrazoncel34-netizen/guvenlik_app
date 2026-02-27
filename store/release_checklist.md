@@ -4,6 +4,7 @@
 
 ### Versioning
 - Her store gonderiminde build number artir: `./scripts/bump_version.sh`
+- Gizlilik politikasını senkronize et: `./scripts/sync_privacy_policy.sh`
 - Version format: `major.minor.patch+build` (orn. 1.0.0+1)
 - Production build: `flutter build apk --release --dart-define=ENV=production --dart-define=ENCRYPTION_KEY=your_key`
 
@@ -21,8 +22,8 @@
 - [x] Version and build number set
 
 ### Store Requirements
-- [ ] Privacy Policy URL canli (store/privacy_policy_template.md'den)
-- [ ] Support email belirle
+- [x] Privacy Policy URL canli: https://poyrazoncel34-netizen.github.io/guvenlik_app/privacy_policy.html
+- [x] Support email: destek@korubeni.com
 - [ ] Store listings finalize (store/ klasoru)
 - [ ] Screenshots al (iPhone, Android)
 - [ ] App icon 1024x1024 onayla
@@ -47,6 +48,8 @@
 - [ ] PIN kurulum akisi test
 - [ ] Izin reddedilme senaryolari test
 - [ ] Offline senaryolar test
+- **Detay:** [QA_SENARYOLAR.md](QA_SENARYOLAR.md) – Kritik akışlar ve ekran kontrol listesi
+- **Eksikler:** [STORE_EKSIKLER.md](STORE_EKSIKLER.md) – Yapılacaklar özeti ve adım adım talimatlar
 
 ## Build Commands
 

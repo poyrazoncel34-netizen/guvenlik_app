@@ -44,14 +44,28 @@ class SmsPlugin(private val activity: FlutterActivity) : MethodChannel.MethodCal
             @Suppress("DEPRECATION")
             val smsManager = SmsManager.getDefault()
             val parts = smsManager.divideMessage(message)
+            
             if (parts.size > 1) {
+                // Multipart SMS - send with delivery confirmation
+                android.util.Log.d("SmsPlugin", "Sending multipart SMS: ${parts.size} parts")
                 smsManager.sendMultipartTextMessage(phone, null, parts, null, null)
             } else {
+                // Single SMS
+                android.util.Log.d("SmsPlugin", "Sending single SMS")
                 smsManager.sendTextMessage(phone, null, message, null, null)
             }
+            
+            android.util.Log.d("SmsPlugin", "SMS sent successfully to $phone")
             result.success(true)
+        } catch (e: SecurityException) {
+            android.util.Log.e("SmsPlugin", "SecurityException: ${e.message}")
+            result.error("PERMISSION_DENIED", "SMS permission denied at runtime", e.message)
+        } catch (e: IllegalArgumentException) {
+            android.util.Log.e("SmsPlugin", "IllegalArgumentException: ${e.message}")
+            result.error("INVALID_NUMBER", "Invalid phone number format", e.message)
         } catch (e: Exception) {
-            result.error("SMS_FAILED", e.message, null)
+            android.util.Log.e("SmsPlugin", "SMS failed: ${e.message}", e)
+            result.error("SMS_FAILED", e.message ?: "Unknown error", null)
         }
     }
 }

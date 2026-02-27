@@ -17,6 +17,13 @@ import 'screens/splash_screen.dart';
 import 'core/services/background_sync_service.dart';
 import 'core/services/offline_queue_service.dart';
 import 'core/services/data_migration_service.dart';
+import 'core/services/foreground_service.dart';
+import 'core/services/haptic_service.dart';
+import 'core/services/breadcrumb_service.dart';
+import 'core/services/startup_diagnostics_service.dart';
+import 'core/services/connectivity_service.dart';
+import 'core/services/resource_monitor_service.dart';
+import 'core/services/atomic_storage_service.dart';
 import 'package:easy_localization/easy_localization.dart';
 
 /// Global flag - AuthGate checks this before using FirebaseAuth
@@ -121,6 +128,57 @@ void main() async {
     debugPrint('>>> OfflineQueue OK');
   } catch (e) {
     debugPrint('>>> OfflineQueue FAILED: $e');
+  }
+
+  // 4c) Foreground service configuration (alarm modunda kullanılır)
+  try {
+    await KoruBeniForegroundService.configure();
+    debugPrint('>>> ForegroundService configured');
+  } catch (e) {
+    debugPrint('>>> ForegroundService config FAILED: $e');
+  }
+
+  // 4d) Haptic/vibration service initialization
+  try {
+    await HapticService.initialize();
+    debugPrint('>>> HapticService OK');
+  } catch (e) {
+    debugPrint('>>> HapticService FAILED: $e');
+  }
+
+  // 4e) Connectivity service initialization
+  try {
+    await ConnectivityService.instance.initialize();
+    debugPrint('>>> ConnectivityService OK');
+  } catch (e) {
+    debugPrint('>>> ConnectivityService FAILED: $e');
+  }
+
+  // 4f) Breadcrumb service - start tracking
+  BreadcrumbService.instance.add('App initialization started');
+
+  // 4g) Startup diagnostics - comprehensive health check
+  try {
+    await StartupDiagnosticsService.instance.run();
+    debugPrint('>>> StartupDiagnostics OK');
+  } catch (e) {
+    debugPrint('>>> StartupDiagnostics FAILED: $e');
+  }
+
+  // 4h) Data integrity check
+  try {
+    await AtomicStorageService.instance.checkIntegrity();
+    debugPrint('>>> DataIntegrity OK');
+  } catch (e) {
+    debugPrint('>>> DataIntegrity FAILED: $e');
+  }
+
+  // 4i) Resource monitoring - start tracking RAM/CPU/Battery
+  try {
+    ResourceMonitorService.instance.startMonitoring();
+    debugPrint('>>> ResourceMonitor OK');
+  } catch (e) {
+    debugPrint('>>> ResourceMonitor FAILED: $e');
   }
 
   // 4) Crashlytics (only if Firebase ready)
