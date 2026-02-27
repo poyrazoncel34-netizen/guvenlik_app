@@ -2,6 +2,7 @@
 // KONUM SERVİSİ - GPS & İZİN YÖNETİMİ
 // ============================================================================
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 
@@ -61,7 +62,7 @@ class LocationService {
     if (!serviceEnabled) {
       return LocationResult(
         status: LocationStatus.serviceDisabled,
-        errorMessage: 'Konum servisi kapalı. Lütfen ayarlardan açın.',
+        errorMessage: 'location_error_service_disabled'.tr(),
       );
     }
 
@@ -74,7 +75,7 @@ class LocationService {
       if (permission == LocationPermission.denied) {
         return LocationResult(
           status: LocationStatus.permissionDenied,
-          errorMessage: 'Konum izni reddedildi.',
+          errorMessage: 'location_error_permission_denied'.tr(),
         );
       }
     }
@@ -82,8 +83,7 @@ class LocationService {
     if (permission == LocationPermission.deniedForever) {
       return LocationResult(
         status: LocationStatus.permissionDeniedForever,
-        errorMessage:
-            'Konum izni kalıcı olarak reddedildi. Ayarlardan izin verin.',
+        errorMessage: 'location_error_permission_forever'.tr(),
       );
     }
 
@@ -118,7 +118,7 @@ class LocationService {
     } catch (e) {
       return LocationResult(
         status: LocationStatus.error,
-        errorMessage: 'Konum alınamadı: ${e.toString()}',
+        errorMessage: '${'location_error_failed'.tr()}: ${e.toString()}',
       );
     }
   }

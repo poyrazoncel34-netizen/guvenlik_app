@@ -27,7 +27,7 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
   EmergencyContact? _emergencyContact;
   late final SecureStorage _secureStorage = serviceLocator<SecureStorage>();
   bool _biometricAvailable = false;
-  String _biometricLabel = 'Biyometrik';
+  String _biometricLabel = 'Biometric'; // Updated by _checkBiometric()
 
   @override
   void initState() {
@@ -192,7 +192,10 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return Semantics(
+      label: "semantics_pin_verify".tr(),
+      hint: "semantics_pin_verify_hint".tr(),
+      child: Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
         child: Column(
@@ -226,24 +229,24 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
                 fontWeight: FontWeight.w800,
               ),
             ),
-            const Text(
-              "saniye içinde PIN girilmezse\nACİL ARAMA YAPILACAK",
+            Text(
+              "pin_verify_countdown_warning".tr(),
               textAlign: TextAlign.center,
-              style: TextStyle(color: AppColors.textSecondary),
+              style: const TextStyle(color: AppColors.textSecondary),
             ),
             const SizedBox(height: 16),
             if (_emergencyContact != null)
               Text(
-                "Acil kişi: ${_emergencyContact!.name}",
+                "pin_verify_emergency_name".tr(namedArgs: {"name": _emergencyContact!.name}),
                 style: const TextStyle(
                   color: AppColors.textSecondary,
                   fontWeight: FontWeight.w600,
                 ),
               ),
             const SizedBox(height: 10),
-            const Text(
-              "İstediğiniz an PIN girerek işlemi iptal edebilirsiniz.",
-              style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+            Text(
+              "pin_verify_cancel_hint".tr(),
+              style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
             ),
             const SizedBox(height: 40),
             // Şifre Noktaları
@@ -273,7 +276,7 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
                       : Icons.fingerprint_rounded,
                   size: 22,
                 ),
-                label: Text('$_biometricLabel ile İptal Et'),
+                label: Text("pin_verify_biometric_cancel_btn".tr(namedArgs: {"label": _biometricLabel})),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppColors.primary,
                   side: const BorderSide(color: AppColors.primary, width: 1.5),
@@ -341,6 +344,7 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
           ],
         ),
       ),
+    ),
     );
   }
 }

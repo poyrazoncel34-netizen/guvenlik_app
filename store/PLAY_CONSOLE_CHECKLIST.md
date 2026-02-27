@@ -10,7 +10,7 @@ Bu liste, KoruBeni uygulamasını Play Store’a göndermeden önce **Play Conso
 - **Ne yap:** Gizlilik politikasının yayında olduğu **canlı URL**’yi gir.
 - **KoruBeni için:**
   - Gizlilik metni: `store/privacy_policy.html` (TR), `store/privacy_policy_en.html` (EN)
-  - GitHub Pages veya kendi hosting’e yükle; örnek: `https://<username>.github.io/korubeni-privacy/`
+  - GitHub Pages URL: `https://poyrazoncel34-netizen.github.io/guvenlik_app/privacy_policy.html`
   - Bu URL’yi Play Console’daki **Privacy policy** alanına yapıştır.
 - **Detay:** [store/privacy_policy_template.md](privacy_policy_template.md)
 

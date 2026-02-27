@@ -1,5 +1,5 @@
 // ============================================================================
-// GERİ SAYIM EKRANI
+// GERİ SAYIM EKRANI – DRAMATIC UX (Gradient arc, pulsating glow, scale bounce)
 // ============================================================================
 
 import 'dart:async';
@@ -26,6 +26,8 @@ import '../core/services/connectivity_service.dart';
 import '../core/services/offline_queue_service.dart';
 import '../domain/models/activity_event.dart';
 import 'emergency_call_screen.dart';
+import '../core/services/foreground_service.dart';
+import '../core/services/haptic_service.dart';
 
 class CountdownScreen extends StatefulWidget {
   final bool isTestMode;
@@ -41,8 +43,10 @@ class _CountdownScreenState extends State<CountdownScreen>
   int _countdown = 10;
   Timer? _timer;
   String _pin = "";
-  String? _correctPin; // null until loaded - no default fallback
+  String? _correctPin;
   late AnimationController _shakeController;
+  late AnimationController _tickBounceController;
+  late AnimationController _glowController;
   EmergencyContact? _emergencyContact;
   late final LocationRepository _locationRepository =
       serviceLocator<LocationRepository>();
@@ -61,10 +65,20 @@ class _CountdownScreenState extends State<CountdownScreen>
       vsync: this,
       duration: const Duration(milliseconds: 500),
     );
+    _tickBounceController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+    _glowController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    )..repeat(reverse: true);
+
     _loadPin();
     _loadEmergencyContact();
     _checkBiometric();
     _startCountdown();
+    KoruBeniForegroundService.start();
   }
 
   Future<void> _checkBiometric() async {
@@ -75,7 +89,6 @@ class _CountdownScreenState extends State<CountdownScreen>
         _biometricAvailable = true;
         _biometricLabel = label;
       });
-      // Auto-prompt biometric on entry
       _authenticateWithBiometric();
     }
   }
@@ -89,14 +102,17 @@ class _CountdownScreenState extends State<CountdownScreen>
       ActivityService.logEvent(
         type: ActivityType.emergencyCancelled,
         title: "countdown_cancelled_title".tr(),
-        description: "countdown_cancelled_biometric".tr(namedArgs: {"label": _biometricLabel}),
+        description: "countdown_cancelled_biometric"
+            .tr(namedArgs: {"label": _biometricLabel}),
       );
+      KoruBeniForegroundService.stop();
       Navigator.pop(context);
     } else if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            "countdown_biometric_fail".tr(namedArgs: {"label": _biometricLabel}),
+            "countdown_biometric_fail"
+                .tr(namedArgs: {"label": _biometricLabel}),
           ),
           backgroundColor: AppColors.warning,
           behavior: SnackBarBehavior.floating,
@@ -113,16 +129,14 @@ class _CountdownScreenState extends State<CountdownScreen>
       if (mounted) setState(() => _correctPin = secureValue);
       return;
     }
-    // Legacy migration from SharedPreferences
     final prefs = await SharedPreferences.getInstance();
     final legacy = prefs.getString(SecureStorageKeys.userPin);
     if (legacy != null && legacy.isNotEmpty) {
-      await _secureStorage.write(key: SecureStorageKeys.userPin, value: legacy);
+      await _secureStorage.write(
+          key: SecureStorageKeys.userPin, value: legacy);
       await prefs.remove(SecureStorageKeys.userPin);
       if (mounted) setState(() => _correctPin = legacy);
     }
-    // If still null, PIN was never set - this shouldn't happen because
-    // auth_gate now forces PIN setup, but handle gracefully
   }
 
   Future<void> _loadEmergencyContact() async {
@@ -136,7 +150,9 @@ class _CountdownScreenState extends State<CountdownScreen>
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (_countdown > 0) {
         setState(() => _countdown--);
-        HapticFeedback.mediumImpact();
+        HapticService.countdownTick(secondsRemaining: _countdown);
+        // ── Tick bounce animation ──
+        _tickBounceController.forward(from: 0);
       } else {
         timer.cancel();
         _makeEmergencyCall();
@@ -161,9 +177,8 @@ class _CountdownScreenState extends State<CountdownScreen>
     final numbers = await _contactsRepository.getAllEmergencyNumbers();
     if (numbers.isEmpty) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text("countdown_no_contact".tr())));
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("countdown_no_contact".tr())));
         Navigator.pop(context);
       }
       return;
@@ -173,11 +188,31 @@ class _CountdownScreenState extends State<CountdownScreen>
     final lat = locationResult.position?.latitude;
     final lng = locationResult.position?.longitude;
     final message = locationResult.isSuccess && lat != null && lng != null
-        ? "countdown_emergency_msg".tr(namedArgs: {"lat": "$lat", "lng": "$lng"})
+        ? "countdown_emergency_msg"
+            .tr(namedArgs: {"lat": "$lat", "lng": "$lng"})
         : "countdown_emergency_msg_no_loc".tr();
 
     final isOnline = ConnectivityService.instance.isOnline;
-    if (!isOnline) {
+
+    if (isOnline) {
+      try {
+        if (lat != null && lng != null) {
+          await _emergencyRepository
+              ?.updateLocation(lat: lat, lng: lng)
+              .timeout(const Duration(seconds: 5));
+        }
+        await _emergencyRepository
+            ?.createEmergencyEvent(
+              title: "countdown_emergency_title".tr(),
+              message: message,
+              lat: lat,
+              lng: lng,
+            )
+            .timeout(const Duration(seconds: 5));
+      } catch (e) {
+        debugPrint('>>> API failed, SMS fallback active: $e');
+      }
+    } else {
       await OfflineQueueService.instance.enqueue(
         OfflineEvent(
           type: 'emergency',
@@ -186,31 +221,6 @@ class _CountdownScreenState extends State<CountdownScreen>
           data: {'message': message, 'lat': lat, 'lng': lng},
         ),
       );
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              "countdown_offline_saved".tr(),
-            ),
-            backgroundColor: AppColors.warning,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
-    } else {
-      if (lat != null && lng != null) {
-        await _emergencyRepository?.updateLocation(lat: lat, lng: lng);
-      }
-      try {
-        await _emergencyRepository?.createEmergencyEvent(
-          title: "countdown_emergency_title".tr(),
-          message: message,
-          lat: lat,
-          lng: lng,
-        );
-      } catch (_) {
-        // Continue even if Firebase fails - emergency must proceed
-      }
     }
 
     await ActivityService.logEvent(
@@ -219,21 +229,20 @@ class _CountdownScreenState extends State<CountdownScreen>
       description: "countdown_emergency_desc".tr(),
     );
 
+    await HapticService.emergencyTriggered();
     await SmsService.sendSms(numbers: numbers, message: message);
 
-    final primaryNumber =
-        _emergencyContact?.phone ?? (numbers.isNotEmpty ? numbers.first : null);
+    final primaryNumber = _emergencyContact?.phone ??
+        (numbers.isNotEmpty ? numbers.first : null);
     if (primaryNumber != null && primaryNumber.isNotEmpty) {
       bool callMade = false;
       try {
-        // Direct call — dials immediately without user confirmation (Android)
         await FlutterDirectCallerPlugin.callNumber(primaryNumber);
         callMade = true;
       } catch (_) {
         callMade = false;
       }
       if (!callMade) {
-        // Fallback: open dialer with the number pre-filled
         try {
           final telUri = Uri(scheme: 'tel', path: primaryNumber);
           await launchUrl(telUri, mode: LaunchMode.externalApplication);
@@ -246,7 +255,8 @@ class _CountdownScreenState extends State<CountdownScreen>
         context,
         MaterialPageRoute(
           builder: (context) => EmergencyCallScreen(
-            name: _emergencyContact?.name ?? "countdown_emergency_label".tr(),
+            name:
+                _emergencyContact?.name ?? "countdown_emergency_label".tr(),
             phone: primaryNumber ?? "",
           ),
         ),
@@ -258,6 +268,8 @@ class _CountdownScreenState extends State<CountdownScreen>
   void dispose() {
     _timer?.cancel();
     _shakeController.dispose();
+    _tickBounceController.dispose();
+    _glowController.dispose();
     super.dispose();
   }
 
@@ -282,6 +294,7 @@ class _CountdownScreenState extends State<CountdownScreen>
             title: "countdown_cancelled_title".tr(),
             description: "countdown_cancelled_pin".tr(),
           );
+          KoruBeniForegroundService.stop();
           Navigator.pop(context);
         } else {
           _shakeController.forward(from: 0);
@@ -298,197 +311,263 @@ class _CountdownScreenState extends State<CountdownScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            children: [
-              const SizedBox(height: 24),
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: AppColors.emergency.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(18),
-                  border: Border.all(
-                    color: AppColors.emergency.withValues(alpha: 0.3),
-                    width: 2,
-                  ),
+    final isUrgent = _countdown <= 5;
+    final urgentColor =
+        isUrgent ? AppColors.emergency : AppColors.warning;
+
+    return Semantics(
+      label: "semantics_countdown".tr(),
+      hint: "semantics_countdown_hint".tr(),
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        body: AnimatedBuilder(
+          animation: _glowController,
+          builder: (context, child) {
+            // ── Pulsating background glow in last 5 seconds ──
+            final glowAlpha = isUrgent
+                ? (0.03 + _glowController.value * 0.08)
+                : 0.0;
+            return Container(
+              decoration: BoxDecoration(
+                gradient: RadialGradient(
+                  center: Alignment.topCenter,
+                  radius: 1.2,
+                  colors: [
+                    AppColors.emergency.withValues(alpha: glowAlpha),
+                    AppColors.background,
+                  ],
                 ),
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.warning_rounded,
-                      color: AppColors.emergency,
-                      size: 26,
+              ),
+              child: child,
+            );
+          },
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                children: [
+                  const SizedBox(height: 24),
+                  // Warning banner
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: AppColors.emergency.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(
+                        color:
+                            AppColors.emergency.withValues(alpha: 0.3),
+                        width: 2,
+                      ),
                     ),
-                    const SizedBox(width: 16),
-                    Expanded(
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.warning_rounded,
+                          color: AppColors.emergency,
+                          size: 26,
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Text(
+                            "countdown_warning_title".tr(),
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (widget.isTestMode) ...[
+                    const SizedBox(height: 10),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color:
+                            AppColors.success.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: AppColors.success
+                              .withValues(alpha: 0.3),
+                        ),
+                      ),
                       child: Text(
-                        "countdown_warning_title".tr(),
+                        "countdown_test_mode".tr(),
                         style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.textPrimary,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.success,
                         ),
                       ),
                     ),
                   ],
-                ),
-              ),
-              if (widget.isTestMode) ...[
-                const SizedBox(height: 10),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.success.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: AppColors.success.withValues(alpha: 0.3),
-                    ),
-                  ),
-                  child: Text(
-                    "countdown_test_mode".tr(),
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.success,
-                    ),
-                  ),
-                ),
-              ],
-              const SizedBox(height: 50),
-              Stack(
-                alignment: Alignment.center,
-                children: [
-                  SizedBox(
-                    width: 180,
-                    height: 180,
-                    child: CircularProgressIndicator(
-                      value: _countdown / 10,
-                      strokeWidth: 14,
-                      backgroundColor: AppColors.border,
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        _countdown > 5
-                            ? AppColors.warning
-                            : AppColors.emergency,
-                      ),
-                      strokeCap: StrokeCap.round,
-                    ),
-                  ),
-                  Column(
+                  const SizedBox(height: 50),
+                  // ── Countdown circle with gradient arc + tick bounce ──
+                  Stack(
+                    alignment: Alignment.center,
                     children: [
-                      Text(
-                        "$_countdown",
-                        style: TextStyle(
-                          fontSize: 70,
-                          fontWeight: FontWeight.w900,
-                          color: _countdown > 5
-                              ? AppColors.warning
-                              : AppColors.emergency,
-                          height: 1,
+                      // Gradient arc
+                      SizedBox(
+                        width: 180,
+                        height: 180,
+                        child: CustomPaint(
+                          painter: _GradientArcPainter(
+                            progress: _countdown / 10,
+                            startColor: urgentColor,
+                            endColor: isUrgent
+                                ? const Color(0xFFFF8A65)
+                                : AppColors.primary,
+                            bgColor:
+                                AppColors.border.withValues(alpha: 0.5),
+                            strokeWidth: 14,
+                          ),
                         ),
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        "countdown_seconds".tr(),
-                        style: const TextStyle(
-                          fontSize: 15,
-                          color: AppColors.textSecondary,
-                          fontWeight: FontWeight.w600,
+                      // Bouncing countdown number
+                      AnimatedBuilder(
+                        animation: _tickBounceController,
+                        builder: (context, child) {
+                          final bounceScale = 1.0 +
+                              (sin(_tickBounceController.value * pi) *
+                                  0.12);
+                          return Transform.scale(
+                            scale: bounceScale,
+                            child: child,
+                          );
+                        },
+                        child: Column(
+                          children: [
+                            Text(
+                              "$_countdown",
+                              style: TextStyle(
+                                fontSize: 70,
+                                fontWeight: FontWeight.w900,
+                                color: urgentColor,
+                                height: 1,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              "countdown_seconds".tr(),
+                              style: const TextStyle(
+                                fontSize: 15,
+                                color: AppColors.textSecondary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
                   ),
+                  const SizedBox(height: 50),
+                  Text(
+                    "countdown_enter_pin".tr(),
+                    style: const TextStyle(
+                      fontSize: 19,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  if (_emergencyContact != null) ...[
+                    const SizedBox(height: 6),
+                    Text(
+                      "countdown_emergency_contact".tr(
+                          namedArgs: {"name": _emergencyContact!.name}),
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: AppColors.textSecondary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 10),
+                  Text(
+                    "countdown_disclaimer".tr(),
+                    style: const TextStyle(
+                        fontSize: 12, color: AppColors.textSecondary),
+                  ),
+                  if (_biometricAvailable) ...[
+                    const SizedBox(height: 16),
+                    OutlinedButton.icon(
+                      onPressed: _authenticateWithBiometric,
+                      icon: Icon(
+                        _biometricLabel == 'Face ID'
+                            ? Icons.face_rounded
+                            : Icons.fingerprint_rounded,
+                        size: 22,
+                      ),
+                      label: Text("countdown_biometric_cancel"
+                          .tr(namedArgs: {"label": _biometricLabel})),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.primary,
+                        side: const BorderSide(
+                          color: AppColors.primary,
+                          width: 1.5,
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 14,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                    ),
+                  ],
+                  const Spacer(),
+                  // ── PIN dots with shake ──
+                  AnimatedBuilder(
+                    animation: _shakeController,
+                    builder: (context, child) {
+                      final offset =
+                          sin(_shakeController.value * pi * 4) * 12;
+                      return Transform.translate(
+                        offset: Offset(offset, 0),
+                        child: child,
+                      );
+                    },
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(4, (index) {
+                        final isFilled = index < _pin.length;
+                        return AnimatedContainer(
+                          duration: const Duration(milliseconds: 150),
+                          curve: Curves.easeOutBack,
+                          margin: const EdgeInsets.symmetric(
+                              horizontal: 10),
+                          width: isFilled ? 20 : 18,
+                          height: isFilled ? 20 : 18,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: isFilled
+                                ? AppColors.primary
+                                : AppColors.border,
+                            boxShadow: isFilled
+                                ? [
+                                    BoxShadow(
+                                      color: AppColors.primary
+                                          .withValues(alpha: 0.4),
+                                      blurRadius: 8,
+                                    ),
+                                  ]
+                                : null,
+                          ),
+                        );
+                      }),
+                    ),
+                  ),
+                  const SizedBox(height: 50),
+                  _buildNumberPad(),
+                  const SizedBox(height: 24),
                 ],
               ),
-              const SizedBox(height: 50),
-              Text(
-                "countdown_enter_pin".tr(),
-                style: const TextStyle(
-                  fontSize: 19,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              if (_emergencyContact != null) ...[
-                const SizedBox(height: 6),
-                Text(
-                  "countdown_emergency_contact".tr(namedArgs: {"name": _emergencyContact!.name}),
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: AppColors.textSecondary,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-              const SizedBox(height: 10),
-              Text(
-                "countdown_disclaimer".tr(),
-                style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
-              ),
-              if (_biometricAvailable) ...[
-                const SizedBox(height: 16),
-                OutlinedButton.icon(
-                  onPressed: _authenticateWithBiometric,
-                  icon: Icon(
-                    _biometricLabel == 'Face ID'
-                        ? Icons.face_rounded
-                        : Icons.fingerprint_rounded,
-                    size: 22,
-                  ),
-                  label: Text("countdown_biometric_cancel".tr(namedArgs: {"label": _biometricLabel})),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.primary,
-                    side: const BorderSide(
-                      color: AppColors.primary,
-                      width: 1.5,
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 14,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
-                ),
-              ],
-              const Spacer(),
-              AnimatedBuilder(
-                animation: _shakeController,
-                builder: (context, child) {
-                  final offset = sin(_shakeController.value * pi * 4) * 12;
-                  return Transform.translate(
-                    offset: Offset(offset, 0),
-                    child: child,
-                  );
-                },
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: List.generate(4, (index) {
-                    return Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 10),
-                      width: 18,
-                      height: 18,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: index < _pin.length
-                            ? AppColors.primary
-                            : AppColors.border,
-                      ),
-                    );
-                  }),
-                ),
-              ),
-              const SizedBox(height: 50),
-              _buildNumberPad(),
-              const SizedBox(height: 24),
-            ],
+            ),
           ),
         ),
       ),
@@ -531,21 +610,127 @@ class _CountdownScreenState extends State<CountdownScreen>
     );
   }
 
-  Widget _buildPadButton({required Widget child, required VoidCallback onTap}) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        customBorder: const CircleBorder(),
-        child: Container(
-          decoration: BoxDecoration(
-            color: AppColors.cardBg,
-            shape: BoxShape.circle,
-            border: Border.all(color: AppColors.border, width: 1.5),
-          ),
-          child: Center(child: child),
+  Widget _buildPadButton(
+      {required Widget child, required VoidCallback onTap}) {
+    return _ScaleTapButton(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColors.cardBg,
+          shape: BoxShape.circle,
+          border: Border.all(color: AppColors.border, width: 1.5),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.shadow.withValues(alpha: 0.2),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
+        child: Center(child: child),
       ),
     );
+  }
+}
+
+/// Scale-bounce micro-animation for numpad buttons
+class _ScaleTapButton extends StatefulWidget {
+  final Widget child;
+  final VoidCallback onTap;
+  const _ScaleTapButton({required this.child, required this.onTap});
+
+  @override
+  State<_ScaleTapButton> createState() => _ScaleTapButtonState();
+}
+
+class _ScaleTapButtonState extends State<_ScaleTapButton>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _ctrl;
+  late Animation<double> _scale;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 80),
+      reverseDuration: const Duration(milliseconds: 150),
+    );
+    _scale = Tween<double>(begin: 1.0, end: 0.9).animate(
+      CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => _ctrl.forward(),
+      onTapUp: (_) {
+        _ctrl.reverse();
+        widget.onTap();
+      },
+      onTapCancel: () => _ctrl.reverse(),
+      child: ScaleTransition(scale: _scale, child: widget.child),
+    );
+  }
+}
+
+/// Gradient arc painter for the countdown circle
+class _GradientArcPainter extends CustomPainter {
+  final double progress;
+  final Color startColor;
+  final Color endColor;
+  final Color bgColor;
+  final double strokeWidth;
+
+  _GradientArcPainter({
+    required this.progress,
+    required this.startColor,
+    required this.endColor,
+    required this.bgColor,
+    this.strokeWidth = 14,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = (size.width / 2) - strokeWidth / 2;
+    final rect = Rect.fromCircle(center: center, radius: radius);
+
+    // Background ring
+    final bgPaint = Paint()
+      ..color = bgColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth
+      ..strokeCap = StrokeCap.round;
+    canvas.drawCircle(center, radius, bgPaint);
+
+    // Gradient arc
+    if (progress > 0) {
+      final sweepAngle = 2 * pi * progress;
+      final gradient = SweepGradient(
+        startAngle: -pi / 2,
+        endAngle: -pi / 2 + sweepAngle,
+        colors: [startColor, endColor],
+      );
+      final arcPaint = Paint()
+        ..shader = gradient.createShader(rect)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = strokeWidth
+        ..strokeCap = StrokeCap.round;
+      canvas.drawArc(rect, -pi / 2, sweepAngle, false, arcPaint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _GradientArcPainter oldDelegate) {
+    return oldDelegate.progress != progress ||
+        oldDelegate.startColor != startColor;
   }
 }

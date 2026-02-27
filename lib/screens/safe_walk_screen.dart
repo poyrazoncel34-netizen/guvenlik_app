@@ -133,7 +133,10 @@ class _SafeWalkScreenState extends State<SafeWalkScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return Semantics(
+      label: "semantics_safe_walk".tr(),
+      hint: "semantics_safe_walk_hint".tr(),
+      child: Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: Text("safe_walk_title".tr()),
@@ -154,6 +157,7 @@ class _SafeWalkScreenState extends State<SafeWalkScreen> {
           child: _isActive ? _buildActiveView() : _buildSetupView(),
         ),
       ),
+    ),
     );
   }
 
@@ -227,25 +231,40 @@ class _SafeWalkScreenState extends State<SafeWalkScreen> {
                 HapticFeedback.lightImpact();
                 setState(() => _selectedMinutes = min);
               },
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 14,
-                ),
-                decoration: BoxDecoration(
-                  color: isSelected ? AppColors.accent : AppColors.cardBg,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(
-                    color: isSelected ? AppColors.accent : AppColors.border,
-                    width: isSelected ? 2 : 1,
+              child: AnimatedScale(
+                scale: isSelected ? 1.08 : 1.0,
+                duration: const Duration(milliseconds: 200),
+                curve: Curves.easeOutBack,
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 14,
                   ),
-                ),
-                child: Text(
-                  "safe_walk_minutes".tr(namedArgs: {"min": "$min"}),
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: isSelected ? Colors.white : AppColors.textPrimary,
+                  decoration: BoxDecoration(
+                    color: isSelected ? AppColors.accent : AppColors.cardBg,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: isSelected ? AppColors.accent : AppColors.border,
+                      width: isSelected ? 2 : 1,
+                    ),
+                    boxShadow: isSelected
+                      ? [
+                          BoxShadow(
+                            color: AppColors.accent.withValues(alpha: 0.3),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ]
+                      : null,
+                  ),
+                  child: Text(
+                    "safe_walk_minutes".tr(namedArgs: {"min": "$min"}),
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: isSelected ? Colors.white : AppColors.textPrimary,
+                    ),
                   ),
                 ),
               ),
@@ -294,7 +313,7 @@ class _SafeWalkScreenState extends State<SafeWalkScreen> {
               child: CircularProgressIndicator(
                 value: progress,
                 strokeWidth: 14,
-                backgroundColor: AppColors.border,
+                backgroundColor: AppColors.border.withValues(alpha: 0.5),
                 valueColor: AlwaysStoppedAnimation<Color>(
                   isUrgent ? AppColors.emergency : AppColors.accent,
                 ),

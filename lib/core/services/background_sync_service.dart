@@ -1,26 +1,59 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
+import 'offline_queue_service.dart';
 
-/// Background sync service - workmanager paketi uyumsuzluk sorunu nedeniyle gecici olarak devre disi
-/// Firebase zaten aktif oldugu icin kritik degil
+/// Background sync service — uygulama açıkken periyodik senkronizasyon.
+/// `workmanager` paketi uyumsuzluk nedeniyle devre dışı bırakılmıştı.
+/// Bu versiyon `dart:async` Timer.periodic kullanarak çalışır.
 class BackgroundSyncService {
   static const String taskName = 'guvendeyim_background_sync';
+  static const Duration _syncInterval = Duration(minutes: 5);
 
-  @pragma('vm:entry-point')
-  static void callbackDispatcher() {
+  static Timer? _periodicTimer;
+  static bool _initialized = false;
+
+  /// Servisi başlat — çift başlatmayı önler.
+  static Future<void> initialize() async {
+    if (_initialized) return;
+    _initialized = true;
+    debugPrint('BackgroundSync: Initialized');
+  }
+
+  /// Periyodik senkronizasyon timer'ını başlat.
+  static Future<void> registerPeriodicSync() async {
+    _periodicTimer?.cancel();
+    _periodicTimer = Timer.periodic(_syncInterval, (_) async {
+      await _performSync();
+    });
     debugPrint(
-      'BackgroundSync: Workmanager disabled due to compatibility issues',
+      'BackgroundSync: Periodic sync registered (${_syncInterval.inMinutes}m interval)',
     );
   }
 
-  static Future<void> initialize() async {
-    debugPrint('BackgroundSync: Initialize skipped - workmanager disabled');
+  /// Tek seferlik senkronizasyon çalıştır.
+  static Future<void> syncNow() async {
+    await _performSync();
   }
 
-  static Future<void> registerPeriodicSync() async {
-    debugPrint('BackgroundSync: Register skipped - workmanager disabled');
+  /// Senkronizasyon mantığı.
+  static Future<void> _performSync() async {
+    debugPrint('BackgroundSync: Sync started');
+    try {
+      // 1) Offline queue'daki bekleyen event'leri senkronize et
+      await OfflineQueueService.instance.syncPendingEvents();
+
+      debugPrint('BackgroundSync: Sync completed');
+    } catch (e) {
+      debugPrint('BackgroundSync: Sync failed: $e');
+    }
   }
 
+  /// Tüm timer'ları iptal et.
   static Future<void> cancelAll() async {
-    debugPrint('BackgroundSync: Cancel skipped - workmanager disabled');
+    _periodicTimer?.cancel();
+    _periodicTimer = null;
+    _initialized = false;
+    debugPrint('BackgroundSync: All timers cancelled');
   }
 }
+

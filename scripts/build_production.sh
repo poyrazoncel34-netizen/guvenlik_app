@@ -44,7 +44,7 @@ if [ ! -z "$1" ]; then
     ENCRYPTION_KEY="$1"
 fi
 
-echo "🔐 Encryption key kullanılıyor: ${ENCRYPTION_KEY:0:20}..."
+echo "🔐 Encryption key set (not logged for security)."
 echo ""
 
 # Flutter clean

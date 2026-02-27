@@ -25,4 +25,15 @@ class EmergencyRepositoryImpl implements EmergencyRepository {
   Future<void> updateLocation({required double lat, required double lng}) {
     return _remote.updateLocation(lat: lat, lng: lng);
   }
+
+  @override
+  Future<List<Map<String, dynamic>>> getEmergencyHistory({int limit = 20}) {
+    return _remote.getEmergencyHistory(limit: limit);
+  }
+
+  @override
+  Future<List<Map<String, dynamic>>> getActiveEmergencies() {
+    return _remote.getActiveEmergencies();
+  }
 }
+

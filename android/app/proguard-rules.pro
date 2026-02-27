@@ -75,6 +75,21 @@
 -dontwarn kotlin.**
 -keep class kotlin.** { *; }
 
+# KoruBeni custom platform channels - CRITICAL for emergency app
+-keep class com.poyrazoncel.korubeni.** { *; }
+-keepclassmembers class com.poyrazoncel.korubeni.** {
+    public <methods>;
+    public <fields>;
+}
+
+# MethodChannel handlers must not be obfuscated
+-keep class * implements io.flutter.plugin.common.MethodChannel$MethodCallHandler {
+    *;
+}
+-keep class * implements io.flutter.plugin.common.EventChannel$StreamHandler {
+    *;
+}
+
 # ProGuard optimizations
 -optimizations !code/simplification/arithmetic,!code/simplification/cast,!field/*,!class/merging/*
 -allowaccessmodification

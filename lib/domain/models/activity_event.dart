@@ -10,6 +10,8 @@ enum ActivityType {
   pinChanged,
   fakeCallUsed,
   contactAdded,
+  timelineNote,
+  checkIn,
 }
 
 class ActivityEvent {
@@ -45,6 +47,10 @@ class ActivityEvent {
         return Icons.phone_in_talk_rounded;
       case ActivityType.contactAdded:
         return Icons.person_add_rounded;
+      case ActivityType.timelineNote:
+        return Icons.edit_note_rounded;
+      case ActivityType.checkIn:
+        return Icons.verified_user_rounded;
     }
   }
 
@@ -66,6 +72,10 @@ class ActivityEvent {
         return AppColors.primary;
       case ActivityType.contactAdded:
         return AppColors.info;
+      case ActivityType.timelineNote:
+        return AppColors.accent;
+      case ActivityType.checkIn:
+        return AppColors.success;
     }
   }
 

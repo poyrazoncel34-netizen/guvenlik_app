@@ -31,7 +31,10 @@ class _ContactsPageState extends State<ContactsPage> {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<ContactsProvider>();
-    return Scaffold(
+    return Semantics(
+      label: "semantics_contacts_page".tr(),
+      hint: "semantics_contacts_page_hint".tr(),
+      child: Scaffold(
       appBar: AppBar(
         title: Text("contacts_emergency_title".tr()),
         actions: [
@@ -111,6 +114,7 @@ class _ContactsPageState extends State<ContactsPage> {
           _buildInfoCard(),
         ],
       ),
+    ),
     );
   }
 
@@ -439,7 +443,7 @@ class _ContactsPageState extends State<ContactsPage> {
                 onPressed: () {
                   Navigator.pop(context);
                   provider.selectEmergencyContact(contact);
-                  _showSnack("Acil kişi seçildi: ${contact.name}");
+                  _showSnack("contacts_emergency_selected".tr(namedArgs: {"name": contact.name}));
                 },
                 icon: const Icon(Icons.shield_rounded, size: 20),
                 label: Text("contacts_select_emergency_btn".tr(), style: const TextStyle(fontWeight: FontWeight.w700)),
@@ -632,7 +636,7 @@ class _ContactsPageState extends State<ContactsPage> {
         return;
       }
 
-      _showSnack("$name eklendi");
+      _showSnack("contacts_added".tr(namedArgs: {"name": name}));
       HapticFeedback.mediumImpact();
     } on UserCancelledPickingException {
       // kullanıcı vazgeçti
@@ -697,7 +701,7 @@ class _ContactsPageState extends State<ContactsPage> {
                 onTap: () {
                   Navigator.pop(context);
                   provider.selectEmergencyContact(contact);
-                  _showSnack("Acil kişi seçildi: ${contact.name}");
+                  _showSnack("contacts_emergency_selected".tr(namedArgs: {"name": contact.name}));
                 },
               );
             }),

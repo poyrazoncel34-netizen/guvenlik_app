@@ -2,29 +2,44 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/constants/app_constants.dart';
+import '../../core/services/volume_trigger_service.dart';
 
 class SettingsProvider extends ChangeNotifier {
   bool _notificationsEnabled = true;
   bool _locationEnabled = true;
   bool _soundEnabled = true;
   bool _vibrationEnabled = true;
+  bool _volumeTriggerEnabled = false;
   bool _loaded = false;
 
   String _profileName = '';
   String _profileEmail = '';
+  String _bloodType = '';
+  String _allergies = '';
+  String _medicalConditions = '';
+  String _emergencyNotes = '';
 
   bool get notificationsEnabled => _notificationsEnabled;
   bool get locationEnabled => _locationEnabled;
   bool get soundEnabled => _soundEnabled;
   bool get vibrationEnabled => _vibrationEnabled;
+  bool get volumeTriggerEnabled => _volumeTriggerEnabled;
   String get profileName => _profileName.isEmpty ? "settings_default_user".tr() : _profileName;
   String get profileEmail => _profileEmail.isEmpty ? '' : _profileEmail;
+  String get bloodType => _bloodType;
+  String get allergies => _allergies;
+  String get medicalConditions => _medicalConditions;
+  String get emergencyNotes => _emergencyNotes;
   bool get hasProfile => _profileName.isNotEmpty;
 
   Future<void> loadProfile() async {
     final prefs = await SharedPreferences.getInstance();
     _profileName = prefs.getString(AppConstants.prefProfileName) ?? '';
     _profileEmail = prefs.getString(AppConstants.prefProfileEmail) ?? '';
+    _bloodType = prefs.getString(AppConstants.prefBloodType) ?? '';
+    _allergies = prefs.getString(AppConstants.prefAllergies) ?? '';
+    _medicalConditions = prefs.getString(AppConstants.prefMedicalConditions) ?? '';
+    _emergencyNotes = prefs.getString(AppConstants.prefEmergencyNotes) ?? '';
 
     if (!_loaded) {
       _notificationsEnabled =
@@ -32,6 +47,7 @@ class SettingsProvider extends ChangeNotifier {
       _locationEnabled = prefs.getBool(AppConstants.prefLocation) ?? true;
       _soundEnabled = prefs.getBool(AppConstants.prefSound) ?? true;
       _vibrationEnabled = prefs.getBool(AppConstants.prefVibration) ?? true;
+      _volumeTriggerEnabled = prefs.getBool('pref_volume_trigger') ?? false;
       _loaded = true;
     }
     notifyListeners();
@@ -40,12 +56,24 @@ class SettingsProvider extends ChangeNotifier {
   Future<void> updateProfile({
     required String name,
     required String email,
+    String bloodType = '',
+    String allergies = '',
+    String medicalConditions = '',
+    String emergencyNotes = '',
   }) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(AppConstants.prefProfileName, name.trim());
     await prefs.setString(AppConstants.prefProfileEmail, email.trim());
+    await prefs.setString(AppConstants.prefBloodType, bloodType.trim());
+    await prefs.setString(AppConstants.prefAllergies, allergies.trim());
+    await prefs.setString(AppConstants.prefMedicalConditions, medicalConditions.trim());
+    await prefs.setString(AppConstants.prefEmergencyNotes, emergencyNotes.trim());
     _profileName = name.trim();
     _profileEmail = email.trim();
+    _bloodType = bloodType.trim();
+    _allergies = allergies.trim();
+    _medicalConditions = medicalConditions.trim();
+    _emergencyNotes = emergencyNotes.trim();
     notifyListeners();
   }
 
@@ -75,5 +103,13 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(AppConstants.prefVibration, value);
+  }
+
+  Future<void> setVolumeTrigger(bool value) async {
+    _volumeTriggerEnabled = value;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('pref_volume_trigger', value);
+    await VolumeTriggerService.instance.setEnabled(value);
   }
 }

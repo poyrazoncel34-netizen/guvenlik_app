@@ -28,4 +28,8 @@ class AppConstants {
   static const String prefPinSetupDone = 'pref_pin_setup_done';
   static const String prefOnboardingDone = 'pref_onboarding_done';
   static const String prefDemoMode = 'pref_demo_mode';
+  static const String prefBloodType = 'profile_blood_type';
+  static const String prefAllergies = 'profile_allergies';
+  static const String prefMedicalConditions = 'profile_medical_conditions';
+  static const String prefEmergencyNotes = 'profile_emergency_notes';
 }

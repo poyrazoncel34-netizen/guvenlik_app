@@ -20,7 +20,7 @@ Bu dosya, teknik eksikler listesinde istenen maddelerin projede nasıl karşıla
 
 ### 3. Gizlilik Politikası
 - **`store/privacy_policy_template.md`** güncellendi: başlık, maddeler, iletişim ve yayınlama notları eklendi.
-- **Sizin yapacaklarınız:** `[TARIH_YYYY_AA_GG]` ve `[DESTEK_EMAIL]` yerlerini doldurun. Metni HTML’e çevirip GitHub Pages veya kendi sitenizde yayınlayın; store’daki “Privacy Policy URL” alanına bu adresi yazın.
+- **Sizin yapacaklarınız:** Template dolduruldu (tarih: 2026-02-26, e-posta: destek@korubeni.com). HTML dosyaları güncel. GitHub Pages deploy sonrası store Privacy Policy URL alanına `https://poyrazoncel34-netizen.github.io/guvenlik_app/privacy_policy.html` yazın.
 
 ### 4. ProGuard / R8 (Android)
 - **`android/app/proguard-rules.pro`** eklendi (Flutter, Firebase, Gson kuralları).

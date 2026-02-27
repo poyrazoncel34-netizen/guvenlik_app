@@ -139,19 +139,18 @@ store/screenshots/ios/
 
 ---
 
-## 📄 ADIM 6: PRIVACY POLICY (1 saat)
+## 📄 ADIM 6: PRIVACY POLICY (✅ Tamamlandı)
 
-`store/privacy_policy_template.md` dosyasını aç ve şunları doldur:
-- `[TARIH_YYYY_AA_GG]` → Bugünün tarihi (örn: 2026-02-06)
-- `[DESTEK_EMAIL]` → Destek e-postan (örn: destek@korubeni.com)
+`store/privacy_policy_template.md` dosyası dolduruldu:
+- Tarih: 2026-02-26
+- Destek e-postası: destek@korubeni.com
 
-**Privacy Policy'i canlıya almak için:**
+**Privacy Policy canlı URL'ler (GitHub Pages):**
+- Türkçe: `https://poyrazoncel34-netizen.github.io/guvenlik_app/privacy_policy.html`
+- İngilizce: `https://poyrazoncel34-netizen.github.io/guvenlik_app/privacy_policy_en.html`
 
-**Seçenek 1: GitHub Pages (Ücretsiz, Önerilen)**
-1. GitHub'da yeni bir repo oluştur: `korubeni-privacy`
-2. `privacy_policy_template.md` dosyasını `index.md` olarak yükle
-3. Settings > Pages > Source: `main` branch
-4. URL: `https://kullaniciadi.github.io/korubeni-privacy/`
+**Deploy:** Repo Settings > Pages > Source: GitHub Actions, veya Actions > Deploy Privacy Policy > Run workflow
+
 
 **Seçenek 2: Kendi websiten**
 - HTML'e çevir ve yayınla
@@ -196,6 +195,12 @@ https://play.google.com/console
 - **Kişi bilgileri:** Evet, kullanıcı tarafından ekleniyor
 - **Telefon numarası:** Evet, Firebase Auth için
 - **Veri şifreleme:** Evet, transit ve at rest
+
+### 7.5.5. ⚠️ SMS Permission Declaration (KRİTİK!)
+Uygulama `SEND_SMS` izni kullandığı için Google formu **zorunlu olarak** doldurmanız gerekiyor.
+- **Nereye gidilir:** Play Console > App content > Permissions declarations
+- **Detaylı rehber:** `store/SMS_PERMISSION_DECLARATION.md` dosyasını takip edin
+- **Demo video hazırlanmalı** (panik butonuna basılıp SMS gönderiminin gösterildiği 30-60 sn video)
 
 ### 7.6. AAB Dosyasını Yükle
 - Production > Create new release
