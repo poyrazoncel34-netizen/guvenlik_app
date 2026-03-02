@@ -21,16 +21,34 @@
     <uses-permission android:name="android.permission.USE_BIOMETRIC" />
     <!-- Vibration for shake feedback -->
     <uses-permission android:name="android.permission.VIBRATE" />
-    <!-- Direct call for emergency (without dialer confirmation) -->
-    <uses-permission android:name="android.permission.CALL_PHONE" />
-    <!-- Direct SMS for emergency (background send without user confirmation) -->
+    <!-- 
+    ⚠️ CRITICAL EMERGENCY PERMISSIONS ⚠️
+    These permissions are REQUIRED for the dual-action emergency system:
+    1. SEND_SMS: Sends background SMS with location to emergency contact
+    2. CALL_PHONE: Makes direct phone call immediately after SMS
+    
+    ZERO-FAULT GUARANTEE: If SMS fails (no credit), the call MUST still proceed.
+    Runtime permissions are checked/requested before each action.
+    -->
     <uses-permission android:name="android.permission.SEND_SMS" />
+    <uses-permission android:name="android.permission.CALL_PHONE" />
     <!-- Foreground Service for keeping app alive in background -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
     <!-- Wake Lock for keeping CPU alive during emergency -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
-    <!-- Battery optimization exemption request -->
+    <!-- 
+    ⚠️ GOOGLE PLAY POLICY WARNING ⚠️
+    REQUEST_IGNORE_BATTERY_OPTIMIZATIONS is a RESTRICTED permission.
+    Google Play often REJECTS apps using this unless:
+    1. The app's core functionality requires background operation (emergency app ✓)
+    2. You provide clear justification in the Play Console declaration form
+    3. The app prompts users to whitelist it (not automatically)
+    
+    For KoruBeni: This is justified because the app MUST run in background
+    to detect emergency triggers (panic button, shake detection) at all times.
+    User lives may depend on this working 24/7.
+    -->
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
     <!-- Background location for emergency tracking -->
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />

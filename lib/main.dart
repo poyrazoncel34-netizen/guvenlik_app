@@ -5,35 +5,18 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_crashlytics/firebase_crashlytics.dart';
-import 'firebase_options.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'core/di/service_locator.dart';
 import 'package:provider/provider.dart';
 import 'core/app_theme.dart';
 import 'presentation/providers/providers.dart';
 import 'screens/splash_screen.dart';
-import 'core/services/background_sync_service.dart';
 import 'core/services/offline_queue_service.dart';
 import 'core/services/data_migration_service.dart';
 import 'core/services/foreground_service.dart';
 import 'core/services/haptic_service.dart';
-import 'core/services/breadcrumb_service.dart';
-import 'core/services/startup_diagnostics_service.dart';
 import 'core/services/connectivity_service.dart';
-import 'core/services/resource_monitor_service.dart';
 import 'core/services/atomic_storage_service.dart';
 import 'package:easy_localization/easy_localization.dart';
-
-/// Global flag - AuthGate checks this before using FirebaseAuth
-bool kFirebaseReady = false;
-
-Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  try {
-    await Firebase.initializeApp();
-  } catch (_) {}
-}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -42,7 +25,6 @@ void main() async {
   // 0) ErrorWidget.builder MUST be set BEFORE runApp so ANY error is caught
   ErrorWidget.builder = (FlutterErrorDetails details) {
     debugPrint('ErrorWidget caught: ${details.exception}');
-    // Use tr() for localized error text (locale from EasyLocalization.ensureInitialized)
     final errorTitle = 'error_title'.tr();
     final errorRestart = 'error_restart'.tr();
     return MaterialApp(
@@ -89,117 +71,35 @@ void main() async {
     );
   };
 
-  // 1) Firebase MUST initialize FIRST (platform-specific options for Web support)
+  // OPTIMIZED COLD START: Run independent services in parallel
   try {
-    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-    kFirebaseReady = true;
-    debugPrint('>>> Firebase OK');
+    await Future.wait([
+      // Critical services (must complete)
+      setupServiceLocator(),
+      DataMigrationService.migrate(),
+      OfflineQueueService.instance.initialize(),
+      AtomicStorageService.instance.checkIntegrity(),
+      
+      // Non-blocking services
+      HapticService.initialize(),
+      ConnectivityService.instance.initialize(),
+      KoruBeniForegroundService.configure(),
+    ]);
+    debugPrint('>>> All services initialized in parallel');
   } catch (e) {
-    debugPrint('>>> Firebase FAILED: $e');
+    debugPrint('>>> Service initialization error (non-fatal): $e');
   }
 
-  // 2) ServiceLocator
-  try {
-    await setupServiceLocator();
-    debugPrint('>>> ServiceLocator OK');
-  } catch (e) {
-    debugPrint('>>> ServiceLocator FAILED: $e');
-  }
-
-  // 2b) Data migration
-  try {
-    await DataMigrationService.migrate();
-    debugPrint('>>> DataMigration OK');
-  } catch (e) {
-    debugPrint('>>> DataMigration FAILED: $e');
-  }
-
-  // 3) Background sync
-  try {
-    await BackgroundSyncService.initialize();
-    await BackgroundSyncService.registerPeriodicSync();
-  } catch (e) {
-    debugPrint('>>> BackgroundSync FAILED: $e');
-  }
-
-  // 4b) Offline queue
-  try {
-    await OfflineQueueService.instance.initialize();
-    debugPrint('>>> OfflineQueue OK');
-  } catch (e) {
-    debugPrint('>>> OfflineQueue FAILED: $e');
-  }
-
-  // 4c) Foreground service configuration (alarm modunda kullanılır)
-  try {
-    await KoruBeniForegroundService.configure();
-    debugPrint('>>> ForegroundService configured');
-  } catch (e) {
-    debugPrint('>>> ForegroundService config FAILED: $e');
-  }
-
-  // 4d) Haptic/vibration service initialization
-  try {
-    await HapticService.initialize();
-    debugPrint('>>> HapticService OK');
-  } catch (e) {
-    debugPrint('>>> HapticService FAILED: $e');
-  }
-
-  // 4e) Connectivity service initialization
-  try {
-    await ConnectivityService.instance.initialize();
-    debugPrint('>>> ConnectivityService OK');
-  } catch (e) {
-    debugPrint('>>> ConnectivityService FAILED: $e');
-  }
-
-  // 4f) Breadcrumb service - start tracking
-  BreadcrumbService.instance.add('App initialization started');
-
-  // 4g) Startup diagnostics - comprehensive health check
-  try {
-    await StartupDiagnosticsService.instance.run();
-    debugPrint('>>> StartupDiagnostics OK');
-  } catch (e) {
-    debugPrint('>>> StartupDiagnostics FAILED: $e');
-  }
-
-  // 4h) Data integrity check
-  try {
-    await AtomicStorageService.instance.checkIntegrity();
-    debugPrint('>>> DataIntegrity OK');
-  } catch (e) {
-    debugPrint('>>> DataIntegrity FAILED: $e');
-  }
-
-  // 4i) Resource monitoring - start tracking RAM/CPU/Battery
-  try {
-    ResourceMonitorService.instance.startMonitoring();
-    debugPrint('>>> ResourceMonitor OK');
-  } catch (e) {
-    debugPrint('>>> ResourceMonitor FAILED: $e');
-  }
-
-  // 4) Crashlytics (only if Firebase ready)
-  if (kFirebaseReady) {
-    try {
-      FlutterError.onError = (details) {
-        debugPrint('FlutterError: ${details.exception}');
-        FirebaseCrashlytics.instance.recordFlutterFatalError(details);
-      };
-      PlatformDispatcher.instance.onError = (error, stack) {
-        debugPrint('PlatformError: $error');
-        FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
-        return true;
-      };
-      FirebaseMessaging.onBackgroundMessage(
-        _firebaseMessagingBackgroundHandler,
-      );
-    } catch (e) {
-      debugPrint('>>> Crashlytics setup FAILED: $e');
-    }
-  }
+  // Error handling for Flutter errors (no Firebase Crashlytics)
+  FlutterError.onError = (details) {
+    debugPrint('FlutterError: ${details.exception}');
+    // Log to console only in offline-first mode
+  };
+  
+  PlatformDispatcher.instance.onError = (error, stack) {
+    debugPrint('PlatformError: $error');
+    return true;
+  };
 
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
@@ -214,7 +114,7 @@ void main() async {
     DeviceOrientation.portraitDown,
   ]);
 
-  debugPrint('>>> Running app...');
+  debugPrint('>>> Running app (offline-first mode)...');
   runApp(
     EasyLocalization(
       supportedLocales: const [Locale('tr', 'TR'), Locale('en', 'US')],

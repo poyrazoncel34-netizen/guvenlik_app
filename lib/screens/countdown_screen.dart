@@ -11,7 +11,6 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_direct_caller_plugin/flutter_direct_caller_plugin.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/di/service_locator.dart';
-import '../main.dart' show kFirebaseReady;
 import '../core/security/secure_storage.dart';
 import '../core/security/secure_storage_keys.dart';
 import '../core/app_colors.dart';
@@ -19,7 +18,7 @@ import '../core/services/contact_service.dart';
 import '../core/services/biometric_service.dart';
 import '../core/services/sms_service.dart';
 import '../domain/repositories/contacts_repository.dart';
-import '../domain/repositories/emergency_repository.dart';
+// Emergency repository removed (offline-first)
 import '../domain/repositories/location_repository.dart';
 import '../core/services/activity_service.dart';
 import '../core/services/connectivity_service.dart';
@@ -52,8 +51,7 @@ class _CountdownScreenState extends State<CountdownScreen>
       serviceLocator<LocationRepository>();
   late final ContactsRepository _contactsRepository =
       serviceLocator<ContactsRepository>();
-  EmergencyRepository? get _emergencyRepository =>
-      kFirebaseReady ? serviceLocator<EmergencyRepository>() : null;
+  // Offline-first: No EmergencyRepository (Firebase removed)
   late final SecureStorage _secureStorage = serviceLocator<SecureStorage>();
   bool _biometricAvailable = false;
   String _biometricLabel = 'Biometric';
@@ -196,19 +194,12 @@ class _CountdownScreenState extends State<CountdownScreen>
 
     if (isOnline) {
       try {
+        // Offline-first: No cloud sync, emergency handled locally via EmergencyCoreService
+        debugPrint('Emergency event logged locally (no Firebase)');
         if (lat != null && lng != null) {
-          await _emergencyRepository
-              ?.updateLocation(lat: lat, lng: lng)
-              .timeout(const Duration(seconds: 5));
+          debugPrint('Location: $lat, $lng');
         }
-        await _emergencyRepository
-            ?.createEmergencyEvent(
-              title: "countdown_emergency_title".tr(),
-              message: message,
-              lat: lat,
-              lng: lng,
-            )
-            .timeout(const Duration(seconds: 5));
+        debugPrint('Message: $message');
       } catch (e) {
         debugPrint('>>> API failed, SMS fallback active: $e');
       }

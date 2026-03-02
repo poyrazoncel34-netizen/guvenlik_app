@@ -13,8 +13,6 @@ import '../../core/utils/permission_helper.dart';
 import '../../core/services/location_service.dart';
 import '../../domain/models/activity_event.dart' as app_activity;
 import '../../domain/repositories/contacts_repository.dart';
-import '../../domain/repositories/emergency_repository.dart';
-import '../../main.dart' show kFirebaseReady;
 
 class HomeProvider extends ChangeNotifier {
   HomeProvider();
@@ -26,8 +24,7 @@ class HomeProvider extends ChangeNotifier {
       serviceLocator<LocationService>();
   late final ContactsRepository _contactsRepository =
       serviceLocator<ContactsRepository>();
-  EmergencyRepository? get _emergencyRepository =>
-      kFirebaseReady ? serviceLocator<EmergencyRepository>() : null;
+  // Offline-first: No EmergencyRepository (Firebase removed)
 
   EmergencyContact? _emergencyContact;
   bool _contactsPermissionGranted = false;
@@ -184,7 +181,7 @@ class HomeProvider extends ChangeNotifier {
 
     final lat = result.position!.latitude;
     final lng = result.position!.longitude;
-    await _emergencyRepository?.updateLocation(lat: lat, lng: lng);
+    // Offline-first: No cloud sync, location used locally only
     final url = 'https://www.google.com/maps/search/?api=1&query=$lat,$lng';
     final message = 'location_share_message'.tr(namedArgs: {'url': url});
     return SmsService.sendSms(numbers: numbers, message: message);

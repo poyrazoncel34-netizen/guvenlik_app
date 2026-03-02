@@ -6,6 +6,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.PowerManager
 import android.provider.Settings
+import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 
 /**
@@ -20,7 +21,7 @@ class DozeModeHandler(private val context: Context) : MethodChannel.MethodCallHa
         const val CHANNEL = "com.poyrazoncel.korubeni/doze"
     }
     
-    override fun onMethodCall(call: MethodChannel.MethodCall, result: MethodChannel.Result) {
+    override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
         when (call.method) {
             "isDozeWhitelisted" -> {
                 result.success(isWhitelisted())

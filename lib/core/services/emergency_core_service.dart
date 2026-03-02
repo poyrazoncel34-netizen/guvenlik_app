@@ -13,15 +13,16 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:battery_plus/battery_plus.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:flutter_direct_caller_plugin/flutter_direct_caller_plugin.dart';
+import 'package:telephony/telephony.dart';
 import 'connectivity_service.dart';
 import 'offline_queue_service.dart';
 import 'location_service.dart';
-import 'firebase_service.dart';
 import 'atomic_storage_service.dart';
 
 /// Emergency işlem sonucu
@@ -115,33 +116,157 @@ class EmergencyCoreService {
   // MAIN EMERGENCY TRIGGER - Zero Fault Entry Point
   // ============================================================================
   
-  /// Acil durum tetiklendiğinde çağrılır - TÜM zero-fault pattern'leri burada
+  /// Acil durum tetiklendiğinde çağrılır - 10 saniye countdown + dual-action (SMS+Call)
   Future<EmergencyResult> triggerEmergency({
     required String title,
     String? message,
   }) async {
     debugPrint('🚨 EMERGENCY TRIGGERED: $title');
     
-    // 1. Başlangıç context'i oluştur
-    final context = await _buildEmergencyContext();
+    // 1. Start 10-second countdown
+    debugPrint('⏱️ Starting 10-second countdown...');
+    await Future.delayed(Duration(seconds: 10));
     
-    // 2. Crashlytics'e context set et
-    await _setCrashlyticsContext(context);
+    // 2. Get location during/after countdown
+    final locationResult = await _getLocationWithFallback();
+    debugPrint('📍 Location: ${locationResult.position != null ? "Available" : "Unavailable"}');
     
-    // 3. Pil seviyesi kontrolü - kritik durumda emergency-only mode
-    if (context.batteryLevel <= CRITICAL_BATTERY_LEVEL) {
-      debugPrint('⚠️ CRITICAL BATTERY: ${context.batteryLevel}%');
-      return await _handleCriticalBatteryEmergency(title, message, context);
+    // 3. Get emergency contact from local storage
+    final contactNumber = await _getEmergencyContactNumber();
+    if (contactNumber == null || contactNumber.isEmpty) {
+      debugPrint('❌ No emergency contact configured');
+      return EmergencyResult(
+        success: false,
+        message: 'No emergency contact configured',
+        context: EmergencyContext(
+          isOnline: ConnectivityService.instance.isOnline,
+          batteryLevel: await _getBatteryLevel(),
+          locationSource: locationResult.source,
+          location: locationResult.position,
+          timestamp: DateTime.now(),
+          errorDetails: 'No emergency contact',
+        ),
+      );
     }
     
-    // 4. Internet kontrolü - offline-first yaklaşım
-    if (!context.isOnline) {
-      debugPrint('📴 OFFLINE MODE: Queuing emergency');
-      return await _handleOfflineEmergency(title, message, context);
-    }
+    debugPrint('📞 Emergency contact: $contactNumber');
     
-    // 5. Online - direkt gönder ama hata olursa queue'ya ekle
-    return await _handleOnlineEmergency(title, message, context);
+    // 4. Execute DUAL-ACTION sequence (SMS + Call)
+    await _executeDualAction(
+      contactNumber: contactNumber,
+      location: locationResult.position,
+    );
+    
+    // 5. Return success
+    return EmergencyResult(
+      success: true,
+      message: 'Emergency SMS sent and call initiated',
+      context: EmergencyContext(
+        isOnline: ConnectivityService.instance.isOnline,
+        batteryLevel: await _getBatteryLevel(),
+        locationSource: locationResult.source,
+        location: locationResult.position,
+        timestamp: DateTime.now(),
+      ),
+    );
+  }
+  
+  /// Get emergency contact number from local storage
+  Future<String?> _getEmergencyContactNumber() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getString('emergency_contact_phone');
+    } catch (e) {
+      debugPrint('Failed to get emergency contact: $e');
+      return null;
+    }
+  }
+  
+  /// Execute dual-action: SMS + Call (ZERO-FAULT)
+  Future<void> _executeDualAction({
+    required String contactNumber,
+    required LatLng? location,
+  }) async {
+    debugPrint('🚀 Executing DUAL-ACTION: SMS + Call');
+    
+    // ACTION 1: Send SMS (background, no user interaction)
+    await _sendEmergencySMS(
+      contactNumber: contactNumber,
+      location: location,
+    );
+    
+    // ACTION 2: Make phone call (immediately after SMS)
+    await _makeEmergencyCall(contactNumber: contactNumber);
+  }
+  
+  /// Send emergency SMS with location link
+  Future<void> _sendEmergencySMS({
+    required String contactNumber,
+    required LatLng? location,
+  }) async {
+    try {
+      // 1. Check SMS permission
+      final smsPermission = await Permission.sms.status;
+      if (!smsPermission.isGranted) {
+        debugPrint('⚠️ SMS permission not granted, requesting...');
+        final result = await Permission.sms.request();
+        if (!result.isGranted) {
+          debugPrint('❌ SMS permission denied');
+          return;
+        }
+      }
+      
+      // 2. Format SMS message
+      final smsMessage = _formatEmergencySMS(location);
+      debugPrint('📱 SMS message: $smsMessage');
+      
+      // 3. Send SMS in background (no user interaction)
+      final Telephony telephony = Telephony.instance;
+      await telephony.sendSms(
+        to: contactNumber,
+        message: smsMessage,
+      );
+      
+      debugPrint('✅ SMS sent successfully');
+    } catch (e) {
+      debugPrint('❌ SMS send failed: $e');
+      // CRITICAL: Don't throw - we must proceed to phone call even if SMS fails
+    }
+  }
+  
+  /// Format emergency SMS with Google Maps link
+  String _formatEmergencySMS(LatLng? location) {
+    if (location != null) {
+      final mapsLink = 'https://maps.google.com/?q=${location.latitude},${location.longitude}';
+      return 'ACİL DURUM! KoruBeni panik butonu tetiklendi. Bana acil ulaşın. Konumum: $mapsLink';
+    } else {
+      return 'ACİL DURUM! KoruBeni panik butonu tetiklendi. Bana acil ulaşın. (Konum bilgisi alınamadı)';
+    }
+  }
+  
+  /// Make emergency phone call
+  Future<void> _makeEmergencyCall({required String contactNumber}) async {
+    try {
+      // 1. Check CALL_PHONE permission
+      final callPermission = await Permission.phone.status;
+      if (!callPermission.isGranted) {
+        debugPrint('⚠️ Call permission not granted, requesting...');
+        final result = await Permission.phone.request();
+        if (!result.isGranted) {
+          debugPrint('❌ Call permission denied');
+          return;
+        }
+      }
+      
+      // 2. Make direct call (no dialer confirmation)
+      debugPrint('📞 Calling $contactNumber...');
+      await FlutterDirectCallerPlugin.callNumber(contactNumber);
+      
+      debugPrint('✅ Call initiated successfully');
+    } catch (e) {
+      debugPrint('❌ Call failed: $e');
+      // CRITICAL: This is the last action, log the error
+    }
   }
   
   // ============================================================================
@@ -168,12 +293,12 @@ class EmergencyCoreService {
       );
     } catch (e, stack) {
       debugPrint('Context build failed: $e');
-      FirebaseCrashlytics.instance.recordError(e, stack);
+      debugPrint('Stack trace: $stack');
       
       // Fallback context
       return EmergencyContext(
         isOnline: false,
-        batteryLevel: 100,
+        batteryLevel: 20, // Safe conservative fallback
         locationSource: LocationSource.none,
         timestamp: DateTime.now(),
         errorDetails: e.toString(),
@@ -251,8 +376,7 @@ class EmergencyCoreService {
     }
     
     // Level 5: No location (ama crash yok!)
-    debugPrint('⚠️ Level 5: No location available');
-    FirebaseCrashlytics.instance.log('All location methods failed');
+    debugPrint('⚠️ Level 5: No location available - all 5 fallback methods exhausted');
     
     return LocationResultWithSource(
       position: null,
@@ -263,9 +387,9 @@ class EmergencyCoreService {
   /// IP-based location (fallback)
   Future<LatLng?> _getIpBasedLocation() async {
     try {
-      // Use ip-api.com for free IP geolocation
+      // Use ip-api.com for free IP geolocation (HTTPS to prevent Android 9+ blocking)
       final response = await HttpClient()
-          .getUrl(Uri.parse('http://ip-api.com/json'))
+          .getUrl(Uri.parse('https://ip-api.com/json'))
           .timeout(Duration(seconds: 5));
       
       final httpResponse = await response.close();
@@ -301,209 +425,11 @@ class EmergencyCoreService {
       return level;
     } catch (e) {
       debugPrint('Battery check failed: $e');
-      return 100; // Fallback: assume full battery
+      return 20; // Fallback: safe conservative value (not 100!)
     }
   }
   
-  // ============================================================================
-  // CRITICAL BATTERY HANDLER - Emergency-Only Mode
-  // ============================================================================
-  
-  Future<EmergencyResult> _handleCriticalBatteryEmergency(
-    String title,
-    String? message,
-    EmergencyContext context,
-  ) async {
-    debugPrint('⚡ CRITICAL BATTERY MODE: Emergency-only');
-    
-    try {
-      // 1. Sadece kritik veriyi local'e kaydet
-      await _saveToLocal(title, message, context);
-      
-      // 2. Offline queue'ya ekle (minimal data)
-      await OfflineQueueService.instance.enqueue(
-        OfflineEvent(
-          type: 'emergency',
-          title: title,
-          description: message,
-          data: {
-            'lat': context.location?.latitude,
-            'lng': context.location?.longitude,
-            'battery_critical': true,
-          },
-        ),
-      );
-      
-      // 3. Crashlytics'e raporla
-      await FirebaseCrashlytics.instance.recordError(
-        Exception('Emergency triggered with critical battery'),
-        StackTrace.current,
-        reason: 'Critical battery emergency',
-        fatal: false,
-      );
-      
-      return EmergencyResult(
-        success: true,
-        message: 'Emergency queued (critical battery mode)',
-        context: context,
-      );
-    } catch (e, stack) {
-      debugPrint('Critical battery emergency failed: $e');
-      FirebaseCrashlytics.instance.recordError(e, stack);
-      
-      return EmergencyResult(
-        success: false,
-        message: 'Failed to queue emergency: $e',
-        context: context,
-      );
-    }
-  }
-  
-  // ============================================================================
-  // OFFLINE HANDLER - Queue Pattern
-  // ============================================================================
-  
-  Future<EmergencyResult> _handleOfflineEmergency(
-    String title,
-    String? message,
-    EmergencyContext context,
-  ) async {
-    debugPrint('📴 OFFLINE: Queuing emergency');
-    
-    try {
-      // 1. Local'e kaydet (anında)
-      await _saveToLocal(title, message, context);
-      
-      // 2. Offline queue'ya ekle
-      await OfflineQueueService.instance.enqueue(
-        OfflineEvent(
-          type: 'emergency',
-          title: title,
-          description: message,
-          data: {
-            'lat': context.location?.latitude,
-            'lng': context.location?.longitude,
-            'location_source': context.locationSource.name,
-            'battery_level': context.batteryLevel,
-          },
-        ),
-      );
-      
-      // 3. Crashlytics'e log
-      FirebaseCrashlytics.instance.log('Emergency queued (offline)');
-      
-      return EmergencyResult(
-        success: true,
-        message: 'Emergency queued for sync',
-        context: context,
-      );
-    } catch (e, stack) {
-      debugPrint('Offline emergency failed: $e');
-      FirebaseCrashlytics.instance.recordError(e, stack);
-      
-      return EmergencyResult(
-        success: false,
-        message: 'Failed to queue emergency: $e',
-        context: context,
-      );
-    }
-  }
-  
-  // ============================================================================
-  // ONLINE HANDLER - Direct Send with Fallback
-  // ============================================================================
-  
-  Future<EmergencyResult> _handleOnlineEmergency(
-    String title,
-    String? message,
-    EmergencyContext context,
-  ) async {
-    debugPrint('🌐 ONLINE: Sending emergency');
-    
-    try {
-      // 1. Önce local'e kaydet (safety)
-      await _saveToLocal(title, message, context);
-      
-      // 2. Firebase'e gönder (10 saniye timeout)
-      await FirebaseService.instance.createEmergencyEvent(
-        title: title,
-        message: message ?? 'Emergency triggered',
-        lat: context.location?.latitude,
-        lng: context.location?.longitude,
-      ).timeout(Duration(seconds: 10));
-      
-      // 3. Başarılı - local'den sil
-      await _deleteFromLocal(title);
-      
-      // 4. Crashlytics'e log
-      FirebaseCrashlytics.instance.log('Emergency sent successfully');
-      
-      return EmergencyResult(
-        success: true,
-        message: 'Emergency sent successfully',
-        context: context,
-      );
-    } on TimeoutException catch (e, stack) {
-      debugPrint('Timeout: $e');
-      FirebaseCrashlytics.instance.recordError(e, stack);
-      
-      // Timeout - queue'ya ekle
-      return await _fallbackToQueue(title, message, context);
-    } on SocketException catch (e, stack) {
-      debugPrint('Network error: $e');
-      FirebaseCrashlytics.instance.recordError(e, stack);
-      
-      // Network error - queue'ya ekle
-      return await _fallbackToQueue(title, message, context);
-    } catch (e, stack) {
-      debugPrint('Send failed: $e');
-      FirebaseCrashlytics.instance.recordError(e, stack);
-      
-      // Genel hata - queue'ya ekle
-      return await _fallbackToQueue(title, message, context);
-    }
-  }
-  
-  /// Online gönderim başarısız - queue'ya fallback
-  Future<EmergencyResult> _fallbackToQueue(
-    String title,
-    String? message,
-    EmergencyContext context,
-  ) async {
-    debugPrint('⚠️ FALLBACK: Adding to queue');
-    
-    try {
-      await OfflineQueueService.instance.enqueue(
-        OfflineEvent(
-          type: 'emergency',
-          title: title,
-          description: message,
-          data: {
-            'lat': context.location?.latitude,
-            'lng': context.location?.longitude,
-            'location_source': context.locationSource.name,
-            'battery_level': context.batteryLevel,
-            'fallback_reason': 'online_send_failed',
-          },
-        ),
-      );
-      
-      return EmergencyResult(
-        success: true,
-        message: 'Emergency queued (send failed)',
-        context: context,
-      );
-    } catch (e, stack) {
-      debugPrint('Fallback failed: $e');
-      FirebaseCrashlytics.instance.recordError(e, stack);
-      
-      return EmergencyResult(
-        success: false,
-        message: 'Critical: All methods failed',
-        context: context,
-      );
-    }
-  }
+  // Note: Old Firebase-dependent handlers removed in offline-first refactoring
   
   // ============================================================================
   // LOCAL STORAGE - Safety Net
@@ -542,6 +468,7 @@ class EmergencyCoreService {
   
   Future<void> _deleteFromLocal(String title) async {
     try {
+      // Delete from BOTH SharedPreferences AND AtomicStorageService
       final prefs = await SharedPreferences.getInstance();
       final keys = prefs.getKeys();
       
@@ -549,8 +476,13 @@ class EmergencyCoreService {
         if (key.startsWith('emergency_')) {
           final value = prefs.getString(key);
           if (value != null && value.contains(title)) {
+            // Delete from SharedPreferences
             await prefs.remove(key);
-            debugPrint('🗑️ Deleted from local: $key');
+            debugPrint('🗑️ Deleted from SharedPreferences: $key');
+            
+            // Delete from AtomicStorageService
+            await AtomicStorageService.instance.delete(key);
+            debugPrint('🗑️ Deleted from AtomicStorage: $key');
           }
         }
       }
@@ -561,52 +493,7 @@ class EmergencyCoreService {
   }
   
   // ============================================================================
-  // CRASHLYTICS CONTEXT - Full Device State
-  // ============================================================================
-  
-  Future<void> _setCrashlyticsContext(EmergencyContext context) async {
-    try {
-      await FirebaseCrashlytics.instance.setCustomKey(
-        'emergency_timestamp',
-        context.timestamp.toIso8601String(),
-      );
-      await FirebaseCrashlytics.instance.setCustomKey(
-        'is_online',
-        context.isOnline,
-      );
-      await FirebaseCrashlytics.instance.setCustomKey(
-        'battery_level',
-        context.batteryLevel,
-      );
-      await FirebaseCrashlytics.instance.setCustomKey(
-        'location_source',
-        context.locationSource.name,
-      );
-      await FirebaseCrashlytics.instance.setCustomKey(
-        'has_location',
-        context.location != null,
-      );
-      
-      if (context.location != null) {
-        await FirebaseCrashlytics.instance.setCustomKey(
-          'latitude',
-          context.location!.latitude,
-        );
-        await FirebaseCrashlytics.instance.setCustomKey(
-          'longitude',
-          context.location!.longitude,
-        );
-      }
-      
-      debugPrint('📊 Crashlytics context set');
-    } catch (e) {
-      debugPrint('Crashlytics context failed: $e');
-      // Non-critical - don't throw
-    }
-  }
-  
-  // ============================================================================
-  // HEALTH CHECK - System Status
+  // HEALTH CHECK - System Status (Offline-First)
   // ============================================================================
   
   Future<Map<String, bool>> checkSystemHealth() async {
@@ -631,8 +518,19 @@ class EmergencyCoreService {
         health['battery_ok'] = true; // Assume OK
       }
       
-      // Firebase
-      health['firebase'] = FirebaseService.instance != null;
+      // SMS Permission
+      try {
+        health['sms_permission'] = await Permission.sms.isGranted;
+      } catch (e) {
+        health['sms_permission'] = false;
+      }
+      
+      // Call Permission
+      try {
+        health['call_permission'] = await Permission.phone.isGranted;
+      } catch (e) {
+        health['call_permission'] = false;
+      }
       
       debugPrint('🏥 System health: $health');
       return health;

@@ -8,7 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../core/app_colors.dart';
 import '../core/services/activity_service.dart';
-import '../core/services/analytics_service.dart';
+// Analytics service removed (offline-first)
 import '../domain/models/activity_event.dart';
 import 'countdown_screen.dart';
 
@@ -42,7 +42,7 @@ class _SafeWalkScreenState extends State<SafeWalkScreen> {
       _remainingSeconds = _selectedMinutes * 60;
     });
 
-    AnalyticsService.logSafeWalkStarted(minutes: _selectedMinutes);
+    // Analytics removed (offline-first)
     ActivityService.logEvent(
       type: ActivityType.locationShared,
       title: "safe_walk_started_activity".tr(),
@@ -83,7 +83,7 @@ class _SafeWalkScreenState extends State<SafeWalkScreen> {
   void _checkIn() {
     HapticFeedback.lightImpact();
     _timer?.cancel();
-    AnalyticsService.logSafeWalkCompleted();
+    // Analytics removed (offline-first)
     ActivityService.logEvent(
       type: ActivityType.safetyCheck,
       title: "safe_walk_completed_activity".tr(),

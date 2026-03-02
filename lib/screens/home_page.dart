@@ -14,7 +14,7 @@ import '../core/services/volume_trigger_service.dart';
 import '../core/services/haptic_service.dart';
 import '../core/services/audio_recorder_service.dart';
 import '../core/services/connectivity_service.dart';
-import '../core/services/analytics_service.dart';
+// Analytics service removed (offline-first)
 import 'package:easy_localization/easy_localization.dart';
 import '../presentation/providers/home_provider.dart';
 import '../presentation/providers/settings_provider.dart';
@@ -96,7 +96,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       _initVolumeTrigger();
       _initConnectivity();
     });
-    AnalyticsService.logScreenView('home');
+    // Analytics removed (offline-first)
   }
 
   void _initShakeDetection() {
@@ -104,7 +104,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       onShakeDetected: () {
         if (!mounted) return;
         HapticFeedback.heavyImpact();
-        AnalyticsService.logShakeDetected();
+        // Analytics removed (offline-first)
         Navigator.push(
           context,
           MaterialPageRoute(builder: (_) => const CountdownScreen()),
@@ -1013,7 +1013,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         Icons.phone_in_talk_rounded,
         AppColors.primary,
         () {
-          AnalyticsService.logFakeCallUsed();
+          // Analytics removed (offline-first)
           Navigator.push(context,
               MaterialPageRoute(builder: (_) => const FakeCallScreen()));
         },
@@ -1214,7 +1214,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
   void _activateSiren() {
     HapticFeedback.heavyImpact();
-    AnalyticsService.logSirenActivated();
+    // Analytics removed (offline-first)
     showDialog(
       context: context,
       barrierDismissible: false,

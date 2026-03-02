@@ -8,8 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../core/app_colors.dart';
-import '../core/services/firebase_service.dart';
-import '../core/services/notification_service.dart';
+// Firebase and notification services removed (offline-first)
 import 'home_page.dart';
 import 'contacts_page.dart';
 import 'map_page.dart';
@@ -38,7 +37,7 @@ class _MainNavigationState extends State<MainNavigation>
   @override
   void initState() {
     super.initState();
-    _initFirebaseServices();
+    // Firebase services removed (offline-first)
 
     _fabController = AnimationController(
       vsync: this,
@@ -59,19 +58,7 @@ class _MainNavigationState extends State<MainNavigation>
     super.dispose();
   }
 
-  Future<void> _initFirebaseServices() async {
-    try {
-      await NotificationService.instance.initialize();
-    } catch (e) {
-      debugPrint('NotificationService init failed (push may be disabled): $e');
-    }
-    try {
-      await FirebaseService.instance.upsertUserProfile();
-      FirebaseService.instance.listenForTokenUpdates();
-    } catch (e) {
-      debugPrint('FirebaseService init failed: $e');
-    }
-  }
+  // Firebase services removed (offline-first architecture)
 
   Future<void> _makeCall(String number) async {
     final uri = Uri(scheme: 'tel', path: number);

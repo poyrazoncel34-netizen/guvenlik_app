@@ -42,13 +42,9 @@ dependencies:
   flutter_secure_storage: ^10.0.0
   encrypt: ^5.0.3
   # workmanager: ^0.5.2  # Geçici olarak devre dışı - uyumluluk sorunu
-  firebase_core: ^3.15.0
-  firebase_auth: ^5.1.0
-  cloud_firestore: ^5.4.0
-  firebase_messaging: ^15.1.0
-  firebase_analytics: ^11.2.0
-  firebase_crashlytics: ^4.1.0
   flutter_local_notifications: ^17.2.1
+  # SMS sending capability for emergency alerts
+  telephony: ^0.2.0
   flutter:
     sdk: flutter
   audioplayers: ^6.5.1
@@ -94,6 +90,7 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
   flutter_launcher_icons: ^0.13.1
+  flutter_native_splash: ^2.4.1
 
 flutter_launcher_icons:
   android: true
@@ -105,6 +102,40 @@ flutter_launcher_icons:
   remove_alpha_ios: true
   web:
     generate: false
+
+flutter_native_splash:
+  # Background color matching your app's theme
+  color: "#0A1B2A"
+  
+  # App icon to display in the center of the splash screen
+  image: assets/icon/app_icon.png
+  
+  # Branding image (optional - can be used for a logo at bottom)
+  # branding: assets/icon/branding.png
+  
+  # Platform-specific configuration
+  android: true
+  ios: true
+  web: false
+  
+  # Android 12+ specific configuration
+  android_12:
+    # Background color for Android 12+
+    color: "#0A1B2A"
+    # App icon for Android 12+
+    image: assets/icon/app_icon.png
+    # Icon background color (should match main background)
+    icon_background_color: "#0A1B2A"
+  
+  # iOS specific configuration
+  ios_content_mode: center
+  
+  # Fullscreen mode (removes status bar during splash)
+  fullscreen: true
+  
+  # Info.plist modifications for iOS
+  info_plist_files:
+    - 'ios/Runner/Info.plist'
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

@@ -4,7 +4,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../di/service_locator.dart';
-import '../../domain/repositories/emergency_repository.dart';
+// Emergency repository removed (offline-first)
 import 'connectivity_service.dart';
 
 /// Offline event queue - stores events locally when offline,
@@ -110,26 +110,20 @@ class OfflineQueueService {
     debugPrint('OfflineQueue: Processing ${event.type} - ${event.title}');
 
     if (event.type == 'emergency') {
-      if (!serviceLocator.isRegistered<EmergencyRepository>()) {
-        debugPrint('OfflineQueue: EmergencyRepository not available (Firebase off)');
-        return false; // Keep in queue for retry
-      }
+      // Offline-first: Emergency events are handled locally only
+      debugPrint('OfflineQueue: Emergency event (local only, no cloud sync)');
       try {
-        final repo = serviceLocator<EmergencyRepository>();
         final data = event.data ?? {};
         final message =
             data['message'] as String? ?? event.description ?? 'default_emergency_message'.tr();
         final lat = (data['lat'] as num?)?.toDouble();
         final lng = (data['lng'] as num?)?.toDouble();
-        if (lat != null && lng != null) {
-          await repo.updateLocation(lat: lat, lng: lng);
-        }
-        await repo.createEmergencyEvent(
-          title: event.title,
-          message: message,
-          lat: lat,
-          lng: lng,
-        );
+        
+        // Log the emergency locally
+        debugPrint('Emergency queued: ${event.title}');
+        debugPrint('Location: ${lat != null && lng != null ? "$lat, $lng" : "N/A"}');
+        debugPrint('Message: $message');
+        
         return true;
       } catch (e) {
         debugPrint('OfflineQueue: Emergency sync failed: $e');
