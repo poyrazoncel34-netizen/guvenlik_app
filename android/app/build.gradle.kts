@@ -1,8 +1,7 @@
 plugins {
     id("com.android.application")
     id("kotlin-android")
-    id("com.google.gms.google-services")
-    id("com.google.firebase.crashlytics")
+    // Firebase plugins removed for offline-first architecture
     id("dev.flutter.flutter-gradle-plugin")
 }
 

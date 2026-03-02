@@ -7,7 +7,6 @@
 
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'dart:convert';
 
 /// Atomic storage service with transaction support
@@ -43,7 +42,7 @@ class AtomicStorageService {
       }
     } catch (e, stack) {
       debugPrint('Atomic write failed: $e');
-      FirebaseCrashlytics.instance.recordError(e, stack);
+      debugPrint('Stack trace: $stack');
       
       // Try to restore from backup
       try {
@@ -93,7 +92,7 @@ class AtomicStorageService {
       return await writeString(key, jsonString);
     } catch (e, stack) {
       debugPrint('JSON write failed: $e');
-      FirebaseCrashlytics.instance.recordError(e, stack);
+      debugPrint('Stack trace: $stack');
       return false;
     }
   }
@@ -136,7 +135,7 @@ class AtomicStorageService {
       }
     } catch (e, stack) {
       debugPrint('Int write failed: $e');
-      FirebaseCrashlytics.instance.recordError(e, stack);
+      debugPrint('Stack trace: $stack');
       return false;
     }
   }
@@ -187,7 +186,7 @@ class AtomicStorageService {
       }
     } catch (e, stack) {
       debugPrint('Bool write failed: $e');
-      FirebaseCrashlytics.instance.recordError(e, stack);
+      debugPrint('Stack trace: $stack');
       return false;
     }
   }
@@ -263,16 +262,13 @@ class AtomicStorageService {
       
       if (recoveredCount > 0) {
         debugPrint('✅ Integrity check: recovered $recoveredCount keys');
-        FirebaseCrashlytics.instance.log(
-          'Data integrity check recovered $recoveredCount keys',
-        );
       } else {
         debugPrint('✅ Integrity check: all data consistent');
       }
       
     } catch (e, stack) {
       debugPrint('Integrity check failed: $e');
-      FirebaseCrashlytics.instance.recordError(e, stack);
+      debugPrint('Stack trace: $stack');
     }
   }
 }

@@ -1,25 +1,15 @@
 import 'package:dio/dio.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 
-/// Attaches Firebase auth token to every outgoing request.
+/// Auth interceptor (offline-first mode - no Firebase auth)
 class AuthInterceptor extends Interceptor {
   @override
   void onRequest(
     RequestOptions options,
     RequestInterceptorHandler handler,
   ) async {
-    try {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user != null) {
-        final token = await user.getIdToken();
-        if (token != null) {
-          options.headers['Authorization'] = 'Bearer $token';
-        }
-      }
-    } catch (e) {
-      debugPrint('AuthInterceptor: token fetch failed: $e');
-    }
+    // Offline-first: No Firebase authentication
+    // Add custom auth headers here if needed for future API calls
     handler.next(options);
   }
 }

@@ -5,7 +5,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart' show defaultTargetPlatform, TargetPlatform;
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -582,9 +581,8 @@ class _SettingsPageState extends State<SettingsPage> {
                   child: ElevatedButton(
                     onPressed: () async {
                       Navigator.pop(context);
-                      try {
-                        await FirebaseAuth.instance.signOut();
-                      } catch (_) {}
+                      // Offline-first: No Firebase auth to sign out from
+                      // Clear local session data if needed
                       if (!context.mounted) return;
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
