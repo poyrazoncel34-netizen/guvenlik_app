@@ -4,7 +4,7 @@
 # Kullanım: ENCRYPTION_KEY='base64key' ./scripts/build_production.sh
 # Key üretmek: openssl rand -base64 32
 
-set -e
+set -euo pipefail
 
 echo "🏗️  KoruBeni Production Build Başlıyor..."
 echo ""
@@ -33,7 +33,7 @@ if [ -z "$ENCRYPTION_KEY" ]; then
 fi
 
 # İlk parametre encryption key olabilir
-if [ ! -z "$1" ]; then
+if [ -n "${1:-}" ]; then
     ENCRYPTION_KEY="$1"
 fi
 
@@ -52,20 +52,35 @@ echo ""
 
 # Android AAB Build
 echo "🤖 Android AAB build başlıyor..."
+AAB_PATH="build/app/outputs/bundle/release/app-release.aab"
+BUILD_LOG="$(mktemp /tmp/korubeni_android_build.XXXXXX.log)"
+
+set +e
 flutter build appbundle --release \
   --dart-define=ENV=production \
-  --dart-define=ENCRYPTION_KEY="$ENCRYPTION_KEY"
+  --dart-define=ENCRYPTION_KEY="$ENCRYPTION_KEY" 2>&1 | tee "$BUILD_LOG"
+ANDROID_BUILD_EXIT=$?
+set -e
 
-if [ $? -eq 0 ]; then
-    echo ""
-    echo "✅ Android AAB build başarılı!"
-    echo "📦 Dosya: build/app/outputs/bundle/release/app-release.aab"
-    echo ""
-else
-    echo ""
-    echo "❌ Android build başarısız!"
-    exit 1
+if [ $ANDROID_BUILD_EXIT -ne 0 ]; then
+    if [ -f "$AAB_PATH" ] && grep -q "failed to strip debug symbols from native libraries" "$BUILD_LOG"; then
+        echo ""
+        echo "⚠️  Flutter native symbol stripping uyarısı verdi, ancak AAB üretildi."
+        echo "   Paket bütünlüğü yine de doğrulanıyor..."
+        unzip -tq "$AAB_PATH" >/dev/null
+    else
+        echo ""
+        echo "❌ Android build başarısız!"
+        rm -f "$BUILD_LOG"
+        exit 1
+    fi
 fi
+
+echo ""
+echo "✅ Android AAB build başarılı!"
+echo "📦 Dosya: $AAB_PATH"
+echo ""
+rm -f "$BUILD_LOG"
 
 # iOS Build (opsiyonel - sadece Mac'te)
 if [[ "$OSTYPE" == "darwin"* ]]; then
