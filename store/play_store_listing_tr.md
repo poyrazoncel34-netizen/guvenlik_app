@@ -7,7 +7,7 @@ Acil durumlarda tek dokunuşla güvenlik ağınıza ulaşın. Panik, konum, SOS.
 **Full Description (4000 karakter):**
 KoruBeni, kişisel güvenliğinizi ön planda tutan, acil durumlarda güvenlik ağınızla hızlıca iletişim kurmanızı sağlayan bir güvenlik uygulamasıdır.
 
-Kendinizi güvende hissetmediğiniz anlarda panik butonuna basın veya telefonunuzu sallayın — KoruBeni otomatik olarak acil kişilerinizi arar, konumunuzu paylaşır ve yardım ister.
+Kendinizi güvende hissetmediğiniz anlarda panik butonuna basın veya telefonunuzu sallayın — KoruBeni acil arama akışını başlatır, konum bağlantınızı hazırlar ve güvenlik ağınıza hızla ulaşmanızı kolaylaştırır.
 
 ★ TEMEL ÖZELLİKLER ★
 
@@ -15,10 +15,10 @@ Kendinizi güvende hissetmediğiniz anlarda panik butonuna basın veya telefonun
 Uzun basarak veya telefonu sallayarak acil durum başlatın. 10 saniyelik geri sayım ile yanlışlıkla tetiklemeyi önleyin.
 
 ◉ Acil Kişi Arama
-Rehberinizden seçtiğiniz güvenilir kişilere otomatik arama ve bildirim gönderin.
+Rehberinizden seçtiğiniz güvenilir kişilere hızlı arama başlatın ve acil mesaj taslağını hazırlayın.
 
-◉ Canlı Konum Paylaşımı
-10 dakika, 30 dakika veya 1 saat süreyle gerçek zamanlı konumunuzu acil kişilerinizle paylaşın.
+◉ Konum Paylaşımı
+10 dakika, 30 dakika veya 1 saat için güncel konum bağlantınızı hızla hazırlayın ve paylaşın.
 
 ◉ Güvenli Yürüyüş
 Gece veya güvensiz ortamlarda konum takibi yapın. Acil kişileriniz nerede olduğunuzu bilsin.
@@ -33,7 +33,7 @@ Acil durumlarda kanıt toplamak için tek dokunuşla ses kaydı başlatın.
 Yüksek sesli alarm ile çevrenizdeki insanların dikkatini çekin.
 
 ◉ Hızlı Mesaj
-Tek dokunuşla hazır mesaj şablonlarıyla acil kişilerinize ulaşın.
+Tek dokunuşla hazır mesaj şablonlarıyla mesaj uygulamanızı acil kişileriniz için açın.
 
 ★ GÜVENLİK ★
 

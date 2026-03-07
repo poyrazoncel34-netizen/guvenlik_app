@@ -7,7 +7,7 @@ One-tap access to your safety network in emergencies. Panic, location, SOS.
 **Full Description (4000 characters):**
 KoruBeni is a personal safety app that puts your security first, helping you quickly connect with your safety network in emergencies.
 
-When you feel unsafe, press the panic button or shake your phone — KoruBeni automatically calls your emergency contacts, shares your location, and sends for help.
+When you feel unsafe, press the panic button or shake your phone — KoruBeni starts the emergency calling flow, prepares your location link, and helps you reach your safety network quickly.
 
 ★ CORE FEATURES ★
 
@@ -15,10 +15,10 @@ When you feel unsafe, press the panic button or shake your phone — KoruBeni au
 Hold to trigger or shake your phone to start an emergency. A 10-second countdown prevents accidental activation.
 
 ◉ Emergency Contact Calling
-Automatically call and notify trusted contacts from your address book.
+Quickly start a call for trusted contacts from your address book and prepare an emergency message draft.
 
-◉ Live Location Sharing
-Share your real-time location with emergency contacts for 10 minutes, 30 minutes, or 1 hour.
+◉ Location Sharing
+Prepare and share your current location link with emergency contacts for 10 minutes, 30 minutes, or 1 hour.
 
 ◉ Safe Walk
 Track your location during night or unsafe situations. Let your emergency contacts know where you are.
@@ -33,7 +33,7 @@ One-tap voice recording for evidence in emergencies.
 Draw attention with a loud alarm.
 
 ◉ Quick Message
-One-tap message templates to reach emergency contacts.
+Open your messaging app with one-tap emergency message templates for your contacts.
 
 ★ SECURITY ★
 

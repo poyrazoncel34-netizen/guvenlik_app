@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'core/di/service_locator.dart';
 import 'package:provider/provider.dart';
 import 'core/app_theme.dart';
+import 'core/navigation/app_navigator.dart';
 import 'presentation/providers/providers.dart';
 import 'screens/splash_screen.dart';
 import 'core/services/offline_queue_service.dart';
@@ -16,6 +17,7 @@ import 'core/services/foreground_service.dart';
 import 'core/services/haptic_service.dart';
 import 'core/services/connectivity_service.dart';
 import 'core/services/atomic_storage_service.dart';
+import 'core/widgets/emergency_trigger_host.dart';
 import 'package:easy_localization/easy_localization.dart';
 
 void main() async {
@@ -146,21 +148,24 @@ class KoruBeniApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: AppProviders.providers,
-      child: MaterialApp(
-        debugShowCheckedModeBanner: false,
-        title: 'KoruBeni',
-        theme: AppTheme.lightTheme,
-        builder: (context, child) => Semantics(
-          label: 'KoruBeni güvenlik uygulaması',
-          hint: 'Acil durumlarda yardım çağırın, konum paylaşın',
-          child: child ?? const SizedBox.shrink(),
+      child: EmergencyTriggerHost(
+        child: MaterialApp(
+          navigatorKey: rootNavigatorKey,
+          debugShowCheckedModeBanner: false,
+          title: 'KoruBeni',
+          theme: AppTheme.lightTheme,
+          builder: (context, child) => Semantics(
+            label: 'KoruBeni güvenlik uygulaması',
+            hint: 'Acil durumlarda yardım çağırın, konum paylaşın',
+            child: child ?? const SizedBox.shrink(),
+          ),
+          darkTheme: AppTheme.darkTheme,
+          themeMode: ThemeMode.dark,
+          localizationsDelegates: context.localizationDelegates,
+          supportedLocales: context.supportedLocales,
+          locale: context.locale,
+          home: const SplashScreen(),
         ),
-        darkTheme: AppTheme.darkTheme,
-        themeMode: ThemeMode.dark,
-        localizationsDelegates: context.localizationDelegates,
-        supportedLocales: context.supportedLocales,
-        locale: context.locale,
-        home: const SplashScreen(),
       ),
     );
   }

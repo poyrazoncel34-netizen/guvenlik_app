@@ -7,8 +7,6 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'package:flutter_direct_caller_plugin/flutter_direct_caller_plugin.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/di/service_locator.dart';
 import '../core/security/secure_storage.dart';
@@ -21,6 +19,7 @@ import '../domain/repositories/contacts_repository.dart';
 // Emergency repository removed (offline-first)
 import '../domain/repositories/location_repository.dart';
 import '../core/services/activity_service.dart';
+import '../core/services/call_service.dart';
 import '../core/services/connectivity_service.dart';
 import '../core/services/offline_queue_service.dart';
 import '../domain/models/activity_event.dart';
@@ -55,6 +54,7 @@ class _CountdownScreenState extends State<CountdownScreen>
   late final SecureStorage _secureStorage = serviceLocator<SecureStorage>();
   bool _biometricAvailable = false;
   String _biometricLabel = 'Biometric';
+  bool _handoffToEmergencyScreen = false;
 
   @override
   void initState() {
@@ -160,6 +160,7 @@ class _CountdownScreenState extends State<CountdownScreen>
 
   Future<void> _makeEmergencyCall() async {
     if (widget.isTestMode) {
+      await KoruBeniForegroundService.stop();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -174,6 +175,7 @@ class _CountdownScreenState extends State<CountdownScreen>
 
     final numbers = await _contactsRepository.getAllEmergencyNumbers();
     if (numbers.isEmpty) {
+      await KoruBeniForegroundService.stop();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text("countdown_no_contact".tr())));
@@ -221,27 +223,30 @@ class _CountdownScreenState extends State<CountdownScreen>
     );
 
     await HapticService.emergencyTriggered();
-    await SmsService.sendSms(numbers: numbers, message: message);
+    final smsResult = await SmsService.sendSms(
+      numbers: numbers,
+      message: message,
+    );
 
     final primaryNumber = _emergencyContact?.phone ??
         (numbers.isNotEmpty ? numbers.first : null);
-    if (primaryNumber != null && primaryNumber.isNotEmpty) {
-      bool callMade = false;
-      try {
-        await FlutterDirectCallerPlugin.callNumber(primaryNumber);
-        callMade = true;
-      } catch (_) {
-        callMade = false;
+    final callResult = primaryNumber != null && primaryNumber.isNotEmpty
+        ? await CallService.startEmergencyCall(primaryNumber)
+        : EmergencyCallResult.failed('');
+
+    if (!smsResult.isSuccess && !callResult.isSuccess) {
+      await KoruBeniForegroundService.stop();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('emergency_action_failed'.tr())),
+        );
+        Navigator.pop(context);
       }
-      if (!callMade) {
-        try {
-          final telUri = Uri(scheme: 'tel', path: primaryNumber);
-          await launchUrl(telUri, mode: LaunchMode.externalApplication);
-        } catch (_) {}
-      }
+      return;
     }
 
     if (mounted) {
+      _handoffToEmergencyScreen = true;
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
@@ -249,6 +254,8 @@ class _CountdownScreenState extends State<CountdownScreen>
             name:
                 _emergencyContact?.name ?? "countdown_emergency_label".tr(),
             phone: primaryNumber ?? "",
+            callStatusMessage: callResult.statusMessage,
+            smsStatusMessage: smsResult.statusMessage,
           ),
         ),
       );
@@ -261,6 +268,9 @@ class _CountdownScreenState extends State<CountdownScreen>
     _shakeController.dispose();
     _tickBounceController.dispose();
     _glowController.dispose();
+    if (!_handoffToEmergencyScreen) {
+      KoruBeniForegroundService.stop();
+    }
     super.dispose();
   }
 

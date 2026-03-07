@@ -8,10 +8,12 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:provider/provider.dart';
 import '../core/app_colors.dart';
 import '../core/di/service_locator.dart';
 import '../core/services/connectivity_service.dart';
 import '../core/services/location_service.dart';
+import '../presentation/providers/home_provider.dart';
 import '../domain/repositories/location_repository.dart';
 import 'countdown_screen.dart';
 
@@ -103,9 +105,17 @@ class _EmergencyMapScreenState extends State<EmergencyMapScreen> {
               children: [
                 Expanded(
                   child: ElevatedButton.icon(
-                    onPressed: () {
+                    onPressed: () async {
                       HapticFeedback.lightImpact();
-                      _showSnack(context, "emergency_map_shared".tr());
+                      final provider = context.read<HomeProvider>();
+                      final result = await provider.startLocationSharing(10);
+                      if (!result.isSuccess) {
+                        provider.stopLocationSharing(manual: true);
+                      }
+                      final notice =
+                          result.inlineNotice ?? "emergency_map_shared_ready".tr();
+                      if (!context.mounted) return;
+                      _showSnack(context, notice);
                     },
                     icon: const Icon(Icons.share_location, color: Colors.white),
                     label: Text(

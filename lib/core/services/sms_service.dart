@@ -1,121 +1,125 @@
-import 'package:flutter/foundation.dart' show debugPrint;
-import 'package:url_launcher/url_launcher.dart';
+import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/services.dart';
 
-/// Service for sending SMS.
-///
-/// Strateji:
-/// 1. Varsayılan SMS uygulamasını aç.
-/// 2. Alıcıları ve mesaj metnini mümkün olduğunca hazır doldur.
-/// 3. Cihaz grup alıcı URI'sını desteklemiyorsa tek tek dene.
-///
-/// Bu yaklaşım restricted SMS izni gerektirmez ve Play Store ile daha uyumludur.
+import 'android_intent_service.dart';
+
+enum SmsComposeStatus {
+  composerOpened,
+  composerOpenedPrimaryOnly,
+  failed,
+}
+
+class SmsComposeResult {
+  final SmsComposeStatus status;
+  final List<String> recipients;
+  final String? fallbackPayload;
+  final String? errorMessage;
+
+  const SmsComposeResult._({
+    required this.status,
+    required this.recipients,
+    this.fallbackPayload,
+    this.errorMessage,
+  });
+
+  factory SmsComposeResult.opened(List<String> recipients) {
+    return SmsComposeResult._(
+      status: SmsComposeStatus.composerOpened,
+      recipients: recipients,
+    );
+  }
+
+  factory SmsComposeResult.primaryOnly({
+    required List<String> recipients,
+    required String fallbackPayload,
+  }) {
+    return SmsComposeResult._(
+      status: SmsComposeStatus.composerOpenedPrimaryOnly,
+      recipients: recipients,
+      fallbackPayload: fallbackPayload,
+    );
+  }
+
+  factory SmsComposeResult.failed(String message) {
+    return SmsComposeResult._(
+      status: SmsComposeStatus.failed,
+      recipients: const [],
+      errorMessage: message,
+    );
+  }
+
+  bool get isSuccess => status != SmsComposeStatus.failed;
+  bool get isPartial => status == SmsComposeStatus.composerOpenedPrimaryOnly;
+
+  String get statusMessage {
+    switch (status) {
+      case SmsComposeStatus.composerOpened:
+        return 'sms_composer_opened'.tr();
+      case SmsComposeStatus.composerOpenedPrimaryOnly:
+        return 'sms_composer_partial'.tr();
+      case SmsComposeStatus.failed:
+        return errorMessage ?? 'sms_composer_failed'.tr();
+    }
+  }
+
+  String? get inlineNotice {
+    if (status == SmsComposeStatus.composerOpened) {
+      return null;
+    }
+    return statusMessage;
+  }
+}
+
 class SmsService {
-  /// Send [message] to all [numbers].
-  /// Returns null on success, or an error string on failure.
-  static Future<String?> sendSms({
+  static Future<SmsComposeResult> sendSms({
     required List<String> numbers,
     required String message,
   }) async {
-    if (numbers.isEmpty) return 'No recipients';
-    return _sendViaLauncher(numbers, message);
-  }
+    final recipients = numbers
+        .map(AndroidIntentService.normalizePhoneNumber)
+        .where((number) => number.isNotEmpty)
+        .toSet()
+        .toList(growable: false);
 
-  /// url_launcher ile SMS uygulamasını açarak gönderim.
-  /// Mesaj metni ve alıcı numarası otomatik doldurulur.
-  static Future<String?> _sendViaLauncher(
-    List<String> numbers,
-    String message,
-  ) async {
-    if (numbers.isEmpty) return 'No recipients';
-
-    final groupedLaunched = await _tryLaunchGroupedSmsUri(numbers, message);
-    if (groupedLaunched) return null;
-
-    int successCount = 0;
-
-    for (final number in numbers) {
-      // Birden fazla URI formatı dene — cihaz uyumluluğu için
-      final launched = await _tryLaunchSmsUri(number, message);
-      if (launched) successCount++;
+    if (recipients.isEmpty) {
+      return SmsComposeResult.failed('sms_no_recipients'.tr());
     }
 
-    if (successCount == 0 && numbers.isNotEmpty) {
-      return 'SMS uygulaması açılamadı';
+    final groupedOpened = await AndroidIntentService.composeSms(
+      recipients: recipients,
+      message: message,
+    );
+    if (groupedOpened) {
+      return SmsComposeResult.opened(recipients);
     }
-    return null;
+
+    final primaryOpened = await AndroidIntentService.composeSms(
+      recipients: [recipients.first],
+      message: message,
+    );
+    if (primaryOpened) {
+      final payload = _buildFallbackPayload(
+        recipients: recipients,
+        message: message,
+      );
+      await Clipboard.setData(ClipboardData(text: payload));
+      return SmsComposeResult.primaryOnly(
+        recipients: recipients,
+        fallbackPayload: payload,
+      );
+    }
+
+    return SmsComposeResult.failed('sms_composer_failed'.tr());
   }
 
-  static Future<bool> _tryLaunchGroupedSmsUri(
-    List<String> numbers,
-    String message,
-  ) async {
-    final recipients = numbers.join(',');
-
-    try {
-      final uri1 = Uri(
-        scheme: 'sms',
-        path: recipients,
-        queryParameters: {'body': message},
-      );
-      if (await launchUrl(uri1, mode: LaunchMode.externalApplication)) {
-        return true;
-      }
-    } catch (_) {}
-
-    try {
-      final uri2 = Uri.parse(
-        'sms:$recipients?body=${Uri.encodeComponent(message)}',
-      );
-      if (await launchUrl(uri2, mode: LaunchMode.externalApplication)) {
-        return true;
-      }
-    } catch (_) {}
-
-    try {
-      final semicolonRecipients = numbers.join(';');
-      final uri3 = Uri.parse(
-        'sms:$semicolonRecipients?body=${Uri.encodeComponent(message)}',
-      );
-      if (await launchUrl(uri3, mode: LaunchMode.externalApplication)) {
-        return true;
-      }
-    } catch (_) {}
-
-    debugPrint('>>> SmsService: Grouped SMS URI failed, trying individual launch');
-    return false;
-  }
-
-  /// Tek bir numara için SMS URI'sını aç. Başarılıysa true döner.
-  static Future<bool> _tryLaunchSmsUri(String number, String message) async {
-    // Format 1: sms:+905xx?body=...  (Android için en yaygın)
-    try {
-      final uri1 = Uri(
-        scheme: 'sms',
-        path: number,
-        queryParameters: {'body': message},
-      );
-      if (await launchUrl(uri1, mode: LaunchMode.externalApplication)) {
-        return true;
-      }
-    } catch (_) {}
-
-    // Format 2: sms:+905xx&body=... (bazı Samsung/Xiaomi cihazlar)
-    try {
-      final uri2 = Uri.parse('sms:$number?body=${Uri.encodeComponent(message)}');
-      if (await launchUrl(uri2, mode: LaunchMode.externalApplication)) {
-        return true;
-      }
-    } catch (_) {}
-
-    // Format 3: Sadece SMS uygulamasını numara ile aç (mesaj olmadan)
-    try {
-      final uri3 = Uri(scheme: 'sms', path: number);
-      if (await launchUrl(uri3, mode: LaunchMode.externalApplication)) {
-        return true;
-      }
-    } catch (_) {}
-
-    debugPrint('>>> SmsService: All URI formats failed for $number');
-    return false;
+  static String _buildFallbackPayload({
+    required List<String> recipients,
+    required String message,
+  }) {
+    return [
+      'sms_fallback_recipients'.tr(namedArgs: {'numbers': recipients.join(', ')}),
+      '',
+      message,
+    ].join('\n');
   }
 }
