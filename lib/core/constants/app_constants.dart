@@ -16,6 +16,7 @@ class AppConstants {
 
   // Limits
   static const int maxEmergencyContacts = 5;
+  static const String turkeyEmergencyNumber = '112';
 
   // SharedPreferences keys (non-sensitive)
   static const String prefProfileName = 'profile_name';
@@ -28,6 +29,7 @@ class AppConstants {
   static const String prefPinSetupDone = 'pref_pin_setup_done';
   static const String prefOnboardingDone = 'pref_onboarding_done';
   static const String prefDemoMode = 'pref_demo_mode';
+  static const String prefVolumeTrigger = 'pref_volume_trigger';
   static const String prefBloodType = 'profile_blood_type';
   static const String prefAllergies = 'profile_allergies';
   static const String prefMedicalConditions = 'profile_medical_conditions';

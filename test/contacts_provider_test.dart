@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:guvenlik_app/core/services/contact_service.dart';
 import 'package:guvenlik_app/presentation/providers/contacts_provider.dart';
 
 void main() {
@@ -43,8 +44,8 @@ void main() {
       // Test the normalization logic used by containsPhone
       const phone1 = '+90 555 123 45 67';
       const phone2 = '+905551234567';
-      final normalized1 = phone1.replaceAll(RegExp(r'\s+'), '');
-      final normalized2 = phone2.replaceAll(RegExp(r'\s+'), '');
+      final normalized1 = normalizePhoneNumber(phone1);
+      final normalized2 = normalizePhoneNumber(phone2);
 
       expect(normalized1, equals(normalized2));
     });
@@ -53,16 +54,29 @@ void main() {
       const formats = [
         '+90 555 123 4567',
         '+90  555  123  4567',
+        '+90 (555) 123-45-67',
         '+905551234567',
         ' +905551234567 ',
       ];
 
-      final normalized =
-          formats.map((p) => p.replaceAll(RegExp(r'\s+'), '')).toSet();
+      final normalized = formats.map(normalizePhoneNumber).toSet();
 
       // All should normalize to same value
       expect(normalized.length, 1);
       expect(normalized.first, '+905551234567');
+    });
+
+    test('EmergencyContact json round-trip preserves values', () {
+      const contact = EmergencyContact(
+        name: 'Ayse',
+        phone: '+90 555 123 45 67',
+      );
+
+      final decoded = EmergencyContact.fromJson(contact.toJson());
+
+      expect(decoded.name, 'Ayse');
+      expect(decoded.phone, '+90 555 123 45 67');
+      expect(decoded.matchesPhone('+905551234567'), isTrue);
     });
   });
 }

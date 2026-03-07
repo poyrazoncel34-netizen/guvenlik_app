@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import '../core/app_colors.dart';
+import '../core/utils/app_reset_helper.dart';
 import '../core/utils/pin_settings_helper.dart';
 import 'edit_profile_screen.dart';
 import 'settings_detail_page.dart';
@@ -127,29 +128,11 @@ class _ProfilePageState extends State<ProfilePage> {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: () async {
+              onPressed: () {
                 HapticFeedback.mediumImpact();
-                // Offline-first: No Firebase auth to sign out from
-                // Clear local session data if needed
-                if (!context.mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Row(
-                      children: [
-                        const Icon(Icons.logout_rounded, color: Colors.white),
-                        const SizedBox(width: 12),
-                        Text(
-                          "profile_logout_success".tr(),
-                          style: const TextStyle(fontWeight: FontWeight.w600),
-                        ),
-                      ],
-                    ),
-                    backgroundColor: AppColors.emergency,
-                    behavior: SnackBarBehavior.floating,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
+                AppResetHelper.showResetDialog(
+                  context,
+                  title: "profile_logout".tr(),
                 );
               },
               style: ElevatedButton.styleFrom(
@@ -159,7 +142,10 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
               child: Text(
                 "profile_logout".tr(),
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ),
           ),
@@ -177,7 +163,11 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  _appVersion.isNotEmpty ? "profile_version".tr(namedArgs: {"version": _appVersion}) : "...",
+                  _appVersion.isNotEmpty
+                      ? "profile_version".tr(
+                          namedArgs: {"version": _appVersion},
+                        )
+                      : "...",
                   style: TextStyle(
                     fontSize: 12,
                     color: AppColors.textSecondary.withValues(alpha: 0.6),
@@ -192,7 +182,11 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _buildSettingsItem(BuildContext context, IconData icon, String itemKey) {
+  Widget _buildSettingsItem(
+    BuildContext context,
+    IconData icon,
+    String itemKey,
+  ) {
     final title = itemKey.tr();
     return Material(
       color: Colors.transparent,

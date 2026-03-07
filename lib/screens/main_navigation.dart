@@ -6,12 +6,18 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../core/app_colors.dart';
+import '../core/constants/app_constants.dart';
+import '../core/di/service_locator.dart';
+import '../core/security/secure_storage.dart';
+import '../core/security/secure_storage_keys.dart';
 // Firebase and notification services removed (offline-first)
 import 'home_page.dart';
 import 'contacts_page.dart';
 import 'map_page.dart';
+import 'pin_setup_screen.dart';
 import 'settings_page.dart';
 
 class MainNavigation extends StatefulWidget {
@@ -26,6 +32,7 @@ class _MainNavigationState extends State<MainNavigation>
   int _selectedIndex = 0;
   late AnimationController _fabController;
   late Animation<double> _fabScale;
+  bool _pinPromptVisible = false;
 
   final List<Widget> _pages = const [
     HomePage(),
@@ -50,6 +57,9 @@ class _MainNavigationState extends State<MainNavigation>
     Future.delayed(const Duration(milliseconds: 400), () {
       if (mounted) _fabController.forward();
     });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _ensurePinSetup();
+    });
   }
 
   @override
@@ -67,6 +77,41 @@ class _MainNavigationState extends State<MainNavigation>
     } catch (e) {
       debugPrint('Could not launch $uri: $e');
     }
+  }
+
+  Future<void> _ensurePinSetup() async {
+    if (!mounted || _pinPromptVisible) return;
+
+    final hasPin = await _hasConfiguredPin();
+    if (!mounted || hasPin) return;
+
+    _pinPromptVisible = true;
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (_) => const PinSetupScreen(requiredSetup: true),
+      ),
+    );
+    _pinPromptVisible = false;
+  }
+
+  Future<bool> _hasConfiguredPin() async {
+    final secureStorage = serviceLocator<SecureStorage>();
+    final securePin = await secureStorage.read(key: SecureStorageKeys.userPin);
+    if (securePin != null && securePin.isNotEmpty) {
+      return true;
+    }
+
+    final prefs = await SharedPreferences.getInstance();
+    final legacyPin = prefs.getString(SecureStorageKeys.userPin);
+    if (legacyPin == null || legacyPin.isEmpty) {
+      return false;
+    }
+
+    await secureStorage.write(key: SecureStorageKeys.userPin, value: legacyPin);
+    await prefs.remove(SecureStorageKeys.userPin);
+    await prefs.setBool(AppConstants.prefPinSetupDone, true);
+    return true;
   }
 
   void _showQuickHelp(BuildContext context) {
@@ -111,10 +156,10 @@ class _MainNavigationState extends State<MainNavigation>
               icon: Icons.local_police_rounded,
               color: AppColors.info,
               title: "call_police".tr(),
-              subtitle: "155",
+              subtitle: AppConstants.turkeyEmergencyNumber,
               onTap: () {
                 Navigator.pop(context);
-                _makeCall('155');
+                _makeCall(AppConstants.turkeyEmergencyNumber);
               },
             ),
             const SizedBox(height: 12),
@@ -122,10 +167,10 @@ class _MainNavigationState extends State<MainNavigation>
               icon: Icons.medical_services_rounded,
               color: AppColors.emergency,
               title: "call_ambulance".tr(),
-              subtitle: "112",
+              subtitle: AppConstants.turkeyEmergencyNumber,
               onTap: () {
                 Navigator.pop(context);
-                _makeCall('112');
+                _makeCall(AppConstants.turkeyEmergencyNumber);
               },
             ),
             const SizedBox(height: 12),
@@ -133,10 +178,10 @@ class _MainNavigationState extends State<MainNavigation>
               icon: Icons.fire_truck_rounded,
               color: AppColors.warning,
               title: "call_fire".tr(),
-              subtitle: "110",
+              subtitle: AppConstants.turkeyEmergencyNumber,
               onTap: () {
                 Navigator.pop(context);
-                _makeCall('110');
+                _makeCall(AppConstants.turkeyEmergencyNumber);
               },
             ),
             const SizedBox(height: 16),
@@ -206,8 +251,7 @@ class _MainNavigationState extends State<MainNavigation>
               Container(
                 width: 44,
                 height: 44,
-                decoration:
-                    BoxDecoration(color: color, shape: BoxShape.circle),
+                decoration: BoxDecoration(color: color, shape: BoxShape.circle),
                 child: const Icon(
                   Icons.call_rounded,
                   color: Colors.white,
@@ -224,18 +268,7 @@ class _MainNavigationState extends State<MainNavigation>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 300),
-        switchInCurve: Curves.easeOut,
-        switchOutCurve: Curves.easeIn,
-        transitionBuilder: (child, animation) {
-          return FadeTransition(opacity: animation, child: child);
-        },
-        child: KeyedSubtree(
-          key: ValueKey(_selectedIndex),
-          child: _pages[_selectedIndex],
-        ),
-      ),
+      body: IndexedStack(index: _selectedIndex, children: _pages),
       // Floating Action Button - Only on Home screen
       floatingActionButton: _selectedIndex == 0
           ? ScaleTransition(
@@ -247,8 +280,7 @@ class _MainNavigationState extends State<MainNavigation>
                 },
                 backgroundColor: AppColors.emergency,
                 elevation: 8,
-                icon:
-                    const Icon(Icons.flash_on_rounded, color: Colors.white),
+                icon: const Icon(Icons.flash_on_rounded, color: Colors.white),
                 label: Text(
                   "quick_help".tr(),
                   style: const TextStyle(
@@ -277,8 +309,7 @@ class _MainNavigationState extends State<MainNavigation>
             ),
             child: SafeArea(
               child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [

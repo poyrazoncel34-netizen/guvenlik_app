@@ -13,7 +13,9 @@ import '../core/security/secure_storage.dart';
 import '../core/security/secure_storage_keys.dart';
 
 class PinSetupScreen extends StatefulWidget {
-  const PinSetupScreen({super.key});
+  final bool requiredSetup;
+
+  const PinSetupScreen({super.key, this.requiredSetup = false});
 
   @override
   State<PinSetupScreen> createState() => _PinSetupScreenState();
@@ -100,96 +102,101 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
     return Semantics(
       label: 'pin_screen_semantics'.tr(),
       hint: 'pin_screen_hint_semantics'.tr(),
-      child: Scaffold(
-        backgroundColor: AppColors.background,
-        body: SafeArea(
-          child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            children: [
-              const SizedBox(height: 40),
-              Container(
-                width: 80,
-                height: 80,
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.12),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.lock_rounded,
-                  size: 40,
-                  color: AppColors.primary,
-                ),
-              ),
-              const SizedBox(height: 24),
-              Text(
-                _isConfirming
-                    ? 'pin_confirm_title'.tr()
-                    : 'pin_setup_title'.tr(),
-                style: const TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                _isConfirming
-                    ? 'pin_confirm_hint'.tr()
-                    : 'pin_setup_hint'.tr(namedArgs: {'count': '${AppConstants.pinLength}'}),
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-              if (_errorMessage != null) ...[
-                const SizedBox(height: 16),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 10,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.emergency.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    _errorMessage!,
-                    style: const TextStyle(
-                      color: AppColors.emergency,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ],
-              const SizedBox(height: 40),
-              // PIN dots
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(AppConstants.pinLength, (index) {
-                  return Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 10),
-                    width: 20,
-                    height: 20,
+      child: PopScope(
+        canPop: !widget.requiredSetup,
+        child: Scaffold(
+          backgroundColor: AppColors.background,
+          body: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                children: [
+                  const SizedBox(height: 40),
+                  Container(
+                    width: 80,
+                    height: 80,
                     decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.12),
                       shape: BoxShape.circle,
-                      color: index < currentPin.length
-                          ? AppColors.primary
-                          : AppColors.border,
                     ),
-                  );
-                }),
+                    child: const Icon(
+                      Icons.lock_rounded,
+                      size: 40,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Text(
+                    _isConfirming
+                        ? 'pin_confirm_title'.tr()
+                        : 'pin_setup_title'.tr(),
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    _isConfirming
+                        ? 'pin_confirm_hint'.tr()
+                        : 'pin_setup_hint'.tr(
+                            namedArgs: {'count': '${AppConstants.pinLength}'},
+                          ),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                  if (_errorMessage != null) ...[
+                    const SizedBox(height: 16),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 10,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.emergency.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        _errorMessage!,
+                        style: const TextStyle(
+                          color: AppColors.emergency,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 40),
+                  // PIN dots
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(AppConstants.pinLength, (index) {
+                      return Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 10),
+                        width: 20,
+                        height: 20,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: index < currentPin.length
+                              ? AppColors.primary
+                              : AppColors.border,
+                        ),
+                      );
+                    }),
+                  ),
+                  const Spacer(),
+                  _buildNumberPad(),
+                  const SizedBox(height: 24),
+                ],
               ),
-              const Spacer(),
-              _buildNumberPad(),
-              const SizedBox(height: 24),
-            ],
+            ),
           ),
         ),
       ),
-    ),
     );
   }
 

@@ -12,19 +12,30 @@ final GetIt serviceLocator = GetIt.instance;
 
 Future<void> setupServiceLocator() async {
   // Offline-first services - no Firebase, no network dependencies
-  serviceLocator.registerSingleton<LocationService>(LocationService());
-  serviceLocator.registerLazySingleton<ContactsLocalDataSource>(
-    () => ContactsLocalDataSource(),
-  );
-  serviceLocator.registerLazySingleton<LocationRepository>(
-    () => LocationRepositoryImpl(serviceLocator<LocationService>()),
-  );
-  serviceLocator.registerLazySingleton<ContactsRepository>(
-    () => ContactsRepositoryImpl(serviceLocator<ContactsLocalDataSource>()),
-  );
-  serviceLocator.registerLazySingleton<SecureStorage>(() => SecureStorage());
-  serviceLocator.registerLazySingleton<EncryptionService>(
-    () => EncryptionService(),
-  );
+  if (!serviceLocator.isRegistered<LocationService>()) {
+    serviceLocator.registerSingleton<LocationService>(LocationService());
+  }
+  if (!serviceLocator.isRegistered<ContactsLocalDataSource>()) {
+    serviceLocator.registerLazySingleton<ContactsLocalDataSource>(
+      () => ContactsLocalDataSource(),
+    );
+  }
+  if (!serviceLocator.isRegistered<LocationRepository>()) {
+    serviceLocator.registerLazySingleton<LocationRepository>(
+      () => LocationRepositoryImpl(serviceLocator<LocationService>()),
+    );
+  }
+  if (!serviceLocator.isRegistered<ContactsRepository>()) {
+    serviceLocator.registerLazySingleton<ContactsRepository>(
+      () => ContactsRepositoryImpl(serviceLocator<ContactsLocalDataSource>()),
+    );
+  }
+  if (!serviceLocator.isRegistered<SecureStorage>()) {
+    serviceLocator.registerLazySingleton<SecureStorage>(() => SecureStorage());
+  }
+  if (!serviceLocator.isRegistered<EncryptionService>()) {
+    serviceLocator.registerLazySingleton<EncryptionService>(
+      () => EncryptionService(),
+    );
+  }
 }
-

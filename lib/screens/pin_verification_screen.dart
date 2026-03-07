@@ -72,7 +72,9 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            "pin_verify_biometric_fail".tr(namedArgs: {"label": _biometricLabel}),
+            "pin_verify_biometric_fail".tr(
+              namedArgs: {"label": _biometricLabel},
+            ),
           ),
           backgroundColor: AppColors.warning,
           behavior: SnackBarBehavior.floating,
@@ -125,9 +127,9 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
 
     if (emergencyNumber == null || emergencyNumber.isEmpty) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("pin_verify_no_number".tr())),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("pin_verify_no_number".tr())));
         Navigator.pop(context);
       }
       return;
@@ -180,9 +182,9 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
     } catch (e) {
       debugPrint("Arama hatası: $e");
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("pin_verify_call_failed".tr())),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("pin_verify_call_failed".tr())));
         Navigator.pop(context);
       }
     }
@@ -226,161 +228,213 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
     super.dispose();
   }
 
+  void _cancelWithoutPin() {
+    _timer?.cancel();
+    final messenger = ScaffoldMessenger.of(context);
+    Navigator.pop(context);
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text("emergency_cancelled_no_pin".tr()),
+        backgroundColor: AppColors.warning,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Semantics(
       label: "semantics_pin_verify".tr(),
       hint: "semantics_pin_verify_hint".tr(),
       child: Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-              decoration: BoxDecoration(
-                color: AppColors.emergency.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(30),
-                border: Border.all(
-                  color: AppColors.emergency.withValues(alpha: 0.4),
+        backgroundColor: AppColors.background,
+        body: SafeArea(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 18,
+                  vertical: 10,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.emergency.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(30),
+                  border: Border.all(
+                    color: AppColors.emergency.withValues(alpha: 0.4),
+                  ),
+                ),
+                child: Text(
+                  "pin_verify_title".tr(),
+                  style: TextStyle(
+                    color: AppColors.emergency,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 1.2,
+                  ),
                 ),
               ),
-              child: Text(
-                "pin_verify_title".tr(),
-                style: TextStyle(
-                  color: AppColors.emergency,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 1.2,
-                ),
-              ),
-            ),
-            const SizedBox(height: 28),
-            Text(
-              "$_timeLeft",
-              style: const TextStyle(
-                color: AppColors.textPrimary,
-                fontSize: 80,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-            Text(
-              "pin_verify_countdown_warning".tr(),
-              textAlign: TextAlign.center,
-              style: const TextStyle(color: AppColors.textSecondary),
-            ),
-            const SizedBox(height: 16),
-            if (_emergencyContact != null)
+              const SizedBox(height: 28),
               Text(
-                "pin_verify_emergency_name".tr(namedArgs: {"name": _emergencyContact!.name}),
+                "$_timeLeft",
+                style: const TextStyle(
+                  color: AppColors.textPrimary,
+                  fontSize: 80,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              Text(
+                "pin_verify_countdown_warning".tr(),
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: AppColors.textSecondary),
+              ),
+              const SizedBox(height: 16),
+              if (_emergencyContact != null)
+                Text(
+                  "pin_verify_emergency_name".tr(
+                    namedArgs: {"name": _emergencyContact!.name},
+                  ),
+                  style: const TextStyle(
+                    color: AppColors.textSecondary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              const SizedBox(height: 10),
+              Text(
+                _correctPin == null
+                    ? "emergency_no_pin_warning".tr()
+                    : "pin_verify_cancel_hint".tr(),
                 style: const TextStyle(
                   color: AppColors.textSecondary,
-                  fontWeight: FontWeight.w600,
+                  fontSize: 12,
                 ),
+                textAlign: TextAlign.center,
               ),
-            const SizedBox(height: 10),
-            Text(
-              "pin_verify_cancel_hint".tr(),
-              style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
-            ),
-            const SizedBox(height: 40),
-            // Şifre Noktaları
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(4, (index) {
-                return Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 8),
-                  width: 15,
-                  height: 15,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: index < _enteredPin.length
-                        ? AppColors.emergency
-                        : AppColors.border,
-                  ),
-                );
-              }),
-            ),
-            if (_biometricAvailable) ...[
-              const SizedBox(height: 12),
-              OutlinedButton.icon(
-                onPressed: _authenticateWithBiometric,
-                icon: Icon(
-                  _biometricLabel == 'Face ID'
-                      ? Icons.face_rounded
-                      : Icons.fingerprint_rounded,
-                  size: 22,
-                ),
-                label: Text("pin_verify_biometric_cancel_btn".tr(namedArgs: {"label": _biometricLabel})),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: AppColors.primary,
-                  side: const BorderSide(color: AppColors.primary, width: 1.5),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 14,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
+              if (_correctPin == null) ...[
+                const SizedBox(height: 16),
+                OutlinedButton.icon(
+                  onPressed: _cancelWithoutPin,
+                  icon: const Icon(Icons.close_rounded, size: 20),
+                  label: Text("emergency_cancel_without_pin".tr()),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.warning,
+                    side: const BorderSide(color: AppColors.warning),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 14,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
                   ),
                 ),
-              ),
-            ],
-            const SizedBox(height: 40),
-            // Numara Tuşları
-            Expanded(
-              child: GridView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 40),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3,
-                  childAspectRatio: 1.5,
-                  mainAxisSpacing: 20,
-                  crossAxisSpacing: 20,
-                ),
-                itemCount: 12,
-                itemBuilder: (context, index) {
-                  if (index == 9) return const SizedBox();
-                  if (index == 11) {
-                    // Silme Tuşu
-                    return IconButton(
-                      icon: const Icon(
-                        Icons.backspace,
-                        color: AppColors.textPrimary,
+              ] else ...[
+                const SizedBox(height: 40),
+                // Şifre Noktaları
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(4, (index) {
+                    return Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 8),
+                      width: 15,
+                      height: 15,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: index < _enteredPin.length
+                            ? AppColors.emergency
+                            : AppColors.border,
                       ),
-                      onPressed: () {
-                        setState(() {
-                          if (_enteredPin.isNotEmpty) {
-                            _enteredPin = _enteredPin.substring(
-                              0,
-                              _enteredPin.length - 1,
-                            );
-                          }
-                        });
-                      },
                     );
-                  }
-                  String number = index == 10 ? "0" : "${index + 1}";
-                  return ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.cardBg,
-                      shape: const CircleBorder(),
+                  }),
+                ),
+              ],
+              if (_biometricAvailable) ...[
+                const SizedBox(height: 12),
+                OutlinedButton.icon(
+                  onPressed: _authenticateWithBiometric,
+                  icon: Icon(
+                    _biometricLabel == 'Face ID'
+                        ? Icons.face_rounded
+                        : Icons.fingerprint_rounded,
+                    size: 22,
+                  ),
+                  label: Text(
+                    "pin_verify_biometric_cancel_btn".tr(
+                      namedArgs: {"label": _biometricLabel},
                     ),
-                    onPressed: () => _onNumberPress(number),
-                    child: Text(
-                      number,
-                      style: const TextStyle(
-                        fontSize: 24,
-                        color: AppColors.textPrimary,
-                      ),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.primary,
+                    side: const BorderSide(
+                      color: AppColors.primary,
+                      width: 1.5,
                     ),
-                  );
-                },
-              ),
-            ),
-          ],
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 14,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                ),
+              ],
+              const SizedBox(height: 40),
+              if (_correctPin != null)
+                // Numara Tuşları
+                Expanded(
+                  child: GridView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 40),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 3,
+                          childAspectRatio: 1.5,
+                          mainAxisSpacing: 20,
+                          crossAxisSpacing: 20,
+                        ),
+                    itemCount: 12,
+                    itemBuilder: (context, index) {
+                      if (index == 9) return const SizedBox();
+                      if (index == 11) {
+                        // Silme Tuşu
+                        return IconButton(
+                          icon: const Icon(
+                            Icons.backspace,
+                            color: AppColors.textPrimary,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              if (_enteredPin.isNotEmpty) {
+                                _enteredPin = _enteredPin.substring(
+                                  0,
+                                  _enteredPin.length - 1,
+                                );
+                              }
+                            });
+                          },
+                        );
+                      }
+                      String number = index == 10 ? "0" : "${index + 1}";
+                      return ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.cardBg,
+                          shape: const CircleBorder(),
+                        ),
+                        onPressed: () => _onNumberPress(number),
+                        child: Text(
+                          number,
+                          style: const TextStyle(
+                            fontSize: 24,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
-    ),
     );
   }
 }

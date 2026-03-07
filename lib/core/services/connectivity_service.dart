@@ -10,6 +10,7 @@ class ConnectivityService {
 
   final Connectivity _connectivity = Connectivity();
   StreamSubscription<List<ConnectivityResult>>? _subscription;
+  bool _initialized = false;
 
   bool _isOnline = true;
   bool get isOnline => _isOnline;
@@ -20,6 +21,9 @@ class ConnectivityService {
 
   /// Initialize and start monitoring
   Future<void> initialize() async {
+    if (_initialized) return;
+    _initialized = true;
+
     try {
       final results = await _connectivity.checkConnectivity();
       _isOnline = _hasConnection(results);
@@ -27,6 +31,7 @@ class ConnectivityService {
       debugPrint('ConnectivityService init error: $e');
     }
 
+    await _subscription?.cancel();
     _subscription = _connectivity.onConnectivityChanged.listen((results) {
       final online = _hasConnection(results);
       if (online != _isOnline) {
