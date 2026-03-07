@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # KoruBeni - Play Store Release Hazırlık Script
-# Plan: İkon, key.properties, google-services.json hazırlığı
+# Plan: İkon ve key.properties hazırlığı
 # Kullanım: ./scripts/setup_play_release.sh
 
 set -e
@@ -8,7 +8,6 @@ set -e
 ANDROID_DIR="android"
 KEY_PROPS="$ANDROID_DIR/key.properties"
 KEY_EXAMPLE="$ANDROID_DIR/key.properties.example"
-GOOGLE_SERVICES="$ANDROID_DIR/app/google-services.json"
 ICON_PATH="assets/icon/app_icon.png"
 
 echo "═══════════════════════════════════════════════════════════"
@@ -45,26 +44,9 @@ else
     echo "   cd android && keytool -genkey -v -keystore korubeni-release-key.jks -keyalg RSA -keysize 2048 -validity 10000 -alias korubeni"
 fi
 
-# 3. google-services.json
+# 3. Launcher icons üret
 echo ""
-echo "3. google-services.json..."
-if [ -f "$GOOGLE_SERVICES" ]; then
-    echo "   ✅ android/app/google-services.json mevcut"
-else
-    echo "   ❌ $GOOGLE_SERVICES bulunamadı!"
-    echo ""
-    echo "   İndirmek için:"
-    echo "   1. https://console.firebase.google.com"
-    echo "   2. Proje → Project Settings → Your apps"
-    echo "   3. Android app (com.poyrazoncel.korubeni) → Download google-services.json"
-    echo "   4. Dosyayı android/app/ içine kopyala"
-    echo ""
-    exit 1
-fi
-
-# 4. Launcher icons üret
-echo ""
-echo "4. Launcher icons üretiliyor..."
+echo "3. Launcher icons üretiliyor..."
 dart run flutter_launcher_icons
 echo "   ✅ Android ve iOS ikonları oluşturuldu"
 

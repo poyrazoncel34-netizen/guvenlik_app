@@ -24,9 +24,9 @@
 ## 🏗️ Teknoloji
 
 - **Flutter** 3.29+ (Dart)
-- **Firebase** — Auth, Firestore, Crashlytics, Analytics, FCM
+- **Mimari** — Offline-first, on-device storage
 - **State Management** — Provider + GetIt
-- **Güvenlik** — AES şifreleme, Flutter Secure Storage
+- **Güvenlik** — AES şifreleme, Flutter Secure Storage, biyometrik doğrulama
 
 ## 📄 Gizlilik Politikası
 

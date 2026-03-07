@@ -27,7 +27,7 @@ SECURITY:
 • 4-digit PIN app protection
 • Face ID / Touch ID support
 • AES-256 encryption for data security
-• Firebase security rules protect all data
+• Sensitive data primarily stays on device
 
 KoruBeni keeps your safety with you at all times.
 
@@ -38,4 +38,4 @@ KoruBeni keeps your safety with you at all times.
 
 **Support URL:** https://poyrazoncel34-netizen.github.io/guvenlik_app/privacy_policy_en.html
 **Privacy Policy URL:** https://poyrazoncel34-netizen.github.io/guvenlik_app/privacy_policy.html
-**Contact Email:** destek@korubeni.com
+**Contact Email:** korubeni.destek@gmail.com

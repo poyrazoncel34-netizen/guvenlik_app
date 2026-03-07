@@ -1,6 +1,6 @@
 # Play Console — Data Safety Form Yanıtları
 
-Bu dosya, Play Console → Policy → App content → Data safety formunu doldururken kopyalanacak yanıtları içerir.
+Bu dosya, mevcut offline-first mimariye göre hazırlanmış daha güvenli cevapları içerir.
 
 ---
 
@@ -8,6 +8,8 @@ Bu dosya, Play Console → Policy → App content → Data safety formunu doldur
 
 **Does your app collect or share any of the required user data types?**  
 → Yes
+
+Not: KoruBeni geliştirici sunucularına veri göndermez. Ancak kullanıcı tetiklediğinde konum SMS ile acil kişilere iletilebildiği için formu boş bırakmak doğru olmaz.
 
 ---
 
@@ -17,27 +19,29 @@ Bu dosya, Play Console → Policy → App content → Data safety formunu doldur
 
 | Soru | Yanıt |
 |------|-------|
-| Approximate location | ✅ Collected, shared with emergency contacts when emergency triggered |
-| Precise location | ✅ Collected, shared with emergency contacts when emergency or location sharing is active |
-| Amaç | App functionality — Emergency location sharing, Safe Walk |
-| Zorunlu / Opsiyonel | Optional — User chooses when to share |
+| Approximate location | ✅ Processed when emergency or location sharing is triggered |
+| Precise location | ✅ Processed when emergency or location sharing is triggered |
+| Paylaşım | ✅ May be shared with emergency contacts via SMS |
+| Amaç | App functionality — Emergency assistance, location sharing |
+| Zorunlu / Opsiyonel | Optional — User action required |
 
-**Kısa açıklama (İngilizce):**  
-Location is collected only when the user actively shares it or triggers an emergency. Shared with emergency contacts and Firebase for delivery.
+**Short explanation:**  
+Location is used only when the user triggers an emergency flow or starts location sharing. It may be included in an SMS sent to the user’s chosen emergency contacts.
 
 ---
 
 ### 2. Kişisel Bilgiler (Personal info)
 
-| Veri | Toplanıyor? | Paylaşılıyor? | Amaç |
-|------|-------------|---------------|------|
-| Name | ✅ Optional (profile) | ❌ No | App functionality |
-| Email address | ✅ Optional (profile) | ✅ With Firebase | Account, notifications |
-| Phone number | ✅ Yes | ✅ With Firebase | Authentication, emergency calls |
-| User IDs | ✅ Yes (Firebase Auth) | ✅ With Firebase | Account management |
+| Veri | Yanıt | Not |
+|------|-------|-----|
+| Name | ✅ Optional, device-only | Profile personalization |
+| Photo | ✅ Optional, device-only | Profile personalization |
+| Email address | ❌ Not collected | No account system |
+| Phone number | ❌ Not collected by developer | Emergency contact numbers are chosen from the device and stored locally |
+| User IDs | ❌ Not collected | No auth backend |
 
-**Kısa açıklama:**  
-Phone number for authentication. Optional name/email for profile. Data processed by Firebase under DPA.
+**Short explanation:**  
+Optional profile data stays on the device. The app has no sign-in flow and no backend user account.
 
 ---
 
@@ -45,12 +49,13 @@ Phone number for authentication. Optional name/email for profile. Data processed
 
 | Soru | Yanıt |
 |------|-------|
-| Contacts | ✅ Collected | Stored on device only (for emergency contact selection) |
+| Contacts | ✅ Accessed so the user can choose emergency contacts |
+| Storage | Device-only |
+| Paylaşım | ❌ Not shared with developer or cloud services |
 | Amaç | App functionality — Emergency contact selection |
-| Paylaşım | Not shared with third parties; used in-app only |
 
-**Kısa açıklama:**  
-Contacts are used only to let users select emergency contacts. Stored locally, not shared with servers except when SMS/call is triggered by user action.
+**Short explanation:**  
+Contacts are accessed only so the user can pick trusted contacts. Selected contact data is stored locally on the device.
 
 ---
 
@@ -58,45 +63,45 @@ Contacts are used only to let users select emergency contacts. Stored locally, n
 
 | Soru | Yanıt |
 |------|-------|
-| Voice or sound recordings | ✅ Collected (optional) | ❌ Not shared |
-| Amaç | App functionality — Evidence recording (user-initiated) |
-| Opsiyonel | Yes — User chooses when to record |
+| Voice or sound recordings | ✅ Optional |
+| Storage | Device-only |
+| Paylaşım | ❌ Not shared |
+| Amaç | App functionality — Evidence recording |
 
-**Kısa açıklama:**  
-Microphone used only for optional voice recording feature when user enables it. Not shared.
+**Short explanation:**  
+Voice recording is optional and stays on the device unless the user manually exports it outside the app.
 
 ---
 
 ### 5. Uygulama Etkileşimi (App activity)
 
-| Veri | Toplanıyor? | Amaç |
-|------|-------------|------|
-| Crash logs | ✅ Yes | Firebase Crashlytics — App stability |
-| Diagnostics | ✅ Yes | Firebase Crashlytics — Bug fixing |
-| Analytics | ✅ Yes | Firebase Analytics — Anonymous usage stats |
+| Veri | Yanıt |
+|------|-------|
+| Crash logs | ❌ Not collected |
+| Diagnostics | ❌ Not collected |
+| Analytics | ❌ Not collected |
 
-**Kısa açıklama:**  
-Crash reports and anonymous analytics via Firebase for stability and improvement.
+**Short explanation:**  
+The app does not use Firebase Analytics, Crashlytics, or another telemetry backend.
 
 ---
 
 ## Veri Güvenliği
 
-- **Encryption in transit:** Yes (HTTPS/TLS)
-- **Users can request data deletion:** Yes
-- **Data processing agreement (DPA):** Firebase/Google DPA applies
+- **Encryption in transit:** Conservative answer: do not mark blanket `Yes` for all data, because emergency delivery can use carrier SMS.
+- **Users can request data deletion:** Yes — deleting the app or clearing app storage removes on-device data.
+- **Data sold:** No
 
 ---
 
 ## Özet (Copy-Paste için)
 
-**Collected data types:**
-- Location (approximate, precise) — for emergency sharing
-- Personal info (name, email, phone, user ID) — for account and notifications
-- Contacts — for emergency contact selection (device-stored)
-- Audio — optional voice recording
-- App activity — crash logs, analytics
+**Data used by the app:**
+- Location, only during emergency/location sharing flows
+- Contacts, only for choosing emergency contacts
+- Optional profile name/photo, device-only
+- Optional audio recordings, device-only
 
-**Shared with:** Emergency contacts (when user triggers emergency), Firebase (infrastructure)
+**Shared with:** Emergency contacts chosen by the user, only when the user triggers an emergency/location sharing action
 
-**Not sold:** We do not sell user data.
+**Not used:** Firebase auth, cloud database, analytics, crash reporting

@@ -22,14 +22,13 @@
     <uses-permission android:name="android.permission.VIBRATE" />
     <!-- 
     ⚠️ CRITICAL EMERGENCY PERMISSIONS ⚠️
-    These permissions are REQUIRED for the dual-action emergency system:
-    1. SEND_SMS: Sends background SMS with location to emergency contact
-    2. CALL_PHONE: Makes direct phone call immediately after SMS
+    Emergency flow:
+    1. Opens the user's SMS app with a prefilled emergency message
+    2. Makes a direct phone call when the user confirms
     
-    ZERO-FAULT GUARANTEE: If SMS fails (no credit), the call MUST still proceed.
+    ZERO-FAULT GUARANTEE: If SMS composer cannot open, the call flow can still proceed.
     Runtime permissions are checked/requested before each action.
     -->
-    <uses-permission android:name="android.permission.SEND_SMS" />
     <uses-permission android:name="android.permission.CALL_PHONE" />
     <!-- Foreground Service for keeping app alive in background -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
@@ -49,12 +48,6 @@
     User lives may depend on this working 24/7.
     -->
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
-    <!-- Background location for emergency tracking -->
-    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
-    <!-- Exact alarms for emergency timers (Android 12+) -->
-    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
-    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
-    
     <!-- Screen size compatibility -->
     <supports-screens
         android:smallScreens="true"

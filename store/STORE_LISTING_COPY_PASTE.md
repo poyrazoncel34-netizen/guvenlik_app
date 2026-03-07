@@ -48,5 +48,5 @@ One-tap access to your safety network in emergencies. Panic, location, SOS.
 
 | Alan | Değer |
 |------|-------|
-| Contact email | destek@korubeni.com |
+| Contact email | korubeni.destek@gmail.com |
 | Category | Tools veya Safety |

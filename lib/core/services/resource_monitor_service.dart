@@ -45,12 +45,12 @@ class ResourceMonitorService {
   bool _isMonitoring = false;
   
   // Thresholds
-  static const int HIGH_MEMORY_THRESHOLD_MB = 200;
-  static const int CRITICAL_MEMORY_THRESHOLD_MB = 300;
-  static const int LOW_BATTERY_THRESHOLD = 15;
+  static const int highMemoryThresholdMb = 200;
+  static const int criticalMemoryThresholdMb = 300;
+  static const int lowBatteryThreshold = 15;
   
   // Monitoring interval
-  static const Duration MONITOR_INTERVAL = Duration(minutes: 5);
+  static const Duration monitorInterval = Duration(minutes: 5);
   
   /// Start monitoring resources
   void startMonitoring() {
@@ -66,7 +66,7 @@ class ResourceMonitorService {
     _takeSnapshot();
     
     // Periodic monitoring
-    _monitorTimer = Timer.periodic(MONITOR_INTERVAL, (_) {
+    _monitorTimer = Timer.periodic(monitorInterval, (_) {
       _takeSnapshot();
     });
   }
@@ -136,15 +136,15 @@ class ResourceMonitorService {
     try {
       // Memory threshold check
       if (snapshot.memoryUsageMB != null) {
-        if (snapshot.memoryUsageMB! >= CRITICAL_MEMORY_THRESHOLD_MB) {
+        if (snapshot.memoryUsageMB! >= criticalMemoryThresholdMb) {
           debugPrint('🚨 CRITICAL: Memory usage ${snapshot.memoryUsageMB}MB');
-        } else if (snapshot.memoryUsageMB! >= HIGH_MEMORY_THRESHOLD_MB) {
+        } else if (snapshot.memoryUsageMB! >= highMemoryThresholdMb) {
           debugPrint('⚠️ HIGH: Memory usage ${snapshot.memoryUsageMB}MB');
         }
       }
       
       // Battery threshold check
-      if (snapshot.batteryLevel <= LOW_BATTERY_THRESHOLD) {
+      if (snapshot.batteryLevel <= lowBatteryThreshold) {
         debugPrint('🔋 LOW BATTERY: ${snapshot.batteryLevel}%');
       }
       

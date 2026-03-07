@@ -40,8 +40,8 @@ One-tap message templates to reach emergency contacts.
 • 4-digit PIN app protection
 • Face ID / Fingerprint support
 • AES-256 encryption
-• Secure data storage
-• Firebase security rules
+• Secure on-device storage
+• Offline-first architecture
 
 ★ PRIVACY ★
 
@@ -53,7 +53,7 @@ KoruBeni — Your safety, one tap away.
 
 **Category:** Tools / Safety
 **Content Rating:** Everyone
-**Contact Email:** destek@korubeni.com
+**Contact Email:** korubeni.destek@gmail.com
 **Privacy Policy URL:** https://poyrazoncel34-netizen.github.io/guvenlik_app/privacy_policy.html
 
 **Tags:** safety, emergency, panic button, location sharing, personal security, SOS, fake call
