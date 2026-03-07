@@ -3,9 +3,11 @@
     <!-- Location for emergency GPS -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.INTERNET" />
     <!-- Background location removed for store compliance (request only if truly required) -->
-    
-    <!-- Offline-first: No INTERNET - app uses only SMS, Call, GPS -->
+
+    <!-- Offline-first core with optional online map tiles and connectivity checks -->
     <!-- Contacts Permission -->
     <uses-permission android:name="android.permission.READ_CONTACTS" />
     <!-- Photo Library Permission (Android 13+) -->

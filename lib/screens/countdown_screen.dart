@@ -26,6 +26,7 @@ import '../domain/models/activity_event.dart';
 import 'emergency_call_screen.dart';
 import '../core/services/foreground_service.dart';
 import '../core/services/haptic_service.dart';
+import '../core/services/notification_service.dart';
 
 class CountdownScreen extends StatefulWidget {
   final bool isTestMode;
@@ -55,6 +56,14 @@ class _CountdownScreenState extends State<CountdownScreen>
   bool _biometricAvailable = false;
   String _biometricLabel = 'Biometric';
   bool _handoffToEmergencyScreen = false;
+
+  // Brute force protection
+  int _failedAttempts = 0;
+  static const int _maxAttempts = 3;
+  static const int _lockoutDurationSeconds = 60;
+  DateTime? _lockoutEndTime;
+  Timer? _lockoutTimer;
+  int _lockoutRemaining = 0;
 
   @override
   void initState() {
@@ -189,11 +198,26 @@ class _CountdownScreenState extends State<CountdownScreen>
     final locationResult = await _locationRepository.getCurrentLocation();
     final lat = locationResult.position?.latitude;
     final lng = locationResult.position?.longitude;
-    final message = locationResult.isSuccess && lat != null && lng != null
-        ? "countdown_emergency_msg".tr(
-            namedArgs: {"lat": "$lat", "lng": "$lng"},
-          )
-        : "countdown_emergency_msg_no_loc".tr();
+
+    // Load custom SMS template or use default
+    final prefs = await SharedPreferences.getInstance();
+    final customTemplate = prefs.getString('pref_sms_template');
+    String message;
+    if (customTemplate != null && customTemplate.isNotEmpty) {
+      // Replace {konum} placeholder with actual location
+      if (locationResult.isSuccess && lat != null && lng != null) {
+        message = customTemplate
+            .replaceAll('{konum}', 'https://www.google.com/maps/search/?api=1&query=$lat,$lng');
+      } else {
+        message = customTemplate.replaceAll('{konum}', 'countdown_location_unavailable'.tr());
+      }
+    } else {
+      message = locationResult.isSuccess && lat != null && lng != null
+          ? "countdown_emergency_msg".tr(
+              namedArgs: {"lat": "$lat", "lng": "$lng"},
+            )
+          : "countdown_emergency_msg_no_loc".tr();
+    }
 
     final isOnline = ConnectivityService.instance.isOnline;
 
@@ -226,6 +250,14 @@ class _CountdownScreenState extends State<CountdownScreen>
     );
 
     await HapticService.emergencyTriggered();
+
+    // Send local push notification for alarm
+    await NotificationService.instance.showEmergencyAlert(
+      id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+      title: 'countdown_emergency_title'.tr(),
+      body: 'alarm_notification_body'.tr(),
+    );
+
     final smsResult = await SmsService.sendSms(
       numbers: numbers,
       message: message,
@@ -233,9 +265,35 @@ class _CountdownScreenState extends State<CountdownScreen>
 
     final primaryNumber =
         _emergencyContact?.phone ?? (numbers.isNotEmpty ? numbers.first : null);
-    final callResult = primaryNumber != null && primaryNumber.isNotEmpty
-        ? await CallService.startEmergencyCall(primaryNumber)
-        : EmergencyCallResult.failed('');
+
+    // Failover: try each number until one succeeds
+    EmergencyCallResult callResult = EmergencyCallResult.failed('');
+    String calledNumber = primaryNumber ?? '';
+    if (primaryNumber != null && primaryNumber.isNotEmpty) {
+      callResult = await CallService.startEmergencyCall(primaryNumber);
+      if (!callResult.isSuccess && numbers.length > 1) {
+        // Try remaining numbers as failover
+        for (final fallbackNumber in numbers) {
+          if (fallbackNumber == primaryNumber) continue;
+          callResult = await CallService.startEmergencyCall(fallbackNumber);
+          if (callResult.isSuccess) {
+            calledNumber = fallbackNumber;
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('emergency_failover_called'.tr(
+                    namedArgs: {'number': fallbackNumber},
+                  )),
+                  backgroundColor: AppColors.warning,
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            }
+            break;
+          }
+        }
+      }
+    }
 
     if (!smsResult.isSuccess && !callResult.isSuccess) {
       await KoruBeniForegroundService.stop();
@@ -255,7 +313,7 @@ class _CountdownScreenState extends State<CountdownScreen>
         MaterialPageRoute(
           builder: (context) => EmergencyCallScreen(
             name: _emergencyContact?.name ?? "countdown_emergency_label".tr(),
-            phone: primaryNumber ?? "",
+            phone: calledNumber,
             callStatusMessage: callResult.statusMessage,
             smsStatusMessage: smsResult.statusMessage,
           ),
@@ -287,7 +345,36 @@ class _CountdownScreenState extends State<CountdownScreen>
     Navigator.pop(context);
   }
 
+  bool get _isPinLockedOut =>
+      _lockoutEndTime != null && DateTime.now().isBefore(_lockoutEndTime!);
+
+  void _startPinLockout() {
+    _lockoutEndTime =
+        DateTime.now().add(const Duration(seconds: _lockoutDurationSeconds));
+    _lockoutRemaining = _lockoutDurationSeconds;
+    _lockoutTimer?.cancel();
+    _lockoutTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      final remaining =
+          _lockoutEndTime!.difference(DateTime.now()).inSeconds;
+      if (remaining <= 0) {
+        timer.cancel();
+        setState(() {
+          _lockoutEndTime = null;
+          _lockoutRemaining = 0;
+          _failedAttempts = 0;
+        });
+      } else {
+        setState(() => _lockoutRemaining = remaining);
+      }
+    });
+  }
+
   void _handlePinInput(String key) {
+    if (_isPinLockedOut) return;
     HapticFeedback.lightImpact();
 
     if (key == "DEL") {
@@ -303,6 +390,7 @@ class _CountdownScreenState extends State<CountdownScreen>
       if (_pin.length == 4) {
         if (_correctPin != null && _pin == _correctPin) {
           _timer?.cancel();
+          _lockoutTimer?.cancel();
           ActivityService.logEvent(
             type: ActivityType.emergencyCancelled,
             title: "countdown_cancelled_title".tr(),
@@ -311,8 +399,21 @@ class _CountdownScreenState extends State<CountdownScreen>
           KoruBeniForegroundService.stop();
           Navigator.pop(context);
         } else {
+          _failedAttempts++;
           _shakeController.forward(from: 0);
           HapticFeedback.vibrate();
+          if (_failedAttempts >= _maxAttempts) {
+            _startPinLockout();
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('brute_force_locked'
+                    .tr(namedArgs: {'seconds': '$_lockoutDurationSeconds'})),
+                backgroundColor: AppColors.emergency,
+                behavior: SnackBarBehavior.floating,
+                duration: const Duration(seconds: 3),
+              ),
+            );
+          }
           Future.delayed(const Duration(milliseconds: 300), () {
             if (mounted) {
               setState(() => _pin = "");
@@ -475,6 +576,43 @@ class _CountdownScreenState extends State<CountdownScreen>
                     ],
                   ),
                   const SizedBox(height: 50),
+                  if (_isPinLockedOut) ...[
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 10,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.emergency.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: AppColors.emergency.withValues(alpha: 0.4),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.lock_clock_rounded,
+                            color: AppColors.emergency,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'brute_force_locked_short'.tr(
+                              namedArgs: {'seconds': '$_lockoutRemaining'},
+                            ),
+                            style: const TextStyle(
+                              color: AppColors.emergency,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
                   Text(
                     _correctPin == null
                         ? "settings_pin_not_found".tr()

@@ -50,6 +50,23 @@ class _SirenDialogState extends State<SirenDialog> with TickerProviderStateMixin
 
   Future<void> _startSirenSound() async {
     try {
+      // Force audio to main speaker even when headphones are connected
+      if (!kIsWeb) {
+        await _audioPlayer.setAudioContext(AudioContext(
+          android: const AudioContextAndroid(
+            usageType: AndroidUsageType.alarm,
+            contentType: AndroidContentType.sonification,
+            audioFocus: AndroidAudioFocus.gainTransientExclusive,
+          ),
+          iOS: AudioContextIOS(
+            category: AVAudioSessionCategory.playback,
+            options: {
+              AVAudioSessionOptions.defaultToSpeaker,
+              AVAudioSessionOptions.duckOthers,
+            },
+          ),
+        ));
+      }
       await _audioPlayer.setVolume(1.0);
       await _audioPlayer.setReleaseMode(ReleaseMode.loop);
 
@@ -61,7 +78,7 @@ class _SirenDialogState extends State<SirenDialog> with TickerProviderStateMixin
         await _audioPlayer.play(AssetSource('sounds/siren.wav'));
       }
 
-      debugPrint('SirenDialog: Siren sound started');
+      debugPrint('SirenDialog: Siren sound started (forced to speaker)');
     } catch (e) {
       debugPrint("SirenDialog: Ses çalma hatası: $e");
     }

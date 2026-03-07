@@ -310,7 +310,24 @@ class _FakeCallScreenState extends State<FakeCallScreen> with SingleTickerProvid
                 "fake_call_settings_title".tr(),
                 style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 14),
+              // Preset scenario templates
+              SizedBox(
+                height: 38,
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  children: [
+                    _buildTemplateChip(nameController, phoneController, 'fake_template_boss'.tr(), '+90 555 000 00 01'),
+                    const SizedBox(width: 8),
+                    _buildTemplateChip(nameController, phoneController, 'fake_template_spouse'.tr(), '+90 555 000 00 02'),
+                    const SizedBox(width: 8),
+                    _buildTemplateChip(nameController, phoneController, 'fake_template_mom'.tr(), '+90 555 000 00 03'),
+                    const SizedBox(width: 8),
+                    _buildTemplateChip(nameController, phoneController, 'fake_template_custom'.tr(), ''),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 14),
               TextField(
                 controller: nameController,
                 style: const TextStyle(color: Colors.white),
@@ -404,5 +421,23 @@ class _FakeCallScreenState extends State<FakeCallScreen> with SingleTickerProvid
         setState(() => _avatarPath = saved.path);
       }
     } catch (_) {}
+  }
+
+  Widget _buildTemplateChip(
+    TextEditingController nameCtrl,
+    TextEditingController phoneCtrl,
+    String label,
+    String phone,
+  ) {
+    return ActionChip(
+      label: Text(label, style: const TextStyle(fontSize: 12, color: Colors.white)),
+      backgroundColor: AppColors.surface,
+      side: const BorderSide(color: Colors.white24),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      onPressed: () {
+        nameCtrl.text = label;
+        if (phone.isNotEmpty) phoneCtrl.text = phone;
+      },
+    );
   }
 }

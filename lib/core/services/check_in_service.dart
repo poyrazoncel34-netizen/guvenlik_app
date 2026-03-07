@@ -5,9 +5,9 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import '../../domain/models/activity_event.dart';
 import '../services/activity_service.dart';
+import '../services/notification_service.dart';
 import '../services/sms_service.dart';
 import '../di/service_locator.dart';
 import '../../domain/repositories/contacts_repository.dart';
@@ -58,7 +58,9 @@ class CheckInService extends ChangeNotifier {
     ActivityService.logEvent(
       type: ActivityType.checkIn,
       title: "check_in_started_title".tr(),
-      description: "check_in_started_desc".tr(namedArgs: {'minutes': '$minutes'}),
+      description: "check_in_started_desc".tr(
+        namedArgs: {'minutes': '$minutes'},
+      ),
     );
 
     notifyListeners();
@@ -103,7 +105,9 @@ class CheckInService extends ChangeNotifier {
     _tickTimer?.cancel();
     _isGracePeriod = true;
     _remainingSeconds = _gracePeriodSeconds;
-    _graceEndAt = DateTime.now().add(const Duration(seconds: _gracePeriodSeconds));
+    _graceEndAt = DateTime.now().add(
+      const Duration(seconds: _gracePeriodSeconds),
+    );
 
     // Show local notification
     _showGraceNotification();
@@ -123,20 +127,10 @@ class CheckInService extends ChangeNotifier {
 
   Future<void> _showGraceNotification() async {
     try {
-      final plugin = FlutterLocalNotificationsPlugin();
-      await plugin.show(
-        9999,
-        "check_in_notification_title".tr(),
-        "check_in_notification_body".tr(),
-        const NotificationDetails(
-          android: AndroidNotificationDetails(
-            'emergency_alerts',
-            'Acil Bildirimler',
-            importance: Importance.max,
-            priority: Priority.max,
-          ),
-          iOS: DarwinNotificationDetails(),
-        ),
+      await NotificationService.instance.showEmergencyAlert(
+        id: 9999,
+        title: "check_in_notification_title".tr(),
+        body: "check_in_notification_body".tr(),
       );
     } catch (_) {
       // Notification not critical
@@ -166,7 +160,8 @@ class CheckInService extends ChangeNotifier {
           if (result.isSuccess && result.position != null) {
             final lat = result.position!.latitude;
             final lng = result.position!.longitude;
-            final url = 'https://www.google.com/maps/search/?api=1&query=$lat,$lng';
+            final url =
+                'https://www.google.com/maps/search/?api=1&query=$lat,$lng';
             message += '\n$url';
           }
         } catch (_) {

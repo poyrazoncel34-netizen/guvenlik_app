@@ -17,6 +17,7 @@ import 'core/services/foreground_service.dart';
 import 'core/services/haptic_service.dart';
 import 'core/services/connectivity_service.dart';
 import 'core/services/atomic_storage_service.dart';
+import 'core/services/notification_service.dart';
 import 'core/widgets/emergency_trigger_host.dart';
 import 'package:easy_localization/easy_localization.dart';
 
@@ -81,7 +82,8 @@ void main() async {
       DataMigrationService.migrate(),
       OfflineQueueService.instance.initialize(),
       AtomicStorageService.instance.checkIntegrity(),
-      
+      NotificationService.instance.initialize(),
+
       // Non-blocking services
       HapticService.initialize(),
       ConnectivityService.instance.initialize(),
@@ -100,7 +102,7 @@ void main() async {
       return true;
     }());
   };
-  
+
   // Zero-fault: Fatal hataları yutma - return false ile standart hata yönetimine bırak
   // return true = "hata işlendi" (sessizce yutulur, beyaz ekranda kilit kalabilir)
   // return false = Flutter/Dart standart işleyişi devam eder
@@ -154,11 +156,22 @@ class KoruBeniApp extends StatelessWidget {
           debugShowCheckedModeBanner: false,
           title: 'KoruBeni',
           theme: AppTheme.lightTheme,
-          builder: (context, child) => Semantics(
-            label: 'KoruBeni güvenlik uygulaması',
-            hint: 'Acil durumlarda yardım çağırın, konum paylaşın',
-            child: child ?? const SizedBox.shrink(),
-          ),
+          builder: (context, child) {
+            // Clamp text scale factor for accessibility & layout stability
+            final mediaQuery = MediaQuery.of(context);
+            final clampedTextScaler = mediaQuery.textScaler.clamp(
+              minScaleFactor: 1.0,
+              maxScaleFactor: 1.4,
+            );
+            return MediaQuery(
+              data: mediaQuery.copyWith(textScaler: clampedTextScaler),
+              child: Semantics(
+                label: 'KoruBeni güvenlik uygulaması',
+                hint: 'Acil durumlarda yardım çağırın, konum paylaşın',
+                child: child ?? const SizedBox.shrink(),
+              ),
+            );
+          },
           darkTheme: AppTheme.darkTheme,
           themeMode: ThemeMode.dark,
           localizationsDelegates: context.localizationDelegates,

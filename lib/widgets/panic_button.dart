@@ -8,7 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../core/app_colors.dart';
-import '../screens/pin_verification_screen.dart';
+import '../screens/countdown_screen.dart';
 
 class PanicButton extends StatefulWidget {
   const PanicButton({super.key});
@@ -96,30 +96,58 @@ class _PanicButtonState extends State<PanicButton>
     _holdTimer?.cancel();
     _holdSeconds = 0;
 
-    // Vibrate and navigate to PIN verification
+    // Vibrate and show cancellable countdown overlay
     HapticFeedback.vibrate();
 
-    Navigator.push(
-      context,
-      PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) =>
-            const PinVerificationScreen(),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          return FadeTransition(
-            opacity: animation,
-            child: SlideTransition(
-              position: Tween<Offset>(
-                begin: const Offset(0, 0.1),
-                end: Offset.zero,
-              ).animate(CurvedAnimation(
-                parent: animation,
-                curve: Curves.easeOutCubic,
-              )),
-              child: child,
+    _showCancellableCountdown();
+  }
+
+  void _showCancellableCountdown() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      barrierColor: Colors.black87,
+      builder: (ctx) => _PanicCountdownOverlay(
+        onComplete: () {
+          Navigator.of(ctx).pop();
+          Navigator.push(
+            context,
+            PageRouteBuilder(
+              pageBuilder: (context, animation, secondaryAnimation) =>
+                  const CountdownScreen(),
+              transitionsBuilder:
+                  (context, animation, secondaryAnimation, child) {
+                return FadeTransition(
+                  opacity: animation,
+                  child: SlideTransition(
+                    position: Tween<Offset>(
+                      begin: const Offset(0, 0.1),
+                      end: Offset.zero,
+                    ).animate(CurvedAnimation(
+                      parent: animation,
+                      curve: Curves.easeOutCubic,
+                    )),
+                    child: child,
+                  ),
+                );
+              },
+              transitionDuration: const Duration(milliseconds: 300),
             ),
           );
         },
-        transitionDuration: const Duration(milliseconds: 300),
+        onCancel: () {
+          Navigator.of(ctx).pop();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('panic_countdown_cancelled'.tr()),
+              backgroundColor: AppColors.success,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -429,5 +457,157 @@ class _ProgressRingPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _ProgressRingPainter oldDelegate) {
     return oldDelegate.progress != progress;
+  }
+}
+
+/// 10-second cancellable countdown overlay shown after panic button release.
+/// Large cancel button for panic/stress situations (one-handed use).
+class _PanicCountdownOverlay extends StatefulWidget {
+  final VoidCallback onComplete;
+  final VoidCallback onCancel;
+
+  const _PanicCountdownOverlay({
+    required this.onComplete,
+    required this.onCancel,
+  });
+
+  @override
+  State<_PanicCountdownOverlay> createState() =>
+      _PanicCountdownOverlayState();
+}
+
+class _PanicCountdownOverlayState extends State<_PanicCountdownOverlay>
+    with SingleTickerProviderStateMixin {
+  int _seconds = 10;
+  Timer? _timer;
+  late AnimationController _pulseController;
+
+  @override
+  void initState() {
+    super.initState();
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    )..repeat(reverse: true);
+
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (_seconds > 1) {
+        HapticFeedback.mediumImpact();
+        setState(() => _seconds--);
+      } else {
+        _timer?.cancel();
+        HapticFeedback.heavyImpact();
+        widget.onComplete();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _pulseController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return PopScope(
+      canPop: false,
+      child: Dialog.fullscreen(
+        backgroundColor: Colors.transparent,
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: RadialGradient(
+              center: Alignment.center,
+              radius: 1.0,
+              colors: [
+                AppColors.emergency.withValues(alpha: 0.15),
+                Colors.black.withValues(alpha: 0.95),
+              ],
+            ),
+          ),
+          child: SafeArea(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                AnimatedBuilder(
+                  animation: _pulseController,
+                  builder: (context, child) {
+                    final scale = 1.0 + (_pulseController.value * 0.08);
+                    return Transform.scale(scale: scale, child: child);
+                  },
+                  child: Container(
+                    width: 160,
+                    height: 160,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: AppColors.emergency.withValues(alpha: 0.15),
+                      border: Border.all(
+                        color: AppColors.emergency.withValues(alpha: 0.6),
+                        width: 4,
+                      ),
+                    ),
+                    child: Center(
+                      child: Text(
+                        '$_seconds',
+                        style: const TextStyle(
+                          fontSize: 72,
+                          fontWeight: FontWeight.w900,
+                          color: AppColors.emergency,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 32),
+                Text(
+                  'panic_countdown_title'.tr(),
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w900,
+                    color: Colors.white,
+                    letterSpacing: 1.5,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'panic_countdown_subtitle'.tr(),
+                  style: TextStyle(
+                    fontSize: 15,
+                    color: Colors.white.withValues(alpha: 0.7),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 60),
+                // Large cancel button for one-handed panic use
+                SizedBox(
+                  width: 220,
+                  height: 64,
+                  child: ElevatedButton(
+                    onPressed: widget.onCancel,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.success,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: Text(
+                      'panic_countdown_cancel'.tr(),
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 2,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }

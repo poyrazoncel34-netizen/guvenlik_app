@@ -103,11 +103,34 @@ class _ContactsPageState extends State<ContactsPage> {
             if (!provider.isLoading && !provider.hasContacts) ...[
               _buildEmptyContactsState(),
             ] else ...[
-              ...provider.emergencyContacts.asMap().entries.map((entry) {
-                final index = entry.key;
-                final contact = entry.value;
-                return _buildContactCard(context, index, contact, provider);
-              }),
+              Text(
+                'contacts_reorder_hint'.tr(),
+                style: const TextStyle(
+                  fontSize: 11,
+                  color: AppColors.textSecondary,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+              const SizedBox(height: 8),
+              SizedBox(
+                height: provider.emergencyContacts.length * 110.0,
+                child: ReorderableListView.builder(
+                  physics: const NeverScrollableScrollPhysics(),
+                  shrinkWrap: true,
+                  itemCount: provider.emergencyContacts.length,
+                  onReorder: (oldIndex, newIndex) {
+                    HapticFeedback.mediumImpact();
+                    provider.reorderContact(oldIndex, newIndex);
+                  },
+                  itemBuilder: (context, index) {
+                    final contact = provider.emergencyContacts[index];
+                    return KeyedSubtree(
+                      key: ValueKey(contact.phone),
+                      child: _buildContactCard(context, index, contact, provider),
+                    );
+                  },
+                ),
+              ),
             ],
 
             if (provider.isAtLimit) ...[

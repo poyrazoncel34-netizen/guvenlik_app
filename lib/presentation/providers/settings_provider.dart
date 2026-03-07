@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/constants/app_constants.dart';
+import '../../core/services/shake_detector_service.dart';
 import '../../core/services/volume_trigger_service.dart';
 
 class SettingsProvider extends ChangeNotifier {
@@ -10,6 +11,8 @@ class SettingsProvider extends ChangeNotifier {
   bool _soundEnabled = true;
   bool _vibrationEnabled = true;
   bool _volumeTriggerEnabled = false;
+  bool _shakeEnabled = true;
+  ShakeSensitivity _shakeSensitivity = ShakeSensitivity.medium;
   bool _loaded = false;
 
   String _profileName = '';
@@ -24,6 +27,8 @@ class SettingsProvider extends ChangeNotifier {
   bool get soundEnabled => _soundEnabled;
   bool get vibrationEnabled => _vibrationEnabled;
   bool get volumeTriggerEnabled => _volumeTriggerEnabled;
+  bool get shakeEnabled => _shakeEnabled;
+  ShakeSensitivity get shakeSensitivity => _shakeSensitivity;
   String get profileName =>
       _profileName.isEmpty ? "settings_default_user".tr() : _profileName;
   String get profileEmail => _profileEmail.isEmpty ? '' : _profileEmail;
@@ -51,6 +56,12 @@ class SettingsProvider extends ChangeNotifier {
       _vibrationEnabled = prefs.getBool(AppConstants.prefVibration) ?? true;
       _volumeTriggerEnabled =
           prefs.getBool(AppConstants.prefVolumeTrigger) ?? false;
+      _shakeEnabled =
+          prefs.getBool(AppConstants.prefShakeEnabled) ?? true;
+      final shakeSenIdx =
+          prefs.getInt(AppConstants.prefShakeSensitivity) ?? 1;
+      _shakeSensitivity =
+          ShakeSensitivity.values[shakeSenIdx.clamp(0, 2)];
       _loaded = true;
     }
     notifyListeners();
@@ -120,5 +131,19 @@ class SettingsProvider extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(AppConstants.prefVolumeTrigger, value);
     await VolumeTriggerService.instance.setEnabled(value);
+  }
+
+  Future<void> setShakeEnabled(bool value) async {
+    _shakeEnabled = value;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(AppConstants.prefShakeEnabled, value);
+  }
+
+  Future<void> setShakeSensitivity(ShakeSensitivity level) async {
+    _shakeSensitivity = level;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(AppConstants.prefShakeSensitivity, level.index);
   }
 }

@@ -43,7 +43,8 @@ class KoruBeniForegroundService {
 
     await flutterLocalNotificationsPlugin
         .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>()
+          AndroidFlutterLocalNotificationsPlugin
+        >()
         ?.createNotificationChannel(channel);
 
     await _service.configure(
@@ -113,10 +114,7 @@ class KoruBeniForegroundService {
 
   /// Bildirim metnini güncelle
   static void updateNotification(String title, String content) {
-    _service.invoke('updateNotification', {
-      'title': title,
-      'content': content,
-    });
+    _service.invoke('updateNotification', {'title': title, 'content': content});
   }
 }
 
@@ -131,6 +129,16 @@ Future<void> _onStart(ServiceInstance service) async {
 
   final FlutterLocalNotificationsPlugin notificationsPlugin =
       FlutterLocalNotificationsPlugin();
+  try {
+    await notificationsPlugin.initialize(
+      const InitializationSettings(
+        android: AndroidInitializationSettings('ic_bg_service_small'),
+        iOS: DarwinInitializationSettings(),
+      ),
+    );
+  } catch (_) {
+    // Best effort only.
+  }
 
   // "stop" komutu geldiğinde servisi durdur
   service.on('stop').listen((_) async {
