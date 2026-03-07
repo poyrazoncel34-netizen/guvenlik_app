@@ -61,6 +61,7 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
   }
 
   Future<void> _initLocation() async {
+    if (!mounted) return;
     setState(() {
       _isLoading = true;
     });
@@ -68,6 +69,7 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
     // First try to get last known location (faster)
     final lastKnown = await _locationRepository.getLastKnownLocation();
 
+    if (!mounted) return;
     if (lastKnown.isSuccess && lastKnown.position != null) {
       setState(() {
         _currentLocation = lastKnown.position;
@@ -78,6 +80,7 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
     // Then get current location (more accurate)
     final result = await _locationRepository.getCurrentLocation();
 
+    if (!mounted) return;
     setState(() {
       _isLoading = false;
       _locationStatus = result.status;
@@ -111,6 +114,7 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
 
     final result = await _locationRepository.getCurrentLocation();
 
+    if (!mounted) return;
     setState(() {
       _isLoading = false;
       _locationStatus = result.status;
@@ -150,6 +154,7 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
   }
 
   void _showPermissionError(LocationResult result) {
+    if (!mounted) return;
     String title;
     String message;
     String buttonText;
@@ -350,10 +355,7 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
     );
   }
 
-  Future<void> _startLocationSharing(
-    HomeProvider provider,
-    int minutes,
-  ) async {
+  Future<void> _startLocationSharing(HomeProvider provider, int minutes) async {
     final result = await provider.startLocationSharing(minutes);
     if (!result.isSuccess) {
       provider.stopLocationSharing(manual: true);
@@ -384,71 +386,76 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
       label: "semantics_map_page".tr(),
       hint: "semantics_map_page_hint".tr(),
       child: Scaffold(
-      body: Stack(
-        children: [
-          // Map
-          _shouldUseOfflineMapFallback ? _buildOfflineMapSurface() : _buildMap(),
-          if (!_shouldUseOfflineMapFallback)
+        body: Stack(
+          children: [
+            // Map
+            _shouldUseOfflineMapFallback
+                ? _buildOfflineMapSurface()
+                : _buildMap(),
+            if (!_shouldUseOfflineMapFallback)
+              Positioned(
+                left: 12,
+                bottom: 130,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.6),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Text(
+                    "© OpenStreetMap contributors",
+                    style: TextStyle(fontSize: 10, color: Colors.white70),
+                  ),
+                ),
+              ),
+
+            // Top gradient for status bar
             Positioned(
-              left: 12,
-              bottom: 130,
+              top: 0,
+              left: 0,
+              right: 0,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                height: MediaQuery.of(context).padding.top + 60,
                 decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.6),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Text(
-                  "© OpenStreetMap contributors",
-                  style: TextStyle(fontSize: 10, color: Colors.white70),
-                ),
-              ),
-            ),
-
-          // Top gradient for status bar
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: Container(
-              height: MediaQuery.of(context).padding.top + 60,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.black.withValues(alpha: 0.3),
-                    Colors.transparent,
-                  ],
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.black.withValues(alpha: 0.3),
+                      Colors.transparent,
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
 
-          // App bar
-          Positioned(
-            top: MediaQuery.of(context).padding.top + 10,
-            left: 16,
-            right: 16,
-            child: _buildCustomAppBar(),
-          ),
+            // App bar
+            Positioned(
+              top: MediaQuery.of(context).padding.top + 10,
+              left: 16,
+              right: 16,
+              child: _buildCustomAppBar(),
+            ),
 
-          // Loading overlay
-          if (_isLoading) _buildLoadingOverlay(),
+            // Loading overlay
+            if (_isLoading) _buildLoadingOverlay(),
 
-          // Bottom controls
-          Positioned(
-            bottom: 24,
-            left: 16,
-            right: 16,
-            child: _buildBottomControls(),
-          ),
+            // Bottom controls
+            Positioned(
+              bottom: 24,
+              left: 16,
+              right: 16,
+              child: _buildBottomControls(),
+            ),
 
-          // My location FAB
-          Positioned(bottom: 200, right: 16, child: _buildMyLocationFab()),
-        ],
+            // My location FAB
+            Positioned(bottom: 200, right: 16, child: _buildMyLocationFab()),
+          ],
+        ),
       ),
-    ),
     );
   }
 

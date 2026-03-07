@@ -5,8 +5,16 @@ class ContactsLocalDataSource {
     return ContactService.getContacts();
   }
 
+  Future<List<EmergencyContact>> getContactRecords() {
+    return ContactService.getContactRecords();
+  }
+
   Future<void> saveContacts(List<String> numbers) {
     return ContactService.saveContacts(numbers);
+  }
+
+  Future<void> saveContactRecords(List<EmergencyContact> contacts) {
+    return ContactService.saveContactRecords(contacts);
   }
 
   Future<EmergencyContact?> getPrimaryEmergencyContact() {
@@ -18,6 +26,10 @@ class ContactsLocalDataSource {
     required String phone,
   }) {
     return ContactService.savePrimaryEmergencyContact(name: name, phone: phone);
+  }
+
+  Future<void> clearPrimaryEmergencyContact() {
+    return ContactService.clearPrimaryEmergencyContact();
   }
 
   Future<List<String>> getAllEmergencyNumbers() {

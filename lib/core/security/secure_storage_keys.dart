@@ -4,6 +4,7 @@ class SecureStorageKeys {
   static const String fakeCallNumber = 'fake_call_number';
   static const String fakeCallAvatar = 'fake_call_avatar';
   static const String contactsList = 'contacts_list';
+  static const String contactsData = 'contacts_data';
   static const String emergencyContactsList = 'emergency_contacts_list';
   static const String emergencyContactName = 'emergency_contact_name';
   static const String emergencyContactPhone = 'emergency_contact_phone';

@@ -12,16 +12,16 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../constants/app_constants.dart';
+
 /// Ses tuşu ile acil durum tetikleme servisi.
 ///
 /// Android'de native [VolumeButtonDetector] ile iletişim kurar.
 /// iOS'ta henüz desteklenmez (API kısıtlaması).
 class VolumeTriggerService {
-  static const String _eventChannel =
-      'com.poyrazoncel.korubeni/volume_button';
+  static const String _eventChannel = 'com.poyrazoncel.korubeni/volume_button';
   static const String _controlChannel =
       'com.poyrazoncel.korubeni/volume_button/control';
-  static const String _prefKey = 'volume_trigger_enabled';
 
   static VolumeTriggerService? _instance;
   static VolumeTriggerService get instance =>
@@ -48,7 +48,7 @@ class VolumeTriggerService {
   Future<void> loadPreference() async {
     if (!isSupported) return;
     final prefs = await SharedPreferences.getInstance();
-    _isEnabled = prefs.getBool(_prefKey) ?? false;
+    _isEnabled = prefs.getBool(AppConstants.prefVolumeTrigger) ?? false;
   }
 
   /// Tercihi kaydet ve native tarafı güncelle.
@@ -56,7 +56,7 @@ class VolumeTriggerService {
     if (!isSupported) return;
     _isEnabled = enabled;
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_prefKey, enabled);
+    await prefs.setBool(AppConstants.prefVolumeTrigger, enabled);
 
     try {
       await _control.invokeMethod('setEnabled', {'enabled': enabled});

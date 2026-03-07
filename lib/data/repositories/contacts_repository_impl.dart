@@ -13,8 +13,18 @@ class ContactsRepositoryImpl implements ContactsRepository {
   }
 
   @override
+  Future<List<EmergencyContact>> getContactRecords() {
+    return _local.getContactRecords();
+  }
+
+  @override
   Future<void> saveContacts(List<String> numbers) {
     return _local.saveContacts(numbers);
+  }
+
+  @override
+  Future<void> saveContactRecords(List<EmergencyContact> contacts) {
+    return _local.saveContactRecords(contacts);
   }
 
   @override
@@ -28,6 +38,11 @@ class ContactsRepositoryImpl implements ContactsRepository {
     required String phone,
   }) {
     return _local.savePrimaryEmergencyContact(name: name, phone: phone);
+  }
+
+  @override
+  Future<void> clearPrimaryEmergencyContact() {
+    return _local.clearPrimaryEmergencyContact();
   }
 
   @override

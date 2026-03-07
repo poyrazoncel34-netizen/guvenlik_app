@@ -24,7 +24,8 @@ class SettingsProvider extends ChangeNotifier {
   bool get soundEnabled => _soundEnabled;
   bool get vibrationEnabled => _vibrationEnabled;
   bool get volumeTriggerEnabled => _volumeTriggerEnabled;
-  String get profileName => _profileName.isEmpty ? "settings_default_user".tr() : _profileName;
+  String get profileName =>
+      _profileName.isEmpty ? "settings_default_user".tr() : _profileName;
   String get profileEmail => _profileEmail.isEmpty ? '' : _profileEmail;
   String get bloodType => _bloodType;
   String get allergies => _allergies;
@@ -38,7 +39,8 @@ class SettingsProvider extends ChangeNotifier {
     _profileEmail = prefs.getString(AppConstants.prefProfileEmail) ?? '';
     _bloodType = prefs.getString(AppConstants.prefBloodType) ?? '';
     _allergies = prefs.getString(AppConstants.prefAllergies) ?? '';
-    _medicalConditions = prefs.getString(AppConstants.prefMedicalConditions) ?? '';
+    _medicalConditions =
+        prefs.getString(AppConstants.prefMedicalConditions) ?? '';
     _emergencyNotes = prefs.getString(AppConstants.prefEmergencyNotes) ?? '';
 
     if (!_loaded) {
@@ -47,7 +49,8 @@ class SettingsProvider extends ChangeNotifier {
       _locationEnabled = prefs.getBool(AppConstants.prefLocation) ?? true;
       _soundEnabled = prefs.getBool(AppConstants.prefSound) ?? true;
       _vibrationEnabled = prefs.getBool(AppConstants.prefVibration) ?? true;
-      _volumeTriggerEnabled = prefs.getBool('pref_volume_trigger') ?? false;
+      _volumeTriggerEnabled =
+          prefs.getBool(AppConstants.prefVolumeTrigger) ?? false;
       _loaded = true;
     }
     notifyListeners();
@@ -66,8 +69,14 @@ class SettingsProvider extends ChangeNotifier {
     await prefs.setString(AppConstants.prefProfileEmail, email.trim());
     await prefs.setString(AppConstants.prefBloodType, bloodType.trim());
     await prefs.setString(AppConstants.prefAllergies, allergies.trim());
-    await prefs.setString(AppConstants.prefMedicalConditions, medicalConditions.trim());
-    await prefs.setString(AppConstants.prefEmergencyNotes, emergencyNotes.trim());
+    await prefs.setString(
+      AppConstants.prefMedicalConditions,
+      medicalConditions.trim(),
+    );
+    await prefs.setString(
+      AppConstants.prefEmergencyNotes,
+      emergencyNotes.trim(),
+    );
     _profileName = name.trim();
     _profileEmail = email.trim();
     _bloodType = bloodType.trim();
@@ -109,7 +118,7 @@ class SettingsProvider extends ChangeNotifier {
     _volumeTriggerEnabled = value;
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('pref_volume_trigger', value);
+    await prefs.setBool(AppConstants.prefVolumeTrigger, value);
     await VolumeTriggerService.instance.setEnabled(value);
   }
 }
