@@ -1,12 +1,11 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter_direct_caller_plugin/flutter_direct_caller_plugin.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../core/app_colors.dart';
 import '../core/services/contact_service.dart';
 import '../core/services/biometric_service.dart';
+import '../core/services/call_service.dart';
 import '../core/services/sms_service.dart';
 import '../core/di/service_locator.dart';
 import '../core/security/secure_storage.dart';
@@ -146,27 +145,21 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
     try {
       final allNumbers = await ContactService.getAllEmergencyNumbers();
       final smsNumbers = allNumbers.isNotEmpty ? allNumbers : [emergencyNumber];
-      await SmsService.sendSms(numbers: smsNumbers, message: smsMessage);
-      debugPrint('✅ PinVerification: SMS sent');
-    } catch (e) {
-      debugPrint('❌ PinVerification: SMS failed: $e');
-      // CRITICAL: SMS başarısız olsa bile aramaya devam et
-    }
+      final smsResult = await SmsService.sendSms(
+        numbers: smsNumbers,
+        message: smsMessage,
+      );
 
-    // 3. Doğrudan arama yap — başarısız olursa tel: URI fallback
-    try {
-      bool callMade = false;
-      try {
-        await FlutterDirectCallerPlugin.callNumber(emergencyNumber);
-        callMade = true;
-      } catch (_) {
-        callMade = false;
-      }
-      if (!callMade) {
-        try {
-          final telUri = Uri(scheme: 'tel', path: emergencyNumber);
-          await launchUrl(telUri, mode: LaunchMode.externalApplication);
-        } catch (_) {}
+      final callResult = await CallService.startEmergencyCall(emergencyNumber);
+
+      if (!smsResult.isSuccess && !callResult.isSuccess) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('emergency_action_failed'.tr())),
+          );
+          Navigator.pop(context);
+        }
+        return;
       }
 
       if (mounted) {
@@ -174,8 +167,12 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
           context,
           MaterialPageRoute(
             builder: (context) => EmergencyCallScreen(
-              name: _emergencyContact?.name ?? "pin_verify_emergency_contact".tr(),
+              name:
+                  _emergencyContact?.name ??
+                  "pin_verify_emergency_contact".tr(),
               phone: emergencyNumber,
+              callStatusMessage: callResult.statusMessage,
+              smsStatusMessage: smsResult.statusMessage,
             ),
           ),
         );

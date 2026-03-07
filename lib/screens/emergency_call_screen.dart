@@ -5,15 +5,20 @@
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../core/app_colors.dart';
+import '../core/services/foreground_service.dart';
 
 class EmergencyCallScreen extends StatefulWidget {
   final String name;
   final String phone;
+  final String callStatusMessage;
+  final String? smsStatusMessage;
 
   const EmergencyCallScreen({
     super.key,
     this.name = "",
     this.phone = "",
+    this.callStatusMessage = "",
+    this.smsStatusMessage,
   });
 
   @override
@@ -41,6 +46,10 @@ class _EmergencyCallScreenState extends State<EmergencyCallScreen>
 
   @override
   Widget build(BuildContext context) {
+    final callStatus = widget.callStatusMessage.isEmpty
+        ? "emergency_call_dialing".tr()
+        : widget.callStatusMessage;
+
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
@@ -115,15 +124,30 @@ class _EmergencyCallScreenState extends State<EmergencyCallScreen>
                         ),
                         const SizedBox(width: 10),
                         Text(
-                          "emergency_call_ringing".tr(),
+                          callStatus,
                           style: TextStyle(
                             color: Colors.white.withValues(alpha: 0.75),
-                            fontSize: 17,
+                            fontSize: 16,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
                       ],
                     ),
+                    if (widget.smsStatusMessage != null) ...[
+                      const SizedBox(height: 16),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 32),
+                        child: Text(
+                          widget.smsStatusMessage!,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: Colors.white60,
+                            fontSize: 13,
+                            height: 1.4,
+                          ),
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -144,9 +168,11 @@ class _EmergencyCallScreenState extends State<EmergencyCallScreen>
                     Material(
                       color: Colors.transparent,
                       child: InkWell(
-                        onTap: () => Navigator.of(
-                          context,
-                        ).popUntil((route) => route.isFirst),
+                        onTap: () async {
+                          await KoruBeniForegroundService.stop();
+                          if (!context.mounted) return;
+                          Navigator.of(context).popUntil((route) => route.isFirst);
+                        },
                         customBorder: const CircleBorder(),
                         child: Container(
                           width: 76,

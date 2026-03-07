@@ -9,6 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/services/activity_service.dart';
 import '../../core/services/contact_service.dart';
 import '../../core/di/service_locator.dart';
+import '../../core/services/foreground_service.dart';
 import '../../core/utils/permission_helper.dart';
 import '../../core/services/location_service.dart';
 import '../../domain/models/activity_event.dart' as app_activity;
@@ -120,7 +121,27 @@ class HomeProvider extends ChangeNotifier {
     return null;
   }
 
-  Future<String?> startLocationSharing(int minutes) async {
+  Future<SmsComposeResult> startLocationSharing(int minutes) async {
+    final numbers = await _contactsRepository.getAllEmergencyNumbers();
+    if (numbers.isEmpty) {
+      return SmsComposeResult.failed('emergency_contact_not_found'.tr());
+    }
+
+    final result = await _locationService.getCurrentLocation();
+    if (!result.isSuccess || result.position == null) {
+      return SmsComposeResult.failed('location_unavailable'.tr());
+    }
+
+    final lat = result.position!.latitude;
+    final lng = result.position!.longitude;
+    final url = 'https://www.google.com/maps/search/?api=1&query=$lat,$lng';
+    final message = 'location_share_message'.tr(namedArgs: {'url': url});
+    final smsResult = await SmsService.sendSms(numbers: numbers, message: message);
+
+    if (!smsResult.isSuccess) {
+      return smsResult;
+    }
+
     _locationShareEndAt = DateTime.now().add(Duration(minutes: minutes));
     _isLocationSharing = true;
     _locationShareTimer?.cancel();
@@ -135,19 +156,25 @@ class HomeProvider extends ChangeNotifier {
         notifyListeners();
       }
     });
+    await KoruBeniForegroundService.start();
+    KoruBeniForegroundService.updateNotification(
+      'foreground_location_share_title'.tr(),
+      'foreground_location_share_body'.tr(namedArgs: {'minutes': '$minutes'}),
+    );
     notifyListeners();
     ActivityService.logEvent(
       type: app_activity.ActivityType.locationShared,
       title: "home_location_shared_title".tr(),
       description: "home_location_shared_desc".tr(namedArgs: {'minutes': '$minutes'}),
     );
-    return await _sendLocationShareSms();
+    return smsResult;
   }
 
   void stopLocationSharing({bool manual = false}) {
     _locationShareTimer?.cancel();
     _locationShareEndAt = null;
     _isLocationSharing = false;
+    KoruBeniForegroundService.stop();
     if (!manual) {
       _pendingMessage = "home_location_sharing_ended".tr();
     }
@@ -160,34 +187,13 @@ class HomeProvider extends ChangeNotifier {
     return message;
   }
 
-  Future<String?> sendQuickMessage(String message) async {
+  Future<SmsComposeResult> sendQuickMessage(String message) async {
     final numbers = await _contactsRepository.getAllEmergencyNumbers();
     if (numbers.isEmpty) {
-      return 'emergency_contact_not_found'.tr();
+      return SmsComposeResult.failed('emergency_contact_not_found'.tr());
     }
     return SmsService.sendSms(numbers: numbers, message: message);
   }
-
-  Future<String?> _sendLocationShareSms() async {
-    final numbers = await _contactsRepository.getAllEmergencyNumbers();
-    if (numbers.isEmpty) {
-      return 'emergency_contact_not_found'.tr();
-    }
-
-    final result = await _locationService.getCurrentLocation();
-    if (!result.isSuccess || result.position == null) {
-      return 'location_unavailable'.tr();
-    }
-
-    final lat = result.position!.latitude;
-    final lng = result.position!.longitude;
-    // Offline-first: No cloud sync, location used locally only
-    final url = 'https://www.google.com/maps/search/?api=1&query=$lat,$lng';
-    final message = 'location_share_message'.tr(namedArgs: {'url': url});
-    return SmsService.sendSms(numbers: numbers, message: message);
-  }
-
-
 
   @override
   void dispose() {

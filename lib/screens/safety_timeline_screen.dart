@@ -148,7 +148,7 @@ class _SafetyTimelineScreenState extends State<SafetyTimelineScreen> {
     if (notes.isNotEmpty) parts.add("timeline_share_notes".tr(namedArgs: {'notes': notes}));
 
     final message = parts.join('\n');
-    await SmsService.sendSms(numbers: numbers, message: message);
+    final smsResult = await SmsService.sendSms(numbers: numbers, message: message);
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -157,10 +157,16 @@ class _SafetyTimelineScreenState extends State<SafetyTimelineScreen> {
             children: [
               const Icon(Icons.send_rounded, color: Colors.white, size: 20),
               const SizedBox(width: 10),
-              Expanded(child: Text("timeline_shared".tr())),
+              Expanded(
+                child: Text(
+                  smsResult.inlineNotice ?? "timeline_shared_ready".tr(),
+                ),
+              ),
             ],
           ),
-          backgroundColor: AppColors.primary,
+          backgroundColor: smsResult.isSuccess
+              ? AppColors.primary
+              : AppColors.warning,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),

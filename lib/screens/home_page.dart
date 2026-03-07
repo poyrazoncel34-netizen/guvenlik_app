@@ -6,12 +6,9 @@ import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:provider/provider.dart';
 import '../core/app_colors.dart';
-import '../core/services/shake_detector_service.dart';
-import '../core/services/volume_trigger_service.dart';
-import '../core/services/haptic_service.dart';
 import '../core/services/audio_recorder_service.dart';
 import '../core/services/connectivity_service.dart';
 // Analytics service removed (offline-first)
@@ -37,7 +34,6 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   late AnimationController _headerController;
   late AnimationController _cardsController;
-  final ShakeDetectorService _shakeDetector = ShakeDetectorService();
   bool _isRecording = false;
   StreamSubscription<bool>? _connectivitySubscription;
 
@@ -90,40 +86,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<HomeProvider>().initialize();
-      _initShakeDetection();
-      _initVolumeTrigger();
       _initConnectivity();
     });
     // Analytics removed (offline-first)
-  }
-
-  void _initShakeDetection() {
-    _shakeDetector.startListening(
-      onShakeDetected: () {
-        if (!mounted) return;
-        HapticFeedback.heavyImpact();
-        // Analytics removed (offline-first)
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const CountdownScreen()),
-        );
-      },
-    );
-  }
-
-  Future<void> _initVolumeTrigger() async {
-    if (!VolumeTriggerService.isSupported) return;
-    await VolumeTriggerService.instance.loadPreference();
-    VolumeTriggerService.instance.startListening(
-      onPanicTriggered: () {
-        if (!mounted) return;
-        HapticService.volumePanicTrigger();
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const CountdownScreen()),
-        );
-      },
-    );
   }
 
   void _initConnectivity() {
@@ -172,8 +137,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     _connectivitySubscription?.cancel();
     _headerController.dispose();
     _cardsController.dispose();
-    _shakeDetector.dispose();
-    VolumeTriggerService.instance.stopListening();
     super.dispose();
   }
 
@@ -208,9 +171,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               ),
               onTap: () async {
                 Navigator.pop(context);
-                final message = await provider.sendQuickMessage(text);
-                if (message != null && context.mounted) {
-                  _showSnack(message);
+                final result = await provider.sendQuickMessage(text);
+                final notice = result.inlineNotice;
+                if (notice != null && context.mounted) {
+                  _showSnack(notice);
                 }
               },
             );
@@ -1301,10 +1265,13 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   Future<void> _startLocationSharing(int minutes) async {
     final provider = context.read<HomeProvider>();
     HapticFeedback.lightImpact();
-    final message = await provider.startLocationSharing(minutes);
-    if (message != null && context.mounted) {
+    final result = await provider.startLocationSharing(minutes);
+    if (!result.isSuccess && context.mounted) {
       provider.stopLocationSharing(manual: true);
-      _showSnack(message);
+    }
+    final notice = result.inlineNotice;
+    if (notice != null && context.mounted) {
+      _showSnack(notice);
     }
   }
 
