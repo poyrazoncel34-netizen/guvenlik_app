@@ -7,7 +7,6 @@
 
 import 'package:flutter_test/flutter_test.dart';
 import 'chaos_test_helpers.dart';
-import '../../lib/core/services/emergency_core_service.dart';
 import '../../lib/core/services/atomic_storage_service.dart';
 
 void main() {

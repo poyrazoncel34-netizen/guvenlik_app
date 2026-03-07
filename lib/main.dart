@@ -85,20 +85,31 @@ void main() async {
       ConnectivityService.instance.initialize(),
       KoruBeniForegroundService.configure(),
     ]);
-    debugPrint('>>> All services initialized in parallel');
+    // Services ready - app launches instantly
   } catch (e) {
-    debugPrint('>>> Service initialization error (non-fatal): $e');
+    // Non-fatal - app continues
   }
 
   // Error handling for Flutter errors (no Firebase Crashlytics)
   FlutterError.onError = (details) {
-    debugPrint('FlutterError: ${details.exception}');
-    // Log to console only in offline-first mode
+    // Offline-first: console logging only
+    assert(() {
+      debugPrint('FlutterError: ${details.exception}');
+      return true;
+    }());
   };
   
+  // Zero-fault: Fatal hataları yutma - return false ile standart hata yönetimine bırak
+  // return true = "hata işlendi" (sessizce yutulur, beyaz ekranda kilit kalabilir)
+  // return false = Flutter/Dart standart işleyişi devam eder
   PlatformDispatcher.instance.onError = (error, stack) {
-    debugPrint('PlatformError: $error');
-    return true;
+    assert(() {
+      debugPrint('PlatformDispatcher.onError: $error');
+      return true;
+    }());
+    // Kritik hatalarda uygulamanın kilitli kalması yerine standart hata yönetiminin
+    // çalışmasına izin ver (ErrorWidget, crash reporting vb.)
+    return false;
   };
 
   SystemChrome.setSystemUIOverlayStyle(
@@ -114,7 +125,6 @@ void main() async {
     DeviceOrientation.portraitDown,
   ]);
 
-  debugPrint('>>> Running app (offline-first mode)...');
   runApp(
     EasyLocalization(
       supportedLocales: const [Locale('tr', 'TR'), Locale('en', 'US')],
@@ -134,7 +144,6 @@ class KoruBeniApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    debugPrint('>>> KoruBeniApp.build()');
     return MultiProvider(
       providers: AppProviders.providers,
       child: MaterialApp(

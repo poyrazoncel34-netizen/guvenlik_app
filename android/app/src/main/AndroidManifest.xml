@@ -1,12 +1,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
-    <!-- Location Permissions for GPS -->
+    <!-- Location for emergency GPS -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <!-- Background location removed for store compliance (request only if truly required) -->
     
-    <!-- Internet Permission for Map Tiles -->
-    <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Offline-first: No INTERNET - app uses only SMS, Call, GPS -->
     <!-- Contacts Permission -->
     <uses-permission android:name="android.permission.READ_CONTACTS" />
     <!-- Photo Library Permission (Android 13+) -->
@@ -116,8 +115,6 @@
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
         </intent>
-    </queries>
-    <queries>
         <intent>
             <action android:name="android.intent.action.DIAL" />
             <data android:scheme="tel" />

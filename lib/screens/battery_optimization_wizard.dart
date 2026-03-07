@@ -14,6 +14,7 @@ import 'package:optimize_battery/optimize_battery.dart';
 import 'package:easy_localization/easy_localization.dart';
 
 import '../core/app_colors.dart';
+import '../core/utils/permission_helper.dart';
 
 /// Key for battery optimization wizard seen flag
 const String _kBatteryWizardSeenKey = 'battery_optimization_wizard_seen';
@@ -63,11 +64,17 @@ class _BatteryOptimizationWizardState extends State<BatteryOptimizationWizard> {
     } catch (_) {}
   }
 
-  Future<void> _requestDisableOptimization() async {
+  /// Pil kısıtlamasını kaldır - PermissionHelper ile Prominent Disclosure önce gösterilir.
+  Future<void> _requestDisableOptimization(BuildContext context) async {
+    if (!mounted) return;
     try {
-      await OptimizeBattery.stopOptimizingBatteryUsage();
-      await Future.delayed(const Duration(milliseconds: 500));
-      await _checkStatus();
+      final success = await PermissionHelper.requestBatteryOptimizationExemption(
+        context,
+      );
+      if (success) {
+        await Future.delayed(const Duration(milliseconds: 500));
+        await _checkStatus();
+      }
     } catch (e) {
       debugPrint('Battery optimization request failed: $e');
     }
@@ -201,7 +208,7 @@ class _BatteryOptimizationWizardState extends State<BatteryOptimizationWizard> {
                   child: ElevatedButton.icon(
                     onPressed: () {
                       HapticFeedback.mediumImpact();
-                      _requestDisableOptimization();
+                      _requestDisableOptimization(context);
                     },
                     icon: const Icon(Icons.battery_saver_rounded, size: 22),
                     label: Text(

@@ -92,48 +92,50 @@
   <div class="lang-switch"><a href="#english">🇬🇧 English Version Below</a></div>
 
   <h1>🛡️ KoruBeni — Gizlilik Politikası</h1>
-  <p class="date">Son güncelleme: 16 Şubat 2026</p>
+  <p class="date">Son güncelleme: 7 Mart 2026</p>
 
   <div class="section">
     <h2>1. Giriş</h2>
     <p>KoruBeni ("Uygulama"), kişisel güvenliğinizi artırmak amacıyla geliştirilmiş bir mobil uygulamadır. Gizliliğinizi
       ciddiye alıyoruz. Bu politika, hangi verileri topladığımızı, nasıl kullandığımızı ve nasıl koruduğumuzu açıklar.
     </p>
+    <p><strong>KoruBeni tamamen çevrimdışı çalışan (offline-first) bir uygulamadır.</strong> Verileriniz hiçbir bulut
+      sunucusuna gönderilmez; tüm veriler yalnızca cihazınızda saklanır.</p>
   </div>
 
   <div class="section">
     <h2>2. Topladığımız Veriler</h2>
 
-    <h3>2.1. Hesap Bilgileri</h3>
+    <h3>2.1. Kullanıcı Bilgileri</h3>
     <ul>
-      <li>Telefon numarası (Firebase Authentication ile doğrulama için)</li>
-      <li>Profil adı ve fotoğrafı (isteğe bağlı)</li>
+      <li>Profil adı ve fotoğrafı (isteğe bağlı, yalnızca cihazınızda saklanır)</li>
+      <li>PIN kodu (cihaz üzerinde AES şifreleme ile güvenli depolamada saklanır, hiçbir sunucuya gönderilmez)</li>
     </ul>
 
     <h3>2.2. Konum Verileri</h3>
     <ul>
       <li>GPS konumunuz yalnızca acil durum tetiklendiğinde veya konum paylaşımı aktifken toplanır</li>
       <li>Konum verisi acil durum kişilerinize SMS ile gönderilir</li>
-      <li>Arka planda sürekli konum takibi yapılmaz</li>
+      <li>Konum verileri hiçbir sunucuya iletilmez, yalnızca SMS mesajına eklenir</li>
     </ul>
 
     <h3>2.3. Kişi Bilgileri</h3>
     <ul>
       <li>Acil durum kişisi olarak seçtiğiniz kişilerin adı ve telefon numarası</li>
-      <li>Bu bilgiler yalnızca cihazınızda ve Firebase'de güvenli şekilde saklanır</li>
+      <li>Bu bilgiler yalnızca cihazınızda şifrelenmiş olarak saklanır</li>
     </ul>
 
-    <h3>2.4. Cihaz ve Kullanım Verileri</h3>
-    <ul>
-      <li>Uygulama çökme raporları (Firebase Crashlytics)</li>
-      <li>Anonim kullanım istatistikleri (Firebase Analytics)</li>
-      <li>Push notification token'ları (Firebase Cloud Messaging)</li>
-    </ul>
-
-    <h3>2.5. Ses Kayıtları</h3>
+    <h3>2.4. Ses Kayıtları</h3>
     <ul>
       <li>Ses kaydı özelliği kullanıldığında, kayıtlar yalnızca cihazınızda saklanır</li>
-      <li>Ses dosyaları sunucularımıza yüklenmez</li>
+      <li>Ses dosyaları hiçbir sunucuya yüklenmez</li>
+    </ul>
+
+    <h3>2.5. Toplamadığımız Veriler</h3>
+    <ul>
+      <li>Anonim kullanım istatistikleri <strong>toplanmaz</strong></li>
+      <li>Çökme raporları hiçbir sunucuya <strong>gönderilmez</strong></li>
+      <li>Mesaj içerikleri, arama kayıtları, tarama geçmişi <strong>toplanmaz</strong></li>
     </ul>
   </div>
 
@@ -141,29 +143,33 @@
     <h2>3. Verilerin Kullanımı</h2>
     <p>Topladığımız verileri şu amaçlarla kullanırız:</p>
     <ul>
-      <li>Acil durumlarda konumunuzu ve mesajınızı belirlediğiniz kişilere iletmek</li>
-      <li>Kimlik doğrulama ve hesap güvenliği</li>
-      <li>Uygulama performansını iyileştirmek ve hataları gidermek</li>
-      <li>Bildirim göndermek</li>
+      <li>Acil durumlarda konumunuzu ve mesajınızı belirlediğiniz kişilere SMS ile iletmek</li>
+      <li>Acil durum kişinizi otomatik aramak</li>
+      <li>PIN ve biyometrik doğrulama ile uygulama güvenliğini sağlamak</li>
+      <li>Güvenlik bildirimleri göndermek (yalnızca yerel bildirimler)</li>
     </ul>
   </div>
 
   <div class="section">
     <h2>4. Veri Paylaşımı</h2>
-    <p>Kişisel verilerinizi üçüncü taraflarla <strong>satmayız</strong>. Veriler yalnızca şu hizmet sağlayıcılarla
-      paylaşılır:</p>
+    <p>Kişisel verilerinizi üçüncü taraflarla <strong>satmayız</strong> ve hiçbir bulut hizmetine
+      <strong>göndermeyiz</strong>.</p>
     <ul>
-      <li><strong>Google Firebase</strong> — Kimlik doğrulama, veritabanı, çökme raporları, bildirimler</li>
-      <li><strong>Google Maps</strong> — Konum bağlantıları (SMS ile paylaşılan harita linkleri)</li>
+      <li><strong>Acil durum kişileri:</strong> Acil durum tetiklendiğinde, konumunuz yalnızca SMS ile belirlediğiniz
+        kişilere iletilir</li>
+      <li><strong>Google Maps:</strong> SMS'teki konum bağlantısı Google Maps URL formatında oluşturulur (veri
+        gönderilmez, sadece harita linki oluşturulur)</li>
+      <li><strong>OpenStreetMap:</strong> Harita görüntüleme için kullanılır (kişisel veri toplanmaz)</li>
     </ul>
   </div>
 
   <div class="section">
     <h2>5. Veri Güvenliği</h2>
     <ul>
-      <li>PIN kodunuz ve hassas verileriniz <strong>AES şifreleme</strong> ile korunur (Flutter Secure Storage)</li>
+      <li>PIN kodunuz ve hassas verileriniz <strong>AES şifreleme</strong> ile korunur (Flutter Secure Storage / Android
+        Keystore)</li>
       <li>Biyometrik doğrulama (parmak izi / yüz tanıma) desteklenir</li>
-      <li>Firebase bağlantıları SSL/TLS ile şifrelenir</li>
+      <li>Tüm veriler yalnızca cihazınızda saklanır — bulut sunucusuna aktarılmaz</li>
       <li>Ses kayıtları ve fotoğraflar yalnızca cihazınızda saklanır</li>
     </ul>
   </div>
@@ -177,7 +183,7 @@
       </tr>
       <tr style="border-bottom:1px solid #1E3A52;">
         <td style="padding:8px;">📍 Konum</td>
-        <td style="padding:8px;">Acil durumlarda konumunuzu paylaşmak için</td>
+        <td style="padding:8px;">Acil durumlarda konumunuzu SMS ile paylaşmak için</td>
       </tr>
       <tr style="border-bottom:1px solid #1E3A52;">
         <td style="padding:8px;">📱 Kişiler</td>
@@ -189,7 +195,7 @@
       </tr>
       <tr style="border-bottom:1px solid #1E3A52;">
         <td style="padding:8px;">💬 SMS</td>
-        <td style="padding:8px;">Acil durum mesajı göndermek için (Android)</td>
+        <td style="padding:8px;">Acil durum mesajı ve konum bilgisi göndermek için</td>
       </tr>
       <tr style="border-bottom:1px solid #1E3A52;">
         <td style="padding:8px;">🎤 Mikrofon</td>
@@ -197,11 +203,11 @@
       </tr>
       <tr style="border-bottom:1px solid #1E3A52;">
         <td style="padding:8px;">🔔 Bildirimler</td>
-        <td style="padding:8px;">Güvenlik bildirimleri için</td>
+        <td style="padding:8px;">Güvenlik bildirimleri için (yalnızca yerel)</td>
       </tr>
       <tr>
         <td style="padding:8px;">🔐 Biyometrik</td>
-        <td style="padding:8px;">Hızlı ve güvenli giriş için</td>
+        <td style="padding:8px;">Hızlı ve güvenli erişim için</td>
       </tr>
     </table>
   </div>
@@ -217,68 +223,70 @@
     <ul>
       <li>Verilerinize erişim talep etme</li>
       <li>Verilerinizin düzeltilmesini isteme</li>
-      <li>Verilerinizin silinmesini talep etme</li>
+      <li>Verilerinizin silinmesini talep etme (uygulama verilerini silmek için uygulamayı kaldırmanız yeterlidir)</li>
       <li>Veri işlenmesine itiraz etme</li>
-      <li>Veri taşınabilirliği talep etme</li>
     </ul>
-    <p>Bu haklarınızı kullanmak için <a href="mailto:destek@korubeni.com">destek@korubeni.com</a> adresine e-posta
-      gönderebilirsiniz.</p>
+    <p>Sorularınız için: <a href="mailto:poyrazoncel02@gmail.com">poyrazoncel02@gmail.com</a></p>
   </div>
 
   <div class="section">
     <h2>9. Değişiklikler</h2>
-    <p>Bu gizlilik politikası güncellenebilir. Önemli değişiklikler uygulama içinden bildirilecektir.</p>
+    <p>Bu gizlilik politikası güncellenebilir. Güncel halini bu sayfada bulabilirsiniz.</p>
   </div>
 
   <div class="section">
     <h2>10. İletişim</h2>
-    <p>Sorularınız için: <a href="mailto:destek@korubeni.com">destek@korubeni.com</a></p>
+    <p>Geliştirici: Poyraz Öncel</p>
+    <p>E-posta: <a href="mailto:poyrazoncel02@gmail.com">poyrazoncel02@gmail.com</a></p>
+    <p>Konum: Türkiye</p>
   </div>
 
   <hr>
 
   <h1 id="english">🛡️ KoruBeni — Privacy Policy</h1>
-  <p class="date">Last updated: February 16, 2026</p>
+  <p class="date">Last updated: March 7, 2026</p>
 
   <div class="section">
     <h2>1. Introduction</h2>
     <p>KoruBeni ("App") is a mobile application designed to enhance your personal safety. We take your privacy
       seriously. This policy explains what data we collect, how we use it, and how we protect it.</p>
+    <p><strong>KoruBeni is a fully offline-first application.</strong> Your data is never sent to any cloud server; all
+      data is stored exclusively on your device.</p>
   </div>
 
   <div class="section">
     <h2>2. Data We Collect</h2>
 
-    <h3>2.1. Account Information</h3>
+    <h3>2.1. User Information</h3>
     <ul>
-      <li>Phone number (for Firebase Authentication verification)</li>
-      <li>Profile name and photo (optional)</li>
+      <li>Profile name and photo (optional, stored only on your device)</li>
+      <li>PIN code (stored in AES-encrypted secure storage on device, never sent to any server)</li>
     </ul>
 
     <h3>2.2. Location Data</h3>
     <ul>
       <li>Your GPS location is collected only when an emergency is triggered or location sharing is active</li>
       <li>Location data is sent to your emergency contacts via SMS</li>
-      <li>We do not continuously track your location in the background</li>
+      <li>Location data is never transmitted to any server; it is only included in the SMS message</li>
     </ul>
 
     <h3>2.3. Contact Information</h3>
     <ul>
       <li>Name and phone number of contacts you designate as emergency contacts</li>
-      <li>This information is stored securely only on your device and in Firebase</li>
+      <li>This information is stored in encrypted form only on your device</li>
     </ul>
 
-    <h3>2.4. Device and Usage Data</h3>
-    <ul>
-      <li>App crash reports (Firebase Crashlytics)</li>
-      <li>Anonymous usage statistics (Firebase Analytics)</li>
-      <li>Push notification tokens (Firebase Cloud Messaging)</li>
-    </ul>
-
-    <h3>2.5. Audio Recordings</h3>
+    <h3>2.4. Audio Recordings</h3>
     <ul>
       <li>When the audio recording feature is used, recordings are stored only on your device</li>
-      <li>Audio files are not uploaded to our servers</li>
+      <li>Audio files are never uploaded to any server</li>
+    </ul>
+
+    <h3>2.5. Data We Do NOT Collect</h3>
+    <ul>
+      <li>Anonymous usage statistics are <strong>not collected</strong></li>
+      <li>Crash reports are <strong>not sent</strong> to any server</li>
+      <li>Message contents, call logs, browsing history are <strong>not collected</strong></li>
     </ul>
   </div>
 
@@ -286,30 +294,33 @@
     <h2>3. Use of Data</h2>
     <p>We use the collected data for the following purposes:</p>
     <ul>
-      <li>Sending your location and messages to designated contacts in emergencies</li>
-      <li>Identity verification and account security</li>
-      <li>Improving app performance and fixing bugs</li>
-      <li>Sending notifications</li>
+      <li>Sending your location and messages to designated contacts via SMS in emergencies</li>
+      <li>Automatically calling your emergency contact</li>
+      <li>Securing the app through PIN and biometric authentication</li>
+      <li>Sending safety notifications (local notifications only)</li>
     </ul>
   </div>
 
   <div class="section">
     <h2>4. Data Sharing</h2>
-    <p>We do <strong>not sell</strong> your personal data to third parties. Data is shared only with the following
-      service providers:</p>
+    <p>We do <strong>not sell</strong> your personal data to third parties and do <strong>not send</strong> it to any
+      cloud service.</p>
     <ul>
-      <li><strong>Google Firebase</strong> — Authentication, database, crash reports, notifications</li>
-      <li><strong>Google Maps</strong> — Location links (map links shared via SMS)</li>
+      <li><strong>Emergency contacts:</strong> When an emergency is triggered, your location is sent only to your
+        designated contacts via SMS</li>
+      <li><strong>Google Maps:</strong> Location links in SMS are created in Google Maps URL format (no data is sent,
+        only a map link is generated)</li>
+      <li><strong>OpenStreetMap:</strong> Used for map display (no personal data collected)</li>
     </ul>
   </div>
 
   <div class="section">
     <h2>5. Data Security</h2>
     <ul>
-      <li>Your PIN code and sensitive data are protected with <strong>AES encryption</strong> (Flutter Secure Storage)
-      </li>
+      <li>Your PIN code and sensitive data are protected with <strong>AES encryption</strong> (Flutter Secure Storage /
+        Android Keystore)</li>
       <li>Biometric authentication (fingerprint / face recognition) is supported</li>
-      <li>Firebase connections are encrypted with SSL/TLS</li>
+      <li>All data is stored exclusively on your device — never transferred to cloud servers</li>
       <li>Audio recordings and photos are stored only on your device</li>
     </ul>
   </div>
@@ -323,7 +334,7 @@
       </tr>
       <tr style="border-bottom:1px solid #1E3A52;">
         <td style="padding:8px;">📍 Location</td>
-        <td style="padding:8px;">To share your location in emergencies</td>
+        <td style="padding:8px;">To share your location via SMS in emergencies</td>
       </tr>
       <tr style="border-bottom:1px solid #1E3A52;">
         <td style="padding:8px;">📱 Contacts</td>
@@ -335,7 +346,7 @@
       </tr>
       <tr style="border-bottom:1px solid #1E3A52;">
         <td style="padding:8px;">💬 SMS</td>
-        <td style="padding:8px;">To send emergency messages (Android)</td>
+        <td style="padding:8px;">To send emergency messages with location information</td>
       </tr>
       <tr style="border-bottom:1px solid #1E3A52;">
         <td style="padding:8px;">🎤 Microphone</td>
@@ -343,7 +354,7 @@
       </tr>
       <tr style="border-bottom:1px solid #1E3A52;">
         <td style="padding:8px;">🔔 Notifications</td>
-        <td style="padding:8px;">For safety notifications</td>
+        <td style="padding:8px;">For safety notifications (local only)</td>
       </tr>
       <tr>
         <td style="padding:8px;">🔐 Biometric</td>
@@ -364,21 +375,22 @@
     <ul>
       <li>Request access to your data</li>
       <li>Request correction of your data</li>
-      <li>Request deletion of your data</li>
+      <li>Request deletion of your data (simply uninstall the app to delete all data)</li>
       <li>Object to data processing</li>
-      <li>Request data portability</li>
     </ul>
-    <p>To exercise these rights, email us at <a href="mailto:destek@korubeni.com">destek@korubeni.com</a>.</p>
+    <p>For questions: <a href="mailto:poyrazoncel02@gmail.com">poyrazoncel02@gmail.com</a></p>
   </div>
 
   <div class="section">
     <h2>9. Changes</h2>
-    <p>This privacy policy may be updated. Significant changes will be communicated through the app.</p>
+    <p>This privacy policy may be updated. The current version is always available on this page.</p>
   </div>
 
   <div class="section">
     <h2>10. Contact</h2>
-    <p>For questions: <a href="mailto:destek@korubeni.com">destek@korubeni.com</a></p>
+    <p>Developer: Poyraz Öncel</p>
+    <p>Email: <a href="mailto:poyrazoncel02@gmail.com">poyrazoncel02@gmail.com</a></p>
+    <p>Location: Turkey</p>
   </div>
 
 </body>

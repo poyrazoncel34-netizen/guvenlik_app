@@ -2,13 +2,12 @@
 // RESOURCE MONITOR SERVICE - RAM/CPU Tracking
 // ============================================================================
 // Monitors app resource usage to ensure optimal performance on mid-range devices.
-// Reports excessive usage to Crashlytics.
+// Offline-first: No Crashlytics.
 // ============================================================================
 
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
-import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:battery_plus/battery_plus.dart';
 
 /// Resource usage snapshot
@@ -139,29 +138,14 @@ class ResourceMonitorService {
       if (snapshot.memoryUsageMB != null) {
         if (snapshot.memoryUsageMB! >= CRITICAL_MEMORY_THRESHOLD_MB) {
           debugPrint('🚨 CRITICAL: Memory usage ${snapshot.memoryUsageMB}MB');
-          
-          await FirebaseCrashlytics.instance.recordError(
-            Exception('Critical memory usage: ${snapshot.memoryUsageMB}MB'),
-            StackTrace.current,
-            reason: 'Memory usage exceeded critical threshold',
-            fatal: false,
-          );
         } else if (snapshot.memoryUsageMB! >= HIGH_MEMORY_THRESHOLD_MB) {
           debugPrint('⚠️ HIGH: Memory usage ${snapshot.memoryUsageMB}MB');
-          
-          FirebaseCrashlytics.instance.log(
-            'High memory usage: ${snapshot.memoryUsageMB}MB',
-          );
         }
       }
       
       // Battery threshold check
       if (snapshot.batteryLevel <= LOW_BATTERY_THRESHOLD) {
         debugPrint('🔋 LOW BATTERY: ${snapshot.batteryLevel}%');
-        
-        FirebaseCrashlytics.instance.log(
-          'Low battery: ${snapshot.batteryLevel}%',
-        );
       }
       
     } catch (e) {
@@ -169,27 +153,8 @@ class ResourceMonitorService {
     }
   }
   
-  /// Report snapshot to Crashlytics
   Future<void> _reportSnapshot(ResourceSnapshot snapshot) async {
-    try {
-      await FirebaseCrashlytics.instance.setCustomKey(
-        'last_memory_mb',
-        snapshot.memoryUsageMB ?? 0,
-      );
-      
-      await FirebaseCrashlytics.instance.setCustomKey(
-        'last_battery_level',
-        snapshot.batteryLevel,
-      );
-      
-      await FirebaseCrashlytics.instance.setCustomKey(
-        'last_battery_state',
-        snapshot.batteryState,
-      );
-      
-    } catch (e) {
-      debugPrint('Failed to report snapshot: $e');
-    }
+    // Offline-first: No Crashlytics reporting
   }
   
   /// Get current resource status

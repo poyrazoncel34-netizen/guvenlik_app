@@ -1,13 +1,19 @@
+import 'dart:io';
+
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:optimize_battery/optimize_battery.dart';
 import '../app_colors.dart';
 
 /// Centralized permission handling with user-friendly dialogs.
+/// Play Store Prominent Disclosure: Tehlikeli izinler (arka plan konum, pil optimizasyonu)
+/// için izin istemeden ÖNCE kullanıcıya açık bilgilendirme gösterilir.
 class PermissionHelper {
   PermissionHelper._();
 
   /// Request location permission with proper UX flow.
+  /// Play Store: Prominent Disclosure - Native izin istemeden önce açık bilgilendirme.
   /// Returns true if permission was granted.
   static Future<bool> requestLocationPermission(BuildContext context) async {
     final serviceEnabled = await Geolocator.isLocationServiceEnabled();
@@ -28,6 +34,15 @@ class PermissionHelper {
 
     var permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
+      // Prominent Disclosure: Arka plan konum için açık beyan - kullanıcı kabul etmezse native'e geçme
+      if (!context.mounted) return false;
+      final accepted = await _showProminentDisclosure(
+        context,
+        title: 'perm_location_prominent_title'.tr(),
+        message: 'perm_location_prominent_msg'.tr(),
+      );
+      if (accepted != true) return false;
+
       permission = await Geolocator.requestPermission();
     }
 
@@ -48,6 +63,115 @@ class PermissionHelper {
 
     return permission == LocationPermission.always ||
         permission == LocationPermission.whileInUse;
+  }
+
+  /// Pil optimizasyonu muafiyeti - Prominent Disclosure ile.
+  /// Play Store: REQUEST_IGNORE_BATTERY_OPTIMIZATIONS izni için önce açık beyan.
+  /// Returns true if user accepted and system dialog completed successfully.
+  static Future<bool> requestBatteryOptimizationExemption(
+    BuildContext context,
+  ) async {
+    if (!Platform.isAndroid) return false;
+    if (!context.mounted) return false;
+
+    // Prominent Disclosure: Pil optimizasyonu için açık beyan
+    final accepted = await _showProminentDisclosure(
+      context,
+      title: 'perm_battery_prominent_title'.tr(),
+      message: 'perm_battery_prominent_msg'.tr(),
+    );
+    if (accepted != true) return false;
+
+    try {
+      await OptimizeBattery.stopOptimizingBatteryUsage();
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// Play Store Prominent Disclosure: İzin istemeden önce gösterilen bilgilendirme.
+  /// Kullanıcı "Kabul Et" demezse native izin adımına geçilmez.
+  static Future<bool?> _showProminentDisclosure(
+    BuildContext context, {
+    required String title,
+    required String message,
+  }) {
+    return showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => Semantics(
+        label: '$title. $message',
+        child: AlertDialog(
+          backgroundColor: AppColors.cardBg,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 64,
+                height: 64,
+                decoration: BoxDecoration(
+                  color: AppColors.info.withValues(alpha: 0.12),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.info_outline_rounded,
+                  color: AppColors.info,
+                  size: 32,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textPrimary,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 10),
+              Text(
+                message,
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: AppColors.textSecondary,
+                  height: 1.5,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(
+                'perm_cancel'.tr(),
+                style: const TextStyle(color: AppColors.textSecondary),
+              ),
+            ),
+            Semantics(
+              label: 'perm_accept'.tr(),
+              button: true,
+              child: ElevatedButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: Text('perm_accept'.tr()),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   /// Show a generic "go to settings" dialog for any permission.
