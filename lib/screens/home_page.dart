@@ -11,6 +11,7 @@ import 'package:provider/provider.dart';
 import '../core/app_colors.dart';
 import '../core/services/audio_recorder_service.dart';
 import '../core/services/connectivity_service.dart';
+import '../core/utils/permission_helper.dart';
 // Analytics service removed (offline-first)
 import 'package:easy_localization/easy_localization.dart';
 import '../presentation/providers/home_provider.dart';
@@ -67,10 +68,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         ),
       );
       _cardSlideAnimations.add(
-        Tween<Offset>(
-          begin: const Offset(0, 0.15),
-          end: Offset.zero,
-        ).animate(
+        Tween<Offset>(begin: const Offset(0, 0.15), end: Offset.zero).animate(
           CurvedAnimation(
             parent: _cardsController,
             curve: Interval(start, end, curve: Curves.easeOutCubic),
@@ -94,10 +92,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   void _initConnectivity() {
     ConnectivityService.instance.initialize();
     // Offline-first: No internet warning UI - app works fully offline
-    _connectivitySubscription =
-        ConnectivityService.instance.onStatusChange.listen((_) {
-      if (mounted) setState(() {});
-    });
+    _connectivitySubscription = ConnectivityService.instance.onStatusChange
+        .listen((_) {
+          if (mounted) setState(() {});
+        });
   }
 
   Future<void> _toggleRecording() async {
@@ -111,8 +109,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             content: Text(
               path != null ? "recording_saved".tr() : "recording_failed".tr(),
             ),
-            backgroundColor:
-                path != null ? AppColors.success : AppColors.emergency,
+            backgroundColor: path != null
+                ? AppColors.success
+                : AppColors.emergency,
           ),
         );
       }
@@ -208,8 +207,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             const SizedBox(height: 16),
             Text(
               "notifications".tr(),
-              style:
-                  const TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
+              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: 24),
             _buildNotificationItem(
@@ -287,8 +285,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     }
     final size = MediaQuery.sizeOf(context);
     final padding = MediaQuery.paddingOf(context);
-    final horizontalPadding =
-        size.width > 400 ? 24.0 : (size.width > 340 ? 20.0 : 16.0);
+    final horizontalPadding = size.width > 400
+        ? 24.0
+        : (size.width > 340 ? 20.0 : 16.0);
     final shortScreen = size.height < 700;
     final spacing = shortScreen ? 8.0 : 14.0;
     final sectionSpacing = shortScreen ? 12.0 : 20.0;
@@ -332,8 +331,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               ),
               SliverToBoxAdapter(
                 child: Padding(
-                  padding:
-                      EdgeInsets.symmetric(horizontal: horizontalPadding),
+                  padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -345,12 +343,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                             vertical: 8,
                           ),
                           decoration: BoxDecoration(
-                            color: AppColors.emergency
-                                .withValues(alpha: 0.12),
+                            color: AppColors.emergency.withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(10),
                             border: Border.all(
-                              color: AppColors.emergency
-                                  .withValues(alpha: 0.3),
+                              color: AppColors.emergency.withValues(alpha: 0.3),
                             ),
                           ),
                           child: Row(
@@ -492,8 +488,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                         decoration: BoxDecoration(
                           color: AppColors.emergency,
                           shape: BoxShape.circle,
-                          border:
-                              Border.all(color: Colors.white, width: 2),
+                          border: Border.all(color: Colors.white, width: 2),
                         ),
                       ),
                     ),
@@ -577,7 +572,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   }
 
   Widget _buildReadinessCard(HomeProvider provider) {
-    final allReady = provider.locationPermissionGranted &&
+    final allReady =
+        provider.locationPermissionGranted &&
         provider.contactsPermissionGranted &&
         provider.emergencyContact != null;
     final title = allReady ? "ready".tr() : "setup_incomplete".tr();
@@ -601,17 +597,15 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 width: 36,
                 height: 36,
                 decoration: BoxDecoration(
-                  color:
-                      (allReady ? AppColors.success : AppColors.warning)
-                          .withValues(alpha: 0.15),
+                  color: (allReady ? AppColors.success : AppColors.warning)
+                      .withValues(alpha: 0.15),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
                   allReady
                       ? Icons.check_circle_rounded
                       : Icons.error_outline_rounded,
-                  color:
-                      allReady ? AppColors.success : AppColors.warning,
+                  color: allReady ? AppColors.success : AppColors.warning,
                   size: 18,
                 ),
               ),
@@ -679,21 +673,21 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: (isOk ? AppColors.success : AppColors.warning)
-              .withValues(alpha: 0.12),
+          color: (isOk ? AppColors.success : AppColors.warning).withValues(
+            alpha: 0.12,
+          ),
           borderRadius: BorderRadius.circular(999),
           border: Border.all(
-            color: (isOk ? AppColors.success : AppColors.warning)
-                .withValues(alpha: 0.3),
+            color: (isOk ? AppColors.success : AppColors.warning).withValues(
+              alpha: 0.3,
+            ),
           ),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
-              isOk
-                  ? Icons.check_circle_rounded
-                  : Icons.error_outline_rounded,
+              isOk ? Icons.check_circle_rounded : Icons.error_outline_rounded,
               size: 14,
               color: isOk ? AppColors.success : AppColors.warning,
             ),
@@ -713,26 +707,174 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   }
 
   Future<void> _requestLocationPermission() async {
+    // Show rationale dialog before requesting permission
+    final proceed = await _showPermissionRationale(
+      title: 'perm_rationale_location_title'.tr(),
+      body: 'perm_rationale_location_body'.tr(),
+    );
+    if (!proceed || !mounted) return;
+
     final provider = context.read<HomeProvider>();
-    final message =
-        await provider.requestLocationPermission(context: context);
+    final message = await provider.requestLocationPermission(context: context);
     if (message != null && mounted) _showSnack(message);
   }
 
   Future<void> _requestContactsPermission() async {
     if (kIsWeb) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("home_contacts_web_unsupported".tr()),
-        ),
+        SnackBar(content: Text("home_contacts_web_unsupported".tr())),
       );
       return;
     }
+    // Show rationale dialog before requesting permission
+    final proceed = await _showPermissionRationale(
+      title: 'perm_rationale_contacts_title'.tr(),
+      body: 'perm_rationale_contacts_body'.tr(),
+    );
+    if (!proceed || !mounted) return;
+
     final provider = context.read<HomeProvider>();
     final message = await provider.requestContactsPermission();
     if (message != null && context.mounted) {
       _showSnack(message);
     }
+  }
+
+  Future<bool> _showPermissionRationale({
+    required String title,
+    required String body,
+  }) async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.cardBg,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
+          title,
+          style: const TextStyle(
+            color: AppColors.textPrimary,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        content: Text(
+          body,
+          style: const TextStyle(
+            color: AppColors.textSecondary,
+            fontSize: 14,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(
+              'perm_rationale_later'.tr(),
+              style: const TextStyle(color: AppColors.textSecondary),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: Text('perm_rationale_allow'.tr()),
+          ),
+        ],
+      ),
+    );
+    return result ?? false;
+  }
+
+  void _showFakeCallDelayOptions() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        decoration: const BoxDecoration(
+          color: AppColors.cardBg,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: AppColors.border,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 18),
+            Text(
+              'fake_call_delay_title'.tr(),
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w800,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 16),
+            _buildFakeCallOption('fake_call_delay_now'.tr(), Duration.zero),
+            _buildFakeCallOption(
+                'fake_call_delay_1min'.tr(), const Duration(minutes: 1)),
+            _buildFakeCallOption(
+                'fake_call_delay_3min'.tr(), const Duration(minutes: 3)),
+            const SizedBox(height: 12),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFakeCallOption(String label, Duration delay) {
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      title: Text(
+        label,
+        style: const TextStyle(
+          fontWeight: FontWeight.w700,
+          color: AppColors.textPrimary,
+        ),
+      ),
+      trailing: const Icon(
+        Icons.chevron_right_rounded,
+        color: AppColors.textSecondary,
+      ),
+      onTap: () {
+        Navigator.pop(context);
+        if (delay == Duration.zero) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const FakeCallScreen()),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('fake_call_delay_scheduled'
+                  .tr(namedArgs: {'seconds': '${delay.inSeconds}'})),
+              backgroundColor: AppColors.primary,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          );
+          Future.delayed(delay, () {
+            if (mounted) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const FakeCallScreen()),
+              );
+            }
+          });
+        }
+      },
+    );
   }
 
   Widget _buildOnboardingCard(HomeProvider provider) {
@@ -873,10 +1015,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       style: OutlinedButton.styleFrom(
         foregroundColor: AppColors.primary,
         side: const BorderSide(color: AppColors.primary),
-        padding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14)),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       ),
     );
   }
@@ -910,11 +1050,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         "fake_call".tr(),
         Icons.phone_in_talk_rounded,
         AppColors.primary,
-        () {
-          // Analytics removed (offline-first)
-          Navigator.push(context,
-              MaterialPageRoute(builder: (_) => const FakeCallScreen()));
-        },
+        () => _showFakeCallDelayOptions(),
       ),
       _ActionData(
         "siren".tr(),
@@ -927,8 +1063,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         Icons.directions_walk_rounded,
         AppColors.accent,
         () {
-          Navigator.push(context,
-              MaterialPageRoute(builder: (_) => const SafeWalkScreen()));
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const SafeWalkScreen()),
+          );
         },
       ),
       _ActionData(
@@ -955,9 +1093,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         AppColors.accent,
         () {
           Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (_) => const SafetyTimelineScreen()));
+            context,
+            MaterialPageRoute(builder: (_) => const SafetyTimelineScreen()),
+          );
         },
       ),
       _ActionData(
@@ -965,8 +1103,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         Icons.verified_user_rounded,
         AppColors.success,
         () {
-          Navigator.push(context,
-              MaterialPageRoute(builder: (_) => const CheckInScreen()));
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const CheckInScreen()),
+          );
         },
       ),
     ];
@@ -990,10 +1130,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           Row(
             children: [
               Expanded(
-                child: _buildAnimatedActionCard(
-                  actions[row * 2],
-                  row * 2,
-                ),
+                child: _buildAnimatedActionCard(actions[row * 2], row * 2),
               ),
               SizedBox(width: gap),
               Expanded(
@@ -1167,9 +1304,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 const SizedBox(height: 4),
                 Text(
                   provider.isLocationSharing
-                      ? provider.locationShareEndAt != null
-                          ? "${"sharing".tr()} • ${_formatRemaining(provider.locationShareEndAt)}"
-                          : "your_location_is_sharing".tr()
+                      ? _buildLocationShareStatus(provider)
                       : "share_location_with_network".tr(),
                   style: const TextStyle(
                     fontSize: 13,
@@ -1206,8 +1341,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       builder: (context) => Container(
         decoration: const BoxDecoration(
           color: AppColors.cardBg,
-          borderRadius:
-              BorderRadius.vertical(top: Radius.circular(24)),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -1263,14 +1397,26 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   }
 
   Future<void> _startLocationSharing(int minutes) async {
+    final notificationsAllowed =
+        await PermissionHelper.requestNotificationPermission(context);
+    if (!mounted) return;
+    if (!notificationsAllowed) {
+      _showSnack(
+        "notification_session_permission_required".tr(),
+        backgroundColor: AppColors.warning,
+      );
+      return;
+    }
+
     final provider = context.read<HomeProvider>();
     HapticFeedback.lightImpact();
     final result = await provider.startLocationSharing(minutes);
-    if (!result.isSuccess && context.mounted) {
+    if (!mounted) return;
+    if (!result.isSuccess) {
       provider.stopLocationSharing(manual: true);
     }
     final notice = result.inlineNotice;
-    if (notice != null && context.mounted) {
+    if (notice != null) {
       _showSnack(notice);
     }
   }
@@ -1286,12 +1432,28 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     return "${minutes}dk ${seconds}s";
   }
 
-  void _showSnack(String message) {
+  String _buildLocationShareStatus(HomeProvider provider) {
+    final remaining = _formatRemaining(provider.locationShareEndAt);
+    final lastUpdatedAt = provider.locationShareLastUpdatedAt;
+
+    if (lastUpdatedAt != null) {
+      return "${"sharing".tr()} • $remaining • ${"location_share_last_updated".tr(namedArgs: {'time': _formatClock(lastUpdatedAt)})}";
+    }
+
+    return provider.locationShareEndAt != null
+        ? "${"sharing".tr()} • $remaining"
+        : "your_location_is_sharing".tr();
+  }
+
+  String _formatClock(DateTime value) {
+    final hour = value.hour.toString().padLeft(2, '0');
+    final minute = value.minute.toString().padLeft(2, '0');
+    return '$hour:$minute';
+  }
+
+  void _showSnack(String message, {Color backgroundColor = AppColors.primary}) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: AppColors.primary,
-      ),
+      SnackBar(content: Text(message), backgroundColor: backgroundColor),
     );
   }
 
@@ -1302,8 +1464,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       decoration: BoxDecoration(
         color: AppColors.primary.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-            color: AppColors.primary.withValues(alpha: 0.12)),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.12)),
       ),
       child: Row(
         children: [
@@ -1383,9 +1544,10 @@ class _ScaleTapCardState extends State<_ScaleTapCard>
       duration: const Duration(milliseconds: 120),
       reverseDuration: const Duration(milliseconds: 200),
     );
-    _scale = Tween<double>(begin: 1.0, end: 0.95).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    _scale = Tween<double>(
+      begin: 1.0,
+      end: 0.95,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override
@@ -1403,10 +1565,7 @@ class _ScaleTapCardState extends State<_ScaleTapCard>
         widget.onTap();
       },
       onTapCancel: () => _controller.reverse(),
-      child: ScaleTransition(
-        scale: _scale,
-        child: widget.child,
-      ),
+      child: ScaleTransition(scale: _scale, child: widget.child),
     );
   }
 }

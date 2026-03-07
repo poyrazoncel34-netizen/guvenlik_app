@@ -10,10 +10,13 @@ import 'package:provider/provider.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../core/app_colors.dart';
 import '../core/utils/app_reset_helper.dart';
 import '../core/utils/pin_settings_helper.dart';
+import '../core/services/shake_detector_service.dart';
 import 'profile_page.dart';
+import 'recordings_screen.dart';
 import 'settings_detail_page.dart';
 import '../presentation/providers/settings_provider.dart';
 import 'battery_optimization_wizard.dart';
@@ -191,6 +194,154 @@ class _SettingsPageState extends State<SettingsPage> {
                   onChanged: provider.setVolumeTrigger,
                 ),
               ],
+              _buildDivider(),
+              _buildSwitchTile(
+                icon: Icons.vibration_rounded,
+                iconColor: AppColors.warning,
+                title: 'settings_shake_title'.tr(),
+                subtitle: 'settings_shake_subtitle'.tr(),
+                value: provider.shakeEnabled,
+                onChanged: provider.setShakeEnabled,
+              ),
+              if (provider.shakeEnabled) ...[
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'settings_shake_sensitivity'.tr(),
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: AppColors.textSecondary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: ShakeSensitivity.values.map((level) {
+                          final isSelected =
+                              provider.shakeSensitivity == level;
+                          final label = {
+                            ShakeSensitivity.low:
+                                'shake_sensitivity_low'.tr(),
+                            ShakeSensitivity.medium:
+                                'shake_sensitivity_medium'.tr(),
+                            ShakeSensitivity.high:
+                                'shake_sensitivity_high'.tr(),
+                          }[level]!;
+                          return Expanded(
+                            child: Padding(
+                              padding: EdgeInsets.only(
+                                  right: level != ShakeSensitivity.high
+                                      ? 8
+                                      : 0),
+                              child: GestureDetector(
+                                onTap: () {
+                                  HapticFeedback.lightImpact();
+                                  provider.setShakeSensitivity(level);
+                                },
+                                child: AnimatedContainer(
+                                  duration: const Duration(
+                                      milliseconds: 200),
+                                  padding:
+                                      const EdgeInsets.symmetric(
+                                          vertical: 10),
+                                  decoration: BoxDecoration(
+                                    color: isSelected
+                                        ? AppColors.primary
+                                            .withValues(alpha: 0.15)
+                                        : AppColors.surface,
+                                    borderRadius:
+                                        BorderRadius.circular(10),
+                                    border: Border.all(
+                                      color: isSelected
+                                          ? AppColors.primary
+                                          : AppColors.border,
+                                      width: isSelected ? 1.5 : 1,
+                                    ),
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      label,
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: isSelected
+                                            ? FontWeight.w700
+                                            : FontWeight.w500,
+                                        color: isSelected
+                                            ? AppColors.primary
+                                            : AppColors.textSecondary,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ]),
+            const SizedBox(height: 28),
+
+            // Recordings
+            _buildSectionTitle('recordings_section_title'.tr()),
+            const SizedBox(height: 14),
+            _buildSettingsCard([
+              _buildNavigationTile(
+                icon: Icons.mic_rounded,
+                iconColor: const Color(0xFF9B59B6),
+                title: 'recordings_title'.tr(),
+                subtitle: 'recordings_subtitle'.tr(),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const RecordingsScreen(),
+                    ),
+                  );
+                },
+              ),
+            ]),
+            const SizedBox(height: 28),
+
+            // Language
+            _buildSectionTitle('settings_language_section'.tr()),
+            const SizedBox(height: 14),
+            _buildSettingsCard([
+              _buildNavigationTile(
+                icon: Icons.language_rounded,
+                iconColor: AppColors.info,
+                title: 'settings_language_title'.tr(),
+                subtitle: context.locale.languageCode == 'tr'
+                    ? 'Türkçe'
+                    : 'English',
+                onTap: () {
+                  final currentLocale = context.locale;
+                  final newLocale = currentLocale.languageCode == 'tr'
+                      ? const Locale('en', 'US')
+                      : const Locale('tr', 'TR');
+                  context.setLocale(newLocale);
+                },
+              ),
+            ]),
+            const SizedBox(height: 28),
+
+            // SMS Template
+            _buildSectionTitle('settings_sms_section'.tr()),
+            const SizedBox(height: 14),
+            _buildSettingsCard([
+              _buildNavigationTile(
+                icon: Icons.sms_rounded,
+                iconColor: AppColors.accent,
+                title: 'settings_sms_template_title'.tr(),
+                subtitle: 'settings_sms_template_subtitle'.tr(),
+                onTap: () => _showSmsTemplateDialog(context),
+              ),
             ]),
             const SizedBox(height: 28),
 
@@ -606,5 +757,126 @@ class _SettingsPageState extends State<SettingsPage> {
 
   void _showLogoutDialog(BuildContext context) {
     AppResetHelper.showResetDialog(context);
+  }
+
+  void _showSmsTemplateDialog(BuildContext context) async {
+    final prefs = await SharedPreferences.getInstance();
+    final saved = prefs.getString('pref_sms_template') ?? '';
+    final controller = TextEditingController(text: saved);
+
+    if (!context.mounted) return;
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(ctx).viewInsets.bottom,
+        ),
+        child: Container(
+          decoration: const BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40, height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.white24,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 18),
+              Text(
+                'settings_sms_template_title'.tr(),
+                style: const TextStyle(
+                  color: AppColors.textPrimary,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'sms_template_hint'.tr(),
+                style: const TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 12,
+                ),
+              ),
+              const SizedBox(height: 14),
+              TextField(
+                controller: controller,
+                maxLines: 4,
+                style: const TextStyle(color: AppColors.textPrimary),
+                decoration: InputDecoration(
+                  hintText: 'sms_template_placeholder'.tr(),
+                  hintStyle: const TextStyle(color: AppColors.textSecondary),
+                  filled: true,
+                  fillColor: AppColors.cardBg,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: BorderSide(color: AppColors.border),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: BorderSide(color: AppColors.border),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () async {
+                        await prefs.remove('pref_sms_template');
+                        if (ctx.mounted) Navigator.pop(ctx);
+                      },
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.textSecondary,
+                        side: BorderSide(color: AppColors.border),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                      child: Text('sms_template_reset'.tr()),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        await prefs.setString(
+                          'pref_sms_template',
+                          controller.text.trim(),
+                        );
+                        if (ctx.mounted) Navigator.pop(ctx);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                      child: Text('save'.tr(),
+                          style: const TextStyle(fontWeight: FontWeight.w700)),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }

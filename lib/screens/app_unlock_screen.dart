@@ -2,6 +2,7 @@
 // UYGULAMA KİLİDİ - Uygulama açılışında biyometrik veya PIN ile doğrulama
 // ============================================================================
 
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -27,6 +28,14 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> {
   bool _biometricAvailable = false;
   String _biometricLabel = 'Biometric'; // Updated by _loadAndCheckBiometric()
   bool _loading = true;
+
+  // Brute force protection
+  int _failedAttempts = 0;
+  static const int _maxAttempts = 3;
+  static const int _lockoutDurationSeconds = 60;
+  DateTime? _lockoutEndTime;
+  Timer? _lockoutTimer;
+  int _lockoutRemaining = 0;
 
   late final SecureStorage _secureStorage = serviceLocator<SecureStorage>();
 
@@ -71,7 +80,43 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> {
     }
   }
 
+  bool get _isLockedOut =>
+      _lockoutEndTime != null && DateTime.now().isBefore(_lockoutEndTime!);
+
+  void _startLockout() {
+    _lockoutEndTime =
+        DateTime.now().add(const Duration(seconds: _lockoutDurationSeconds));
+    _lockoutRemaining = _lockoutDurationSeconds;
+    _lockoutTimer?.cancel();
+    _lockoutTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      final remaining =
+          _lockoutEndTime!.difference(DateTime.now()).inSeconds;
+      if (remaining <= 0) {
+        timer.cancel();
+        setState(() {
+          _lockoutEndTime = null;
+          _lockoutRemaining = 0;
+          _failedAttempts = 0;
+        });
+      } else {
+        setState(() => _lockoutRemaining = remaining);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _lockoutTimer?.cancel();
+    super.dispose();
+  }
+
   void _onPinKey(String key) {
+    if (_isLockedOut) return;
+
     if (key == 'DEL') {
       setState(() {
         if (_pin.isNotEmpty) _pin = _pin.substring(0, _pin.length - 1);
@@ -84,17 +129,32 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> {
     if (_pin.length == AppConstants.pinLength && _correctPin != null) {
       if (_pin == _correctPin) {
         HapticFeedback.lightImpact();
+        _failedAttempts = 0;
         widget.onUnlocked();
       } else {
         HapticFeedback.vibrate();
+        _failedAttempts++;
         setState(() => _pin = '');
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('unlock_wrong_pin'.tr()),
-            backgroundColor: AppColors.emergency,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        if (_failedAttempts >= _maxAttempts) {
+          _startLockout();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('brute_force_locked'
+                  .tr(namedArgs: {'seconds': '$_lockoutDurationSeconds'})),
+              backgroundColor: AppColors.emergency,
+              behavior: SnackBarBehavior.floating,
+              duration: const Duration(seconds: 3),
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('unlock_wrong_pin'.tr()),
+              backgroundColor: AppColors.emergency,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
       }
     }
   }
@@ -190,6 +250,44 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> {
                     ),
                   ),
                   const SizedBox(height: 32),
+                  if (_isLockedOut)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 16),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 10,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.emergency.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: AppColors.emergency.withValues(alpha: 0.4),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.lock_clock_rounded,
+                              color: AppColors.emergency,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'brute_force_locked_short'.tr(
+                                namedArgs: {'seconds': '$_lockoutRemaining'},
+                              ),
+                              style: const TextStyle(
+                                color: AppColors.emergency,
+                                fontWeight: FontWeight.w700,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                   _buildNumPad(),
                 ],
               ],

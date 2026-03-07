@@ -8,8 +8,10 @@ import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../core/app_colors.dart';
 import '../core/services/activity_service.dart';
+import '../core/services/notification_service.dart';
 // Analytics service removed (offline-first)
 import '../domain/models/activity_event.dart';
+import '../widgets/siren_dialog.dart';
 import 'countdown_screen.dart';
 
 class SafeWalkScreen extends StatefulWidget {
@@ -19,19 +21,44 @@ class SafeWalkScreen extends StatefulWidget {
   State<SafeWalkScreen> createState() => _SafeWalkScreenState();
 }
 
-class _SafeWalkScreenState extends State<SafeWalkScreen> {
+class _SafeWalkScreenState extends State<SafeWalkScreen>
+    with WidgetsBindingObserver {
   int _selectedMinutes = 15;
   bool _isActive = false;
   Timer? _timer;
   DateTime? _endTime;
   int _remainingSeconds = 0;
+  bool _preWarningFired = false;
 
   final List<int> _durations = [5, 10, 15, 30, 60];
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
   void dispose() {
     _timer?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // When app resumes from background, recalculate remaining time from _endTime
+    if (state == AppLifecycleState.resumed && _isActive && _endTime != null) {
+      final remaining = _endTime!.difference(DateTime.now());
+      if (remaining.isNegative || remaining.inSeconds <= 0) {
+        _timer?.cancel();
+        _onTimerExpired();
+      } else {
+        setState(() {
+          _remainingSeconds = remaining.inSeconds;
+        });
+      }
+    }
   }
 
   void _startSafeWalk() {
@@ -49,6 +76,7 @@ class _SafeWalkScreenState extends State<SafeWalkScreen> {
       description: "safe_walk_started_desc".tr(namedArgs: {"minutes": "$_selectedMinutes"}),
     );
 
+    _preWarningFired = false;
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (_endTime == null) {
         timer.cancel();
@@ -62,8 +90,25 @@ class _SafeWalkScreenState extends State<SafeWalkScreen> {
         setState(() {
           _remainingSeconds = remaining.inSeconds;
         });
+        // Fire pre-expiry warning at 2 minutes (or 10% of total if total < 4 min)
+        final warningThreshold = _selectedMinutes >= 4 ? 120 : (_selectedMinutes * 60 * 0.1).round();
+        if (!_preWarningFired && _remainingSeconds <= warningThreshold && _remainingSeconds > 0) {
+          _preWarningFired = true;
+          _firePreExpiryWarning();
+        }
       }
     });
+  }
+
+  void _firePreExpiryWarning() {
+    // Haptic alert
+    HapticFeedback.heavyImpact();
+    // Local notification (works even when screen is off)
+    NotificationService.instance.showEmergencyAlert(
+      id: 200,
+      title: 'safe_walk_pre_warning_title'.tr(),
+      body: 'safe_walk_pre_warning_body'.tr(),
+    );
   }
 
   void _onTimerExpired() {
@@ -74,10 +119,23 @@ class _SafeWalkScreenState extends State<SafeWalkScreen> {
       _timer?.cancel();
     });
 
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (_) => const CountdownScreen()),
+    // Auto-play siren before navigating to countdown
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const SirenDialog(),
     );
+
+    // Navigate to countdown after short delay to let siren start
+    Future.delayed(const Duration(milliseconds: 500), () {
+      if (mounted) {
+        Navigator.of(context).pop(); // Close siren dialog
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const CountdownScreen()),
+        );
+      }
+    });
   }
 
   void _checkIn() {

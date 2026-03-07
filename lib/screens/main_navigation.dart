@@ -13,7 +13,9 @@ import '../core/constants/app_constants.dart';
 import '../core/di/service_locator.dart';
 import '../core/security/secure_storage.dart';
 import '../core/security/secure_storage_keys.dart';
+import '../core/utils/permission_helper.dart';
 // Firebase and notification services removed (offline-first)
+import '../widgets/connectivity_banner.dart';
 import 'home_page.dart';
 import 'contacts_page.dart';
 import 'map_page.dart';
@@ -33,6 +35,7 @@ class _MainNavigationState extends State<MainNavigation>
   late AnimationController _fabController;
   late Animation<double> _fabScale;
   bool _pinPromptVisible = false;
+  bool _notificationPromptVisible = false;
 
   final List<Widget> _pages = const [
     HomePage(),
@@ -58,7 +61,7 @@ class _MainNavigationState extends State<MainNavigation>
       if (mounted) _fabController.forward();
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _ensurePinSetup();
+      _runStartupChecks();
     });
   }
 
@@ -95,6 +98,11 @@ class _MainNavigationState extends State<MainNavigation>
     _pinPromptVisible = false;
   }
 
+  Future<void> _runStartupChecks() async {
+    await _ensurePinSetup();
+    await _ensureNotificationPermission();
+  }
+
   Future<bool> _hasConfiguredPin() async {
     final secureStorage = serviceLocator<SecureStorage>();
     final securePin = await secureStorage.read(key: SecureStorageKeys.userPin);
@@ -112,6 +120,39 @@ class _MainNavigationState extends State<MainNavigation>
     await prefs.remove(SecureStorageKeys.userPin);
     await prefs.setBool(AppConstants.prefPinSetupDone, true);
     return true;
+  }
+
+  Future<void> _ensureNotificationPermission() async {
+    if (!mounted || _notificationPromptVisible) return;
+
+    final prefs = await SharedPreferences.getInstance();
+    final notificationsEnabled =
+        prefs.getBool(AppConstants.prefNotifications) ?? true;
+    if (!notificationsEnabled) return;
+
+    final alreadyPrompted =
+        prefs.getBool(AppConstants.prefNotificationPermissionPrompted) ?? false;
+    final alreadyGranted = await PermissionHelper.hasNotificationPermission();
+    if (alreadyGranted) {
+      await prefs.setBool(
+        AppConstants.prefNotificationPermissionPrompted,
+        true,
+      );
+      return;
+    }
+    if (alreadyPrompted) return;
+
+    _notificationPromptVisible = true;
+    try {
+      if (!mounted) return;
+      await PermissionHelper.requestNotificationPermission(context);
+      await prefs.setBool(
+        AppConstants.prefNotificationPermissionPrompted,
+        true,
+      );
+    } finally {
+      _notificationPromptVisible = false;
+    }
   }
 
   void _showQuickHelp(BuildContext context) {
@@ -268,7 +309,21 @@ class _MainNavigationState extends State<MainNavigation>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(index: _selectedIndex, children: _pages),
+      body: Stack(
+        children: [
+          IndexedStack(index: _selectedIndex, children: _pages),
+          // Offline mode banner at top
+          const Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: SafeArea(
+              bottom: false,
+              child: ConnectivityBanner(),
+            ),
+          ),
+        ],
+      ),
       // Floating Action Button - Only on Home screen
       floatingActionButton: _selectedIndex == 0
           ? ScaleTransition(
@@ -400,7 +455,7 @@ class _MainNavigationState extends State<MainNavigation>
               AnimatedDefaultTextStyle(
                 duration: const Duration(milliseconds: 200),
                 style: TextStyle(
-                  fontSize: isSelected ? 11.5 : 11,
+                  fontSize: isSelected ? 12.5 : 12,
                   fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
                   color: isSelected
                       ? AppColors.primary

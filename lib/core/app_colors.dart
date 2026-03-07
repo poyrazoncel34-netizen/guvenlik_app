@@ -12,7 +12,7 @@ class AppColors {
   static const Color accent = Color(0xFF16E0C4);
 
   static const Color emergency = Color(0xFFFF4D4D);
-  static const Color success = Color(0xFF1CD6A5);
+  static const Color success = Color(0xFF2CB5A0); // WCAG color-blind safe teal
   static const Color warning = Color(0xFFFFB547);
   static const Color info = Color(0xFF4C8DFF);
 

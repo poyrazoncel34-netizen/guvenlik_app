@@ -160,6 +160,15 @@ class ContactsProvider extends ChangeNotifier {
     await _repository.saveEmergencyNumbers(numbers);
   }
 
+  /// Reorder contacts by moving item from oldIndex to newIndex.
+  Future<void> reorderContact(int oldIndex, int newIndex) async {
+    if (oldIndex < newIndex) newIndex -= 1;
+    final item = _emergencyContacts.removeAt(oldIndex);
+    _emergencyContacts.insert(newIndex, item);
+    await _persistContacts();
+    notifyListeners();
+  }
+
   int _findIndexByPhone(String phone) {
     final normalized = normalizePhoneNumber(phone);
     return _emergencyContacts.indexWhere(

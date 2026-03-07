@@ -28,10 +28,15 @@ class AppConstants {
   static const String prefThemeMode = 'pref_theme_mode';
   static const String prefPinSetupDone = 'pref_pin_setup_done';
   static const String prefOnboardingDone = 'pref_onboarding_done';
+  static const String prefNotificationPermissionPrompted =
+      'pref_notification_permission_prompted';
   static const String prefDemoMode = 'pref_demo_mode';
   static const String prefVolumeTrigger = 'pref_volume_trigger';
+  static const String prefShakeEnabled = 'pref_shake_enabled';
+  static const String prefShakeSensitivity = 'pref_shake_sensitivity';
   static const String prefBloodType = 'profile_blood_type';
   static const String prefAllergies = 'profile_allergies';
   static const String prefMedicalConditions = 'profile_medical_conditions';
   static const String prefEmergencyNotes = 'profile_emergency_notes';
+  static const String prefSmsTemplate = 'pref_sms_template';
 }

@@ -1,9 +1,11 @@
 import 'dart:io';
 
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:optimize_battery/optimize_battery.dart';
+import 'package:permission_handler/permission_handler.dart';
 import '../app_colors.dart';
 
 /// Centralized permission handling with user-friendly dialogs.
@@ -88,6 +90,50 @@ class PermissionHelper {
     } catch (e) {
       return false;
     }
+  }
+
+  static Future<bool> hasNotificationPermission() async {
+    if (kIsWeb) return true;
+    if (!Platform.isAndroid && !Platform.isIOS) return true;
+
+    final status = await Permission.notification.status;
+    return status.isGranted || status.isLimited || status.isProvisional;
+  }
+
+  static Future<bool> requestNotificationPermission(
+    BuildContext context,
+  ) async {
+    if (await hasNotificationPermission()) {
+      return true;
+    }
+    if (!context.mounted) return false;
+
+    final accepted = await _showProminentDisclosure(
+      context,
+      title: 'perm_notifications_prominent_title'.tr(),
+      message: 'perm_notifications_prominent_msg'.tr(),
+    );
+    if (accepted != true) return false;
+
+    final result = await Permission.notification.request();
+    if (result.isGranted || result.isLimited || result.isProvisional) {
+      return true;
+    }
+
+    if (result.isPermanentlyDenied && context.mounted) {
+      final shouldOpen = await _showDialog(
+        context,
+        icon: Icons.notifications_off_rounded,
+        title: 'perm_notifications_denied'.tr(),
+        message: 'perm_notifications_denied_msg'.tr(),
+        actionText: 'perm_go_settings'.tr(),
+      );
+      if (shouldOpen == true) {
+        await openAppSettings();
+      }
+    }
+
+    return false;
   }
 
   /// Play Store Prominent Disclosure: İzin istemeden önce gösterilen bilgilendirme.
@@ -273,4 +319,3 @@ class PermissionHelper {
     );
   }
 }
-

@@ -4,7 +4,6 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -13,6 +12,7 @@ import '../core/app_colors.dart';
 import '../core/di/service_locator.dart';
 import '../core/services/connectivity_service.dart';
 import '../core/services/location_service.dart';
+import '../core/utils/map_utils.dart';
 import '../presentation/providers/home_provider.dart';
 import '../domain/repositories/location_repository.dart';
 import 'countdown_screen.dart';
@@ -33,10 +33,9 @@ class _EmergencyMapScreenState extends State<EmergencyMapScreen> {
   bool _isLoading = true;
 
   bool get _shouldUseOfflineMapFallback {
-    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
-      return true;
-    }
-    return !ConnectivityService.instance.isOnline;
+    return shouldUseOfflineMapFallback(
+      isOnline: ConnectivityService.instance.isOnline,
+    );
   }
 
   @override
@@ -113,7 +112,8 @@ class _EmergencyMapScreenState extends State<EmergencyMapScreen> {
                         provider.stopLocationSharing(manual: true);
                       }
                       final notice =
-                          result.inlineNotice ?? "emergency_map_shared_ready".tr();
+                          result.inlineNotice ??
+                          "emergency_map_shared_ready".tr();
                       if (!context.mounted) return;
                       _showSnack(context, notice);
                     },
@@ -175,7 +175,7 @@ class _EmergencyMapScreenState extends State<EmergencyMapScreen> {
       children: [
         TileLayer(
           urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-          userAgentPackageName: 'com.guvendeyim.app',
+          userAgentPackageName: kOsmUserAgentPackageName,
           maxZoom: 19,
         ),
         if (_currentLocation != null)

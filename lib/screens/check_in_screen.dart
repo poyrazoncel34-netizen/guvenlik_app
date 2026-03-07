@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../core/app_colors.dart';
 import '../core/services/check_in_service.dart';
+import '../core/utils/permission_helper.dart';
 // Analytics service removed (offline-first)
 
 class CheckInScreen extends StatefulWidget {
@@ -50,7 +51,23 @@ class _CheckInScreenState extends State<CheckInScreen>
     if (mounted) setState(() {});
   }
 
-  void _startCheckIn(int minutes) {
+  Future<void> _startCheckIn(int minutes) async {
+    final notificationsAllowed =
+        await PermissionHelper.requestNotificationPermission(context);
+    if (!notificationsAllowed && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("notification_session_permission_required".tr()),
+          backgroundColor: AppColors.warning,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      );
+      return;
+    }
+
     HapticFeedback.mediumImpact();
     _service.start(minutes);
   }
@@ -62,7 +79,11 @@ class _CheckInScreenState extends State<CheckInScreen>
       SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
+            const Icon(
+              Icons.check_circle_rounded,
+              color: Colors.white,
+              size: 20,
+            ),
             const SizedBox(width: 10),
             Expanded(child: Text("check_in_safe_confirmed".tr())),
           ],
@@ -104,13 +125,15 @@ class _CheckInScreenState extends State<CheckInScreen>
         children: [
           const SizedBox(height: 20),
           Container(
-            width: 120, height: 120,
+            width: 120,
+            height: 120,
             decoration: BoxDecoration(
               color: AppColors.success.withValues(alpha: 0.08),
               shape: BoxShape.circle,
             ),
             child: const Icon(
-              Icons.verified_user_rounded, size: 56,
+              Icons.verified_user_rounded,
+              size: 56,
               color: AppColors.success,
             ),
           ),
@@ -118,8 +141,10 @@ class _CheckInScreenState extends State<CheckInScreen>
           Text(
             "check_in_setup_title".tr(),
             style: const TextStyle(
-              fontSize: 26, fontWeight: FontWeight.w800,
-              color: AppColors.textPrimary, letterSpacing: -0.5,
+              fontSize: 26,
+              fontWeight: FontWeight.w800,
+              color: AppColors.textPrimary,
+              letterSpacing: -0.5,
             ),
           ),
           const SizedBox(height: 12),
@@ -127,14 +152,17 @@ class _CheckInScreenState extends State<CheckInScreen>
             "check_in_setup_desc".tr(),
             textAlign: TextAlign.center,
             style: const TextStyle(
-              fontSize: 15, color: AppColors.textSecondary, height: 1.5,
+              fontSize: 15,
+              color: AppColors.textSecondary,
+              height: 1.5,
             ),
           ),
           const SizedBox(height: 36),
           Text(
             "check_in_select_duration".tr(),
             style: const TextStyle(
-              fontSize: 18, fontWeight: FontWeight.w700,
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
               color: AppColors.textPrimary,
             ),
           ),
@@ -157,17 +185,24 @@ class _CheckInScreenState extends State<CheckInScreen>
             decoration: BoxDecoration(
               color: AppColors.warning.withValues(alpha: 0.06),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.warning.withValues(alpha: 0.15)),
+              border: Border.all(
+                color: AppColors.warning.withValues(alpha: 0.15),
+              ),
             ),
             child: Row(
               children: [
-                const Icon(Icons.info_outline_rounded, color: AppColors.warning),
+                const Icon(
+                  Icons.info_outline_rounded,
+                  color: AppColors.warning,
+                ),
                 const SizedBox(width: 14),
                 Expanded(
                   child: Text(
                     "check_in_warning".tr(),
                     style: const TextStyle(
-                      fontSize: 13, color: AppColors.textSecondary, height: 1.4,
+                      fontSize: 13,
+                      color: AppColors.textSecondary,
+                      height: 1.4,
                     ),
                   ),
                 ),
@@ -183,11 +218,18 @@ class _CheckInScreenState extends State<CheckInScreen>
     final start = (index * 0.15).clamp(0.0, 0.6);
     final end = (start + 0.4).clamp(0.0, 1.0);
     final fade = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _staggerController, curve: Interval(start, end, curve: Curves.easeOut)),
+      CurvedAnimation(
+        parent: _staggerController,
+        curve: Interval(start, end, curve: Curves.easeOut),
+      ),
     );
-    final slide = Tween<Offset>(begin: const Offset(0, 0.2), end: Offset.zero).animate(
-      CurvedAnimation(parent: _staggerController, curve: Interval(start, end, curve: Curves.easeOutCubic)),
-    );
+    final slide = Tween<Offset>(begin: const Offset(0, 0.2), end: Offset.zero)
+        .animate(
+          CurvedAnimation(
+            parent: _staggerController,
+            curve: Interval(start, end, curve: Curves.easeOutCubic),
+          ),
+        );
     return FadeTransition(
       opacity: fade,
       child: SlideTransition(
@@ -221,18 +263,24 @@ class _CheckInScreenState extends State<CheckInScreen>
           child: Column(
             children: [
               Container(
-                width: 48, height: 48,
+                width: 48,
+                height: 48,
                 decoration: BoxDecoration(
                   color: AppColors.success.withValues(alpha: 0.12),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.timer_rounded, color: AppColors.success, size: 24),
+                child: const Icon(
+                  Icons.timer_rounded,
+                  color: AppColors.success,
+                  size: 24,
+                ),
               ),
               const SizedBox(height: 12),
               Text(
                 label,
                 style: const TextStyle(
-                  fontSize: 18, fontWeight: FontWeight.w800,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
                   color: AppColors.textPrimary,
                 ),
               ),
@@ -260,23 +308,32 @@ class _CheckInScreenState extends State<CheckInScreen>
               animation: _pulseController,
               builder: (context, child) {
                 return Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 12,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.emergency.withValues(
                       alpha: 0.1 + (_pulseController.value * 0.15),
                     ),
                     borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: AppColors.emergency.withValues(alpha: 0.4)),
+                    border: Border.all(
+                      color: AppColors.emergency.withValues(alpha: 0.4),
+                    ),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.warning_amber_rounded, color: AppColors.emergency),
+                      const Icon(
+                        Icons.warning_amber_rounded,
+                        color: AppColors.emergency,
+                      ),
                       const SizedBox(width: 10),
                       Text(
                         "check_in_grace_warning".tr(),
                         style: const TextStyle(
-                          fontSize: 14, fontWeight: FontWeight.w700,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
                           color: AppColors.emergency,
                         ),
                       ),
@@ -289,7 +346,8 @@ class _CheckInScreenState extends State<CheckInScreen>
           ],
           // Countdown circle
           SizedBox(
-            width: 220, height: 220,
+            width: 220,
+            height: 220,
             child: CustomPaint(
               painter: _CheckInProgressPainter(
                 progress: progress.clamp(0.0, 1.0),
@@ -303,15 +361,20 @@ class _CheckInScreenState extends State<CheckInScreen>
                     Text(
                       _formatTime(_service.remainingSeconds),
                       style: TextStyle(
-                        fontSize: 42, fontWeight: FontWeight.w900,
-                        color: color, letterSpacing: -1,
+                        fontSize: 42,
+                        fontWeight: FontWeight.w900,
+                        color: color,
+                        letterSpacing: -1,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      isGrace ? "check_in_grace_label".tr() : "check_in_remaining".tr(),
+                      isGrace
+                          ? "check_in_grace_label".tr()
+                          : "check_in_remaining".tr(),
                       style: TextStyle(
-                        fontSize: 13, color: color.withValues(alpha: 0.8),
+                        fontSize: 13,
+                        color: color.withValues(alpha: 0.8),
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -330,7 +393,8 @@ class _CheckInScreenState extends State<CheckInScreen>
               label: Text(
                 "check_in_im_safe".tr(),
                 style: const TextStyle(
-                  fontSize: 18, fontWeight: FontWeight.w800,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
                 ),
               ),
               style: ElevatedButton.styleFrom(
@@ -374,7 +438,9 @@ class _CheckInScreenState extends State<CheckInScreen>
                         ? "check_in_grace_info".tr()
                         : "check_in_active_info".tr(),
                     style: const TextStyle(
-                      fontSize: 13, color: AppColors.textSecondary, height: 1.4,
+                      fontSize: 13,
+                      color: AppColors.textSecondary,
+                      height: 1.4,
                     ),
                   ),
                 ),

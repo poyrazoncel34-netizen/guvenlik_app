@@ -111,6 +111,18 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   void _startAnimations() async {
+    // Respect system accessibility: skip animations if reduce motion is on
+    final reduceMotion =
+        MediaQuery.of(context).disableAnimations;
+    if (reduceMotion) {
+      _logoController.value = 1.0;
+      _textController.value = 1.0;
+      await Future.delayed(const Duration(milliseconds: 500));
+      if (!mounted) return;
+      _goNext();
+      return;
+    }
+
     await Future.delayed(const Duration(milliseconds: 200));
     if (!mounted) return;
     _logoController.forward();

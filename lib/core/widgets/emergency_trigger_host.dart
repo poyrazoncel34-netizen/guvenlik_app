@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../screens/countdown_screen.dart';
+import '../constants/app_constants.dart';
 import '../navigation/app_navigator.dart';
+import '../services/app_lifecycle_handler.dart';
 import '../services/shake_detector_service.dart';
 import '../services/volume_trigger_service.dart';
 
@@ -31,6 +34,8 @@ class _EmergencyTriggerHostState extends State<EmergencyTriggerHost>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       _startForegroundTriggers();
+      // Re-auth after prolonged background
+      AppLifecycleHandler.instance.onResumed();
       return;
     }
 
@@ -39,17 +44,27 @@ class _EmergencyTriggerHostState extends State<EmergencyTriggerHost>
         state == AppLifecycleState.paused ||
         state == AppLifecycleState.detached) {
       _stopForegroundTriggers();
+      // Record background start time
+      AppLifecycleHandler.instance.onPaused();
     }
   }
 
-  Future<void> _startForegroundTriggers() async {
-    _shakeDetector.startListening(onShakeDetected: _openCountdown);
-
+  void _startForegroundTriggers() {
+    _startShakeIfEnabled();
     if (VolumeTriggerService.isSupported) {
-      await VolumeTriggerService.instance.loadPreference();
+      VolumeTriggerService.instance.loadPreference(); // Load preference without awaiting
       VolumeTriggerService.instance.startListening(
         onPanicTriggered: _openCountdown,
       );
+    }
+  }
+
+  Future<void> _startShakeIfEnabled() async {
+    final prefs = await SharedPreferences.getInstance();
+    final shakeEnabled =
+        prefs.getBool(AppConstants.prefShakeEnabled) ?? true;
+    if (shakeEnabled) {
+      _shakeDetector.startListening(onShakeDetected: _openCountdown);
     }
   }
 
