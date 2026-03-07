@@ -3,12 +3,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_direct_caller_plugin/flutter_direct_caller_plugin.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../core/app_colors.dart';
 import '../core/services/contact_service.dart';
 import '../core/services/biometric_service.dart';
+import '../core/services/sms_service.dart';
 import '../core/di/service_locator.dart';
 import '../core/security/secure_storage.dart';
 import '../core/security/secure_storage_keys.dart';
+import '../domain/repositories/location_repository.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'emergency_call_screen.dart';
 
@@ -26,6 +29,8 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
   String? _correctPin; // Loaded from secure storage
   EmergencyContact? _emergencyContact;
   late final SecureStorage _secureStorage = serviceLocator<SecureStorage>();
+  late final LocationRepository _locationRepository =
+      serviceLocator<LocationRepository>();
   bool _biometricAvailable = false;
   String _biometricLabel = 'Biometric'; // Updated by _checkBiometric()
 
@@ -115,37 +120,71 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
     });
   }
 
-  // --- ARANACAK NUMARAYI BUL VE DOĞRUDAN ARA (onay penceresi olmadan) ---
+  // --- DUAL-ACTION: SMS + ARAMA (ZERO-FAULT) ---
   Future<void> _triggerSOS() async {
     final emergencyNumber = await ContactService.getEmergencyNumber();
 
-    if (emergencyNumber != null && emergencyNumber.isNotEmpty) {
-      try {
-        FlutterDirectCallerPlugin.callNumber(emergencyNumber);
-        if (mounted) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (context) => EmergencyCallScreen(
-                name: _emergencyContact?.name ?? "pin_verify_emergency_contact".tr(),
-                phone: emergencyNumber,
-              ),
-            ),
-          );
-        }
-      } catch (e) {
-        debugPrint("Arama hatası: $e");
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("pin_verify_call_failed".tr())),
-          );
-          Navigator.pop(context);
-        }
-      }
-    } else {
+    if (emergencyNumber == null || emergencyNumber.isEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("pin_verify_no_number".tr())),
+        );
+        Navigator.pop(context);
+      }
+      return;
+    }
+
+    // 1. Konum al (SMS'e eklemek için)
+    final locationResult = await _locationRepository.getCurrentLocation();
+    final lat = locationResult.position?.latitude;
+    final lng = locationResult.position?.longitude;
+    final smsMessage = (locationResult.isSuccess && lat != null && lng != null)
+        ? 'ACİL DURUM! KoruBeni panik butonu tetiklendi. Bana acil ulaşın. Konumum: https://maps.google.com/?q=$lat,$lng'
+        : 'ACİL DURUM! KoruBeni panik butonu tetiklendi. Bana acil ulaşın. (Konum bilgisi alınamadı)';
+
+    // 2. Tüm acil kişilere SMS gönder (arka planda, hata olsa bile aramaya geç)
+    try {
+      final allNumbers = await ContactService.getAllEmergencyNumbers();
+      final smsNumbers = allNumbers.isNotEmpty ? allNumbers : [emergencyNumber];
+      await SmsService.sendSms(numbers: smsNumbers, message: smsMessage);
+      debugPrint('✅ PinVerification: SMS sent');
+    } catch (e) {
+      debugPrint('❌ PinVerification: SMS failed: $e');
+      // CRITICAL: SMS başarısız olsa bile aramaya devam et
+    }
+
+    // 3. Doğrudan arama yap — başarısız olursa tel: URI fallback
+    try {
+      bool callMade = false;
+      try {
+        await FlutterDirectCallerPlugin.callNumber(emergencyNumber);
+        callMade = true;
+      } catch (_) {
+        callMade = false;
+      }
+      if (!callMade) {
+        try {
+          final telUri = Uri(scheme: 'tel', path: emergencyNumber);
+          await launchUrl(telUri, mode: LaunchMode.externalApplication);
+        } catch (_) {}
+      }
+
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => EmergencyCallScreen(
+              name: _emergencyContact?.name ?? "pin_verify_emergency_contact".tr(),
+              phone: emergencyNumber,
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint("Arama hatası: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("pin_verify_call_failed".tr())),
         );
         Navigator.pop(context);
       }

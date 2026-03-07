@@ -2,6 +2,7 @@ package com.poyrazoncel.korubeni
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.os.Build
 import android.telephony.SmsManager
 import androidx.core.content.ContextCompat
 import io.flutter.embedding.android.FlutterActivity
@@ -18,6 +19,20 @@ class SmsPlugin(private val activity: FlutterActivity) : MethodChannel.MethodCal
         when (call.method) {
             "sendSms" -> handleSendSms(call, result)
             else -> result.notImplemented()
+        }
+    }
+
+    /**
+     * SmsManager'ı API seviyesine göre al.
+     * API 31+ (Android 12): context-based getSystemService
+     * API 30-: deprecated getDefault() (hâlâ çalışır)
+     */
+    private fun getSmsManager(): SmsManager {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            activity.getSystemService(SmsManager::class.java)
+        } else {
+            @Suppress("DEPRECATION")
+            SmsManager.getDefault()
         }
     }
 
@@ -41,8 +56,7 @@ class SmsPlugin(private val activity: FlutterActivity) : MethodChannel.MethodCal
         }
 
         try {
-            @Suppress("DEPRECATION")
-            val smsManager = SmsManager.getDefault()
+            val smsManager = getSmsManager()
             val parts = smsManager.divideMessage(message)
             
             if (parts.size > 1) {

@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../di/service_locator.dart';
 // Emergency repository removed (offline-first)
 import 'connectivity_service.dart';
 

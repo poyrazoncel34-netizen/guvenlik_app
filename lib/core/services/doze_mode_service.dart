@@ -8,7 +8,6 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
-import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Doze Mode bypass service for Android
@@ -42,7 +41,6 @@ class DozeModeService {
       return whitelisted;
     } on PlatformException catch (e) {
       debugPrint('Doze whitelist check failed: ${e.message}');
-      FirebaseCrashlytics.instance.recordError(e, StackTrace.current);
       return false;
     } catch (e) {
       debugPrint('Doze whitelist check error: $e');
@@ -73,16 +71,13 @@ class DozeModeService {
       
       if (whitelistStatus) {
         debugPrint('✅ Doze whitelist granted');
-        FirebaseCrashlytics.instance.log('Doze whitelist granted');
       } else {
         debugPrint('❌ Doze whitelist denied');
-        FirebaseCrashlytics.instance.log('Doze whitelist denied by user');
       }
       
       return whitelistStatus;
     } on PlatformException catch (e) {
       debugPrint('Doze whitelist request failed: ${e.message}');
-      FirebaseCrashlytics.instance.recordError(e, StackTrace.current);
       return false;
     } catch (e) {
       debugPrint('Doze whitelist request error: $e');

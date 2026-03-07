@@ -26,7 +26,6 @@ import 'countdown_screen.dart';
 import 'safe_walk_screen.dart';
 import 'safety_timeline_screen.dart';
 import 'check_in_screen.dart';
-import '../widgets/network_error_retry.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -40,7 +39,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   late AnimationController _cardsController;
   final ShakeDetectorService _shakeDetector = ShakeDetectorService();
   bool _isRecording = false;
-  bool _isOffline = false;
   StreamSubscription<bool>? _connectivitySubscription;
 
   // Staggered card animations
@@ -130,20 +128,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
   void _initConnectivity() {
     ConnectivityService.instance.initialize();
+    // Offline-first: No internet warning UI - app works fully offline
     _connectivitySubscription =
-        ConnectivityService.instance.onStatusChange.listen((online) {
-      if (mounted) {
-        setState(() => _isOffline = !online);
-        if (!online) {
-          showNetworkErrorSnackBar(
-            context,
-            message: "no_internet_connection",
-            onRetry: () {
-              ConnectivityService.instance.initialize();
-            },
-          );
-        }
-      }
+        ConnectivityService.instance.onStatusChange.listen((_) {
+      if (mounted) setState(() {});
     });
   }
 
@@ -385,61 +373,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      if (_isOffline) ...[
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 10,
-                          ),
-                          decoration: BoxDecoration(
-                            color:
-                                AppColors.warning.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(
-                              color: AppColors.warning
-                                  .withValues(alpha: 0.3),
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.wifi_off_rounded,
-                                color: AppColors.warning,
-                                size: 18,
-                              ),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.start,
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Text(
-                                      "offline_mode_warning".tr(),
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: AppColors.warning,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      "offline_sync_pending".tr(),
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        color: AppColors.warning
-                                            .withValues(alpha: 0.85),
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        SizedBox(height: spacing),
-                      ],
+                      // Offline-first: No internet warning UI
                       if (_isRecording) ...[
                         Container(
                           padding: const EdgeInsets.symmetric(

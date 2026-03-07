@@ -13,32 +13,14 @@
 -keep class io.flutter.plugin.editing.** { *; }
 -keep class io.flutter.embedding.** { *; }
 
-# Firebase
--keep class com.google.firebase.** { *; }
--keep class com.google.android.gms.** { *; }
--dontwarn com.google.android.gms.**
--dontwarn com.google.firebase.**
+# Offline-first: No Firebase
 
-# Firebase Crashlytics
--keepattributes SourceFile,LineNumberTable
--keep public class * extends java.lang.Exception
-
-# Firebase Messaging
--keep class com.google.firebase.messaging.** { *; }
-
-# Gson / JSON (Dio vb. için)
+# Gson / JSON
 -keepattributes Signature
 -keepattributes *Annotation*
 -dontwarn sun.misc.**
 -keep class com.google.gson.** { *; }
 -keep class com.google.gson.stream.** { *; }
-
-# OkHttp / Dio networking
--dontwarn okhttp3.**
--dontwarn okio.**
--dontwarn javax.annotation.**
--keep class okhttp3.** { *; }
--keep interface okhttp3.** { *; }
 
 # Geolocator
 -keep class com.baseflow.geolocator.** { *; }

@@ -9,7 +9,6 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:optimize_battery/optimize_battery.dart';
-import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Battery optimization bypass service for Android
@@ -39,7 +38,6 @@ class BatteryOptimizationService {
       return isIgnoring;
     } catch (e) {
       debugPrint('Battery optimization check failed: $e');
-      FirebaseCrashlytics.instance.recordError(e, StackTrace.current);
       return false;
     }
   }
@@ -65,16 +63,13 @@ class BatteryOptimizationService {
       
       if (isDisabled) {
         debugPrint('✅ Battery optimization disabled successfully');
-        FirebaseCrashlytics.instance.log('Battery optimization disabled');
       } else {
         debugPrint('❌ User denied battery optimization disable');
-        FirebaseCrashlytics.instance.log('Battery optimization denied by user');
       }
       
       return isDisabled;
     } catch (e) {
       debugPrint('Battery optimization request failed: $e');
-      FirebaseCrashlytics.instance.recordError(e, StackTrace.current);
       return false;
     }
   }
