@@ -8,7 +8,6 @@ Play Console'da doldurulacak formlar ve ilgili rehberler.
 
 1. **Data Safety** — Zorunlu
 2. **Content Rating** — Zorunlu  
-3. **SMS Permission Declaration** — Zorunlu (SEND_SMS kullanıldığı için)
 
 ---
 
@@ -22,11 +21,11 @@ Play Console'da doldurulacak formlar ve ilgili rehberler.
 |------|-------|
 | Does your app collect or share data? | Yes |
 | Konum (approximate, precise) | Collected, shared with emergency contacts |
-| Personal info (name, email, phone, user ID) | Collected |
+| Personal info (optional profile name/photo) | Device-only |
 | Contacts | Collected, device-stored |
 | Audio | Optional, not shared |
-| App activity (crash, analytics) | Collected via Firebase |
-| Encryption in transit | Yes |
+| App activity (crash, analytics) | Not collected |
+| Encryption in transit | Do not answer "Yes" for SMS-based emergency delivery |
 | Users can request deletion | Yes |
 
 ---
@@ -51,25 +50,9 @@ Play Console'da doldurulacak formlar ve ilgili rehberler.
 
 ---
 
-## 3. SMS Permission Declaration
-
-**Yol:** Policy → App content → Permissions declarations
-
-**Rehber:** [SMS_PERMISSION_DECLARATION.md](SMS_PERMISSION_DECLARATION.md)
-
-| Adım | Durum |
-|------|-------|
-| Restricted permission | SEND_SMS |
-| Form yanıtları kopyala-yapıştır | Rehberden |
-| Demo video (30-60 sn) | YouTube unlisted yükle |
-| Video linkini forma yaz | |
-
-**Önemli:** Panik butonu akışını gösteren ekran kaydı zorunludur.
-
 ---
 
 ## Tüm Formlar Tamamlandığında
 
 - [ ] Data Safety gönderildi
 - [ ] Content Rating sertifikası alındı
-- [ ] SMS Permission Declaration formu dolduruldu ve video eklendi

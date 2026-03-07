@@ -77,31 +77,30 @@
 <body>
     <div class="container">
         <h1>KoruBeni Gizlilik Politikası</h1>
-        <p class="subtitle">Son güncelleme: 26 Şubat 2026</p>
+        <p class="subtitle">Son güncelleme: 7 Mart 2026</p>
 
-        <p>KoruBeni ("Uygulama", "biz", "bizim"), kullanıcılarının güvenliğini sağlamak amacıyla geliştirilmiş bir kişisel güvenlik uygulamasıdır. Bu gizlilik politikası, hangi verilerin toplandığını, nasıl kullanıldığını ve nasıl korunduğunu açıklar.</p>
+        <p>KoruBeni ("Uygulama", "biz", "bizim"), kullanıcılarının güvenliğini sağlamak amacıyla geliştirilmiş bir kişisel güvenlik uygulamasıdır. Bu gizlilik politikası, hangi verilerin işlendiğini, nasıl kullanıldığını ve nasıl korunduğunu açıklar.</p>
+        <p><strong>KoruBeni offline-first çalışır.</strong> Verileriniz geliştiriciye ait bir bulut sunucusuna gönderilmez; verilerin ana kopyası cihazınızda tutulur.</p>
 
         <h2>1. Topladığımız Veriler</h2>
         
         <h3 style="font-size:16px; margin-top:16px; margin-bottom:8px;">a) Kullanıcı Tarafından Sağlanan Veriler</h3>
         <ul>
-            <li><strong>Telefon numarası:</strong> Hesap oluşturma ve kimlik doğrulama için</li>
             <li><strong>Acil durum kişileri:</strong> Kullanıcının rehberinden seçtiği kişilerin adı ve telefon numarası</li>
-            <li><strong>Profil bilgileri:</strong> Ad ve profil fotoğrafı (isteğe bağlı)</li>
-            <li><strong>PIN kodu:</strong> Cihaz üzerinde şifrelenmiş olarak saklanır, sunucularımıza gönderilmez</li>
+            <li><strong>Profil bilgileri:</strong> Ad ve profil fotoğrafı (isteğe bağlı, cihazda saklanır)</li>
+            <li><strong>PIN kodu:</strong> Cihaz üzerinde şifrelenmiş olarak saklanır, herhangi bir sunucuya gönderilmez</li>
         </ul>
 
         <h3 style="font-size:16px; margin-top:16px; margin-bottom:8px;">b) Otomatik Toplanan Veriler</h3>
         <ul>
             <li><strong>Konum verileri:</strong> Yalnızca kullanıcı konum paylaşımını aktif ettiğinde veya acil durum tetiklendiğinde</li>
-            <li><strong>Cihaz bilgileri:</strong> İşletim sistemi, uygulama sürümü (hata raporlama için)</li>
-            <li><strong>Kullanım istatistikleri:</strong> Anonim uygulama kullanım verileri (Firebase Analytics)</li>
-            <li><strong>Hata raporları:</strong> Uygulama çökme verileri (Firebase Crashlytics)</li>
+            <li><strong>Cihaz üzerinde tutulan teknik durum bilgisi:</strong> Uygulama içi çalışma için geçici durum verileri</li>
         </ul>
 
         <h3 style="font-size:16px; margin-top:16px; margin-bottom:8px;">c) Toplamadığımız Veriler</h3>
         <ul>
-            <li>Mesaj içerikleri</li>
+            <li>Anonim kullanım istatistikleri</li>
+            <li>Sunucuya gönderilen çökme raporları</li>
             <li>Arama kayıtları</li>
             <li>Tarama geçmişi</li>
             <li>Finansal bilgiler</li>
@@ -109,11 +108,10 @@
 
         <h2>2. Verilerin Kullanım Amaçları</h2>
         <ul>
-            <li>Acil durumlarda belirlenen kişilere konum ve uyarı gönderimi</li>
-            <li>Güvenli yürüyüş sırasında konum takibi</li>
-            <li>Push bildirimleri gönderimi</li>
-            <li>Uygulamanın güvenilirliğini ve performansını artırma</li>
-            <li>Hata tespiti ve düzeltme</li>
+            <li>Acil durumlarda belirlenen kişilere SMS ile konum ve uyarı gönderimi</li>
+            <li>Güvenli yürüyüş ve check-in akışlarında kullanıcıya yardımcı olma</li>
+            <li>Yerel bildirimler gösterme</li>
+            <li>PIN ve biyometrik doğrulama ile uygulama güvenliğini sağlama</li>
         </ul>
 
         <div class="highlight">
@@ -123,8 +121,8 @@
         <h2>3. Veri Paylaşımı</h2>
         <p>Verilerinizi üçüncü taraflara <strong>satmıyoruz</strong>. Veriler yalnızca şu durumlarda paylaşılır:</p>
         <ul>
-            <li><strong>Acil durum kişileri:</strong> Acil durum tetiklendiğinde, seçtiğiniz kişilere konumunuz ve durum bilginiz iletilir</li>
-            <li><strong>Hizmet sağlayıcılar:</strong> Firebase (Google) altyapı hizmetleri için (veri işleme sözleşmeleri çerçevesinde)</li>
+            <li><strong>Acil durum kişileri:</strong> Acil durum tetiklendiğinde, seçtiğiniz kişilere SMS ile konumunuz ve durum bilginiz iletilir</li>
+            <li><strong>Harita servisleri:</strong> Harita ekranı açıldığında OpenStreetMap altyapısı kullanılabilir</li>
             <li><strong>Yasal zorunluluklar:</strong> Mahkeme kararı veya yasal zorunluluk halinde</li>
         </ul>
 
@@ -132,17 +130,16 @@
         <ul>
             <li>Hassas veriler AES-256 şifreleme ile korunur</li>
             <li>PIN kodları cihaz üzerinde güvenli depolamada (Keychain/Keystore) saklanır</li>
-            <li>Tüm iletişim HTTPS/TLS protokolü ile şifrelenir</li>
-            <li>Firebase güvenlik kuralları ile yetkisiz erişim engellenir</li>
+            <li>Verilerin ana kopyası cihazda tutulur</li>
             <li>Biyometrik kimlik doğrulama (Face ID/Touch ID) desteği</li>
         </ul>
 
         <h2>5. Veri Saklama Süresi</h2>
         <ul>
-            <li>Hesap bilgileri: Hesap silinene kadar</li>
-            <li>Konum verileri: Paylaşım süresi dolduğunda otomatik silinir</li>
-            <li>Acil durum kayıtları: 90 gün sonra otomatik silinir</li>
-            <li>Hata raporları: 180 gün sonra otomatik silinir</li>
+            <li>Profil bilgileri: Kullanıcı silene kadar cihazda kalır</li>
+            <li>Konum verileri: Paylaşım süresi dolduğunda uygulama içinde aktif kullanılmaz</li>
+            <li>Acil durum kişileri: Kullanıcı silene kadar cihazda kalır</li>
+            <li>Ses kayıtları: Kullanıcı silene kadar cihazda kalır</li>
         </ul>
 
         <h2>6. Kullanıcı Hakları</h2>
@@ -150,23 +147,21 @@
         <ul>
             <li><strong>Erişim hakkı:</strong> Verilerinize erişim talep edebilirsiniz</li>
             <li><strong>Düzeltme hakkı:</strong> Hatalı verilerin düzeltilmesini isteyebilirsiniz</li>
-            <li><strong>Silme hakkı:</strong> Hesabınızı ve tüm verilerinizi sildirebilirsiniz</li>
+            <li><strong>Silme hakkı:</strong> Uygulama verilerini temizleyerek veya uygulamayı kaldırarak cihazdaki verileri silebilirsiniz</li>
             <li><strong>İzin yönetimi:</strong> Konum, rehber ve bildirim izinlerini istediğiniz zaman değiştirebilirsiniz</li>
             <li><strong>Veri taşınabilirliği:</strong> Verilerinizin bir kopyasını talep edebilirsiniz</li>
         </ul>
 
         <h2>7. Çocukların Gizliliği</h2>
-        <p>KoruBeni, 13 yaşın altındaki çocuklardan bilerek veri toplamaz. 13 yaşın altındaki bir çocuğun veri sağladığını fark edersek, bu verileri derhal sileriz.</p>
+        <p>KoruBeni, 13 yaşın altındaki çocuklardan bilerek veri toplamaz.</p>
 
         <h2>8. Üçüncü Taraf Hizmetler</h2>
-        <p>Uygulamamız aşağıdaki üçüncü taraf hizmetleri kullanmaktadır:</p>
+        <p>Uygulamamız aşağıdaki üçüncü taraf hizmetleri kullanabilir:</p>
         <ul>
-            <li><strong>Firebase (Google):</strong> Kimlik doğrulama, veritabanı, bildirimler, analitik, hata raporlama</li>
-            <li><strong>OpenStreetMap:</strong> Harita görüntüleme (kişisel veri toplanmaz)</li>
+            <li><strong>OpenStreetMap:</strong> Harita görüntüleme</li>
         </ul>
         <p>Bu hizmetlerin kendi gizlilik politikaları geçerlidir:</p>
         <ul>
-            <li><a href="https://firebase.google.com/support/privacy" target="_blank">Firebase Gizlilik Politikası</a></li>
             <li><a href="https://wiki.osmfoundation.org/wiki/Privacy_Policy" target="_blank">OpenStreetMap Gizlilik Politikası</a></li>
         </ul>
 
@@ -177,7 +172,7 @@
         <div class="contact-box">
             <p>Gizlilik politikamızla ilgili sorularınız için:</p>
             <ul style="list-style: none; padding: 0;">
-                <li><strong>E-posta:</strong> <a href="mailto:destek@korubeni.com">destek@korubeni.com</a></li>
+                <li><strong>E-posta:</strong> <a href="mailto:korubeni.destek@gmail.com">korubeni.destek@gmail.com</a></li>
                 <li><strong>Geliştirici:</strong> Poyraz Öncel</li>
                 <li><strong>Konum:</strong> Türkiye</li>
             </ul>

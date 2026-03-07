@@ -40,8 +40,6 @@ dependencies:
   encrypt: ^5.0.3
   # workmanager: ^0.5.2  # Geçici olarak devre dışı - uyumluluk sorunu
   flutter_local_notifications: ^17.2.1
-  # SMS sending capability for emergency alerts
-  telephony: ^0.2.0
   flutter:
     sdk: flutter
   audioplayers: ^6.5.1

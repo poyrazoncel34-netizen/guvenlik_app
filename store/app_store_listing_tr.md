@@ -27,7 +27,7 @@ GÜVENLİK:
 • 4 haneli PIN ile uygulama koruması
 • Face ID / Touch ID desteği
 • AES-256 şifreleme ile veri güvenliği
-• Tüm veriler Firebase güvenlik kurallarıyla korunur
+• Veriler ağırlıklı olarak cihaz üzerinde tutulur
 
 KoruBeni, güvenliğinizi her an yanınızda taşır.
 
@@ -38,4 +38,4 @@ KoruBeni, güvenliğinizi her an yanınızda taşır.
 
 **Support URL:** https://poyrazoncel34-netizen.github.io/guvenlik_app/privacy_policy.html
 **Privacy Policy URL:** https://poyrazoncel34-netizen.github.io/guvenlik_app/privacy_policy.html
-**Contact Email:** destek@korubeni.com
+**Contact Email:** korubeni.destek@gmail.com

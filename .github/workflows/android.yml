@@ -1,7 +1,6 @@
 # KoruBeni - Android Analyze, Test, Build AAB
 # Push to main veya manuel tetikleme ile çalışır.
 # Gerekli secrets: KEYSTORE_BASE64, KEY_ALIAS, KEY_PASSWORD, STORE_PASSWORD, ENCRYPTION_KEY
-# Opsiyonel: ANDROID_GOOGLE_SERVICES_JSON_BASE64 (base64 -i android/app/google-services.json)
 
 name: Android CI
 
@@ -38,7 +37,6 @@ jobs:
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
           ENCRYPTION_KEY: ${{ secrets.ENCRYPTION_KEY }}
-          GOOGLE_SERVICES: ${{ secrets.ANDROID_GOOGLE_SERVICES_JSON_BASE64 }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
           STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
@@ -73,33 +71,6 @@ jobs:
             echo "can_build_release=false" >> "$GITHUB_OUTPUT"
             [ -z "$ENCRYPTION_KEY" ] && echo "::warning::ENCRYPTION_KEY secret yok — release build atlanacak"
           fi
-
-          # google-services.json
-          if [ -n "$GOOGLE_SERVICES" ]; then
-            echo "$GOOGLE_SERVICES" | base64 -d > android/app/google-services.json 2>/dev/null || true
-          fi
-          if [ ! -s "android/app/google-services.json" ]; then
-            echo "::warning::Dummy google-services.json oluşturuluyor (CI build için)"
-            cat > android/app/google-services.json << 'GSJSON'
-          {
-            "project_info": {
-              "project_number": "000000000000",
-              "firebase_url": "https://dummy.firebaseio.com",
-              "project_id": "dummy-project",
-              "storage_bucket": "dummy-project.appspot.com"
-            },
-            "client": [{
-              "client_info": {
-                "mobilesdk_app_id": "1:000000000000:android:0000000000000000",
-                "android_client_info": { "package_name": "com.poyrazoncel.korubeni" }
-              },
-              "api_key": [{ "current_key": "AIzaSyDummy000000000000000000000000000" }]
-            }],
-            "configuration_version": "1"
-          }
-          GSJSON
-          fi
-
 
       - name: Flutter pub get
         run: flutter pub get

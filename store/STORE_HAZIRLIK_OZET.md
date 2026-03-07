@@ -2,6 +2,8 @@
 
 Bu dosya, teknik eksikler listesinde istenen maddelerin projede nasıl karşılandığını özetler.
 
+> Not: Bu özetin bazı eski bölümleri önceki Firebase tabanlı mimariden kalmış olabilir. Play Store başvurusu için öncelikli referans dosyalar: `store/PLAY_CONSOLE_CHECKLIST.md`, `store/DATA_SAFETY_FORM.md`, `store/SMS_PERMISSION_DECLARATION.md`.
+
 ---
 
 ## Yapılan Değişiklikler (Otomatik)
@@ -20,7 +22,7 @@ Bu dosya, teknik eksikler listesinde istenen maddelerin projede nasıl karşıla
 
 ### 3. Gizlilik Politikası
 - **`store/privacy_policy_template.md`** güncellendi: başlık, maddeler, iletişim ve yayınlama notları eklendi.
-- **Sizin yapacaklarınız:** Template dolduruldu (tarih: 2026-02-26, e-posta: destek@korubeni.com). HTML dosyaları güncel. GitHub Pages deploy sonrası store Privacy Policy URL alanına `https://poyrazoncel34-netizen.github.io/guvenlik_app/privacy_policy.html` yazın.
+- **Sizin yapacaklarınız:** Template dolduruldu (tarih: 2026-03-07, e-posta: korubeni.destek@gmail.com). HTML dosyaları güncel. GitHub Pages deploy sonrası store Privacy Policy URL alanına `https://poyrazoncel34-netizen.github.io/guvenlik_app/privacy_policy.html` yazın.
 
 ### 4. ProGuard / R8 (Android)
 - **`android/app/proguard-rules.pro`** eklendi (Flutter, Firebase, Gson kuralları).

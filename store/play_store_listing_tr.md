@@ -41,7 +41,7 @@ Tek dokunuşla hazır mesaj şablonlarıyla acil kişilerinize ulaşın.
 • Face ID / Parmak İzi desteği
 • AES-256 şifreleme
 • Güvenli veri depolama
-• Firebase güvenlik kuralları
+• Offline-first mimari
 
 ★ GİZLİLİK ★
 
@@ -53,7 +53,7 @@ KoruBeni — Güvenliğiniz bir dokunuş uzağınızda.
 
 **Category:** Tools / Safety
 **Content Rating:** Everyone
-**Contact Email:** destek@korubeni.com
+**Contact Email:** korubeni.destek@gmail.com
 **Privacy Policy URL:** https://poyrazoncel34-netizen.github.io/guvenlik_app/privacy_policy.html
 
 **Tags:** güvenlik, acil durum, panik butonu, konum paylaşımı, kadın güvenliği, SOS, acil yardım, sahte arama, kişisel güvenlik

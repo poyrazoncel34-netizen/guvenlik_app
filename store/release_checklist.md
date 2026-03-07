@@ -12,8 +12,7 @@
 - [x] Encryption key dart-define ile disaridan veriliyor
 - [x] Default PIN kaldirild, ilk giris PIN setup zorunlu
 - [x] key.properties .gitignore'da
-- [x] google-services.json .gitignore'da
-- [x] GoogleService-Info.plist .gitignore'da
+- [x] Firebase bagimliligi kaldirildi; build icin cloud config gerekmiyor
 
 ### App Identity
 - [x] App name finalized: KoruBeni
@@ -23,7 +22,7 @@
 
 ### Store Requirements
 - [x] Privacy Policy URL canli: https://poyrazoncel34-netizen.github.io/guvenlik_app/privacy_policy.html
-- [x] Support email: destek@korubeni.com
+- [x] Support email: korubeni.destek@gmail.com
 - [ ] Store listings finalize (store/ klasoru)
 - [ ] Screenshots al (iPhone, Android)
 - [ ] App icon 1024x1024 onayla

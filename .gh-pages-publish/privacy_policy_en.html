@@ -104,32 +104,31 @@
 <body>
     <div class="container">
         <h1>KoruBeni Privacy Policy</h1>
-        <p class="subtitle">Last updated: February 26, 2026</p>
+        <p class="subtitle">Last updated: March 7, 2026</p>
 
         <p>KoruBeni ("App", "we", "our") is a personal safety application designed to protect its users. This privacy
             policy explains what data we collect, how we use it, and how we protect it.</p>
+        <p><strong>KoruBeni works offline-first.</strong> The primary copy of your data stays on your device and is not sent to a developer-operated cloud backend.</p>
 
         <h2>1. Data We Collect</h2>
 
         <h3 style="font-size:16px; margin-top:16px; margin-bottom:8px;">a) User-Provided Data</h3>
         <ul>
-            <li><strong>Phone number:</strong> For account creation and authentication</li>
             <li><strong>Emergency contacts:</strong> Names and phone numbers of contacts selected from your device</li>
             <li><strong>Profile information:</strong> Name and profile photo (optional)</li>
-            <li><strong>PIN code:</strong> Stored encrypted on-device only, never sent to our servers</li>
+            <li><strong>PIN code:</strong> Stored encrypted on-device only, never sent to any server</li>
         </ul>
 
         <h3 style="font-size:16px; margin-top:16px; margin-bottom:8px;">b) Automatically Collected Data</h3>
         <ul>
-            <li><strong>Location data:</strong> Only when you actively enable location sharing or trigger an emergency
-            </li>
-            <li><strong>Device information:</strong> OS version, app version (for crash reporting)</li>
-            <li><strong>Usage statistics:</strong> Anonymous app usage data (Firebase Analytics)</li>
-            <li><strong>Crash reports:</strong> App crash data (Firebase Crashlytics)</li>
+            <li><strong>Location data:</strong> Only when you actively enable location sharing or trigger an emergency</li>
+            <li><strong>Device-side runtime state:</strong> Temporary technical state needed for app flows</li>
         </ul>
 
         <h3 style="font-size:16px; margin-top:16px; margin-bottom:8px;">c) Data We Do NOT Collect</h3>
         <ul>
+            <li>Anonymous usage statistics</li>
+            <li>Server-side crash reports</li>
             <li>Message contents</li>
             <li>Call logs</li>
             <li>Browsing history</li>
@@ -138,11 +137,10 @@
 
         <h2>2. How We Use Data</h2>
         <ul>
-            <li>Send location and alerts to designated emergency contacts</li>
-            <li>Track location during Safe Walk sessions</li>
-            <li>Send push notifications</li>
-            <li>Improve app reliability and performance</li>
-            <li>Detect and fix bugs</li>
+            <li>Send location and alerts to designated emergency contacts via SMS</li>
+            <li>Support Safe Walk and check-in flows</li>
+            <li>Show local notifications</li>
+            <li>Protect app access with PIN and biometric authentication</li>
         </ul>
 
         <div class="highlight">
@@ -154,9 +152,8 @@
         <p>We do <strong>not sell</strong> your data to third parties. Data is shared only in these cases:</p>
         <ul>
             <li><strong>Emergency contacts:</strong> When an emergency is triggered, your location and status are sent
-                to your selected contacts</li>
-            <li><strong>Service providers:</strong> Firebase (Google) infrastructure services (under data processing
-                agreements)</li>
+                to your selected contacts via SMS</li>
+            <li><strong>Map providers:</strong> OpenStreetMap infrastructure may be contacted when map screens are opened</li>
             <li><strong>Legal requirements:</strong> When required by law or court order</li>
         </ul>
 
@@ -164,42 +161,37 @@
         <ul>
             <li>Sensitive data is protected with AES-256 encryption</li>
             <li>PIN codes are stored in secure device storage (Keychain/Keystore)</li>
-            <li>All communication is encrypted via HTTPS/TLS</li>
-            <li>Firebase security rules prevent unauthorized access</li>
+            <li>The primary copy of sensitive data remains on the device</li>
             <li>Biometric authentication (Face ID/Touch ID) support</li>
         </ul>
 
         <h2>5. Data Retention</h2>
         <ul>
-            <li>Account data: Until account deletion</li>
-            <li>Location data: Automatically deleted when sharing period expires</li>
-            <li>Emergency records: Automatically deleted after 90 days</li>
-            <li>Crash reports: Automatically deleted after 180 days</li>
+            <li>Profile data: Until the user deletes it on the device</li>
+            <li>Emergency contacts: Until the user deletes them on the device</li>
+            <li>Audio recordings: Until the user deletes them on the device</li>
+            <li>Location data: Used only during active emergency and sharing flows</li>
         </ul>
 
         <h2>6. Your Rights</h2>
         <ul>
             <li><strong>Access:</strong> Request access to your data</li>
             <li><strong>Correction:</strong> Request correction of inaccurate data</li>
-            <li><strong>Deletion:</strong> Delete your account and all associated data</li>
+            <li><strong>Deletion:</strong> Delete app data by clearing storage or uninstalling the app</li>
             <li><strong>Permission management:</strong> Change location, contacts, and notification permissions at any
                 time</li>
             <li><strong>Data portability:</strong> Request a copy of your data</li>
         </ul>
 
         <h2>7. Children's Privacy</h2>
-        <p>KoruBeni does not knowingly collect data from children under 13. If we discover that a child under 13 has
-            provided data, we will immediately delete it.</p>
+        <p>KoruBeni does not knowingly collect data from children under 13.</p>
 
         <h2>8. Third-Party Services</h2>
         <ul>
-            <li><strong>Firebase (Google):</strong> Authentication, database, notifications, analytics, crash reporting
-            </li>
-            <li><strong>OpenStreetMap:</strong> Map display (no personal data collected)</li>
+            <li><strong>OpenStreetMap:</strong> Map display</li>
         </ul>
         <p>Their respective privacy policies apply:</p>
         <ul>
-            <li><a href="https://firebase.google.com/support/privacy" target="_blank">Firebase Privacy Policy</a></li>
             <li><a href="https://wiki.osmfoundation.org/wiki/Privacy_Policy" target="_blank">OpenStreetMap Privacy
                     Policy</a></li>
         </ul>
@@ -212,7 +204,7 @@
         <div class="contact-box">
             <p>For questions about our privacy policy:</p>
             <ul style="list-style: none; padding: 0;">
-                <li><strong>Email:</strong> <a href="mailto:destek@korubeni.com">destek@korubeni.com</a></li>
+                <li><strong>Email:</strong> <a href="mailto:korubeni.destek@gmail.com">korubeni.destek@gmail.com</a></li>
                 <li><strong>Developer:</strong> Poyraz Oncel</li>
                 <li><strong>Location:</strong> Turkey</li>
             </ul>

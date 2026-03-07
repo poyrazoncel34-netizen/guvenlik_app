@@ -21,17 +21,18 @@ Bu liste, KoruBeni uygulamasını Play Store’a göndermeden önce **Play Conso
 - **Nerede:** Play Console → Uygulama → **Policy** → **App content** → **Data safety**
 - **Ne yap:** Toplanan / paylaşılan veri türlerini ve amaçlarını beyan et.
 
-KoruBeni’nin kullandığı veriler ve önerilen beyan:
+KoruBeni için güvenli ve güncel beyan yaklaşımı:
 
 | Veri türü | Toplama / paylaşma | Amaç (kısa) |
 |------------|--------------------|-------------|
-| **Konum** (approximate / precise) | Toplanıyor, acil durumda paylaşılıyor | Acil durumda güvenlik ekibi / kişiye konum göndermek |
-| **Kişiler** (rehber) | Sadece cihazda, uygulama içi | Acil iletişim kişilerini seçmek |
-| **Ses kaydı** (mikrofon) | Toplanıyor, opsiyonel | Kanıt / delil kaydı (kullanıcı açar) |
-| **E-posta / telefon** | Hesap ve bildirim için | Kimlik doğrulama, push bildirimleri |
-| **Uygulama etkileşimi** (çökme, analitik) | Firebase / Crashlytics | Hata analizi, iyileştirme |
+| **Konum** (approximate / precise) | Acil durumda veya kullanıcı konum paylaşımını başlatınca işlenir; SMS ile acil kişiye aktarılabilir | Acil durumda konum paylaşımı |
+| **Kişiler** (rehber) | Cihazda erişilir, seçilen kişi cihazda saklanır | Acil kişi seçimi |
+| **Ses kaydı** (mikrofon) | Opsiyonel, cihazda kalır | Kanıt / delil kaydı |
+| **Profil bilgisi** (ad/fotoğraf) | Opsiyonel, cihazda kalır | Uygulama içi kişiselleştirme |
+| **Uygulama etkileşimi** | Toplanmıyor | Analitik / crash reporting yok |
 
-- **“Veri toplanmıyor”** seçme; konum, kişi, ses vb. kullanıldığı için ilgili kutucukları işaretle ve kısa açıklama yaz.
+- Konum ve kişi erişimi kullandığı için Data Safety formunu boş bırakma.
+- Firebase, auth, crash analytics veya push bildirim beyanı verme; mevcut mimari offline-first.
 - Gizlilik politikasındaki açıklamalarla **tutarlı** ol.
 
 ---
@@ -73,7 +74,7 @@ KoruBeni’nin kullandığı veriler ve önerilen beyan:
 ## 6. Özet Sıra
 
 1. Privacy Policy’i yayınla; URL’yi Store listing’e ekle.
-2. Data Safety formunu doldur (konum, kişi, ses, e-posta/telefon, analitik).
+2. Data Safety formunu doldur (konum, kişi erişimi, ses kaydı, opsiyonel profil verisi).
 3. Content rating anketini tamamla.
 4. Hedef kitle ve reklam bilgisini gir.
 5. AAB’yi build alıp ilgili track’e yükle.

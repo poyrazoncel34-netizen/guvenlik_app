@@ -38,9 +38,9 @@ Bu dosya, [release_checklist.md](release_checklist.md) ve [PLAY_CONSOLE_CHECKLIS
 **Gerekli:** Destek için e-posta adresi.
 
 **Adımlar:**
-1. ✅ `privacy_policy_template.md` içinde destek e-postası dolduruldu: `destek@korubeni.com`
+1. ✅ `privacy_policy_template.md` içinde destek e-postası dolduruldu: `korubeni.destek@gmail.com`
 2. ✅ `store/privacy_policy.html` ve `privacy_policy_en.html` içinde aynı e-posta kullanılıyor.
-3. Play Console ve App Store Connect'te Support email alanına `destek@korubeni.com` yazın.
+3. Play Console ve App Store Connect'te Support email alanına `korubeni.destek@gmail.com` yazın.
 
 ---
 

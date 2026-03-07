@@ -17,16 +17,6 @@ class MainActivity : FlutterActivity() {
         try {
             val messenger = flutterEngine.dartExecutor.binaryMessenger
 
-            // SMS plugin (mevcut)
-            try {
-                val smsPlugin = SmsPlugin(this)
-                MethodChannel(messenger, SmsPlugin.CHANNEL)
-                    .setMethodCallHandler(smsPlugin)
-                android.util.Log.d("MainActivity", "SMS plugin configured")
-            } catch (e: Exception) {
-                android.util.Log.e("MainActivity", "SMS plugin failed: ${e.message}", e)
-            }
-
             // Volume button EventChannel — Flutter'a sürekli event akışı
             try {
                 EventChannel(messenger, VolumeButtonDetector.CHANNEL)

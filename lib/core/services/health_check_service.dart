@@ -51,7 +51,7 @@ class HealthCheckService {
     debugPrint('🏥 Starting local health check...');
 
     try {
-      final results = await Future.wait([
+      final results = await Future.wait<bool>([
         _checkGPS(),
         _checkPermissions(),
         _checkBattery(),
@@ -59,10 +59,10 @@ class HealthCheckService {
       ]);
 
       final status = HealthStatus(
-        gpsHealthy: results[0] as bool,
-        permissionsHealthy: results[1] as bool,
-        batteryHealthy: results[2] as bool,
-        sensorsHealthy: results[3] as bool,
+        gpsHealthy: results[0],
+        permissionsHealthy: results[1],
+        batteryHealthy: results[2],
+        sensorsHealthy: results[3],
       );
 
       if (!status.isHealthy) {

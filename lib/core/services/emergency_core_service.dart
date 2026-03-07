@@ -98,8 +98,8 @@ class EmergencyCoreService {
   
   // Battery monitoring
   final Battery _battery = Battery();
-  static const int CRITICAL_BATTERY_LEVEL = 10;
-  static const int LOW_BATTERY_LEVEL = 20;
+  static const int criticalBatteryLevel = 10;
+  static const int lowBatteryLevel = 20;
   
   // Location caching
   LatLng? _lastKnownPosition;
@@ -115,7 +115,10 @@ class EmergencyCoreService {
     // Level 1: Real-time GPS
     try {
       final position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+          timeLimit: Duration(seconds: 10),
+        ),
       ).timeout(Duration(seconds: 10));
       
       final latLng = LatLng(position.latitude, position.longitude);
@@ -207,17 +210,13 @@ class EmergencyCoreService {
       // Battery
       try {
         final level = await _battery.batteryLevel;
-        health['battery_ok'] = level > LOW_BATTERY_LEVEL;
+        health['battery_ok'] = level > lowBatteryLevel;
       } catch (e) {
         health['battery_ok'] = true; // Assume OK
       }
       
-      // SMS Permission
-      try {
-        health['sms_permission'] = await Permission.sms.isGranted;
-      } catch (e) {
-        health['sms_permission'] = false;
-      }
+      // SMS is composer-based; no restricted SMS permission required.
+      health['sms_permission'] = true;
       
       // Call Permission
       try {

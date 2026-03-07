@@ -7,7 +7,6 @@ Plan Madde 6-7: AAB build, Internal Testing yükleme, inceleme gönderimi.
 ## Ön Koşullar
 
 - [ ] `android/key.properties` dolduruldu (storePassword, keyPassword, storeFile, keyAlias)
-- [ ] `android/app/google-services.json` indirildi
 - [ ] `assets/icon/app_icon.png` mevcut
 - [ ] ENCRYPTION_KEY hazır (`openssl rand -base64 32`)
 
@@ -47,7 +46,6 @@ ENCRYPTION_KEY='base64_key_buraya' ./scripts/build_production.sh
 - [ ] **Store listing** tamam (başlık, açıklama, Privacy Policy URL, screenshots)
 - [ ] **Data Safety** formu dolduruldu
 - [ ] **Content Rating** sertifikası alındı
-- [ ] **SMS Permission Declaration** formu dolduruldu (+ demo video)
 
 ---
 
@@ -64,5 +62,4 @@ ENCRYPTION_KEY='base64_key_buraya' ./scripts/build_production.sh
 | Hata | Çözüm |
 |------|-------|
 | key.properties bulunamadı | `cp android/key.properties.example android/key.properties` → değerleri düzenle |
-| google-services.json bulunamadı | Firebase Console → Android app → Download |
 | Keystore bulunamadı | `cd android && keytool -genkey -v -keystore korubeni-release-key.jks ...` |

@@ -4,11 +4,13 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../core/app_colors.dart';
 import '../core/di/service_locator.dart';
+import '../core/services/connectivity_service.dart';
 import '../core/services/location_service.dart';
 import '../domain/repositories/location_repository.dart';
 import 'countdown_screen.dart';
@@ -27,6 +29,13 @@ class _EmergencyMapScreenState extends State<EmergencyMapScreen> {
 
   LatLng? _currentLocation;
   bool _isLoading = true;
+
+  bool get _shouldUseOfflineMapFallback {
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+      return true;
+    }
+    return !ConnectivityService.instance.isOnline;
+  }
 
   @override
   void initState() {
@@ -72,8 +81,11 @@ class _EmergencyMapScreenState extends State<EmergencyMapScreen> {
       ),
       body: Stack(
         children: [
-          _buildMap(),
-          Positioned(left: 12, bottom: 92, child: _buildOsmAttribution()),
+          _shouldUseOfflineMapFallback
+              ? _buildOfflineMapSurface()
+              : _buildMap(),
+          if (!_shouldUseOfflineMapFallback)
+            Positioned(left: 12, bottom: 92, child: _buildOsmAttribution()),
           if (_isLoading)
             Container(
               color: Colors.black.withValues(alpha: 0.2),
@@ -180,6 +192,105 @@ class _EmergencyMapScreenState extends State<EmergencyMapScreen> {
             ],
           ),
       ],
+    );
+  }
+
+  Widget _buildOfflineMapSurface() {
+    final location = _currentLocation ?? LocationService.defaultLocation;
+
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFF102435), Color(0xFF0A1B2A)],
+        ),
+      ),
+      child: SafeArea(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: AppColors.cardBg,
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: AppColors.border),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 72,
+                    height: 72,
+                    decoration: BoxDecoration(
+                      color: AppColors.emergency.withValues(alpha: 0.14),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.gps_not_fixed_rounded,
+                      color: AppColors.emergency,
+                      size: 34,
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  Text(
+                    "no_internet_connection".tr(),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    "offline_mode_warning".tr(),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      height: 1.5,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AppColors.emergency.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    child: Column(
+                      children: [
+                        Text(
+                          "location".tr(),
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        SelectableText(
+                          '${location.latitude.toStringAsFixed(6)}, ${location.longitude.toStringAsFixed(6)}',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 
