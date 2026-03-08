@@ -49,6 +49,9 @@ class VolumeTriggerService {
     if (!isSupported) return;
     final prefs = await SharedPreferences.getInstance();
     _isEnabled = prefs.getBool(AppConstants.prefVolumeTrigger) ?? false;
+    if (_isEnabled && _onPanicTriggered != null && !_isListening) {
+      _startListening();
+    }
   }
 
   /// Tercihi kaydet ve native tarafı güncelle.

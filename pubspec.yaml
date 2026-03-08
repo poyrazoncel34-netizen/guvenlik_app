@@ -90,12 +90,11 @@ dev_dependencies:
 
 flutter_launcher_icons:
   android: true
-  ios: true
+  ios: false
   image_path: "assets/icon/app_icon.png"
   adaptive_icon_background: "#0A1B2A"
   adaptive_icon_foreground: "assets/icon/app_icon.png"
   min_sdk_android: 21
-  remove_alpha_ios: true
   web:
     generate: false
 
@@ -111,7 +110,7 @@ flutter_native_splash:
   
   # Platform-specific configuration
   android: true
-  ios: true
+  ios: false
   web: false
   
   # Android 12+ specific configuration
@@ -123,15 +122,8 @@ flutter_native_splash:
     # Icon background color (should match main background)
     icon_background_color: "#0A1B2A"
   
-  # iOS specific configuration
-  ios_content_mode: center
-  
   # Fullscreen mode (removes status bar during splash)
   fullscreen: true
-  
-  # Info.plist modifications for iOS
-  info_plist_files:
-    - 'ios/Runner/Info.plist'
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

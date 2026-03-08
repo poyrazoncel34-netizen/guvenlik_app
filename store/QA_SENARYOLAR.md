@@ -15,7 +15,7 @@ Bu dosya, uygulama çıkışı öncesi kritik akışların manuel test senaryola
 
 **Olası sorunlar:**
 - `SharedPreferences` erişim hatası (izin/izolasyon)
-- Uzun süren splash (ağ/Firebase gecikmesi)
+- Uzun süren splash (cihaz yavasligi veya servis gecikmesi)
 
 ---
 
@@ -96,4 +96,4 @@ Bu dosya, uygulama çıkışı öncesi kritik akışların manuel test senaryola
 3. **Orta:** Harita, Ayarlar, Sahte çağrı, Siren
 4. **Düşük:** Arka plan, sallama/ses tetikleme, dil değişimi
 
-Bu senaryoları gerçek Android ve iOS cihazlarda test edin; emülatörde izinler ve arama/SMS davranışı farklı olabilir.
+Bu senaryolari gercek Android cihazda test edin; emulatorde izinler ve arama/SMS davranisi farkli olabilir.

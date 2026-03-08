@@ -8,6 +8,7 @@ import '../navigation/app_navigator.dart';
 import '../di/service_locator.dart';
 import '../security/secure_storage.dart';
 import '../security/secure_storage_keys.dart';
+import 'check_in_service.dart';
 
 /// Tracks app lifecycle and forces re-authentication after being
 /// backgrounded for longer than [lockAfterSeconds].
@@ -35,6 +36,10 @@ class AppLifecycleHandler {
     _pausedAt = null;
 
     if (elapsed < lockAfterSeconds) return;
+    if (CheckInService.instance.isActive ||
+        CheckInService.instance.isGracePeriod) {
+      return;
+    }
 
     // Check if PIN is set — no lock if user hasn't set one.
     final secureStorage = serviceLocator<SecureStorage>();

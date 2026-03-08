@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# KoruBeni - Production Build Script (Play Store AAB + optional iOS)
+# KoruBeni - Production Build Script (Play Store AAB)
 # Kullanım: ENCRYPTION_KEY='base64key' ./scripts/build_production.sh
 # Key üretmek: openssl rand -base64 32
 
@@ -82,32 +82,13 @@ echo "📦 Dosya: $AAB_PATH"
 echo ""
 rm -f "$BUILD_LOG"
 
-# iOS Build (opsiyonel - sadece Mac'te)
-if [[ "$OSTYPE" == "darwin"* ]]; then
-    echo "🍎 iOS build başlıyor..."
-    flutter build ios --release \
-      --dart-define=ENV=production \
-      --dart-define=ENCRYPTION_KEY="$ENCRYPTION_KEY"
-    
-    if [ $? -eq 0 ]; then
-        echo ""
-        echo "✅ iOS build başarılı!"
-        echo "📦 Xcode'da Archive yapabilirsin: ios/Runner.xcworkspace"
-        echo ""
-    else
-        echo ""
-        echo "⚠️  iOS build başarısız (devam ediyoruz...)"
-    fi
-fi
-
 echo ""
 echo "═══════════════════════════════════════════════════════════"
 echo "✅ Build tamamlandı!"
 echo "═══════════════════════════════════════════════════════════"
 echo ""
 echo "📋 Sonraki adımlar:"
-echo "1. Screenshot'ları al (store/screenshots/)"
+echo "1. Android screenshot'larını al (store/screenshots/android/)"
 echo "2. Privacy Policy'i canlıya al"
 echo "3. Play Store Console'a git ve AAB'yi yükle"
-echo "4. App Store Connect'e git ve iOS build'i yükle"
 echo ""

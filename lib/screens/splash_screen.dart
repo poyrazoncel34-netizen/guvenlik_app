@@ -110,10 +110,16 @@ class _SplashScreenState extends State<SplashScreen>
     _startAnimations();
   }
 
-  void _startAnimations() async {
-    // Respect system accessibility: skip animations if reduce motion is on
-    final reduceMotion =
-        MediaQuery.of(context).disableAnimations;
+  void _startAnimations() {
+    // MediaQuery.of(context) must NOT be called in initState before async gap.
+    // Use addPostFrameCallback so context is valid when we read it.
+    WidgetsBinding.instance.addPostFrameCallback((_) => _runAnimations());
+  }
+
+  Future<void> _runAnimations() async {
+    if (!mounted) return;
+    final reduceMotion = MediaQuery.of(context).disableAnimations;
+
     if (reduceMotion) {
       _logoController.value = 1.0;
       _textController.value = 1.0;

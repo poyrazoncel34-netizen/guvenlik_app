@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../core/app_colors.dart';
 import '../core/services/activity_service.dart';
+import '../core/services/foreground_service.dart';
 import '../core/services/notification_service.dart';
 // Analytics service removed (offline-first)
 import '../domain/models/activity_event.dart';
@@ -61,7 +62,7 @@ class _SafeWalkScreenState extends State<SafeWalkScreen>
     }
   }
 
-  void _startSafeWalk() {
+  Future<void> _startSafeWalk() async {
     HapticFeedback.mediumImpact();
     setState(() {
       _isActive = true;
@@ -73,8 +74,13 @@ class _SafeWalkScreenState extends State<SafeWalkScreen>
     ActivityService.logEvent(
       type: ActivityType.locationShared,
       title: "safe_walk_started_activity".tr(),
-      description: "safe_walk_started_desc".tr(namedArgs: {"minutes": "$_selectedMinutes"}),
+      description: "safe_walk_started_desc".tr(
+        namedArgs: {"minutes": "$_selectedMinutes"},
+      ),
     );
+
+    await KoruBeniForegroundService.start();
+    _updateForegroundStatus();
 
     _preWarningFired = false;
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
@@ -90,9 +96,16 @@ class _SafeWalkScreenState extends State<SafeWalkScreen>
         setState(() {
           _remainingSeconds = remaining.inSeconds;
         });
+        if (_remainingSeconds % 30 == 0 || _remainingSeconds <= 60) {
+          _updateForegroundStatus();
+        }
         // Fire pre-expiry warning at 2 minutes (or 10% of total if total < 4 min)
-        final warningThreshold = _selectedMinutes >= 4 ? 120 : (_selectedMinutes * 60 * 0.1).round();
-        if (!_preWarningFired && _remainingSeconds <= warningThreshold && _remainingSeconds > 0) {
+        final warningThreshold = _selectedMinutes >= 4
+            ? 120
+            : (_selectedMinutes * 60 * 0.1).round();
+        if (!_preWarningFired &&
+            _remainingSeconds <= warningThreshold &&
+            _remainingSeconds > 0) {
           _preWarningFired = true;
           _firePreExpiryWarning();
         }
@@ -141,6 +154,7 @@ class _SafeWalkScreenState extends State<SafeWalkScreen>
   void _checkIn() {
     HapticFeedback.lightImpact();
     _timer?.cancel();
+    KoruBeniForegroundService.stop();
     // Analytics removed (offline-first)
     ActivityService.logEvent(
       type: ActivityType.safetyCheck,
@@ -176,6 +190,7 @@ class _SafeWalkScreenState extends State<SafeWalkScreen>
   void _cancelWalk() {
     HapticFeedback.lightImpact();
     _timer?.cancel();
+    KoruBeniForegroundService.stop();
     setState(() {
       _isActive = false;
       _endTime = null;
@@ -189,33 +204,40 @@ class _SafeWalkScreenState extends State<SafeWalkScreen>
     return '${min.toString().padLeft(2, '0')}:${sec.toString().padLeft(2, '0')}';
   }
 
+  void _updateForegroundStatus() {
+    KoruBeniForegroundService.updateNotification(
+      "safe_walk_title".tr(),
+      '${"safe_walk_remaining".tr()}: ${_formatTime(_remainingSeconds)}',
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Semantics(
       label: "semantics_safe_walk".tr(),
       hint: "semantics_safe_walk_hint".tr(),
       child: Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: Text("safe_walk_title".tr()),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded),
-          onPressed: () {
-            if (_isActive) {
-              _showExitWarning();
-            } else {
-              Navigator.pop(context);
-            }
-          },
+        backgroundColor: AppColors.background,
+        appBar: AppBar(
+          title: Text("safe_walk_title".tr()),
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new_rounded),
+            onPressed: () {
+              if (_isActive) {
+                _showExitWarning();
+              } else {
+                Navigator.pop(context);
+              }
+            },
+          ),
+        ),
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: _isActive ? _buildActiveView() : _buildSetupView(),
+          ),
         ),
       ),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: _isActive ? _buildActiveView() : _buildSetupView(),
-        ),
-      ),
-    ),
     );
   }
 
@@ -307,14 +329,14 @@ class _SafeWalkScreenState extends State<SafeWalkScreen>
                       width: isSelected ? 2 : 1,
                     ),
                     boxShadow: isSelected
-                      ? [
-                          BoxShadow(
-                            color: AppColors.accent.withValues(alpha: 0.3),
-                            blurRadius: 12,
-                            offset: const Offset(0, 4),
-                          ),
-                        ]
-                      : null,
+                        ? [
+                            BoxShadow(
+                              color: AppColors.accent.withValues(alpha: 0.3),
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
+                            ),
+                          ]
+                        : null,
                   ),
                   child: Text(
                     "safe_walk_minutes".tr(namedArgs: {"min": "$min"}),
@@ -401,7 +423,9 @@ class _SafeWalkScreenState extends State<SafeWalkScreen>
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  isUrgent ? "safe_walk_hurry".tr() : "safe_walk_remaining".tr(),
+                  isUrgent
+                      ? "safe_walk_hurry".tr()
+                      : "safe_walk_remaining".tr(),
                   style: TextStyle(
                     fontSize: 14,
                     color: isUrgent
@@ -427,7 +451,10 @@ class _SafeWalkScreenState extends State<SafeWalkScreen>
             ),
             child: Row(
               children: [
-                const Icon(Icons.warning_amber_rounded, color: AppColors.emergency),
+                const Icon(
+                  Icons.warning_amber_rounded,
+                  color: AppColors.emergency,
+                ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(

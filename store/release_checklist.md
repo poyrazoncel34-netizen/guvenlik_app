@@ -17,14 +17,13 @@
 ### App Identity
 - [x] App name finalized: KoruBeni
 - [x] Android applicationId: com.poyrazoncel.korubeni
-- [x] iOS bundleId: com.poyrazoncel.korubeni
 - [x] Version and build number set
 
 ### Store Requirements
 - [x] Privacy Policy URL canli: https://poyrazoncel34-netizen.github.io/guvenlik_app/privacy_policy.html
 - [x] Support email: korubeni.destek@gmail.com
 - [ ] Store listings finalize (store/ klasoru)
-- [ ] Screenshots al (iPhone, Android)
+- [ ] Screenshots al (Android)
 - [ ] App icon 1024x1024 onayla
 
 ### Android
@@ -35,20 +34,13 @@
 - [ ] Internal Testing track'e yukle
 - **Detay:** [PLAY_CONSOLE_CHECKLIST.md](PLAY_CONSOLE_CHECKLIST.md) – Privacy Policy URL, Data Safety, Content rating, AAB adimlari
 
-### iOS
-- [x] Signing & provisioning yapilandi (Team ID set)
-- [ ] App Store Privacy Details doldur
-- [ ] TestFlight'a yukle
-
 ### QA
 - [ ] Gercek Android cihazda test
-- [ ] Gercek iPhone'da test
 - [ ] SMS + arama akisi test
 - [ ] PIN kurulum akisi test
 - [ ] Izin reddedilme senaryolari test
 - [ ] Offline senaryolar test
 - **Detay:** [QA_SENARYOLAR.md](QA_SENARYOLAR.md) – Kritik akışlar ve ekran kontrol listesi
-- **Eksikler:** [STORE_EKSIKLER.md](STORE_EKSIKLER.md) – Yapılacaklar özeti ve adım adım talimatlar
 
 ## Build Commands
 
@@ -66,16 +58,8 @@ flutter build appbundle --release \
   --dart-define=ENV=production \
   --dart-define=ENCRYPTION_KEY=your_base64_key
 
-# iOS
-flutter build ios --release \
-  --dart-define=ENV=production \
-  --dart-define=ENCRYPTION_KEY=your_base64_key
-
 # Build numarasi artir
 chmod +x scripts/bump_version.sh && ./scripts/bump_version.sh
-
-# Testler
-flutter test
 
 # Ikon uret
 dart run flutter_launcher_icons

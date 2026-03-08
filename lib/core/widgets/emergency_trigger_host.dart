@@ -6,6 +6,7 @@ import '../../screens/countdown_screen.dart';
 import '../constants/app_constants.dart';
 import '../navigation/app_navigator.dart';
 import '../services/app_lifecycle_handler.dart';
+import '../services/check_in_service.dart';
 import '../services/shake_detector_service.dart';
 import '../services/volume_trigger_service.dart';
 
@@ -20,13 +21,15 @@ class EmergencyTriggerHost extends StatefulWidget {
 
 class _EmergencyTriggerHostState extends State<EmergencyTriggerHost>
     with WidgetsBindingObserver {
-  final ShakeDetectorService _shakeDetector = ShakeDetectorService();
+  final ShakeDetectorService _shakeDetector = ShakeDetectorService.instance;
   bool _countdownOpen = false;
+  bool _foregroundTriggersEnabled = false;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    CheckInService.instance.initialize();
     _startForegroundTriggers();
   }
 
@@ -34,6 +37,7 @@ class _EmergencyTriggerHostState extends State<EmergencyTriggerHost>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       _startForegroundTriggers();
+      CheckInService.instance.handleAppResumed();
       // Re-auth after prolonged background
       AppLifecycleHandler.instance.onResumed();
       return;
@@ -50,25 +54,38 @@ class _EmergencyTriggerHostState extends State<EmergencyTriggerHost>
   }
 
   void _startForegroundTriggers() {
+    _foregroundTriggersEnabled = true;
     _startShakeIfEnabled();
-    if (VolumeTriggerService.isSupported) {
-      VolumeTriggerService.instance.loadPreference(); // Load preference without awaiting
+    _startVolumeIfEnabled();
+  }
+
+  Future<void> _startShakeIfEnabled() async {
+    await _shakeDetector.loadPreferences();
+    if (!mounted || !_foregroundTriggersEnabled) return;
+    _shakeDetector.startListening(onShakeDetected: _openCountdown);
+  }
+
+  Future<void> _startVolumeIfEnabled() async {
+    if (!VolumeTriggerService.isSupported) return;
+
+    VolumeTriggerService.instance.startListening(
+      onPanicTriggered: _openCountdown,
+    );
+    await VolumeTriggerService.instance.loadPreference();
+    if (!mounted || !_foregroundTriggersEnabled) return;
+
+    final prefs = await SharedPreferences.getInstance();
+    final volumeEnabled =
+        prefs.getBool(AppConstants.prefVolumeTrigger) ?? false;
+    if (volumeEnabled) {
       VolumeTriggerService.instance.startListening(
         onPanicTriggered: _openCountdown,
       );
     }
   }
 
-  Future<void> _startShakeIfEnabled() async {
-    final prefs = await SharedPreferences.getInstance();
-    final shakeEnabled =
-        prefs.getBool(AppConstants.prefShakeEnabled) ?? true;
-    if (shakeEnabled) {
-      _shakeDetector.startListening(onShakeDetected: _openCountdown);
-    }
-  }
-
   void _stopForegroundTriggers() {
+    _foregroundTriggersEnabled = false;
     _shakeDetector.stopListening();
     VolumeTriggerService.instance.stopListening();
   }

@@ -48,7 +48,7 @@ fi
 echo ""
 echo "3. Launcher icons üretiliyor..."
 dart run flutter_launcher_icons
-echo "   ✅ Android ve iOS ikonları oluşturuldu"
+echo "   ✅ Android ikonları oluşturuldu"
 
 echo ""
 echo "═══════════════════════════════════════════════════════════"

@@ -3,6 +3,7 @@
 // ============================================================================
 
 import 'dart:ui';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'core/di/service_locator.dart';
@@ -75,21 +76,21 @@ void main() async {
   };
 
   // OPTIMIZED COLD START: Run independent services in parallel
+  // Web: Skip NotificationService & ForegroundService (platform plugins don't support web)
   try {
-    await Future.wait([
-      // Critical services (must complete)
+    final services = <Future<void>>[
       setupServiceLocator(),
       DataMigrationService.migrate(),
       OfflineQueueService.instance.initialize(),
       AtomicStorageService.instance.checkIntegrity(),
-      NotificationService.instance.initialize(),
-
-      // Non-blocking services
       HapticService.initialize(),
       ConnectivityService.instance.initialize(),
-      KoruBeniForegroundService.configure(),
-    ]);
-    // Services ready - app launches instantly
+    ];
+    if (!kIsWeb) {
+      services.add(NotificationService.instance.initialize());
+      services.add(KoruBeniForegroundService.configure());
+    }
+    await Future.wait(services);
   } catch (e) {
     // Non-fatal - app continues
   }

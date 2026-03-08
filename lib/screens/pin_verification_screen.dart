@@ -10,7 +10,7 @@ import '../core/services/sms_service.dart';
 import '../core/di/service_locator.dart';
 import '../core/security/secure_storage.dart';
 import '../core/security/secure_storage_keys.dart';
-import '../domain/repositories/location_repository.dart';
+import '../core/utils/emergency_message_helper.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'emergency_call_screen.dart';
 
@@ -28,8 +28,6 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
   String? _correctPin; // Loaded from secure storage
   EmergencyContact? _emergencyContact;
   late final SecureStorage _secureStorage = serviceLocator<SecureStorage>();
-  late final LocationRepository _locationRepository =
-      serviceLocator<LocationRepository>();
   bool _biometricAvailable = false;
   String _biometricLabel = 'Biometric'; // Updated by _checkBiometric()
 
@@ -61,8 +59,9 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
     );
     if (success && mounted) {
       _timer?.cancel();
+      final messenger = ScaffoldMessenger.of(context);
       Navigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger.showSnackBar(
         SnackBar(
           content: Text("pin_verify_safe_cancelled".tr()),
           backgroundColor: AppColors.success,
@@ -135,13 +134,9 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
       return;
     }
 
-    // 1. Konum al (SMS'e eklemek için)
-    final locationResult = await _locationRepository.getCurrentLocation();
-    final lat = locationResult.position?.latitude;
-    final lng = locationResult.position?.longitude;
-    final smsMessage = (locationResult.isSuccess && lat != null && lng != null)
-        ? 'ACİL DURUM! KoruBeni panik butonu tetiklendi. Bana acil ulaşın. Konumum: https://maps.google.com/?q=$lat,$lng'
-        : 'ACİL DURUM! KoruBeni panik butonu tetiklendi. Bana acil ulaşın. (Konum bilgisi alınamadı)';
+    final messagePayload =
+        await EmergencyMessageHelper.buildPanicButtonMessage();
+    final smsMessage = messagePayload.message;
 
     // 2. Tüm acil kişilere SMS gönder (arka planda, hata olsa bile aramaya geç)
     try {
@@ -173,8 +168,9 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
                   _emergencyContact?.name ??
                   "pin_verify_emergency_contact".tr(),
               phone: emergencyNumber,
-              callStatusMessage: callResult.statusMessage,
-              smsStatusMessage: smsResult.statusMessage,
+              callResult: callResult,
+              smsResult: smsResult,
+              locationStatusMessage: messagePayload.locationStatusMessage,
             ),
           ),
         );
@@ -200,8 +196,9 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
     if (_enteredPin.length == 4) {
       if (_correctPin != null && _enteredPin == _correctPin) {
         _timer?.cancel();
+        final messenger = ScaffoldMessenger.of(context);
         Navigator.pop(context); // Şifre doğru, iptal et
-        ScaffoldMessenger.of(context).showSnackBar(
+        messenger.showSnackBar(
           SnackBar(
             content: Text("pin_verify_safe_cancelled".tr()),
             backgroundColor: AppColors.success,

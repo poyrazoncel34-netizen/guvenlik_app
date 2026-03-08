@@ -30,91 +30,109 @@ class KoruBeniForegroundService {
 
   /// Servisi yapılandır — uygulama başlangıcında bir kez çağır.
   static Future<void> configure() async {
+    if (kIsWeb) return;
     if (_isConfigured) return;
 
-    // Bildirim kanalı oluştur
-    final flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
-    const AndroidNotificationChannel channel = AndroidNotificationChannel(
-      kForegroundChannelId,
-      kForegroundChannelName,
-      description: 'KoruBeni güvenlik servisi arka planda çalışıyor',
-      importance: Importance.low, // Sessiz ama kalıcı bildirim
-    );
+    try {
+      // Bildirim kanalı oluştur
+      final flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+      const AndroidNotificationChannel channel = AndroidNotificationChannel(
+        kForegroundChannelId,
+        kForegroundChannelName,
+        description: 'KoruBeni güvenlik servisi arka planda çalışıyor',
+        importance: Importance.low, // Sessiz ama kalıcı bildirim
+      );
 
-    await flutterLocalNotificationsPlugin
-        .resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin
-        >()
-        ?.createNotificationChannel(channel);
+      await flutterLocalNotificationsPlugin
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >()
+          ?.createNotificationChannel(channel);
 
-    await _service.configure(
-      androidConfiguration: AndroidConfiguration(
-        onStart: _onStart,
-        autoStart: false, // Manuel başlatma — sadece alarm modunda
-        isForegroundMode: true,
-        notificationChannelId: kForegroundChannelId,
-        initialNotificationTitle: 'KoruBeni',
-        initialNotificationContent: 'Güvenlik modu aktif 🛡️',
-        foregroundServiceNotificationId: kForegroundNotificationId,
-        foregroundServiceTypes: [AndroidForegroundType.location],
-      ),
-      iosConfiguration: IosConfiguration(
-        autoStart: false,
-        onForeground: _onStart,
-        onBackground: _onIosBackground,
-      ),
-    );
+      await _service.configure(
+        androidConfiguration: AndroidConfiguration(
+          onStart: _onStart,
+          autoStart: false, // Manuel başlatma — sadece alarm modunda
+          isForegroundMode: true,
+          notificationChannelId: kForegroundChannelId,
+          initialNotificationTitle: 'KoruBeni',
+          initialNotificationContent: 'Güvenlik modu aktif 🛡️',
+          foregroundServiceNotificationId: kForegroundNotificationId,
+          foregroundServiceTypes: [AndroidForegroundType.location],
+        ),
+        iosConfiguration: IosConfiguration(
+          autoStart: false,
+          onForeground: _onStart,
+          onBackground: _onIosBackground,
+        ),
+      );
 
-    _isConfigured = true;
-    debugPrint('ForegroundService: Configured');
+      _isConfigured = true;
+      debugPrint('ForegroundService: Configured');
+    } catch (e) {
+      debugPrint('ForegroundService: Configure failed: $e');
+    }
   }
 
   /// Foreground service'i başlat (alarm modu aktifleştiğinde çağır)
   static Future<void> start() async {
-    if (!_isConfigured) await configure();
+    if (kIsWeb) return;
+    try {
+      if (!_isConfigured) await configure();
 
-    final isRunning = await _service.isRunning();
-    if (isRunning) {
-      debugPrint('ForegroundService: Already running');
-      return;
-    }
+      final isRunning = await _service.isRunning();
+      if (isRunning) {
+        debugPrint('ForegroundService: Already running');
+        return;
+      }
 
-    await _service.startService();
-
-    // Wakelock'u etkinleştir — CPU uyanık kalsın
-    if (!kIsWeb) {
+      await _service.startService();
       await WakelockPlus.enable();
+      debugPrint('ForegroundService: Started + Wakelock enabled');
+    } catch (e) {
+      debugPrint('ForegroundService: Start failed: $e');
     }
-
-    debugPrint('ForegroundService: Started + Wakelock enabled');
   }
 
   /// Foreground service'i durdur (alarm modu kapatıldığında çağır)
   static Future<void> stop() async {
-    final isRunning = await _service.isRunning();
-    if (!isRunning) {
-      debugPrint('ForegroundService: Already stopped');
-      return;
-    }
+    if (kIsWeb) return;
+    try {
+      final isRunning = await _service.isRunning();
+      if (!isRunning) {
+        debugPrint('ForegroundService: Already stopped');
+        return;
+      }
 
-    _service.invoke('stop');
-
-    // Wakelock'u devre dışı bırak
-    if (!kIsWeb) {
+      _service.invoke('stop');
       await WakelockPlus.disable();
+      debugPrint('ForegroundService: Stopped + Wakelock disabled');
+    } catch (e) {
+      debugPrint('ForegroundService: Stop failed: $e');
     }
-
-    debugPrint('ForegroundService: Stopped + Wakelock disabled');
   }
 
   /// Servis çalışıyor mu?
   static Future<bool> isRunning() async {
-    return await _service.isRunning();
+    if (kIsWeb) return false;
+    try {
+      return await _service.isRunning();
+    } catch (_) {
+      return false;
+    }
   }
 
   /// Bildirim metnini güncelle
   static void updateNotification(String title, String content) {
-    _service.invoke('updateNotification', {'title': title, 'content': content});
+    if (kIsWeb) return;
+    try {
+      _service.invoke('updateNotification', {
+        'title': title,
+        'content': content,
+      });
+    } catch (e) {
+      debugPrint('ForegroundService: Update notification failed: $e');
+    }
   }
 }
 
