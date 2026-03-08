@@ -46,13 +46,16 @@ class _SafetyTimelineScreenState extends State<SafetyTimelineScreen> {
   Future<void> _loadEntries() async {
     final prefs = await SharedPreferences.getInstance();
     final raw = prefs.getStringList(_storageKey) ?? [];
-    final entries = raw.map((e) {
-      try {
-        return jsonDecode(e) as Map<String, dynamic>;
-      } catch (_) {
-        return <String, dynamic>{};
-      }
-    }).where((e) => e.isNotEmpty).toList();
+    final entries = raw
+        .map((e) {
+          try {
+            return jsonDecode(e) as Map<String, dynamic>;
+          } catch (_) {
+            return <String, dynamic>{};
+          }
+        })
+        .where((e) => e.isNotEmpty)
+        .toList();
     entries.sort((a, b) {
       final aTime = DateTime.tryParse(a['timestamp'] ?? '') ?? DateTime(2000);
       final bTime = DateTime.tryParse(b['timestamp'] ?? '') ?? DateTime(2000);
@@ -91,7 +94,9 @@ class _SafetyTimelineScreenState extends State<SafetyTimelineScreen> {
       type: ActivityType.timelineNote,
       title: "timeline_note_added".tr(),
       description: destination.isNotEmpty
-          ? "timeline_note_destination_desc".tr(namedArgs: {'destination': destination})
+          ? "timeline_note_destination_desc".tr(
+              namedArgs: {'destination': destination},
+            )
           : "timeline_note_general_desc".tr(),
     );
 
@@ -100,19 +105,26 @@ class _SafetyTimelineScreenState extends State<SafetyTimelineScreen> {
     _notesController.clear();
 
     if (mounted) {
+      final messenger = ScaffoldMessenger.of(context);
       Navigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger.showSnackBar(
         SnackBar(
           content: Row(
             children: [
-              const Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
+              const Icon(
+                Icons.check_circle_rounded,
+                color: Colors.white,
+                size: 20,
+              ),
               const SizedBox(width: 10),
               Expanded(child: Text("timeline_note_saved".tr())),
             ],
           ),
           backgroundColor: AppColors.success,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
       );
     }
@@ -130,7 +142,9 @@ class _SafetyTimelineScreenState extends State<SafetyTimelineScreen> {
             content: Text("emergency_contact_not_found".tr()),
             backgroundColor: AppColors.warning,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
         );
       }
@@ -143,12 +157,25 @@ class _SafetyTimelineScreenState extends State<SafetyTimelineScreen> {
 
     final parts = <String>[];
     parts.add("timeline_share_header".tr());
-    if (destination.isNotEmpty) parts.add("timeline_share_destination".tr(namedArgs: {'destination': destination}));
-    if (plan.isNotEmpty) parts.add("timeline_share_plan".tr(namedArgs: {'plan': plan}));
-    if (notes.isNotEmpty) parts.add("timeline_share_notes".tr(namedArgs: {'notes': notes}));
+    if (destination.isNotEmpty) {
+      parts.add(
+        "timeline_share_destination".tr(
+          namedArgs: {'destination': destination},
+        ),
+      );
+    }
+    if (plan.isNotEmpty) {
+      parts.add("timeline_share_plan".tr(namedArgs: {'plan': plan}));
+    }
+    if (notes.isNotEmpty) {
+      parts.add("timeline_share_notes".tr(namedArgs: {'notes': notes}));
+    }
 
     final message = parts.join('\n');
-    final smsResult = await SmsService.sendSms(numbers: numbers, message: message);
+    final smsResult = await SmsService.sendSms(
+      numbers: numbers,
+      message: message,
+    );
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -168,7 +195,9 @@ class _SafetyTimelineScreenState extends State<SafetyTimelineScreen> {
               ? AppColors.primary
               : AppColors.warning,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
       );
     }
@@ -195,7 +224,9 @@ class _SafetyTimelineScreenState extends State<SafetyTimelineScreen> {
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       builder: (context) => Padding(
-        padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
         child: Container(
           decoration: const BoxDecoration(
             color: AppColors.cardBg,
@@ -209,7 +240,8 @@ class _SafetyTimelineScreenState extends State<SafetyTimelineScreen> {
               children: [
                 Center(
                   child: Container(
-                    width: 40, height: 4,
+                    width: 40,
+                    height: 4,
                     decoration: BoxDecoration(
                       color: AppColors.border,
                       borderRadius: BorderRadius.circular(2),
@@ -220,7 +252,8 @@ class _SafetyTimelineScreenState extends State<SafetyTimelineScreen> {
                 Text(
                   "timeline_add_entry".tr(),
                   style: const TextStyle(
-                    fontSize: 22, fontWeight: FontWeight.w800,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
                     color: AppColors.textPrimary,
                   ),
                 ),
@@ -228,7 +261,8 @@ class _SafetyTimelineScreenState extends State<SafetyTimelineScreen> {
                 Text(
                   "timeline_add_desc".tr(),
                   style: const TextStyle(
-                    fontSize: 14, color: AppColors.textSecondary,
+                    fontSize: 14,
+                    color: AppColors.textSecondary,
                   ),
                 ),
                 const SizedBox(height: 24),
@@ -336,15 +370,16 @@ class _SafetyTimelineScreenState extends State<SafetyTimelineScreen> {
         label: Text(
           "timeline_new_note".tr(),
           style: const TextStyle(
-            fontWeight: FontWeight.w700, color: Colors.white,
+            fontWeight: FontWeight.w700,
+            color: Colors.white,
           ),
         ),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _entries.isEmpty
-              ? _buildEmptyState()
-              : _buildEntryList(),
+          ? _buildEmptyState()
+          : _buildEntryList(),
     );
   }
 
@@ -356,13 +391,15 @@ class _SafetyTimelineScreenState extends State<SafetyTimelineScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              width: 100, height: 100,
+              width: 100,
+              height: 100,
               decoration: BoxDecoration(
                 color: AppColors.accent.withValues(alpha: 0.08),
                 shape: BoxShape.circle,
               ),
               child: const Icon(
-                Icons.timeline_rounded, size: 48,
+                Icons.timeline_rounded,
+                size: 48,
                 color: AppColors.accent,
               ),
             ),
@@ -370,7 +407,8 @@ class _SafetyTimelineScreenState extends State<SafetyTimelineScreen> {
             Text(
               "timeline_empty".tr(),
               style: const TextStyle(
-                fontSize: 20, fontWeight: FontWeight.w800,
+                fontSize: 20,
+                fontWeight: FontWeight.w800,
                 color: AppColors.textPrimary,
               ),
             ),
@@ -379,7 +417,9 @@ class _SafetyTimelineScreenState extends State<SafetyTimelineScreen> {
               "timeline_empty_desc".tr(),
               textAlign: TextAlign.center,
               style: const TextStyle(
-                fontSize: 14, color: AppColors.textSecondary, height: 1.5,
+                fontSize: 14,
+                color: AppColors.textSecondary,
+                height: 1.5,
               ),
             ),
           ],
@@ -403,9 +443,12 @@ class _SafetyTimelineScreenState extends State<SafetyTimelineScreen> {
     final destination = entry['destination'] ?? '';
     final plan = entry['plan'] ?? '';
     final notes = entry['notes'] ?? '';
-    final timestamp = DateTime.tryParse(entry['timestamp'] ?? '') ?? DateTime.now();
-    final timeStr = "${timestamp.hour.toString().padLeft(2, '0')}:${timestamp.minute.toString().padLeft(2, '0')}";
-    final dateStr = "${timestamp.day.toString().padLeft(2, '0')}.${timestamp.month.toString().padLeft(2, '0')}.${timestamp.year}";
+    final timestamp =
+        DateTime.tryParse(entry['timestamp'] ?? '') ?? DateTime.now();
+    final timeStr =
+        "${timestamp.hour.toString().padLeft(2, '0')}:${timestamp.minute.toString().padLeft(2, '0')}";
+    final dateStr =
+        "${timestamp.day.toString().padLeft(2, '0')}.${timestamp.month.toString().padLeft(2, '0')}.${timestamp.year}";
 
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
@@ -432,12 +475,17 @@ class _SafetyTimelineScreenState extends State<SafetyTimelineScreen> {
               Row(
                 children: [
                   Container(
-                    width: 42, height: 42,
+                    width: 42,
+                    height: 42,
                     decoration: BoxDecoration(
                       color: AppColors.accent.withValues(alpha: 0.12),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.timeline_rounded, color: AppColors.accent, size: 22),
+                    child: const Icon(
+                      Icons.timeline_rounded,
+                      color: AppColors.accent,
+                      size: 22,
+                    ),
                   ),
                   const SizedBox(width: 14),
                   Expanded(
@@ -445,9 +493,12 @@ class _SafetyTimelineScreenState extends State<SafetyTimelineScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          destination.isNotEmpty ? destination : "timeline_general_note".tr(),
+                          destination.isNotEmpty
+                              ? destination
+                              : "timeline_general_note".tr(),
                           style: const TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.w700,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
                             color: AppColors.textPrimary,
                           ),
                         ),
@@ -456,14 +507,19 @@ class _SafetyTimelineScreenState extends State<SafetyTimelineScreen> {
                           "$dateStr • $timeStr",
                           style: TextStyle(
                             fontSize: 12,
-                            color: AppColors.textSecondary.withValues(alpha: 0.7),
+                            color: AppColors.textSecondary.withValues(
+                              alpha: 0.7,
+                            ),
                           ),
                         ),
                       ],
                     ),
                   ),
                   PopupMenuButton<String>(
-                    icon: const Icon(Icons.more_vert_rounded, color: AppColors.textSecondary),
+                    icon: const Icon(
+                      Icons.more_vert_rounded,
+                      color: AppColors.textSecondary,
+                    ),
                     color: AppColors.cardBg,
                     onSelected: (value) {
                       if (value == 'share') _shareEntry(entry);
@@ -474,9 +530,18 @@ class _SafetyTimelineScreenState extends State<SafetyTimelineScreen> {
                         value: 'share',
                         child: Row(
                           children: [
-                            const Icon(Icons.send_rounded, color: AppColors.primary, size: 20),
+                            const Icon(
+                              Icons.send_rounded,
+                              color: AppColors.primary,
+                              size: 20,
+                            ),
                             const SizedBox(width: 10),
-                            Text("timeline_share".tr(), style: const TextStyle(color: AppColors.textPrimary)),
+                            Text(
+                              "timeline_share".tr(),
+                              style: const TextStyle(
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -484,9 +549,18 @@ class _SafetyTimelineScreenState extends State<SafetyTimelineScreen> {
                         value: 'delete',
                         child: Row(
                           children: [
-                            const Icon(Icons.delete_outline_rounded, color: AppColors.emergency, size: 20),
+                            const Icon(
+                              Icons.delete_outline_rounded,
+                              color: AppColors.emergency,
+                              size: 20,
+                            ),
                             const SizedBox(width: 10),
-                            Text("timeline_delete".tr(), style: const TextStyle(color: AppColors.textPrimary)),
+                            Text(
+                              "timeline_delete".tr(),
+                              style: const TextStyle(
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -506,12 +580,20 @@ class _SafetyTimelineScreenState extends State<SafetyTimelineScreen> {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(Icons.event_note_rounded, color: AppColors.textSecondary, size: 16),
+                      const Icon(
+                        Icons.event_note_rounded,
+                        color: AppColors.textSecondary,
+                        size: 16,
+                      ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           plan,
-                          style: const TextStyle(fontSize: 13, color: AppColors.textSecondary, height: 1.4),
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: AppColors.textSecondary,
+                            height: 1.4,
+                          ),
                         ),
                       ),
                     ],
@@ -530,12 +612,20 @@ class _SafetyTimelineScreenState extends State<SafetyTimelineScreen> {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(Icons.notes_rounded, color: AppColors.info, size: 16),
+                      const Icon(
+                        Icons.notes_rounded,
+                        color: AppColors.info,
+                        size: 16,
+                      ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           notes,
-                          style: const TextStyle(fontSize: 13, color: AppColors.textSecondary, height: 1.4),
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: AppColors.textSecondary,
+                            height: 1.4,
+                          ),
                         ),
                       ),
                     ],

@@ -8,7 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../core/app_colors.dart';
-import '../screens/countdown_screen.dart';
+import '../screens/pin_verification_screen.dart';
 
 class PanicButton extends StatefulWidget {
   const PanicButton({super.key});
@@ -96,58 +96,37 @@ class _PanicButtonState extends State<PanicButton>
     _holdTimer?.cancel();
     _holdSeconds = 0;
 
-    // Vibrate and show cancellable countdown overlay
+    // Vibrate and open PIN verification immediately
     HapticFeedback.vibrate();
 
-    _showCancellableCountdown();
+    _openPinVerificationScreen();
   }
 
-  void _showCancellableCountdown() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      barrierColor: Colors.black87,
-      builder: (ctx) => _PanicCountdownOverlay(
-        onComplete: () {
-          Navigator.of(ctx).pop();
-          Navigator.push(
-            context,
-            PageRouteBuilder(
-              pageBuilder: (context, animation, secondaryAnimation) =>
-                  const CountdownScreen(),
-              transitionsBuilder:
-                  (context, animation, secondaryAnimation, child) {
-                return FadeTransition(
-                  opacity: animation,
-                  child: SlideTransition(
-                    position: Tween<Offset>(
-                      begin: const Offset(0, 0.1),
-                      end: Offset.zero,
-                    ).animate(CurvedAnimation(
+  void _openPinVerificationScreen() {
+    Navigator.push(
+      context,
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            const PinVerificationScreen(),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return FadeTransition(
+            opacity: animation,
+            child: SlideTransition(
+              position:
+                  Tween<Offset>(
+                    begin: const Offset(0, 0.1),
+                    end: Offset.zero,
+                  ).animate(
+                    CurvedAnimation(
                       parent: animation,
                       curve: Curves.easeOutCubic,
-                    )),
-                    child: child,
+                    ),
                   ),
-                );
-              },
-              transitionDuration: const Duration(milliseconds: 300),
+              child: child,
             ),
           );
         },
-        onCancel: () {
-          Navigator.of(ctx).pop();
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('panic_countdown_cancelled'.tr()),
-              backgroundColor: AppColors.success,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-          );
-        },
+        transitionDuration: const Duration(milliseconds: 300),
       ),
     );
   }
@@ -176,118 +155,115 @@ class _PanicButtonState extends State<PanicButton>
           child: Stack(
             alignment: Alignment.center,
             children: [
-            // ── Breathing glow rings (idle) ──
-            if (!_isArmed) ..._buildBreathingRings(baseSize),
+              // ── Breathing glow rings (idle) ──
+              if (!_isArmed) ..._buildBreathingRings(baseSize),
 
-            // Armed pulse rings
-            if (_isArmed) ..._buildArmedPulseRings(baseSize),
+              // Armed pulse rings
+              if (_isArmed) ..._buildArmedPulseRings(baseSize),
 
-            // Progress ring (shown when armed)
-            if (_isArmed)
-              AnimatedBuilder(
-                animation: _progressController,
-                builder: (context, child) {
-                  return SizedBox(
-                    width: baseSize + 20,
-                    height: baseSize + 20,
-                    child: CustomPaint(
-                      painter: _ProgressRingPainter(
-                        progress: _progressController.value,
-                        color: AppColors.emergency,
-                        strokeWidth: 4.0,
+              // Progress ring (shown when armed)
+              if (_isArmed)
+                AnimatedBuilder(
+                  animation: _progressController,
+                  builder: (context, child) {
+                    return SizedBox(
+                      width: baseSize + 20,
+                      height: baseSize + 20,
+                      child: CustomPaint(
+                        painter: _ProgressRingPainter(
+                          progress: _progressController.value,
+                          color: AppColors.emergency,
+                          strokeWidth: 4.0,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+
+              // Main button with gradient
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 150),
+                curve: Curves.easeOut,
+                width: buttonSize,
+                height: buttonSize,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: _isArmed
+                        ? [AppColors.emergency, const Color(0xFFB32020)]
+                        : [AppColors.primaryDark, AppColors.primary],
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color:
+                          (_isArmed ? AppColors.emergency : AppColors.primary)
+                              .withValues(alpha: _isArmed ? 0.7 : 0.5),
+                      blurRadius: _isArmed ? 50 : 35,
+                      spreadRadius: _isArmed ? 5 : 0,
+                      offset: const Offset(0, 12),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Icon
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 200),
+                      transitionBuilder: (child, animation) {
+                        return ScaleTransition(scale: animation, child: child);
+                      },
+                      child: Icon(
+                        _isArmed ? Icons.warning_rounded : Icons.shield_rounded,
+                        key: ValueKey(_isArmed),
+                        size: iconSize,
+                        color: Colors.white,
                       ),
                     ),
-                  );
-                },
-              ),
+                    SizedBox(height: baseSize * 0.048),
 
-            // Main button with gradient
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 150),
-              curve: Curves.easeOut,
-              width: buttonSize,
-              height: buttonSize,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: _isArmed
-                      ? [AppColors.emergency, const Color(0xFFB32020)]
-                      : [AppColors.primaryDark, AppColors.primary],
+                    // Text
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 200),
+                      child: Column(
+                        key: ValueKey('$_isArmed$_holdSeconds'),
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            _isArmed ? "BIRAK = ACIL" : "BASILI TUT",
+                            style: TextStyle(
+                              fontSize: _isArmed
+                                  ? titleFontSize * 0.75
+                                  : titleFontSize,
+                              fontWeight: FontWeight.w900,
+                              color: Colors.white,
+                              letterSpacing: _isArmed ? 2.2 : 2.8,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            _isArmed
+                                ? "${_holdSeconds}s"
+                                : "GÜVENDE OLANA KADAR",
+                            style: TextStyle(
+                              fontSize: _isArmed
+                                  ? subtitleFontSize * 1.2
+                                  : subtitleFontSize,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white.withValues(alpha: 0.9),
+                              letterSpacing: 0.8,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color:
-                        (_isArmed ? AppColors.emergency : AppColors.primary)
-                            .withValues(alpha: _isArmed ? 0.7 : 0.5),
-                    blurRadius: _isArmed ? 50 : 35,
-                    spreadRadius: _isArmed ? 5 : 0,
-                    offset: const Offset(0, 12),
-                  ),
-                ],
               ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // Icon
-                  AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 200),
-                    transitionBuilder: (child, animation) {
-                      return ScaleTransition(
-                          scale: animation, child: child);
-                    },
-                    child: Icon(
-                      _isArmed
-                          ? Icons.warning_rounded
-                          : Icons.shield_rounded,
-                      key: ValueKey(_isArmed),
-                      size: iconSize,
-                      color: Colors.white,
-                    ),
-                  ),
-                  SizedBox(height: baseSize * 0.048),
-
-                  // Text
-                  AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 200),
-                    child: Column(
-                      key: ValueKey('$_isArmed$_holdSeconds'),
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          _isArmed ? "BIRAK = ACIL" : "BASILI TUT",
-                          style: TextStyle(
-                            fontSize: _isArmed
-                                ? titleFontSize * 0.75
-                                : titleFontSize,
-                            fontWeight: FontWeight.w900,
-                            color: Colors.white,
-                            letterSpacing: _isArmed ? 2.2 : 2.8,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          _isArmed
-                              ? "${_holdSeconds}s"
-                              : "GÜVENDE OLANA KADAR",
-                          style: TextStyle(
-                            fontSize: _isArmed
-                                ? subtitleFontSize * 1.2
-                                : subtitleFontSize,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white.withValues(alpha: 0.9),
-                            letterSpacing: 0.8,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+            ],
+          ),
         ),
       ),
     );
@@ -309,8 +285,9 @@ class _PanicButtonState extends State<PanicButton>
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(
-                color: AppColors.primary
-                    .withValues(alpha: 0.06 + (value * 0.06)),
+                color: AppColors.primary.withValues(
+                  alpha: 0.06 + (value * 0.06),
+                ),
                 width: 2,
               ),
             ),
@@ -329,14 +306,16 @@ class _PanicButtonState extends State<PanicButton>
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(
-                color: AppColors.primary
-                    .withValues(alpha: 0.1 + (value * 0.08)),
+                color: AppColors.primary.withValues(
+                  alpha: 0.1 + (value * 0.08),
+                ),
                 width: 2.5,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.primary
-                      .withValues(alpha: 0.03 + (value * 0.05)),
+                  color: AppColors.primary.withValues(
+                    alpha: 0.03 + (value * 0.05),
+                  ),
                   blurRadius: 15 + (value * 10),
                   spreadRadius: value * 3,
                 ),
@@ -363,8 +342,9 @@ class _PanicButtonState extends State<PanicButton>
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(
-                color: AppColors.emergency
-                    .withValues(alpha: 0.6 - (value * 0.4)),
+                color: AppColors.emergency.withValues(
+                  alpha: 0.6 - (value * 0.4),
+                ),
                 width: 4,
               ),
             ),
@@ -382,8 +362,9 @@ class _PanicButtonState extends State<PanicButton>
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(
-                color: AppColors.emergency
-                    .withValues(alpha: 0.4 - (value * 0.3)),
+                color: AppColors.emergency.withValues(
+                  alpha: 0.4 - (value * 0.3),
+                ),
                 width: 3,
               ),
             ),
@@ -401,8 +382,9 @@ class _PanicButtonState extends State<PanicButton>
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(
-                color: AppColors.emergency
-                    .withValues(alpha: 0.25 - (value * 0.2)),
+                color: AppColors.emergency.withValues(
+                  alpha: 0.25 - (value * 0.2),
+                ),
                 width: 2,
               ),
             ),
@@ -457,157 +439,5 @@ class _ProgressRingPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _ProgressRingPainter oldDelegate) {
     return oldDelegate.progress != progress;
-  }
-}
-
-/// 10-second cancellable countdown overlay shown after panic button release.
-/// Large cancel button for panic/stress situations (one-handed use).
-class _PanicCountdownOverlay extends StatefulWidget {
-  final VoidCallback onComplete;
-  final VoidCallback onCancel;
-
-  const _PanicCountdownOverlay({
-    required this.onComplete,
-    required this.onCancel,
-  });
-
-  @override
-  State<_PanicCountdownOverlay> createState() =>
-      _PanicCountdownOverlayState();
-}
-
-class _PanicCountdownOverlayState extends State<_PanicCountdownOverlay>
-    with SingleTickerProviderStateMixin {
-  int _seconds = 10;
-  Timer? _timer;
-  late AnimationController _pulseController;
-
-  @override
-  void initState() {
-    super.initState();
-    _pulseController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 800),
-    )..repeat(reverse: true);
-
-    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (_seconds > 1) {
-        HapticFeedback.mediumImpact();
-        setState(() => _seconds--);
-      } else {
-        _timer?.cancel();
-        HapticFeedback.heavyImpact();
-        widget.onComplete();
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    _pulseController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return PopScope(
-      canPop: false,
-      child: Dialog.fullscreen(
-        backgroundColor: Colors.transparent,
-        child: Container(
-          decoration: BoxDecoration(
-            gradient: RadialGradient(
-              center: Alignment.center,
-              radius: 1.0,
-              colors: [
-                AppColors.emergency.withValues(alpha: 0.15),
-                Colors.black.withValues(alpha: 0.95),
-              ],
-            ),
-          ),
-          child: SafeArea(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                AnimatedBuilder(
-                  animation: _pulseController,
-                  builder: (context, child) {
-                    final scale = 1.0 + (_pulseController.value * 0.08);
-                    return Transform.scale(scale: scale, child: child);
-                  },
-                  child: Container(
-                    width: 160,
-                    height: 160,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: AppColors.emergency.withValues(alpha: 0.15),
-                      border: Border.all(
-                        color: AppColors.emergency.withValues(alpha: 0.6),
-                        width: 4,
-                      ),
-                    ),
-                    child: Center(
-                      child: Text(
-                        '$_seconds',
-                        style: const TextStyle(
-                          fontSize: 72,
-                          fontWeight: FontWeight.w900,
-                          color: AppColors.emergency,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 32),
-                Text(
-                  'panic_countdown_title'.tr(),
-                  style: const TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w900,
-                    color: Colors.white,
-                    letterSpacing: 1.5,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  'panic_countdown_subtitle'.tr(),
-                  style: TextStyle(
-                    fontSize: 15,
-                    color: Colors.white.withValues(alpha: 0.7),
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 60),
-                // Large cancel button for one-handed panic use
-                SizedBox(
-                  width: 220,
-                  height: 64,
-                  child: ElevatedButton(
-                    onPressed: widget.onCancel,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.success,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      elevation: 0,
-                    ),
-                    child: Text(
-                      'panic_countdown_cancel'.tr(),
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 2,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
   }
 }

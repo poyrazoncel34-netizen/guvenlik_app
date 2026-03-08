@@ -3,15 +3,23 @@
 // ============================================================================
 
 import 'dart:async';
-import 'package:flutter/material.dart';
+
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 import '../../domain/models/activity_event.dart';
+import '../../domain/repositories/contacts_repository.dart';
+import '../../screens/emergency_call_screen.dart';
+import '../di/service_locator.dart';
+import '../navigation/app_navigator.dart';
 import '../services/activity_service.dart';
+import '../services/call_service.dart';
+import '../services/foreground_service.dart';
+import '../services/haptic_service.dart';
 import '../services/notification_service.dart';
 import '../services/sms_service.dart';
-import '../di/service_locator.dart';
-import '../../domain/repositories/contacts_repository.dart';
-import '../services/location_service.dart';
+import '../utils/emergency_message_helper.dart';
 
 /// Manages check-in timer logic — if user doesn't confirm safety within the
 /// set duration + grace period, an emergency is automatically triggered.
@@ -19,43 +27,51 @@ class CheckInService extends ChangeNotifier {
   CheckInService._();
   static final CheckInService instance = CheckInService._();
 
-  Timer? _mainTimer;
-  Timer? _graceTimer;
+  static const int _gracePeriodSeconds = 60;
+  static const String _activeKey = 'check_in_active';
+  static const String _totalSecondsKey = 'check_in_total_seconds';
+  static const String _endAtKey = 'check_in_end_at';
+  static const String _graceEndAtKey = 'check_in_grace_end_at';
+
   Timer? _tickTimer;
   DateTime? _endAt;
   DateTime? _graceEndAt;
   bool _isActive = false;
   bool _isGracePeriod = false;
+  bool _emergencyInProgress = false;
   int _remainingSeconds = 0;
   int _totalSeconds = 0;
-  static const int _gracePeriodSeconds = 60;
 
   bool get isActive => _isActive;
   bool get isGracePeriod => _isGracePeriod;
   int get remainingSeconds => _remainingSeconds;
   int get totalSeconds => _totalSeconds;
-  DateTime? get endAt => _endAt;
+  DateTime? get endAt => _isGracePeriod ? _graceEndAt : _endAt;
+
+  Future<void> initialize() async {
+    await _restoreFromStorage();
+  }
+
+  Future<void> handleAppResumed() async {
+    await _restoreFromStorage();
+  }
 
   /// Start a check-in timer with [minutes] duration.
-  void start(int minutes) {
-    stop();
+  Future<void> start(int minutes) async {
+    await stop();
+
     _totalSeconds = minutes * 60;
     _remainingSeconds = _totalSeconds;
     _isActive = true;
     _isGracePeriod = false;
     _endAt = DateTime.now().add(Duration(minutes: minutes));
+    _graceEndAt = null;
 
-    _tickTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-      final remaining = _endAt!.difference(DateTime.now()).inSeconds;
-      if (remaining <= 0) {
-        _onTimerExpired();
-      } else {
-        _remainingSeconds = remaining;
-        notifyListeners();
-      }
-    });
+    await _persistState();
+    await _startBackgroundProtection();
+    _startMainTicker();
 
-    ActivityService.logEvent(
+    await ActivityService.logEvent(
       type: ActivityType.checkIn,
       title: "check_in_started_title".tr(),
       description: "check_in_started_desc".tr(
@@ -67,61 +83,170 @@ class CheckInService extends ChangeNotifier {
   }
 
   /// User confirms they are safe — resets the timer.
-  void confirmSafe() {
-    _graceTimer?.cancel();
-    _graceEndAt = null;
-    _isGracePeriod = false;
-
-    if (_isActive && _endAt != null) {
-      // Reset to the original total duration
-      _endAt = DateTime.now().add(Duration(seconds: _totalSeconds));
-      _remainingSeconds = _totalSeconds;
-
-      ActivityService.logEvent(
-        type: ActivityType.checkIn,
-        title: "check_in_confirmed_title".tr(),
-        description: "check_in_confirmed_desc".tr(),
-      );
-
-      notifyListeners();
+  Future<void> confirmSafe() async {
+    if (!_isActive || _totalSeconds <= 0) {
+      return;
     }
-  }
 
-  /// Stop the check-in completely.
-  void stop() {
-    _mainTimer?.cancel();
-    _graceTimer?.cancel();
-    _tickTimer?.cancel();
-    _isActive = false;
     _isGracePeriod = false;
-    _endAt = null;
     _graceEndAt = null;
-    _remainingSeconds = 0;
-    _totalSeconds = 0;
+    _endAt = DateTime.now().add(Duration(seconds: _totalSeconds));
+    _remainingSeconds = _totalSeconds;
+
+    await _persistState();
+    await _startBackgroundProtection();
+    _startMainTicker();
+
+    await ActivityService.logEvent(
+      type: ActivityType.checkIn,
+      title: "check_in_confirmed_title".tr(),
+      description: "check_in_confirmed_desc".tr(),
+    );
+
     notifyListeners();
   }
 
-  void _onTimerExpired() {
-    _tickTimer?.cancel();
+  /// Stop the check-in completely.
+  Future<void> stop() async {
+    _cancelTicker();
+    _isActive = false;
+    _isGracePeriod = false;
+    _graceEndAt = null;
+    _endAt = null;
+    _remainingSeconds = 0;
+    _totalSeconds = 0;
+    _emergencyInProgress = false;
+
+    await _clearPersistedState();
+    await KoruBeniForegroundService.stop();
+    notifyListeners();
+  }
+
+  Future<void> _restoreFromStorage() async {
+    final prefs = await SharedPreferences.getInstance();
+    final storedActive = prefs.getBool(_activeKey) ?? false;
+    if (!storedActive) {
+      return;
+    }
+
+    final totalSeconds = prefs.getInt(_totalSecondsKey) ?? 0;
+    final restoredEndAt = _parseDateTime(prefs.getString(_endAtKey));
+    if (totalSeconds <= 0 || restoredEndAt == null) {
+      await stop();
+      return;
+    }
+
+    _isActive = true;
+    _totalSeconds = totalSeconds;
+    _endAt = restoredEndAt;
+    _graceEndAt = _parseDateTime(prefs.getString(_graceEndAtKey));
+
+    await _reconcileWithClock();
+  }
+
+  Future<void> _reconcileWithClock() async {
+    if (!_isActive || _endAt == null) {
+      return;
+    }
+
+    final now = DateTime.now();
+    if (_graceEndAt != null) {
+      final graceRemaining = _graceEndAt!.difference(now).inSeconds;
+      if (graceRemaining > 0) {
+        _isGracePeriod = true;
+        _remainingSeconds = graceRemaining;
+        await _startBackgroundProtection();
+        _startGraceTicker();
+        notifyListeners();
+        return;
+      }
+
+      await _triggerEmergency();
+      return;
+    }
+
+    final mainRemaining = _endAt!.difference(now).inSeconds;
+    if (mainRemaining > 0) {
+      _isGracePeriod = false;
+      _remainingSeconds = mainRemaining;
+      await _startBackgroundProtection();
+      _startMainTicker();
+      notifyListeners();
+      return;
+    }
+
     _isGracePeriod = true;
-    _remainingSeconds = _gracePeriodSeconds;
+    _graceEndAt = _endAt!.add(const Duration(seconds: _gracePeriodSeconds));
+    await _persistState();
+
+    final graceRemaining = _graceEndAt!.difference(now).inSeconds;
+    if (graceRemaining > 0) {
+      _remainingSeconds = graceRemaining;
+      await _startBackgroundProtection();
+      _startGraceTicker();
+      notifyListeners();
+      return;
+    }
+
+    await _triggerEmergency();
+  }
+
+  void _startMainTicker() {
+    _cancelTicker();
+    _tickTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      final deadline = _endAt;
+      if (!_isActive || deadline == null || _isGracePeriod) {
+        _cancelTicker();
+        return;
+      }
+
+      final remaining = deadline.difference(DateTime.now()).inSeconds;
+      if (remaining <= 0) {
+        _onMainTimerExpired();
+        return;
+      }
+
+      _remainingSeconds = remaining;
+      notifyListeners();
+    });
+  }
+
+  void _startGraceTicker() {
+    _cancelTicker();
+    _tickTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      final deadline = _graceEndAt;
+      if (!_isActive || deadline == null || !_isGracePeriod) {
+        _cancelTicker();
+        return;
+      }
+
+      final remaining = deadline.difference(DateTime.now()).inSeconds;
+      if (remaining <= 0) {
+        _triggerEmergency();
+        return;
+      }
+
+      _remainingSeconds = remaining;
+      notifyListeners();
+    });
+  }
+
+  Future<void> _onMainTimerExpired() async {
+    if (!_isActive || _isGracePeriod) {
+      return;
+    }
+
+    _cancelTicker();
+    _isGracePeriod = true;
     _graceEndAt = DateTime.now().add(
       const Duration(seconds: _gracePeriodSeconds),
     );
+    _remainingSeconds = _gracePeriodSeconds;
 
-    // Show local notification
-    _showGraceNotification();
-
-    _tickTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-      final remaining = _graceEndAt!.difference(DateTime.now()).inSeconds;
-      if (remaining <= 0) {
-        _triggerEmergency();
-      } else {
-        _remainingSeconds = remaining;
-        notifyListeners();
-      }
-    });
-
+    await _persistState();
+    await _startBackgroundProtection();
+    await _showGraceNotification();
+    _startGraceTicker();
     notifyListeners();
   }
 
@@ -138,42 +263,157 @@ class CheckInService extends ChangeNotifier {
   }
 
   Future<void> _triggerEmergency() async {
-    _tickTimer?.cancel();
+    if (_emergencyInProgress) {
+      return;
+    }
+    _emergencyInProgress = true;
+    _cancelTicker();
 
-    ActivityService.logEvent(
-      type: ActivityType.emergencyTriggered,
-      title: "check_in_emergency_title".tr(),
-      description: "check_in_emergency_desc".tr(),
-    );
-
-    // Send SMS to emergency contacts
     try {
+      await ActivityService.logEvent(
+        type: ActivityType.emergencyTriggered,
+        title: "check_in_emergency_title".tr(),
+        description: "check_in_emergency_desc".tr(),
+      );
+      await HapticService.emergencyTriggered();
+      await NotificationService.instance.showEmergencyAlert(
+        id: 9999,
+        title: "check_in_emergency_title".tr(),
+        body: "alarm_notification_body".tr(),
+      );
+
       final contactsRepo = serviceLocator<ContactsRepository>();
       final numbers = await contactsRepo.getAllEmergencyNumbers();
-      if (numbers.isNotEmpty) {
-        String message = "check_in_emergency_msg".tr();
+      final primaryContact = await contactsRepo.getPrimaryEmergencyContact();
+      final emergencyMessage =
+          await EmergencyMessageHelper.buildCheckInMessage();
 
-        // Try to append location
-        try {
-          final locationService = serviceLocator<LocationService>();
-          final result = await locationService.getCurrentLocation();
-          if (result.isSuccess && result.position != null) {
-            final lat = result.position!.latitude;
-            final lng = result.position!.longitude;
-            final url =
-                'https://www.google.com/maps/search/?api=1&query=$lat,$lng';
-            message += '\n$url';
+      final smsResult = numbers.isEmpty
+          ? SmsComposeResult.failed('emergency_contact_not_found'.tr())
+          : await SmsService.sendSms(
+              numbers: numbers,
+              message: emergencyMessage.message,
+            );
+
+      final primaryNumber =
+          primaryContact?.phone ?? (numbers.isNotEmpty ? numbers.first : '');
+      var calledNumber = primaryNumber;
+      var callResult = EmergencyCallResult.failed(primaryNumber);
+
+      if (primaryNumber.isNotEmpty) {
+        callResult = await CallService.startEmergencyCall(primaryNumber);
+        if (!callResult.isSuccess && numbers.length > 1) {
+          for (final fallbackNumber in numbers) {
+            if (fallbackNumber == primaryNumber) continue;
+            final fallbackResult = await CallService.startEmergencyCall(
+              fallbackNumber,
+            );
+            if (fallbackResult.isSuccess) {
+              callResult = fallbackResult;
+              calledNumber = fallbackNumber;
+              break;
+            }
           }
-        } catch (_) {
-          // Location not available, send without
         }
-
-        await SmsService.sendSms(numbers: numbers, message: message);
       }
-    } catch (_) {
-      // Best effort
+
+      final shouldKeepForeground = smsResult.isSuccess || callResult.isSuccess;
+      await _clearMonitoringState(stopForeground: !shouldKeepForeground);
+
+      final navigator = rootNavigatorKey.currentState;
+      if (navigator != null) {
+        navigator.push(
+          MaterialPageRoute(
+            builder: (_) => EmergencyCallScreen(
+              name: primaryContact?.name ?? "pin_verify_emergency_contact".tr(),
+              phone: calledNumber,
+              callResult: callResult,
+              smsResult: smsResult,
+              locationStatusMessage: emergencyMessage.locationStatusMessage,
+            ),
+          ),
+        );
+      } else if (shouldKeepForeground) {
+        await KoruBeniForegroundService.stop();
+      }
+    } catch (e) {
+      debugPrint('CheckInService emergency trigger failed: $e');
+      await _clearMonitoringState(stopForeground: true);
+    } finally {
+      _emergencyInProgress = false;
+    }
+  }
+
+  Future<void> _startBackgroundProtection() async {
+    await KoruBeniForegroundService.start();
+
+    final label = _isGracePeriod
+        ? "check_in_grace_label".tr()
+        : "check_in_title".tr();
+    final body =
+        '${"check_in_remaining".tr()}: ${_formatDuration(_remainingSeconds)}';
+    KoruBeniForegroundService.updateNotification(label, body);
+  }
+
+  Future<void> _persistState() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_activeKey, _isActive);
+
+    if (!_isActive) {
+      await _clearPersistedState();
+      return;
     }
 
-    stop();
+    await prefs.setInt(_totalSecondsKey, _totalSeconds);
+    if (_endAt != null) {
+      await prefs.setString(_endAtKey, _endAt!.toIso8601String());
+    }
+    if (_graceEndAt != null) {
+      await prefs.setString(_graceEndAtKey, _graceEndAt!.toIso8601String());
+    } else {
+      await prefs.remove(_graceEndAtKey);
+    }
+  }
+
+  Future<void> _clearPersistedState() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_activeKey);
+    await prefs.remove(_totalSecondsKey);
+    await prefs.remove(_endAtKey);
+    await prefs.remove(_graceEndAtKey);
+  }
+
+  Future<void> _clearMonitoringState({required bool stopForeground}) async {
+    _cancelTicker();
+    _isActive = false;
+    _isGracePeriod = false;
+    _graceEndAt = null;
+    _endAt = null;
+    _remainingSeconds = 0;
+    _totalSeconds = 0;
+
+    await _clearPersistedState();
+    if (stopForeground) {
+      await KoruBeniForegroundService.stop();
+    }
+    notifyListeners();
+  }
+
+  DateTime? _parseDateTime(String? value) {
+    if (value == null || value.isEmpty) {
+      return null;
+    }
+    return DateTime.tryParse(value);
+  }
+
+  String _formatDuration(int totalSeconds) {
+    final minutes = totalSeconds ~/ 60;
+    final seconds = totalSeconds % 60;
+    return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+  }
+
+  void _cancelTicker() {
+    _tickTimer?.cancel();
+    _tickTimer = null;
   }
 }

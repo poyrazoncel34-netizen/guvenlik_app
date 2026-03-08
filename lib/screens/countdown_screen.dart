@@ -9,6 +9,7 @@ import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/di/service_locator.dart';
+import '../core/constants/app_constants.dart';
 import '../core/security/secure_storage.dart';
 import '../core/security/secure_storage_keys.dart';
 import '../core/app_colors.dart';
@@ -16,8 +17,6 @@ import '../core/services/contact_service.dart';
 import '../core/services/biometric_service.dart';
 import '../core/services/sms_service.dart';
 import '../domain/repositories/contacts_repository.dart';
-// Emergency repository removed (offline-first)
-import '../domain/repositories/location_repository.dart';
 import '../core/services/activity_service.dart';
 import '../core/services/call_service.dart';
 import '../core/services/connectivity_service.dart';
@@ -27,6 +26,7 @@ import 'emergency_call_screen.dart';
 import '../core/services/foreground_service.dart';
 import '../core/services/haptic_service.dart';
 import '../core/services/notification_service.dart';
+import '../core/utils/emergency_message_helper.dart';
 
 class CountdownScreen extends StatefulWidget {
   final bool isTestMode;
@@ -47,8 +47,6 @@ class _CountdownScreenState extends State<CountdownScreen>
   late AnimationController _tickBounceController;
   late AnimationController _glowController;
   EmergencyContact? _emergencyContact;
-  late final LocationRepository _locationRepository =
-      serviceLocator<LocationRepository>();
   late final ContactsRepository _contactsRepository =
       serviceLocator<ContactsRepository>();
   // Offline-first: No EmergencyRepository (Firebase removed)
@@ -195,29 +193,13 @@ class _CountdownScreenState extends State<CountdownScreen>
       return;
     }
 
-    final locationResult = await _locationRepository.getCurrentLocation();
-    final lat = locationResult.position?.latitude;
-    final lng = locationResult.position?.longitude;
-
-    // Load custom SMS template or use default
     final prefs = await SharedPreferences.getInstance();
-    final customTemplate = prefs.getString('pref_sms_template');
-    String message;
-    if (customTemplate != null && customTemplate.isNotEmpty) {
-      // Replace {konum} placeholder with actual location
-      if (locationResult.isSuccess && lat != null && lng != null) {
-        message = customTemplate
-            .replaceAll('{konum}', 'https://www.google.com/maps/search/?api=1&query=$lat,$lng');
-      } else {
-        message = customTemplate.replaceAll('{konum}', 'countdown_location_unavailable'.tr());
-      }
-    } else {
-      message = locationResult.isSuccess && lat != null && lng != null
-          ? "countdown_emergency_msg".tr(
-              namedArgs: {"lat": "$lat", "lng": "$lng"},
-            )
-          : "countdown_emergency_msg_no_loc".tr();
-    }
+    final customTemplate = prefs.getString(AppConstants.prefSmsTemplate);
+    final messagePayload = await EmergencyMessageHelper.buildCountdownMessage(
+      customTemplate: customTemplate,
+    );
+    final message = messagePayload.message;
+    final locationLink = messagePayload.mapsUrl;
 
     final isOnline = ConnectivityService.instance.isOnline;
 
@@ -225,8 +207,8 @@ class _CountdownScreenState extends State<CountdownScreen>
       try {
         // Offline-first: No cloud sync, emergency handled locally via EmergencyCoreService
         debugPrint('Emergency event logged locally (no Firebase)');
-        if (lat != null && lng != null) {
-          debugPrint('Location: $lat, $lng');
+        if (locationLink != null) {
+          debugPrint('Location link: $locationLink');
         }
         debugPrint('Message: $message');
       } catch (e) {
@@ -238,7 +220,11 @@ class _CountdownScreenState extends State<CountdownScreen>
           type: 'emergency',
           title: "countdown_emergency_title".tr(),
           description: message,
-          data: {'message': message, 'lat': lat, 'lng': lng},
+          data: {
+            'message': message,
+            'maps_url': messagePayload.mapsUrl,
+            'location_status': messagePayload.locationStatusMessage,
+          },
         ),
       );
     }
@@ -281,9 +267,11 @@ class _CountdownScreenState extends State<CountdownScreen>
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('emergency_failover_called'.tr(
-                    namedArgs: {'number': fallbackNumber},
-                  )),
+                  content: Text(
+                    'emergency_failover_called'.tr(
+                      namedArgs: {'number': fallbackNumber},
+                    ),
+                  ),
                   backgroundColor: AppColors.warning,
                   behavior: SnackBarBehavior.floating,
                 ),
@@ -314,8 +302,9 @@ class _CountdownScreenState extends State<CountdownScreen>
           builder: (context) => EmergencyCallScreen(
             name: _emergencyContact?.name ?? "countdown_emergency_label".tr(),
             phone: calledNumber,
-            callStatusMessage: callResult.statusMessage,
-            smsStatusMessage: smsResult.statusMessage,
+            callResult: callResult,
+            smsResult: smsResult,
+            locationStatusMessage: messagePayload.locationStatusMessage,
           ),
         ),
       );
@@ -349,8 +338,9 @@ class _CountdownScreenState extends State<CountdownScreen>
       _lockoutEndTime != null && DateTime.now().isBefore(_lockoutEndTime!);
 
   void _startPinLockout() {
-    _lockoutEndTime =
-        DateTime.now().add(const Duration(seconds: _lockoutDurationSeconds));
+    _lockoutEndTime = DateTime.now().add(
+      const Duration(seconds: _lockoutDurationSeconds),
+    );
     _lockoutRemaining = _lockoutDurationSeconds;
     _lockoutTimer?.cancel();
     _lockoutTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
@@ -358,8 +348,7 @@ class _CountdownScreenState extends State<CountdownScreen>
         timer.cancel();
         return;
       }
-      final remaining =
-          _lockoutEndTime!.difference(DateTime.now()).inSeconds;
+      final remaining = _lockoutEndTime!.difference(DateTime.now()).inSeconds;
       if (remaining <= 0) {
         timer.cancel();
         setState(() {
@@ -406,8 +395,11 @@ class _CountdownScreenState extends State<CountdownScreen>
             _startPinLockout();
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('brute_force_locked'
-                    .tr(namedArgs: {'seconds': '$_lockoutDurationSeconds'})),
+                content: Text(
+                  'brute_force_locked'.tr(
+                    namedArgs: {'seconds': '$_lockoutDurationSeconds'},
+                  ),
+                ),
                 backgroundColor: AppColors.emergency,
                 behavior: SnackBarBehavior.floating,
                 duration: const Duration(seconds: 3),

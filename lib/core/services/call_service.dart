@@ -2,23 +2,17 @@ import 'dart:io';
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_direct_caller_plugin/flutter_direct_caller_plugin.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import 'android_intent_service.dart';
 
-enum EmergencyCallStatus {
-  directCallStarted,
-  dialerOpened,
-  failed,
-}
+enum EmergencyCallStatus { directCallStarted, dialerOpened, failed }
 
 class EmergencyCallResult {
   final EmergencyCallStatus status;
   final String number;
 
-  const EmergencyCallResult._({
-    required this.status,
-    required this.number,
-  });
+  const EmergencyCallResult._({required this.status, required this.number});
 
   factory EmergencyCallResult.direct(String number) {
     return EmergencyCallResult._(
@@ -68,6 +62,17 @@ class CallService {
 
     if (Platform.isAndroid) {
       try {
+        final phonePermission = await Permission.phone.request();
+        if (!phonePermission.isGranted) {
+          final dialerOpened = await AndroidIntentService.openDialer(
+            normalized,
+          );
+          if (dialerOpened) {
+            return EmergencyCallResult.dialer(normalized);
+          }
+          return EmergencyCallResult.failed(normalized);
+        }
+
         final directCallStarted =
             await FlutterDirectCallerPlugin.callNumber(normalized) ?? false;
         if (directCallStarted) {

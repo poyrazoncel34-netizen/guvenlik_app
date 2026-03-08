@@ -1,7 +1,13 @@
+import 'dart:convert';
+
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
 import '../../core/constants/app_constants.dart';
+import '../../core/di/service_locator.dart';
+import '../../core/security/secure_storage.dart';
+import '../../core/security/secure_storage_keys.dart';
 import '../../core/services/shake_detector_service.dart';
 import '../../core/services/volume_trigger_service.dart';
 
@@ -14,6 +20,7 @@ class SettingsProvider extends ChangeNotifier {
   bool _shakeEnabled = true;
   ShakeSensitivity _shakeSensitivity = ShakeSensitivity.medium;
   bool _loaded = false;
+  final SecureStorage _secureStorage = serviceLocator<SecureStorage>();
 
   String _profileName = '';
   String _profileEmail = '';
@@ -42,11 +49,7 @@ class SettingsProvider extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     _profileName = prefs.getString(AppConstants.prefProfileName) ?? '';
     _profileEmail = prefs.getString(AppConstants.prefProfileEmail) ?? '';
-    _bloodType = prefs.getString(AppConstants.prefBloodType) ?? '';
-    _allergies = prefs.getString(AppConstants.prefAllergies) ?? '';
-    _medicalConditions =
-        prefs.getString(AppConstants.prefMedicalConditions) ?? '';
-    _emergencyNotes = prefs.getString(AppConstants.prefEmergencyNotes) ?? '';
+    await _loadSensitiveProfile(prefs);
 
     if (!_loaded) {
       _notificationsEnabled =
@@ -56,12 +59,9 @@ class SettingsProvider extends ChangeNotifier {
       _vibrationEnabled = prefs.getBool(AppConstants.prefVibration) ?? true;
       _volumeTriggerEnabled =
           prefs.getBool(AppConstants.prefVolumeTrigger) ?? false;
-      _shakeEnabled =
-          prefs.getBool(AppConstants.prefShakeEnabled) ?? true;
-      final shakeSenIdx =
-          prefs.getInt(AppConstants.prefShakeSensitivity) ?? 1;
-      _shakeSensitivity =
-          ShakeSensitivity.values[shakeSenIdx.clamp(0, 2)];
+      _shakeEnabled = prefs.getBool(AppConstants.prefShakeEnabled) ?? true;
+      final shakeSenIdx = prefs.getInt(AppConstants.prefShakeSensitivity) ?? 1;
+      _shakeSensitivity = ShakeSensitivity.values[shakeSenIdx.clamp(0, 2)];
       _loaded = true;
     }
     notifyListeners();
@@ -78,15 +78,11 @@ class SettingsProvider extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(AppConstants.prefProfileName, name.trim());
     await prefs.setString(AppConstants.prefProfileEmail, email.trim());
-    await prefs.setString(AppConstants.prefBloodType, bloodType.trim());
-    await prefs.setString(AppConstants.prefAllergies, allergies.trim());
-    await prefs.setString(
-      AppConstants.prefMedicalConditions,
-      medicalConditions.trim(),
-    );
-    await prefs.setString(
-      AppConstants.prefEmergencyNotes,
-      emergencyNotes.trim(),
+    await _saveSensitiveProfile(
+      bloodType: bloodType.trim(),
+      allergies: allergies.trim(),
+      medicalConditions: medicalConditions.trim(),
+      emergencyNotes: emergencyNotes.trim(),
     );
     _profileName = name.trim();
     _profileEmail = email.trim();
@@ -95,6 +91,82 @@ class SettingsProvider extends ChangeNotifier {
     _medicalConditions = medicalConditions.trim();
     _emergencyNotes = emergencyNotes.trim();
     notifyListeners();
+  }
+
+  Future<void> _loadSensitiveProfile(SharedPreferences prefs) async {
+    final secureValue = await _secureStorage.read(
+      key: SecureStorageKeys.medicalProfile,
+    );
+    if (secureValue != null && secureValue.isNotEmpty) {
+      final decoded = _decodeSensitiveProfile(secureValue);
+      _bloodType = decoded['bloodType'] ?? '';
+      _allergies = decoded['allergies'] ?? '';
+      _medicalConditions = decoded['medicalConditions'] ?? '';
+      _emergencyNotes = decoded['emergencyNotes'] ?? '';
+      return;
+    }
+
+    _bloodType = prefs.getString(AppConstants.prefBloodType) ?? '';
+    _allergies = prefs.getString(AppConstants.prefAllergies) ?? '';
+    _medicalConditions =
+        prefs.getString(AppConstants.prefMedicalConditions) ?? '';
+    _emergencyNotes = prefs.getString(AppConstants.prefEmergencyNotes) ?? '';
+
+    final hasLegacySensitiveData =
+        _bloodType.isNotEmpty ||
+        _allergies.isNotEmpty ||
+        _medicalConditions.isNotEmpty ||
+        _emergencyNotes.isNotEmpty;
+    if (!hasLegacySensitiveData) {
+      return;
+    }
+
+    await _saveSensitiveProfile(
+      bloodType: _bloodType,
+      allergies: _allergies,
+      medicalConditions: _medicalConditions,
+      emergencyNotes: _emergencyNotes,
+    );
+  }
+
+  Future<void> _saveSensitiveProfile({
+    required String bloodType,
+    required String allergies,
+    required String medicalConditions,
+    required String emergencyNotes,
+  }) async {
+    final payload = jsonEncode({
+      'bloodType': bloodType,
+      'allergies': allergies,
+      'medicalConditions': medicalConditions,
+      'emergencyNotes': emergencyNotes,
+    });
+
+    await _secureStorage.write(
+      key: SecureStorageKeys.medicalProfile,
+      value: payload,
+    );
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(AppConstants.prefBloodType);
+    await prefs.remove(AppConstants.prefAllergies);
+    await prefs.remove(AppConstants.prefMedicalConditions);
+    await prefs.remove(AppConstants.prefEmergencyNotes);
+  }
+
+  Map<String, String> _decodeSensitiveProfile(String raw) {
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! Map) {
+        return const {};
+      }
+
+      return decoded.map(
+        (key, value) => MapEntry(key.toString(), value?.toString() ?? ''),
+      );
+    } catch (_) {
+      return const {};
+    }
   }
 
   Future<void> setNotifications(bool value) async {
@@ -136,14 +208,12 @@ class SettingsProvider extends ChangeNotifier {
   Future<void> setShakeEnabled(bool value) async {
     _shakeEnabled = value;
     notifyListeners();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(AppConstants.prefShakeEnabled, value);
+    await ShakeDetectorService.instance.setEnabled(value);
   }
 
   Future<void> setShakeSensitivity(ShakeSensitivity level) async {
     _shakeSensitivity = level;
     notifyListeners();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt(AppConstants.prefShakeSensitivity, level.index);
+    await ShakeDetectorService.instance.setSensitivity(level);
   }
 }

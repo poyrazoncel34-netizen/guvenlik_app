@@ -36,6 +36,7 @@ class _CheckInScreenState extends State<CheckInScreen>
       duration: const Duration(milliseconds: 800),
     )..forward();
     _service.addListener(_onServiceChanged);
+    _service.initialize();
     // Analytics removed (offline-first)
   }
 
@@ -69,12 +70,13 @@ class _CheckInScreenState extends State<CheckInScreen>
     }
 
     HapticFeedback.mediumImpact();
-    _service.start(minutes);
+    await _service.start(minutes);
   }
 
-  void _confirmSafe() {
+  Future<void> _confirmSafe() async {
     HapticFeedback.heavyImpact();
-    _service.confirmSafe();
+    await _service.confirmSafe();
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -95,9 +97,9 @@ class _CheckInScreenState extends State<CheckInScreen>
     );
   }
 
-  void _stopCheckIn() {
+  Future<void> _stopCheckIn() async {
     HapticFeedback.lightImpact();
-    _service.stop();
+    await _service.stop();
   }
 
   String _formatTime(int totalSeconds) {

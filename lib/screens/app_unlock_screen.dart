@@ -84,8 +84,9 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> {
       _lockoutEndTime != null && DateTime.now().isBefore(_lockoutEndTime!);
 
   void _startLockout() {
-    _lockoutEndTime =
-        DateTime.now().add(const Duration(seconds: _lockoutDurationSeconds));
+    _lockoutEndTime = DateTime.now().add(
+      const Duration(seconds: _lockoutDurationSeconds),
+    );
     _lockoutRemaining = _lockoutDurationSeconds;
     _lockoutTimer?.cancel();
     _lockoutTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
@@ -93,8 +94,7 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> {
         timer.cancel();
         return;
       }
-      final remaining =
-          _lockoutEndTime!.difference(DateTime.now()).inSeconds;
+      final remaining = _lockoutEndTime!.difference(DateTime.now()).inSeconds;
       if (remaining <= 0) {
         timer.cancel();
         setState(() {
@@ -139,8 +139,11 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> {
           _startLockout();
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('brute_force_locked'
-                  .tr(namedArgs: {'seconds': '$_lockoutDurationSeconds'})),
+              content: Text(
+                'brute_force_locked'.tr(
+                  namedArgs: {'seconds': '$_lockoutDurationSeconds'},
+                ),
+              ),
               backgroundColor: AppColors.emergency,
               behavior: SnackBarBehavior.floating,
               duration: const Duration(seconds: 3),
@@ -163,134 +166,143 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> {
   Widget build(BuildContext context) {
     return Semantics(
       label: 'unlock_semantics'.tr(),
-      child: Scaffold(
-        backgroundColor: AppColors.background,
-        body: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  width: 80,
-                  height: 80,
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.12),
-                    shape: BoxShape.circle,
+      child: PopScope(
+        canPop: false,
+        child: Scaffold(
+          backgroundColor: AppColors.background,
+          body: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    width: 80,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.12),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.lock_rounded,
+                      size: 40,
+                      color: AppColors.primary,
+                    ),
                   ),
-                  child: const Icon(
-                    Icons.lock_rounded,
-                    size: 40,
-                    color: AppColors.primary,
+                  const SizedBox(height: 24),
+                  Text(
+                    'unlock_title'.tr(),
+                    style: const TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textPrimary,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 24),
-                Text(
-                  'unlock_title'.tr(),
-                  style: const TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.textPrimary,
+                  const SizedBox(height: 8),
+                  Text(
+                    'unlock_subtitle'.tr(),
+                    style: TextStyle(
+                      fontSize: 15,
+                      color: AppColors.textSecondary.withValues(alpha: 0.9),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'unlock_subtitle'.tr(),
-                  style: TextStyle(
-                    fontSize: 15,
-                    color: AppColors.textSecondary.withValues(alpha: 0.9),
-                  ),
-                ),
-                if (_loading) ...[
-                  const SizedBox(height: 32),
-                  const CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
-                  ),
-                ] else ...[
-                  if (_biometricAvailable) ...[
+                  if (_loading) ...[
                     const SizedBox(height: 32),
-                    OutlinedButton.icon(
-                      onPressed: _tryBiometric,
-                      icon: Icon(
-                        _biometricLabel.contains('Face')
-                            ? Icons.face_rounded
-                            : Icons.fingerprint_rounded,
-                        size: 24,
-                      ),
-                      label: Text('unlock_biometric_btn'.tr(namedArgs: {'label': _biometricLabel})),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: AppColors.primary,
-                        side: const BorderSide(color: AppColors.primary),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 24,
-                          vertical: 14,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
+                    const CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        AppColors.primary,
                       ),
                     ),
-                  ],
-                  const SizedBox(height: 32),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(
-                      AppConstants.pinLength,
-                      (i) => Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 8),
-                        width: 16,
-                        height: 16,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: i < _pin.length
-                              ? AppColors.primary
-                              : AppColors.border,
+                  ] else ...[
+                    if (_biometricAvailable) ...[
+                      const SizedBox(height: 32),
+                      OutlinedButton.icon(
+                        onPressed: _tryBiometric,
+                        icon: Icon(
+                          _biometricLabel.contains('Face')
+                              ? Icons.face_rounded
+                              : Icons.fingerprint_rounded,
+                          size: 24,
                         ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 32),
-                  if (_isLockedOut)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 16),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 10,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.emergency.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: AppColors.emergency.withValues(alpha: 0.4),
+                        label: Text(
+                          'unlock_biometric_btn'.tr(
+                            namedArgs: {'label': _biometricLabel},
                           ),
                         ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(
-                              Icons.lock_clock_rounded,
-                              color: AppColors.emergency,
-                              size: 20,
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              'brute_force_locked_short'.tr(
-                                namedArgs: {'seconds': '$_lockoutRemaining'},
-                              ),
-                              style: const TextStyle(
-                                color: AppColors.emergency,
-                                fontWeight: FontWeight.w700,
-                                fontSize: 14,
-                              ),
-                            ),
-                          ],
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.primary,
+                          side: const BorderSide(color: AppColors.primary),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: 14,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 32),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(
+                        AppConstants.pinLength,
+                        (i) => Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 8),
+                          width: 16,
+                          height: 16,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: i < _pin.length
+                                ? AppColors.primary
+                                : AppColors.border,
+                          ),
                         ),
                       ),
                     ),
-                  _buildNumPad(),
+                    const SizedBox(height: 32),
+                    if (_isLockedOut)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 10,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.emergency.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: AppColors.emergency.withValues(alpha: 0.4),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.lock_clock_rounded,
+                                color: AppColors.emergency,
+                                size: 20,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'brute_force_locked_short'.tr(
+                                  namedArgs: {'seconds': '$_lockoutRemaining'},
+                                ),
+                                style: const TextStyle(
+                                  color: AppColors.emergency,
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    _buildNumPad(),
+                  ],
                 ],
-              ],
+              ),
             ),
           ),
         ),
@@ -331,7 +343,11 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> {
           ),
           child: Center(
             child: isIcon
-                ? const Icon(Icons.backspace_outlined, size: 24, color: AppColors.textPrimary)
+                ? const Icon(
+                    Icons.backspace_outlined,
+                    size: 24,
+                    color: AppColors.textPrimary,
+                  )
                 : Text(
                     key,
                     style: const TextStyle(

@@ -3,17 +3,23 @@ import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../constants/app_constants.dart';
 
 /// Shake sensitivity levels.
 enum ShakeSensitivity {
-  low,    // Hard shake only
+  low, // Hard shake only
   medium, // Default
-  high,   // Very sensitive
+  high, // Very sensitive
 }
 
 /// Detects phone shake gestures using accelerometer data.
 /// When a shake is detected, [onShake] callback is triggered.
 class ShakeDetectorService {
+  ShakeDetectorService._();
+
+  static final ShakeDetectorService _instance = ShakeDetectorService._();
+  static ShakeDetectorService get instance => _instance;
+
   static const Map<ShakeSensitivity, double> _thresholds = {
     ShakeSensitivity.low: 22.0,
     ShakeSensitivity.medium: 15.0,
@@ -23,40 +29,61 @@ class ShakeDetectorService {
   static const int _shakeCountThreshold = 3; // shakes needed
   static const Duration _shakeWindow = Duration(milliseconds: 1500);
   static const Duration _cooldown = Duration(seconds: 3);
-  static const String _prefSensitivity = 'pref_shake_sensitivity';
 
   StreamSubscription<AccelerometerEvent>? _subscription;
   VoidCallback? onShake;
 
+  bool _isEnabled = true;
   ShakeSensitivity _sensitivity = ShakeSensitivity.medium;
   final List<DateTime> _shakeTimestamps = [];
   DateTime? _lastTrigger;
   bool _isListening = false;
 
+  bool get isEnabled => _isEnabled;
   bool get isListening => _isListening;
   ShakeSensitivity get sensitivity => _sensitivity;
   double get currentThreshold => _thresholds[_sensitivity] ?? 15.0;
 
-  /// Load saved sensitivity from preferences.
-  Future<void> loadSensitivity() async {
+  /// Load saved enablement and sensitivity from preferences.
+  Future<void> loadPreferences() async {
     final prefs = await SharedPreferences.getInstance();
-    final index = prefs.getInt(_prefSensitivity) ?? 1;
+    _isEnabled = prefs.getBool(AppConstants.prefShakeEnabled) ?? true;
+    final index = prefs.getInt(AppConstants.prefShakeSensitivity) ?? 1;
     _sensitivity = ShakeSensitivity.values[index.clamp(0, 2)];
+  }
+
+  Future<void> setEnabled(bool enabled) async {
+    _isEnabled = enabled;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(AppConstants.prefShakeEnabled, enabled);
+
+    if (enabled) {
+      if (onShake != null && !_isListening) {
+        _startListening();
+      }
+      return;
+    }
+
+    _cancelSubscription();
   }
 
   /// Set and persist sensitivity level.
   Future<void> setSensitivity(ShakeSensitivity level) async {
     _sensitivity = level;
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt(_prefSensitivity, level.index);
+    await prefs.setInt(AppConstants.prefShakeSensitivity, level.index);
   }
 
   /// Start listening for shake events
   void startListening({required VoidCallback onShakeDetected}) {
-    if (_isListening) return;
     onShake = onShakeDetected;
-    _isListening = true;
+    if (!_isEnabled || _isListening) return;
+    _startListening();
+  }
 
+  void _startListening() {
+    if (_isListening) return;
+    _isListening = true;
     _subscription =
         accelerometerEventStream(
           samplingPeriod: const Duration(milliseconds: 100),
@@ -75,6 +102,13 @@ class ShakeDetectorService {
             debugPrint('ShakeDetector error: $e');
           },
         );
+  }
+
+  void _cancelSubscription() {
+    _subscription?.cancel();
+    _subscription = null;
+    _isListening = false;
+    _shakeTimestamps.clear();
   }
 
   void _registerShake() {
@@ -98,10 +132,7 @@ class ShakeDetectorService {
 
   /// Stop listening for shake events
   void stopListening() {
-    _subscription?.cancel();
-    _subscription = null;
-    _isListening = false;
-    _shakeTimestamps.clear();
+    _cancelSubscription();
     onShake = null;
   }
 
