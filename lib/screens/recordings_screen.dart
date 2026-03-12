@@ -76,8 +76,10 @@ class _RecordingsScreenState extends State<RecordingsScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text('btn_cancel'.tr(),
-                style: const TextStyle(color: AppColors.textSecondary)),
+            child: Text(
+              'btn_cancel'.tr(),
+              style: const TextStyle(color: AppColors.textSecondary),
+            ),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
@@ -85,7 +87,8 @@ class _RecordingsScreenState extends State<RecordingsScreen> {
               backgroundColor: AppColors.emergency,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
             child: Text('btn_delete'.tr()),
           ),
@@ -102,9 +105,15 @@ class _RecordingsScreenState extends State<RecordingsScreen> {
 
   Future<void> _shareRecording(RecordingEntry entry) async {
     try {
+      final sharePath = await AudioRecorderService.instance.prepareShareFile(
+        entry,
+      );
+      if (sharePath == null) {
+        throw StateError('share-file-unavailable');
+      }
       await SharePlus.instance.share(
         ShareParams(
-          files: [XFile(entry.path)],
+          files: [XFile(sharePath)],
           subject: 'recordings_share_subject'.tr(),
         ),
       );
@@ -139,7 +148,9 @@ class _RecordingsScreenState extends State<RecordingsScreen> {
                       ? _buildEmptyState()
                       : ListView.builder(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 8),
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
                           itemCount: _recordings.length,
                           itemBuilder: (context, index) =>
                               _buildRecordingTile(_recordings[index]),
@@ -161,8 +172,7 @@ class _RecordingsScreenState extends State<RecordingsScreen> {
       ),
       child: Row(
         children: [
-          Icon(Icons.shield_rounded,
-              color: AppColors.info, size: 20),
+          Icon(Icons.shield_rounded, color: AppColors.info, size: 20),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
@@ -183,15 +193,20 @@ class _RecordingsScreenState extends State<RecordingsScreen> {
       padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
       child: Row(
         children: [
-          const Icon(Icons.storage_rounded,
-              color: AppColors.textSecondary, size: 16),
+          const Icon(
+            Icons.storage_rounded,
+            color: AppColors.textSecondary,
+            size: 16,
+          ),
           const SizedBox(width: 8),
           Text(
-            'recordings_storage_used'.tr(namedArgs: {
-              'size': _formatStorage(_storageUsedBytes),
-              'count': '${_recordings.length}',
-              'max': '${AudioRecorderService.maxRecordings}',
-            }),
+            'recordings_storage_used'.tr(
+              namedArgs: {
+                'size': _formatStorage(_storageUsedBytes),
+                'count': '${_recordings.length}',
+                'max': '${AudioRecorderService.maxRecordings}',
+              },
+            ),
             style: const TextStyle(
               color: AppColors.textSecondary,
               fontSize: 12,
@@ -214,8 +229,11 @@ class _RecordingsScreenState extends State<RecordingsScreen> {
               color: AppColors.primary.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.mic_off_rounded,
-                size: 40, color: AppColors.textSecondary),
+            child: const Icon(
+              Icons.mic_off_rounded,
+              size: 40,
+              color: AppColors.textSecondary,
+            ),
           ),
           const SizedBox(height: 16),
           Text(
@@ -248,8 +266,7 @@ class _RecordingsScreenState extends State<RecordingsScreen> {
         border: Border.all(color: AppColors.border),
       ),
       child: ListTile(
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
         leading: Container(
           width: 44,
           height: 44,
@@ -257,8 +274,11 @@ class _RecordingsScreenState extends State<RecordingsScreen> {
             color: const Color(0xFF9B59B6).withValues(alpha: 0.12),
             borderRadius: BorderRadius.circular(12),
           ),
-          child: const Icon(Icons.mic_rounded,
-              color: Color(0xFF9B59B6), size: 22),
+          child: const Icon(
+            Icons.mic_rounded,
+            color: Color(0xFF9B59B6),
+            size: 22,
+          ),
         ),
         title: Text(
           _formatDate(entry.createdAt),
@@ -270,10 +290,7 @@ class _RecordingsScreenState extends State<RecordingsScreen> {
         ),
         subtitle: Text(
           entry.formattedSize,
-          style: const TextStyle(
-            color: AppColors.textSecondary,
-            fontSize: 12,
-          ),
+          style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
         ),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,

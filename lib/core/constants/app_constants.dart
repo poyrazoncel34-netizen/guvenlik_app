@@ -28,6 +28,7 @@ class AppConstants {
   static const String prefThemeMode = 'pref_theme_mode';
   static const String prefPinSetupDone = 'pref_pin_setup_done';
   static const String prefOnboardingDone = 'pref_onboarding_done';
+  static const String prefLegalDisclaimerAccepted = 'pref_legal_disclaimer_accepted';
   static const String prefNotificationPermissionPrompted =
       'pref_notification_permission_prompted';
   static const String prefDemoMode = 'pref_demo_mode';

@@ -20,6 +20,7 @@ import '../domain/repositories/contacts_repository.dart';
 import '../core/services/activity_service.dart';
 import '../core/services/call_service.dart';
 import '../core/services/connectivity_service.dart';
+import '../core/services/pin_lockout_service.dart';
 import '../core/services/offline_queue_service.dart';
 import '../domain/models/activity_event.dart';
 import 'emergency_call_screen.dart';
@@ -55,12 +56,8 @@ class _CountdownScreenState extends State<CountdownScreen>
   String _biometricLabel = 'Biometric';
   bool _handoffToEmergencyScreen = false;
 
-  // Brute force protection
-  int _failedAttempts = 0;
-  static const int _maxAttempts = 3;
-  static const int _lockoutDurationSeconds = 60;
   DateTime? _lockoutEndTime;
-  Timer? _lockoutTimer;
+  StreamSubscription<int>? _lockoutSubscription;
   int _lockoutRemaining = 0;
 
   @override
@@ -81,6 +78,7 @@ class _CountdownScreenState extends State<CountdownScreen>
 
     _loadPin();
     _loadEmergencyContact();
+    _syncLockoutState();
     _checkBiometric();
     _startCountdown();
     KoruBeniForegroundService.start();
@@ -314,6 +312,7 @@ class _CountdownScreenState extends State<CountdownScreen>
   @override
   void dispose() {
     _timer?.cancel();
+    _lockoutSubscription?.cancel();
     _shakeController.dispose();
     _tickBounceController.dispose();
     _glowController.dispose();
@@ -337,29 +336,33 @@ class _CountdownScreenState extends State<CountdownScreen>
   bool get _isPinLockedOut =>
       _lockoutEndTime != null && DateTime.now().isBefore(_lockoutEndTime!);
 
-  void _startPinLockout() {
-    _lockoutEndTime = DateTime.now().add(
-      const Duration(seconds: _lockoutDurationSeconds),
-    );
-    _lockoutRemaining = _lockoutDurationSeconds;
-    _lockoutTimer?.cancel();
-    _lockoutTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (!mounted) {
-        timer.cancel();
-        return;
-      }
-      final remaining = _lockoutEndTime!.difference(DateTime.now()).inSeconds;
-      if (remaining <= 0) {
-        timer.cancel();
-        setState(() {
-          _lockoutEndTime = null;
-          _lockoutRemaining = 0;
-          _failedAttempts = 0;
-        });
-      } else {
-        setState(() => _lockoutRemaining = remaining);
-      }
+  Future<void> _syncLockoutState() async {
+    final state = await PinLockoutService.instance.getState();
+    if (!mounted) return;
+    setState(() {
+      _lockoutEndTime = state.lockedUntil;
+      _lockoutRemaining = state.remainingSeconds;
     });
+    if (state.isLocked) {
+      _startPinLockout(state);
+    }
+  }
+
+  void _startPinLockout(PinLockoutState state) {
+    _lockoutSubscription?.cancel();
+    _lockoutSubscription = PinLockoutService.instance
+        .countdownStream(state)
+        .listen((remaining) {
+          if (!mounted) {
+            return;
+          }
+          setState(() {
+            _lockoutRemaining = remaining;
+            if (remaining == 0) {
+              _lockoutEndTime = null;
+            }
+          });
+        });
   }
 
   void _handlePinInput(String key) {
@@ -379,7 +382,8 @@ class _CountdownScreenState extends State<CountdownScreen>
       if (_pin.length == 4) {
         if (_correctPin != null && _pin == _correctPin) {
           _timer?.cancel();
-          _lockoutTimer?.cancel();
+          _lockoutSubscription?.cancel();
+          PinLockoutService.instance.reset();
           ActivityService.logEvent(
             type: ActivityType.emergencyCancelled,
             title: "countdown_cancelled_title".tr(),
@@ -388,24 +392,37 @@ class _CountdownScreenState extends State<CountdownScreen>
           KoruBeniForegroundService.stop();
           Navigator.pop(context);
         } else {
-          _failedAttempts++;
           _shakeController.forward(from: 0);
           HapticFeedback.vibrate();
-          if (_failedAttempts >= _maxAttempts) {
-            _startPinLockout();
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  'brute_force_locked'.tr(
-                    namedArgs: {'seconds': '$_lockoutDurationSeconds'},
+          PinLockoutService.instance.registerFailure().then((state) {
+            if (!mounted) return;
+            setState(() {
+              _lockoutEndTime = state.lockedUntil;
+              _lockoutRemaining = state.remainingSeconds;
+            });
+            if (state.isLocked) {
+              _startPinLockout(state);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    'brute_force_locked'.tr(
+                      namedArgs: {'seconds': '${state.remainingSeconds}'},
+                    ),
                   ),
+                  backgroundColor: AppColors.emergency,
+                  behavior: SnackBarBehavior.floating,
+                  duration: const Duration(seconds: 3),
                 ),
-                backgroundColor: AppColors.emergency,
-                behavior: SnackBarBehavior.floating,
-                duration: const Duration(seconds: 3),
-              ),
-            );
-          }
+              );
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text("pin_mismatch".tr()),
+                  backgroundColor: AppColors.emergency,
+                ),
+              );
+            }
+          });
           Future.delayed(const Duration(milliseconds: 300), () {
             if (mounted) {
               setState(() => _pin = "");

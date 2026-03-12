@@ -12,6 +12,7 @@ import '../core/di/service_locator.dart';
 import '../core/security/secure_storage.dart';
 import '../core/security/secure_storage_keys.dart';
 import '../core/services/biometric_service.dart';
+import '../core/services/pin_lockout_service.dart';
 
 class AppUnlockScreen extends StatefulWidget {
   final VoidCallback onUnlocked;
@@ -29,12 +30,8 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> {
   String _biometricLabel = 'Biometric'; // Updated by _loadAndCheckBiometric()
   bool _loading = true;
 
-  // Brute force protection
-  int _failedAttempts = 0;
-  static const int _maxAttempts = 3;
-  static const int _lockoutDurationSeconds = 60;
   DateTime? _lockoutEndTime;
-  Timer? _lockoutTimer;
+  StreamSubscription<int>? _lockoutSubscription;
   int _lockoutRemaining = 0;
 
   late final SecureStorage _secureStorage = serviceLocator<SecureStorage>();
@@ -47,6 +44,7 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> {
 
   Future<void> _loadAndCheckBiometric() async {
     await _loadPin();
+    await _syncLockoutState();
     if (!mounted) return;
     final available = await BiometricService.instance.isAvailable();
     if (available && mounted) {
@@ -83,34 +81,38 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> {
   bool get _isLockedOut =>
       _lockoutEndTime != null && DateTime.now().isBefore(_lockoutEndTime!);
 
-  void _startLockout() {
-    _lockoutEndTime = DateTime.now().add(
-      const Duration(seconds: _lockoutDurationSeconds),
-    );
-    _lockoutRemaining = _lockoutDurationSeconds;
-    _lockoutTimer?.cancel();
-    _lockoutTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (!mounted) {
-        timer.cancel();
-        return;
-      }
-      final remaining = _lockoutEndTime!.difference(DateTime.now()).inSeconds;
-      if (remaining <= 0) {
-        timer.cancel();
-        setState(() {
-          _lockoutEndTime = null;
-          _lockoutRemaining = 0;
-          _failedAttempts = 0;
-        });
-      } else {
-        setState(() => _lockoutRemaining = remaining);
-      }
+  Future<void> _syncLockoutState() async {
+    final state = await PinLockoutService.instance.getState();
+    if (!mounted) return;
+    setState(() {
+      _lockoutEndTime = state.lockedUntil;
+      _lockoutRemaining = state.remainingSeconds;
     });
+    if (state.isLocked) {
+      _startLockoutCountdown(state);
+    }
+  }
+
+  void _startLockoutCountdown(PinLockoutState state) {
+    _lockoutSubscription?.cancel();
+    _lockoutSubscription = PinLockoutService.instance
+        .countdownStream(state)
+        .listen((remaining) {
+          if (!mounted) {
+            return;
+          }
+          setState(() {
+            _lockoutRemaining = remaining;
+            if (remaining == 0) {
+              _lockoutEndTime = null;
+            }
+          });
+        });
   }
 
   @override
   void dispose() {
-    _lockoutTimer?.cancel();
+    _lockoutSubscription?.cancel();
     super.dispose();
   }
 
@@ -129,27 +131,33 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> {
     if (_pin.length == AppConstants.pinLength && _correctPin != null) {
       if (_pin == _correctPin) {
         HapticFeedback.lightImpact();
-        _failedAttempts = 0;
+        PinLockoutService.instance.reset();
         widget.onUnlocked();
       } else {
         HapticFeedback.vibrate();
-        _failedAttempts++;
         setState(() => _pin = '');
-        if (_failedAttempts >= _maxAttempts) {
-          _startLockout();
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'brute_force_locked'.tr(
-                  namedArgs: {'seconds': '$_lockoutDurationSeconds'},
+        PinLockoutService.instance.registerFailure().then((state) {
+          if (!mounted) return;
+          setState(() {
+            _lockoutEndTime = state.lockedUntil;
+            _lockoutRemaining = state.remainingSeconds;
+          });
+          if (state.isLocked) {
+            _startLockoutCountdown(state);
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  'brute_force_locked'.tr(
+                    namedArgs: {'seconds': '${state.remainingSeconds}'},
+                  ),
                 ),
+                backgroundColor: AppColors.emergency,
+                behavior: SnackBarBehavior.floating,
+                duration: const Duration(seconds: 3),
               ),
-              backgroundColor: AppColors.emergency,
-              behavior: SnackBarBehavior.floating,
-              duration: const Duration(seconds: 3),
-            ),
-          );
-        } else {
+            );
+            return;
+          }
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('unlock_wrong_pin'.tr()),
@@ -157,7 +165,7 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> {
               behavior: SnackBarBehavior.floating,
             ),
           );
-        }
+        });
       }
     }
   }

@@ -2,6 +2,10 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 const String kEmergencyAlertsChannelId = 'emergency_alerts';
 const String kEmergencyAlertsChannelName = 'Acil Bildirimler';
+const String kServiceStatusChannelId = 'service_status';
+const String kServiceStatusChannelName = 'Servis Durumu';
+const String kGeneralNotificationsChannelId = 'general_notifications';
+const String kGeneralNotificationsChannelName = 'Genel Bildirimler';
 const String kNotificationGroupKey = 'korubeni_alerts';
 
 class NotificationService {
@@ -23,18 +27,34 @@ class NotificationService {
     );
 
     await _plugin.initialize(settings);
-    await _plugin
+    final androidImplementation = _plugin
         .resolvePlatformSpecificImplementation<
           AndroidFlutterLocalNotificationsPlugin
-        >()
-        ?.createNotificationChannel(
-          const AndroidNotificationChannel(
-            kEmergencyAlertsChannelId,
-            kEmergencyAlertsChannelName,
-            description: 'Kritik güvenlik ve check-in bildirimleri',
-            importance: Importance.max,
-          ),
-        );
+        >();
+    await androidImplementation?.createNotificationChannel(
+      const AndroidNotificationChannel(
+        kEmergencyAlertsChannelId,
+        kEmergencyAlertsChannelName,
+        description: 'Kritik güvenlik ve check-in bildirimleri',
+        importance: Importance.max,
+      ),
+    );
+    await androidImplementation?.createNotificationChannel(
+      const AndroidNotificationChannel(
+        kServiceStatusChannelId,
+        kServiceStatusChannelName,
+        description: 'Shake, kayit ve arka plan servis durumu',
+        importance: Importance.low,
+      ),
+    );
+    await androidImplementation?.createNotificationChannel(
+      const AndroidNotificationChannel(
+        kGeneralNotificationsChannelId,
+        kGeneralNotificationsChannelName,
+        description: 'Genel uygulama bildirimleri',
+        importance: Importance.defaultImportance,
+      ),
+    );
     _initialized = true;
   }
 

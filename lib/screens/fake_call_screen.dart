@@ -3,6 +3,7 @@
 // ============================================================================
 
 import 'dart:io';
+import 'dart:async';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
@@ -15,6 +16,7 @@ import '../core/di/service_locator.dart';
 import '../core/security/secure_storage.dart';
 import '../core/security/secure_storage_keys.dart';
 import '../core/services/activity_service.dart';
+import '../core/services/emergency_platform_service.dart';
 import '../domain/models/activity_event.dart';
 
 class FakeCallScreen extends StatefulWidget {
@@ -24,13 +26,15 @@ class FakeCallScreen extends StatefulWidget {
   State<FakeCallScreen> createState() => _FakeCallScreenState();
 }
 
-class _FakeCallScreenState extends State<FakeCallScreen> with SingleTickerProviderStateMixin {
+class _FakeCallScreenState extends State<FakeCallScreen>
+    with SingleTickerProviderStateMixin {
   late AnimationController _pulseController;
   final AudioPlayer _audioPlayer = AudioPlayer();
   final ImagePicker _imagePicker = ImagePicker();
   String _callerName = "";
   String _callerNumber = "";
   String? _avatarPath;
+  StreamSubscription<Map<String, dynamic>>? _phoneStateSubscription;
   final SecureStorage _secureStorage = serviceLocator<SecureStorage>();
 
   static const String _keyName = SecureStorageKeys.fakeCallName;
@@ -46,14 +50,31 @@ class _FakeCallScreenState extends State<FakeCallScreen> with SingleTickerProvid
     )..repeat(reverse: true);
     _loadSavedSettings();
     _startRingtone();
+    _listenForRealCalls();
   }
 
   @override
   void dispose() {
     _pulseController.dispose();
+    _phoneStateSubscription?.cancel();
     _audioPlayer.stop();
     _audioPlayer.dispose();
     super.dispose();
+  }
+
+  void _listenForRealCalls() {
+    if (!EmergencyPlatformService.instance.isSupported) {
+      return;
+    }
+    EmergencyPlatformService.instance.initialize();
+    _phoneStateSubscription = EmergencyPlatformService.instance.phoneStates
+        .listen((event) {
+          final state = event['state']?.toString() ?? '';
+          if (state.contains('ringing') && mounted) {
+            _stopRingtone();
+            Navigator.of(context).maybePop();
+          }
+        });
   }
 
   Future<void> _loadSavedSettings() async {
@@ -85,7 +106,8 @@ class _FakeCallScreenState extends State<FakeCallScreen> with SingleTickerProvid
       await _secureStorage.write(key: _keyAvatar, value: legacyAvatar);
       await prefs.remove(_keyAvatar);
     }
-    if (mounted && (legacyName != null || legacyNumber != null || legacyAvatar != null)) {
+    if (mounted &&
+        (legacyName != null || legacyNumber != null || legacyAvatar != null)) {
       setState(() {
         _callerName = legacyName ?? _callerName;
         _callerNumber = legacyNumber ?? _callerNumber;
@@ -96,7 +118,9 @@ class _FakeCallScreenState extends State<FakeCallScreen> with SingleTickerProvid
     if (mounted && _callerName.isEmpty) {
       setState(() {
         _callerName = "fake_call_default_name".tr();
-        _callerNumber = _callerNumber.isEmpty ? "fake_call_default_number".tr() : _callerNumber;
+        _callerNumber = _callerNumber.isEmpty
+            ? "fake_call_default_number".tr()
+            : _callerNumber;
       });
     }
   }
@@ -106,7 +130,7 @@ class _FakeCallScreenState extends State<FakeCallScreen> with SingleTickerProvid
       // Set volume to maximum
       await _audioPlayer.setVolume(1.0);
       await _audioPlayer.setReleaseMode(ReleaseMode.loop);
-      
+
       if (kIsWeb) {
         // On web, AssetSource paths resolve differently.
         // Use UrlSource with the correct Flutter web asset path.
@@ -115,11 +139,13 @@ class _FakeCallScreenState extends State<FakeCallScreen> with SingleTickerProvid
         // Play the ringtone asset on native platforms
         await _audioPlayer.play(AssetSource('sounds/ringtone.wav'));
       }
-      
+
       // Log success for debugging
       debugPrint('FakeCallScreen: Ringtone started playing');
     } catch (e) {
-      debugPrint('FakeCallScreen: Error playing ringtone (asset may be missing): $e');
+      debugPrint(
+        'FakeCallScreen: Error playing ringtone (asset may be missing): $e',
+      );
       // Safe fallback: skip playback so app does not crash
     }
   }
@@ -136,127 +162,191 @@ class _FakeCallScreenState extends State<FakeCallScreen> with SingleTickerProvid
       label: "semantics_fake_call".tr(),
       hint: "semantics_fake_call_hint".tr(),
       child: Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFF1C1C1E), Color(0xFF000000)],
+        body: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color(0xFF1C1C1E), Color(0xFF000000)],
+            ),
           ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              const SizedBox(height: 24),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    IconButton(
-                      onPressed: () {
-                        _stopRingtone();
-                        Navigator.pop(context);
-                      },
-                      icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white70),
-                    ),
-                    TextButton.icon(
-                      onPressed: _showCustomizeDialog,
-                      icon: const Icon(Icons.tune_rounded, color: Colors.white70, size: 18),
-                      label: Text("fake_call_settings".tr(), style: const TextStyle(color: Colors.white70)),
-                    ),
-                  ],
+          child: SafeArea(
+            child: Column(
+              children: [
+                const SizedBox(height: 24),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      IconButton(
+                        onPressed: () {
+                          _stopRingtone();
+                          Navigator.pop(context);
+                        },
+                        icon: const Icon(
+                          Icons.arrow_back_ios_new_rounded,
+                          color: Colors.white70,
+                        ),
+                      ),
+                      TextButton.icon(
+                        onPressed: _showCustomizeDialog,
+                        icon: const Icon(
+                          Icons.tune_rounded,
+                          color: Colors.white70,
+                          size: 18,
+                        ),
+                        label: Text(
+                          "fake_call_settings".tr(),
+                          style: const TextStyle(color: Colors.white70),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(height: 20),
-              AnimatedBuilder(
-                animation: _pulseController,
-                builder: (context, child) {
-                  return Transform.scale(
-                    scale: 1 + (_pulseController.value * 0.04),
-                    child: child,
-                  );
-                },
-                child: Column(
-                  children: [
-                    Container(
-                      width: 130,
-                      height: 130,
-                      decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.grey[850]),
-                      child: !kIsWeb && _avatarPath != null && File(_avatarPath!).existsSync()
-                          ? ClipOval(
-                              child: Image.file(
-                                File(_avatarPath!),
-                                fit: BoxFit.cover,
-                                width: 130,
-                                height: 130,
+                const SizedBox(height: 20),
+                AnimatedBuilder(
+                  animation: _pulseController,
+                  builder: (context, child) {
+                    return Transform.scale(
+                      scale: 1 + (_pulseController.value * 0.04),
+                      child: child,
+                    );
+                  },
+                  child: Column(
+                    children: [
+                      Container(
+                        width: 130,
+                        height: 130,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.grey[850],
+                        ),
+                        child:
+                            !kIsWeb &&
+                                _avatarPath != null &&
+                                File(_avatarPath!).existsSync()
+                            ? ClipOval(
+                                child: Image.file(
+                                  File(_avatarPath!),
+                                  fit: BoxFit.cover,
+                                  width: 130,
+                                  height: 130,
+                                ),
+                              )
+                            : const Icon(
+                                Icons.person_rounded,
+                                size: 70,
+                                color: Colors.white60,
                               ),
-                            )
-                          : const Icon(Icons.person_rounded, size: 70, color: Colors.white60),
-                    ),
-                    const SizedBox(height: 28),
-                    Text(
-                        _callerName, style: const TextStyle(color: Colors.white, fontSize: 34, fontWeight: FontWeight.w600)),
-                    const SizedBox(height: 10),
-                    Text(_callerNumber,
-                        style: const TextStyle(color: Colors.white54, fontSize: 19, fontWeight: FontWeight.w500)),
-                    const SizedBox(height: 32),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                              color: AppColors.primary.withValues(alpha: 0.2), shape: BoxShape.circle),
-                          child: const Icon(Icons.phone_callback_rounded, color: AppColors.primary, size: 20),
+                      ),
+                      const SizedBox(height: 28),
+                      Text(
+                        _callerName,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 34,
+                          fontWeight: FontWeight.w600,
                         ),
-                        const SizedBox(width: 10),
-                        Text(
-                          "fake_call_calling".tr(),
-                          style: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.75), fontSize: 17, fontWeight: FontWeight.w500),
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        _callerNumber,
+                        style: const TextStyle(
+                          color: Colors.white54,
+                          fontSize: 19,
+                          fontWeight: FontWeight.w500,
                         ),
-                      ],
-                    ),
-                  ],
+                      ),
+                      const SizedBox(height: 32),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withValues(alpha: 0.2),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.phone_callback_rounded,
+                              color: AppColors.primary,
+                              size: 20,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Text(
+                            "fake_call_calling".tr(),
+                            style: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.75),
+                              fontSize: 17,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              const Spacer(),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 70, left: 50, right: 50),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    _buildCallButton(AppColors.emergency, Icons.call_end_rounded, "fake_call_decline".tr(), () {
-                      _stopRingtone();
-                      ActivityService.logEvent(
-                        type: ActivityType.fakeCallUsed,
-                        title: "fake_call_activity_title".tr(),
-                        description: "fake_call_declined_desc".tr(namedArgs: {"name": _callerName}),
-                      );
-                      Navigator.pop(context);
-                    }),
-                    _buildCallButton(AppColors.success, Icons.call_rounded, "fake_call_accept".tr(), () {
-                      _stopRingtone();
-                      ActivityService.logEvent(
-                        type: ActivityType.fakeCallUsed,
-                        title: "fake_call_activity_title".tr(),
-                        description: "fake_call_accepted_desc".tr(namedArgs: {"name": _callerName}),
-                      );
-                      Navigator.pop(context);
-                    }),
-                  ],
+                const Spacer(),
+                Padding(
+                  padding: const EdgeInsets.only(
+                    bottom: 70,
+                    left: 50,
+                    right: 50,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _buildCallButton(
+                        AppColors.emergency,
+                        Icons.call_end_rounded,
+                        "fake_call_decline".tr(),
+                        () {
+                          _stopRingtone();
+                          ActivityService.logEvent(
+                            type: ActivityType.fakeCallUsed,
+                            title: "fake_call_activity_title".tr(),
+                            description: "fake_call_declined_desc".tr(
+                              namedArgs: {"name": _callerName},
+                            ),
+                          );
+                          Navigator.pop(context);
+                        },
+                      ),
+                      _buildCallButton(
+                        AppColors.success,
+                        Icons.call_rounded,
+                        "fake_call_accept".tr(),
+                        () {
+                          _stopRingtone();
+                          ActivityService.logEvent(
+                            type: ActivityType.fakeCallUsed,
+                            title: "fake_call_activity_title".tr(),
+                            description: "fake_call_accepted_desc".tr(
+                              namedArgs: {"name": _callerName},
+                            ),
+                          );
+                          Navigator.pop(context);
+                        },
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
-    ),
     );
   }
 
-  Widget _buildCallButton(Color color, IconData icon, String label, VoidCallback onTap) {
+  Widget _buildCallButton(
+    Color color,
+    IconData icon,
+    String label,
+    VoidCallback onTap,
+  ) {
     return Column(
       children: [
         Material(
@@ -273,7 +363,14 @@ class _FakeCallScreenState extends State<FakeCallScreen> with SingleTickerProvid
           ),
         ),
         const SizedBox(height: 14),
-        Text(label, style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600)),
+        Text(
+          label,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
       ],
     );
   }
@@ -287,7 +384,9 @@ class _FakeCallScreenState extends State<FakeCallScreen> with SingleTickerProvid
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       builder: (context) => Padding(
-        padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
         child: Container(
           decoration: const BoxDecoration(
             color: Color(0xFF10263A),
@@ -308,7 +407,11 @@ class _FakeCallScreenState extends State<FakeCallScreen> with SingleTickerProvid
               const SizedBox(height: 18),
               Text(
                 "fake_call_settings_title".tr(),
-                style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
               const SizedBox(height: 14),
               // Preset scenario templates
@@ -317,13 +420,33 @@ class _FakeCallScreenState extends State<FakeCallScreen> with SingleTickerProvid
                 child: ListView(
                   scrollDirection: Axis.horizontal,
                   children: [
-                    _buildTemplateChip(nameController, phoneController, 'fake_template_boss'.tr(), '+90 555 000 00 01'),
+                    _buildTemplateChip(
+                      nameController,
+                      phoneController,
+                      'fake_template_boss'.tr(),
+                      '+90 555 000 00 01',
+                    ),
                     const SizedBox(width: 8),
-                    _buildTemplateChip(nameController, phoneController, 'fake_template_spouse'.tr(), '+90 555 000 00 02'),
+                    _buildTemplateChip(
+                      nameController,
+                      phoneController,
+                      'fake_template_spouse'.tr(),
+                      '+90 555 000 00 02',
+                    ),
                     const SizedBox(width: 8),
-                    _buildTemplateChip(nameController, phoneController, 'fake_template_mom'.tr(), '+90 555 000 00 03'),
+                    _buildTemplateChip(
+                      nameController,
+                      phoneController,
+                      'fake_template_mom'.tr(),
+                      '+90 555 000 00 03',
+                    ),
                     const SizedBox(width: 8),
-                    _buildTemplateChip(nameController, phoneController, 'fake_template_custom'.tr(), ''),
+                    _buildTemplateChip(
+                      nameController,
+                      phoneController,
+                      'fake_template_custom'.tr(),
+                      '',
+                    ),
                   ],
                 ),
               ),
@@ -336,7 +459,9 @@ class _FakeCallScreenState extends State<FakeCallScreen> with SingleTickerProvid
                   hintStyle: const TextStyle(color: Colors.white54),
                   filled: true,
                   fillColor: const Color(0xFF0B1F32),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14),
                     borderSide: const BorderSide(color: Colors.white12),
@@ -354,7 +479,9 @@ class _FakeCallScreenState extends State<FakeCallScreen> with SingleTickerProvid
                     foregroundColor: Colors.white,
                     side: const BorderSide(color: Colors.white24),
                     padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
                   ),
                 ),
               ),
@@ -367,7 +494,9 @@ class _FakeCallScreenState extends State<FakeCallScreen> with SingleTickerProvid
                   hintStyle: const TextStyle(color: Colors.white54),
                   filled: true,
                   fillColor: const Color(0xFF0B1F32),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14),
                     borderSide: const BorderSide(color: Colors.white12),
@@ -380,13 +509,26 @@ class _FakeCallScreenState extends State<FakeCallScreen> with SingleTickerProvid
                 child: ElevatedButton(
                   onPressed: () async {
                     setState(() {
-                      _callerName = nameController.text.isEmpty ? "fake_call_default_name".tr() : nameController.text;
-                      _callerNumber = phoneController.text.isEmpty ? "fake_call_default_number".tr() : phoneController.text;
+                      _callerName = nameController.text.isEmpty
+                          ? "fake_call_default_name".tr()
+                          : nameController.text;
+                      _callerNumber = phoneController.text.isEmpty
+                          ? "fake_call_default_number".tr()
+                          : phoneController.text;
                     });
-                    await _secureStorage.write(key: _keyName, value: _callerName);
-                    await _secureStorage.write(key: _keyNumber, value: _callerNumber);
+                    await _secureStorage.write(
+                      key: _keyName,
+                      value: _callerName,
+                    );
+                    await _secureStorage.write(
+                      key: _keyNumber,
+                      value: _callerNumber,
+                    );
                     if (_avatarPath != null) {
-                      await _secureStorage.write(key: _keyAvatar, value: _avatarPath!);
+                      await _secureStorage.write(
+                        key: _keyAvatar,
+                        value: _avatarPath!,
+                      );
                     }
                     if (!context.mounted) return;
                     Navigator.pop(context);
@@ -395,9 +537,14 @@ class _FakeCallScreenState extends State<FakeCallScreen> with SingleTickerProvid
                     backgroundColor: AppColors.primary,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
                   ),
-                  child: Text("save".tr(), style: const TextStyle(fontWeight: FontWeight.w700)),
+                  child: Text(
+                    "save".tr(),
+                    style: const TextStyle(fontWeight: FontWeight.w700),
+                  ),
                 ),
               ),
             ],
@@ -410,7 +557,10 @@ class _FakeCallScreenState extends State<FakeCallScreen> with SingleTickerProvid
   Future<void> _pickProfileImage() async {
     if (kIsWeb) return; // File picking not supported on web
     try {
-      final picked = await _imagePicker.pickImage(source: ImageSource.gallery, imageQuality: 85);
+      final picked = await _imagePicker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 85,
+      );
       if (picked == null) return;
 
       final dir = await getApplicationDocumentsDirectory();
@@ -430,7 +580,10 @@ class _FakeCallScreenState extends State<FakeCallScreen> with SingleTickerProvid
     String phone,
   ) {
     return ActionChip(
-      label: Text(label, style: const TextStyle(fontSize: 12, color: Colors.white)),
+      label: Text(
+        label,
+        style: const TextStyle(fontSize: 12, color: Colors.white),
+      ),
       backgroundColor: AppColors.surface,
       side: const BorderSide(color: Colors.white24),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),

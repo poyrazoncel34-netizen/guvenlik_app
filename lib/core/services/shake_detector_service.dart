@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../constants/app_constants.dart';
+import 'emergency_platform_service.dart';
 
 /// Shake sensitivity levels.
 enum ShakeSensitivity {
@@ -64,7 +65,12 @@ class ShakeDetectorService {
       return;
     }
 
-    _cancelSubscription();
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+      _isListening = false;
+      await EmergencyPlatformService.instance.disarmShake();
+    } else {
+      _cancelSubscription();
+    }
   }
 
   /// Set and persist sensitivity level.
@@ -72,12 +78,23 @@ class ShakeDetectorService {
     _sensitivity = level;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt(AppConstants.prefShakeSensitivity, level.index);
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+      await EmergencyPlatformService.instance.setShakeSensitivity(level.index);
+    }
   }
 
   /// Start listening for shake events
   void startListening({required VoidCallback onShakeDetected}) {
     onShake = onShakeDetected;
     if (!_isEnabled || _isListening) return;
+
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+      _isListening = true;
+      EmergencyPlatformService.instance.armShake();
+      EmergencyPlatformService.instance.setShakeSensitivity(_sensitivity.index);
+      return;
+    }
+
     _startListening();
   }
 
@@ -132,7 +149,12 @@ class ShakeDetectorService {
 
   /// Stop listening for shake events
   void stopListening() {
-    _cancelSubscription();
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+      _isListening = false;
+      EmergencyPlatformService.instance.disarmShake();
+    } else {
+      _cancelSubscription();
+    }
     onShake = null;
   }
 

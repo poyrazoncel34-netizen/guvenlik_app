@@ -1,5 +1,6 @@
 import 'package:get_it/get_it.dart';
 import '../../core/services/location_service.dart';
+import '../../core/services/local_database_service.dart';
 import '../../data/datasources/local/contacts_local_datasource.dart';
 import '../../data/repositories/contacts_repository_impl.dart';
 import '../../data/repositories/location_repository_impl.dart';
@@ -12,6 +13,11 @@ final GetIt serviceLocator = GetIt.instance;
 
 Future<void> setupServiceLocator() async {
   // Offline-first services - no Firebase, no network dependencies
+  if (!serviceLocator.isRegistered<LocalDatabaseService>()) {
+    final databaseService = LocalDatabaseService();
+    await databaseService.initialize();
+    serviceLocator.registerSingleton<LocalDatabaseService>(databaseService);
+  }
   if (!serviceLocator.isRegistered<LocationService>()) {
     serviceLocator.registerSingleton<LocationService>(LocationService());
   }

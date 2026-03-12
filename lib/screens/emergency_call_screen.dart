@@ -437,6 +437,13 @@ class _EmergencyCallScreenState extends State<EmergencyCallScreen>
 
   _StatusPresentation _buildSmsPresentation(SmsComposeResult result) {
     switch (result.status) {
+      case SmsComposeStatus.nativeDispatched:
+        return _StatusPresentation(
+          icon: Icons.sms_rounded,
+          color: AppColors.success,
+          summary: result.statusMessage,
+          detail: 'SMS gonderimi cihaz seviyesinde baslatildi.',
+        );
       case SmsComposeStatus.composerOpened:
         return _StatusPresentation(
           icon: Icons.sms_rounded,

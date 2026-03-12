@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:async';
 
 import '../../screens/countdown_screen.dart';
 import '../constants/app_constants.dart';
 import '../navigation/app_navigator.dart';
 import '../services/app_lifecycle_handler.dart';
 import '../services/check_in_service.dart';
+import '../services/emergency_platform_service.dart';
 import '../services/shake_detector_service.dart';
 import '../services/volume_trigger_service.dart';
 
@@ -24,12 +26,14 @@ class _EmergencyTriggerHostState extends State<EmergencyTriggerHost>
   final ShakeDetectorService _shakeDetector = ShakeDetectorService.instance;
   bool _countdownOpen = false;
   bool _foregroundTriggersEnabled = false;
+  StreamSubscription<Map<String, dynamic>>? _platformEventsSubscription;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     CheckInService.instance.initialize();
+    _bindPlatformEvents();
     _startForegroundTriggers();
   }
 
@@ -38,6 +42,7 @@ class _EmergencyTriggerHostState extends State<EmergencyTriggerHost>
     if (state == AppLifecycleState.resumed) {
       _startForegroundTriggers();
       CheckInService.instance.handleAppResumed();
+      _consumePendingTrigger();
       // Re-auth after prolonged background
       AppLifecycleHandler.instance.onResumed();
       return;
@@ -86,8 +91,61 @@ class _EmergencyTriggerHostState extends State<EmergencyTriggerHost>
 
   void _stopForegroundTriggers() {
     _foregroundTriggersEnabled = false;
-    _shakeDetector.stopListening();
+    if (!EmergencyPlatformService.instance.isSupported) {
+      _shakeDetector.stopListening();
+    }
     VolumeTriggerService.instance.stopListening();
+  }
+
+  void _bindPlatformEvents() {
+    EmergencyPlatformService.instance.initialize();
+    _platformEventsSubscription = EmergencyPlatformService.instance.events
+        .listen((event) async {
+          final type = event['type']?.toString();
+          if (type == 'shakeDetected') {
+            await _openCountdown();
+            return;
+          }
+          if (type == 'checkInGraceStarted') {
+            await CheckInService.instance.handleNativeGraceStarted();
+            return;
+          }
+          if (type == 'checkInExpired') {
+            if (CheckInService.instance.isActive ||
+                CheckInService.instance.isGracePeriod) {
+              await CheckInService.instance.handleNativeExpired();
+            } else {
+              await _openCountdown();
+            }
+          }
+        });
+    _consumePendingTrigger();
+  }
+
+  Future<void> _consumePendingTrigger() async {
+    final pending = await EmergencyPlatformService.instance
+        .consumePendingTrigger();
+    if (pending == null) {
+      return;
+    }
+
+    final type = pending['type']?.toString();
+    if (type == 'shakeDetected') {
+      await _openCountdown();
+      return;
+    }
+    if (type == 'checkInGraceStarted') {
+      await CheckInService.instance.handleNativeGraceStarted();
+      return;
+    }
+    if (type == 'checkInExpired') {
+      if (CheckInService.instance.isActive ||
+          CheckInService.instance.isGracePeriod) {
+        await CheckInService.instance.handleNativeExpired();
+      } else {
+        await _openCountdown();
+      }
+    }
   }
 
   Future<void> _openCountdown() async {
@@ -112,7 +170,10 @@ class _EmergencyTriggerHostState extends State<EmergencyTriggerHost>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _stopForegroundTriggers();
-    _shakeDetector.dispose();
+    if (!EmergencyPlatformService.instance.isSupported) {
+      _shakeDetector.dispose();
+    }
+    _platformEventsSubscription?.cancel();
     super.dispose();
   }
 
