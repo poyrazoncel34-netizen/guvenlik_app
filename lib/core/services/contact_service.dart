@@ -1,11 +1,12 @@
 import 'dart:convert';
 
 import 'package:easy_localization/easy_localization.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../di/service_locator.dart';
 import '../security/secure_storage.dart';
 import '../security/secure_storage_keys.dart';
+import 'local_database_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 String normalizePhoneNumber(String raw) {
   return raw.replaceAll(RegExp(r'[\s\-\(\)]'), '');
@@ -14,109 +15,106 @@ String normalizePhoneNumber(String raw) {
 class ContactService {
   static String get _unknownNameFallback => "contacts_fallback_name".tr();
   static final SecureStorage _secureStorage = serviceLocator<SecureStorage>();
+  static final LocalDatabaseService _databaseService =
+      serviceLocator<LocalDatabaseService>();
 
-  // Kişileri Kaydet
   static Future<void> saveContacts(List<String> numbers) async {
-    final existingContacts = await getContactRecords();
+    final existing = await getContactRecords();
     final contacts = <EmergencyContact>[];
 
-    for (int i = 0; i < numbers.length; i++) {
-      final phone = numbers[i].trim();
-      final normalizedPhone = normalizePhoneNumber(phone);
+    for (final number in numbers) {
+      final normalizedPhone = normalizePhoneNumber(number);
       if (normalizedPhone.isEmpty ||
-          contacts.any((contact) => contact.matchesPhone(phone))) {
+          contacts.any((contact) => contact.matchesPhone(number))) {
         continue;
       }
 
-      final existingContact = _findContactByPhone(existingContacts, phone);
+      final existingContact = _findContactByPhone(existing, number);
       contacts.add(
         existingContact ??
             EmergencyContact(
               name: "contacts_person_label".tr(
                 namedArgs: {'index': '${contacts.length + 1}'},
               ),
-              phone: phone,
+              phone: number.trim(),
             ),
       );
     }
 
-    await _persistContactRecords(contacts);
+    await saveContactRecords(contacts);
   }
 
   static Future<void> saveContactRecords(
     List<EmergencyContact> contacts,
   ) async {
-    await _persistContactRecords(contacts);
-  }
+    final primary = await _readPrimaryFromDatabase();
+    final deduplicated = <EmergencyContact>[];
 
-  // Kişileri Getir
-  static Future<List<String>> getContacts() async {
-    final contacts = await getContactRecords();
-    if (contacts.isNotEmpty) {
-      return contacts.map((contact) => contact.phone).toList(growable: false);
+    for (final contact in contacts) {
+      final sanitized = EmergencyContact(
+        name: contact.name.trim().isEmpty
+            ? _unknownNameFallback
+            : contact.name.trim(),
+        phone: contact.phone.trim(),
+      );
+      if (sanitized.normalizedPhone.isEmpty ||
+          deduplicated.any((item) => item.matchesPhone(sanitized.phone))) {
+        continue;
+      }
+      deduplicated.add(sanitized);
     }
 
-    return _readLegacyContacts();
+    final db = await _databaseService.database;
+    await db.transaction((txn) async {
+      await txn.delete('contacts');
+      for (final contact in deduplicated) {
+        await txn.insert('contacts', {
+          'name': contact.name,
+          'phone': contact.phone,
+          'is_primary': primary != null && primary.matchesPhone(contact.phone)
+              ? 1
+              : 0,
+          'created_at': DateTime.now().toIso8601String(),
+        });
+      }
+    });
+  }
+
+  static Future<List<String>> getContacts() async {
+    final contacts = await getContactRecords();
+    return contacts.map((contact) => contact.phone).toList(growable: false);
   }
 
   static Future<List<EmergencyContact>> getContactRecords() async {
-    final secureValue = await _secureStorage.read(
-      key: SecureStorageKeys.contactsData,
+    final db = await _databaseService.database;
+    var rows = await db.query(
+      'contacts',
+      orderBy: 'is_primary DESC, created_at ASC',
     );
-    final secureContacts = _decodeContacts(secureValue);
-    if (secureContacts.isNotEmpty) {
-      return secureContacts;
-    }
 
-    final legacyContacts = await _readLegacyContacts();
-    if (legacyContacts.isEmpty) {
-      return const [];
-    }
-
-    final primaryContact = await _readStoredPrimaryContact();
-    final migratedContacts = <EmergencyContact>[];
-    for (int i = 0; i < legacyContacts.length; i++) {
-      final phone = legacyContacts[i];
-      migratedContacts.add(
-        EmergencyContact(
-          name: primaryContact != null && primaryContact.matchesPhone(phone)
-              ? primaryContact.name
-              : "contacts_person_label".tr(
-                  namedArgs: {'index': '${migratedContacts.length + 1}'},
-                ),
-          phone: phone,
-        ),
+    if (rows.isEmpty) {
+      await _migrateLegacyContacts();
+      rows = await db.query(
+        'contacts',
+        orderBy: 'is_primary DESC, created_at ASC',
       );
     }
 
-    await _persistContactRecords(migratedContacts);
-    return migratedContacts;
+    return rows
+        .map(
+          (row) => EmergencyContact(
+            name: row['name']?.toString() ?? _unknownNameFallback,
+            phone: row['phone']?.toString() ?? '',
+          ),
+        )
+        .where((contact) => contact.normalizedPhone.isNotEmpty)
+        .toList(growable: false);
   }
 
-  static Future<List<String>> _readLegacyContacts() async {
-    final prefs = await SharedPreferences.getInstance();
-    final legacy = _deduplicateNumbers(
-      prefs.getStringList('saved_contacts') ?? [],
-    );
-    if (legacy.isNotEmpty) {
-      await _secureStorage.write(
-        key: SecureStorageKeys.contactsList,
-        value: jsonEncode(legacy),
-      );
-      await prefs.remove('saved_contacts');
-    }
-    return legacy;
-  }
-
-  // Acil kişilerin telefon listesini kaydet
   static Future<void> saveEmergencyContact(List<String> numbers) async {
-    await _secureStorage.write(
-      key: SecureStorageKeys.emergencyContactsList,
-      value: jsonEncode(_deduplicateNumbers(numbers)),
-    );
+    await saveContacts(numbers);
   }
 
-  // Birincil acil kişiyi kaydet (UI için)
   static Future<void> savePrimaryEmergencyContact({
     required String name,
     required String phone,
@@ -127,43 +125,126 @@ class ContactService {
       return;
     }
 
-    await _secureStorage.write(
-      key: SecureStorageKeys.emergencyContactName,
-      value: name.trim().isEmpty ? _unknownNameFallback : name.trim(),
+    final db = await _databaseService.database;
+    await db.transaction((txn) async {
+      await txn.update('contacts', {'is_primary': 0});
+
+      final existing = await txn.query(
+        'contacts',
+        where: 'phone = ?',
+        whereArgs: [phone.trim()],
+        limit: 1,
+      );
+
+      if (existing.isEmpty) {
+        await txn.insert('contacts', {
+          'name': name.trim().isEmpty ? _unknownNameFallback : name.trim(),
+          'phone': phone.trim(),
+          'is_primary': 1,
+          'created_at': DateTime.now().toIso8601String(),
+        });
+      } else {
+        await txn.update(
+          'contacts',
+          {
+            'name': name.trim().isEmpty ? _unknownNameFallback : name.trim(),
+            'is_primary': 1,
+          },
+          where: 'phone = ?',
+          whereArgs: [phone.trim()],
+        );
+      }
+    });
+  }
+
+  static Future<EmergencyContact?> getEmergencyContact() async {
+    final db = await _databaseService.database;
+    var rows = await db.query(
+      'contacts',
+      where: 'is_primary = ?',
+      whereArgs: [1],
+      limit: 1,
     );
-    await _secureStorage.write(
-      key: SecureStorageKeys.emergencyContactPhone,
-      value: normalizedPhone,
+
+    if (rows.isEmpty) {
+      await _migrateLegacyContacts();
+      rows = await db.query(
+        'contacts',
+        where: 'is_primary = ?',
+        whereArgs: [1],
+        limit: 1,
+      );
+    }
+
+    if (rows.isEmpty) {
+      return null;
+    }
+
+    final row = rows.first;
+    return EmergencyContact(
+      name: row['name']?.toString() ?? _unknownNameFallback,
+      phone: row['phone']?.toString() ?? '',
     );
   }
 
-  // Acil kişiyi getir
-  static Future<EmergencyContact?> getEmergencyContact() async {
-    final stored = await _readStoredPrimaryContact();
-    if (stored == null) {
-      return null;
-    }
+  static Future<void> clearPrimaryEmergencyContact() async {
+    final db = await _databaseService.database;
+    await db.update('contacts', {'is_primary': 0});
+  }
 
-    final allNumbers = await getAllEmergencyNumbers();
-    final stillExists = allNumbers.any(stored.matchesPhone);
-    if (!stillExists) {
-      await clearPrimaryEmergencyContact();
-      return null;
-    }
+  static Future<List<String>> getAllEmergencyNumbers() async {
+    final contacts = await getContactRecords();
+    return contacts.map((contact) => contact.phone).toList(growable: false);
+  }
 
-    final matchingContact = _findContactByPhone(
-      await getContactRecords(),
-      stored.phone,
+  static Future<String?> getEmergencyNumber() async {
+    final emergency = await getEmergencyContact();
+    if (emergency != null && emergency.phone.isNotEmpty) {
+      return emergency.phone;
+    }
+    final list = await getAllEmergencyNumbers();
+    if (list.isNotEmpty) {
+      return list.first;
+    }
+    return null;
+  }
+
+  static Future<void> _migrateLegacyContacts() async {
+    final secureValue = await _secureStorage.read(
+      key: SecureStorageKeys.contactsData,
     );
-    if (matchingContact != null && matchingContact.name != stored.name) {
-      await savePrimaryEmergencyContact(
-        name: matchingContact.name,
-        phone: matchingContact.phone,
-      );
-      return matchingContact;
+    final secureContacts = _decodeContacts(secureValue);
+    final legacyContacts = secureContacts.isNotEmpty
+        ? secureContacts
+        : (await _readLegacyContacts())
+              .asMap()
+              .entries
+              .map(
+                (entry) => EmergencyContact(
+                  name: "contacts_person_label".tr(
+                    namedArgs: {'index': '${entry.key + 1}'},
+                  ),
+                  phone: entry.value,
+                ),
+              )
+              .toList(growable: false);
+
+    if (legacyContacts.isNotEmpty) {
+      await saveContactRecords(legacyContacts);
     }
 
-    return stored;
+    final primary = await _readStoredPrimaryContact();
+    if (primary != null) {
+      await savePrimaryEmergencyContact(
+        name: primary.name,
+        phone: primary.phone,
+      );
+    }
+  }
+
+  static Future<List<String>> _readLegacyContacts() async {
+    final prefs = await SharedPreferences.getInstance();
+    return _deduplicateNumbers(prefs.getStringList('saved_contacts') ?? []);
   }
 
   static Future<EmergencyContact?> _readStoredPrimaryContact() async {
@@ -184,134 +265,10 @@ class ContactService {
     if (legacyPhone == null || legacyPhone.isEmpty) {
       return null;
     }
+
     final legacyName =
         prefs.getString('emergency_contact_name') ?? _unknownNameFallback;
-    await _secureStorage.write(
-      key: SecureStorageKeys.emergencyContactPhone,
-      value: normalizePhoneNumber(legacyPhone),
-    );
-    await _secureStorage.write(
-      key: SecureStorageKeys.emergencyContactName,
-      value: legacyName,
-    );
-    await prefs.remove('emergency_contact_phone');
-    await prefs.remove('emergency_contact_name');
     return EmergencyContact(name: legacyName, phone: legacyPhone);
-  }
-
-  static Future<void> clearPrimaryEmergencyContact() async {
-    await _secureStorage.delete(key: SecureStorageKeys.emergencyContactName);
-    await _secureStorage.delete(key: SecureStorageKeys.emergencyContactPhone);
-
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('emergency_contact_phone');
-    await prefs.remove('emergency_contact_name');
-  }
-
-  // Tüm acil telefon numaralarını getir
-  static Future<List<String>> getAllEmergencyNumbers() async {
-    final secureValue = await _secureStorage.read(
-      key: SecureStorageKeys.emergencyContactsList,
-    );
-    final secureNumbers = _decodeList(secureValue);
-    if (secureNumbers.isNotEmpty) {
-      return secureNumbers;
-    }
-
-    final prefs = await SharedPreferences.getInstance();
-    final legacy = _deduplicateNumbers(
-      prefs.getStringList('emergency_contacts') ?? [],
-    );
-    if (legacy.isNotEmpty) {
-      await _secureStorage.write(
-        key: SecureStorageKeys.emergencyContactsList,
-        value: jsonEncode(legacy),
-      );
-      await prefs.remove('emergency_contacts');
-      return legacy;
-    }
-
-    return getContacts();
-  }
-
-  // İlk Numarayı Getir (Acil Durum İçin)
-  static Future<String?> getEmergencyNumber() async {
-    final emergency = await getEmergencyContact();
-    if (emergency != null && emergency.phone.isNotEmpty) {
-      return emergency.phone;
-    }
-    final list = await getAllEmergencyNumbers();
-    if (list.isNotEmpty) return list.first;
-    return null;
-  }
-
-  static Future<void> _persistContactRecords(
-    List<EmergencyContact> contacts,
-  ) async {
-    final deduplicated = <EmergencyContact>[];
-    for (final contact in contacts) {
-      final sanitized = EmergencyContact(
-        name: contact.name.trim().isEmpty
-            ? _unknownNameFallback
-            : contact.name.trim(),
-        phone: contact.phone.trim(),
-      );
-      if (sanitized.normalizedPhone.isEmpty ||
-          deduplicated.any((item) => item.matchesPhone(sanitized.phone))) {
-        continue;
-      }
-      deduplicated.add(sanitized);
-    }
-
-    await _secureStorage.write(
-      key: SecureStorageKeys.contactsData,
-      value: jsonEncode(
-        deduplicated.map((contact) => contact.toJson()).toList(growable: false),
-      ),
-    );
-    await _secureStorage.write(
-      key: SecureStorageKeys.contactsList,
-      value: jsonEncode(
-        deduplicated.map((contact) => contact.phone).toList(growable: false),
-      ),
-    );
-
-    final primaryContact = await _readStoredPrimaryContact();
-    if (primaryContact == null) {
-      return;
-    }
-
-    final matchingContact = _findContactByPhone(
-      deduplicated,
-      primaryContact.phone,
-    );
-    if (matchingContact == null) {
-      await clearPrimaryEmergencyContact();
-      return;
-    }
-
-    if (matchingContact.name != primaryContact.name ||
-        normalizePhoneNumber(matchingContact.phone) !=
-            normalizePhoneNumber(primaryContact.phone)) {
-      await savePrimaryEmergencyContact(
-        name: matchingContact.name,
-        phone: matchingContact.phone,
-      );
-    }
-  }
-
-  static List<String> _decodeList(String? raw) {
-    if (raw == null || raw.isEmpty) {
-      return const [];
-    }
-
-    try {
-      final decoded = jsonDecode(raw);
-      if (decoded is List) {
-        return _deduplicateNumbers(decoded.map((entry) => entry.toString()));
-      }
-    } catch (_) {}
-    return const [];
   }
 
   static List<EmergencyContact> _decodeContacts(String? raw) {
@@ -372,6 +329,24 @@ class ContactService {
       }
     }
     return null;
+  }
+
+  static Future<EmergencyContact?> _readPrimaryFromDatabase() async {
+    final db = await _databaseService.database;
+    final rows = await db.query(
+      'contacts',
+      where: 'is_primary = ?',
+      whereArgs: [1],
+      limit: 1,
+    );
+    if (rows.isEmpty) {
+      return null;
+    }
+    final row = rows.first;
+    return EmergencyContact(
+      name: row['name']?.toString() ?? _unknownNameFallback,
+      phone: row['phone']?.toString() ?? '',
+    );
   }
 }
 

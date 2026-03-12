@@ -2,8 +2,10 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/services.dart';
 
 import 'android_intent_service.dart';
+import 'emergency_platform_service.dart';
 
 enum SmsComposeStatus {
+  nativeDispatched,
   composerOpened,
   composerOpenedPrimaryOnly,
   failed,
@@ -21,6 +23,13 @@ class SmsComposeResult {
     this.fallbackPayload,
     this.errorMessage,
   });
+
+  factory SmsComposeResult.nativeDispatched(List<String> recipients) {
+    return SmsComposeResult._(
+      status: SmsComposeStatus.nativeDispatched,
+      recipients: recipients,
+    );
+  }
 
   factory SmsComposeResult.opened(List<String> recipients) {
     return SmsComposeResult._(
@@ -53,6 +62,8 @@ class SmsComposeResult {
 
   String get statusMessage {
     switch (status) {
+      case SmsComposeStatus.nativeDispatched:
+        return 'Yerel SMS gonderimi baslatildi';
       case SmsComposeStatus.composerOpened:
         return 'sms_composer_opened'.tr();
       case SmsComposeStatus.composerOpenedPrimaryOnly:
@@ -83,6 +94,23 @@ class SmsService {
 
     if (recipients.isEmpty) {
       return SmsComposeResult.failed('sms_no_recipients'.tr());
+    }
+
+    if (EmergencyPlatformService.instance.isSupported) {
+      final response = await EmergencyPlatformService.instance.sendSms(
+        recipients: recipients,
+        message: message,
+      );
+      final status = response['status']?.toString();
+      if (status == 'nativeDispatched') {
+        return SmsComposeResult.nativeDispatched(recipients);
+      }
+      if (status == 'composerOpened') {
+        return SmsComposeResult.opened(recipients);
+      }
+      if (status == 'failed') {
+        return SmsComposeResult.failed(_mapNativeError(response['error']));
+      }
     }
 
     final groupedOpened = await AndroidIntentService.composeSms(
@@ -117,9 +145,24 @@ class SmsService {
     required String message,
   }) {
     return [
-      'sms_fallback_recipients'.tr(namedArgs: {'numbers': recipients.join(', ')}),
+      'sms_fallback_recipients'.tr(
+        namedArgs: {'numbers': recipients.join(', ')},
+      ),
       '',
       message,
     ].join('\n');
+  }
+
+  static String _mapNativeError(Object? error) {
+    switch (error?.toString()) {
+      case 'airplane_mode':
+        return 'Ucak modu acik. SMS gonderilemez.';
+      case 'sim_unavailable':
+        return 'SIM kart bulunamadi veya hazir degil.';
+      case 'no_recipients':
+        return 'sms_no_recipients'.tr();
+      default:
+        return 'sms_composer_failed'.tr();
+    }
   }
 }

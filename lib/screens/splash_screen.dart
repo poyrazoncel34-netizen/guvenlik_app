@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/app_colors.dart';
 import '../core/constants/app_constants.dart';
+import 'legal_disclaimer_screen.dart';
 import 'main_navigation.dart';
 import 'onboarding_screen.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -143,13 +144,24 @@ class _SplashScreenState extends State<SplashScreen>
   Future<void> _goNext() async {
     if (!mounted) return;
     final prefs = await SharedPreferences.getInstance();
+    final legalAccepted =
+        prefs.getBool(AppConstants.prefLegalDisclaimerAccepted) ?? false;
     final onboardingDone =
         prefs.getBool(AppConstants.prefOnboardingDone) ?? false;
     if (!mounted) return;
+
+    final Widget nextScreen;
+    if (!legalAccepted) {
+      nextScreen = const LegalDisclaimerScreen();
+    } else if (!onboardingDone) {
+      nextScreen = const OnboardingScreen();
+    } else {
+      nextScreen = const MainNavigation();
+    }
+
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) =>
-            onboardingDone ? const MainNavigation() : const OnboardingScreen(),
+        pageBuilder: (context, animation, secondaryAnimation) => nextScreen,
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return FadeTransition(opacity: animation, child: child);
         },

@@ -8,7 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../core/app_colors.dart';
-import '../screens/pin_verification_screen.dart';
+import '../screens/countdown_screen.dart';
 
 class PanicButton extends StatefulWidget {
   const PanicButton({super.key});
@@ -99,15 +99,15 @@ class _PanicButtonState extends State<PanicButton>
     // Vibrate and open PIN verification immediately
     HapticFeedback.vibrate();
 
-    _openPinVerificationScreen();
+    _openCountdownScreen();
   }
 
-  void _openPinVerificationScreen() {
+  void _openCountdownScreen() {
     Navigator.push(
       context,
       PageRouteBuilder(
         pageBuilder: (context, animation, secondaryAnimation) =>
-            const PinVerificationScreen(),
+            const CountdownScreen(),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return FadeTransition(
             opacity: animation,

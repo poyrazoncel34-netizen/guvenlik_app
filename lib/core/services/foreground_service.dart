@@ -58,7 +58,7 @@ class KoruBeniForegroundService {
           initialNotificationTitle: 'KoruBeni',
           initialNotificationContent: 'Güvenlik modu aktif 🛡️',
           foregroundServiceNotificationId: kForegroundNotificationId,
-          foregroundServiceTypes: [AndroidForegroundType.location],
+          foregroundServiceTypes: [AndroidForegroundType.dataSync],
         ),
         iosConfiguration: IosConfiguration(
           autoStart: false,

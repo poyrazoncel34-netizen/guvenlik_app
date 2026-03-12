@@ -15,6 +15,7 @@ import '../di/service_locator.dart';
 import '../navigation/app_navigator.dart';
 import '../services/activity_service.dart';
 import '../services/call_service.dart';
+import '../services/emergency_platform_service.dart';
 import '../services/foreground_service.dart';
 import '../services/haptic_service.dart';
 import '../services/notification_service.dart';
@@ -68,6 +69,7 @@ class CheckInService extends ChangeNotifier {
     _graceEndAt = null;
 
     await _persistState();
+    await _scheduleNativeMainDeadline();
     await _startBackgroundProtection();
     _startMainTicker();
 
@@ -94,6 +96,7 @@ class CheckInService extends ChangeNotifier {
     _remainingSeconds = _totalSeconds;
 
     await _persistState();
+    await _scheduleNativeMainDeadline();
     await _startBackgroundProtection();
     _startMainTicker();
 
@@ -118,6 +121,7 @@ class CheckInService extends ChangeNotifier {
     _emergencyInProgress = false;
 
     await _clearPersistedState();
+    await EmergencyPlatformService.instance.cancelCheckIn();
     await KoruBeniForegroundService.stop();
     notifyListeners();
   }
@@ -244,6 +248,7 @@ class CheckInService extends ChangeNotifier {
     _remainingSeconds = _gracePeriodSeconds;
 
     await _persistState();
+    await _scheduleNativeGraceDeadline();
     await _startBackgroundProtection();
     await _showGraceNotification();
     _startGraceTicker();
@@ -393,10 +398,57 @@ class CheckInService extends ChangeNotifier {
     _totalSeconds = 0;
 
     await _clearPersistedState();
+    await EmergencyPlatformService.instance.cancelCheckIn();
     if (stopForeground) {
       await KoruBeniForegroundService.stop();
     }
     notifyListeners();
+  }
+
+  Future<void> handleNativeGraceStarted() async {
+    if (!_isActive) {
+      return;
+    }
+    _cancelTicker();
+    _isGracePeriod = true;
+    _graceEndAt = DateTime.now().add(
+      const Duration(seconds: _gracePeriodSeconds),
+    );
+    _remainingSeconds = _gracePeriodSeconds;
+    await _persistState();
+    await _scheduleNativeGraceDeadline();
+    await _showGraceNotification();
+    _startGraceTicker();
+    notifyListeners();
+  }
+
+  Future<void> handleNativeExpired() async {
+    if (!_isActive) {
+      return;
+    }
+    await _triggerEmergency();
+  }
+
+  Future<void> _scheduleNativeMainDeadline() async {
+    if (_endAt == null) {
+      return;
+    }
+    await EmergencyPlatformService.instance.scheduleCheckIn(
+      phase: 'main',
+      deadline: _endAt!,
+      graceDuration: const Duration(seconds: _gracePeriodSeconds),
+    );
+  }
+
+  Future<void> _scheduleNativeGraceDeadline() async {
+    if (_graceEndAt == null) {
+      return;
+    }
+    await EmergencyPlatformService.instance.scheduleCheckIn(
+      phase: 'grace',
+      deadline: _graceEndAt!,
+      graceDuration: Duration.zero,
+    );
   }
 
   DateTime? _parseDateTime(String? value) {

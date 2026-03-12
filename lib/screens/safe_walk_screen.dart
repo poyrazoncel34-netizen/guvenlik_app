@@ -6,8 +6,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../core/app_colors.dart';
 import '../core/services/activity_service.dart';
+import '../core/services/emergency_platform_service.dart';
 import '../core/services/foreground_service.dart';
 import '../core/services/notification_service.dart';
 // Analytics service removed (offline-first)
@@ -24,6 +26,10 @@ class SafeWalkScreen extends StatefulWidget {
 
 class _SafeWalkScreenState extends State<SafeWalkScreen>
     with WidgetsBindingObserver {
+  static const String _activeKey = 'safe_walk_active';
+  static const String _endAtKey = 'safe_walk_end_at';
+  static const String _durationMinutesKey = 'safe_walk_duration_minutes';
+
   int _selectedMinutes = 15;
   bool _isActive = false;
   Timer? _timer;
@@ -37,6 +43,7 @@ class _SafeWalkScreenState extends State<SafeWalkScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _restoreState();
   }
 
   @override
@@ -59,14 +66,44 @@ class _SafeWalkScreenState extends State<SafeWalkScreen>
           _remainingSeconds = remaining.inSeconds;
         });
       }
+    } else if (state == AppLifecycleState.resumed) {
+      _restoreState();
     }
+  }
+
+  Future<void> _restoreState() async {
+    final prefs = await SharedPreferences.getInstance();
+    final active = prefs.getBool(_activeKey) ?? false;
+    final endAtRaw = prefs.getString(_endAtKey);
+    final duration = prefs.getInt(_durationMinutesKey) ?? _selectedMinutes;
+    final endAt = endAtRaw == null ? null : DateTime.tryParse(endAtRaw);
+
+    if (!active || endAt == null) {
+      return;
+    }
+
+    final remaining = endAt.difference(DateTime.now());
+    if (remaining.isNegative || remaining.inSeconds <= 0) {
+      await _clearPersistedState();
+      _onTimerExpired();
+      return;
+    }
+
+    setState(() {
+      _selectedMinutes = duration;
+      _isActive = true;
+      _endTime = endAt;
+      _remainingSeconds = remaining.inSeconds;
+    });
+    _startTicker();
   }
 
   Future<void> _startSafeWalk() async {
     HapticFeedback.mediumImpact();
+    final endTime = DateTime.now().add(Duration(minutes: _selectedMinutes));
     setState(() {
       _isActive = true;
-      _endTime = DateTime.now().add(Duration(minutes: _selectedMinutes));
+      _endTime = endTime;
       _remainingSeconds = _selectedMinutes * 60;
     });
 
@@ -80,37 +117,16 @@ class _SafeWalkScreenState extends State<SafeWalkScreen>
     );
 
     await KoruBeniForegroundService.start();
+    await EmergencyPlatformService.instance.scheduleCheckIn(
+      phase: 'grace',
+      deadline: endTime,
+      graceDuration: Duration.zero,
+    );
+    await _persistState();
     _updateForegroundStatus();
 
     _preWarningFired = false;
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (_endTime == null) {
-        timer.cancel();
-        return;
-      }
-      final remaining = _endTime!.difference(DateTime.now());
-      if (remaining.isNegative || remaining.inSeconds <= 0) {
-        timer.cancel();
-        _onTimerExpired();
-      } else {
-        setState(() {
-          _remainingSeconds = remaining.inSeconds;
-        });
-        if (_remainingSeconds % 30 == 0 || _remainingSeconds <= 60) {
-          _updateForegroundStatus();
-        }
-        // Fire pre-expiry warning at 2 minutes (or 10% of total if total < 4 min)
-        final warningThreshold = _selectedMinutes >= 4
-            ? 120
-            : (_selectedMinutes * 60 * 0.1).round();
-        if (!_preWarningFired &&
-            _remainingSeconds <= warningThreshold &&
-            _remainingSeconds > 0) {
-          _preWarningFired = true;
-          _firePreExpiryWarning();
-        }
-      }
-    });
+    _startTicker();
   }
 
   void _firePreExpiryWarning() {
@@ -131,6 +147,8 @@ class _SafeWalkScreenState extends State<SafeWalkScreen>
       _isActive = false;
       _timer?.cancel();
     });
+    EmergencyPlatformService.instance.cancelCheckIn();
+    _clearPersistedState();
 
     // Auto-play siren before navigating to countdown
     showDialog(
@@ -155,6 +173,8 @@ class _SafeWalkScreenState extends State<SafeWalkScreen>
     HapticFeedback.lightImpact();
     _timer?.cancel();
     KoruBeniForegroundService.stop();
+    EmergencyPlatformService.instance.cancelCheckIn();
+    _clearPersistedState();
     // Analytics removed (offline-first)
     ActivityService.logEvent(
       type: ActivityType.safetyCheck,
@@ -191,11 +211,60 @@ class _SafeWalkScreenState extends State<SafeWalkScreen>
     HapticFeedback.lightImpact();
     _timer?.cancel();
     KoruBeniForegroundService.stop();
+    EmergencyPlatformService.instance.cancelCheckIn();
+    _clearPersistedState();
     setState(() {
       _isActive = false;
       _endTime = null;
       _remainingSeconds = 0;
     });
+  }
+
+  void _startTicker() {
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_endTime == null) {
+        timer.cancel();
+        return;
+      }
+      final remaining = _endTime!.difference(DateTime.now());
+      if (remaining.isNegative || remaining.inSeconds <= 0) {
+        timer.cancel();
+        _onTimerExpired();
+      } else {
+        setState(() {
+          _remainingSeconds = remaining.inSeconds;
+        });
+        if (_remainingSeconds % 30 == 0 || _remainingSeconds <= 60) {
+          _updateForegroundStatus();
+        }
+        final warningThreshold = _selectedMinutes >= 4
+            ? 120
+            : (_selectedMinutes * 60 * 0.1).round();
+        if (!_preWarningFired &&
+            _remainingSeconds <= warningThreshold &&
+            _remainingSeconds > 0) {
+          _preWarningFired = true;
+          _firePreExpiryWarning();
+        }
+      }
+    });
+  }
+
+  Future<void> _persistState() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_activeKey, _isActive);
+    await prefs.setInt(_durationMinutesKey, _selectedMinutes);
+    if (_endTime != null) {
+      await prefs.setString(_endAtKey, _endTime!.toIso8601String());
+    }
+  }
+
+  Future<void> _clearPersistedState() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_activeKey);
+    await prefs.remove(_endAtKey);
+    await prefs.remove(_durationMinutesKey);
   }
 
   String _formatTime(int totalSeconds) {

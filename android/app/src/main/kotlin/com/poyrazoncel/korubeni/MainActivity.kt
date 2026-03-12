@@ -3,7 +3,13 @@ package com.poyrazoncel.korubeni
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
+import android.os.Bundle
 import android.view.KeyEvent
+import android.view.WindowManager
+import com.poyrazoncel.korubeni.emergency.EmergencyChannels
+import com.poyrazoncel.korubeni.emergency.EmergencyEventStreamHandler
+import com.poyrazoncel.korubeni.emergency.EmergencyPlatformHandler
+import com.poyrazoncel.korubeni.emergency.PhoneStateStreamHandler
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.EventChannel
@@ -12,16 +18,29 @@ import io.flutter.plugin.common.MethodChannel
 class MainActivity : FlutterActivity() {
     companion object {
         private const val ANDROID_INTENTS_CHANNEL = "com.poyrazoncel.korubeni/android_intents"
+        private const val SETTINGS_CHANNEL = "com.poyrazoncel.korubeni/settings"
     }
 
     private val volumeDetector = VolumeButtonDetector()
     private lateinit var dozeModeHandler: DozeModeHandler
+    private lateinit var emergencyPlatformHandler: EmergencyPlatformHandler
+    private lateinit var phoneStateStreamHandler: PhoneStateStreamHandler
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        window.setFlags(
+            WindowManager.LayoutParams.FLAG_SECURE,
+            WindowManager.LayoutParams.FLAG_SECURE,
+        )
+    }
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
 
         try {
             val messenger = flutterEngine.dartExecutor.binaryMessenger
+            emergencyPlatformHandler = EmergencyPlatformHandler(this)
+            phoneStateStreamHandler = PhoneStateStreamHandler(applicationContext)
 
             // Volume button EventChannel — Flutter'a sürekli event akışı
             try {
@@ -63,6 +82,32 @@ class MainActivity : FlutterActivity() {
                 android.util.Log.d("MainActivity", "Doze Mode handler configured")
             } catch (e: Exception) {
                 android.util.Log.e("MainActivity", "Doze Mode handler failed: ${e.message}", e)
+            }
+
+            try {
+                MethodChannel(messenger, EmergencyChannels.METHOD)
+                    .setMethodCallHandler(emergencyPlatformHandler)
+                EventChannel(messenger, EmergencyChannels.EVENTS)
+                    .setStreamHandler(EmergencyEventStreamHandler())
+                EventChannel(messenger, EmergencyChannels.PHONE_STATE)
+                    .setStreamHandler(phoneStateStreamHandler)
+                android.util.Log.d("MainActivity", "Emergency platform configured")
+            } catch (e: Exception) {
+                android.util.Log.e("MainActivity", "Emergency platform failed: ${e.message}", e)
+            }
+
+            try {
+                MethodChannel(messenger, SETTINGS_CHANNEL)
+                    .setMethodCallHandler { call, result ->
+                        when (call.method) {
+                            "openBatterySettings" ->
+                                result.success(emergencyPlatformHandler.openBatterySettingsProxy())
+                            else -> result.notImplemented()
+                        }
+                    }
+                android.util.Log.d("MainActivity", "Settings channel configured")
+            } catch (e: Exception) {
+                android.util.Log.e("MainActivity", "Settings channel failed: ${e.message}", e)
             }
 
             try {
@@ -160,6 +205,7 @@ class MainActivity : FlutterActivity() {
 
     private fun startExternalIntent(intent: Intent): Boolean {
         return try {
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             startActivity(intent)
             true
         } catch (e: ActivityNotFoundException) {

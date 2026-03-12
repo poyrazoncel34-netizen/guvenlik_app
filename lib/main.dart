@@ -13,6 +13,7 @@ import 'core/navigation/app_navigator.dart';
 import 'presentation/providers/providers.dart';
 import 'screens/splash_screen.dart';
 import 'core/services/offline_queue_service.dart';
+import 'core/services/crash_log_service.dart';
 import 'core/services/data_migration_service.dart';
 import 'core/services/foreground_service.dart';
 import 'core/services/haptic_service.dart';
@@ -20,6 +21,7 @@ import 'core/services/connectivity_service.dart';
 import 'core/services/atomic_storage_service.dart';
 import 'core/services/notification_service.dart';
 import 'core/widgets/emergency_trigger_host.dart';
+import 'core/widgets/app_privacy_shield.dart';
 import 'package:easy_localization/easy_localization.dart';
 
 void main() async {
@@ -97,6 +99,11 @@ void main() async {
 
   // Error handling for Flutter errors (no Firebase Crashlytics)
   FlutterError.onError = (details) {
+    CrashLogService.instance.record(
+      source: 'flutter_error',
+      error: details.exception,
+      stackTrace: details.stack,
+    );
     // Offline-first: console logging only
     assert(() {
       debugPrint('FlutterError: ${details.exception}');
@@ -108,6 +115,11 @@ void main() async {
   // return true = "hata işlendi" (sessizce yutulur, beyaz ekranda kilit kalabilir)
   // return false = Flutter/Dart standart işleyişi devam eder
   PlatformDispatcher.instance.onError = (error, stack) {
+    CrashLogService.instance.record(
+      source: 'platform_dispatcher',
+      error: error,
+      stackTrace: stack,
+    );
     assert(() {
       debugPrint('PlatformDispatcher.onError: $error');
       return true;
@@ -166,10 +178,12 @@ class KoruBeniApp extends StatelessWidget {
             );
             return MediaQuery(
               data: mediaQuery.copyWith(textScaler: clampedTextScaler),
-              child: Semantics(
-                label: 'KoruBeni güvenlik uygulaması',
-                hint: 'Acil durumlarda yardım çağırın, konum paylaşın',
-                child: child ?? const SizedBox.shrink(),
+              child: AppPrivacyShield(
+                child: Semantics(
+                  label: 'KoruBeni güvenlik uygulaması',
+                  hint: 'Acil durumlarda yardım çağırın, konum paylaşın',
+                  child: child ?? const SizedBox.shrink(),
+                ),
               ),
             );
           },

@@ -126,7 +126,12 @@ class _ContactsPageState extends State<ContactsPage> {
                     final contact = provider.emergencyContacts[index];
                     return KeyedSubtree(
                       key: ValueKey(contact.phone),
-                      child: _buildContactCard(context, index, contact, provider),
+                      child: _buildContactCard(
+                        context,
+                        index,
+                        contact,
+                        provider,
+                      ),
                     );
                   },
                 ),
@@ -698,13 +703,15 @@ class _ContactsPageState extends State<ContactsPage> {
   }
 
   void _showAddContactSheet(BuildContext context) {
+    final nameController = TextEditingController();
+    final phoneController = TextEditingController();
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => Padding(
+      builder: (sheetContext) => Padding(
         padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom,
+          bottom: MediaQuery.of(sheetContext).viewInsets.bottom,
         ),
         child: Container(
           decoration: const BoxDecoration(
@@ -760,7 +767,7 @@ class _ContactsPageState extends State<ContactsPage> {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () {
-                    Navigator.pop(context);
+                    Navigator.pop(sheetContext);
                     _pickContactFromDevice();
                   },
                   style: ElevatedButton.styleFrom(
@@ -781,11 +788,110 @@ class _ContactsPageState extends State<ContactsPage> {
                 ),
               ),
               const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: Divider(
+                      color: AppColors.border.withValues(alpha: 0.7),
+                    ),
+                  ),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 12),
+                    child: Text(
+                      'veya manuel gir',
+                      style: TextStyle(
+                        color: AppColors.textSecondary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: Divider(
+                      color: AppColors.border.withValues(alpha: 0.7),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: nameController,
+                textCapitalization: TextCapitalization.words,
+                decoration: InputDecoration(
+                  hintText: 'Isim',
+                  prefixIcon: const Icon(Icons.person_outline_rounded),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: phoneController,
+                keyboardType: TextInputType.phone,
+                decoration: InputDecoration(
+                  hintText: 'Telefon numarasi',
+                  prefixIcon: const Icon(Icons.phone_outlined),
+                ),
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  onPressed: () async {
+                    final name = nameController.text.trim().isEmpty
+                        ? "contacts_unknown".tr()
+                        : nameController.text.trim();
+                    final phone = phoneController.text.trim();
+                    if (phone.isEmpty) {
+                      _showSnack(
+                        "contacts_no_phone".tr(),
+                        backgroundColor: AppColors.warning,
+                      );
+                      return;
+                    }
+
+                    final provider = context.read<ContactsProvider>();
+                    final added = await provider.addContact(
+                      name: name,
+                      phone: phone,
+                    );
+                    if (!added) {
+                      _showSnack(
+                        provider.isAtLimit
+                            ? "contacts_max_reached".tr()
+                            : "contacts_already_in_list".tr(),
+                        backgroundColor: AppColors.warning,
+                      );
+                      return;
+                    }
+
+                    if (!sheetContext.mounted) {
+                      return;
+                    }
+                    Navigator.pop(sheetContext);
+                    await _refreshHomeProvider();
+                    _showSnack("contacts_added".tr(namedArgs: {"name": name}));
+                  },
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.primary,
+                    side: const BorderSide(color: AppColors.primary),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                  child: const Text(
+                    'Manuel numara ekle',
+                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
             ],
           ),
         ),
       ),
-    );
+    ).whenComplete(() {
+      nameController.dispose();
+      phoneController.dispose();
+    });
   }
 
   Future<void> _pickContactFromDevice() async {
