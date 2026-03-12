@@ -177,6 +177,10 @@ class _EmergencyMapScreenState extends State<EmergencyMapScreen> {
           urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
           userAgentPackageName: kOsmUserAgentPackageName,
           maxZoom: 19,
+          errorTileCallback: (tile, error, stack) {
+            // Silently ignore individual tile load failures (offline tolerance)
+            debugPrint('TileLayer error (ignored): $error');
+          },
         ),
         if (_currentLocation != null)
           MarkerLayer(

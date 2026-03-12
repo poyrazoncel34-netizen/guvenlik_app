@@ -14,7 +14,6 @@ import '../core/security/secure_storage.dart';
 import '../core/security/secure_storage_keys.dart';
 import '../core/app_colors.dart';
 import '../core/services/contact_service.dart';
-import '../core/services/biometric_service.dart';
 import '../core/services/sms_service.dart';
 import '../domain/repositories/contacts_repository.dart';
 import '../core/services/activity_service.dart';
@@ -51,8 +50,6 @@ class _CountdownScreenState extends State<CountdownScreen>
       serviceLocator<ContactsRepository>();
   // Offline-first: No EmergencyRepository (Firebase removed)
   late final SecureStorage _secureStorage = serviceLocator<SecureStorage>();
-  bool _biometricAvailable = false;
-  String _biometricLabel = 'Biometric';
   bool _handoffToEmergencyScreen = false;
 
   // Brute force protection
@@ -81,51 +78,8 @@ class _CountdownScreenState extends State<CountdownScreen>
 
     _loadPin();
     _loadEmergencyContact();
-    _checkBiometric();
     _startCountdown();
     KoruBeniForegroundService.start();
-  }
-
-  Future<void> _checkBiometric() async {
-    final available = await BiometricService.instance.isAvailable();
-    if (available && mounted) {
-      final label = await BiometricService.instance.getBiometricLabel();
-      setState(() {
-        _biometricAvailable = true;
-        _biometricLabel = label;
-      });
-      _authenticateWithBiometric();
-    }
-  }
-
-  Future<void> _authenticateWithBiometric() async {
-    final success = await BiometricService.instance.authenticate(
-      reason: "countdown_biometric_reason".tr(),
-    );
-    if (success && mounted) {
-      _timer?.cancel();
-      ActivityService.logEvent(
-        type: ActivityType.emergencyCancelled,
-        title: "countdown_cancelled_title".tr(),
-        description: "countdown_cancelled_biometric".tr(
-          namedArgs: {"label": _biometricLabel},
-        ),
-      );
-      KoruBeniForegroundService.stop();
-      Navigator.pop(context);
-    } else if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            "countdown_biometric_fail".tr(
-              namedArgs: {"label": _biometricLabel},
-            ),
-          ),
-          backgroundColor: AppColors.warning,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    }
   }
 
   Future<void> _loadPin() async {
@@ -639,37 +593,6 @@ class _CountdownScreenState extends State<CountdownScreen>
                     ),
                     textAlign: TextAlign.center,
                   ),
-                  if (_biometricAvailable) ...[
-                    const SizedBox(height: 16),
-                    OutlinedButton.icon(
-                      onPressed: _authenticateWithBiometric,
-                      icon: Icon(
-                        _biometricLabel == 'Face ID'
-                            ? Icons.face_rounded
-                            : Icons.fingerprint_rounded,
-                        size: 22,
-                      ),
-                      label: Text(
-                        "countdown_biometric_cancel".tr(
-                          namedArgs: {"label": _biometricLabel},
-                        ),
-                      ),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: AppColors.primary,
-                        side: const BorderSide(
-                          color: AppColors.primary,
-                          width: 1.5,
-                        ),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 24,
-                          vertical: 14,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                      ),
-                    ),
-                  ],
                   if (_correctPin == null) ...[
                     const SizedBox(height: 16),
                     OutlinedButton.icon(

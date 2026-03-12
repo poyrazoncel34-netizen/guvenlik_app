@@ -20,6 +20,7 @@ import 'core/services/connectivity_service.dart';
 import 'core/services/atomic_storage_service.dart';
 import 'core/services/notification_service.dart';
 import 'core/widgets/emergency_trigger_host.dart';
+import 'core/services/local_logger_service.dart';
 import 'package:easy_localization/easy_localization.dart';
 
 void main() async {
@@ -85,6 +86,7 @@ void main() async {
       AtomicStorageService.instance.checkIntegrity(),
       HapticService.initialize(),
       ConnectivityService.instance.initialize(),
+      LocalLoggerService.instance.initialize(),
     ];
     if (!kIsWeb) {
       services.add(NotificationService.instance.initialize());
@@ -95,25 +97,18 @@ void main() async {
     // Non-fatal - app continues
   }
 
-  // Error handling for Flutter errors (no Firebase Crashlytics)
+  // Error handling for Flutter errors — logs to local file in all build modes
   FlutterError.onError = (details) {
-    // Offline-first: console logging only
-    assert(() {
-      debugPrint('FlutterError: ${details.exception}');
-      return true;
-    }());
+    LocalLoggerService.instance.error(
+      'FlutterError',
+      details.exception,
+      details.stack,
+    );
   };
 
   // Zero-fault: Fatal hataları yutma - return false ile standart hata yönetimine bırak
-  // return true = "hata işlendi" (sessizce yutulur, beyaz ekranda kilit kalabilir)
-  // return false = Flutter/Dart standart işleyişi devam eder
   PlatformDispatcher.instance.onError = (error, stack) {
-    assert(() {
-      debugPrint('PlatformDispatcher.onError: $error');
-      return true;
-    }());
-    // Kritik hatalarda uygulamanın kilitli kalması yerine standart hata yönetiminin
-    // çalışmasına izin ver (ErrorWidget, crash reporting vb.)
+    LocalLoggerService.instance.error('PlatformDispatcher', error, stack);
     return false;
   };
 

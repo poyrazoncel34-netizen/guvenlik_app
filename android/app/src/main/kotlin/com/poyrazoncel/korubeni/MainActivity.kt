@@ -1,8 +1,11 @@
 package com.poyrazoncel.korubeni
 
 import android.content.ActivityNotFoundException
+import android.content.ComponentName
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
+import android.provider.Settings
 import android.view.KeyEvent
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
@@ -12,6 +15,7 @@ import io.flutter.plugin.common.MethodChannel
 class MainActivity : FlutterActivity() {
     companion object {
         private const val ANDROID_INTENTS_CHANNEL = "com.poyrazoncel.korubeni/android_intents"
+        private const val SETTINGS_CHANNEL = "com.poyrazoncel.korubeni/settings"
     }
 
     private val volumeDetector = VolumeButtonDetector()
@@ -91,6 +95,54 @@ class MainActivity : FlutterActivity() {
                 android.util.Log.e("MainActivity", "Android intent channel failed: ${e.message}", e)
             }
             
+            // Settings channel — battery settings & manufacturer-specific auto-start
+            try {
+                MethodChannel(messenger, SETTINGS_CHANNEL)
+                    .setMethodCallHandler { call, result ->
+                        try {
+                            when (call.method) {
+                                "openBatterySettings" -> {
+                                    val intent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                                        Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
+                                            data = Uri.parse("package:$packageName")
+                                        }
+                                    } else {
+                                        Intent(Settings.ACTION_BATTERY_SAVER_SETTINGS)
+                                    }
+                                    startActivity(intent)
+                                    result.success(true)
+                                }
+                                "openActivityByComponent" -> {
+                                    val component = call.argument<String>("component").orEmpty()
+                                    if (component.isEmpty()) {
+                                        result.error("INVALID_ARG", "component is empty", null)
+                                        return@setMethodCallHandler
+                                    }
+                                    val parts = component.split("/")
+                                    if (parts.size != 2) {
+                                        result.error("INVALID_ARG", "component format must be pkg/class", null)
+                                        return@setMethodCallHandler
+                                    }
+                                    val intent = Intent().apply {
+                                        setComponent(ComponentName(parts[0], parts[1]))
+                                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                    }
+                                    startActivity(intent)
+                                    result.success(true)
+                                }
+                                else -> result.notImplemented()
+                            }
+                        } catch (e: ActivityNotFoundException) {
+                            result.error("NOT_FOUND", "Settings screen not available: ${e.message}", null)
+                        } catch (e: Exception) {
+                            result.error("ERROR", e.message, null)
+                        }
+                    }
+                android.util.Log.d("MainActivity", "Settings channel configured")
+            } catch (e: Exception) {
+                android.util.Log.e("MainActivity", "Settings channel failed: ${e.message}", e)
+            }
+
             android.util.Log.i("MainActivity", "All platform channels configured successfully")
         } catch (e: Exception) {
             android.util.Log.e("MainActivity", "Critical: configureFlutterEngine failed", e)

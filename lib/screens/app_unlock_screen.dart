@@ -1,5 +1,6 @@
 // ============================================================================
-// UYGULAMA KİLİDİ - Uygulama açılışında biyometrik veya PIN ile doğrulama
+// UYGULAMA KİLİDİ - Uygulama açılışında PIN ile doğrulama (PIN tek yöntem)
+// SECURITY RULE: Biyometrik kimlik doğrulama YASAKTIR (duress riski).
 // ============================================================================
 
 import 'dart:async';
@@ -11,7 +12,6 @@ import '../core/constants/app_constants.dart';
 import '../core/di/service_locator.dart';
 import '../core/security/secure_storage.dart';
 import '../core/security/secure_storage_keys.dart';
-import '../core/services/biometric_service.dart';
 
 class AppUnlockScreen extends StatefulWidget {
   final VoidCallback onUnlocked;
@@ -25,8 +25,6 @@ class AppUnlockScreen extends StatefulWidget {
 class _AppUnlockScreenState extends State<AppUnlockScreen> {
   String _pin = '';
   String? _correctPin;
-  bool _biometricAvailable = false;
-  String _biometricLabel = 'Biometric'; // Updated by _loadAndCheckBiometric()
   bool _loading = true;
 
   // Brute force protection
@@ -42,24 +40,12 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> {
   @override
   void initState() {
     super.initState();
-    _loadAndCheckBiometric();
+    _initScreen();
   }
 
-  Future<void> _loadAndCheckBiometric() async {
+  Future<void> _initScreen() async {
     await _loadPin();
-    if (!mounted) return;
-    final available = await BiometricService.instance.isAvailable();
-    if (available && mounted) {
-      final label = await BiometricService.instance.getBiometricLabel();
-      setState(() {
-        _biometricAvailable = true;
-        _biometricLabel = label;
-        _loading = false;
-      });
-      _tryBiometric();
-    } else if (mounted) {
-      setState(() => _loading = false);
-    }
+    if (mounted) setState(() => _loading = false);
   }
 
   Future<void> _loadPin() async {
@@ -68,15 +54,6 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> {
       setState(() {
         _correctPin = value;
       });
-    }
-  }
-
-  Future<void> _tryBiometric() async {
-    final success = await BiometricService.instance.authenticate(
-      reason: 'unlock_biometric_reason'.tr(),
-    );
-    if (success && mounted) {
-      widget.onUnlocked();
     }
   }
 
@@ -214,34 +191,6 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> {
                       ),
                     ),
                   ] else ...[
-                    if (_biometricAvailable) ...[
-                      const SizedBox(height: 32),
-                      OutlinedButton.icon(
-                        onPressed: _tryBiometric,
-                        icon: Icon(
-                          _biometricLabel.contains('Face')
-                              ? Icons.face_rounded
-                              : Icons.fingerprint_rounded,
-                          size: 24,
-                        ),
-                        label: Text(
-                          'unlock_biometric_btn'.tr(
-                            namedArgs: {'label': _biometricLabel},
-                          ),
-                        ),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: AppColors.primary,
-                          side: const BorderSide(color: AppColors.primary),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 24,
-                            vertical: 14,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                        ),
-                      ),
-                    ],
                     const SizedBox(height: 32),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,

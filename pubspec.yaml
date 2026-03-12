@@ -47,8 +47,6 @@ dependencies:
   flutter_map: ^7.0.2
   latlong2: ^0.9.1
   geolocator: ^13.0.2
-  # Biometric authentication (Face ID, Touch ID, Fingerprint)
-  local_auth: ^2.3.0
   # Accelerometer for shake detection
   sensors_plus: ^6.1.1
   # Audio recording for evidence collection
