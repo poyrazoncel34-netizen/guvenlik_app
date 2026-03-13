@@ -11,13 +11,18 @@ class CrashLogService {
     required Object error,
     StackTrace? stackTrace,
   }) async {
-    final db = await serviceLocator<LocalDatabaseService>().database;
-    await db.insert('crash_logs', {
-      'source': source,
-      'error': error.toString(),
-      'stack': stackTrace?.toString(),
-      'created_at': DateTime.now().toIso8601String(),
-    });
+    try {
+      final db = await serviceLocator<LocalDatabaseService>().database;
+      await db.insert('crash_logs', {
+        'source': source,
+        'error': error.toString(),
+        'stack': stackTrace?.toString(),
+        'created_at': DateTime.now().toIso8601String(),
+      });
+    } catch (_) {
+      // Storage full or database unavailable — swallow silently so the
+      // emergency flow (SMS, siren) is never interrupted by a logging failure.
+    }
   }
 
   Future<List<Map<String, Object?>>> listLogs() async {

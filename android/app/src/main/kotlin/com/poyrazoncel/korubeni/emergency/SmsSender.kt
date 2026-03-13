@@ -56,35 +56,40 @@ object SmsSender {
         val smsManager = SmsManager.getDefault()
         cleaned.forEachIndexed { index, recipient ->
             executor.execute {
-                val messageId = UUID.randomUUID().toString()
-                val parts = smsManager.divideMessage(message)
-                val sentIntents = ArrayList<PendingIntent>(parts.size)
-                val deliveredIntents = ArrayList<PendingIntent>(parts.size)
+                try {
+                    val messageId = UUID.randomUUID().toString()
+                    val parts = smsManager.divideMessage(message)
+                    val sentIntents = ArrayList<PendingIntent>(parts.size)
+                    val deliveredIntents = ArrayList<PendingIntent>(parts.size)
 
-                parts.indices.forEach { partIndex ->
-                    sentIntents += statusPendingIntent(
-                        context,
-                        ACTION_SMS_SENT,
+                    parts.indices.forEach { partIndex ->
+                        sentIntents += statusPendingIntent(
+                            context,
+                            ACTION_SMS_SENT,
+                            recipient,
+                            messageId,
+                            index * 100 + partIndex,
+                        )
+                        deliveredIntents += statusPendingIntent(
+                            context,
+                            ACTION_SMS_DELIVERED,
+                            recipient,
+                            messageId,
+                            index * 100 + partIndex + 50,
+                        )
+                    }
+
+                    smsManager.sendMultipartTextMessage(
                         recipient,
-                        messageId,
-                        index * 100 + partIndex,
+                        null,
+                        parts,
+                        sentIntents,
+                        deliveredIntents,
                     )
-                    deliveredIntents += statusPendingIntent(
-                        context,
-                        ACTION_SMS_DELIVERED,
-                        recipient,
-                        messageId,
-                        index * 100 + partIndex + 50,
-                    )
+                } catch (e: Exception) {
+                    android.util.Log.e("SmsSender", "SMS dispatch failed for recipient: ${e.message}", e)
+                    // Non-fatal: malformed number or SmsManager error — other recipients continue
                 }
-
-                smsManager.sendMultipartTextMessage(
-                    recipient,
-                    null,
-                    parts,
-                    sentIntents,
-                    deliveredIntents,
-                )
             }
         }
 
