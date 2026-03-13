@@ -11,8 +11,10 @@ import '../core/constants/app_constants.dart';
 import '../core/di/service_locator.dart';
 import '../core/security/secure_storage.dart';
 import '../core/security/secure_storage_keys.dart';
+import '../core/services/app_reset_service.dart';
 import '../core/services/biometric_service.dart';
 import '../core/services/pin_lockout_service.dart';
+import 'main_navigation.dart';
 
 class AppUnlockScreen extends StatefulWidget {
   final VoidCallback onUnlocked;
@@ -179,11 +181,17 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> {
         child: Scaffold(
           backgroundColor: AppColors.background,
           body: SafeArea(
-            child: Padding(
+            child: SingleChildScrollView(
               padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: MediaQuery.of(context).size.height
+                      - MediaQuery.of(context).padding.top
+                      - MediaQuery.of(context).padding.bottom,
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
                   Container(
                     width: 80,
                     height: 80,
@@ -308,14 +316,118 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> {
                         ),
                       ),
                     _buildNumPad(),
+                    const SizedBox(height: 8),
+                    TextButton(
+                      onPressed: _isLockedOut ? null : _showForgotPinDialog,
+                      child: Text(
+                        'Şifremi Unuttum',
+                        style: TextStyle(
+                          color: AppColors.textSecondary.withValues(alpha: 0.7),
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
                   ],
                 ],
+                ),
               ),
             ),
           ),
         ),
       ),
     );
+  }
+
+  Future<void> _showForgotPinDialog() async {
+    final confirmController = TextEditingController();
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          backgroundColor: AppColors.cardBg,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Row(
+            children: [
+              const Icon(Icons.warning_amber_rounded, color: AppColors.emergency, size: 24),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Şifremi Unuttum',
+                  style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w800),
+                ),
+              ),
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'KoruBeni tamamen internetsiz çalışır. Güvenliğiniz için şifrenizi '
+                  'kurtaramayız. Uygulamaya tekrar erişmek için tüm kayıtlı verilerinizi '
+                  '(kişiler, ayarlar) silip uygulamayı sıfırlamanız gerekir. '
+                  'Onaylıyor musunuz?',
+                  style: TextStyle(color: AppColors.textSecondary, fontSize: 14, height: 1.5),
+                ),
+                const SizedBox(height: 20),
+                TextField(
+                  controller: confirmController,
+                  onChanged: (v) => setDialogState(() {}),
+                  decoration: InputDecoration(
+                    hintText: 'Onaylamak için SIFIRLA yazın',
+                    hintStyle: TextStyle(color: AppColors.textSecondary.withValues(alpha: 0.6)),
+                    filled: true,
+                    fillColor: AppColors.surface,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: AppColors.border),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: AppColors.border),
+                    ),
+                  ),
+                  style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w700),
+                  textCapitalization: TextCapitalization.characters,
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('İptal', style: TextStyle(color: AppColors.textSecondary)),
+            ),
+            ElevatedButton(
+              onPressed: confirmController.text == 'SIFIRLA'
+                  ? () async {
+                      Navigator.pop(ctx);
+                      await AppResetService.clearLocalData();
+                      if (!mounted) return;
+                      Navigator.of(context).pushAndRemoveUntil(
+                        PageRouteBuilder(
+                          pageBuilder: (_, __, ___) => const MainNavigation(),
+                          transitionsBuilder: (_, a, __, child) =>
+                              FadeTransition(opacity: a, child: child),
+                          transitionDuration: const Duration(milliseconds: 400),
+                        ),
+                        (_) => false,
+                      );
+                    }
+                  : null,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.emergency,
+                disabledBackgroundColor: AppColors.emergency.withValues(alpha: 0.3),
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Sıfırla', style: TextStyle(fontWeight: FontWeight.w700)),
+            ),
+          ],
+        ),
+      ),
+    );
+    confirmController.dispose();
   }
 
   Widget _buildNumPad() {

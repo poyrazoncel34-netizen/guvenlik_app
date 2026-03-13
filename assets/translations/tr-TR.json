@@ -255,7 +255,7 @@
     "contacts_pick_from_contacts": "Rehberden Seç",
     "contacts_add_new": "Yeni Kişi Ekle",
     "contacts_unknown": "Bilinmeyen Kişi",
-    "contacts_empty": "Henüz acil kişi eklenmedi",
+    "contacts_empty": "Henüz acil durum kişisi eklenmedi.",
     "contacts_message_draft_ready": "Mesaj taslağı hazırlandı",
     "contacts_no_phone": "Seçilen kişide telefon numarası yok",
     "contacts_already_in_list": "Bu kişi zaten listede",
