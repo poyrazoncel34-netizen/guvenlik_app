@@ -26,22 +26,22 @@ class _OnboardingScreenState extends State<OnboardingScreen>
 
   static const List<_OnboardingPage> _pages = [
     _OnboardingPage(
-      icon: Icons.pan_tool_rounded,
-      titleKey: 'onboarding_1_title',
-      bodyKey: 'onboarding_1_body',
+      icon: Icons.vibration_rounded,
+      title: 'Salla ve Uyar',
+      body: 'Tehlike anında telefonunuzu sertçe sallayarak acil durum modunu sessizce tetikleyebilirsiniz.',
       color: AppColors.emergency,
     ),
     _OnboardingPage(
-      icon: Icons.people_rounded,
-      titleKey: 'onboarding_2_title',
-      bodyKey: 'onboarding_2_body',
-      color: AppColors.accent,
+      icon: Icons.timer_rounded,
+      title: 'Zamanlı Kontrol',
+      body: 'Riskli bir yere girerken geri sayım başlatın. Süre bitiminde güvende olduğunuzu onaylamazsanız, yakınlarınıza konumunuz SMS ile iletilir.',
+      color: AppColors.warning,
     ),
     _OnboardingPage(
-      icon: Icons.location_on_rounded,
-      titleKey: 'onboarding_3_title',
-      bodyKey: 'onboarding_3_body',
-      color: AppColors.info,
+      icon: Icons.call_rounded,
+      title: 'Sahte Arama',
+      body: 'Kendinizi güvensiz hissettiğinizde, dikkat dağıtmak için tek tuşla sahte bir arama başlatabilirsiniz.',
+      color: AppColors.accent,
     ),
   ];
 
@@ -182,7 +182,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                                 Transform.translate(
                                   offset: Offset(pageOffset * -30, 0),
                                   child: Text(
-                                    p.titleKey.tr(),
+                                    p.title,
                                     textAlign: TextAlign.center,
                                     style: const TextStyle(
                                       fontSize: 26,
@@ -197,7 +197,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                                 Transform.translate(
                                   offset: Offset(pageOffset * -15, 0),
                                   child: Text(
-                                    p.bodyKey.tr(),
+                                    p.body,
                                     textAlign: TextAlign.center,
                                     style: const TextStyle(
                                       fontSize: 16,
@@ -303,13 +303,13 @@ class _OnboardingScreenState extends State<OnboardingScreen>
 
 class _OnboardingPage {
   final IconData icon;
-  final String titleKey;
-  final String bodyKey;
+  final String title;
+  final String body;
   final Color color;
   const _OnboardingPage({
     required this.icon,
-    required this.titleKey,
-    required this.bodyKey,
+    required this.title,
+    required this.body,
     required this.color,
   });
 }

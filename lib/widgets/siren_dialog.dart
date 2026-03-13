@@ -6,7 +6,7 @@ import 'dart:async';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:flutter/services.dart' show HapticFeedback, MethodChannel;
 import 'package:audioplayers/audioplayers.dart';
 import '../core/app_colors.dart';
 import '../core/services/activity_service.dart';
@@ -20,11 +20,14 @@ class SirenDialog extends StatefulWidget {
 }
 
 class _SirenDialogState extends State<SirenDialog> with TickerProviderStateMixin {
+  static const _audioControl = MethodChannel('com.poyrazoncel.korubeni/audio_control');
+
   late AnimationController _colorController;
   late AnimationController _scaleController;
   Timer? _soundTimer;
   int _duration = 0;
   final AudioPlayer _audioPlayer = AudioPlayer();
+  int? _originalAlarmVolume;
 
   @override
   void initState() {
@@ -70,6 +73,13 @@ class _SirenDialogState extends State<SirenDialog> with TickerProviderStateMixin
       await _audioPlayer.setVolume(1.0);
       await _audioPlayer.setReleaseMode(ReleaseMode.loop);
 
+      // Force device alarm stream to max so siren is audible even in silent mode
+      if (!kIsWeb) {
+        try {
+          _originalAlarmVolume = await _audioControl.invokeMethod<int>('setMaxAlarmVolume');
+        } catch (_) {} // best-effort: non-fatal if permission denied
+      }
+
       if (kIsWeb) {
         // On web, AssetSource paths resolve differently.
         // Use UrlSource with the correct Flutter web asset path.
@@ -91,6 +101,11 @@ class _SirenDialogState extends State<SirenDialog> with TickerProviderStateMixin
     _soundTimer?.cancel();
     _audioPlayer.stop();
     _audioPlayer.dispose();
+    if (_originalAlarmVolume != null) {
+      _audioControl
+          .invokeMethod('restoreAlarmVolume', _originalAlarmVolume)
+          .catchError((_) {});
+    }
     super.dispose();
   }
 
