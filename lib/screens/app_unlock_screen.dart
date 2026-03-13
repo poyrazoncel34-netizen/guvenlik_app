@@ -14,6 +14,7 @@ import '../core/security/secure_storage_keys.dart';
 import '../core/services/app_reset_service.dart';
 import '../core/services/biometric_service.dart';
 import '../core/services/pin_lockout_service.dart';
+import 'legal_info_screen.dart';
 import 'main_navigation.dart';
 
 class AppUnlockScreen extends StatefulWidget {
@@ -180,6 +181,21 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> {
         canPop: false,
         child: Scaffold(
           backgroundColor: AppColors.background,
+          appBar: AppBar(
+            backgroundColor: AppColors.background,
+            elevation: 0,
+            automaticallyImplyLeading: false,
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.info_outline, color: AppColors.textSecondary),
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const LegalInfoScreen()),
+                ),
+                tooltip: 'Yasal Bilgiler',
+              ),
+            ],
+          ),
           body: SafeArea(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(24),
