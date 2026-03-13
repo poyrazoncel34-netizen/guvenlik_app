@@ -11,6 +11,7 @@ import '../core/constants/app_constants.dart';
 import '../core/di/service_locator.dart';
 import '../core/security/secure_storage.dart';
 import '../core/security/secure_storage_keys.dart';
+import 'legal_info_screen.dart';
 
 class PinSetupScreen extends StatefulWidget {
   final bool requiredSetup;
@@ -106,6 +107,21 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
         canPop: !widget.requiredSetup,
         child: Scaffold(
           backgroundColor: AppColors.background,
+          appBar: AppBar(
+            backgroundColor: AppColors.background,
+            elevation: 0,
+            automaticallyImplyLeading: !widget.requiredSetup,
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.info_outline, color: AppColors.textSecondary),
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const LegalInfoScreen()),
+                ),
+                tooltip: 'Yasal Bilgiler',
+              ),
+            ],
+          ),
           body: SafeArea(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(24),
