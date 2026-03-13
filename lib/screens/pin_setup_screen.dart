@@ -107,7 +107,7 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
         child: Scaffold(
           backgroundColor: AppColors.background,
           body: SafeArea(
-            child: Padding(
+            child: SingleChildScrollView(
               padding: const EdgeInsets.all(24),
               child: Column(
                 children: [
@@ -188,7 +188,7 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
                       );
                     }),
                   ),
-                  const Spacer(),
+                  const SizedBox(height: 40),
                   _buildNumberPad(),
                   const SizedBox(height: 16),
                   // PIN forgot info card
