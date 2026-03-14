@@ -18,7 +18,11 @@ class LegalDisclaimerScreen extends StatefulWidget {
 
 class _LegalDisclaimerScreenState extends State<LegalDisclaimerScreen> {
   bool _accepted = false;
+  bool _kvkkAccepted = false;
   bool _saving = false;
+
+  // Şartlar değiştiğinde bu versiyonu artırın; kullanıcıdan tekrar onay alınır.
+  static const String _currentTermsVersion = '1.1';
 
   static const String _disclaimerText =
       'KORUBENİ - YASAL UYARI VE KULLANIM ŞARTLARI\n\n'
@@ -38,14 +42,24 @@ class _LegalDisclaimerScreenState extends State<LegalDisclaimerScreen> {
       '4. Kullanıcı Sorumluluğu\n'
       'Bu uygulamayı kullanmak tamamen sizin tercihinizdedir. Yukarıdaki riskleri '
       'anlıyor ve kabul ediyor olarak uygulamayı kullanıyorsunuz. '
-      'Kullanım riski tamamen size aittir.';
+      'Kullanım riski tamamen size aittir.\n\n'
+      '5. Mücbir Sebep (Force Majeure)\n'
+      'Türk Borçlar Kanunu Madde 136 kapsamında; deprem, sel, elektrik kesintisi, '
+      'şebeke arızası, işletim sistemi güncellemesi gibi öngörülemeyen ve önlenemeyen '
+      'durumlarda uygulamanın çalışmamasından doğan zararlar için geliştirici '
+      'sorumlu tutulamaz.\n\n'
+      '6. Yasal Çerçeve\n'
+      'Bu kullanım koşulları Türk Hukuku\'na tabidir. Taraflar arasında doğabilecek '
+      'anlaşmazlıklarda İstanbul Mahkemeleri ve İcra Daireleri yetkilidir.';
 
   Future<void> _onAccept() async {
-    if (!_accepted || _saving) return;
+    if (!_accepted || !_kvkkAccepted || _saving) return;
     setState(() => _saving = true);
     HapticFeedback.mediumImpact();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(AppConstants.prefLegalDisclaimerAccepted, true);
+    await prefs.setBool(AppConstants.prefKvkkHealthConsentAccepted, true);
+    await prefs.setString(AppConstants.prefTermsVersion, _currentTermsVersion);
     if (!mounted) return;
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
@@ -121,7 +135,7 @@ class _LegalDisclaimerScreenState extends State<LegalDisclaimerScreen> {
                 ),
                 const SizedBox(height: 20),
 
-                // ── Checkbox ──
+                // ── Checkbox 1: Genel sorumluluk reddi ──
                 GestureDetector(
                   onTap: () => setState(() => _accepted = !_accepted),
                   child: Row(
@@ -155,16 +169,54 @@ class _LegalDisclaimerScreenState extends State<LegalDisclaimerScreen> {
                     ],
                   ),
                 ),
+                const SizedBox(height: 4),
+                // ── Checkbox 2: KVKK açık rıza ──
+                GestureDetector(
+                  onTap: () =>
+                      setState(() => _kvkkAccepted = !_kvkkAccepted),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Checkbox(
+                        value: _kvkkAccepted,
+                        onChanged: (v) =>
+                            setState(() => _kvkkAccepted = v ?? false),
+                        activeColor: AppColors.primary,
+                        side: BorderSide(
+                          color:
+                              AppColors.textSecondary.withValues(alpha: 0.5),
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      const Expanded(
+                        child: Padding(
+                          padding: EdgeInsets.only(top: 12),
+                          child: Text(
+                            'Sağlık verilerimin (kan grubu, alerji) ve biyometrik verimim '
+                            'yalnızca cihazımda işlenmesine KVKK Madde 6 kapsamında açıkça '
+                            'rıza gösteriyorum.',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: AppColors.textSecondary,
+                              fontWeight: FontWeight.w500,
+                              height: 1.4,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
                 const SizedBox(height: 16),
 
                 // ── Button — disabled until checkbox is checked ──
                 AnimatedOpacity(
-                  opacity: _accepted ? 1.0 : 0.4,
+                  opacity: (_accepted && _kvkkAccepted) ? 1.0 : 0.4,
                   duration: const Duration(milliseconds: 200),
                   child: SizedBox(
                     height: 52,
                     child: ElevatedButton(
-                      onPressed: _accepted ? _onAccept : null,
+                      onPressed: (_accepted && _kvkkAccepted) ? _onAccept : null,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primary,
                         disabledBackgroundColor: AppColors.primary,

@@ -29,6 +29,13 @@ class AppConstants {
   static const String prefPinSetupDone = 'pref_pin_setup_done';
   static const String prefOnboardingDone = 'pref_onboarding_done';
   static const String prefLegalDisclaimerAccepted = 'pref_legal_disclaimer_accepted';
+  static const String prefKvkkHealthConsentAccepted = 'pref_kvkk_health_consent_accepted';
+  static const String prefTermsVersion = 'pref_terms_version';
+  static const String prefRecordingWarningSeen = 'pref_recording_warning_shown';
+
+  // Web gizlilik politikası URL'si (App Store zorunluluğu)
+  // Bu URL'yi GitHub Pages veya benzeri bir servise yükleyin:
+  static const String privacyPolicyUrl = 'https://poyrazoncel34-netizen.github.io/korubeni/privacy';
   static const String prefNotificationPermissionPrompted =
       'pref_notification_permission_prompted';
   static const String prefDemoMode = 'pref_demo_mode';

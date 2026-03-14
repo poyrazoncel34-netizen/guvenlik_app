@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../core/app_colors.dart';
 import '../core/services/audio_recorder_service.dart';
 import '../core/services/connectivity_service.dart';
@@ -116,6 +117,69 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         );
       }
     } else {
+      // Ses kaydı yasal uyarısını ilk kullanımda göster (TCK 133-136)
+      final prefs = await SharedPreferences.getInstance();
+      final warningShown =
+          prefs.getBool('pref_recording_warning_shown') ?? false;
+      if (!warningShown && mounted) {
+        final confirmed = await showDialog<bool>(
+          context: context,
+          barrierDismissible: false,
+          builder: (ctx) => AlertDialog(
+            backgroundColor: AppColors.cardBg,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            title: const Row(
+              children: [
+                Icon(Icons.warning_amber_rounded,
+                    color: Colors.orange, size: 24),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Ses Kaydı Yasal Uyarısı',
+                    style: TextStyle(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            content: const Text(
+              'Bu özelliği yalnızca kendi güvenliğiniz için, kendi çevrenizi '
+              'kaydetmek amacıyla kullanınız.\n\n'
+              'Türk Ceza Kanunu 133-136. Maddeleri uyarınca üçüncü kişilerin '
+              'sesini rızaları olmadan kaydetmek suç teşkil etmektedir.\n\n'
+              'Bu kaydın tüm hukuki sorumluluğu kullanıcıya aittir.',
+              style: TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 14,
+                height: 1.5,
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('İptal',
+                    style: TextStyle(color: AppColors.textSecondary)),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10)),
+                ),
+                onPressed: () => Navigator.pop(ctx, true),
+                child: const Text('Anladım, Devam Et'),
+              ),
+            ],
+          ),
+        );
+        if (confirmed != true) return;
+        await prefs.setBool('pref_recording_warning_shown', true);
+      }
       final started = await recorder.startRecording();
       if (mounted) {
         setState(() => _isRecording = started);

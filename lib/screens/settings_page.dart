@@ -12,6 +12,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/app_colors.dart';
+import '../core/constants/app_constants.dart';
 import '../core/utils/app_reset_helper.dart';
 import '../core/utils/pin_settings_helper.dart';
 import '../core/services/shake_detector_service.dart';
@@ -380,6 +381,19 @@ class _SettingsPageState extends State<SettingsPage> {
                   'settings_privacy_policy',
                   Icons.description_outlined,
                 ),
+              ),
+              _buildDivider(),
+              _buildNavigationTile(
+                icon: Icons.open_in_browser_rounded,
+                iconColor: AppColors.info,
+                title: 'Gizlilik Politikası (Web)',
+                subtitle: 'App Store gereksinimleri için çevrimiçi sürüm',
+                onTap: () async {
+                  final uri = Uri.parse(AppConstants.privacyPolicyUrl);
+                  try {
+                    await launchUrl(uri, mode: LaunchMode.externalApplication);
+                  } catch (_) {}
+                },
               ),
               _buildDivider(),
               _buildNavigationTile(

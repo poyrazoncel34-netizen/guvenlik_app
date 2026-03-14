@@ -31,7 +31,28 @@ class LegalInfoScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildSection(
-              title: 'GİZLİLİK POLİTİKASI (Privacy Policy)',
+              title: 'KVKK AYDINLATMA METNİ (6698 Sayılı Kanun Md. 10)',
+              body:
+                  'VERİ SORUMLUSU\n'
+                  'Poyraz Öncel — destek@korubeni.com\n\n'
+                  'İŞLEDİĞİMİZ VERİLER VE AMAÇLARI\n'
+                  '• Acil kişi bilgileri (ad, telefon): Acil durum SMS gönderimi için.\n'
+                  '• Konum verisi: Acil durum SMS mesajına koordinat eklenmesi için.\n'
+                  '• PIN / Biyometrik veri: Uygulama kilidi (yalnızca cihazda işlenir, dışarı çıkmaz).\n'
+                  '• Sağlık verisi (kan grubu, alerji): Profil kartı oluşturma için.\n'
+                  '• Ses kaydı: Kullanıcı tarafından başlatılan kanıt kaydı için.\n\n'
+                  'İŞLEMENİN HUKUKİ DAYANAĞI\n'
+                  'İlgili kişinin açık rızası (KVKK Md. 5/1, Md. 6/2). '
+                  'Tüm veriler YALNIZCA cihazınızda saklanır; hiçbir sunucuya gönderilmez, '
+                  'hiçbir üçüncü tarafla paylaşılmaz.\n\n'
+                  'İLGİLİ KİŞİ HAKLARI (KVKK Md. 11)\n'
+                  'Verilerinizin işlenip işlenmediğini öğrenme, hatalı verilerin düzeltilmesini '
+                  'talep etme ve uygulamayı silerek tüm verilerinizi kalıcı olarak kaldırma '
+                  'haklarına sahipsiniz. Talepler için: destek@korubeni.com',
+            ),
+            const SizedBox(height: 20),
+            _buildSection(
+              title: 'GİZLİLİK POLİTİKASI',
               body:
                   'KoruBeni, %100 çevrimdışı (offline) çalışan bir uygulamadır. Hiçbir kişisel veriniz '
                   '(konum, telefon numaraları, PIN, aktivite geçmişi) uygulama dışına çıkmaz, hiçbir sunucuya '
@@ -55,8 +76,11 @@ class LegalInfoScreen extends StatelessWidget {
                   'aktif bir telefon hattına sahip olduğunu kabul eder. Geliştirici (Poyraz Öncel), '
                   'teknik arızalar, ağ sorunları veya kullanıcı hatası nedeniyle acil durum '
                   'bildirimlerinin iletilememesinden doğan zararlardan sorumlu tutulamaz.\n\n'
-                  'Bu uygulama "olduğu gibi" (as-is) sunulmaktadır. Kullanım riski tamamen kullanıcıya '
-                  'aittir.',
+                  'Türk Borçlar Kanunu Madde 136 kapsamında; deprem, sel, elektrik kesintisi, şebeke '
+                  'arızası, işletim sistemi güncellemesi gibi mücbir sebeplerle uygulamanın '
+                  'çalışmamasından doğan zararlar için geliştirici sorumlu tutulamaz.\n\n'
+                  'Bu uygulama "olduğu gibi" (as-is) sunulmaktadır. Bu kullanım koşulları Türk '
+                  'Hukuku\'na tabidir. Kullanım riski tamamen kullanıcıya aittir.',
             ),
             const SizedBox(height: 32),
             Center(
