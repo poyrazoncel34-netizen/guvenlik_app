@@ -423,8 +423,8 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> {
                       if (!mounted) return;
                       Navigator.of(context).pushAndRemoveUntil(
                         PageRouteBuilder(
-                          pageBuilder: (_, __, ___) => const MainNavigation(),
-                          transitionsBuilder: (_, a, __, child) =>
+                          pageBuilder: (_, _, _) => const MainNavigation(),
+                          transitionsBuilder: (_, a, _, child) =>
                               FadeTransition(opacity: a, child: child),
                           transitionDuration: const Duration(milliseconds: 400),
                         ),
