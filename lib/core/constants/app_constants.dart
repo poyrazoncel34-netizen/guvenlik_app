@@ -33,9 +33,7 @@ class AppConstants {
   static const String prefTermsVersion = 'pref_terms_version';
   static const String prefRecordingWarningSeen = 'pref_recording_warning_shown';
 
-  // Web gizlilik politikası URL'si (App Store zorunluluğu)
-  // Bu URL'yi GitHub Pages veya benzeri bir servise yükleyin:
-  static const String privacyPolicyUrl = 'https://poyrazoncel34-netizen.github.io/korubeni/privacy';
+  // Web gizlilik politikası URL'si — privacyPolicyWebUrl kullanılmalı
   static const String prefNotificationPermissionPrompted =
       'pref_notification_permission_prompted';
   static const String prefDemoMode = 'pref_demo_mode';

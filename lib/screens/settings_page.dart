@@ -390,7 +390,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 title: 'Gizlilik Politikası (Web)',
                 subtitle: 'App Store gereksinimleri için çevrimiçi sürüm',
                 onTap: () async {
-                  final uri = Uri.parse(AppConstants.privacyPolicyUrl);
+                  final uri = Uri.parse(AppConstants.privacyPolicyWebUrl);
                   try {
                     await launchUrl(uri, mode: LaunchMode.externalApplication);
                   } catch (_) {}
