@@ -16,8 +16,7 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
     <!-- Notifications (Android 13+) -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-    <!-- Microphone for audio evidence recording -->
-    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <!-- RECORD_AUDIO removed — audio recording feature disabled -->
     <!-- Biometric authentication -->
     <uses-permission android:name="android.permission.USE_BIOMETRIC" />
     <!-- Vibration for shake feedback -->
@@ -37,9 +36,9 @@
     <!-- Foreground Service for keeping app alive in background -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
-    <!-- Required for BackgroundService (timer/check-in keepalive, dataSync type) -->
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <!-- FOREGROUND_SERVICE_MICROPHONE removed — audio recording feature disabled -->
+    <!-- Required for BackgroundService (timer/check-in keepalive, specialUse type) -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <!-- Wake Lock for keeping CPU alive during emergency -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
@@ -94,15 +93,19 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
-        <!-- Flutter Background Service — timer/check-in keepalive (no location used) -->
+        <!-- Flutter Background Service — timer/check-in keepalive (specialUse to avoid Android 15 dataSync 6h limit) -->
         <service
             android:name="id.flutter.flutter_background_service.BackgroundService"
             tools:replace="android:exported,android:foregroundServiceType"
-            android:foregroundServiceType="dataSync"
+            android:foregroundServiceType="specialUse"
             android:exported="false"
             android:enabled="true"
             android:stopWithTask="false"
-            android:permission="android.permission.BIND_JOB_SERVICE" />
+            android:permission="android.permission.BIND_JOB_SERVICE">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="emergency_checkin_keepalive" />
+        </service>
         <service
             android:name=".emergency.ShakeDetectorService"
             android:enabled="true"
@@ -113,12 +116,7 @@
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
                 android:value="emergency_shake_monitoring" />
         </service>
-        <service
-            android:name=".emergency.RecordingSessionService"
-            android:enabled="true"
-            android:exported="false"
-            android:foregroundServiceType="microphone"
-            android:stopWithTask="false" />
+        <!-- RecordingSessionService removed — audio recording feature disabled -->
         <receiver
             android:name=".emergency.CheckInAlarmReceiver"
             android:enabled="true"
@@ -155,6 +153,15 @@
         <intent>
             <action android:name="android.intent.action.DIAL" />
             <data android:scheme="tel" />
+        </intent>
+        <!-- SMS composer visibility (Android 11+ package visibility) -->
+        <intent>
+            <action android:name="android.intent.action.SENDTO" />
+            <data android:scheme="smsto" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="sms" />
         </intent>
     </queries>
 </manifest>
