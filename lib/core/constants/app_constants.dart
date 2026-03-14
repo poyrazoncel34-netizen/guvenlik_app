@@ -2,7 +2,7 @@ class AppConstants {
   static const String appName = 'KoruBeni';
   // Sürüm bilgisi artık package_info_plus ile alınıyor (PackageInfo.fromPlatform()).
   // Sabit appVersion/buildNumber kaldırıldı – tek kaynak pubspec.yaml.
-  static const String supportEmail = 'destek@korubeni.com';
+  static const String supportEmail = 'korubeni.destek@gmail.com';
 
   /// Encryption key is loaded from dart-define at build time.
   /// Build with: --dart-define=ENCRYPTION_KEY=your_base64_key
@@ -31,8 +31,6 @@ class AppConstants {
   static const String prefLegalDisclaimerAccepted = 'pref_legal_disclaimer_accepted';
   static const String prefKvkkHealthConsentAccepted = 'pref_kvkk_health_consent_accepted';
   static const String prefTermsVersion = 'pref_terms_version';
-  static const String prefRecordingWarningSeen = 'pref_recording_warning_shown';
-
   // Web gizlilik politikası URL'si (App Store zorunluluğu)
   // Bu URL'yi GitHub Pages veya benzeri bir servise yükleyin:
   static const String privacyPolicyUrl = 'https://poyrazoncel34-netizen.github.io/korubeni/privacy';
