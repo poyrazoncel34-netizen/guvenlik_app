@@ -90,8 +90,20 @@ jobs:
         run: flutter analyze --no-fatal-infos
         continue-on-error: false
 
-      # 10. İmzalı full APK build et
-      - name: Build release APK (full flavor)
+      # 10a. Play Store için imzalı AAB build et (play flavor — ALLOW_DIRECT_SMS=false)
+      - name: Build release AAB (play flavor — Play Store)
+        run: |
+          flutter build appbundle \
+            --release \
+            --flavor play \
+            --build-name="${{ steps.version.outputs.version_name }}" \
+            --build-number="${{ steps.version.outputs.version_code }}" \
+            --dart-define=ENV=production \
+            --dart-define=SENTRY_DSN="${{ secrets.SENTRY_DSN }}" \
+            --dart-define=ENCRYPTION_KEY="${{ secrets.ENCRYPTION_KEY }}"
+
+      # 10b. Direkt dağıtım için imzalı full APK build et (full flavor — ALLOW_DIRECT_SMS=true)
+      - name: Build release APK (full flavor — direct distribution)
         run: |
           flutter build apk \
             --release \
@@ -99,7 +111,8 @@ jobs:
             --build-name="${{ steps.version.outputs.version_name }}" \
             --build-number="${{ steps.version.outputs.version_code }}" \
             --dart-define=ENV=production \
-            --dart-define=SENTRY_DSN="${{ secrets.SENTRY_DSN }}"
+            --dart-define=SENTRY_DSN="${{ secrets.SENTRY_DSN }}" \
+            --dart-define=ENCRYPTION_KEY="${{ secrets.ENCRYPTION_KEY }}"
 
       # 11. APK'yı yeniden adlandır (versiyonu içersin)
       - name: Rename APK
@@ -146,6 +159,7 @@ jobs:
           files: |
             build/app/outputs/flutter-apk/${{ env.apk_name }}
             build/app/outputs/flutter-apk/${{ env.apk_name }}.sha256
+            build/app/outputs/bundle/playRelease/app-play-release.aab
           generate_release_notes: false
           draft: false
           prerelease: false
