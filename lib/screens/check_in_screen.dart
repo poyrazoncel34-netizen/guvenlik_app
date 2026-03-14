@@ -7,8 +7,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../core/app_colors.dart';
+import '../core/constants/app_constants.dart';
 import '../core/services/check_in_service.dart';
 import '../core/utils/permission_helper.dart';
+import '../core/widgets/feature_warning_dialog.dart';
 // Analytics service removed (offline-first)
 
 class CheckInScreen extends StatefulWidget {
@@ -53,6 +55,15 @@ class _CheckInScreenState extends State<CheckInScreen>
   }
 
   Future<void> _startCheckIn(int minutes) async {
+    // İlk kullanımda uyarı dialogu göster
+    final shown = await FeatureWarningHelper.showIfNeeded(
+      context,
+      prefKey: AppConstants.prefWarningCheckin,
+      featureName: 'check_in',
+      title: FeatureWarningHelper.checkinTitle,
+      content: FeatureWarningHelper.checkinContent,
+    );
+    if (!shown || !mounted) return;
     final notificationsAllowed =
         await PermissionHelper.requestNotificationPermission(context);
     if (!notificationsAllowed && mounted) {

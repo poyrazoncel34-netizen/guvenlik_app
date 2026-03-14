@@ -9,7 +9,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show HapticFeedback, MethodChannel;
 import 'package:audioplayers/audioplayers.dart';
 import '../core/app_colors.dart';
+import '../core/constants/app_constants.dart';
 import '../core/services/activity_service.dart';
+import '../core/widgets/feature_warning_dialog.dart';
 import '../domain/models/activity_event.dart';
 
 class SirenDialog extends StatefulWidget {
@@ -43,8 +45,20 @@ class _SirenDialogState extends State<SirenDialog> with TickerProviderStateMixin
       duration: const Duration(milliseconds: 600),
     )..repeat(reverse: true);
 
-    _startSirenSound();
+    // İlk kullanımda uyarı dialogu göster, onay sonrası siren başlar
+    WidgetsBinding.instance.addPostFrameCallback((_) => _initWithWarning());
+  }
 
+  Future<void> _initWithWarning() async {
+    await FeatureWarningHelper.showIfNeeded(
+      context,
+      prefKey: AppConstants.prefWarningSiren,
+      featureName: 'siren',
+      title: FeatureWarningHelper.sirenTitle,
+      content: FeatureWarningHelper.sirenContent,
+    );
+    if (!mounted) return;
+    _startSirenSound();
     _soundTimer = Timer.periodic(const Duration(milliseconds: 1000), (timer) {
       HapticFeedback.heavyImpact();
       setState(() => _duration++);

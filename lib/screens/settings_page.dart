@@ -16,6 +16,7 @@ import '../core/constants/app_constants.dart';
 import '../core/utils/app_reset_helper.dart';
 import '../core/utils/pin_settings_helper.dart';
 import '../core/services/shake_detector_service.dart';
+import 'legal_info_screen.dart';
 import 'profile_page.dart';
 import 'recordings_screen.dart';
 import 'settings_detail_page.dart';
@@ -394,6 +395,17 @@ class _SettingsPageState extends State<SettingsPage> {
                     await launchUrl(uri, mode: LaunchMode.externalApplication);
                   } catch (_) {}
                 },
+              ),
+              _buildDivider(),
+              _buildNavigationTile(
+                icon: Icons.balance_rounded,
+                iconColor: const Color(0xFF9F7AEA),
+                title: '⚖️ Yasal Bilgiler',
+                subtitle: 'Kullanım şartları, KVKK, veri yönetimi',
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const LegalInfoScreen()),
+                ),
               ),
               _buildDivider(),
               _buildNavigationTile(

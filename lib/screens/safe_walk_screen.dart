@@ -13,6 +13,8 @@ import '../core/services/emergency_platform_service.dart';
 import '../core/services/foreground_service.dart';
 import '../core/services/notification_service.dart';
 // Analytics service removed (offline-first)
+import '../core/constants/app_constants.dart';
+import '../core/widgets/feature_warning_dialog.dart';
 import '../domain/models/activity_event.dart';
 import '../widgets/siren_dialog.dart';
 import 'countdown_screen.dart';
@@ -99,6 +101,15 @@ class _SafeWalkScreenState extends State<SafeWalkScreen>
   }
 
   Future<void> _startSafeWalk() async {
+    // İlk kullanımda uyarı dialogu göster
+    final shown = await FeatureWarningHelper.showIfNeeded(
+      context,
+      prefKey: AppConstants.prefWarningWalk,
+      featureName: 'safe_walk',
+      title: FeatureWarningHelper.checkinTitle,
+      content: FeatureWarningHelper.checkinContent,
+    );
+    if (!shown || !mounted) return;
     HapticFeedback.mediumImpact();
     final endTime = DateTime.now().add(Duration(minutes: _selectedMinutes));
     setState(() {

@@ -25,6 +25,25 @@ class EmergencyMessagePayload {
 class EmergencyMessageHelper {
   EmergencyMessageHelper._();
 
+  /// Görev 7: Acil durum SMS şablonu — hukuki feragatname içerir (TBK Md. 50)
+  /// [userName]: Gönderen kişinin adı (profil adı)
+  /// [locationUrl]: Google Maps linki veya konum bilgisi yoksa açıklama metni
+  static String buildEmergencyMessage(String userName, String locationUrl) {
+    return '⚠️ ACİL DURUM — KoruBeni\n\n'
+        '$userName yardıma ihtiyaç duyuyor olabilir.\n\n'
+        '📍 Son bilinen konum:\n'
+        '$locationUrl\n\n'
+        'Bu mesaj KoruBeni uygulaması tarafından otomatik gönderilmiştir.\n'
+        'Uygulama acil servislerin yerini tutmaz.\n'
+        'Gerekirse 112\'yi arayın.\n\n'
+        'Saat: ${DateTime.now().toString()}';
+  }
+
+  /// Feragatname metni — tüm SMS mesajlarının sonuna eklenir
+  static const String _legalDisclaimer =
+      '\n\nBu mesaj KoruBeni uygulaması tarafından otomatik gönderilmiştir. '
+      'Uygulama acil servislerin yerini tutmaz. Gerekirse 112\'yi arayın.';
+
   static Future<EmergencyMessagePayload> buildCountdownMessage({
     String? customTemplate,
   }) async {
@@ -46,14 +65,15 @@ class EmergencyMessageHelper {
   static Future<EmergencyMessagePayload> buildPanicButtonMessage() async {
     final locationResult = await _resolveLocation();
     final mapsUrl = _buildMapsUrl(locationResult);
-    final baseMessage = mapsUrl != null
+    final baseMessage = (mapsUrl != null
         ? 'countdown_emergency_msg'.tr(
             namedArgs: {
               'lat': locationResult.position!.latitude.toStringAsFixed(6),
               'lng': locationResult.position!.longitude.toStringAsFixed(6),
             },
           )
-        : 'countdown_emergency_msg_no_loc'.tr();
+        : 'countdown_emergency_msg_no_loc'.tr()) +
+        _legalDisclaimer;
 
     return _payloadFromLocation(
       locationResult: locationResult,
