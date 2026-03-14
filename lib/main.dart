@@ -6,6 +6,8 @@ import 'dart:ui';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
+import 'core/config/app_environment.dart';
 import 'core/di/service_locator.dart';
 import 'package:provider/provider.dart';
 import 'core/app_theme.dart';
@@ -22,6 +24,7 @@ import 'core/services/atomic_storage_service.dart';
 import 'core/services/notification_service.dart';
 import 'core/widgets/emergency_trigger_host.dart';
 import 'core/widgets/app_privacy_shield.dart';
+import 'core/widgets/offline_banner.dart';
 import 'package:easy_localization/easy_localization.dart';
 
 void main() async {
@@ -97,14 +100,14 @@ void main() async {
     // Non-fatal - app continues
   }
 
-  // Error handling for Flutter errors (no Firebase Crashlytics)
+  // Error handling for Flutter errors — yerel SQLite + Sentry (offline buffer)
   FlutterError.onError = (details) {
     CrashLogService.instance.record(
       source: 'flutter_error',
       error: details.exception,
       stackTrace: details.stack,
     );
-    // Offline-first: console logging only
+    Sentry.captureException(details.exception, stackTrace: details.stack);
     assert(() {
       debugPrint('FlutterError: ${details.exception}');
       return true;
@@ -120,6 +123,7 @@ void main() async {
       error: error,
       stackTrace: stack,
     );
+    Sentry.captureException(error, stackTrace: stack);
     assert(() {
       debugPrint('PlatformDispatcher.onError: $error');
       return true;
@@ -142,12 +146,25 @@ void main() async {
     DeviceOrientation.portraitDown,
   ]);
 
-  runApp(
-    EasyLocalization(
-      supportedLocales: const [Locale('tr', 'TR'), Locale('en', 'US')],
-      path: 'assets/translations',
-      fallbackLocale: const Locale('tr', 'TR'),
-      child: const KoruBeniApp(),
+  // Sentry init — offline buffer etkin: internet yokken crash'leri biriktir, gelince gönder
+  await SentryFlutter.init(
+    (options) {
+      options.dsn = AppEnvironment.sentryDsn;
+      options.environment = AppEnvironment.name;
+      options.tracesSampleRate = 0.0;       // Performance tracking kapalı (offline app)
+      options.enableOfflineQueueing = true; // Offline'da biriktir, online'da gönder
+      options.maxQueueSize = 30;
+      options.attachScreenshot = false;     // Gizlilik: ekran görüntüsü gönderme
+      options.sendDefaultPii = false;       // KVKK uyumu: kişisel veri gönderme
+      options.reportPackages = false;
+    },
+    appRunner: () => runApp(
+      EasyLocalization(
+        supportedLocales: const [Locale('tr', 'TR'), Locale('en', 'US')],
+        path: 'assets/translations',
+        fallbackLocale: const Locale('tr', 'TR'),
+        child: const KoruBeniApp(),
+      ),
     ),
   );
 }
@@ -178,11 +195,13 @@ class KoruBeniApp extends StatelessWidget {
             );
             return MediaQuery(
               data: mediaQuery.copyWith(textScaler: clampedTextScaler),
-              child: AppPrivacyShield(
-                child: Semantics(
-                  label: 'KoruBeni güvenlik uygulaması',
-                  hint: 'Acil durumlarda yardım çağırın, konum paylaşın',
-                  child: child ?? const SizedBox.shrink(),
+              child: OfflineBanner(
+                child: AppPrivacyShield(
+                  child: Semantics(
+                    label: 'KoruBeni güvenlik uygulaması',
+                    hint: 'Acil durumlarda yardım çağırın, konum paylaşın',
+                    child: child ?? const SizedBox.shrink(),
+                  ),
                 ),
               ),
             );
