@@ -2,10 +2,19 @@
 // AYARLAR DETAY SAYFASI
 // ============================================================================
 
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../core/app_colors.dart';
+import '../core/constants/app_constants.dart';
+import '../core/di/service_locator.dart';
+import '../core/services/local_database_service.dart';
 
 /// Section keys used for content lookup (locale-independent).
 /// Must match the keys passed from settings_page (e.g. settings_about_app).
@@ -228,6 +237,131 @@ class SettingsDetailPage extends StatelessWidget {
                     ),
                   ),
                 ],
+              ),
+            ),
+          ),
+          if (sectionKey == 'settings_privacy_policy') ...[
+            const SizedBox(height: 8),
+            const _DataExportButton(),
+            const SizedBox(height: 8),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _DataExportButton extends StatefulWidget {
+  const _DataExportButton();
+
+  @override
+  State<_DataExportButton> createState() => _DataExportButtonState();
+}
+
+class _DataExportButtonState extends State<_DataExportButton> {
+  bool _exporting = false;
+
+  Future<void> _exportData() async {
+    if (_exporting) return;
+    setState(() => _exporting = true);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final db = serviceLocator<LocalDatabaseService>();
+
+      final profile = {
+        'name': prefs.getString(AppConstants.prefProfileName),
+        'email': prefs.getString(AppConstants.prefProfileEmail),
+        'blood_type': prefs.getString(AppConstants.prefBloodType),
+        'allergies': prefs.getString(AppConstants.prefAllergies),
+        'medical_conditions': prefs.getString(AppConstants.prefMedicalConditions),
+      };
+
+      final dbInstance = await db.database;
+      final contacts = await dbInstance.query('contacts');
+      final activities = await dbInstance.query('activity_events', orderBy: 'timestamp DESC', limit: 200);
+      final consentLogs = await db.getConsentLogs();
+
+      final exportData = {
+        'export_date': DateTime.now().toIso8601String(),
+        'app': AppConstants.appName,
+        'profile': profile,
+        'contacts': contacts,
+        'activity_events': activities,
+        'consent_logs': consentLogs,
+      };
+
+      final jsonStr = const JsonEncoder.withIndent('  ').convert(exportData);
+      final dir = await getTemporaryDirectory();
+      final file = File('${dir.path}/korubeni_verilerim.json');
+      await file.writeAsString(jsonStr);
+
+      await SharePlus.instance.share(
+        ShareParams(
+          files: [XFile(file.path)],
+          text: 'KoruBeni — KVKK Md.11 Veri Dışa Aktarma',
+        ),
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Dışa aktarma başarısız: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _exporting = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: AppColors.cardBg,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Verilerimi Dışa Aktar',
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w800,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            'KVKK Madde 11/f kapsamında kişisel verilerinizin bir kopyasını JSON formatında alabilirsiniz.',
+            style: TextStyle(
+              fontSize: 13,
+              color: AppColors.textSecondary,
+              height: 1.5,
+            ),
+          ),
+          const SizedBox(height: 14),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: _exporting ? null : _exportData,
+              icon: _exporting
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    )
+                  : const Icon(Icons.download_rounded, size: 18),
+              label: Text(_exporting ? 'Hazırlanıyor...' : 'Verilerimi İndir'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
             ),
           ),

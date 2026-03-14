@@ -608,5 +608,12 @@
     "fake_template_custom": "Özel",
     "contacts_reorder_hint": "Sıralarını değiştirmek için basılı tutup sürükleyin",
     "alarm_notification_body": "Acil durum alarmı tetiklendi. Mesaj ve arama adımları hazırlanıyor.",
-    "countdown_location_unavailable": "Konum alınamadı"
+    "countdown_location_unavailable": "Konum alınamadı",
+    "legal_age_checkbox": "18 yaşından büyük olduğumu onaylıyorum.",
+    "kvkk_contact_consent_title": "KVKK Bilgilendirme",
+    "kvkk_contact_consent_body": "Eklediğiniz kişilerin telefon numaraları yalnızca cihazınızda saklanır, hiçbir sunucuya gönderilmez.\n\nKişiyi uygulamaya ekleyerek bu kişinin telefon numarasının acil iletişim amacıyla kullanılmasına onay verdiğinizi kabul edersiniz (KVKK Md. 5).",
+    "data_export_heading": "Verilerimi Dışa Aktar",
+    "data_export_body": "KVKK Madde 11/f kapsamında kişisel verilerinizin bir kopyasını JSON formatında alabilirsiniz.",
+    "data_export_button": "Verilerimi İndir",
+    "data_export_loading": "Hazırlanıyor..."
 }

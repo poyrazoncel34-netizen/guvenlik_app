@@ -7,6 +7,8 @@ import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/app_colors.dart';
 import '../core/constants/app_constants.dart';
+import '../core/di/service_locator.dart';
+import '../core/services/local_database_service.dart';
 import 'onboarding_screen.dart';
 
 class LegalDisclaimerScreen extends StatefulWidget {
@@ -19,6 +21,7 @@ class LegalDisclaimerScreen extends StatefulWidget {
 class _LegalDisclaimerScreenState extends State<LegalDisclaimerScreen> {
   bool _accepted = false;
   bool _kvkkAccepted = false;
+  bool _ageVerified = false;
   bool _saving = false;
 
   // Şartlar değiştiğinde bu versiyonu artırın; kullanıcıdan tekrar onay alınır.
@@ -53,13 +56,20 @@ class _LegalDisclaimerScreenState extends State<LegalDisclaimerScreen> {
       'anlaşmazlıklarda İstanbul Mahkemeleri ve İcra Daireleri yetkilidir.';
 
   Future<void> _onAccept() async {
-    if (!_accepted || !_kvkkAccepted || _saving) return;
+    if (!_accepted || !_kvkkAccepted || !_ageVerified || _saving) return;
     setState(() => _saving = true);
     HapticFeedback.mediumImpact();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(AppConstants.prefLegalDisclaimerAccepted, true);
     await prefs.setBool(AppConstants.prefKvkkHealthConsentAccepted, true);
+    await prefs.setBool(AppConstants.prefAgeVerified, true);
     await prefs.setString(AppConstants.prefTermsVersion, _currentTermsVersion);
+    try {
+      final db = serviceLocator<LocalDatabaseService>();
+      await db.insertConsentLog('disclaimer_accepted', _currentTermsVersion);
+      await db.insertConsentLog('kvkk_health_consent', _currentTermsVersion);
+      await db.insertConsentLog('age_verified', _currentTermsVersion);
+    } catch (_) {}
     if (!mounted) return;
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
@@ -207,16 +217,52 @@ class _LegalDisclaimerScreenState extends State<LegalDisclaimerScreen> {
                     ],
                   ),
                 ),
+                const SizedBox(height: 4),
+                // ── Checkbox 3: Yaş onayı ──
+                GestureDetector(
+                  onTap: () =>
+                      setState(() => _ageVerified = !_ageVerified),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Checkbox(
+                        value: _ageVerified,
+                        onChanged: (v) =>
+                            setState(() => _ageVerified = v ?? false),
+                        activeColor: AppColors.primary,
+                        side: BorderSide(
+                          color:
+                              AppColors.textSecondary.withValues(alpha: 0.5),
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      const Expanded(
+                        child: Padding(
+                          padding: EdgeInsets.only(top: 12),
+                          child: Text(
+                            '18 yaşından büyük olduğumu onaylıyorum.',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: AppColors.textSecondary,
+                              fontWeight: FontWeight.w500,
+                              height: 1.4,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
                 const SizedBox(height: 16),
 
-                // ── Button — disabled until checkbox is checked ──
+                // ── Button — disabled until all checkboxes are checked ──
                 AnimatedOpacity(
-                  opacity: (_accepted && _kvkkAccepted) ? 1.0 : 0.4,
+                  opacity: (_accepted && _kvkkAccepted && _ageVerified) ? 1.0 : 0.4,
                   duration: const Duration(milliseconds: 200),
                   child: SizedBox(
                     height: 52,
                     child: ElevatedButton(
-                      onPressed: (_accepted && _kvkkAccepted) ? _onAccept : null,
+                      onPressed: (_accepted && _kvkkAccepted && _ageVerified) ? _onAccept : null,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primary,
                         disabledBackgroundColor: AppColors.primary,

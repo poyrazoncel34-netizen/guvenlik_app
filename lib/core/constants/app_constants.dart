@@ -47,4 +47,6 @@ class AppConstants {
   static const String prefMedicalConditions = 'profile_medical_conditions';
   static const String prefEmergencyNotes = 'profile_emergency_notes';
   static const String prefSmsTemplate = 'pref_sms_template';
+  static const String prefAgeVerified = 'pref_age_verified';
+  static const String prefContactConsentShown = 'pref_contact_consent_shown';
 }

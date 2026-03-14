@@ -25,6 +25,8 @@ import 'countdown_screen.dart';
 import 'safe_walk_screen.dart';
 import 'safety_timeline_screen.dart';
 import 'check_in_screen.dart';
+import '../core/di/service_locator.dart';
+import '../core/services/local_database_service.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -179,8 +181,18 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         );
         if (confirmed != true) return;
         await prefs.setBool('pref_recording_warning_shown', true);
+        try {
+          await serviceLocator<LocalDatabaseService>()
+              .insertConsentLog('recording_tck_warning_accepted', '1.0');
+        } catch (_) {}
       }
       final started = await recorder.startRecording();
+      if (started) {
+        try {
+          await serviceLocator<LocalDatabaseService>()
+              .insertConsentLog('recording_session_started', '1.0');
+        } catch (_) {}
+      }
       if (mounted) {
         setState(() => _isRecording = started);
         if (!started) {

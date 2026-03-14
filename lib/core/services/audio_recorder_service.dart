@@ -121,12 +121,23 @@ class AudioRecorderService {
 
     _maxDurationTimer?.cancel();
     _maxDurationTimer = null;
+    final sessionStart = _startTime;
 
     try {
       final rawPath = await _recorder.stop() ?? _currentPath;
       _isRecording = false;
       _startTime = null;
       await EmergencyPlatformService.instance.stopRecordingSession();
+      try {
+        final durationSec = sessionStart != null
+            ? DateTime.now().difference(sessionStart).inSeconds
+            : 0;
+        await _databaseService.insertConsentLog(
+          'recording_session_ended',
+          '1.0',
+          deviceInfo: 'duration_seconds:$durationSec',
+        );
+      } catch (_) {}
 
       if (rawPath == null || rawPath.isEmpty) {
         return null;
