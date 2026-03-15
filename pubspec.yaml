@@ -52,8 +52,6 @@ dependencies:
   local_auth: ^2.3.0
   # Accelerometer for shake detection
   sensors_plus: ^6.1.1
-  # Audio recording for evidence collection
-  record: ^6.2.0
   # Connectivity check
   connectivity_plus: ^6.1.4
   wakelock_plus: ^1.2.8
