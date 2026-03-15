@@ -8,9 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../core/app_colors.dart';
-import '../core/services/audio_recorder_service.dart';
 import '../core/services/connectivity_service.dart';
 import '../core/utils/permission_helper.dart';
 // Analytics service removed (offline-first)
@@ -36,13 +34,12 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   late AnimationController _headerController;
   late AnimationController _cardsController;
-  bool _isRecording = false;
   StreamSubscription<bool>? _connectivitySubscription;
 
   // Staggered card animations
   final List<Animation<double>> _cardFadeAnimations = [];
   final List<Animation<Offset>> _cardSlideAnimations = [];
-  static const int _totalCards = 8;
+  static const int _totalCards = 7;
 
   @override
   void initState() {
@@ -97,102 +94,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         .listen((_) {
           if (mounted) setState(() {});
         });
-  }
-
-  Future<void> _toggleRecording() async {
-    final recorder = AudioRecorderService.instance;
-    if (_isRecording) {
-      final path = await recorder.stopRecording();
-      if (mounted) {
-        setState(() => _isRecording = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              path != null ? "recording_saved".tr() : "recording_failed".tr(),
-            ),
-            backgroundColor: path != null
-                ? AppColors.success
-                : AppColors.emergency,
-          ),
-        );
-      }
-    } else {
-      // Ses kaydı yasal uyarısını ilk kullanımda göster (TCK 133-136)
-      final prefs = await SharedPreferences.getInstance();
-      final warningShown =
-          prefs.getBool('pref_recording_warning_shown') ?? false;
-      if (!warningShown && mounted) {
-        final confirmed = await showDialog<bool>(
-          context: context,
-          barrierDismissible: false,
-          builder: (ctx) => AlertDialog(
-            backgroundColor: AppColors.cardBg,
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            title: const Row(
-              children: [
-                Icon(Icons.warning_amber_rounded,
-                    color: Colors.orange, size: 24),
-                SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'Ses Kaydı Yasal Uyarısı',
-                    style: TextStyle(
-                      color: AppColors.textPrimary,
-                      fontWeight: FontWeight.w800,
-                      fontSize: 16,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            content: const Text(
-              'Bu özelliği yalnızca kendi güvenliğiniz için, kendi çevrenizi '
-              'kaydetmek amacıyla kullanınız.\n\n'
-              'Türk Ceza Kanunu 133-136. Maddeleri uyarınca üçüncü kişilerin '
-              'sesini rızaları olmadan kaydetmek suç teşkil etmektedir.\n\n'
-              'Bu kaydın tüm hukuki sorumluluğu kullanıcıya aittir.',
-              style: TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 14,
-                height: 1.5,
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx, false),
-                child: const Text('İptal',
-                    style: TextStyle(color: AppColors.textSecondary)),
-              ),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10)),
-                ),
-                onPressed: () => Navigator.pop(ctx, true),
-                child: const Text('Anladım, Devam Et'),
-              ),
-            ],
-          ),
-        );
-        if (confirmed != true) return;
-        await prefs.setBool('pref_recording_warning_shown', true);
-      }
-      final started = await recorder.startRecording();
-      if (mounted) {
-        setState(() => _isRecording = started);
-        if (!started) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text("microphone_permission_required".tr()),
-              backgroundColor: AppColors.warning,
-            ),
-          );
-        }
-      }
-    }
   }
 
   @override
@@ -400,55 +301,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Offline-first: No internet warning UI
-                      if (_isRecording) ...[
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 8,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppColors.emergency.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(
-                              color: AppColors.emergency.withValues(alpha: 0.3),
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 10,
-                                height: 10,
-                                decoration: const BoxDecoration(
-                                  color: AppColors.emergency,
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                "recording_active".tr(),
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  color: AppColors.emergency,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              const Spacer(),
-                              GestureDetector(
-                                onTap: _toggleRecording,
-                                child: Text(
-                                  "stop".tr(),
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    color: AppColors.emergency,
-                                    fontWeight: FontWeight.w800,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        SizedBox(height: spacing),
-                      ],
                       SizedBox(height: shortScreen ? 4 : 6),
                       _buildEmergencyContactChip(provider),
                       SizedBox(height: spacing),
@@ -1134,12 +986,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         },
       ),
       _ActionData(
-        _isRecording ? "stop_recording".tr() : "voice_record".tr(),
-        _isRecording ? Icons.stop_circle_rounded : Icons.mic_rounded,
-        _isRecording ? AppColors.emergency : const Color(0xFF9B59B6),
-        _toggleRecording,
-      ),
-      _ActionData(
         "quick_message".tr(),
         Icons.message_rounded,
         AppColors.success,
@@ -1189,7 +1035,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         ),
         SizedBox(height: gap),
         // Build rows of 2 cards with staggered animations
-        for (int row = 0; row < 4; row++) ...[
+        for (int row = 0; row < ((actions.length + 1) ~/ 2); row++) ...[
           if (row > 0) SizedBox(height: gap),
           Row(
             children: [
@@ -1197,12 +1043,15 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 child: _buildAnimatedActionCard(actions[row * 2], row * 2),
               ),
               SizedBox(width: gap),
-              Expanded(
-                child: _buildAnimatedActionCard(
-                  actions[row * 2 + 1],
-                  row * 2 + 1,
-                ),
-              ),
+              if (row * 2 + 1 < actions.length)
+                Expanded(
+                  child: _buildAnimatedActionCard(
+                    actions[row * 2 + 1],
+                    row * 2 + 1,
+                  ),
+                )
+              else
+                const Expanded(child: SizedBox()),
             ],
           ),
         ],

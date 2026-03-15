@@ -3,6 +3,7 @@
 // ============================================================================
 
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -29,6 +30,8 @@ class CheckInService extends ChangeNotifier {
   static final CheckInService instance = CheckInService._();
 
   static const int _gracePeriodSeconds = 60;
+  static const String _stateKey = 'check_in_state_v2';
+  // Legacy keys for migration
   static const String _activeKey = 'check_in_active';
   static const String _totalSecondsKey = 'check_in_total_seconds';
   static const String _endAtKey = 'check_in_end_at';
@@ -128,10 +131,37 @@ class CheckInService extends ChangeNotifier {
 
   Future<void> _restoreFromStorage() async {
     final prefs = await SharedPreferences.getInstance();
-    final storedActive = prefs.getBool(_activeKey) ?? false;
-    if (!storedActive) {
-      return;
+
+    // Try atomic JSON blob first
+    final stateJson = prefs.getString(_stateKey);
+    if (stateJson != null) {
+      try {
+        final state = jsonDecode(stateJson) as Map<String, dynamic>;
+        final active = state['active'] as bool? ?? false;
+        if (!active) return;
+
+        final totalSeconds = state['totalSeconds'] as int? ?? 0;
+        final restoredEndAt = _parseDateTime(state['endAt'] as String?);
+        if (totalSeconds <= 0 || restoredEndAt == null) {
+          await stop();
+          return;
+        }
+
+        _isActive = true;
+        _totalSeconds = totalSeconds;
+        _endAt = restoredEndAt;
+        _graceEndAt = _parseDateTime(state['graceEndAt'] as String?);
+
+        await _reconcileWithClock();
+        return;
+      } catch (_) {
+        // Corrupted JSON — fall through to legacy
+      }
     }
+
+    // Legacy key migration
+    final storedActive = prefs.getBool(_activeKey) ?? false;
+    if (!storedActive) return;
 
     final totalSeconds = prefs.getInt(_totalSecondsKey) ?? 0;
     final restoredEndAt = _parseDateTime(prefs.getString(_endAtKey));
@@ -144,6 +174,10 @@ class CheckInService extends ChangeNotifier {
     _totalSeconds = totalSeconds;
     _endAt = restoredEndAt;
     _graceEndAt = _parseDateTime(prefs.getString(_graceEndAtKey));
+
+    // Migrate to atomic format
+    await _persistState();
+    await _clearLegacyKeys(prefs);
 
     await _reconcileWithClock();
   }
@@ -362,26 +396,28 @@ class CheckInService extends ChangeNotifier {
 
   Future<void> _persistState() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_activeKey, _isActive);
 
     if (!_isActive) {
       await _clearPersistedState();
       return;
     }
 
-    await prefs.setInt(_totalSecondsKey, _totalSeconds);
-    if (_endAt != null) {
-      await prefs.setString(_endAtKey, _endAt!.toIso8601String());
-    }
-    if (_graceEndAt != null) {
-      await prefs.setString(_graceEndAtKey, _graceEndAt!.toIso8601String());
-    } else {
-      await prefs.remove(_graceEndAtKey);
-    }
+    final state = {
+      'active': _isActive,
+      'totalSeconds': _totalSeconds,
+      'endAt': _endAt?.toIso8601String(),
+      'graceEndAt': _graceEndAt?.toIso8601String(),
+    };
+    await prefs.setString(_stateKey, jsonEncode(state));
   }
 
   Future<void> _clearPersistedState() async {
     final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_stateKey);
+    await _clearLegacyKeys(prefs);
+  }
+
+  Future<void> _clearLegacyKeys(SharedPreferences prefs) async {
     await prefs.remove(_activeKey);
     await prefs.remove(_totalSecondsKey);
     await prefs.remove(_endAtKey);

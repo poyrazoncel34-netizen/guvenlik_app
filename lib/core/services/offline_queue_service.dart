@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math' show min, pow;
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -62,9 +63,30 @@ class OfflineQueueService {
     for (final eventMap in queue) {
       try {
         final event = OfflineEvent.fromJson(eventMap);
+
+        // Drop events after max retries
+        if (event.retryCount >= 10) {
+          debugPrint('OfflineQueue: Dropping event after 10 retries: ${event.title}');
+          continue;
+        }
+
+        // Exponential backoff check
+        if (event.retryCount > 0 && event.lastAttemptAt != null) {
+          final backoffMs = min(60000, 1000 * pow(2, event.retryCount - 1).toInt());
+          final elapsed = DateTime.now().difference(event.lastAttemptAt!).inMilliseconds;
+          if (elapsed < backoffMs) {
+            failedEvents.add(eventMap);
+            continue;
+          }
+        }
+
         final success = await _processEvent(event);
         if (!success) {
-          failedEvents.add(eventMap);
+          final updated = event.copyWith(
+            retryCount: event.retryCount + 1,
+            lastAttemptAt: DateTime.now(),
+          );
+          failedEvents.add(updated.toJson());
           await Future<void>.delayed(const Duration(milliseconds: 500));
         }
       } catch (e) {
@@ -147,6 +169,8 @@ class OfflineEvent {
   final String? description;
   final Map<String, dynamic>? data;
   final DateTime createdAt;
+  final int retryCount;
+  final DateTime? lastAttemptAt;
 
   OfflineEvent({
     required this.type,
@@ -154,7 +178,24 @@ class OfflineEvent {
     this.description,
     this.data,
     DateTime? createdAt,
+    this.retryCount = 0,
+    this.lastAttemptAt,
   }) : createdAt = createdAt ?? DateTime.now();
+
+  OfflineEvent copyWith({
+    int? retryCount,
+    DateTime? lastAttemptAt,
+  }) {
+    return OfflineEvent(
+      type: type,
+      title: title,
+      description: description,
+      data: data,
+      createdAt: createdAt,
+      retryCount: retryCount ?? this.retryCount,
+      lastAttemptAt: lastAttemptAt ?? this.lastAttemptAt,
+    );
+  }
 
   Map<String, dynamic> toJson() => {
     'type': type,
@@ -162,6 +203,8 @@ class OfflineEvent {
     'description': description,
     'data': data,
     'createdAt': createdAt.toIso8601String(),
+    'retryCount': retryCount,
+    'lastAttemptAt': lastAttemptAt?.toIso8601String(),
   };
 
   factory OfflineEvent.fromJson(Map<String, dynamic> json) => OfflineEvent(
@@ -172,5 +215,9 @@ class OfflineEvent {
     createdAt: json['createdAt'] != null
         ? DateTime.tryParse(json['createdAt'] as String) ?? DateTime.now()
         : DateTime.now(),
+    retryCount: json['retryCount'] as int? ?? 0,
+    lastAttemptAt: json['lastAttemptAt'] != null
+        ? DateTime.tryParse(json['lastAttemptAt'] as String)
+        : null,
   );
 }

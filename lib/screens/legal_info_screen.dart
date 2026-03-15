@@ -34,13 +34,13 @@ class LegalInfoScreen extends StatelessWidget {
               title: 'KVKK AYDINLATMA METNİ (6698 Sayılı Kanun Md. 10)',
               body:
                   'VERİ SORUMLUSU\n'
-                  'Poyraz Öncel — destek@korubeni.com\n\n'
+                  'Poyraz Öncel — korubeni.destek@gmail.com\n\n'
                   'İŞLEDİĞİMİZ VERİLER VE AMAÇLARI\n'
                   '• Acil kişi bilgileri (ad, telefon): Acil durum SMS gönderimi için.\n'
                   '• Konum verisi: Acil durum SMS mesajına koordinat eklenmesi için.\n'
                   '• PIN / Biyometrik veri: Uygulama kilidi (yalnızca cihazda işlenir, dışarı çıkmaz).\n'
                   '• Sağlık verisi (kan grubu, alerji): Profil kartı oluşturma için.\n'
-                  '• Ses kaydı: Kullanıcı tarafından başlatılan kanıt kaydı için.\n\n'
+                  '\n'
                   'İŞLEMENİN HUKUKİ DAYANAĞI\n'
                   'İlgili kişinin açık rızası (KVKK Md. 5/1, Md. 6/2). '
                   'Tüm veriler YALNIZCA cihazınızda saklanır; hiçbir sunucuya gönderilmez, '
@@ -48,7 +48,7 @@ class LegalInfoScreen extends StatelessWidget {
                   'İLGİLİ KİŞİ HAKLARI (KVKK Md. 11)\n'
                   'Verilerinizin işlenip işlenmediğini öğrenme, hatalı verilerin düzeltilmesini '
                   'talep etme ve uygulamayı silerek tüm verilerinizi kalıcı olarak kaldırma '
-                  'haklarına sahipsiniz. Talepler için: destek@korubeni.com',
+                  'haklarına sahipsiniz. Talepler için: korubeni.destek@gmail.com',
             ),
             const SizedBox(height: 20),
             _buildSection(
@@ -58,7 +58,6 @@ class LegalInfoScreen extends StatelessWidget {
                   '(konum, telefon numaraları, PIN, aktivite geçmişi) uygulama dışına çıkmaz, hiçbir sunucuya '
                   'gönderilmez ve üçüncü taraflarla paylaşılmaz.\n\n'
                   'Uygulama yalnızca şu izinleri kullanır:\n'
-                  '• Kamera/Mikrofon: Sahte arama özelliği için (veriler kaydedilmez).\n'
                   '• SMS Gönderme: Yalnızca sizin belirlediğiniz acil durum kişilerine mesaj iletmek için.\n'
                   '• Konum: Acil durum SMS mesajına koordinat eklemek için (yalnızca cihazda işlenir).\n'
                   '• İvmeölçer (Hareket Sensörü): Sallama ile tetikleme özelliği için.\n\n'
@@ -85,7 +84,7 @@ class LegalInfoScreen extends StatelessWidget {
             const SizedBox(height: 32),
             Center(
               child: Text(
-                'KoruBeni v1.0 • Poyraz Öncel • 2025',
+                'KoruBeni • Poyraz Öncel • 2026',
                 style: TextStyle(
                   color: AppColors.textSecondary.withValues(alpha: 0.5),
                   fontSize: 12,

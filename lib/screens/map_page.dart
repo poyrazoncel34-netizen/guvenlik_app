@@ -38,6 +38,7 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
   LatLng? _currentLocation;
   bool _isLoading = true;
   LocationStatus? _locationStatus;
+  bool _usingFallbackLocation = false;
 
   // Animation
   late AnimationController _pulseController;
@@ -90,7 +91,10 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
         _currentLocation = result.position;
       } else {
         // Use default location if failed
-        _currentLocation ??= LocationService.defaultLocation;
+        if (_currentLocation == null) {
+          _currentLocation = LocationService.defaultLocation;
+          _usingFallbackLocation = true;
+        }
       }
     });
 
@@ -456,6 +460,33 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
 
             // Loading overlay
             if (_isLoading) _buildLoadingOverlay(),
+
+            // Fallback location warning
+            if (_usingFallbackLocation)
+              Positioned(
+                bottom: 220,
+                left: 16,
+                right: 16,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: AppColors.warning.withValues(alpha: 0.95),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.warning_amber_rounded, color: Colors.white, size: 20),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          "map_fallback_location".tr(),
+                          style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
 
             // Bottom controls
             Positioned(

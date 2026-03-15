@@ -17,7 +17,6 @@ import '../core/utils/app_reset_helper.dart';
 import '../core/utils/pin_settings_helper.dart';
 import '../core/services/shake_detector_service.dart';
 import 'profile_page.dart';
-import 'recordings_screen.dart';
 import 'settings_detail_page.dart';
 import '../presentation/providers/settings_provider.dart';
 import 'battery_optimization_wizard.dart';
@@ -289,27 +288,6 @@ class _SettingsPageState extends State<SettingsPage> {
             ]),
             const SizedBox(height: 28),
 
-            // Recordings
-            _buildSectionTitle('recordings_section_title'.tr()),
-            const SizedBox(height: 14),
-            _buildSettingsCard([
-              _buildNavigationTile(
-                icon: Icons.mic_rounded,
-                iconColor: const Color(0xFF9B59B6),
-                title: 'recordings_title'.tr(),
-                subtitle: 'recordings_subtitle'.tr(),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const RecordingsScreen(),
-                    ),
-                  );
-                },
-              ),
-            ]),
-            const SizedBox(height: 28),
-
             // Language
             _buildSectionTitle('settings_language_section'.tr()),
             const SizedBox(height: 14),
@@ -326,7 +304,31 @@ class _SettingsPageState extends State<SettingsPage> {
                   final newLocale = currentLocale.languageCode == 'tr'
                       ? const Locale('en', 'US')
                       : const Locale('tr', 'TR');
-                  context.setLocale(newLocale);
+                  final langName = newLocale.languageCode == 'tr'
+                      ? 'Türkçe'
+                      : 'English';
+                  showDialog(
+                    context: context,
+                    builder: (ctx) => AlertDialog(
+                      title: Text('settings_language_confirm_title'.tr()),
+                      content: Text('settings_language_confirm_body'.tr(
+                        namedArgs: {'language': langName},
+                      )),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(ctx),
+                          child: Text('map_cancel'.tr()),
+                        ),
+                        ElevatedButton(
+                          onPressed: () {
+                            Navigator.pop(ctx);
+                            context.setLocale(newLocale);
+                          },
+                          child: Text('confirm'.tr()),
+                        ),
+                      ],
+                    ),
+                  );
                 },
               ),
             ]),

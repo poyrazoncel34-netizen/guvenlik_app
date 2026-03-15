@@ -22,7 +22,7 @@ class _LegalDisclaimerScreenState extends State<LegalDisclaimerScreen> {
   bool _saving = false;
 
   // Şartlar değiştiğinde bu versiyonu artırın; kullanıcıdan tekrar onay alınır.
-  static const String _currentTermsVersion = '1.1';
+  static const String _currentTermsVersion = '1.2';
 
   static const String _disclaimerText =
       'KORUBENİ - YASAL UYARI VE KULLANIM ŞARTLARI\n\n'
@@ -74,7 +74,9 @@ class _LegalDisclaimerScreenState extends State<LegalDisclaimerScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return PopScope(
+      canPop: false,
+      child: Scaffold(
       backgroundColor: AppColors.background,
       body: Container(
         decoration: const BoxDecoration(
@@ -250,6 +252,7 @@ class _LegalDisclaimerScreenState extends State<LegalDisclaimerScreen> {
           ),
         ),
       ),
+    ),
     );
   }
 }
