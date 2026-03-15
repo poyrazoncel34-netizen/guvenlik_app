@@ -131,7 +131,6 @@ class _ConnectivityBannerState extends State<ConnectivityBanner>
             _offlineFeatureRow(Icons.check_circle_rounded, AppColors.success, 'offline_feature_alarm'.tr()),
             _offlineFeatureRow(Icons.check_circle_rounded, AppColors.success, 'offline_feature_siren'.tr()),
             _offlineFeatureRow(Icons.check_circle_rounded, AppColors.success, 'offline_feature_fakecall'.tr()),
-            _offlineFeatureRow(Icons.check_circle_rounded, AppColors.success, 'offline_feature_recording'.tr()),
             _offlineFeatureRow(Icons.check_circle_rounded, AppColors.success, 'offline_feature_safewalk'.tr()),
             const SizedBox(height: 10),
             _offlineFeatureRow(Icons.warning_rounded, AppColors.warning, 'offline_feature_location'.tr()),
