@@ -34,6 +34,7 @@ class _FakeCallScreenState extends State<FakeCallScreen>
   String _callerName = "";
   String _callerNumber = "";
   String? _avatarPath;
+  bool _ringtoneError = false;
   StreamSubscription<Map<String, dynamic>>? _phoneStateSubscription;
   final SecureStorage _secureStorage = serviceLocator<SecureStorage>();
 
@@ -146,7 +147,7 @@ class _FakeCallScreenState extends State<FakeCallScreen>
       debugPrint(
         'FakeCallScreen: Error playing ringtone (asset may be missing): $e',
       );
-      // Safe fallback: skip playback so app does not crash
+      if (mounted) setState(() => _ringtoneError = true);
     }
   }
 
@@ -276,7 +277,9 @@ class _FakeCallScreenState extends State<FakeCallScreen>
                           ),
                           const SizedBox(width: 10),
                           Text(
-                            "fake_call_calling".tr(),
+                            _ringtoneError
+                                ? "fake_call_no_audio".tr()
+                                : "fake_call_calling".tr(),
                             style: TextStyle(
                               color: Colors.white.withValues(alpha: 0.75),
                               fontSize: 17,

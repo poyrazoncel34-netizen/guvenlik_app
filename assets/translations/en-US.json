@@ -588,5 +588,13 @@
     "fake_template_custom": "Custom",
     "contacts_reorder_hint": "Hold and drag to change the order",
     "alarm_notification_body": "Emergency alarm triggered. Preparing the message and call steps.",
-    "countdown_location_unavailable": "Location unavailable"
+    "countdown_location_unavailable": "Location unavailable",
+    "siren_audio_failed": "Siren audio failed",
+    "map_fallback_location": "Could not get real location, showing default",
+    "edit_profile_validation_error": "Please fill the form correctly",
+    "fake_call_no_audio": "Ringtone unavailable",
+    "pin_setup_success": "PIN set successfully",
+    "settings_language_confirm_title": "Change Language",
+    "settings_language_confirm_body": "Change language to {language}?",
+    "confirm": "Confirm"
 }

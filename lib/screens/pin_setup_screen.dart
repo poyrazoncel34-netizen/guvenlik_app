@@ -93,7 +93,19 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
     await prefs.setBool(AppConstants.prefPinSetupDone, true);
 
     if (mounted) {
-      Navigator.pop(context, true);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("pin_setup_success".tr()),
+          backgroundColor: AppColors.success,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          duration: const Duration(milliseconds: 1500),
+        ),
+      );
+      await Future<void>.delayed(const Duration(milliseconds: 500));
+      if (mounted) Navigator.pop(context, true);
     }
   }
 

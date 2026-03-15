@@ -17,7 +17,7 @@ import java.util.concurrent.Executors
 object SmsSender {
     const val ACTION_SMS_SENT = "com.poyrazoncel.korubeni.SMS_SENT"
     const val ACTION_SMS_DELIVERED = "com.poyrazoncel.korubeni.SMS_DELIVERED"
-    private val executor = Executors.newCachedThreadPool()
+    private val executor = Executors.newFixedThreadPool(5)
 
     fun send(
         context: Context,

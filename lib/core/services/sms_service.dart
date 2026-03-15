@@ -89,6 +89,7 @@ class SmsService {
     final recipients = numbers
         .map(AndroidIntentService.normalizePhoneNumber)
         .where((number) => number.isNotEmpty)
+        .where(_isValidPhoneNumber)
         .toSet()
         .toList(growable: false);
 
@@ -151,6 +152,13 @@ class SmsService {
       '',
       message,
     ].join('\n');
+  }
+
+  static bool _isValidPhoneNumber(String number) {
+    final digitsOnly = number.replaceAll(RegExp(r'[^\d+]'), '');
+    if (digitsOnly.length < 7) return false;
+    if (!RegExp(r'^[+\d]').hasMatch(digitsOnly)) return false;
+    return true;
   }
 
   static String _mapNativeError(Object? error) {

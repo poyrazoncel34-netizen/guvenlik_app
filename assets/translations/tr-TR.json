@@ -588,5 +588,13 @@
     "fake_template_custom": "Özel",
     "contacts_reorder_hint": "Sıralarını değiştirmek için basılı tutup sürükleyin",
     "alarm_notification_body": "Acil durum alarmı tetiklendi. Mesaj ve arama adımları hazırlanıyor.",
-    "countdown_location_unavailable": "Konum alınamadı"
+    "countdown_location_unavailable": "Konum alınamadı",
+    "siren_audio_failed": "Siren sesi çalınamıyor",
+    "map_fallback_location": "Gerçek konum alınamadı, varsayılan konum gösteriliyor",
+    "edit_profile_validation_error": "Lütfen formu doğru doldurun",
+    "fake_call_no_audio": "Zil sesi çalınamıyor",
+    "pin_setup_success": "PIN başarıyla ayarlandı",
+    "settings_language_confirm_title": "Dil Değiştir",
+    "settings_language_confirm_body": "Dili {language} olarak değiştirmek istiyor musunuz?",
+    "confirm": "Onayla"
 }

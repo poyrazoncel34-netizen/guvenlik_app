@@ -28,6 +28,7 @@ class _SirenDialogState extends State<SirenDialog> with TickerProviderStateMixin
   int _duration = 0;
   final AudioPlayer _audioPlayer = AudioPlayer();
   int? _originalAlarmVolume;
+  bool _sirenFailed = false;
 
   @override
   void initState() {
@@ -91,6 +92,7 @@ class _SirenDialogState extends State<SirenDialog> with TickerProviderStateMixin
       debugPrint('SirenDialog: Siren sound started (forced to speaker)');
     } catch (e) {
       debugPrint("SirenDialog: Ses çalma hatası: $e");
+      if (mounted) setState(() => _sirenFailed = true);
     }
   }
 
@@ -154,7 +156,7 @@ class _SirenDialogState extends State<SirenDialog> with TickerProviderStateMixin
                             color: Colors.white.withValues(alpha: 0.3),
                             shape: BoxShape.circle,
                           ),
-                          child: const Icon(Icons.volume_up_rounded, size: 60, color: Colors.white),
+                          child: Icon(_sirenFailed ? Icons.volume_off_rounded : Icons.volume_up_rounded, size: 60, color: Colors.white),
                         ),
                       );
                     },
@@ -164,6 +166,13 @@ class _SirenDialogState extends State<SirenDialog> with TickerProviderStateMixin
                     "siren_active".tr(),
                     style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: 2),
                   ),
+                  if (_sirenFailed) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      "siren_audio_failed".tr(),
+                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white70),
+                    ),
+                  ],
                   const SizedBox(height: 16),
                   Text(
                     "siren_loud_alarm".tr(),

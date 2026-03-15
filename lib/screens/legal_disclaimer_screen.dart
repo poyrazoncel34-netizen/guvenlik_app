@@ -74,7 +74,9 @@ class _LegalDisclaimerScreenState extends State<LegalDisclaimerScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return PopScope(
+      canPop: false,
+      child: Scaffold(
       backgroundColor: AppColors.background,
       body: Container(
         decoration: const BoxDecoration(
@@ -250,6 +252,7 @@ class _LegalDisclaimerScreenState extends State<LegalDisclaimerScreen> {
           ),
         ),
       ),
+    ),
     );
   }
 }
