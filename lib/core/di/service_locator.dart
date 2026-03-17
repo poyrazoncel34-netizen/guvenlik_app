@@ -8,6 +8,7 @@ import '../../domain/repositories/contacts_repository.dart';
 import '../../domain/repositories/location_repository.dart';
 import '../security/encryption_service.dart';
 import '../security/secure_storage.dart';
+import '../../services/consent_manager.dart';
 
 final GetIt serviceLocator = GetIt.instance;
 
@@ -43,5 +44,10 @@ Future<void> setupServiceLocator() async {
     serviceLocator.registerLazySingleton<EncryptionService>(
       () => EncryptionService(),
     );
+  }
+  if (!serviceLocator.isRegistered<ConsentManager>()) {
+    final consentManager = ConsentManager();
+    await consentManager.initialize();
+    serviceLocator.registerSingleton<ConsentManager>(consentManager);
   }
 }

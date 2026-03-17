@@ -45,4 +45,16 @@ class AppConstants {
   static const String prefMedicalConditions = 'profile_medical_conditions';
   static const String prefEmergencyNotes = 'profile_emergency_notes';
   static const String prefSmsTemplate = 'pref_sms_template';
+
+  // KVKK & Legal versiyon takibi
+  static const String prefKvkkVersion = 'pref_kvkk_version';
+  static const String prefFakeCallWarned = 'pref_fake_call_warned';
+
+  // Rıza özellik durumu (ConsentManager ile senkronize edilir)
+  static const String prefConsentLocation = 'pref_consent_location';
+  static const String prefConsentBiometric = 'pref_consent_biometric';
+  static const String prefConsentAudio = 'pref_consent_audio';
+  static const String prefConsentEmergencyContacts =
+      'pref_consent_emergency_contacts';
+  static const String prefConsentProfile = 'pref_consent_profile';
 }

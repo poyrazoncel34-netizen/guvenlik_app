@@ -13,6 +13,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/app_colors.dart';
 import '../core/di/service_locator.dart';
+import '../services/consent_manager.dart';
 import '../core/security/secure_storage.dart';
 import '../core/security/secure_storage_keys.dart';
 import '../core/services/activity_service.dart';
@@ -51,6 +52,83 @@ class _FakeCallScreenState extends State<FakeCallScreen>
     _loadSavedSettings();
     _startRingtone();
     _listenForRealCalls();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _checkFirstUseWarning());
+  }
+
+  Future<void> _checkFirstUseWarning() async {
+    final prefs = await SharedPreferences.getInstance();
+    final warned = prefs.getBool('pref_fake_call_warned') ?? false;
+    if (warned || !mounted) return;
+    await _stopRingtone();
+    if (!mounted) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF10263A),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFB547).withValues(alpha: 0.12),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.warning_amber_rounded,
+                  color: Color(0xFFFFB547), size: 22),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'fake_call_warning_title'.tr(),
+                style: const TextStyle(
+                  color: Color(0xFFF3F7FF),
+                  fontWeight: FontWeight.w800,
+                  fontSize: 16,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          'fake_call_warning_desc'.tr(),
+          style: const TextStyle(
+            color: Color(0xFF9BB0C7),
+            fontSize: 14,
+            height: 1.5,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text('cancel'.tr(),
+                style: const TextStyle(color: Color(0xFF9BB0C7))),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFFFB547),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
+            ),
+            child: Text('fake_call_warning_accept'.tr()),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      await prefs.setBool('pref_fake_call_warned', true);
+      // Consent log
+      try {
+        final cm = serviceLocator<ConsentManager>();
+        await cm.grantConsent('fake_call');
+      } catch (_) {}
+      if (mounted) _startRingtone();
+    } else {
+      if (mounted) Navigator.of(context).maybePop();
+    }
   }
 
   @override

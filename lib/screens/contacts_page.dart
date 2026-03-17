@@ -14,6 +14,7 @@ import '../core/constants/app_constants.dart';
 import '../core/services/sms_service.dart';
 import '../presentation/providers/contacts_provider.dart';
 import '../presentation/providers/home_provider.dart';
+import '../widgets/emergency_contact_consent_dialog.dart';
 
 class ContactsPage extends StatefulWidget {
   const ContactsPage({super.key});
@@ -847,6 +848,15 @@ class _ContactsPageState extends State<ContactsPage> {
                       return;
                     }
 
+                    // KVKK: Kişi ekleme öncesi rıza onayı
+                    if (!sheetContext.mounted) return;
+                    final consentGiven =
+                        await EmergencyContactConsentDialog.show(
+                      context: sheetContext,
+                      contactName: name,
+                    );
+                    if (!consentGiven || !sheetContext.mounted) return;
+
                     final provider = context.read<ContactsProvider>();
                     final added = await provider.addContact(
                       name: name,
@@ -919,6 +929,14 @@ class _ContactsPageState extends State<ContactsPage> {
         );
         return;
       }
+
+      // KVKK: Kişi ekleme öncesi rıza onayı
+      if (!mounted) return;
+      final consentGiven = await EmergencyContactConsentDialog.show(
+        context: context,
+        contactName: name,
+      );
+      if (!consentGiven || !mounted) return;
 
       final provider = context.read<ContactsProvider>();
       final added = await provider.addContact(name: name, phone: phone);
