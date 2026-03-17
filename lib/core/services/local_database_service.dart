@@ -7,7 +7,7 @@ class LocalDatabaseService {
   LocalDatabaseService();
 
   static const String databaseName = 'korubeni.db';
-  static const int databaseVersion = 1;
+  static const int databaseVersion = 2;
 
   Database? _database;
 
@@ -75,11 +75,31 @@ class LocalDatabaseService {
         value TEXT
       )
     ''');
+    await _createConsentLogsTable(db);
+  }
+
+  Future<void> _createConsentLogsTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS consent_logs(
+        id TEXT PRIMARY KEY,
+        type TEXT NOT NULL,
+        granted INTEGER NOT NULL,
+        timestamp TEXT NOT NULL,
+        app_version TEXT NOT NULL,
+        os_version TEXT NOT NULL,
+        device_model TEXT NOT NULL,
+        consent_text_version TEXT NOT NULL,
+        locale TEXT NOT NULL
+      )
+    ''');
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 1) {
       await _onCreate(db, newVersion);
+    }
+    if (oldVersion < 2) {
+      await _createConsentLogsTable(db);
     }
   }
 
