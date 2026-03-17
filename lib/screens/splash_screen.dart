@@ -20,7 +20,7 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen>
-    with TickerProviderStateMixin {
+    with TickerProviderStateMixin, WidgetsBindingObserver {
   late AnimationController _logoController;
   late AnimationController _textController;
   late AnimationController _shimmerController;
@@ -37,6 +37,7 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
 
     // ── Logo animasyonu: scale + fade ──
     _logoController = AnimationController(
@@ -171,7 +172,19 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused) {
+      _shimmerController.stop();
+      _glowController.stop();
+    } else if (state == AppLifecycleState.resumed) {
+      if (!_shimmerController.isAnimating) _shimmerController.repeat();
+      if (!_glowController.isAnimating) _glowController.repeat(reverse: true);
+    }
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _logoController.dispose();
     _textController.dispose();
     _shimmerController.dispose();

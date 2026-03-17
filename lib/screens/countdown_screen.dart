@@ -55,6 +55,7 @@ class _CountdownScreenState extends State<CountdownScreen>
   bool _biometricAvailable = false;
   String _biometricLabel = 'Biometric';
   bool _handoffToEmergencyScreen = false;
+  bool _isNavigating = false;
 
   DateTime? _lockoutEndTime;
   StreamSubscription<int>? _lockoutSubscription;
@@ -100,7 +101,8 @@ class _CountdownScreenState extends State<CountdownScreen>
     final success = await BiometricService.instance.authenticate(
       reason: "countdown_biometric_reason".tr(),
     );
-    if (success && mounted) {
+    if (success && mounted && !_isNavigating) {
+      _isNavigating = true;
       _timer?.cancel();
       ActivityService.logEvent(
         type: ActivityType.emergencyCancelled,
@@ -111,7 +113,7 @@ class _CountdownScreenState extends State<CountdownScreen>
       );
       KoruBeniForegroundService.stop();
       Navigator.pop(context);
-    } else if (mounted) {
+    } else if (mounted && !_isNavigating) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -292,20 +294,27 @@ class _CountdownScreenState extends State<CountdownScreen>
       return;
     }
 
-    if (mounted) {
+    if (mounted && !_isNavigating) {
+      _isNavigating = true;
       _handoffToEmergencyScreen = true;
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => EmergencyCallScreen(
-            name: _emergencyContact?.name ?? "countdown_emergency_label".tr(),
-            phone: calledNumber,
-            callResult: callResult,
-            smsResult: smsResult,
-            locationStatusMessage: messagePayload.locationStatusMessage,
+      try {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => EmergencyCallScreen(
+              name: _emergencyContact?.name ?? "countdown_emergency_label".tr(),
+              phone: calledNumber,
+              callResult: callResult,
+              smsResult: smsResult,
+              locationStatusMessage: messagePayload.locationStatusMessage,
+            ),
           ),
-        ),
-      );
+        );
+      } catch (e) {
+        debugPrint('CountdownScreen: Navigation failed: $e');
+        _isNavigating = false;
+        _handoffToEmergencyScreen = false;
+      }
     }
   }
 
@@ -323,6 +332,8 @@ class _CountdownScreenState extends State<CountdownScreen>
   }
 
   void _cancelWithoutPin() {
+    if (_isNavigating) return;
+    _isNavigating = true;
     _timer?.cancel();
     ActivityService.logEvent(
       type: ActivityType.emergencyCancelled,
@@ -380,7 +391,8 @@ class _CountdownScreenState extends State<CountdownScreen>
       setState(() => _pin += key);
 
       if (_pin.length == 4) {
-        if (_correctPin != null && _pin == _correctPin) {
+        if (_correctPin != null && _pin == _correctPin && !_isNavigating) {
+          _isNavigating = true;
           _timer?.cancel();
           _lockoutSubscription?.cancel();
           PinLockoutService.instance.reset();

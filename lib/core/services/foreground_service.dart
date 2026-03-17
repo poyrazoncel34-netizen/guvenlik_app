@@ -158,8 +158,11 @@ Future<void> _onStart(ServiceInstance service) async {
     // Best effort only.
   }
 
+  Timer? heartbeatTimer;
+
   // "stop" komutu geldiğinde servisi durdur
   service.on('stop').listen((_) async {
+    heartbeatTimer?.cancel();
     await service.stopSelf();
     debugPrint('ForegroundService: Stopped via command');
   });
@@ -185,7 +188,7 @@ Future<void> _onStart(ServiceInstance service) async {
   });
 
   // Periyodik "yaşıyorum" sinyali — her 30 saniyede bildirim güncelle
-  Timer.periodic(const Duration(seconds: 30), (timer) async {
+  heartbeatTimer = Timer.periodic(const Duration(seconds: 30), (timer) async {
     if (service is AndroidServiceInstance) {
       if (await service.isForegroundService()) {
         notificationsPlugin.show(

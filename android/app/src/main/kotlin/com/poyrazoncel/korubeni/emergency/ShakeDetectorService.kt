@@ -7,7 +7,9 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+import android.os.Handler
 import android.os.IBinder
+import android.os.Looper
 import android.os.PowerManager
 import androidx.core.content.ContextCompat
 import kotlin.math.abs
@@ -18,6 +20,8 @@ class ShakeDetectorService : Service(), SensorEventListener {
         private const val ACTION_START = "action_start"
         private const val ACTION_STOP = "action_stop"
         private const val ACTION_UPDATE = "action_update"
+        private const val WAKELOCK_TIMEOUT_MS = 2 * 60 * 60 * 1000L  // 2 hours
+        private const val WAKELOCK_RENEW_MS = 110 * 60 * 1000L       // Renew every 110 min
 
         fun start(context: Context) {
             val intent = Intent(context, ShakeDetectorService::class.java).apply {
@@ -46,6 +50,18 @@ class ShakeDetectorService : Service(), SensorEventListener {
     private val shakeTimestamps = ArrayDeque<Long>()
     private var lastTriggerAt: Long = 0L
     private var wakeLock: PowerManager.WakeLock? = null
+    private val wakeLockHandler = Handler(Looper.getMainLooper())
+    private val wakeLockRenewer = object : Runnable {
+        override fun run() {
+            wakeLock?.takeIf { it.isHeld }?.release()
+            val manager = getSystemService(Context.POWER_SERVICE) as PowerManager
+            wakeLock = manager.newWakeLock(
+                PowerManager.PARTIAL_WAKE_LOCK,
+                "KoruBeni:ShakeDetector"
+            ).apply { acquire(WAKELOCK_TIMEOUT_MS) }
+            wakeLockHandler.postDelayed(this, WAKELOCK_RENEW_MS)
+        }
+    }
 
     override fun onCreate() {
         super.onCreate()
@@ -77,13 +93,8 @@ class ShakeDetectorService : Service(), SensorEventListener {
         )
 
         if (wakeLock?.isHeld != true) {
-            val manager = getSystemService(Context.POWER_SERVICE) as PowerManager
-            wakeLock = manager.newWakeLock(
-                PowerManager.PARTIAL_WAKE_LOCK,
-                "KoruBeni:ShakeDetector"
-            ).apply {
-                acquire(24 * 60 * 60 * 1000L) // 24h safety net; onDestroy() releases normally
-            }
+            wakeLockHandler.removeCallbacks(wakeLockRenewer)
+            wakeLockRenewer.run()
         }
 
         accelerometer?.let {
@@ -140,6 +151,7 @@ class ShakeDetectorService : Service(), SensorEventListener {
 
     override fun onDestroy() {
         sensorManager.unregisterListener(this)
+        wakeLockHandler.removeCallbacks(wakeLockRenewer)
         wakeLock?.takeIf { it.isHeld }?.release()
         wakeLock = null
         super.onDestroy()

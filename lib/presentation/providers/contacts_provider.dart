@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/app_colors.dart';
@@ -45,11 +46,15 @@ class ContactsProvider extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
 
-    await _loadContactsFromStorage();
-    await _loadEmergencySelection();
-
-    _isLoading = false;
-    notifyListeners();
+    try {
+      await _loadContactsFromStorage();
+      await _loadEmergencySelection();
+    } catch (e) {
+      debugPrint('ContactsProvider: initialize failed: $e');
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 
   Future<void> _loadContactsFromStorage() async {

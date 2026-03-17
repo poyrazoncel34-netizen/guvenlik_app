@@ -304,7 +304,31 @@ class _SettingsPageState extends State<SettingsPage> {
                   final newLocale = currentLocale.languageCode == 'tr'
                       ? const Locale('en', 'US')
                       : const Locale('tr', 'TR');
-                  context.setLocale(newLocale);
+                  final langName = newLocale.languageCode == 'tr'
+                      ? 'Türkçe'
+                      : 'English';
+                  showDialog(
+                    context: context,
+                    builder: (ctx) => AlertDialog(
+                      title: Text('settings_language_confirm_title'.tr()),
+                      content: Text('settings_language_confirm_body'.tr(
+                        namedArgs: {'language': langName},
+                      )),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(ctx),
+                          child: Text('map_cancel'.tr()),
+                        ),
+                        ElevatedButton(
+                          onPressed: () {
+                            Navigator.pop(ctx);
+                            context.setLocale(newLocale);
+                          },
+                          child: Text('confirm'.tr()),
+                        ),
+                      ],
+                    ),
+                  );
                 },
               ),
             ]),

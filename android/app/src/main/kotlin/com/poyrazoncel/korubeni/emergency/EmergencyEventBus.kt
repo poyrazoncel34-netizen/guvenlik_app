@@ -8,6 +8,7 @@ import org.json.JSONObject
 
 object EmergencyEventBus {
     private val mainHandler = Handler(Looper.getMainLooper())
+    @Volatile
     private var eventSink: EventChannel.EventSink? = null
 
     fun attach(sink: EventChannel.EventSink?) {
@@ -21,13 +22,24 @@ object EmergencyEventBus {
     fun emit(payload: Map<String, Any?>) {
         val sink = eventSink ?: return
         mainHandler.post {
-            sink.success(HashMap(payload))
+            try {
+                sink.success(HashMap(payload))
+            } catch (_: Exception) {
+                // Sink may have been detached between capture and post
+            }
         }
     }
 
     fun emitOrPersist(context: Context, payload: Map<String, Any?>) {
-        if (eventSink != null) {
-            emit(payload)
+        val sink = eventSink
+        if (sink != null) {
+            mainHandler.post {
+                try {
+                    sink.success(HashMap(payload))
+                } catch (_: Exception) {
+                    persist(context, payload)
+                }
+            }
             return
         }
         persist(context, payload)
