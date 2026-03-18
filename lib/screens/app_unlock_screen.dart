@@ -1,5 +1,6 @@
 // ============================================================================
-// UYGULAMA KİLİDİ - Uygulama açılışında biyometrik veya PIN ile doğrulama
+// UYGULAMA KİLİDİ - Uygulama açılışında PIN ile doğrulama (PIN tek yöntem)
+// SECURITY RULE: Biyometrik kimlik doğrulama YASAKTIR (duress riski).
 // ============================================================================
 
 import 'dart:async';
@@ -29,8 +30,6 @@ class AppUnlockScreen extends StatefulWidget {
 class _AppUnlockScreenState extends State<AppUnlockScreen> {
   String _pin = '';
   String? _correctPin;
-  bool _biometricAvailable = false;
-  String _biometricLabel = 'Biometric'; // Updated by _loadAndCheckBiometric()
   bool _loading = true;
 
   DateTime? _lockoutEndTime;
@@ -42,10 +41,10 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> {
   @override
   void initState() {
     super.initState();
-    _loadAndCheckBiometric();
+    _initScreen();
   }
 
-  Future<void> _loadAndCheckBiometric() async {
+  Future<void> _initScreen() async {
     await _loadPin();
     await _syncLockoutState();
     if (!mounted) return;
@@ -69,15 +68,6 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> {
       setState(() {
         _correctPin = value;
       });
-    }
-  }
-
-  Future<void> _tryBiometric() async {
-    final success = await BiometricService.instance.authenticate(
-      reason: 'unlock_biometric_reason'.tr(),
-    );
-    if (success && mounted) {
-      widget.onUnlocked();
     }
   }
 
@@ -246,34 +236,6 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> {
                       ),
                     ),
                   ] else ...[
-                    if (_biometricAvailable) ...[
-                      const SizedBox(height: 32),
-                      OutlinedButton.icon(
-                        onPressed: _tryBiometric,
-                        icon: Icon(
-                          _biometricLabel.contains('Face')
-                              ? Icons.face_rounded
-                              : Icons.fingerprint_rounded,
-                          size: 24,
-                        ),
-                        label: Text(
-                          'unlock_biometric_btn'.tr(
-                            namedArgs: {'label': _biometricLabel},
-                          ),
-                        ),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: AppColors.primary,
-                          side: const BorderSide(color: AppColors.primary),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 24,
-                            vertical: 14,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                        ),
-                      ),
-                    ],
                     const SizedBox(height: 32),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,

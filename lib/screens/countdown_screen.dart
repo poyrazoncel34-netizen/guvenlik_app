@@ -14,7 +14,6 @@ import '../core/security/secure_storage.dart';
 import '../core/security/secure_storage_keys.dart';
 import '../core/app_colors.dart';
 import '../core/services/contact_service.dart';
-import '../core/services/biometric_service.dart';
 import '../core/services/sms_service.dart';
 import '../domain/repositories/contacts_repository.dart';
 import '../core/services/activity_service.dart';
@@ -52,8 +51,6 @@ class _CountdownScreenState extends State<CountdownScreen>
       serviceLocator<ContactsRepository>();
   // Offline-first: No EmergencyRepository (Firebase removed)
   late final SecureStorage _secureStorage = serviceLocator<SecureStorage>();
-  bool _biometricAvailable = false;
-  String _biometricLabel = 'Biometric';
   bool _handoffToEmergencyScreen = false;
   bool _isNavigating = false;
 
@@ -127,6 +124,7 @@ class _CountdownScreenState extends State<CountdownScreen>
       );
     }
   }
+
 
   Future<void> _loadPin() async {
     final secureValue = await _secureStorage.read(
@@ -668,37 +666,6 @@ class _CountdownScreenState extends State<CountdownScreen>
                     ),
                     textAlign: TextAlign.center,
                   ),
-                  if (_biometricAvailable) ...[
-                    const SizedBox(height: 16),
-                    OutlinedButton.icon(
-                      onPressed: _authenticateWithBiometric,
-                      icon: Icon(
-                        _biometricLabel == 'Face ID'
-                            ? Icons.face_rounded
-                            : Icons.fingerprint_rounded,
-                        size: 22,
-                      ),
-                      label: Text(
-                        "countdown_biometric_cancel".tr(
-                          namedArgs: {"label": _biometricLabel},
-                        ),
-                      ),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: AppColors.primary,
-                        side: const BorderSide(
-                          color: AppColors.primary,
-                          width: 1.5,
-                        ),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 24,
-                          vertical: 14,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                      ),
-                    ),
-                  ],
                   if (_correctPin == null) ...[
                     const SizedBox(height: 16),
                     OutlinedButton.icon(

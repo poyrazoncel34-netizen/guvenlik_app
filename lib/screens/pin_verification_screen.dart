@@ -4,7 +4,6 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../core/app_colors.dart';
 import '../core/services/contact_service.dart';
-import '../core/services/biometric_service.dart';
 import '../core/services/call_service.dart';
 import '../core/services/sms_service.dart';
 import '../core/di/service_locator.dart';
@@ -28,8 +27,6 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
   String? _correctPin; // Loaded from secure storage
   EmergencyContact? _emergencyContact;
   late final SecureStorage _secureStorage = serviceLocator<SecureStorage>();
-  bool _biometricAvailable = false;
-  String _biometricLabel = 'Biometric'; // Updated by _checkBiometric()
 
   @override
   void initState() {
@@ -37,49 +34,7 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
     WakelockPlus.enable(); // Ekran açık kalsın - cepte olsa bile geri sayım tamamlansın
     _loadPin();
     _loadEmergencyContact();
-    _checkBiometric();
     _startTimer();
-  }
-
-  Future<void> _checkBiometric() async {
-    final available = await BiometricService.instance.isAvailable();
-    if (available && mounted) {
-      final label = await BiometricService.instance.getBiometricLabel();
-      setState(() {
-        _biometricAvailable = true;
-        _biometricLabel = label;
-      });
-      _authenticateWithBiometric();
-    }
-  }
-
-  Future<void> _authenticateWithBiometric() async {
-    final success = await BiometricService.instance.authenticate(
-      reason: "pin_verify_biometric_reason".tr(),
-    );
-    if (success && mounted) {
-      _timer?.cancel();
-      final messenger = ScaffoldMessenger.of(context);
-      Navigator.pop(context);
-      messenger.showSnackBar(
-        SnackBar(
-          content: Text("pin_verify_safe_cancelled".tr()),
-          backgroundColor: AppColors.success,
-        ),
-      );
-    } else if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            "pin_verify_biometric_fail".tr(
-              namedArgs: {"label": _biometricLabel},
-            ),
-          ),
-          backgroundColor: AppColors.warning,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    }
   }
 
   Future<void> _loadPin() async {
@@ -342,37 +297,6 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
                       ),
                     );
                   }),
-                ),
-              ],
-              if (_biometricAvailable) ...[
-                const SizedBox(height: 12),
-                OutlinedButton.icon(
-                  onPressed: _authenticateWithBiometric,
-                  icon: Icon(
-                    _biometricLabel == 'Face ID'
-                        ? Icons.face_rounded
-                        : Icons.fingerprint_rounded,
-                    size: 22,
-                  ),
-                  label: Text(
-                    "pin_verify_biometric_cancel_btn".tr(
-                      namedArgs: {"label": _biometricLabel},
-                    ),
-                  ),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.primary,
-                    side: const BorderSide(
-                      color: AppColors.primary,
-                      width: 1.5,
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 14,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
                 ),
               ],
               const SizedBox(height: 40),

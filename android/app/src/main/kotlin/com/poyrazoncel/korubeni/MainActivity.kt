@@ -1,11 +1,14 @@
 package com.poyrazoncel.korubeni
 
 import android.content.ActivityNotFoundException
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.media.AudioManager
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import android.view.KeyEvent
 import android.view.WindowManager
 import com.poyrazoncel.korubeni.emergency.EmergencyChannels
@@ -21,7 +24,6 @@ class MainActivity : FlutterActivity() {
     companion object {
         private const val ANDROID_INTENTS_CHANNEL = "com.poyrazoncel.korubeni/android_intents"
         private const val SETTINGS_CHANNEL = "com.poyrazoncel.korubeni/settings"
-        private const val AUDIO_CONTROL_CHANNEL = "com.poyrazoncel.korubeni/audio_control"
     }
 
     private val volumeDetector = VolumeButtonDetector()
@@ -100,20 +102,6 @@ class MainActivity : FlutterActivity() {
             }
 
             try {
-                MethodChannel(messenger, SETTINGS_CHANNEL)
-                    .setMethodCallHandler { call, result ->
-                        when (call.method) {
-                            "openBatterySettings" ->
-                                result.success(emergencyPlatformHandler.openBatterySettingsProxy())
-                            else -> result.notImplemented()
-                        }
-                    }
-                android.util.Log.d("MainActivity", "Settings channel configured")
-            } catch (e: Exception) {
-                android.util.Log.e("MainActivity", "Settings channel failed: ${e.message}", e)
-            }
-
-            try {
                 MethodChannel(messenger, ANDROID_INTENTS_CHANNEL)
                     .setMethodCallHandler { call, result ->
                         try {
@@ -139,34 +127,52 @@ class MainActivity : FlutterActivity() {
                 android.util.Log.e("MainActivity", "Android intent channel failed: ${e.message}", e)
             }
             
-            // Audio control MethodChannel — force alarm volume max before siren
+            // Settings channel (extended) — battery optimization + manufacturer auto-start
             try {
-                val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
-                MethodChannel(messenger, AUDIO_CONTROL_CHANNEL)
+                MethodChannel(messenger, SETTINGS_CHANNEL)
                     .setMethodCallHandler { call, result ->
                         try {
                             when (call.method) {
-                                "setMaxAlarmVolume" -> {
-                                    val original = audioManager.getStreamVolume(AudioManager.STREAM_ALARM)
-                                    val max = audioManager.getStreamMaxVolume(AudioManager.STREAM_ALARM)
-                                    audioManager.setStreamVolume(AudioManager.STREAM_ALARM, max, 0)
-                                    result.success(original)
+                                "openBatterySettings" -> {
+                                    val intent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                                        Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
+                                            data = Uri.parse("package:$packageName")
+                                        }
+                                    } else {
+                                        Intent(Settings.ACTION_BATTERY_SAVER_SETTINGS)
+                                    }
+                                    startActivity(intent)
+                                    result.success(true)
                                 }
-                                "restoreAlarmVolume" -> {
-                                    val original = call.arguments as? Int ?: return@setMethodCallHandler
-                                    audioManager.setStreamVolume(AudioManager.STREAM_ALARM, original, 0)
-                                    result.success(null)
+                                "openActivityByComponent" -> {
+                                    val component = call.argument<String>("component").orEmpty()
+                                    if (component.isEmpty()) {
+                                        result.error("INVALID_ARG", "component is empty", null)
+                                        return@setMethodCallHandler
+                                    }
+                                    val parts = component.split("/")
+                                    if (parts.size != 2) {
+                                        result.error("INVALID_ARG", "component format must be pkg/class", null)
+                                        return@setMethodCallHandler
+                                    }
+                                    val intent = Intent().apply {
+                                        setComponent(ComponentName(parts[0], parts[1]))
+                                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                    }
+                                    startActivity(intent)
+                                    result.success(true)
                                 }
                                 else -> result.notImplemented()
                             }
+                        } catch (e: ActivityNotFoundException) {
+                            result.error("NOT_FOUND", "Settings screen not available: ${e.message}", null)
                         } catch (e: Exception) {
-                            android.util.Log.e("MainActivity", "Audio control error: ${e.message}", e)
-                            result.error("AUDIO_CONTROL_ERROR", e.message, null)
+                            result.error("ERROR", e.message, null)
                         }
                     }
-                android.util.Log.d("MainActivity", "Audio control channel configured")
+                android.util.Log.d("MainActivity", "Settings channel (extended) configured")
             } catch (e: Exception) {
-                android.util.Log.e("MainActivity", "Audio control channel failed: ${e.message}", e)
+                android.util.Log.e("MainActivity", "Settings channel (extended) failed: ${e.message}", e)
             }
 
             android.util.Log.i("MainActivity", "All platform channels configured successfully")

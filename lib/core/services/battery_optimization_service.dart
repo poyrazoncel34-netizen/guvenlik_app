@@ -117,7 +117,7 @@ class BatteryOptimizationService {
     }
   }
   
-  /// Get battery optimization status for Crashlytics
+  /// Get battery optimization status (local only)
   Future<Map<String, dynamic>> getStatus() async {
     return {
       'is_android': Platform.isAndroid,
@@ -125,7 +125,87 @@ class BatteryOptimizationService {
       'has_asked_user': await _hasAskedUser(),
     };
   }
-  
+
+  /// Returns true if this device manufacturer is known to apply aggressive
+  /// battery kill policies on top of standard Android Doze mode.
+  /// When true, call [openManufacturerBatterySettings] after the standard
+  /// Doze whitelist request.
+  static bool isAggressiveManufacturer() {
+    try {
+      // Build.MANUFACTURER is not available in pure Dart — we pass it in via
+      // a MethodChannel or store it at first launch. Here we use the cached
+      // preference set by [cacheManufacturer].
+      // Comparison is lower-cased for safety.
+      final m = _cachedManufacturer.toLowerCase();
+      return m.contains('xiaomi') ||
+          m.contains('huawei') ||
+          m.contains('honor') ||
+          m.contains('oppo') ||
+          m.contains('vivo') ||
+          m.contains('oneplus') ||
+          m.contains('realme') ||
+          m.contains('samsung');
+    } catch (_) {
+      return false;
+    }
+  }
+
+  static String _cachedManufacturer = '';
+  static const String _prefKeyManufacturer = 'device_manufacturer';
+
+  /// Call once at startup with the device manufacturer string from
+  /// device_info_plus or a MethodChannel.
+  static Future<void> cacheManufacturer(String manufacturer) async {
+    _cachedManufacturer = manufacturer;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_prefKeyManufacturer, manufacturer);
+    } catch (_) {}
+  }
+
+  /// Load cached manufacturer from prefs (survives hot-restart).
+  static Future<void> loadCachedManufacturer() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      _cachedManufacturer = prefs.getString(_prefKeyManufacturer) ?? '';
+    } catch (_) {}
+  }
+
+  /// Opens the manufacturer-specific auto-start / protected-apps settings
+  /// screen for known aggressive manufacturers.
+  /// Falls back to standard battery settings on unknown OEMs.
+  Future<void> openManufacturerBatterySettings() async {
+    if (!Platform.isAndroid) return;
+    final m = _cachedManufacturer.toLowerCase();
+    try {
+      const platform = MethodChannel('com.poyrazoncel.korubeni/settings');
+      String? intent;
+      if (m.contains('xiaomi')) {
+        intent = 'com.miui.securitycenter/.MainActivity';
+      } else if (m.contains('huawei') || m.contains('honor')) {
+        intent = 'com.huawei.systemmanager/.startupmgr.ui.StartupNormalAppListActivity';
+      } else if (m.contains('oppo')) {
+        intent = 'com.coloros.safecenter/.startupapp.StartupAppListActivity';
+      } else if (m.contains('vivo')) {
+        intent = 'com.vivo.permissionmanager/.activity.BgStartUpManagerActivity';
+      } else if (m.contains('oneplus')) {
+        intent = 'com.oneplus.security/.autostart.AutoStartActivity';
+      } else if (m.contains('realme')) {
+        intent = 'com.coloros.safecenter/.startupapp.StartupAppListActivity';
+      } else if (m.contains('samsung')) {
+        intent = 'com.samsung.android.lool/.DeviceHealthMonitorMainActivity';
+      }
+      if (intent != null) {
+        await platform.invokeMethod('openActivityByComponent', {'component': intent});
+        return;
+      }
+    } catch (_) {
+      // Fall through to generic settings
+    }
+    // Generic fallback: standard battery settings
+    await openBatterySettings();
+  }
+
   Future<bool> _hasAskedUser() async {
     try {
       final prefs = await SharedPreferences.getInstance();

@@ -519,11 +519,15 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
         ),
       ),
       children: [
-        // OpenStreetMap tile layer
+        // OpenStreetMap tile layer — only shown when online
         TileLayer(
           urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
           userAgentPackageName: kOsmUserAgentPackageName,
           maxZoom: 19,
+          errorTileCallback: (tile, error, stack) {
+            // Silently ignore individual tile load failures (offline tolerance)
+            debugPrint('TileLayer error (ignored): $error');
+          },
         ),
 
         // My location marker

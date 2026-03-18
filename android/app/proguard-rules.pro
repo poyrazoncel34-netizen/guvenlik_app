@@ -25,9 +25,6 @@
 # Geolocator
 -keep class com.baseflow.geolocator.** { *; }
 
-# Local Auth (Biometric)
--keep class androidx.biometric.** { *; }
-
 # Flutter Secure Storage
 -keep class com.it_nomads.fluttersecurestorage.** { *; }
 
