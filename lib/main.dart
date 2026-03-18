@@ -156,8 +156,7 @@ void main() async {
       options.dsn = AppEnvironment.sentryDsn;
       options.environment = AppEnvironment.name;
       options.tracesSampleRate = 0.0;       // Performance tracking kapalı (offline app)
-      options.enableOfflineQueueing = true; // Offline'da biriktir, online'da gönder
-      options.maxQueueSize = 30;
+      options.maxBreadcrumbs = 30;
       options.attachScreenshot = false;     // Gizlilik: ekran görüntüsü gönderme
       options.sendDefaultPii = false;       // KVKK uyumu: kişisel veri gönderme
       options.reportPackages = false;

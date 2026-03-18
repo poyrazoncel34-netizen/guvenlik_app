@@ -27,9 +27,6 @@ class _LegalDisclaimerScreenState extends State<LegalDisclaimerScreen> {
   bool _emergencyAccepted = false;
   bool _saving = false;
 
-  // Şartlar değiştiğinde bu versiyonu artırın; kullanıcıdan tekrar onay alınır.
-  static const String _currentTermsVersion = '1.2';
-
   bool get _allAccepted => _termsAccepted && _privacyAccepted && _emergencyAccepted;
 
   Future<void> _launchUrl(String url) async {
@@ -292,7 +289,6 @@ class _LegalDisclaimerScreenState extends State<LegalDisclaimerScreen> {
           ),
         ),
       ),
-    ),
     );
   }
 

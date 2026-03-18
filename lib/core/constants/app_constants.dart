@@ -76,6 +76,8 @@ class AppConstants {
       'https://poyrazoncel34-netizen.github.io/guvenlik_app/aydinlatma';
   static const String privacyPolicyWebUrl =
       'https://poyrazoncel34-netizen.github.io/guvenlik_app/';
+  static const String privacyPolicyUrl =
+      'https://poyrazoncel34-netizen.github.io/guvenlik_app/';
   static const String kvkkMailto =
       'mailto:korubeni.destek@gmail.com?subject=KVKK%20Ba%C5%9Fvurusu';
 }

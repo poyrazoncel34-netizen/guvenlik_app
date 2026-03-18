@@ -77,52 +77,8 @@ class _CountdownScreenState extends State<CountdownScreen>
     _loadPin();
     _loadEmergencyContact();
     _syncLockoutState();
-    _checkBiometric();
     _startCountdown();
     KoruBeniForegroundService.start();
-  }
-
-  Future<void> _checkBiometric() async {
-    final available = await BiometricService.instance.isAvailable();
-    if (available && mounted) {
-      final label = await BiometricService.instance.getBiometricLabel();
-      setState(() {
-        _biometricAvailable = true;
-        _biometricLabel = label;
-      });
-      _authenticateWithBiometric();
-    }
-  }
-
-  Future<void> _authenticateWithBiometric() async {
-    final success = await BiometricService.instance.authenticate(
-      reason: "countdown_biometric_reason".tr(),
-    );
-    if (success && mounted && !_isNavigating) {
-      _isNavigating = true;
-      _timer?.cancel();
-      ActivityService.logEvent(
-        type: ActivityType.emergencyCancelled,
-        title: "countdown_cancelled_title".tr(),
-        description: "countdown_cancelled_biometric".tr(
-          namedArgs: {"label": _biometricLabel},
-        ),
-      );
-      KoruBeniForegroundService.stop();
-      Navigator.pop(context);
-    } else if (mounted && !_isNavigating) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            "countdown_biometric_fail".tr(
-              namedArgs: {"label": _biometricLabel},
-            ),
-          ),
-          backgroundColor: AppColors.warning,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    }
   }
 
 

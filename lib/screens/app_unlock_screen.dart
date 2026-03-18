@@ -13,7 +13,6 @@ import '../core/di/service_locator.dart';
 import '../core/security/secure_storage.dart';
 import '../core/security/secure_storage_keys.dart';
 import '../core/services/app_reset_service.dart';
-import '../core/services/biometric_service.dart';
 import '../core/services/pin_lockout_service.dart';
 import 'legal_info_screen.dart';
 import 'main_navigation.dart';
@@ -47,17 +46,7 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> {
   Future<void> _initScreen() async {
     await _loadPin();
     await _syncLockoutState();
-    if (!mounted) return;
-    final available = await BiometricService.instance.isAvailable();
-    if (available && mounted) {
-      final label = await BiometricService.instance.getBiometricLabel();
-      setState(() {
-        _biometricAvailable = true;
-        _biometricLabel = label;
-        _loading = false;
-      });
-      _tryBiometric();
-    } else if (mounted) {
+    if (mounted) {
       setState(() => _loading = false);
     }
   }
