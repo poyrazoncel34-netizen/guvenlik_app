@@ -8,6 +8,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../core/app_colors.dart';
+import '../core/constants/app_constants.dart';
+import '../core/widgets/feature_warning_dialog.dart';
 import '../screens/countdown_screen.dart';
 
 class PanicButton extends StatefulWidget {
@@ -60,7 +62,16 @@ class _PanicButtonState extends State<PanicButton>
     super.dispose();
   }
 
-  void _onPressStart(LongPressStartDetails details) {
+  Future<void> _onPressStart(LongPressStartDetails details) async {
+    // İlk kullanımda uyarı dialogu göster; dialog varsa press iptal edilir.
+    final shown = await FeatureWarningHelper.showIfNeeded(
+      context,
+      prefKey: AppConstants.prefWarningPanic,
+      featureName: 'panic_button',
+      title: FeatureWarningHelper.panicTitle,
+      content: FeatureWarningHelper.panicContent,
+    );
+    if (!shown || !mounted) return;
     HapticFeedback.heavyImpact();
     setState(() {
       _isArmed = true;

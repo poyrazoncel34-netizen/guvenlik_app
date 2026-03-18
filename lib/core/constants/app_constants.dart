@@ -31,9 +31,7 @@ class AppConstants {
   static const String prefLegalDisclaimerAccepted = 'pref_legal_disclaimer_accepted';
   static const String prefKvkkHealthConsentAccepted = 'pref_kvkk_health_consent_accepted';
   static const String prefTermsVersion = 'pref_terms_version';
-  // Web gizlilik politikası URL'si (App Store zorunluluğu)
-  // Bu URL'yi GitHub Pages veya benzeri bir servise yükleyin:
-  static const String privacyPolicyUrl = 'https://poyrazoncel34-netizen.github.io/korubeni/privacy';
+  static const String prefRecordingWarningSeen = 'pref_recording_warning_shown';
   static const String prefNotificationPermissionPrompted =
       'pref_notification_permission_prompted';
   static const String prefDemoMode = 'pref_demo_mode';
@@ -45,4 +43,25 @@ class AppConstants {
   static const String prefMedicalConditions = 'profile_medical_conditions';
   static const String prefEmergencyNotes = 'profile_emergency_notes';
   static const String prefSmsTemplate = 'pref_sms_template';
+
+  // Hukuki onay v1 (KVKK Kurul Kararı 2018/90 — aydınlatma + açık rıza ayrı kaydedilir)
+  static const String prefLegalAcceptedV1 = 'legal_accepted_v1';
+  static const String prefLegalTimestamp = 'legal_accepted_timestamp';
+  static const String prefLegalAppVersion = 'legal_accepted_app_version';
+
+  // Özellik bazlı ilk kullanım uyarı flag'leri (KVKK Md. 5 — işlemeden önce bildirim)
+  static const String prefWarningPanic = 'warning_panic_shown';
+  static const String prefWarningCheckin = 'warning_checkin_shown';
+  static const String prefWarningWalk = 'warning_walk_shown';
+  static const String prefWarningSiren = 'warning_siren_shown';
+
+  // Yasal belgeler URL'leri
+  static const String termsOfServiceUrl =
+      'https://poyrazoncel34-netizen.github.io/guvenlik_app/kullanim_sartlari';
+  static const String aydinlatmaMetniUrl =
+      'https://poyrazoncel34-netizen.github.io/guvenlik_app/aydinlatma';
+  static const String privacyPolicyWebUrl =
+      'https://poyrazoncel34-netizen.github.io/guvenlik_app/';
+  static const String kvkkMailto =
+      'mailto:korubeni.destek@gmail.com?subject=KVKK%20Ba%C5%9Fvurusu';
 }

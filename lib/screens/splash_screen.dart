@@ -146,7 +146,7 @@ class _SplashScreenState extends State<SplashScreen>
     if (!mounted) return;
     final prefs = await SharedPreferences.getInstance();
     final legalAccepted =
-        prefs.getBool(AppConstants.prefLegalDisclaimerAccepted) ?? false;
+        prefs.getBool(AppConstants.prefLegalAcceptedV1) ?? false;
     final onboardingDone =
         prefs.getBool(AppConstants.prefOnboardingDone) ?? false;
     if (!mounted) return;
