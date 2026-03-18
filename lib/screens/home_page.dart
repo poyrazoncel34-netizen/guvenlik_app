@@ -23,6 +23,8 @@ import 'countdown_screen.dart';
 import 'safe_walk_screen.dart';
 import 'safety_timeline_screen.dart';
 import 'check_in_screen.dart';
+import '../core/di/service_locator.dart';
+import '../core/services/local_database_service.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});

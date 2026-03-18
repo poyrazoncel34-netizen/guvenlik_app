@@ -5,6 +5,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:fluttercontactpicker_plus/fluttercontactpicker_plus.dart';
 import 'package:provider/provider.dart';
@@ -702,7 +703,61 @@ class _ContactsPageState extends State<ContactsPage> {
     );
   }
 
+  Future<void> _showContactKvkkInfoIfNeeded() async {
+    final prefs = await SharedPreferences.getInstance();
+    final shown = prefs.getBool(AppConstants.prefContactConsentShown) ?? false;
+    if (shown || !mounted) return;
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.cardBg,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Row(
+          children: [
+            Icon(Icons.shield_rounded, color: AppColors.primary, size: 22),
+            SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'KVKK Bilgilendirme',
+                style: TextStyle(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 16,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: const Text(
+          'Eklediğiniz kişilerin telefon numaraları yalnızca cihazınızda '
+          'saklanır, hiçbir sunucuya gönderilmez.\n\n'
+          'Kişiyi uygulamaya ekleyerek bu kişinin telefon numarasının '
+          'acil iletişim amacıyla kullanılmasına onay verdiğinizi kabul '
+          'edersiniz (KVKK Md. 5).',
+          style: TextStyle(
+            color: AppColors.textSecondary,
+            fontSize: 14,
+            height: 1.5,
+          ),
+        ),
+        actions: [
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Anladım'),
+          ),
+        ],
+      ),
+    );
+    await prefs.setBool(AppConstants.prefContactConsentShown, true);
+  }
+
   void _showAddContactSheet(BuildContext context) {
+    _showContactKvkkInfoIfNeeded();
     final nameController = TextEditingController();
     final phoneController = TextEditingController();
     showModalBottomSheet(

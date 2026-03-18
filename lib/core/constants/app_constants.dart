@@ -48,6 +48,8 @@ class AppConstants {
   static const String prefLegalAcceptedV1 = 'legal_accepted_v1';
   static const String prefLegalTimestamp = 'legal_accepted_timestamp';
   static const String prefLegalAppVersion = 'legal_accepted_app_version';
+  static const String prefAgeVerified = 'pref_age_verified';
+  static const String prefContactConsentShown = 'pref_contact_consent_shown';
 
   // Özellik bazlı ilk kullanım uyarı flag'leri (KVKK Md. 5 — işlemeden önce bildirim)
   static const String prefWarningPanic = 'warning_panic_shown';

@@ -596,5 +596,12 @@
     "pin_setup_success": "PIN set successfully",
     "settings_language_confirm_title": "Change Language",
     "settings_language_confirm_body": "Change language to {language}?",
-    "confirm": "Confirm"
+    "confirm": "Confirm",
+    "legal_age_checkbox": "I confirm that I am 18 years of age or older.",
+    "kvkk_contact_consent_title": "Privacy Notice",
+    "kvkk_contact_consent_body": "Phone numbers of contacts you add are stored only on your device and are never sent to any server.\n\nBy adding a contact, you acknowledge that their phone number may be used to contact them in an emergency.",
+    "data_export_heading": "Export My Data",
+    "data_export_body": "You can download a copy of your personal data in JSON format (KVKK Article 11/f — Right to Data Portability).",
+    "data_export_button": "Download My Data",
+    "data_export_loading": "Preparing..."
 }

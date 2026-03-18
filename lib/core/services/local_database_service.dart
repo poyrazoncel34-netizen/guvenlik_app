@@ -7,7 +7,7 @@ class LocalDatabaseService {
   LocalDatabaseService();
 
   static const String databaseName = 'korubeni.db';
-  static const int databaseVersion = 1;
+  static const int databaseVersion = 2;
 
   Database? _database;
 
@@ -75,12 +75,51 @@ class LocalDatabaseService {
         value TEXT
       )
     ''');
+    await db.execute('''
+      CREATE TABLE consent_logs(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        consent_type TEXT NOT NULL,
+        version TEXT NOT NULL,
+        accepted_at TEXT NOT NULL,
+        device_info TEXT
+      )
+    ''');
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 1) {
       await _onCreate(db, newVersion);
     }
+    if (oldVersion < 2) {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS consent_logs(
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          consent_type TEXT NOT NULL,
+          version TEXT NOT NULL,
+          accepted_at TEXT NOT NULL,
+          device_info TEXT
+        )
+      ''');
+    }
+  }
+
+  Future<void> insertConsentLog(
+    String consentType,
+    String version, {
+    String? deviceInfo,
+  }) async {
+    final db = await database;
+    await db.insert('consent_logs', {
+      'consent_type': consentType,
+      'version': version,
+      'accepted_at': DateTime.now().toIso8601String(),
+      if (deviceInfo != null) 'device_info': deviceInfo,
+    });
+  }
+
+  Future<List<Map<String, dynamic>>> getConsentLogs() async {
+    final db = await database;
+    return db.query('consent_logs', orderBy: 'accepted_at ASC');
   }
 
   Future<void> clearAll() async {
@@ -91,6 +130,7 @@ class LocalDatabaseService {
       await txn.delete('crash_logs');
       await txn.delete('recordings');
       await txn.delete('app_settings');
+      await txn.delete('consent_logs');
     });
   }
 

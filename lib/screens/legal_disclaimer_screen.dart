@@ -83,8 +83,7 @@ class _LegalDisclaimerScreenState extends State<LegalDisclaimerScreen> {
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [AppColors.gradientStart, AppColors.background],
-            ),
+              colors: [AppColors.gradientStart, AppColors.background],            ),
           ),
           child: SafeArea(
             child: SingleChildScrollView(
