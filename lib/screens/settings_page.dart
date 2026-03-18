@@ -21,6 +21,7 @@ import 'profile_page.dart';
 import 'settings_detail_page.dart';
 import '../presentation/providers/settings_provider.dart';
 import 'battery_optimization_wizard.dart';
+import 'settings_legal/legal_settings_screen.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -344,6 +345,27 @@ class _SettingsPageState extends State<SettingsPage> {
                 title: 'settings_sms_template_title'.tr(),
                 subtitle: 'settings_sms_template_subtitle'.tr(),
                 onTap: () => _showSmsTemplateDialog(context),
+              ),
+            ]),
+            const SizedBox(height: 28),
+
+            // Legal bilgiler
+            _buildSectionTitle("settings_legal_section".tr()),
+            const SizedBox(height: 14),
+            _buildSettingsCard([
+              _buildNavigationTile(
+                icon: Icons.gavel_rounded,
+                iconColor: AppColors.accent,
+                title: "settings_legal_title".tr(),
+                subtitle: "settings_legal_subtitle".tr(),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const LegalSettingsScreen(),
+                    ),
+                  );
+                },
               ),
             ]),
             const SizedBox(height: 28),

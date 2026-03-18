@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/app_colors.dart';
 import '../core/constants/app_constants.dart';
-import 'legal_disclaimer_screen.dart';
+import 'legal/onboarding_legal_flow.dart';
 import 'main_navigation.dart';
 import 'onboarding_screen.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -149,11 +149,19 @@ class _SplashScreenState extends State<SplashScreen>
         prefs.getBool(AppConstants.prefLegalAcceptedV1) ?? false;
     final onboardingDone =
         prefs.getBool(AppConstants.prefOnboardingDone) ?? false;
+
+    // Versiyon kontrolü: kaydedilen legal sürümler mevcut sürümden farklıysa
+    // yeniden onay akışına yönlendir
+    final savedTermsVersion = prefs.getString(AppConstants.prefTermsVersion) ?? '';
+    final savedKvkkVersion = prefs.getString(AppConstants.prefKvkkVersion) ?? '';
+    final needsReConsent = legalAccepted &&
+        (savedTermsVersion != '2.0.0' || savedKvkkVersion != '2.0.0');
+
     if (!mounted) return;
 
     final Widget nextScreen;
-    if (!legalAccepted) {
-      nextScreen = const LegalDisclaimerScreen();
+    if (!legalAccepted || needsReConsent) {
+      nextScreen = const OnboardingLegalFlow();
     } else if (!onboardingDone) {
       nextScreen = const OnboardingScreen();
     } else {

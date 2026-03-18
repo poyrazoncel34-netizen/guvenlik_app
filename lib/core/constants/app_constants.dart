@@ -51,6 +51,18 @@ class AppConstants {
   static const String prefAgeVerified = 'pref_age_verified';
   static const String prefContactConsentShown = 'pref_contact_consent_shown';
 
+  // KVKK & Legal versiyon takibi
+  static const String prefKvkkVersion = 'pref_kvkk_version';
+  static const String prefFakeCallWarned = 'pref_fake_call_warned';
+
+  // Rıza özellik durumu (ConsentManager ile senkronize edilir)
+  static const String prefConsentLocation = 'pref_consent_location';
+  static const String prefConsentBiometric = 'pref_consent_biometric';
+  static const String prefConsentAudio = 'pref_consent_audio';
+  static const String prefConsentEmergencyContacts =
+      'pref_consent_emergency_contacts';
+  static const String prefConsentProfile = 'pref_consent_profile';
+
   // Özellik bazlı ilk kullanım uyarı flag'leri (KVKK Md. 5 — işlemeden önce bildirim)
   static const String prefWarningPanic = 'warning_panic_shown';
   static const String prefWarningCheckin = 'warning_checkin_shown';

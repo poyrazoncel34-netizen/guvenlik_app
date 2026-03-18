@@ -9,4 +9,7 @@ class SecureStorageKeys {
   static const String emergencyContactsList = 'emergency_contacts_list';
   static const String emergencyContactName = 'emergency_contact_name';
   static const String emergencyContactPhone = 'emergency_contact_phone';
+
+  // KVKK Rıza Logları (ConsentManager tarafından kullanılır)
+  static const String consentLog = 'kvkk_consent_log';
 }
