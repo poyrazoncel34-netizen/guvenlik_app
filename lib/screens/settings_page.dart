@@ -81,9 +81,8 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future<void> _rateApp() async {
-    final url = defaultTargetPlatform == TargetPlatform.iOS
-        ? 'https://apps.apple.com/app/id6738228832'
-        : 'https://play.google.com/store/apps/details?id=com.poyrazoncel.korubeni';
+    const url =
+        'https://play.google.com/store/apps/details?id=com.poyrazoncel.korubeni';
     final uri = Uri.parse(url);
     try {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
