@@ -6,10 +6,10 @@
 
 class LegalTexts {
   // ── Sürüm Numaraları ──────────────────────────────────────────────────────
-  static const String termsVersion = '2.0.0';
+  static const String termsVersion = '3.0.0';
   static const String kvkkVersion = '2.0.0';
-  static const String lastUpdated = '18 Mart 2026';
-  static const String lastUpdatedEn = 'March 18, 2026';
+  static const String lastUpdated = '19 Mart 2026';
+  static const String lastUpdatedEn = 'March 19, 2026';
 
   // ── Kullanım Sözleşmesi — Türkçe ─────────────────────────────────────────
   static const String termsOfServiceTr = '''
@@ -66,6 +66,8 @@ Sahte çağrı özelliği YALNIZCA kişisel güvenlik amaçlı tasarlanmıştır
 ──────────────────────────────────────
 • Kullanıcı, acil durum kişisi olarak eklediği kişilerin ad ve telefon numarası bilgilerini kaydetme ve bu kişilere SMS gönderme yetkisine sahip olduğunu beyan eder.
 • Bu kişilerin KVKK kapsamındaki haklarından kullanıcı sorumludur. Kişilerin rızasının alınması kullanıcının yükümlülüğündedir.
+• Kullanıcı, acil durum kişisi olarak eklediği kişilerin kişisel verilerini (ad, telefon numarası) işlemek için ilgili kişilerden KVKK kapsamında gerekli açık rızayı almakla yükümlüdür.
+• KVKK kapsamında üçüncü kişilerin verilerinin rızasız işlenmesinden doğan tüm hukuki sorumluluk (idari para cezaları dahil) münhasıran kullanıcıya aittir.
 
 ──────────────────────────────────────
 8. GARANTİ REDDİ
@@ -91,6 +93,47 @@ Bu Sözleşme Türkiye Cumhuriyeti hukukuna tabidir. Bu Sözleşme'den doğan uy
 12. SÖZLEŞME DEĞİŞİKLİKLERİ
 ──────────────────────────────────────
 Geliştirici bu Sözleşme'yi dilediği zaman güncelleme hakkını saklı tutar. Güncellemeler uygulamada yayımlandığında devam eden kullanım yeni koşulların kabulü anlamına gelir. Önemli değişikliklerde uygulama yeniden onay isteyecektir.
+
+──────────────────────────────────────
+13. SİREN ÖZELLİĞİ
+──────────────────────────────────────
+• Siren özelliğinin uygunsuz ortamlarda veya gereksiz yere kullanılmasından doğan sorumluluk münhasıran kullanıcıya aittir.
+• Gürültü kirliliği, çevreye rahatsızlık veya yerel gürültü yönetmeliklerinin ihlalinden geliştirici sorumlu tutulamaz.
+• Bu özellikten doğabilecek üçüncü kişi şikayet ve talepleri kullanıcıya aittir.
+
+──────────────────────────────────────
+14. SHAKE (SALLAMA) ALGILAMA ÖZELLİĞİ
+──────────────────────────────────────
+• Telefonun sarsılmasıyla tetiklenen acil durum özelliği, kasıtsız hareketler nedeniyle yanlışlıkla tetiklenebilir.
+• Yanlışlıkla tetiklenmeden doğan sonuçlardan (gereksiz SMS gönderimi dahil) geliştirici sorumlu tutulamaz.
+• PIN girişi ile iptal etme imkânı sunulmasına karşın süre aşımından kaynaklanan sonuçlardan geliştirici sorumlu değildir.
+
+──────────────────────────────────────
+15. GÜVENLİ YÜRÜYÜŞ ÖZELLİĞİ (DETAYLI)
+──────────────────────────────────────
+• Bu özellik YALNIZCA hatırlatma ve bildirim amaçlıdır; fiziksel güvenlik garantisi sağlamaz.
+• Zamanlayıcı süresi dolduğunda GSM şebekesi, pil durumu veya cihaz ayarları nedeniyle SMS gönderilemeyebilir; bu durumdan geliştirici sorumlu tutulamaz.
+• Bu özellik profesyonel güvenlik hizmeti veya kolluk kuvveti yerine geçmez.
+• Güvenli yürüyüş sırasında kullanıcının başına gelen hiçbir olaydan geliştirici sorumlu değildir.
+
+──────────────────────────────────────
+16. TAZMİNAT (INDEMNİFİCATION)
+──────────────────────────────────────
+Kullanıcı, bu uygulamayı kullanımından kaynaklanan her türlü üçüncü kişi talebi, davası, zararı, yükümlülüğü ve masrafına (avukatlık ücretleri dahil) karşı geliştiriciyi tazmin etmeyi, savunmayı ve zararsız kılmayı kabul eder. Bu tazmin yükümlülüğü aşağıdaki halleri kapsar:
+• Kullanıcının bu Sözleşme'yi ihlal etmesi,
+• Uygulamayı yasalara aykırı amaçlarla kullanması,
+• Üçüncü kişilerin haklarını veya gizliliğini ihlal etmesi,
+• Üçüncü kişilerin kişisel verilerini rızasız işlemesi.
+
+──────────────────────────────────────
+17. SORUMLULUK ÜST SINIRI
+──────────────────────────────────────
+Geliştirici'nin bu uygulama kapsamındaki toplam sorumluluğu, her halükarda, kullanıcının uygulama için ödediği bedelle sınırlıdır. Uygulama ücretsiz sunulduğundan bu üst sınır 0 TL (sıfır Türk Lirası)'dır. Bu sınırlama yerel hukukun izin verdiği azami ölçüde uygulanır.
+
+──────────────────────────────────────
+18. MÜCBİR SEBEP
+──────────────────────────────────────
+Doğal afet, savaş, terör eylemi, salgın hastalık, internet altyapı kesintisi, elektrik kesintisi, GSM şebekesi arızası, devlet müdahalesi veya geliştirici'nin makul kontrolü dışındaki diğer olaylardan kaynaklanan aksaklıklar nedeniyle uygulamanın çalışmaması veya eksik çalışmasından geliştirici sorumlu tutulamaz.
 
 İletişim: korubeni.destek@gmail.com
 ''';
@@ -150,6 +193,8 @@ The fake call feature is designed ONLY for personal safety purposes (e.g., leavi
 ──────────────────────────────────────
 • The User declares that they have the authority to save and send SMS to the persons added as emergency contacts.
 • The User is responsible for the rights of these persons under applicable privacy laws.
+• The User is obligated to obtain the necessary explicit consent from the persons added as emergency contacts for processing their personal data (name, phone number) under applicable data protection laws.
+• All legal liability (including administrative fines) arising from processing third-party personal data without consent exclusively belongs to the User.
 
 ──────────────────────────────────────
 8. DISCLAIMER OF WARRANTIES
@@ -175,6 +220,47 @@ This Agreement is governed by the laws of the Republic of Turkey. The courts and
 12. AMENDMENTS
 ──────────────────────────────────────
 The Developer reserves the right to update this Agreement at any time. Continued use after updates are published in the application constitutes acceptance of the new terms. For material changes, the application will request re-consent.
+
+──────────────────────────────────────
+13. SIREN FEATURE
+──────────────────────────────────────
+• All responsibility arising from use of the siren feature in inappropriate environments or unnecessarily belongs solely to the User.
+• The Developer cannot be held liable for noise pollution, disturbance to others, or violations of local noise regulations.
+• Third-party complaints and claims arising from use of this feature belong to the User.
+
+──────────────────────────────────────
+14. SHAKE DETECTION FEATURE
+──────────────────────────────────────
+• The emergency feature triggered by shaking the phone may be accidentally activated by unintentional movements.
+• The Developer cannot be held liable for consequences arising from accidental triggering (including unnecessary SMS sending).
+• Even though a PIN-entry cancellation window is provided, the Developer is not responsible for consequences arising from timeout.
+
+──────────────────────────────────────
+15. SAFE WALK FEATURE (DETAILED)
+──────────────────────────────────────
+• This feature is ONLY for reminder and notification purposes; it does not provide a physical safety guarantee.
+• When the timer expires, SMS may not be sent due to GSM network issues, battery status, or device settings; the Developer cannot be held liable for this.
+• This feature does not replace professional security services or law enforcement.
+• The Developer is not responsible for any incident that occurs to the User during a safe walk session.
+
+──────────────────────────────────────
+16. INDEMNIFICATION
+──────────────────────────────────────
+The User agrees to indemnify, defend, and hold harmless the Developer from and against any and all third-party claims, lawsuits, damages, liabilities, and expenses (including attorney's fees) arising from use of the application. This indemnification obligation covers:
+• The User's breach of this Agreement,
+• Use of the application for unlawful purposes,
+• Violation of the rights or privacy of third parties,
+• Processing third parties' personal data without consent.
+
+──────────────────────────────────────
+17. LIMITATION OF LIABILITY CAP
+──────────────────────────────────────
+The Developer's total liability under this Agreement shall in no event exceed the amount paid by the User for the application. Since the application is provided free of charge, this cap is 0 TRY (zero Turkish Lira). This limitation applies to the maximum extent permitted by local law.
+
+──────────────────────────────────────
+18. FORCE MAJEURE
+──────────────────────────────────────
+The Developer cannot be held liable for failure or partial failure of the application due to natural disasters, war, terrorist acts, epidemic diseases, internet infrastructure outages, power cuts, GSM network failures, government intervention, or other events reasonably beyond the Developer's control.
 
 Contact: korubeni.destek@gmail.com
 ''';

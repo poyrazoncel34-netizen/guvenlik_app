@@ -648,8 +648,8 @@
     "contact_consent_title": "Kişi Ekleme Onayı",
     "contact_consent_desc_pre": "Aşağıdaki kişiyi acil durum kişisi olarak eklemek üzeresiniz:",
     "contact_consent_desc_post": "Bu kişinin ad ve telefon numarası cihazınızda saklanacak ve acil durum tetiklendiğinde bu kişiye otomatik SMS gönderilecektir.",
-    "contact_consent_kvkk_warning": "KVKK kapsamında: Bu kişinin kişisel verilerini işlemeden önce bilgilendirilmesi ve rızasının alınması sizin yükümlülüğünüzdedir.",
-    "contact_consent_checkbox_label": "Bu kişiyi uygulamaya eklediğimi bildirdiğimi ve rızasını aldığımı beyan ederim.",
+    "contact_consent_kvkk_warning": "KVKK kapsamında: Bu kişinin kişisel verilerini işlemeden önce açık rızasını almak yasal yükümlülüğünüzdür. Rızasız işleme durumunda KVKK cezası ve hukuki sorumluluk münhasıran kullanıcıya aittir.",
+    "contact_consent_checkbox_label": "Bu kişiyi uygulamaya eklediğimi ve kişisel verilerinin (ad, telefon numarası) işleneceğini ilgili kişiye bildirdim; açık rızasını aldım. KVKK kapsamında rızasız veri işlemeden doğan tüm hukuki sorumluluk bana aittir.",
     "contact_consent_confirm": "Ekle",
 
     "consent_mgmt_title": "Rıza Yönetimi",
@@ -709,5 +709,5 @@
     "settings_legal_subtitle": "Sözleşme, aydınlatma metni, rıza yönetimi",
 
     "fake_call_warning_title": "Sahte Çağrı Uyarısı",
-    "fake_call_warning_desc": "Bu özellik YALNIZCA kişisel güvenlik amaçlı tasarlanmıştır (örn. tehlikeli bir ortamdan çıkmak için). Dolandırıcılık, taciz veya başkasını yanıltma amacıyla kullanılması yasalara aykırıdır. Bu özelliğin kötüye kullanımından doğan tüm hukuki sorumluluk kullanıcıya aittir.",
+    "fake_call_warning_desc": "Bu özellik YALNIZCA kişisel güvenlik amaçlı tasarlanmıştır (örn. tehlikeli bir ortamdan çıkmak için). Dolandırıcılık, taciz, sahtecilik veya başkasını yanıltma amacıyla kullanılması kesinlikle yasaktır ve yasalara aykırıdır. Bu özelliğin kötüye kullanımından doğan tüm hukuki, cezai ve mali sorumluluk münhasıran kullanıcıya aittir. Geliştirici, bu özelliğin kullanımından kaynaklanan üçüncü kişi talep ve davalarından sorumlu tutulamaz.",
     "fake_call_warning_accept": "Anladım, Devam Et"}

@@ -15,6 +15,7 @@ import '../core/utils/permission_helper.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../presentation/providers/home_provider.dart';
 import '../presentation/providers/settings_provider.dart';
+import '../widgets/legal_disclaimer_banner.dart';
 import '../widgets/panic_button.dart';
 import '../widgets/siren_dialog.dart';
 import 'fake_call_screen.dart';
@@ -319,6 +320,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                       _buildLocationCard(provider),
                       SizedBox(height: largeSectionSpacing),
                       _buildSafetyTips(),
+                      SizedBox(height: shortScreen ? 10 : 16),
+                      const LegalDisclaimerBanner(
+                          bannerContext: LegalBannerContext.home),
                       SizedBox(height: bottomPadding),
                     ],
                   ),

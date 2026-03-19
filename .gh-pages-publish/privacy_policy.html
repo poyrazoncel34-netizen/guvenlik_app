@@ -77,7 +77,7 @@
 <body>
     <div class="container">
         <h1>KoruBeni Gizlilik Politikası</h1>
-        <p class="subtitle">Son güncelleme: 14 Mart 2026</p>
+        <p class="subtitle">Son güncelleme: 19 Mart 2026</p>
 
         <div style="background:#fde8e8; border:2px solid #e53e3e; border-radius:10px; padding:16px 20px; margin-bottom:24px;">
             <strong style="color:#c53030; font-size:15px;">⚠️ ÖNEMLİ UYARI</strong><br>
@@ -88,7 +88,7 @@
         <p><strong>KoruBeni offline-first çalışır.</strong> Verileriniz geliştiriciye ait bir bulut sunucusuna gönderilmez; verilerin ana kopyası cihazınızda tutulur.</p>
 
         <h2>1. Topladığımız Veriler</h2>
-
+        
         <h3 style="font-size:16px; margin-top:16px; margin-bottom:8px;">a) Kullanıcı Tarafından Sağlanan Veriler</h3>
         <ul>
             <li><strong>Acil durum kişileri:</strong> Kullanıcının rehberinden seçtiği kişilerin adı ve telefon numarası</li>
@@ -144,7 +144,7 @@
             <li>Profil bilgileri: Kullanıcı silene kadar cihazda kalır</li>
             <li>Konum verileri: Paylaşım süresi dolduğunda uygulama içinde aktif kullanılmaz</li>
             <li>Acil durum kişileri: Kullanıcı silene kadar cihazda kalır</li>
-            <li>Hukuki log kayıtları: Maksimum 2 yıl yalnızca cihazda tutulur</li>
+            <li>Ses kayıtları: Kullanıcı silene kadar cihazda kalır</li>
         </ul>
 
         <h2>6. Kullanıcı Hakları (KVKK Md. 11 — Tam Liste)</h2>
@@ -170,6 +170,7 @@
         <ul>
             <li><strong>Google Maps:</strong> Acil durum SMS mesajına konum linki eklenmesi amacıyla kullanılır. Konum verisi Google sunucularına aktarılmaz; yalnızca "https://www.google.com/maps/..." formatında bir URL oluşturularak SMS içinde gönderilir.</li>
             <li><strong>OpenStreetMap:</strong> Uygulama içi harita görüntüleme. Kişisel veri aktarımı gerçekleşmez.</li>
+            <li><strong>Sentry (Çökme Raporlama):</strong> Uygulama beklenmedik biçimde kapandığında teknik hata raporu gönderilebilir. Gönderilen veriler: cihaz modeli, Android OS versiyonu, çökme yığın izi (stack trace). Konum, rehber, PIN veya diğer kişisel veriler Sentry'ye gönderilmez. Sentry'nin kendi gizlilik politikası geçerlidir: <a href="https://sentry.io/privacy/" target="_blank">sentry.io/privacy</a></li>
         </ul>
         <p>Bu hizmetlerin kendi gizlilik politikaları geçerlidir:</p>
         <ul>
@@ -180,18 +181,97 @@
         <h2>9. Politika Değişiklikleri</h2>
         <p>Bu gizlilik politikasını zaman zaman güncelleyebiliriz. Önemli değişiklikler olduğunda uygulama içi bildirim ile kullanıcıları bilgilendiririz. Politikanın güncel halini bu sayfada bulabilirsiniz.</p>
 
-        <h2>10. İletişim</h2>
+        <h2>10. KVKK Madde 10 — Tam Aydınlatma</h2>
+        <p><strong>Veri Sorumlusu:</strong> Poyraz Öncel — Bireysel Yazılım Geliştirici, İzmir/Türkiye, korubeni.destek@gmail.com</p>
+        <p>İşlenen kişisel veriler ve işleme amaçları:</p>
+        <table style="width:100%; border-collapse:collapse; margin-bottom:16px; font-size:14px;">
+            <tr style="background:#f0f4f8;">
+                <th style="border:1px solid #ddd; padding:8px;">Kategori</th>
+                <th style="border:1px solid #ddd; padding:8px;">Veri</th>
+                <th style="border:1px solid #ddd; padding:8px;">Amaç</th>
+                <th style="border:1px solid #ddd; padding:8px;">Hukuki Sebep</th>
+            </tr>
+            <tr>
+                <td style="border:1px solid #ddd; padding:8px;">Kimlik</td>
+                <td style="border:1px solid #ddd; padding:8px;">Ad, profil fotoğrafı</td>
+                <td style="border:1px solid #ddd; padding:8px;">Uygulama profili</td>
+                <td style="border:1px solid #ddd; padding:8px;">Açık rıza</td>
+            </tr>
+            <tr>
+                <td style="border:1px solid #ddd; padding:8px;">İletişim</td>
+                <td style="border:1px solid #ddd; padding:8px;">Acil kişi adı, telefon</td>
+                <td style="border:1px solid #ddd; padding:8px;">Acil durumda SMS</td>
+                <td style="border:1px solid #ddd; padding:8px;">Açık rıza</td>
+            </tr>
+            <tr>
+                <td style="border:1px solid #ddd; padding:8px;">Konum</td>
+                <td style="border:1px solid #ddd; padding:8px;">GPS koordinatları</td>
+                <td style="border:1px solid #ddd; padding:8px;">Acil durum konum paylaşımı</td>
+                <td style="border:1px solid #ddd; padding:8px;">Açık rıza</td>
+            </tr>
+            <tr>
+                <td style="border:1px solid #ddd; padding:8px;"><strong>Biyometrik (*)</strong></td>
+                <td style="border:1px solid #ddd; padding:8px;">Parmak izi/yüz tanıma</td>
+                <td style="border:1px solid #ddd; padding:8px;">Giriş güvenliği</td>
+                <td style="border:1px solid #ddd; padding:8px;">Açık rıza</td>
+            </tr>
+            <tr>
+                <td style="border:1px solid #ddd; padding:8px;">Ses</td>
+                <td style="border:1px solid #ddd; padding:8px;">Ortam ses kaydı</td>
+                <td style="border:1px solid #ddd; padding:8px;">Kullanıcı inisiyatifinde kanıt</td>
+                <td style="border:1px solid #ddd; padding:8px;">Açık rıza</td>
+            </tr>
+        </table>
+        <p>(*) Biyometrik veri ÖZEL NİTELİKLİ KİŞİSEL VERİ kapsamındadır. Uygulama biyometrik veriyi doğrudan işlemez; cihazın yerel güvenlik altyapısı (Android Keystore / iOS Keychain) kullanılır.</p>
+
+        <h2>11. Özel Nitelikli Veri İşleme</h2>
+        <p>Uygulama, biyometrik kimlik doğrulama için yalnızca cihazın yerleşik güvenlik API'sini kullanır. Biyometrik veriler uygulama tarafından saklanmaz, erişilmez veya işlenmez.</p>
+
+        <h2>12. Otomatik Karar Verme</h2>
+        <p>Uygulama, kullanıcı hakkında otomatik karar verme veya profilleme yapmaz. Tüm işlemler yalnızca kullanıcının açıkça başlattığı eylemler sonucunda gerçekleşir.</p>
+
+        <h2>13. Uluslararası Veri Aktarımı</h2>
+        <p>Kişisel veriler Türkiye dışına aktarılmaz. Tüm veriler cihazda saklanır. Acil durum SMS'leri doğrudan cihazın SMS altyapısı üzerinden gönderilir.</p>
+
+        <h2>14. Veri İhlali Bildirimi</h2>
+        <p>Olası bir veri ihlali durumunda KVKK'nın 12. maddesi uyarınca en kısa sürede ilgili kişiler ve Kişisel Verileri Koruma Kurulu bilgilendirilecektir.</p>
+
+        <h2>15. Yaş Sınırı</h2>
+        <p>Uygulama 18 yaş altı bireyler için tasarlanmamıştır. 18 yaş altı kullanıcılar için ebeveyn veya vasi onayı zorunludur. 13 yaş altı bireylerin kişisel verilerini bilerek işlemiyoruz.</p>
+
+        <h2>16. Çerez Politikası</h2>
+        <p>Uygulamamız web tabanlı olmadığından çerez (cookie) kullanmamaktadır.</p>
+
+        <h2>19. Sorumluluk Sınırı</h2>
+        <p>Geliştirici, uygulamanın kullanımından veya kullanılamamasından doğan doğrudan, dolaylı, özel, arızi veya sonuç olarak ortaya çıkan hiçbir zarardan sorumlu tutulamaz. Uygulama "olduğu gibi" (as-is) sunulmaktadır ve kesintisiz, hatasız çalışacağına dair hiçbir garanti verilmez. Geliştirici'nin toplam sorumluluğu, kullanıcının uygulama için ödediği bedelle (ücretsiz uygulama: 0 TL) sınırlıdır.</p>
+
+        <h2>20. Üçüncü Kişi Verileri</h2>
+        <p>Kullanıcı, acil durum kişisi olarak eklediği kişilerin kişisel verilerinin (ad, telefon numarası) işlenmesi için ilgili kişilerden KVKK kapsamında gerekli açık rızayı almakla yükümlüdür. Üçüncü kişi verilerinin rızasız işlenmesinden doğan tüm hukuki sorumluluk (idari para cezaları dahil) münhasıran kullanıcıya aittir; geliştirici bu konuda sorumlu tutulamaz.</p>
+
+        <h2>17. KVKK Kapsamındaki Haklarınız (Madde 11)</h2>
+        <ul>
+            <li>Kişisel veri işlenip işlenmediğini öğrenme</li>
+            <li>İşlenmişse buna ilişkin bilgi talep etme</li>
+            <li>Verilerin silinmesini veya yok edilmesini isteme</li>
+            <li>Verilerin düzeltilmesini isteme</li>
+            <li>Otomatik sistemlerle analiz edilmesi sonucu aleyhine sonuçlara itiraz etme</li>
+            <li>Zarar halinde tazminat talep etme</li>
+        </ul>
+
+        <h2>18. İletişim ve KVKK Başvurusu</h2>
         <div class="contact-box">
-            <p>Gizlilik politikamızla ilgili sorularınız için:</p>
+            <p>Gizlilik politikamızla ilgili sorularınız ve KVKK başvurularınız için:</p>
             <ul style="list-style: none; padding: 0;">
                 <li><strong>E-posta:</strong> <a href="mailto:korubeni.destek@gmail.com">korubeni.destek@gmail.com</a></li>
+                <li><strong>Konu Satırı:</strong> "KVKK Başvurusu"</li>
+                <li><strong>Yanıt Süresi:</strong> En geç 30 (otuz) gün</li>
                 <li><strong>Geliştirici:</strong> Poyraz Öncel</li>
-                <li><strong>Konum:</strong> Türkiye</li>
+                <li><strong>Konum:</strong> İzmir, Türkiye</li>
             </ul>
         </div>
 
         <footer>
-            <p>&copy; 2026 KoruBeni — Poyraz Öncel. Tüm hakları saklıdır.</p>
+            <p>&copy; 2026 KoruBeni — Poyraz Öncel. Tüm hakları saklıdır. | KVKK Sürüm 2.0.0 | Son güncelleme: 19 Mart 2026</p>
             <p style="margin-top: 8px;">
                 <a href="https://poyrazoncel34-netizen.github.io/guvenlik_app/aydinlatma">Aydınlatma Metni (KVKK)</a>
                 &nbsp;|&nbsp;

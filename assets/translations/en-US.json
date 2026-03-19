@@ -648,8 +648,8 @@
     "contact_consent_title": "Contact Consent",
     "contact_consent_desc_pre": "You are about to add the following person as an emergency contact:",
     "contact_consent_desc_post": "This person's name and phone number will be stored on your device and an automatic SMS will be sent to them when an emergency is triggered.",
-    "contact_consent_kvkk_warning": "Under KVKK: You are responsible for informing this person and obtaining their consent before processing their personal data.",
-    "contact_consent_checkbox_label": "I declare that I have informed this person that they are being added to the app and have obtained their consent.",
+    "contact_consent_kvkk_warning": "Under KVKK: Obtaining explicit consent from this person before processing their personal data is your legal obligation. Any KVKK fines and legal liability arising from processing without consent exclusively belong to you.",
+    "contact_consent_checkbox_label": "I have informed this person that they are being added to the app and that their personal data (name, phone number) will be processed; I have obtained their explicit consent. All legal liability arising from processing personal data without consent under KVKK belongs to me.",
     "contact_consent_confirm": "Add",
 
     "consent_mgmt_title": "Consent Management",
@@ -709,5 +709,5 @@
     "settings_legal_subtitle": "Agreement, disclosure, consent management",
 
     "fake_call_warning_title": "Fake Call Warning",
-    "fake_call_warning_desc": "This feature is designed ONLY for personal safety purposes (e.g., to exit a dangerous situation). Using it for fraud, harassment, or deception is illegal. All legal responsibility for misuse belongs to the user.",
+    "fake_call_warning_desc": "This feature is designed ONLY for personal safety purposes (e.g., to exit a dangerous situation). Using it for fraud, harassment, forgery, or deception is strictly prohibited and illegal. All legal, criminal, and financial liability arising from misuse exclusively belongs to the user. The developer cannot be held liable for third-party claims and lawsuits arising from use of this feature.",
     "fake_call_warning_accept": "I Understand, Continue"}
