@@ -628,7 +628,9 @@
     "legal_consent_title": "Açık Rıza",
     "legal_consent_subtitle": "Aşağıdaki veri işleme faaliyetleri için rızanızı belirtin:",
     "legal_consent_info": "Rızanızı dilediğiniz zaman Ayarlar > Yasal Bilgiler > Rıza Yönetimi bölümünden geri çekebilirsiniz. Rıza vermediğiniz özellikler devre dışı kalır.",
-    "legal_consent_rejection_note": "Not: Bazı rızaları reddetmeniz durumunda ilgili özellik kullanılamaz hale gelir, ancak uygulama çalışmaya devam eder. Biyometrik rıza reddedilirse yalnızca PIN ile giriş yapılır.",
+    "legal_consent_rejection_note": "Not: Bazı rızaları reddetmeniz durumunda ilgili özellik kullanılamaz hale gelir, ancak uygulama çalışmaya devam eder.",
+    "legal_consent_age": "18 yaşından büyük olduğumu veya veli/vasimin uygulamayı kullanmama onay verdiğini beyan ederim",
+    "legal_consent_age_sub": "Yaş doğrulaması zorunludur — uygulamayı kullanmak için bu kutucuğu işaretlemeniz gerekir",
     "legal_consent_save": "Kaydet",
     "legal_consent_complete": "Tamamla",
 

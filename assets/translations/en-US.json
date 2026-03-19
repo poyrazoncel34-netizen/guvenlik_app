@@ -628,7 +628,9 @@
     "legal_consent_title": "Explicit Consent",
     "legal_consent_subtitle": "Please indicate your consent for the following data processing activities:",
     "legal_consent_info": "You can withdraw your consent at any time from Settings > Legal > Consent Management. Features for which consent is not given will be disabled.",
-    "legal_consent_rejection_note": "Note: Rejecting some consents will disable the related feature, but the app will continue to work. If biometric consent is rejected, only PIN login will be available.",
+    "legal_consent_rejection_note": "Note: Rejecting some consents will disable the related feature, but the app will continue to work.",
+    "legal_consent_age": "I confirm that I am 18 years of age or older, or that my parent/guardian has consented to my use of this application",
+    "legal_consent_age_sub": "Age verification is required — you must check this box to use the application",
     "legal_consent_save": "Save",
     "legal_consent_complete": "Complete",
 

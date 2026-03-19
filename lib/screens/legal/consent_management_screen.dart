@@ -49,21 +49,6 @@ class _ConsentManagementScreenState extends State<ConsentManagementScreen> {
       color: AppColors.accent,
     ),
     _ConsentItem(
-      type: ConsentRecord.typeAudio,
-      titleKey: 'legal_consent_audio',
-      subtitleKey: 'legal_consent_audio_sub',
-      icon: Icons.mic_rounded,
-      color: AppColors.warning,
-    ),
-    _ConsentItem(
-      type: ConsentRecord.typeBiometric,
-      titleKey: 'legal_consent_biometric',
-      subtitleKey: 'legal_consent_biometric_sub',
-      icon: Icons.fingerprint_rounded,
-      color: AppColors.emergency,
-      isSpecialCategory: true,
-    ),
-    _ConsentItem(
       type: ConsentRecord.typeFakeCall,
       titleKey: 'legal_consent_fake_call',
       subtitleKey: 'legal_consent_fake_call_sub',
@@ -119,10 +104,6 @@ class _ConsentManagementScreenState extends State<ConsentManagementScreen> {
     switch (type) {
       case ConsentRecord.typeLocation:
         return AppConstants.prefConsentLocation;
-      case ConsentRecord.typeBiometric:
-        return AppConstants.prefConsentBiometric;
-      case ConsentRecord.typeAudio:
-        return AppConstants.prefConsentAudio;
       case ConsentRecord.typeEmergencyContacts:
         return AppConstants.prefConsentEmergencyContacts;
       case ConsentRecord.typeProfile:
@@ -293,25 +274,6 @@ class _ConsentManagementScreenState extends State<ConsentManagementScreen> {
                         ),
                       ),
                     ),
-                    if (item.isSpecialCategory)
-                      Container(
-                        margin: const EdgeInsets.only(left: 6),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color:
-                              AppColors.emergency.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: const Text(
-                          'ÖZEL',
-                          style: TextStyle(
-                            fontSize: 9,
-                            fontWeight: FontWeight.w800,
-                            color: AppColors.emergency,
-                          ),
-                        ),
-                      ),
                   ],
                 ),
                 const SizedBox(height: 2),
@@ -348,7 +310,6 @@ class _ConsentItem {
   final String subtitleKey;
   final IconData icon;
   final Color color;
-  final bool isSpecialCategory;
 
   const _ConsentItem({
     required this.type,
@@ -356,6 +317,5 @@ class _ConsentItem {
     required this.subtitleKey,
     required this.icon,
     required this.color,
-    this.isSpecialCategory = false,
   });
 }

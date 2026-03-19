@@ -77,7 +77,7 @@
 <body>
     <div class="container">
         <h1>KoruBeni Gizlilik Politikası</h1>
-        <p class="subtitle">Son güncelleme: 14 Mart 2026</p>
+        <p class="subtitle">Son güncelleme: 19 Mart 2026</p>
 
         <div style="background:#fde8e8; border:2px solid #e53e3e; border-radius:10px; padding:16px 20px; margin-bottom:24px;">
             <strong style="color:#c53030; font-size:15px;">⚠️ ÖNEMLİ UYARI</strong><br>
@@ -100,12 +100,12 @@
         <ul>
             <li><strong>Konum verileri:</strong> Yalnızca kullanıcı konum paylaşımını aktif ettiğinde veya acil durum tetiklendiğinde</li>
             <li><strong>Cihaz üzerinde tutulan teknik durum bilgisi:</strong> Uygulama içi çalışma için geçici durum verileri</li>
+            <li><strong>Anonim çökme raporları (Sentry):</strong> Uygulama çökmelerinde kişisel veri içermeyen anonim hata raporu Sentry (sentry.io) üzerinden gönderilir. Kişisel tanımlayıcı veri (PII) gönderilmez (<code>sendDefaultPii=false</code>).</li>
         </ul>
 
         <h3 style="font-size:16px; margin-top:16px; margin-bottom:8px;">c) Toplamadığımız Veriler</h3>
         <ul>
             <li>Anonim kullanım istatistikleri</li>
-            <li>Sunucuya gönderilen çökme raporları</li>
             <li>Arama kayıtları</li>
             <li>Tarama geçmişi</li>
             <li>Finansal bilgiler</li>
@@ -136,7 +136,7 @@
             <li>Hassas veriler AES-256 şifreleme ile korunur</li>
             <li>PIN kodları cihaz üzerinde güvenli depolamada (Keychain/Keystore) saklanır</li>
             <li>Verilerin ana kopyası cihazda tutulur</li>
-            <li>Biyometrik kimlik doğrulama (Face ID/Touch ID) desteği</li>
+            <li>Uygulama girişi yalnızca PIN ile korunur; biyometrik kimlik doğrulama kullanılmaz</li>
         </ul>
 
         <h2>5. Veri Saklama Süresi</h2>
@@ -160,7 +160,7 @@
             <li>Münhasıran otomatik sistemler ile analiz sonucu aleyhine karar çıkmasına <strong>itiraz etme</strong></li>
             <li>Kanuna aykırı işleme sebebiyle oluşan <strong>zararın giderilmesini talep etme</strong></li>
         </ol>
-        <p>Bu haklarınızı kullanmak için <a href="mailto:korubeni.destek@gmail.com?subject=KVKK%20Ba%C5%9Fvurusu">korubeni.destek@gmail.com</a> adresine "KVKK Başvurusu" konu başlığıyla e-posta gönderebilirsiniz.</p>
+        <p>Bu haklarınızı kullanmak için <a href="mailto:korubeni.destek@gmail.com?subject=KVKK%20Ba%C5%9Fvurusu">korubeni.destek@gmail.com</a> adresine "KVKK Başvurusu" konu başlığıyla e-posta gönderebilirsiniz. KVKK Madde 13 uyarınca başvurunuzu yazılı olarak veya kayıtlı elektronik posta (KEP) ile de iletebilirsiniz.</p>
 
         <h2>7. Çocukların Gizliliği</h2>
         <p>KoruBeni, KVKK Madde 3/1-ç kapsamında <strong>18 yaşın altındaki bireylerden</strong> bilerek kişisel veri toplamaz.</p>
@@ -170,17 +170,22 @@
         <ul>
             <li><strong>Google Maps:</strong> Acil durum SMS mesajına konum linki eklenmesi amacıyla kullanılır. Konum verisi Google sunucularına aktarılmaz; yalnızca "https://www.google.com/maps/..." formatında bir URL oluşturularak SMS içinde gönderilir.</li>
             <li><strong>OpenStreetMap:</strong> Uygulama içi harita görüntüleme. Kişisel veri aktarımı gerçekleşmez.</li>
+            <li><strong>Sentry (sentry.io):</strong> Anonim çökme raporu ve hata izleme. Kişisel tanımlayıcı veri (PII) gönderilmez (<code>sendDefaultPii=false</code>, <code>attachScreenshot=false</code>). Sentry ABD merkezli bir hizmettir; aktarılan veriler anonim hata bilgisiyle sınırlıdır. <a href="https://sentry.io/privacy/" target="_blank">Sentry Gizlilik Politikası</a></li>
         </ul>
         <p>Bu hizmetlerin kendi gizlilik politikaları geçerlidir:</p>
         <ul>
             <li><a href="https://policies.google.com/privacy" target="_blank">Google Gizlilik Politikası</a></li>
             <li><a href="https://wiki.osmfoundation.org/wiki/Privacy_Policy" target="_blank">OpenStreetMap Gizlilik Politikası</a></li>
+            <li><a href="https://sentry.io/privacy/" target="_blank">Sentry Gizlilik Politikası</a></li>
         </ul>
 
-        <h2>9. Politika Değişiklikleri</h2>
+        <h2>9. Veri İhlali Bildirimi</h2>
+        <p>Kişisel verilerinizin güvenliğini tehdit eden bir ihlal tespit edilmesi halinde, KVKK Madde 12/5 kapsamında 72 (yetmiş iki) saat içinde Kişisel Verileri Koruma Kurumu'na bildirim yapılır. Etkilenen kullanıcılar da makul süre içinde bilgilendirilir.</p>
+
+        <h2>10. Politika Değişiklikleri</h2>
         <p>Bu gizlilik politikasını zaman zaman güncelleyebiliriz. Önemli değişiklikler olduğunda uygulama içi bildirim ile kullanıcıları bilgilendiririz. Politikanın güncel halini bu sayfada bulabilirsiniz.</p>
 
-        <h2>10. İletişim</h2>
+        <h2>11. İletişim</h2>
         <div class="contact-box">
             <p>Gizlilik politikamızla ilgili sorularınız için:</p>
             <ul style="list-style: none; padding: 0;">
