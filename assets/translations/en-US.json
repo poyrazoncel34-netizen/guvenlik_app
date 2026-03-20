@@ -726,4 +726,42 @@
 
     "fake_call_warning_title": "Fake Call Warning",
     "fake_call_warning_desc": "This feature is designed ONLY for personal safety purposes (e.g., to exit a dangerous situation). Using it for fraud, harassment, or deception is illegal. All legal responsibility for misuse belongs to the user.",
-    "fake_call_warning_accept": "I Understand, Continue"}
+    "fake_call_warning_accept": "I Understand, Continue",
+
+    "subscription_section_title": "KoruBeni Pro",
+    "subscription_tile_title": "KoruBeni Pro",
+    "subscription_tile_subtitle_free": "Upgrade to access Pro features",
+    "subscription_tile_subtitle_pro": "Pro member — all features active",
+    "subscription_badge_pro": "PRO",
+
+    "subscription_manage_title": "Subscription",
+    "subscription_status_active": "KoruBeni Pro Active",
+    "subscription_status_free": "Free Plan",
+    "subscription_lifetime_active": "Lifetime access",
+    "subscription_free_desc": "Upgrade to access Pro features",
+    "subscription_expires": "Renews: {date}",
+
+    "subscription_pro_features_title": "Pro Features",
+    "subscription_feature_1": "Advanced Security Protection",
+    "subscription_feature_2": "Unlimited Location Sharing",
+    "subscription_feature_3": "Priority Notifications",
+    "subscription_feature_4": "Priority Support",
+
+    "subscription_upgrade_title": "Upgrade to KoruBeni Pro",
+    "subscription_upgrade_btn": "Upgrade to Pro",
+
+    "subscription_manage_section": "Manage Subscription",
+    "subscription_customer_center_title": "Subscription Center",
+    "subscription_customer_center_subtitle": "Cancel, refunds, and subscription details",
+    "subscription_customer_center_error": "Subscription center is unavailable right now",
+
+    "subscription_restore_section": "Restore Purchases",
+    "subscription_restore_title": "Restore Purchases",
+    "subscription_restore_subtitle": "Restore your previous Pro purchase",
+    "subscription_restore_success": "Purchases restored successfully",
+    "subscription_restore_no_purchase": "No active subscription found",
+
+    "subscription_error_purchase": "Purchase failed. Please try again.",
+    "subscription_error_restore": "Restore failed. Please try again.",
+    "subscription_error_offline": "Internet connection required"
+}

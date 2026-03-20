@@ -5,6 +5,8 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Required for Google Play Billing (RevenueCat) -->
+    <uses-permission android:name="com.android.vending.BILLING" />
     <!-- Background location removed for store compliance (request only if truly required) -->
 
     <!-- Offline-first core with optional online map tiles and connectivity checks -->

@@ -15,12 +15,12 @@ import com.poyrazoncel.korubeni.emergency.EmergencyChannels
 import com.poyrazoncel.korubeni.emergency.EmergencyEventStreamHandler
 import com.poyrazoncel.korubeni.emergency.EmergencyPlatformHandler
 import com.poyrazoncel.korubeni.emergency.PhoneStateStreamHandler
-import io.flutter.embedding.android.FlutterActivity
+import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodChannel
 
-class MainActivity : FlutterActivity() {
+class MainActivity : FlutterFragmentActivity() {
     companion object {
         private const val ANDROID_INTENTS_CHANNEL = "com.poyrazoncel.korubeni/android_intents"
         private const val SETTINGS_CHANNEL = "com.poyrazoncel.korubeni/settings"

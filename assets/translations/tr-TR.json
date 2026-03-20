@@ -726,4 +726,42 @@
 
     "fake_call_warning_title": "Sahte Çağrı Uyarısı",
     "fake_call_warning_desc": "Bu özellik YALNIZCA kişisel güvenlik amaçlı tasarlanmıştır (örn. tehlikeli bir ortamdan çıkmak için). Dolandırıcılık, taciz veya başkasını yanıltma amacıyla kullanılması yasalara aykırıdır. Bu özelliğin kötüye kullanımından doğan tüm hukuki sorumluluk kullanıcıya aittir.",
-    "fake_call_warning_accept": "Anladım, Devam Et"}
+    "fake_call_warning_accept": "Anladım, Devam Et",
+
+    "subscription_section_title": "KoruBeni Pro",
+    "subscription_tile_title": "KoruBeni Pro",
+    "subscription_tile_subtitle_free": "Pro özelliklere erişmek için yükseltin",
+    "subscription_tile_subtitle_pro": "Pro üye — tüm özellikler aktif",
+    "subscription_badge_pro": "PRO",
+
+    "subscription_manage_title": "Abonelik",
+    "subscription_status_active": "KoruBeni Pro Aktif",
+    "subscription_status_free": "Ücretsiz Plan",
+    "subscription_lifetime_active": "Ömür boyu erişim",
+    "subscription_free_desc": "Pro özelliklere erişmek için yükseltin",
+    "subscription_expires": "Yenileme: {date}",
+
+    "subscription_pro_features_title": "Pro Özellikler",
+    "subscription_feature_1": "Gelişmiş Güvenlik Koruması",
+    "subscription_feature_2": "Sınırsız Konum Paylaşımı",
+    "subscription_feature_3": "Öncelikli Bildirimler",
+    "subscription_feature_4": "Öncelikli Destek",
+
+    "subscription_upgrade_title": "KoruBeni Pro'ya Yükselt",
+    "subscription_upgrade_btn": "Pro'ya Yükselt",
+
+    "subscription_manage_section": "Aboneliği Yönet",
+    "subscription_customer_center_title": "Abonelik Merkezi",
+    "subscription_customer_center_subtitle": "İptal, geri ödeme ve abonelik detayları",
+    "subscription_customer_center_error": "Abonelik merkezi şu anda açılamıyor",
+
+    "subscription_restore_section": "Satın Alımları Geri Yükle",
+    "subscription_restore_title": "Satın Alımları Geri Yükle",
+    "subscription_restore_subtitle": "Önceki Pro satın alımınızı geri yükleyin",
+    "subscription_restore_success": "Satın alımlar geri yüklendi",
+    "subscription_restore_no_purchase": "Aktif abonelik bulunamadı",
+
+    "subscription_error_purchase": "Satın alma başarısız. Tekrar deneyin.",
+    "subscription_error_restore": "Geri yükleme başarısız. Tekrar deneyin.",
+    "subscription_error_offline": "İnternet bağlantısı gerekli"
+}

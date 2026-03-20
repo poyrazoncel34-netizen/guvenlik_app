@@ -4,9 +4,11 @@
 
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/app_colors.dart';
 import '../core/constants/app_constants.dart';
+import '../presentation/providers/subscription_provider.dart';
 import 'legal/onboarding_legal_flow.dart';
 import 'main_navigation.dart';
 import 'onboarding_screen.dart';
@@ -120,6 +122,10 @@ class _SplashScreenState extends State<SplashScreen>
 
   Future<void> _runAnimations() async {
     if (!mounted) return;
+    // Initialize subscription state in the background (fire-and-forget).
+    // RevenueCat uses local cache when offline, so this is always safe.
+    context.read<SubscriptionProvider>().initialize();
+
     final reduceMotion = MediaQuery.of(context).disableAnimations;
 
     if (reduceMotion) {

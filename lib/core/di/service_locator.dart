@@ -1,6 +1,7 @@
 import 'package:get_it/get_it.dart';
 import '../../core/services/location_service.dart';
 import '../../core/services/local_database_service.dart';
+import '../../core/services/revenue_cat_service.dart';
 import '../../data/datasources/local/contacts_local_datasource.dart';
 import '../../data/repositories/contacts_repository_impl.dart';
 import '../../data/repositories/location_repository_impl.dart';
@@ -49,5 +50,10 @@ Future<void> setupServiceLocator() async {
     final consentManager = ConsentManager();
     await consentManager.initialize();
     serviceLocator.registerSingleton<ConsentManager>(consentManager);
+  }
+  if (!serviceLocator.isRegistered<RevenueCatService>()) {
+    serviceLocator.registerLazySingleton<RevenueCatService>(
+      () => RevenueCatService(),
+    );
   }
 }
