@@ -35,6 +35,7 @@ class _ConsentScreenState extends State<ConsentScreen> {
   bool _consentAudio = false;
   bool _consentEmergencyContacts = false;
   bool _consentProfile = false;
+  bool _consentFakeCall = false;
   bool _loading = false;
 
   // Zorunlu rızalar: konum ve acil kişiler temel işlevsellik için gerekli
@@ -56,6 +57,7 @@ class _ConsentScreenState extends State<ConsentScreen> {
       _consentEmergencyContacts =
           cm.isGranted(ConsentRecord.typeEmergencyContacts);
       _consentProfile = cm.isGranted(ConsentRecord.typeProfile);
+      _consentFakeCall = cm.isGranted(ConsentRecord.typeFakeCall);
     });
   }
 
@@ -82,6 +84,7 @@ class _ConsentScreenState extends State<ConsentScreen> {
       await record(ConsentRecord.typeAudio, _consentAudio);
       await record(ConsentRecord.typeEmergencyContacts, _consentEmergencyContacts);
       await record(ConsentRecord.typeProfile, _consentProfile);
+      await record(ConsentRecord.typeFakeCall, _consentFakeCall);
 
       // SharedPrefs önbelleği güncelle (özellik durumu için)
       await prefs.setBool(AppConstants.prefConsentLocation, _consentLocation);
@@ -195,6 +198,15 @@ class _ConsentScreenState extends State<ConsentScreen> {
                     value: _consentAudio,
                     onChanged: (v) =>
                         setState(() => _consentAudio = v ?? false),
+                  ),
+
+                  // Sahte çağrı
+                  ConsentCheckboxWidget(
+                    label: 'legal_consent_fake_call'.tr(),
+                    sublabel: 'legal_consent_fake_call_sub'.tr(),
+                    value: _consentFakeCall,
+                    onChanged: (v) =>
+                        setState(() => _consentFakeCall = v ?? false),
                   ),
 
                   // Biyometrik (özel nitelikli)

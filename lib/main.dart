@@ -6,8 +6,6 @@ import 'dart:ui';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:sentry_flutter/sentry_flutter.dart';
-import 'core/config/app_environment.dart';
 import 'core/di/service_locator.dart';
 import 'package:provider/provider.dart';
 import 'core/app_theme.dart';
@@ -114,7 +112,6 @@ void main() async {
       details.exception,
       details.stack,
     );
-    Sentry.captureException(details.exception, stackTrace: details.stack);
     assert(() {
       debugPrint('FlutterError: ${details.exception}');
       return true;
@@ -129,7 +126,6 @@ void main() async {
       stackTrace: stack,
     );
     LocalLoggerService.instance.error('PlatformDispatcher', error, stack);
-    Sentry.captureException(error, stackTrace: stack);
     assert(() {
       debugPrint('PlatformDispatcher.onError: $error');
       return true;
@@ -150,24 +146,13 @@ void main() async {
     DeviceOrientation.portraitDown,
   ]);
 
-  // Sentry init — offline buffer etkin: internet yokken crash'leri biriktir, gelince gönder
-  await SentryFlutter.init(
-    (options) {
-      options.dsn = AppEnvironment.sentryDsn;
-      options.environment = AppEnvironment.name;
-      options.tracesSampleRate = 0.0;       // Performance tracking kapalı (offline app)
-      options.maxBreadcrumbs = 30;
-      options.attachScreenshot = false;     // Gizlilik: ekran görüntüsü gönderme
-      options.sendDefaultPii = false;       // KVKK uyumu: kişisel veri gönderme
-      options.reportPackages = false;
-    },
-    appRunner: () => runApp(
-      EasyLocalization(
-        supportedLocales: const [Locale('tr', 'TR'), Locale('en', 'US')],
-        path: 'assets/translations',
-        fallbackLocale: const Locale('tr', 'TR'),
-        child: const KoruBeniApp(),
-      ),
+  // KVKK uyumu: Üçüncü taraf crash raporlama yok — tüm hatalar yerel olarak loglanır
+  runApp(
+    EasyLocalization(
+      supportedLocales: const [Locale('tr', 'TR'), Locale('en', 'US')],
+      path: 'assets/translations',
+      fallbackLocale: const Locale('tr', 'TR'),
+      child: const KoruBeniApp(),
     ),
   );
 }

@@ -121,7 +121,7 @@
 <body>
     <div class="container">
         <h1>KoruBeni KVKK Aydınlatma Metni</h1>
-        <p class="subtitle">Son güncelleme: 14 Mart 2026 &nbsp;|&nbsp; 6698 Sayılı KVKK Md. 10 ve 10.03.2018 Tarihli Aydınlatma Tebliği Uyarınca</p>
+        <p class="subtitle">Sürüm 3.0.0 &nbsp;|&nbsp; Son güncelleme: 19 Mart 2026 &nbsp;|&nbsp; 6698 Sayılı KVKK Md. 10 ve 10.03.2018 Tarihli Aydınlatma Tebliği Uyarınca</p>
 
         <div class="warning-box">
             <strong>⚠️ ÖNEMLİ UYARI</strong><br>
@@ -152,9 +152,14 @@
             </thead>
             <tbody>
                 <tr>
+                    <td><strong>Kimlik (Ad, profil fotoğrafı)</strong></td>
+                    <td>Uygulama profili</td>
+                    <td>Md. 5/2-a: İlgili kişinin açık rızası</td>
+                </tr>
+                <tr>
                     <td><strong>Konum verisi (GPS)</strong></td>
                     <td>Acil durum tetiklendiğinde belirlenen kişilere Google Maps linki içeren SMS ile iletmek</td>
-                    <td>Md. 5/2-f: Veri sorumlusunun meşru menfaatleri için zorunlu olması (kullanıcının fiziksel güvenliğine katkı)</td>
+                    <td>Md. 5/2-a: İlgili kişinin açık rızası</td>
                 </tr>
                 <tr>
                     <td><strong>Acil durum kişisi adı ve telefon numarası</strong></td>
@@ -171,6 +176,21 @@
                     <td>Biyometrik kimlik doğrulama ile hızlı ve güvenli uygulama açma</td>
                     <td>Md. 5/2-a ve KVKK Md. 6/2: İlgili kişinin açık rızası (özel nitelikli veri)</td>
                 </tr>
+                <tr>
+                    <td><strong>Ses (Ortam ses kaydı)</strong></td>
+                    <td>Kullanıcı inisiyatifinde kanıt toplama</td>
+                    <td>Md. 5/2-a: İlgili kişinin açık rızası</td>
+                </tr>
+                <tr>
+                    <td><strong>Cihaz (Cihaz tipi, OS versiyonu)</strong></td>
+                    <td>Teknik uyumluluk ve rıza logu</td>
+                    <td>Md. 5/2-f: Veri sorumlusunun meşru menfaatleri için zorunlu olması</td>
+                </tr>
+                <tr>
+                    <td><strong>Yasal Rıza Logu (Rıza türü, tarih, versiyon)</strong></td>
+                    <td>KVKK uyum kaydı</td>
+                    <td>Md. 5/2-ç: Veri sorumlusunun hukuki yükümlülüğünün yerine getirilmesi</td>
+                </tr>
             </tbody>
         </table>
 
@@ -180,10 +200,12 @@
 
         <h2>3. Kişisel Verilerin Toplanma Yöntemi</h2>
         <ul>
-            <li><strong>Kullanıcı tarafından doğrudan girilmesi:</strong> Acil durum kişi bilgileri, PIN kodu, profil adı</li>
+            <li><strong>Kullanıcı tarafından doğrudan girilmesi:</strong> Acil durum kişi bilgileri, PIN kodu, profil adı, profil fotoğrafı</li>
             <li><strong>Cihaz sensörleri:</strong> GPS konum verisi (yalnızca konum izni verildiğinde)</li>
             <li><strong>Otomatik olarak:</strong> Acil durum tetiklendiğinde anlık konum bilgisi</li>
             <li><strong>Biyometrik okuyucu:</strong> Face ID / Touch ID (yalnızca kullanıcı etkinleştirdiğinde, cihazın güvenli alanında işlenir)</li>
+            <li><strong>Mikrofon:</strong> Ortam ses kaydı (yalnızca kullanıcı tarafından başlatıldığında)</li>
+            <li><strong>Otomatik cihaz bilgisi:</strong> Cihaz tipi ve OS versiyonu (teknik uyumluluk amacıyla)</li>
         </ul>
 
         <h2>4. Kişisel Verilerin Aktarılması</h2>
@@ -194,6 +216,9 @@
             <li><strong>OpenStreetMap:</strong> Harita görüntüleme için kullanılır; kişisel veri aktarımı gerçekleşmez.</li>
             <li><strong>Yetkili makamlar:</strong> Mahkeme kararı veya yasal zorunluluk halinde ilgili kurum ve kuruluşlara aktarılabilir.</li>
         </ul>
+        <div class="highlight">
+            <strong>Kişisel verileriniz HİÇBİR üçüncü taraf sunucusuna aktarılmaz.</strong> Tüm veriler yalnızca cihazınızda kalır. Kişisel verileriniz TÜRKİYE DIŞINA aktarılmaz.
+        </div>
 
         <h2>5. Kişisel Verilerin Saklanma Süreleri</h2>
         <ul>
@@ -201,20 +226,26 @@
             <li><strong>Acil durum kişileri (ad + telefon):</strong> Kullanıcı uygulamadan silene kadar yalnızca cihazda şifreli olarak saklanır.</li>
             <li><strong>PIN kodu:</strong> Kullanıcı değiştirene veya silene kadar cihazın güvenli depolama alanında (Keychain/Keystore) şifreli olarak tutulur.</li>
             <li><strong>Biyometrik veri:</strong> Cihazın güvenli donanım alanında (Secure Enclave / TEE) saklanır; uygulama bu veriye doğrudan erişemez.</li>
+            <li><strong>Ses kayıtları:</strong> Siz silene kadar cihazda saklanır (otomatik temizleme seçeneği mevcuttur).</li>
+            <li><strong>Rıza logları:</strong> Uygulama kullanıldığı sürece cihazda tutulur.</li>
             <li><strong>Hukuki log kayıtları:</strong> Maksimum 2 yıl süre ile yalnızca cihazda tutulur; ispat amacıyla kullanılır.</li>
         </ul>
 
         <h2>6. Çocukların Kişisel Verileri</h2>
-        <p>KoruBeni, KVKK Madde 3/1-ç kapsamında <strong>18 yaşın altındaki bireylerden</strong> bilerek kişisel veri toplamaz. Uygulamanın 18 yaş altı bireylere yönelik kullanımda olduğundan haberdar olunması halinde ilgili veriler derhal silinecektir.</p>
+        <p>KoruBeni, KVKK Madde 3/1-ç ve Madde 6 kapsamında <strong>18 yaşın altındaki bireylerden</strong> bilerek kişisel veri toplamaz. Uygulamayı kullanmak için 18 yaşını doldurmuş olmanız veya yasal velinizin onayını almış olmanız gerekmektedir. Uygulama içinde yaş doğrulaması yapılmaktadır. 18 yaş altı bireylerin uygulamayı kullandığının tespit edilmesi halinde ilgili veriler derhal silinecektir.</p>
 
         <h2>7. Kişisel Veri Güvenliği</h2>
         <ul>
             <li>Hassas veriler AES-256 şifreleme ile korunur.</li>
             <li>PIN ve biyometrik veriler cihazın güvenli depolama alanında (iOS Keychain / Android Keystore) saklanır.</li>
             <li>Uygulama tamamen çevrimdışı (offline) çalışır; veriler geliştirici sunucularına gönderilmez.</li>
+            <li>Hiçbir kişisel veri harici hata izleme veya analitik servislerine aktarılmaz.</li>
         </ul>
 
-        <h2>8. İlgili Kişinin Hakları (KVKK Md. 11 — Tam Liste)</h2>
+        <h2>8. Üçüncü Kişi Veri Sahiplerinin Hakları</h2>
+        <p>Acil durum kişisi olarak eklenen üçüncü kişiler de KVKK Madde 11 kapsamındaki haklardan yararlanır. Bu kişiler, kendilerine ait kişisel verilerin (ad ve telefon numarası) işlenmesine ilişkin haklarını kullanmak için <a href="mailto:korubeni.destek@gmail.com?subject=KVKK%20Ba%C5%9Fvurusu%20-%20%C3%9C%C3%A7%C3%BCnc%C3%BC%20Ki%C5%9Fi">korubeni.destek@gmail.com</a> adresine başvurabilir.</p>
+
+        <h2>9. İlgili Kişinin Hakları (KVKK Md. 11 — Tam Liste)</h2>
         <p>Kişisel verilerinize ilişkin aşağıdaki haklara sahipsiniz:</p>
         <ol>
             <li>Kişisel verilerinizin işlenip işlenmediğini <strong>öğrenme</strong></li>
@@ -229,9 +260,9 @@
         </ol>
         <p>Bu haklarınızı kullanmak için <a href="mailto:korubeni.destek@gmail.com?subject=KVKK%20Ba%C5%9Fvurusu">korubeni.destek@gmail.com</a> adresine "KVKK Başvurusu" konu başlığıyla e-posta gönderebilirsiniz. Başvurularınız yasal süre içinde (en geç 30 gün) yanıtlanacaktır.</p>
 
-        <h2>9. Politika Değişiklikleri</h2>
+        <h2>10. Politika Değişiklikleri</h2>
         <p>Bu aydınlatma metninde yapılacak önemli değişiklikler uygulama içi bildirim aracılığıyla kullanıcılara duyurulur. Güncel metne bu sayfadan ulaşabilirsiniz.</p>
-        <p><strong>Son güncelleme:</strong> 14 Mart 2026</p>
+        <p><strong>Son güncelleme:</strong> 19 Mart 2026</p>
 
         <footer>
             <p>&copy; 2026 KoruBeni — Poyraz Öncel. Tüm hakları saklıdır.</p>

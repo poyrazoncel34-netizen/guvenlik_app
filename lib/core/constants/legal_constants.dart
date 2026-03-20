@@ -7,24 +7,24 @@ class LegalConstants {
   LegalConstants._();
 
   /// Kullanım Sözleşmesi (EULA) versiyonu
-  static const String termsVersion = '2.0';
+  static const String termsVersion = '3.0.0';
 
   /// KVKK Aydınlatma Metni versiyonu
-  static const String kvkkDisclosureVersion = '1.0';
+  static const String kvkkDisclosureVersion = '3.0.0';
 
   /// Rıza Formu versiyonu
-  static const String consentFormVersion = '1.0';
+  static const String consentFormVersion = '3.0.0';
 
   /// Gizlilik Politikası versiyonu
-  static const String privacyPolicyVersion = '2.0';
+  static const String privacyPolicyVersion = '3.0.0';
 
   /// Son güncelleme tarihi
-  static const String lastUpdated = '2026-03-18';
+  static const String lastUpdated = '2026-03-19';
 
   /// Veri Sorumlusu bilgileri
   static const String dataControllerName = 'Poyraz Öncel';
   static const String dataControllerTitle = 'Bireysel Yazılım Geliştirici';
-  static const String dataControllerCity = 'İzmir/Türkiye';
+  static const String dataControllerCity = 'İzmir, Türkiye';
   static const String dataControllerEmail = 'korubeni.destek@gmail.com';
 
   /// Yetkili mahkeme
