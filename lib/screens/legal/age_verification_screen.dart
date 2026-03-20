@@ -28,15 +28,16 @@ class _AgeVerificationScreenState extends State<AgeVerificationScreen> {
     if (_selectedOption == null) return;
     HapticFeedback.mediumImpact();
 
+    final locale = context.locale.languageCode;
+
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(AppConstants.prefAgeVerified, true);
 
     // Log age verification in consent manager
     final cm = serviceLocator<ConsentManager>();
-    final locale = context.locale.languageCode;
     await cm.grantConsent('age_verification', locale: locale);
 
-    widget.onVerified?.call();
+    if (mounted) widget.onVerified?.call();
   }
 
   @override

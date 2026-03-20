@@ -34,12 +34,12 @@ class AudioRecordingConsentDialog {
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: AppColors.error.withValues(alpha: 0.12),
+                      color: AppColors.emergency.withValues(alpha: 0.12),
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(
                       Icons.mic_rounded,
-                      color: AppColors.error,
+                      color: AppColors.emergency,
                       size: 22,
                     ),
                   ),
@@ -62,17 +62,17 @@ class AudioRecordingConsentDialog {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AppColors.error.withValues(alpha: 0.08),
+                  color: AppColors.emergency.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: AppColors.error.withValues(alpha: 0.4),
+                    color: AppColors.emergency.withValues(alpha: 0.4),
                   ),
                 ),
                 child: Text(
                   'audio_consent_warning'.tr(),
                   style: const TextStyle(
                     fontSize: 12,
-                    color: AppColors.error,
+                    color: AppColors.emergency,
                     height: 1.5,
                   ),
                 ),
