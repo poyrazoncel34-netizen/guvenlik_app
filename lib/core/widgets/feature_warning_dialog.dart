@@ -78,6 +78,23 @@ class FeatureWarningHelper {
       '• Kamuya açık alanlarda kullanımda yerel gürültü yönetmeliği geçerlidir\n'
       '• Gereksiz kullanım çevre sakinlerini rahatsız edebilir\n'
       '• Bu özellikten doğacak şikayetler kullanıcının sorumluluğundadır';
+
+  static const String locationTitle = '📍 Konum Paylaşımı — Bilgilendirme';
+  static const String locationContent =
+      'Konum bilginiz seçtiğiniz kişilere SMS ile gönderilecektir.\n\n'
+      '• GPS doğruluğu cihaz ve çevre koşullarına bağlıdır; geliştirici garanti vermez\n'
+      '• Konum bilginizi kiminle paylaştığınız sizin sorumluluğunuzdadır\n'
+      '• Konum bilgisinin yetersiz, hatalı veya gecikmeli olmasından geliştirici sorumlu tutulamaz\n'
+      '• Konum paylaşımından doğan sonuçların tüm sorumluluğu kullanıcıya aittir\n\n'
+      '⚠️ Gerçek acil durumda mutlaka 112\'yi arayın.';
+
+  static const String shakeTitle = '📳 Shake Algılama — Bilgilendirme';
+  static const String shakeContent =
+      'Telefonunuzu sarsarak acil durum tetikleyebilirsiniz. Ancak:\n\n'
+      '• Bu özellik yanlışlıkla tetiklenebilir (cep, yürüyüş, araç titreşimi)\n'
+      '• Yanlış tetiklenmeden doğan sonuçlardan (gereksiz SMS dahil) siz sorumlusunuz\n'
+      '• PIN girişi ile iptal etme süreniz sınırlıdır; süre aşımından geliştirici sorumlu değildir\n\n'
+      'Özelliği aktifleştirerek bu koşulları kabul etmiş olursunuz.';
 }
 
 class _FeatureWarningDialog extends StatelessWidget {

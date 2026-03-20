@@ -26,9 +26,6 @@ Track your location during night or unsafe situations. Let your emergency contac
 ◉ Fake Call
 Create a realistic incoming call to escape uncomfortable situations.
 
-◉ Voice Recording
-One-tap voice recording for evidence in emergencies.
-
 ◉ Siren
 Draw attention with a loud alarm.
 
@@ -38,7 +35,6 @@ Open your messaging app with one-tap emergency message templates for your contac
 ★ SECURITY ★
 
 • 4-digit PIN app protection
-• Face ID / Fingerprint support
 • AES-256 encryption
 • Secure on-device storage
 • Offline-first architecture

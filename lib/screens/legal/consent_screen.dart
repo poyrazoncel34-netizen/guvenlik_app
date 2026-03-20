@@ -30,12 +30,10 @@ class ConsentScreen extends StatefulWidget {
 }
 
 class _ConsentScreenState extends State<ConsentScreen> {
+  bool _consentAge = false;
   bool _consentLocation = false;
-  bool _consentBiometric = false;
-  bool _consentAudio = false;
   bool _consentEmergencyContacts = false;
   bool _consentProfile = false;
-  bool _consentFakeCall = false;
   bool _loading = false;
 
   // Zorunlu rızalar: konum ve acil kişiler temel işlevsellik için gerekli
@@ -50,19 +48,19 @@ class _ConsentScreenState extends State<ConsentScreen> {
 
   Future<void> _loadExistingConsents() async {
     final cm = serviceLocator<ConsentManager>();
+    final prefs = await SharedPreferences.getInstance();
     setState(() {
+      _consentAge = prefs.getBool(AppConstants.prefAgeVerified) ?? false;
       _consentLocation = cm.isGranted(ConsentRecord.typeLocation);
-      _consentBiometric = cm.isGranted(ConsentRecord.typeBiometric);
-      _consentAudio = cm.isGranted(ConsentRecord.typeAudio);
       _consentEmergencyContacts =
           cm.isGranted(ConsentRecord.typeEmergencyContacts);
       _consentProfile = cm.isGranted(ConsentRecord.typeProfile);
-      _consentFakeCall = cm.isGranted(ConsentRecord.typeFakeCall);
     });
   }
 
   Future<void> _saveConsents() async {
     if (_loading) return;
+    if (!_consentAge) return; // Yaş doğrulaması zorunlu
     setState(() => _loading = true);
     HapticFeedback.mediumImpact();
 
@@ -79,17 +77,13 @@ class _ConsentScreenState extends State<ConsentScreen> {
         }
       }
 
+      await prefs.setBool(AppConstants.prefAgeVerified, _consentAge);
       await record(ConsentRecord.typeLocation, _consentLocation);
-      await record(ConsentRecord.typeBiometric, _consentBiometric);
-      await record(ConsentRecord.typeAudio, _consentAudio);
       await record(ConsentRecord.typeEmergencyContacts, _consentEmergencyContacts);
       await record(ConsentRecord.typeProfile, _consentProfile);
-      await record(ConsentRecord.typeFakeCall, _consentFakeCall);
 
       // SharedPrefs önbelleği güncelle (özellik durumu için)
       await prefs.setBool(AppConstants.prefConsentLocation, _consentLocation);
-      await prefs.setBool(AppConstants.prefConsentBiometric, _consentBiometric);
-      await prefs.setBool(AppConstants.prefConsentAudio, _consentAudio);
       await prefs.setBool(AppConstants.prefConsentEmergencyContacts,
           _consentEmergencyContacts);
       await prefs.setBool(AppConstants.prefConsentProfile, _consentProfile);
@@ -163,6 +157,15 @@ class _ConsentScreenState extends State<ConsentScreen> {
                   ),
                   const SizedBox(height: 16),
 
+                  // Yaş doğrulama (zorunlu)
+                  ConsentCheckboxWidget(
+                    label: 'legal_consent_age'.tr(),
+                    sublabel: 'legal_consent_age_sub'.tr(),
+                    value: _consentAge,
+                    onChanged: (v) =>
+                        setState(() => _consentAge = v ?? false),
+                  ),
+
                   // Konum
                   ConsentCheckboxWidget(
                     label: 'legal_consent_location'.tr(),
@@ -189,34 +192,6 @@ class _ConsentScreenState extends State<ConsentScreen> {
                     value: _consentProfile,
                     onChanged: (v) =>
                         setState(() => _consentProfile = v ?? false),
-                  ),
-
-                  // Ses kaydı
-                  ConsentCheckboxWidget(
-                    label: 'legal_consent_audio'.tr(),
-                    sublabel: 'legal_consent_audio_sub'.tr(),
-                    value: _consentAudio,
-                    onChanged: (v) =>
-                        setState(() => _consentAudio = v ?? false),
-                  ),
-
-                  // Sahte çağrı
-                  ConsentCheckboxWidget(
-                    label: 'legal_consent_fake_call'.tr(),
-                    sublabel: 'legal_consent_fake_call_sub'.tr(),
-                    value: _consentFakeCall,
-                    onChanged: (v) =>
-                        setState(() => _consentFakeCall = v ?? false),
-                  ),
-
-                  // Biyometrik (özel nitelikli)
-                  ConsentCheckboxWidget(
-                    label: 'legal_consent_biometric'.tr(),
-                    sublabel: 'legal_consent_biometric_sub'.tr(),
-                    value: _consentBiometric,
-                    onChanged: (v) =>
-                        setState(() => _consentBiometric = v ?? false),
-                    isSpecialCategory: true,
                   ),
 
                   const SizedBox(height: 16),
@@ -253,7 +228,7 @@ class _ConsentScreenState extends State<ConsentScreen> {
             child: SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: _loading ? null : _saveConsents,
+                onPressed: (_loading || !_consentAge) ? null : _saveConsents,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,

@@ -55,67 +55,58 @@ Kullanıcı aşağıdakileri kabul eder:
 Sahte çağrı özelliği YALNIZCA kişisel güvenlik amaçlı tasarlanmıştır (örn. tacizden kaçmak için ortamdan uzaklaşma). Bu özelliğin dolandırıcılık, taciz, başkasını yanıltma veya herhangi bir suç eyleminde kullanılması YASALARA AYKIRIDIR. Söz konusu kötüye kullanımlardan doğan TÜM HUKUKİ VE CEZAİ SORUMLULUK KULLANICIYA AİTTİR.
 
 ──────────────────────────────────────
-6. SES KAYDI ÖZELLİĞİ
-──────────────────────────────────────
-• Geliştirici, ses kaydı özelliğini yalnızca bir teknik araç olarak sunar; bu özelliğin kullanımından doğan tüm cezai ve hukuki sorumluluk MÜNHASIRAN KULLANICIYA AİTTİR.
-• Ses kaydı özelliğinin kullanımı, kaydedilen kişilerin açık rızasına tabidir.
-• TCK m.133 (Kişiler Arasındaki Konuşmaların Dinlenmesi ve Kayda Alınması) uyarınca rızasız ses kaydı 2 ila 5 yıl hapis cezası ile cezalandırılır. Bu yasal düzenlemeye uygunluk TAMAMEN KULLANICININ SORUMLULUĞUNDADIR.
-• Uygulama, her ses kaydı başlangıcında kullanıcıdan TCK m.133 kapsamında onay talep eder; onay verilmeden kayıt başlatılmaz.
-• Geliştirici, ses kayıtlarını sunucularına göndermez; kayıtlar yalnızca kullanıcının cihazında AES-256 şifrelemesi ile saklanır.
-
-──────────────────────────────────────
-7. KONUM PAYLAŞIMI
+6. KONUM PAYLAŞIMI
 ──────────────────────────────────────
 • Konum verisi yalnızca kullanıcının açıkça tetiklemesiyle paylaşılır.
 • Paylaşılan konumun doğruluğu GPS donanımına bağlıdır; geliştirici tarafından garanti edilmez.
 • Konum, yalnızca kullanıcının belirlediği kişilere SMS yoluyla iletilir; üçüncü taraf sunuculara gönderilmez.
 
 ──────────────────────────────────────
-8. ACİL DURUM KİŞİLERİ VE ÜÇÜNCÜ KİŞİ HAKLARI
+7. ACİL DURUM KİŞİLERİ VE ÜÇÜNCÜ KİŞİ HAKLARI
 ──────────────────────────────────────
 • Kullanıcı, acil durum kişisi olarak eklediği kişilerin ad ve telefon numarası bilgilerini kaydetme ve bu kişilere SMS gönderme yetkisine sahip olduğunu beyan eder.
 • Bu kişilerin KVKK kapsamındaki haklarından kullanıcı sorumludur. Kişilerin rızasının alınması kullanıcının yükümlülüğündedir.
 • Acil durum kişisi olarak eklenen üçüncü kişiler, KVKK Madde 11 kapsamındaki haklarını korubeni.destek@gmail.com adresine başvurarak kullanabilir. Geliştirici, başvuru üzerine ilgili veriyi kullanıcıya bildirerek silinmesini talep edecektir.
 
 ──────────────────────────────────────
-9. GARANTİ REDDİ
+8. GARANTİ REDDİ
 ──────────────────────────────────────
 Uygulama "OLDUĞU GİBİ" (AS IS) sunulmaktadır. Kesintisiz, hatasız veya belirli bir amaca uygun çalışacağına dair HİÇBİR GARANTİ verilmemektedir. Uygulama herhangi bir zamanda önceden bildirim yapılmaksızın değiştirilebilir, güncellenebilir veya hizmet durdurulabilir.
 
 ──────────────────────────────────────
-10. SORUMLULUK SINIRLANDIRMASI
+9. SORUMLULUK SINIRLANDIRMASI
 ──────────────────────────────────────
 Geliştirici; uygulamanın kullanımından veya kullanılamamasından kaynaklanan doğrudan, dolaylı, arızi, özel veya sonuç olarak ortaya çıkan HİÇBİR ZARARDAN (can kaybı, maddi kayıp, veri kaybı dahil) sorumlu tutulamaz. Bu sınırlama, TBK m.115 uyarınca ağır kusur ve kasıt hallerini kapsamamaktadır.
 
 Geliştiricinin toplam sorumluluğu, kullanıcının uygulamayı kullandığı son 12 (on iki) aylık dönemde ödediği toplam bedeli aşamaz. Uygulama ücretsiz sunulmakta olup, kullanıcı bu hususta herhangi bir bedel ödemediğini kabul ve beyan eder.
 
 ──────────────────────────────────────
-11. TAZMİN (INDEMNIFICATION)
+10. TAZMİN (INDEMNIFICATION)
 ──────────────────────────────────────
 Kullanıcı, uygulamanın kullanımından kaynaklanan üçüncü kişi talep, dava veya zararlarından geliştiricinin zarar görmemesini sağlamayı ve doğacak makul avukatlık ücretleri dahil tüm zararları tazmin etmeyi kabul eder.
 
 ──────────────────────────────────────
-12. MÜCBİR SEBEP
+11. MÜCBİR SEBEP
 ──────────────────────────────────────
 Doğal afet, savaş, salgın hastalık, internet/telekomünikasyon altyapısı kesintisi, enerji kesintisi, devlet kısıtlamaları veya kontrol dışı benzeri olaylar ("mücbir sebep") nedeniyle uygulamanın çalışmaması veya gecikmesinden geliştirici sorumlu tutulamaz.
 
 ──────────────────────────────────────
-13. FİKRİ MÜLKİYET
+12. FİKRİ MÜLKİYET
 ──────────────────────────────────────
 Uygulama ve içerdiği tüm fikri mülkiyet hakları Poyraz Öncel'e aittir. Kullanıcıya yalnızca kişisel, devredilemez, münhasır olmayan bir kullanım lisansı verilmektedir.
 
 ──────────────────────────────────────
-14. UYGULANACAK HUKUK VE YETKİLİ MAHKEME
+13. UYGULANACAK HUKUK VE YETKİLİ MAHKEME
 ──────────────────────────────────────
 Bu Sözleşme Türkiye Cumhuriyeti hukukuna tabidir. Bu Sözleşme'den doğan uyuşmazlıklarda İzmir Mahkemeleri ve İcra Daireleri yetkilidir.
 
 ──────────────────────────────────────
-15. BÖLÜNEBİLİRLİK
+14. BÖLÜNEBİLİRLİK
 ──────────────────────────────────────
 Bu Sözleşme'nin herhangi bir hükmünün yetkili mahkeme tarafından geçersiz veya uygulanamaz ilan edilmesi halinde, Sözleşme'nin geri kalan hükümleri tam olarak yürürlükte kalmaya devam eder.
 
 ──────────────────────────────────────
-16. SÖZLEŞME DEĞİŞİKLİKLERİ
+15. SÖZLEŞME DEĞİŞİKLİKLERİ
 ──────────────────────────────────────
 Geliştirici bu Sözleşme'yi dilediği zaman güncelleme hakkını saklı tutar. Güncellemeler uygulamada yayımlandığında devam eden kullanım yeni koşulların kabulü anlamına gelir. Önemli değişikliklerde uygulama yeniden onay isteyecektir.
 
@@ -166,67 +157,58 @@ The User agrees to:
 The fake call feature is designed ONLY for personal safety purposes (e.g., leaving a situation to escape harassment). Using this feature for fraud, harassment, deception of others, or any criminal act IS ILLEGAL. ALL LEGAL AND CRIMINAL RESPONSIBILITY for such misuse BELONGS TO THE USER.
 
 ──────────────────────────────────────
-6. AUDIO RECORDING FEATURE
-──────────────────────────────────────
-• The Developer provides the audio recording feature solely as a technical tool; ALL criminal and legal responsibility arising from its use BELONGS EXCLUSIVELY TO THE USER.
-• Use of the audio recording feature is subject to the express consent of the persons being recorded.
-• Under Article 133 of the Turkish Penal Code (Wiretapping), recording without consent is punishable by 2 to 5 years of imprisonment. Compliance with this legal provision IS ENTIRELY THE USER'S RESPONSIBILITY.
-• The application requests TCK Article 133 confirmation from the user before each audio recording session; recording will not start without confirmation.
-• The Developer does not send audio recordings to servers; recordings are stored only on the user's device with AES-256 encryption.
-
-──────────────────────────────────────
-7. LOCATION SHARING
+6. LOCATION SHARING
 ──────────────────────────────────────
 • Location data is shared only when explicitly triggered by the user.
 • The accuracy of the shared location depends on GPS hardware and is not guaranteed by the Developer.
 • Location is transmitted only to persons designated by the user via SMS; not sent to third-party servers.
 
 ──────────────────────────────────────
-8. EMERGENCY CONTACTS AND THIRD-PARTY RIGHTS
+7. EMERGENCY CONTACTS AND THIRD-PARTY RIGHTS
 ──────────────────────────────────────
 • The User declares that they have the authority to save and send SMS to the persons added as emergency contacts.
 • The User is responsible for the rights of these persons under applicable privacy laws.
 • Third parties added as emergency contacts may exercise their rights under KVKK Article 11 by contacting korubeni.destek@gmail.com. The Developer will notify the relevant user and request deletion of the data.
 
 ──────────────────────────────────────
-9. DISCLAIMER OF WARRANTIES
+8. DISCLAIMER OF WARRANTIES
 ──────────────────────────────────────
 The application is provided "AS IS". NO WARRANTY of any kind is given that it will operate without interruption, error-free, or fit for a particular purpose. The application may be changed, updated, or service discontinued at any time without prior notice.
 
 ──────────────────────────────────────
-10. LIMITATION OF LIABILITY
+9. LIMITATION OF LIABILITY
 ──────────────────────────────────────
 The Developer shall not be liable for any direct, indirect, incidental, special, or consequential DAMAGES (including loss of life, financial loss, or data loss) arising from use or inability to use the application. This limitation does NOT cover cases of gross negligence or intentional misconduct in accordance with TBK Article 115.
 
 The Developer's total liability shall not exceed the total amount paid by the User in the 12 (twelve) months preceding the claim. The application is provided free of charge, and the User acknowledges that no payment has been made.
 
 ──────────────────────────────────────
-11. INDEMNIFICATION
+10. INDEMNIFICATION
 ──────────────────────────────────────
 The User agrees to indemnify and hold the Developer harmless from any third-party claims, lawsuits, or damages arising from the use of the application, including reasonable attorney fees.
 
 ──────────────────────────────────────
-12. FORCE MAJEURE
+11. FORCE MAJEURE
 ──────────────────────────────────────
 The Developer shall not be liable for any failure or delay in the operation of the application caused by natural disasters, war, pandemics, internet/telecommunications infrastructure outages, power outages, government restrictions, or similar events beyond the Developer's control ("force majeure").
 
 ──────────────────────────────────────
-13. INTELLECTUAL PROPERTY
+12. INTELLECTUAL PROPERTY
 ──────────────────────────────────────
 The application and all intellectual property rights contained therein belong to Poyraz Öncel. The User is granted only a personal, non-transferable, non-exclusive license to use the application.
 
 ──────────────────────────────────────
-14. GOVERNING LAW AND JURISDICTION
+13. GOVERNING LAW AND JURISDICTION
 ──────────────────────────────────────
 This Agreement is governed by the laws of the Republic of Turkey. The courts and enforcement offices of İzmir shall have jurisdiction over disputes arising from this Agreement.
 
 ──────────────────────────────────────
-15. SEVERABILITY
+14. SEVERABILITY
 ──────────────────────────────────────
 If any provision of this Agreement is found to be invalid or unenforceable by a competent court, the remaining provisions shall continue in full force and effect.
 
 ──────────────────────────────────────
-16. AMENDMENTS
+15. AMENDMENTS
 ──────────────────────────────────────
 The Developer reserves the right to update this Agreement at any time. Continued use after updates are published in the application constitutes acceptance of the new terms. For material changes, the application will request re-consent.
 

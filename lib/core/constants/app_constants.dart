@@ -68,6 +68,8 @@ class AppConstants {
   static const String prefWarningCheckin = 'warning_checkin_shown';
   static const String prefWarningWalk = 'warning_walk_shown';
   static const String prefWarningSiren = 'warning_siren_shown';
+  static const String prefWarningLocation = 'warning_location_shown';
+  static const String prefWarningShake = 'warning_shake_shown';
 
   // Yasal belgeler URL'leri
   static const String termsOfServiceUrl =

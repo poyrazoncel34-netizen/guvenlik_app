@@ -26,9 +26,6 @@ Gece veya güvensiz ortamlarda konum takibi yapın. Acil kişileriniz nerede old
 ◉ Sahte Arama
 Rahatsız edici durumlardan kurtulmak için gerçekçi sahte gelen arama oluşturun.
 
-◉ Ses Kaydı
-Acil durumlarda kanıt toplamak için tek dokunuşla ses kaydı başlatın.
-
 ◉ Siren
 Yüksek sesli alarm ile çevrenizdeki insanların dikkatini çekin.
 
@@ -38,7 +35,6 @@ Tek dokunuşla hazır mesaj şablonlarıyla mesaj uygulamanızı acil kişilerin
 ★ GÜVENLİK ★
 
 • 4 haneli PIN ile uygulama koruması
-• Face ID / Parmak İzi desteği
 • AES-256 şifreleme
 • Güvenli veri depolama
 • Offline-first mimari

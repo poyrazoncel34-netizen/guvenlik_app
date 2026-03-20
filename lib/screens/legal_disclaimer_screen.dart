@@ -25,9 +25,16 @@ class _LegalDisclaimerScreenState extends State<LegalDisclaimerScreen> {
   bool _termsAccepted = false;
   bool _privacyAccepted = false;
   bool _emergencyAccepted = false;
+  bool _ageAccepted = false;
+  bool _liabilityAccepted = false;
   bool _saving = false;
 
-  bool get _allAccepted => _termsAccepted && _privacyAccepted && _emergencyAccepted;
+  bool get _allAccepted =>
+      _termsAccepted &&
+      _privacyAccepted &&
+      _emergencyAccepted &&
+      _ageAccepted &&
+      _liabilityAccepted;
 
   Future<void> _launchUrl(String url) async {
     final uri = Uri.parse(url);
@@ -54,7 +61,7 @@ class _LegalDisclaimerScreenState extends State<LegalDisclaimerScreen> {
 
     await LegalLogService.instance.logEvent(
       'terms_accepted',
-      checkboxes: ['terms', 'privacy', 'emergency_disclaimer'],
+      checkboxes: ['terms', 'privacy', 'emergency_disclaimer', 'age_confirmation', 'liability_acceptance'],
     );
 
     if (!mounted) return;
@@ -237,6 +244,41 @@ class _LegalDisclaimerScreenState extends State<LegalDisclaimerScreen> {
                     child: const Text(
                       'Bu uygulamanın teknik sınırlarını anlıyorum. '
                       'Gerçek acil durumda önce 112\'yi arayacağımı kabul ediyorum.',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: AppColors.textSecondary,
+                        height: 1.5,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+
+                  // ── Checkbox 4: Yaş onayı ──
+                  _buildCheckboxTile(
+                    value: _ageAccepted,
+                    onChanged: (v) =>
+                        setState(() => _ageAccepted = v ?? false),
+                    child: const Text(
+                      '18 yaşından büyüğüm veya velim/vasim bu uygulamayı '
+                      'kullanmam için onay vermiştir.',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: AppColors.textSecondary,
+                        height: 1.5,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+
+                  // ── Checkbox 5: Sorumluluk kabulü ──
+                  _buildCheckboxTile(
+                    value: _liabilityAccepted,
+                    onChanged: (v) =>
+                        setState(() => _liabilityAccepted = v ?? false),
+                    child: const Text(
+                      'Uygulama özelliklerinin kötüye kullanımından doğan '
+                      'tüm hukuki, cezai ve mali sorumluluğun bana ait '
+                      'olduğunu kabul ediyorum.',
                       style: TextStyle(
                         fontSize: 14,
                         color: AppColors.textSecondary,

@@ -10,7 +10,9 @@ import 'package:latlong2/latlong.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:provider/provider.dart';
 import '../core/app_colors.dart';
+import '../core/constants/app_constants.dart';
 import '../core/di/service_locator.dart';
+import '../core/widgets/feature_warning_dialog.dart';
 import '../core/services/connectivity_service.dart';
 import '../core/services/location_service.dart';
 import '../core/utils/permission_helper.dart';
@@ -289,12 +291,20 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
     );
   }
 
-  void _toggleLocationSharing(HomeProvider provider) {
+  Future<void> _toggleLocationSharing(HomeProvider provider) async {
     HapticFeedback.mediumImpact();
     if (provider.isLocationSharing) {
       provider.stopLocationSharing(manual: true);
       return;
     }
+    final ok = await FeatureWarningHelper.showIfNeeded(
+      context,
+      prefKey: AppConstants.prefWarningLocation,
+      featureName: 'location_sharing',
+      title: FeatureWarningHelper.locationTitle,
+      content: FeatureWarningHelper.locationContent,
+    );
+    if (!ok || !mounted) return;
     _showLocationShareOptions(provider);
   }
 
