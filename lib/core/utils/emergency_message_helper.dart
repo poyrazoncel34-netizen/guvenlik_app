@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../constants/app_constants.dart';
+import '../services/consent_gate_service.dart';
 import '../services/emergency_core_service.dart';
 
 class EmergencyMessagePayload {
@@ -97,6 +98,14 @@ class EmergencyMessageHelper {
   }
 
   static Future<LocationResultWithSource> _resolveLocation() async {
+    // KVKK m.5: Konum rızası kontrolü — rıza yoksa konum işlenmez
+    if (!ConsentGateService.isLocationAllowed()) {
+      return LocationResultWithSource(
+        position: null,
+        source: LocationSource.none,
+      );
+    }
+
     final prefs = await SharedPreferences.getInstance();
     final locationEnabled = prefs.getBool(AppConstants.prefLocation) ?? true;
     if (!locationEnabled) {

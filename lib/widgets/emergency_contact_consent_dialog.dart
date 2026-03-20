@@ -155,6 +155,26 @@ class _EmergencyContactConsentDialogState
                 ),
               ),
             ),
+            const SizedBox(height: 8),
+
+            // 3. kişi KVKK hakları bilgilendirmesi
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.info.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                    color: AppColors.info.withValues(alpha: 0.4)),
+              ),
+              child: Text(
+                'contact_consent_third_party_rights'.tr(),
+                style: const TextStyle(
+                  fontSize: 11,
+                  color: AppColors.info,
+                  height: 1.4,
+                ),
+              ),
+            ),
             const SizedBox(height: 16),
 
             // Onay checkbox

@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/services.dart';
 
 import 'android_intent_service.dart';
+import 'consent_gate_service.dart';
 import 'emergency_platform_service.dart';
 
 enum SmsComposeStatus {
@@ -86,6 +87,13 @@ class SmsService {
     required List<String> numbers,
     required String message,
   }) async {
+    // KVKK m.5: Acil durum kişileri rızası kontrolü
+    if (!ConsentGateService.isEmergencyContactsAllowed()) {
+      return SmsComposeResult.failed(
+        'SMS göndermek için acil durum kişileri rızası gereklidir.',
+      );
+    }
+
     final recipients = numbers
         .map(AndroidIntentService.normalizePhoneNumber)
         .where((number) => number.isNotEmpty)

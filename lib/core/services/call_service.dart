@@ -5,6 +5,7 @@ import 'package:flutter_direct_caller_plugin/flutter_direct_caller_plugin.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import 'android_intent_service.dart';
+import 'consent_gate_service.dart';
 
 enum EmergencyCallStatus { directCallStarted, dialerOpened, failed }
 
@@ -55,6 +56,11 @@ class CallService {
   CallService._();
 
   static Future<EmergencyCallResult> startEmergencyCall(String number) async {
+    // KVKK m.5: Acil durum kişileri rızası kontrolü
+    if (!ConsentGateService.isEmergencyContactsAllowed()) {
+      return EmergencyCallResult.failed(number);
+    }
+
     final normalized = AndroidIntentService.normalizePhoneNumber(number);
     if (normalized.isEmpty) {
       return EmergencyCallResult.failed(normalized);

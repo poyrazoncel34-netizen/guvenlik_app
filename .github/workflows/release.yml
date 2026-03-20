@@ -9,7 +9,6 @@
 #   STORE_PASSWORD    → key.properties'deki storePassword
 #   KEY_PASSWORD      → key.properties'deki keyPassword
 #   KEY_ALIAS         → key.properties'deki keyAlias (genellikle "upload")
-#   SENTRY_DSN        → Sentry proje DSN'i (https://...@sentry.io/...)
 # ============================================================================
 
 name: Release APK
@@ -99,7 +98,6 @@ jobs:
             --build-name="${{ steps.version.outputs.version_name }}" \
             --build-number="${{ steps.version.outputs.version_code }}" \
             --dart-define=ENV=production \
-            --dart-define=SENTRY_DSN="${{ secrets.SENTRY_DSN }}" \
             --dart-define=ENCRYPTION_KEY="${{ secrets.ENCRYPTION_KEY }}"
 
       # 10b. Direkt dağıtım için imzalı full APK build et (full flavor — ALLOW_DIRECT_SMS=true)
@@ -111,7 +109,6 @@ jobs:
             --build-name="${{ steps.version.outputs.version_name }}" \
             --build-number="${{ steps.version.outputs.version_code }}" \
             --dart-define=ENV=production \
-            --dart-define=SENTRY_DSN="${{ secrets.SENTRY_DSN }}" \
             --dart-define=ENCRYPTION_KEY="${{ secrets.ENCRYPTION_KEY }}"
 
       # 11. APK'yı yeniden adlandır (versiyonu içersin)

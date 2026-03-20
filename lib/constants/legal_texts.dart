@@ -6,10 +6,10 @@
 
 class LegalTexts {
   // ── Sürüm Numaraları ──────────────────────────────────────────────────────
-  static const String termsVersion = '2.0.0';
-  static const String kvkkVersion = '2.0.0';
-  static const String lastUpdated = '18 Mart 2026';
-  static const String lastUpdatedEn = 'March 18, 2026';
+  static const String termsVersion = '3.0.0';
+  static const String kvkkVersion = '3.0.0';
+  static const String lastUpdated = '19 Mart 2026';
+  static const String lastUpdatedEn = 'March 19, 2026';
 
   // ── Kullanım Sözleşmesi — Türkçe ─────────────────────────────────────────
   static const String termsOfServiceTr = '''
@@ -21,10 +21,17 @@ Bu Kullanım Sözleşmesi ("Sözleşme"), Poyraz Öncel ("Geliştirici") ile uyg
 ──────────────────────────────────────
 1. UYGULAMANIN AMACI VE KAPSAMI
 ──────────────────────────────────────
-KoruBeni, kişisel güvenlik farkındalığını desteklemek amacıyla geliştirilmiş bir mobil yardımcı uygulamadır. Uygulama; panik butonu, sahte çağrı, güvenli yürüyüş takibi, acil durum SMS gönderimi ve konum paylaşımı gibi özellikler sunmaktadır.
+KoruBeni, kişisel güvenlik farkındalığını desteklemek amacıyla geliştirilmiş ÜCRETSİZ bir mobil yardımcı uygulamadır. Uygulama; panik butonu, sahte çağrı, güvenli yürüyüş takibi, acil durum SMS gönderimi ve konum paylaşımı gibi özellikler sunmaktadır.
+
+6502 Sayılı Tüketicinin Korunması Hakkında Kanun kapsamında bilgilendirme: Bu uygulama ücretsiz bir yardımcı araçtır. Profesyonel güvenlik hizmeti, acil müdahale servisi veya herhangi bir mesleki güvenlik çözümü DEĞİLDİR. Herhangi bir hizmet seviyesi taahhüdü verilmemektedir.
 
 ──────────────────────────────────────
-2. SORUMLULUK REDDİ (DİSCLAIMER)
+2. YAŞ SINIRI VE EBEVEYN ONAYI
+──────────────────────────────────────
+Bu uygulamayı kullanmak için 18 yaşından büyük olmanız veya ebeveyn/veli onayı ile kullanmanız gerekmektedir. 18 yaşından küçük kullanıcıların kişisel verilerinin işlenmesi, KVKK Madde 6 kapsamında ebeveyn/veli açık rızasına tabidir. Kullanıcı, yaş beyanının doğruluğundan münhasıran kendisi sorumludur.
+
+──────────────────────────────────────
+3. SORUMLULUK REDDİ (DİSCLAIMER)
 ──────────────────────────────────────
 • Bu uygulama profesyonel güvenlik hizmeti, acil servis veya polis hizmetinin yerini ALMAZ ve ALMAYACAKTIR.
 • Acil durumlarda 112'yi aramak KULLANICININ SORUMLULUĞUNDADIR. Uygulama yalnızca yardımcı bir araçtır.
@@ -33,7 +40,7 @@ KoruBeni, kişisel güvenlik farkındalığını desteklemek amacıyla geliştir
 • GPS donanımının doğruluk payından kaynaklanan konum hatalarından geliştirici sorumlu değildir.
 
 ──────────────────────────────────────
-3. KULLANICI SORUMLULUKLARI
+4. KULLANICI SORUMLULUKLARI
 ──────────────────────────────────────
 Kullanıcı aşağıdakileri kabul eder:
 • Uygulamayı yalnızca yasal amaçlarla ve iyi niyetle kullanacağını,
@@ -43,52 +50,72 @@ Kullanıcı aşağıdakileri kabul eder:
 • Türk Ceza Kanunu başta olmak üzere yürürlükteki tüm mevzuata uyacağını.
 
 ──────────────────────────────────────
-4. SAHTE ÇAĞRI ÖZELLİĞİ
+5. SAHTE ÇAĞRI ÖZELLİĞİ
 ──────────────────────────────────────
 Sahte çağrı özelliği YALNIZCA kişisel güvenlik amaçlı tasarlanmıştır (örn. tacizden kaçmak için ortamdan uzaklaşma). Bu özelliğin dolandırıcılık, taciz, başkasını yanıltma veya herhangi bir suç eyleminde kullanılması YASALARA AYKIRIDIR. Söz konusu kötüye kullanımlardan doğan TÜM HUKUKİ VE CEZAİ SORUMLULUK KULLANICIYA AİTTİR.
 
 ──────────────────────────────────────
-5. SES KAYDI ÖZELLİĞİ
+6. SES KAYDI ÖZELLİĞİ
 ──────────────────────────────────────
+• Geliştirici, ses kaydı özelliğini yalnızca bir teknik araç olarak sunar; bu özelliğin kullanımından doğan tüm cezai ve hukuki sorumluluk MÜNHASIRAN KULLANICIYA AİTTİR.
 • Ses kaydı özelliğinin kullanımı, kaydedilen kişilerin açık rızasına tabidir.
-• TCK m.133 (Kişiler Arasındaki Konuşmaların Dinlenmesi ve Kayda Alınması) ve ilgili tüm yasal düzenlemelere uygunluk TAMAMEN KULLANICININ SORUMLULUĞUNDADIR.
-• Geliştirici, ses kayıtlarını sunucularına göndermez; kayıtlar yalnızca kullanıcının cihazında saklanır.
+• TCK m.133 (Kişiler Arasındaki Konuşmaların Dinlenmesi ve Kayda Alınması) uyarınca rızasız ses kaydı 2 ila 5 yıl hapis cezası ile cezalandırılır. Bu yasal düzenlemeye uygunluk TAMAMEN KULLANICININ SORUMLULUĞUNDADIR.
+• Uygulama, her ses kaydı başlangıcında kullanıcıdan TCK m.133 kapsamında onay talep eder; onay verilmeden kayıt başlatılmaz.
+• Geliştirici, ses kayıtlarını sunucularına göndermez; kayıtlar yalnızca kullanıcının cihazında AES-256 şifrelemesi ile saklanır.
 
 ──────────────────────────────────────
-6. KONUM PAYLAŞIMI
+7. KONUM PAYLAŞIMI
 ──────────────────────────────────────
 • Konum verisi yalnızca kullanıcının açıkça tetiklemesiyle paylaşılır.
 • Paylaşılan konumun doğruluğu GPS donanımına bağlıdır; geliştirici tarafından garanti edilmez.
 • Konum, yalnızca kullanıcının belirlediği kişilere SMS yoluyla iletilir; üçüncü taraf sunuculara gönderilmez.
 
 ──────────────────────────────────────
-7. ACİL DURUM KİŞİLERİ
+8. ACİL DURUM KİŞİLERİ VE ÜÇÜNCÜ KİŞİ HAKLARI
 ──────────────────────────────────────
 • Kullanıcı, acil durum kişisi olarak eklediği kişilerin ad ve telefon numarası bilgilerini kaydetme ve bu kişilere SMS gönderme yetkisine sahip olduğunu beyan eder.
 • Bu kişilerin KVKK kapsamındaki haklarından kullanıcı sorumludur. Kişilerin rızasının alınması kullanıcının yükümlülüğündedir.
+• Acil durum kişisi olarak eklenen üçüncü kişiler, KVKK Madde 11 kapsamındaki haklarını korubeni.destek@gmail.com adresine başvurarak kullanabilir. Geliştirici, başvuru üzerine ilgili veriyi kullanıcıya bildirerek silinmesini talep edecektir.
 
 ──────────────────────────────────────
-8. GARANTİ REDDİ
+9. GARANTİ REDDİ
 ──────────────────────────────────────
 Uygulama "OLDUĞU GİBİ" (AS IS) sunulmaktadır. Kesintisiz, hatasız veya belirli bir amaca uygun çalışacağına dair HİÇBİR GARANTİ verilmemektedir. Uygulama herhangi bir zamanda önceden bildirim yapılmaksızın değiştirilebilir, güncellenebilir veya hizmet durdurulabilir.
 
 ──────────────────────────────────────
-9. SORUMLULUK SINIRLANDIRMASI
+10. SORUMLULUK SINIRLANDIRMASI
 ──────────────────────────────────────
-Geliştirici; uygulamanın kullanımından veya kullanılamamasından kaynaklanan doğrudan, dolaylı, arızi, özel veya sonuç olarak ortaya çıkan HİÇBİR ZARARDAN (can kaybı, maddi kayıp, veri kaybı dahil) SORUMLU TUTULAMAZ. Bu sınırlama, yerel hukukun izin verdiği azami ölçüde uygulanır.
+Geliştirici; uygulamanın kullanımından veya kullanılamamasından kaynaklanan doğrudan, dolaylı, arızi, özel veya sonuç olarak ortaya çıkan HİÇBİR ZARARDAN (can kaybı, maddi kayıp, veri kaybı dahil) sorumlu tutulamaz. Bu sınırlama, TBK m.115 uyarınca ağır kusur ve kasıt hallerini kapsamamaktadır.
+
+Geliştiricinin toplam sorumluluğu, kullanıcının uygulamayı kullandığı son 12 (on iki) aylık dönemde ödediği toplam bedeli aşamaz. Uygulama ücretsiz sunulmakta olup, kullanıcı bu hususta herhangi bir bedel ödemediğini kabul ve beyan eder.
 
 ──────────────────────────────────────
-10. FİKRİ MÜLKİYET
+11. TAZMİN (INDEMNIFICATION)
+──────────────────────────────────────
+Kullanıcı, uygulamanın kullanımından kaynaklanan üçüncü kişi talep, dava veya zararlarından geliştiricinin zarar görmemesini sağlamayı ve doğacak makul avukatlık ücretleri dahil tüm zararları tazmin etmeyi kabul eder.
+
+──────────────────────────────────────
+12. MÜCBİR SEBEP
+──────────────────────────────────────
+Doğal afet, savaş, salgın hastalık, internet/telekomünikasyon altyapısı kesintisi, enerji kesintisi, devlet kısıtlamaları veya kontrol dışı benzeri olaylar ("mücbir sebep") nedeniyle uygulamanın çalışmaması veya gecikmesinden geliştirici sorumlu tutulamaz.
+
+──────────────────────────────────────
+13. FİKRİ MÜLKİYET
 ──────────────────────────────────────
 Uygulama ve içerdiği tüm fikri mülkiyet hakları Poyraz Öncel'e aittir. Kullanıcıya yalnızca kişisel, devredilemez, münhasır olmayan bir kullanım lisansı verilmektedir.
 
 ──────────────────────────────────────
-11. UYGULANACAK HUKUK VE YETKİLİ MAHKEME
+14. UYGULANACAK HUKUK VE YETKİLİ MAHKEME
 ──────────────────────────────────────
 Bu Sözleşme Türkiye Cumhuriyeti hukukuna tabidir. Bu Sözleşme'den doğan uyuşmazlıklarda İzmir Mahkemeleri ve İcra Daireleri yetkilidir.
 
 ──────────────────────────────────────
-12. SÖZLEŞME DEĞİŞİKLİKLERİ
+15. BÖLÜNEBİLİRLİK
+──────────────────────────────────────
+Bu Sözleşme'nin herhangi bir hükmünün yetkili mahkeme tarafından geçersiz veya uygulanamaz ilan edilmesi halinde, Sözleşme'nin geri kalan hükümleri tam olarak yürürlükte kalmaya devam eder.
+
+──────────────────────────────────────
+16. SÖZLEŞME DEĞİŞİKLİKLERİ
 ──────────────────────────────────────
 Geliştirici bu Sözleşme'yi dilediği zaman güncelleme hakkını saklı tutar. Güncellemeler uygulamada yayımlandığında devam eden kullanım yeni koşulların kabulü anlamına gelir. Önemli değişikliklerde uygulama yeniden onay isteyecektir.
 
@@ -105,10 +132,17 @@ This Terms of Service Agreement ("Agreement") is entered into between Poyraz Ön
 ──────────────────────────────────────
 1. PURPOSE AND SCOPE
 ──────────────────────────────────────
-KoruBeni is a mobile utility application developed to support personal safety awareness. The app offers features such as a panic button, fake call, safe walk tracking, emergency SMS sending, and location sharing.
+KoruBeni is a FREE mobile utility application developed to support personal safety awareness. The app offers features such as a panic button, fake call, safe walk tracking, emergency SMS sending, and location sharing.
+
+Notice under Consumer Protection Law No. 6502: This application is a free auxiliary tool. It is NOT a professional security service, emergency response service, or any professional security solution. No service level commitment is provided.
 
 ──────────────────────────────────────
-2. DISCLAIMER
+2. AGE RESTRICTION AND PARENTAL CONSENT
+──────────────────────────────────────
+You must be at least 18 years old or have parental/guardian consent to use this application. Processing of personal data of users under 18 is subject to explicit parental/guardian consent under KVKK Article 6. The User is solely responsible for the accuracy of their age declaration.
+
+──────────────────────────────────────
+3. DISCLAIMER
 ──────────────────────────────────────
 • This application does NOT and WILL NOT replace professional security services, emergency services, or police services.
 • Calling 112 in emergency situations IS THE USER'S RESPONSIBILITY. The app is only an auxiliary tool.
@@ -117,7 +151,7 @@ KoruBeni is a mobile utility application developed to support personal safety aw
 • The Developer is not responsible for location errors arising from GPS hardware inaccuracy.
 
 ──────────────────────────────────────
-3. USER RESPONSIBILITIES
+4. USER RESPONSIBILITIES
 ──────────────────────────────────────
 The User agrees to:
 • Use the application only for lawful purposes and in good faith,
@@ -127,52 +161,72 @@ The User agrees to:
 • Comply with all applicable laws including the Turkish Penal Code.
 
 ──────────────────────────────────────
-4. FAKE CALL FEATURE
+5. FAKE CALL FEATURE
 ──────────────────────────────────────
 The fake call feature is designed ONLY for personal safety purposes (e.g., leaving a situation to escape harassment). Using this feature for fraud, harassment, deception of others, or any criminal act IS ILLEGAL. ALL LEGAL AND CRIMINAL RESPONSIBILITY for such misuse BELONGS TO THE USER.
 
 ──────────────────────────────────────
-5. AUDIO RECORDING FEATURE
+6. AUDIO RECORDING FEATURE
 ──────────────────────────────────────
+• The Developer provides the audio recording feature solely as a technical tool; ALL criminal and legal responsibility arising from its use BELONGS EXCLUSIVELY TO THE USER.
 • Use of the audio recording feature is subject to the express consent of the persons being recorded.
-• Compliance with Article 133 of the Turkish Penal Code (Wiretapping) and all related legal regulations IS ENTIRELY THE USER'S RESPONSIBILITY.
-• The Developer does not send audio recordings to servers; recordings are stored only on the user's device.
+• Under Article 133 of the Turkish Penal Code (Wiretapping), recording without consent is punishable by 2 to 5 years of imprisonment. Compliance with this legal provision IS ENTIRELY THE USER'S RESPONSIBILITY.
+• The application requests TCK Article 133 confirmation from the user before each audio recording session; recording will not start without confirmation.
+• The Developer does not send audio recordings to servers; recordings are stored only on the user's device with AES-256 encryption.
 
 ──────────────────────────────────────
-6. LOCATION SHARING
+7. LOCATION SHARING
 ──────────────────────────────────────
 • Location data is shared only when explicitly triggered by the user.
 • The accuracy of the shared location depends on GPS hardware and is not guaranteed by the Developer.
 • Location is transmitted only to persons designated by the user via SMS; not sent to third-party servers.
 
 ──────────────────────────────────────
-7. EMERGENCY CONTACTS
+8. EMERGENCY CONTACTS AND THIRD-PARTY RIGHTS
 ──────────────────────────────────────
 • The User declares that they have the authority to save and send SMS to the persons added as emergency contacts.
 • The User is responsible for the rights of these persons under applicable privacy laws.
+• Third parties added as emergency contacts may exercise their rights under KVKK Article 11 by contacting korubeni.destek@gmail.com. The Developer will notify the relevant user and request deletion of the data.
 
 ──────────────────────────────────────
-8. DISCLAIMER OF WARRANTIES
+9. DISCLAIMER OF WARRANTIES
 ──────────────────────────────────────
 The application is provided "AS IS". NO WARRANTY of any kind is given that it will operate without interruption, error-free, or fit for a particular purpose. The application may be changed, updated, or service discontinued at any time without prior notice.
 
 ──────────────────────────────────────
-9. LIMITATION OF LIABILITY
+10. LIMITATION OF LIABILITY
 ──────────────────────────────────────
-The Developer SHALL NOT BE LIABLE for any direct, indirect, incidental, special, or consequential DAMAGES (including loss of life, financial loss, or data loss) arising from use or inability to use the application. This limitation applies to the maximum extent permitted by local law.
+The Developer shall not be liable for any direct, indirect, incidental, special, or consequential DAMAGES (including loss of life, financial loss, or data loss) arising from use or inability to use the application. This limitation does NOT cover cases of gross negligence or intentional misconduct in accordance with TBK Article 115.
+
+The Developer's total liability shall not exceed the total amount paid by the User in the 12 (twelve) months preceding the claim. The application is provided free of charge, and the User acknowledges that no payment has been made.
 
 ──────────────────────────────────────
-10. INTELLECTUAL PROPERTY
+11. INDEMNIFICATION
+──────────────────────────────────────
+The User agrees to indemnify and hold the Developer harmless from any third-party claims, lawsuits, or damages arising from the use of the application, including reasonable attorney fees.
+
+──────────────────────────────────────
+12. FORCE MAJEURE
+──────────────────────────────────────
+The Developer shall not be liable for any failure or delay in the operation of the application caused by natural disasters, war, pandemics, internet/telecommunications infrastructure outages, power outages, government restrictions, or similar events beyond the Developer's control ("force majeure").
+
+──────────────────────────────────────
+13. INTELLECTUAL PROPERTY
 ──────────────────────────────────────
 The application and all intellectual property rights contained therein belong to Poyraz Öncel. The User is granted only a personal, non-transferable, non-exclusive license to use the application.
 
 ──────────────────────────────────────
-11. GOVERNING LAW AND JURISDICTION
+14. GOVERNING LAW AND JURISDICTION
 ──────────────────────────────────────
 This Agreement is governed by the laws of the Republic of Turkey. The courts and enforcement offices of İzmir shall have jurisdiction over disputes arising from this Agreement.
 
 ──────────────────────────────────────
-12. AMENDMENTS
+15. SEVERABILITY
+──────────────────────────────────────
+If any provision of this Agreement is found to be invalid or unenforceable by a competent court, the remaining provisions shall continue in full force and effect.
+
+──────────────────────────────────────
+16. AMENDMENTS
 ──────────────────────────────────────
 The Developer reserves the right to update this Agreement at any time. Continued use after updates are published in the application constitutes acceptance of the new terms. For material changes, the application will request re-consent.
 
@@ -224,7 +278,7 @@ Yasal Rıza Logu   | Rıza türü, tarih, versiyon        | KVKK uyum kaydı    
 ──────────────────────────────────────
 Kişisel verileriniz HİÇBİR üçüncü taraf sunucusuna aktarılmaz. Tüm veriler YALNIZCA CİHAZINIZDA saklanır. Acil durum tetiklendiğinde, yalnızca sizin belirlediğiniz kişilere SMS yoluyla konum bilginiz iletilir; bu iletim doğrudan cihazınızın SMS altyapısı üzerinden gerçekleşir.
 
-Kişisel verileriniz TÜRK YE DIŞINA aktarılmaz.
+Kişisel verileriniz TÜRKİYE DIŞINA aktarılmaz.
 
 ──────────────────────────────────────
 5. VERİ SAKLAMA SÜRELERİ
@@ -249,7 +303,12 @@ Uygulama, biyometrik veriyi (parmak izi, yüz tanıma) DOĞRUDAN İŞLEMEZ. Biyo
 • Uygulama, internete herhangi bir kişisel veri göndermemektedir.
 
 ──────────────────────────────────────
-8. HAKLARINIZ (KVKK Madde 11)
+8. ÜÇÜNCÜ KİŞİ VERİ SAHİPLERİNİN HAKLARI
+──────────────────────────────────────
+Kullanıcı tarafından acil durum kişisi olarak eklenen üçüncü kişiler de veri sahibi sıfatıyla KVKK Madde 11 kapsamındaki tüm haklardan yararlanır. Bu kişiler, verilerinin silinmesini veya düzeltilmesini talep etmek için korubeni.destek@gmail.com adresine başvurabilir.
+
+──────────────────────────────────────
+9. HAKLARINIZ (KVKK Madde 11)
 ──────────────────────────────────────
 KVKK kapsamında aşağıdaki haklara sahipsiniz:
 a) Kişisel veri işlenip işlenmediğini öğrenme
@@ -263,7 +322,7 @@ g) Düzeltme/silme işlemlerinin aktarılan üçüncü kişilere bildirilmesini 
 h) Kanuna aykırı olarak işlenmesi sebebiyle zarara uğraması halinde zararın giderilmesini talep etme
 
 ──────────────────────────────────────
-9. BAŞVURU YÖNTEMİ
+10. BAŞVURU YÖNTEMİ
 ──────────────────────────────────────
 Haklarınızı kullanmak için aşağıdaki e-posta adresine yazılı başvuruda bulunabilirsiniz:
 
@@ -274,7 +333,7 @@ Konu Satırı: "KVKK Başvurusu"
 Başvurunuzda; adınızı, soyadınızı, başvuruya konu talebinizi ve iletişim bilgilerinizi belirtmeniz gerekmektedir.
 
 ──────────────────────────────────────
-10. AYDINLATMA METNİ DEĞİŞİKLİKLERİ
+11. AYDINLATMA METNİ DEĞİŞİKLİKLERİ
 ──────────────────────────────────────
 Bu metin, KVKK ve ilgili mevzuattaki değişiklikler doğrultusunda güncellenebilir. Önemli değişikliklerde uygulama yeniden onay isteyecektir.
 ''';
@@ -349,7 +408,12 @@ The application does NOT DIRECTLY PROCESS biometric data (fingerprint, face reco
 • The application does not send any personal data to the internet.
 
 ──────────────────────────────────────
-8. YOUR RIGHTS (KVKK Article 11)
+8. THIRD-PARTY DATA SUBJECT RIGHTS
+──────────────────────────────────────
+Third parties added as emergency contacts by the User also hold data subject status and benefit from all rights under KVKK Article 11. These persons may contact korubeni.destek@gmail.com to request deletion or correction of their data.
+
+──────────────────────────────────────
+9. YOUR RIGHTS (KVKK Article 11)
 ──────────────────────────────────────
 Under KVKK, you have the following rights:
 a) To learn whether personal data is processed
@@ -363,7 +427,7 @@ g) To request notification of correction/deletion to third parties to whom data 
 h) To demand compensation for damages in case of unlawful processing
 
 ──────────────────────────────────────
-9. APPLICATION METHOD
+10. APPLICATION METHOD
 ──────────────────────────────────────
 To exercise your rights, you may apply in writing to the following email address:
 
@@ -374,7 +438,7 @@ Subject Line : "KVKK Application"
 In your application, please include your name, surname, the subject of your request, and contact information.
 
 ──────────────────────────────────────
-10. CHANGES TO DISCLOSURE NOTICE
+11. CHANGES TO DISCLOSURE NOTICE
 ──────────────────────────────────────
 This notice may be updated in line with changes to KVKK and related legislation. For significant changes, the application will request re-consent.
 ''';

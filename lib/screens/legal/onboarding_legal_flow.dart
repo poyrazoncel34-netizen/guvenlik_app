@@ -1,6 +1,6 @@
 // ============================================================================
 // ONBOARDING LEGAL FLOW — Ana yasal akış kontrolcüsü
-// 3 adım: Kullanım Sözleşmesi → KVKK Aydınlatma → Granüler Rıza
+// 4 adım: Yaş Doğrulama → Kullanım Sözleşmesi → KVKK Aydınlatma → Granüler Rıza
 // Tüm adımlar tamamlanmadan devam edilemez.
 // ============================================================================
 
@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import '../../core/app_colors.dart';
 import '../../services/consent_manager.dart';
 import '../../core/di/service_locator.dart';
+import 'age_verification_screen.dart';
 import 'terms_of_service_screen.dart';
 import 'kvkk_disclosure_screen.dart';
 import 'consent_screen.dart';
@@ -22,7 +23,7 @@ class OnboardingLegalFlow extends StatefulWidget {
 
 class _OnboardingLegalFlowState extends State<OnboardingLegalFlow> {
   int _currentStep = 0;
-  final int _totalSteps = 3;
+  final int _totalSteps = 4;
 
   void _nextStep() {
     if (_currentStep < _totalSteps - 1) {
@@ -117,10 +118,12 @@ class _OnboardingLegalFlowState extends State<OnboardingLegalFlow> {
   String get _stepLabel {
     switch (_currentStep) {
       case 0:
-        return 'Kullanım Sözleşmesi';
+        return 'Yaş Doğrulama';
       case 1:
-        return 'KVKK Aydınlatma Metni';
+        return 'Kullanım Sözleşmesi';
       case 2:
+        return 'KVKK Aydınlatma Metni';
+      case 3:
         return 'Açık Rıza';
       default:
         return '';
@@ -130,16 +133,20 @@ class _OnboardingLegalFlowState extends State<OnboardingLegalFlow> {
   Widget _buildCurrentStep() {
     switch (_currentStep) {
       case 0:
+        return AgeVerificationScreen(
+          onVerified: _nextStep,
+        );
+      case 1:
         return TermsOfServiceScreen(
           isReadOnly: false,
           onAccepted: _nextStep,
         );
-      case 1:
+      case 2:
         return KvkkDisclosureScreen(
           isReadOnly: false,
           onAccepted: _nextStep,
         );
-      case 2:
+      case 3:
         return ConsentScreen(
           onCompleted: _nextStep,
         );

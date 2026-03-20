@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
+import 'consent_gate_service.dart';
+
 class EmergencyPlatformService {
   EmergencyPlatformService._();
 
@@ -184,6 +186,11 @@ class EmergencyPlatformService {
 
   Future<void> startRecordingSession() async {
     if (!isSupported) {
+      return;
+    }
+    // KVKK m.5 + TCK m.133: Ses kaydı rızası kontrolü
+    if (!ConsentGateService.isAudioAllowed()) {
+      debugPrint('[EmergencyPlatform] Ses kaydı rızası verilmemiş — kayıt başlatılmadı');
       return;
     }
     await _methodChannel.invokeMethod<void>('startRecordingSession');
