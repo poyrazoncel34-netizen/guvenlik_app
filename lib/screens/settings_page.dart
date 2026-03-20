@@ -21,8 +21,11 @@ import 'legal_info_screen.dart';
 import 'profile_page.dart';
 import 'settings_detail_page.dart';
 import '../presentation/providers/settings_provider.dart';
+import '../presentation/providers/subscription_provider.dart';
 import 'battery_optimization_wizard.dart';
 import 'settings_legal/legal_settings_screen.dart';
+import 'subscription/paywall_screen.dart';
+import 'subscription/subscription_management_screen.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -97,6 +100,7 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<SettingsProvider>();
+    final isPro = context.watch<SubscriptionProvider>().isPro;
     return Semantics(
       label: "semantics_settings_page".tr(),
       hint: "semantics_settings_page_hint".tr(),
@@ -107,6 +111,14 @@ class _SettingsPageState extends State<SettingsPage> {
           children: [
             // Profile section
             _buildProfileSection(provider),
+            const SizedBox(height: 28),
+
+            // KoruBeni Pro
+            _buildSectionTitle('subscription_section_title'.tr()),
+            const SizedBox(height: 14),
+            _buildSettingsCard([
+              _buildProTile(isPro),
+            ]),
             const SizedBox(height: 28),
 
             // Security settings
@@ -535,6 +547,99 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
             ),
             const SizedBox(height: 20),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProTile(bool isPro) {
+    return InkWell(
+      onTap: () {
+        HapticFeedback.lightImpact();
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => isPro
+                ? const SubscriptionManagementScreen()
+                : const PaywallScreen(),
+          ),
+        ).then((_) {
+          if (!mounted) return;
+          context.read<SubscriptionProvider>().refresh();
+        });
+      },
+      borderRadius: BorderRadius.circular(16),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: isPro
+                    ? AppColors.success.withValues(alpha: 0.15)
+                    : AppColors.warning.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                Icons.workspace_premium_rounded,
+                color: isPro ? AppColors.success : AppColors.warning,
+                size: 22,
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'subscription_tile_title'.tr(),
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    isPro
+                        ? 'subscription_tile_subtitle_pro'.tr()
+                        : 'subscription_tile_subtitle_free'.tr(),
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (isPro)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.success.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: AppColors.success.withValues(alpha: 0.3),
+                  ),
+                ),
+                child: Text(
+                  'subscription_badge_pro'.tr(),
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.success,
+                  ),
+                ),
+              )
+            else
+              Icon(
+                Icons.chevron_right_rounded,
+                color: AppColors.textSecondary,
+                size: 20,
+              ),
           ],
         ),
       ),

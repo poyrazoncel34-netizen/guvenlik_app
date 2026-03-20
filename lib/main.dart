@@ -24,6 +24,7 @@ import 'core/widgets/emergency_trigger_host.dart';
 import 'core/widgets/app_privacy_shield.dart';
 import 'core/services/local_logger_service.dart';
 import 'core/widgets/offline_banner.dart';
+import 'core/services/revenue_cat_service.dart';
 import 'package:easy_localization/easy_localization.dart';
 
 void main() async {
@@ -94,6 +95,7 @@ void main() async {
     if (!kIsWeb) {
       services.add(NotificationService.instance.initialize());
       services.add(KoruBeniForegroundService.configure());
+      services.add(serviceLocator<RevenueCatService>().initialize());
     }
     await Future.wait(services);
   } catch (e) {

@@ -3,6 +3,7 @@ import 'app_state_provider.dart';
 import 'contacts_provider.dart';
 import 'home_provider.dart';
 import 'settings_provider.dart';
+import 'subscription_provider.dart';
 
 class AppProviders {
   static final providers = [
@@ -10,5 +11,8 @@ class AppProviders {
     ChangeNotifierProvider<ContactsProvider>(create: (_) => ContactsProvider()),
     ChangeNotifierProvider<HomeProvider>(create: (_) => HomeProvider()),
     ChangeNotifierProvider<SettingsProvider>(create: (_) => SettingsProvider()),
+    ChangeNotifierProvider<SubscriptionProvider>(
+      create: (_) => SubscriptionProvider(),
+    ),
   ];
 }
