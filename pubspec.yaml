@@ -48,8 +48,6 @@ dependencies:
   flutter_map: ^7.0.2
   latlong2: ^0.9.1
   geolocator: ^13.0.2
-  # Accelerometer for shake detection
-  sensors_plus: ^6.1.1
   # Connectivity check
   connectivity_plus: ^6.1.4
   wakelock_plus: ^1.2.8

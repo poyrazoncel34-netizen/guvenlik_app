@@ -54,8 +54,6 @@ void main() {
         AppConstants.prefNotificationPermissionPrompted,
         AppConstants.prefDemoMode,
         AppConstants.prefVolumeTrigger,
-        AppConstants.prefShakeEnabled,
-        AppConstants.prefShakeSensitivity,
         AppConstants.prefBloodType,
         AppConstants.prefAllergies,
         AppConstants.prefMedicalConditions,

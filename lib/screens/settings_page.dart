@@ -13,10 +13,8 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/app_colors.dart';
 import '../core/constants/app_constants.dart';
-import '../core/widgets/feature_warning_dialog.dart';
 import '../core/utils/app_reset_helper.dart';
 import '../core/utils/pin_settings_helper.dart';
-import '../core/services/shake_detector_service.dart';
 import 'legal_info_screen.dart';
 import 'profile_page.dart';
 import 'settings_detail_page.dart';
@@ -206,109 +204,6 @@ class _SettingsPageState extends State<SettingsPage> {
                   subtitle: "settings_volume_trigger_subtitle".tr(),
                   value: provider.volumeTriggerEnabled,
                   onChanged: provider.setVolumeTrigger,
-                ),
-              ],
-              _buildDivider(),
-              _buildSwitchTile(
-                icon: Icons.vibration_rounded,
-                iconColor: AppColors.warning,
-                title: 'settings_shake_title'.tr(),
-                subtitle: 'settings_shake_subtitle'.tr(),
-                value: provider.shakeEnabled,
-                onChanged: (val) async {
-                  if (val) {
-                    final ok = await FeatureWarningHelper.showIfNeeded(
-                      context,
-                      prefKey: AppConstants.prefWarningShake,
-                      featureName: 'shake_detection',
-                      title: FeatureWarningHelper.shakeTitle,
-                      content: FeatureWarningHelper.shakeContent,
-                    );
-                    if (!ok || !context.mounted) return;
-                  }
-                  provider.setShakeEnabled(val);
-                },
-              ),
-              if (provider.shakeEnabled) ...[
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'settings_shake_sensitivity'.tr(),
-                        style: const TextStyle(
-                          fontSize: 13,
-                          color: AppColors.textSecondary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: ShakeSensitivity.values.map((level) {
-                          final isSelected =
-                              provider.shakeSensitivity == level;
-                          final label = {
-                            ShakeSensitivity.low:
-                                'shake_sensitivity_low'.tr(),
-                            ShakeSensitivity.medium:
-                                'shake_sensitivity_medium'.tr(),
-                            ShakeSensitivity.high:
-                                'shake_sensitivity_high'.tr(),
-                          }[level]!;
-                          return Expanded(
-                            child: Padding(
-                              padding: EdgeInsets.only(
-                                  right: level != ShakeSensitivity.high
-                                      ? 8
-                                      : 0),
-                              child: GestureDetector(
-                                onTap: () {
-                                  HapticFeedback.lightImpact();
-                                  provider.setShakeSensitivity(level);
-                                },
-                                child: AnimatedContainer(
-                                  duration: const Duration(
-                                      milliseconds: 200),
-                                  padding:
-                                      const EdgeInsets.symmetric(
-                                          vertical: 10),
-                                  decoration: BoxDecoration(
-                                    color: isSelected
-                                        ? AppColors.primary
-                                            .withValues(alpha: 0.15)
-                                        : AppColors.surface,
-                                    borderRadius:
-                                        BorderRadius.circular(10),
-                                    border: Border.all(
-                                      color: isSelected
-                                          ? AppColors.primary
-                                          : AppColors.border,
-                                      width: isSelected ? 1.5 : 1,
-                                    ),
-                                  ),
-                                  child: Center(
-                                    child: Text(
-                                      label,
-                                      style: TextStyle(
-                                        fontSize: 13,
-                                        fontWeight: isSelected
-                                            ? FontWeight.w700
-                                            : FontWeight.w500,
-                                        color: isSelected
-                                            ? AppColors.primary
-                                            : AppColors.textSecondary,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          );
-                        }).toList(),
-                      ),
-                    ],
-                  ),
                 ),
               ],
             ]),
