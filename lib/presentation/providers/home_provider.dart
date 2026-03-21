@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:fluttercontactpicker_plus/fluttercontactpicker_plus.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 import '../../core/services/sms_service.dart';
@@ -77,9 +76,8 @@ class HomeProvider extends ChangeNotifier {
         serviceEnabled &&
         (permission == LocationPermission.always ||
             permission == LocationPermission.whileInUse);
-    final contactsGranted = kIsWeb
-        ? false
-        : await FlutterContactPicker.hasPermission();
+    // Contact Picker uses Intent.ACTION_PICK — no READ_CONTACTS permission needed.
+    const contactsGranted = !kIsWeb;
 
     _locationPermissionGranted = locationGranted;
     _contactsPermissionGranted = contactsGranted;
@@ -118,11 +116,7 @@ class HomeProvider extends ChangeNotifier {
   }
 
   Future<String?> requestContactsPermission() async {
-    if (kIsWeb) {
-      return "home_contacts_web_unsupported".tr();
-    }
-    await FlutterContactPicker.requestPermission();
-    await _loadPermissionsStatus();
+    // Contact Picker uses Intent.ACTION_PICK — no permission request needed.
     return null;
   }
 
