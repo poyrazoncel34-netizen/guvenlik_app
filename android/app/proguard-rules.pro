@@ -34,9 +34,6 @@
 # Audioplayers
 -keep class xyz.luan.audioplayers.** { *; }
 
-# Record (audio recording)
--keep class com.llfbandit.record.** { *; }
-
 # Connectivity Plus
 -keep class dev.fluttercommunity.plus.connectivity.** { *; }
 

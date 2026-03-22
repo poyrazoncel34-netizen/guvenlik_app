@@ -24,6 +24,9 @@ import 'countdown_screen.dart';
 import 'safe_walk_screen.dart';
 import 'safety_timeline_screen.dart';
 import 'check_in_screen.dart';
+import '../presentation/providers/subscription_provider.dart';
+import 'subscription/paywall_screen.dart';
+import '../core/services/subscription_gate.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -709,6 +712,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   }
 
   void _showFakeCallDelayOptions() {
+    final isPro = context.read<SubscriptionProvider>().isPro;
+    if (!SubscriptionGate.canUseProFeature(isPro: isPro)) {
+      Navigator.push(context, MaterialPageRoute(builder: (_) => const PaywallScreen()));
+      return;
+    }
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -983,6 +991,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         Icons.directions_walk_rounded,
         AppColors.accent,
         () {
+          final isPro = context.read<SubscriptionProvider>().isPro;
+          if (!SubscriptionGate.canUseProFeature(isPro: isPro)) {
+            Navigator.push(context, MaterialPageRoute(builder: (_) => const PaywallScreen()));
+            return;
+          }
           Navigator.push(
             context,
             MaterialPageRoute(builder: (_) => const SafeWalkScreen()),
@@ -1017,6 +1030,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         Icons.verified_user_rounded,
         AppColors.success,
         () {
+          final isPro = context.read<SubscriptionProvider>().isPro;
+          if (!SubscriptionGate.canUseProFeature(isPro: isPro)) {
+            Navigator.push(context, MaterialPageRoute(builder: (_) => const PaywallScreen()));
+            return;
+          }
           Navigator.push(
             context,
             MaterialPageRoute(builder: (_) => const CheckInScreen()),
@@ -1165,6 +1183,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   }
 
   void _activateSiren() {
+    final isPro = context.read<SubscriptionProvider>().isPro;
+    if (!SubscriptionGate.canUseProFeature(isPro: isPro)) {
+      Navigator.push(context, MaterialPageRoute(builder: (_) => const PaywallScreen()));
+      return;
+    }
     HapticFeedback.heavyImpact();
     // Analytics removed (offline-first)
     showDialog(
