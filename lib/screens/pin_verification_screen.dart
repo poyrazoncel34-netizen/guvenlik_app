@@ -5,6 +5,7 @@ import 'package:easy_localization/easy_localization.dart';
 import '../core/app_colors.dart';
 import '../core/services/contact_service.dart';
 import '../core/services/call_service.dart';
+import '../core/utils/permission_helper.dart';
 import '../core/services/sms_service.dart';
 import '../core/di/service_locator.dart';
 import '../core/security/secure_storage.dart';
@@ -102,6 +103,10 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
         message: smsMessage,
       );
 
+      // Prominent disclosure before requesting CALL_PHONE permission (Play Store compliance)
+      if (mounted) {
+        await PermissionHelper.requestCallPhonePermission(context);
+      }
       final callResult = await CallService.startEmergencyCall(emergencyNumber);
 
       if (!smsResult.isSuccess && !callResult.isSuccess) {

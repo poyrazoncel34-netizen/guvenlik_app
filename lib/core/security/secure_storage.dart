@@ -3,6 +3,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 class SecureStorage {
   static const bool encryptedPrefsEnabled = true;
 
+  // Android: EncryptedSharedPreferences (Keystore-backed AES-256)
   static final _storage = FlutterSecureStorage(
     aOptions: const AndroidOptions(encryptedSharedPreferences: true),
   );

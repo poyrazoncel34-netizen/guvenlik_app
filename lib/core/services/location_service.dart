@@ -2,9 +2,11 @@
 // KONUM SERVİSİ - GPS & İZİN YÖNETİMİ
 // ============================================================================
 
+import 'dart:async';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
+import 'resource_monitor_service.dart';
 
 /// Konum servisi sonuç durumları
 enum LocationStatus {
@@ -39,6 +41,14 @@ class LocationService {
   // Cache for last known position
   LatLng? _lastKnownPosition;
   LatLng get lastKnownPosition => _lastKnownPosition ?? defaultLocation;
+
+  bool _lowBattery = false;
+  StreamSubscription<bool>? _lowBatterySubscription;
+
+  void initBatteryAwareness() {
+    _lowBatterySubscription ??= ResourceMonitorService.instance.lowBatteryStream
+        .listen((isLow) => _lowBattery = isLow);
+  }
 
   /// Konum servisinin aktif olup olmadığını kontrol eder
   Future<bool> isLocationServiceEnabled() async {
@@ -101,12 +111,12 @@ class LocationService {
         return permissionResult;
       }
 
-      // Konum al
+      // Konum al — pil düşükse doğruluk düşürülür
       final position = await Geolocator.getCurrentPosition(
         locationSettings: LocationSettings(
-          accuracy: highAccuracy
-              ? LocationAccuracy.high
-              : LocationAccuracy.medium,
+          accuracy: (_lowBattery || !highAccuracy)
+              ? LocationAccuracy.medium
+              : LocationAccuracy.high,
           timeLimit: const Duration(seconds: 10),
         ),
       );

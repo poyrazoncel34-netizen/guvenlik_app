@@ -55,8 +55,8 @@ class KoruBeniForegroundService {
           autoStart: false, // Manuel başlatma — sadece alarm modunda
           isForegroundMode: true,
           notificationChannelId: kForegroundChannelId,
-          initialNotificationTitle: 'KoruBeni',
-          initialNotificationContent: 'Güvenlik modu aktif 🛡️',
+          initialNotificationTitle: 'KoruBeni Aktif',
+          initialNotificationContent: 'Acil durum modu aktif — konum paylaşılıyor',
           foregroundServiceNotificationId: kForegroundNotificationId,
           foregroundServiceTypes: [AndroidForegroundType.dataSync],
         ),
@@ -193,8 +193,8 @@ Future<void> _onStart(ServiceInstance service) async {
       if (await service.isForegroundService()) {
         notificationsPlugin.show(
           kForegroundNotificationId,
-          'KoruBeni Aktif 🛡️',
-          'Güvenlik modu arka planda çalışıyor',
+          'KoruBeni Aktif',
+          'Acil durum modu aktif — konum paylaşılıyor',
           const NotificationDetails(
             android: AndroidNotificationDetails(
               kForegroundChannelId,

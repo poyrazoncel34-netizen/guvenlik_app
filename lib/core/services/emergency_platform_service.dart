@@ -61,29 +61,6 @@ class EmergencyPlatformService {
     _initialized = true;
   }
 
-  Future<void> armShake() async {
-    if (!isSupported) {
-      return;
-    }
-    await _methodChannel.invokeMethod<void>('armShake');
-  }
-
-  Future<void> disarmShake() async {
-    if (!isSupported) {
-      return;
-    }
-    await _methodChannel.invokeMethod<void>('disarmShake');
-  }
-
-  Future<void> setShakeSensitivity(int level) async {
-    if (!isSupported) {
-      return;
-    }
-    await _methodChannel.invokeMethod<void>('setShakeSensitivity', {
-      'level': level,
-    });
-  }
-
   Future<void> scheduleCheckIn({
     required String phase,
     required DateTime deadline,

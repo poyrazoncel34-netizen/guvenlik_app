@@ -969,7 +969,7 @@ class _ContactsPageState extends State<ContactsPage> {
         return;
       }
       final contact = await FlutterContactPicker.pickPhoneContact(
-        askForPermission: true,
+        askForPermission: false,
       );
       if (!mounted) return;
       final name = (contact.fullName?.trim().isNotEmpty ?? false)

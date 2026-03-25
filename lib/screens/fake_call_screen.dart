@@ -7,6 +7,7 @@ import 'dart:async';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
@@ -384,6 +385,7 @@ class _FakeCallScreenState extends State<FakeCallScreen>
                         Icons.call_end_rounded,
                         "fake_call_decline".tr(),
                         () {
+                          HapticFeedback.heavyImpact();
                           _stopRingtone();
                           ActivityService.logEvent(
                             type: ActivityType.fakeCallUsed,
@@ -400,6 +402,7 @@ class _FakeCallScreenState extends State<FakeCallScreen>
                         Icons.call_rounded,
                         "fake_call_accept".tr(),
                         () {
+                          HapticFeedback.mediumImpact();
                           _stopRingtone();
                           ActivityService.logEvent(
                             type: ActivityType.fakeCallUsed,

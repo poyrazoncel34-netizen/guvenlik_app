@@ -88,13 +88,6 @@ class FeatureWarningHelper {
       '• Konum paylaşımından doğan sonuçların tüm sorumluluğu kullanıcıya aittir\n\n'
       '⚠️ Gerçek acil durumda mutlaka 112\'yi arayın.';
 
-  static const String shakeTitle = '📳 Shake Algılama — Bilgilendirme';
-  static const String shakeContent =
-      'Telefonunuzu sarsarak acil durum tetikleyebilirsiniz. Ancak:\n\n'
-      '• Bu özellik yanlışlıkla tetiklenebilir (cep, yürüyüş, araç titreşimi)\n'
-      '• Yanlış tetiklenmeden doğan sonuçlardan (gereksiz SMS dahil) siz sorumlusunuz\n'
-      '• PIN girişi ile iptal etme süreniz sınırlıdır; süre aşımından geliştirici sorumlu değildir\n\n'
-      'Özelliği aktifleştirerek bu koşulları kabul etmiş olursunuz.';
 }
 
 class _FeatureWarningDialog extends StatelessWidget {

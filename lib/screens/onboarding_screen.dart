@@ -24,24 +24,30 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   late AnimationController _iconPulseController;
   late AnimationController _fadeController;
 
-  static const List<_OnboardingPage> _pages = [
+  List<_OnboardingPage> get _pages => [
     _OnboardingPage(
       icon: Icons.vibration_rounded,
-      title: 'Salla ve Uyar',
-      body: 'Tehlike anında telefonunuzu sertçe sallayarak acil durum modunu sessizce tetikleyebilirsiniz.',
+      title: 'onboarding_1_title'.tr(),
+      body: 'onboarding_1_body'.tr(),
       color: AppColors.emergency,
     ),
     _OnboardingPage(
       icon: Icons.timer_rounded,
-      title: 'Zamanlı Kontrol',
-      body: 'Riskli bir yere girerken geri sayım başlatın. Süre bitiminde güvende olduğunuzu onaylamazsanız, yakınlarınıza konumunuz SMS ile iletilir.',
+      title: 'onboarding_2_title'.tr(),
+      body: 'onboarding_2_body'.tr(),
       color: AppColors.warning,
     ),
     _OnboardingPage(
       icon: Icons.call_rounded,
-      title: 'Sahte Arama',
-      body: 'Kendinizi güvensiz hissettiğinizde, dikkat dağıtmak için tek tuşla sahte bir arama başlatabilirsiniz.',
+      title: 'onboarding_3_title'.tr(),
+      body: 'onboarding_3_body'.tr(),
       color: AppColors.accent,
+    ),
+    _OnboardingPage(
+      icon: Icons.lock_rounded,
+      title: 'onboarding_4_title'.tr(),
+      body: 'onboarding_4_body'.tr(),
+      color: AppColors.success,
     ),
   ];
 

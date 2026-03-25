@@ -239,13 +239,10 @@ Kategori          | Veri                              | Amaç                   
 Kimlik            | Ad, profil fotoğrafı              | Uygulama profili                      | Açık rıza
 İletişim          | Acil kişi adı, telefon numarası   | Acil durumda SMS gönderimi            | Açık rıza
 Konum             | GPS koordinatları                 | Acil durum konum paylaşımı            | Açık rıza
-Biyometrik (*)    | Parmak izi / yüz tanıma hash      | Uygulama girişi güvenliği             | Açık rıza
 Ses               | Ortam ses kaydı                   | Kullanıcı inisiyatifinde kanıt toplama| Açık rıza
 Güvenlik          | PIN kodu (şifreli)                | Uygulama erişim kontrolü              | Meşru menfaat
 Cihaz             | Cihaz tipi, OS versiyonu          | Teknik uyumluluk & rıza logu          | Meşru menfaat
 Yasal Rıza Logu   | Rıza türü, tarih, versiyon        | KVKK uyum kaydı                       | Hukuki yükümlülük
-
-(*) Biyometrik veri ÖZEL NİTELİKLİ KİŞİSEL VERİ kapsamındadır. KVKK Madde 6 gereği işlenmesi için açık rıza zorunludur.
 
 ──────────────────────────────────────
 3. VERİLERİN İŞLENME AMACI
@@ -273,24 +270,19 @@ Kişisel verileriniz TÜRKİYE DIŞINA aktarılmaz.
 • PIN (şifreli)        : Siz değiştirene veya silene kadar
 
 ──────────────────────────────────────
-6. BİYOMETRİK VERİ ÖZEL DURUMU
-──────────────────────────────────────
-Uygulama, biyometrik veriyi (parmak izi, yüz tanıma) DOĞRUDAN İŞLEMEZ. Biyometrik doğrulama için cihazınızın yerel güvenlik altyapısı (Android Keystore / iOS Keychain) kullanılır. Biyometrik veriniz uygulama tarafından saklanmaz veya erişilmez. Bu mekanizma hakkında ayrıntılı bilgi için cihaz üreticinizin gizlilik dokümanlarına başvurabilirsiniz.
-
-──────────────────────────────────────
-7. VERİ GÜVENLİĞİ
+6. VERİ GÜVENLİĞİ
 ──────────────────────────────────────
 • Tüm hassas veriler AES-256 şifrelemesi ile korunmaktadır.
 • PIN ve kişisel bilgiler FlutterSecureStorage (Android Keystore / iOS Keychain) üzerinde saklanmaktadır.
 • Uygulama, internete herhangi bir kişisel veri göndermemektedir.
 
 ──────────────────────────────────────
-8. ÜÇÜNCÜ KİŞİ VERİ SAHİPLERİNİN HAKLARI
+7. ÜÇÜNCÜ KİŞİ VERİ SAHİPLERİNİN HAKLARI
 ──────────────────────────────────────
 Kullanıcı tarafından acil durum kişisi olarak eklenen üçüncü kişiler de veri sahibi sıfatıyla KVKK Madde 11 kapsamındaki tüm haklardan yararlanır. Bu kişiler, verilerinin silinmesini veya düzeltilmesini talep etmek için korubeni.destek@gmail.com adresine başvurabilir.
 
 ──────────────────────────────────────
-9. HAKLARINIZ (KVKK Madde 11)
+8. HAKLARINIZ (KVKK Madde 11)
 ──────────────────────────────────────
 KVKK kapsamında aşağıdaki haklara sahipsiniz:
 a) Kişisel veri işlenip işlenmediğini öğrenme
@@ -304,7 +296,7 @@ g) Düzeltme/silme işlemlerinin aktarılan üçüncü kişilere bildirilmesini 
 h) Kanuna aykırı olarak işlenmesi sebebiyle zarara uğraması halinde zararın giderilmesini talep etme
 
 ──────────────────────────────────────
-10. BAŞVURU YÖNTEMİ
+9. BAŞVURU YÖNTEMİ
 ──────────────────────────────────────
 Haklarınızı kullanmak için aşağıdaki e-posta adresine yazılı başvuruda bulunabilirsiniz:
 
@@ -315,7 +307,7 @@ Konu Satırı: "KVKK Başvurusu"
 Başvurunuzda; adınızı, soyadınızı, başvuruya konu talebinizi ve iletişim bilgilerinizi belirtmeniz gerekmektedir.
 
 ──────────────────────────────────────
-11. AYDINLATMA METNİ DEĞİŞİKLİKLERİ
+10. AYDINLATMA METNİ DEĞİŞİKLİKLERİ
 ──────────────────────────────────────
 Bu metin, KVKK ve ilgili mevzuattaki değişiklikler doğrultusunda güncellenebilir. Önemli değişikliklerde uygulama yeniden onay isteyecektir.
 ''';
@@ -344,13 +336,10 @@ Category          | Data                              | Purpose                 
 Identity          | Name, profile photo               | Application profile                   | Explicit consent
 Contact           | Emergency contact name, phone     | Emergency SMS sending                 | Explicit consent
 Location          | GPS coordinates                   | Emergency location sharing            | Explicit consent
-Biometric (*)     | Fingerprint / face recognition    | App login security                    | Explicit consent
 Audio             | Ambient audio recording           | User-initiated evidence collection    | Explicit consent
 Security          | PIN code (encrypted)              | App access control                    | Legitimate interest
 Device            | Device type, OS version           | Technical compatibility & consent log | Legitimate interest
 Legal Consent Log | Consent type, date, version       | KVKK compliance record                | Legal obligation
-
-(*) Biometric data is classified as SPECIAL CATEGORY PERSONAL DATA. Explicit consent is mandatory for processing under KVKK Article 6.
 
 ──────────────────────────────────────
 3. PURPOSES OF PROCESSING
@@ -378,24 +367,19 @@ Your personal data is NOT TRANSFERRED OUTSIDE OF TURKEY.
 • PIN (encrypted)          : Until you change or delete it
 
 ──────────────────────────────────────
-6. BIOMETRIC DATA SPECIAL CASE
-──────────────────────────────────────
-The application does NOT DIRECTLY PROCESS biometric data (fingerprint, face recognition). Your device's local security infrastructure (Android Keystore / iOS Keychain) is used for biometric authentication. Your biometric data is not stored or accessed by the application. For detailed information about this mechanism, please refer to your device manufacturer's privacy documentation.
-
-──────────────────────────────────────
-7. DATA SECURITY
+6. DATA SECURITY
 ──────────────────────────────────────
 • All sensitive data is protected with AES-256 encryption.
 • PIN and personal information is stored on FlutterSecureStorage (Android Keystore / iOS Keychain).
 • The application does not send any personal data to the internet.
 
 ──────────────────────────────────────
-8. THIRD-PARTY DATA SUBJECT RIGHTS
+7. THIRD-PARTY DATA SUBJECT RIGHTS
 ──────────────────────────────────────
 Third parties added as emergency contacts by the User also hold data subject status and benefit from all rights under KVKK Article 11. These persons may contact korubeni.destek@gmail.com to request deletion or correction of their data.
 
 ──────────────────────────────────────
-9. YOUR RIGHTS (KVKK Article 11)
+8. YOUR RIGHTS (KVKK Article 11)
 ──────────────────────────────────────
 Under KVKK, you have the following rights:
 a) To learn whether personal data is processed
@@ -409,7 +393,7 @@ g) To request notification of correction/deletion to third parties to whom data 
 h) To demand compensation for damages in case of unlawful processing
 
 ──────────────────────────────────────
-10. APPLICATION METHOD
+9. APPLICATION METHOD
 ──────────────────────────────────────
 To exercise your rights, you may apply in writing to the following email address:
 
@@ -420,7 +404,7 @@ Subject Line : "KVKK Application"
 In your application, please include your name, surname, the subject of your request, and contact information.
 
 ──────────────────────────────────────
-11. CHANGES TO DISCLOSURE NOTICE
+10. CHANGES TO DISCLOSURE NOTICE
 ──────────────────────────────────────
 This notice may be updated in line with changes to KVKK and related legislation. For significant changes, the application will request re-consent.
 ''';

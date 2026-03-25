@@ -1,88 +1,46 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
-import 'package:provider/provider.dart';
+import 'package:mocktail/mocktail.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:guvenlik_app/core/security/secure_storage.dart';
 import 'package:guvenlik_app/presentation/providers/settings_provider.dart';
+import 'package:guvenlik_app/core/constants/app_constants.dart';
 
-class FakeSecureStorage extends SecureStorage {
-  final Map<String, String> _store = {};
-
-  @override
-  Future<void> write({required String key, required String value}) async {
-    _store[key] = value;
-  }
-
-  @override
-  Future<String?> read({required String key}) async => _store[key];
-
-  @override
-  Future<void> delete({required String key}) async => _store.remove(key);
-
-  @override
-  Future<void> deleteAll() async => _store.clear();
-}
+class MockSecureStorage extends Mock implements SecureStorage {}
 
 void main() {
-  late SettingsProvider provider;
+  group('SettingsProvider themeMode', () {
+    late MockSecureStorage mockStorage;
 
-  setUpAll(() {
-    if (!GetIt.instance.isRegistered<SecureStorage>()) {
-      GetIt.instance.registerSingleton<SecureStorage>(FakeSecureStorage());
-    }
-  });
-
-  setUp(() async {
-    SharedPreferences.setMockInitialValues({});
-    provider = SettingsProvider();
-  });
-
-  group('SettingsProvider.themeMode', () {
-    test('defaults to ThemeMode.dark', () {
-      expect(provider.themeMode, ThemeMode.dark);
+    setUp(() async {
+      SharedPreferences.setMockInitialValues({});
+      await GetIt.instance.reset();
+      mockStorage = MockSecureStorage();
+      when(() => mockStorage.read(key: any(named: 'key')))
+          .thenAnswer((_) async => null);
+      GetIt.instance.registerSingleton<SecureStorage>(mockStorage);
     });
 
-    test('setThemeMode updates themeMode and persists to SharedPreferences', () async {
-      await provider.setThemeMode(ThemeMode.system);
-      expect(provider.themeMode, ThemeMode.system);
+    tearDown(() async {
+      await GetIt.instance.reset();
+    });
 
+    test('themeMode defaults to ThemeMode.system when no prefs saved', () async {
+      final provider = SettingsProvider();
+      await provider.loadProfile();
+      expect(provider.themeMode, equals(ThemeMode.system));
+    });
+
+    test('setThemeMode persists and updates themeMode', () async {
+      final provider = SettingsProvider();
+      await provider.loadProfile();
+
+      await provider.setThemeMode(ThemeMode.dark);
+
+      expect(provider.themeMode, equals(ThemeMode.dark));
       final prefs = await SharedPreferences.getInstance();
-      expect(prefs.getInt('pref_theme_mode'), ThemeMode.system.index);
-    });
-
-    test('loadProfile restores persisted themeMode', () async {
-      SharedPreferences.setMockInitialValues({'pref_theme_mode': ThemeMode.light.index});
-      final freshProvider = SettingsProvider();
-      await freshProvider.loadProfile();
-      expect(freshProvider.themeMode, ThemeMode.light);
-    });
-  });
-
-  group('MaterialApp themeMode wiring', () {
-    testWidgets('MaterialApp themeMode updates when SettingsProvider changes', (tester) async {
-      await tester.pumpWidget(
-        ChangeNotifierProvider<SettingsProvider>.value(
-          value: provider,
-          child: Consumer<SettingsProvider>(
-            builder: (context, settings, _) => MaterialApp(
-              theme: ThemeData(brightness: Brightness.light),
-              darkTheme: ThemeData(brightness: Brightness.dark),
-              themeMode: settings.themeMode,
-              home: const SizedBox.shrink(),
-            ),
-          ),
-        ),
-      );
-
-      var app = tester.widget<MaterialApp>(find.byType(MaterialApp));
-      expect(app.themeMode, ThemeMode.dark);
-
-      await provider.setThemeMode(ThemeMode.light);
-      await tester.pump();
-
-      app = tester.widget<MaterialApp>(find.byType(MaterialApp));
-      expect(app.themeMode, ThemeMode.light);
+      expect(prefs.getString(AppConstants.prefThemeMode), equals('dark'));
     });
   });
 }

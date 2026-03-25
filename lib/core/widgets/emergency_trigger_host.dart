@@ -9,7 +9,6 @@ import '../navigation/app_navigator.dart';
 import '../services/app_lifecycle_handler.dart';
 import '../services/check_in_service.dart';
 import '../services/emergency_platform_service.dart';
-import '../services/shake_detector_service.dart';
 import '../services/volume_trigger_service.dart';
 
 class EmergencyTriggerHost extends StatefulWidget {
@@ -23,7 +22,6 @@ class EmergencyTriggerHost extends StatefulWidget {
 
 class _EmergencyTriggerHostState extends State<EmergencyTriggerHost>
     with WidgetsBindingObserver {
-  final ShakeDetectorService _shakeDetector = ShakeDetectorService.instance;
   bool _countdownOpen = false;
   bool _foregroundTriggersEnabled = false;
   StreamSubscription<Map<String, dynamic>>? _platformEventsSubscription;
@@ -60,14 +58,7 @@ class _EmergencyTriggerHostState extends State<EmergencyTriggerHost>
 
   void _startForegroundTriggers() {
     _foregroundTriggersEnabled = true;
-    _startShakeIfEnabled();
     _startVolumeIfEnabled();
-  }
-
-  Future<void> _startShakeIfEnabled() async {
-    await _shakeDetector.loadPreferences();
-    if (!mounted || !_foregroundTriggersEnabled) return;
-    _shakeDetector.startListening(onShakeDetected: _openCountdown);
   }
 
   Future<void> _startVolumeIfEnabled() async {
@@ -91,9 +82,6 @@ class _EmergencyTriggerHostState extends State<EmergencyTriggerHost>
 
   void _stopForegroundTriggers() {
     _foregroundTriggersEnabled = false;
-    if (!EmergencyPlatformService.instance.isSupported) {
-      _shakeDetector.stopListening();
-    }
     VolumeTriggerService.instance.stopListening();
   }
 
@@ -102,10 +90,6 @@ class _EmergencyTriggerHostState extends State<EmergencyTriggerHost>
     _platformEventsSubscription = EmergencyPlatformService.instance.events
         .listen((event) async {
           final type = event['type']?.toString();
-          if (type == 'shakeDetected') {
-            await _openCountdown();
-            return;
-          }
           if (type == 'checkInGraceStarted') {
             await CheckInService.instance.handleNativeGraceStarted();
             return;
@@ -130,10 +114,6 @@ class _EmergencyTriggerHostState extends State<EmergencyTriggerHost>
     }
 
     final type = pending['type']?.toString();
-    if (type == 'shakeDetected') {
-      await _openCountdown();
-      return;
-    }
     if (type == 'checkInGraceStarted') {
       await CheckInService.instance.handleNativeGraceStarted();
       return;
@@ -170,9 +150,6 @@ class _EmergencyTriggerHostState extends State<EmergencyTriggerHost>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _stopForegroundTriggers();
-    if (!EmergencyPlatformService.instance.isSupported) {
-      _shakeDetector.dispose();
-    }
     _platformEventsSubscription?.cancel();
     super.dispose();
   }

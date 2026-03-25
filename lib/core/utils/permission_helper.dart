@@ -92,6 +92,27 @@ class PermissionHelper {
     }
   }
 
+  /// CALL_PHONE izni — Prominent Disclosure ile.
+  /// Play Store: izin istemeden önce kullanıcıya neden gerektiği açıklanır.
+  /// Returns true if permission is granted (or was already granted).
+  static Future<bool> requestCallPhonePermission(BuildContext context) async {
+    if (!Platform.isAndroid) return true;
+
+    final status = await Permission.phone.status;
+    if (status.isGranted) return true;
+
+    if (!context.mounted) return false;
+    final accepted = await _showProminentDisclosure(
+      context,
+      title: 'perm_call_prominent_title'.tr(),
+      message: 'perm_call_prominent_msg'.tr(),
+    );
+    if (accepted != true) return false;
+
+    final result = await Permission.phone.request();
+    return result.isGranted;
+  }
+
   static Future<bool> hasNotificationPermission() async {
     if (kIsWeb) return true;
     if (!Platform.isAndroid && !Platform.isIOS) return true;

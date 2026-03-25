@@ -24,3 +24,4 @@ linter:
     - avoid_unnecessary_containers
     - avoid_redundant_argument_values
     - unawaited_futures
+    - unnecessary_null_checks
