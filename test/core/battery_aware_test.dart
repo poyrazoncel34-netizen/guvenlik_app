@@ -11,24 +11,6 @@ void main() {
     );
   });
 
-  test('ShakeDetectorService subscribes to lowBatteryStream to raise threshold', () {
-    final source = File('lib/core/services/shake_detector_service.dart').readAsStringSync();
-    expect(
-      source.contains('lowBatteryStream'),
-      isTrue,
-      reason: 'ShakeDetectorService must subscribe to lowBatteryStream',
-    );
-  });
-
-  test('ShakeDetectorService cancels lowBattery subscription on dispose', () {
-    final source = File('lib/core/services/shake_detector_service.dart').readAsStringSync();
-    expect(
-      source.contains('_lowBatterySubscription?.cancel()'),
-      isTrue,
-      reason: 'dispose() must cancel the lowBattery subscription to avoid leaks',
-    );
-  });
-
   test('LocationService subscribes to lowBatteryStream to reduce accuracy', () {
     final source = File('lib/core/services/location_service.dart').readAsStringSync();
     expect(

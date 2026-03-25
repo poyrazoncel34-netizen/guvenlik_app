@@ -18,6 +18,7 @@ import '../core/services/sms_service.dart';
 import '../domain/repositories/contacts_repository.dart';
 import '../core/services/activity_service.dart';
 import '../core/services/call_service.dart';
+import '../core/utils/permission_helper.dart';
 import '../core/services/connectivity_service.dart';
 import '../core/services/pin_lockout_service.dart';
 import '../core/services/offline_queue_service.dart';
@@ -205,6 +206,11 @@ class _CountdownScreenState extends State<CountdownScreen>
 
     final primaryNumber =
         _emergencyContact?.phone ?? (numbers.isNotEmpty ? numbers.first : null);
+
+    // Prominent disclosure before requesting CALL_PHONE permission (Play Store compliance)
+    if (mounted) {
+      await PermissionHelper.requestCallPhonePermission(context);
+    }
 
     // Failover: try each number until one succeeds
     EmergencyCallResult callResult = EmergencyCallResult.failed('');
