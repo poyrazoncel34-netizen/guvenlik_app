@@ -763,5 +763,20 @@
 
     "subscription_error_purchase": "Purchase failed. Please try again.",
     "subscription_error_restore": "Restore failed. Please try again.",
-    "subscription_error_offline": "Internet connection required"
+    "subscription_error_offline": "Internet connection required",
+
+    "onboarding_4_title": "Secure PIN Lock",
+    "onboarding_4_body": "Your app is protected by a local PIN. Face ID and fingerprint are intentionally disabled — they cannot be unlocked under duress.",
+
+    "device_security_warning_title": "Security Warning",
+    "device_security_warning_body": "This device appears to be rooted or jailbroken. Sensitive data may be at risk. Are you sure you want to continue?",
+
+    "btn_continue": "Continue",
+
+    "settings_theme_label": "Theme",
+    "settings_theme_system": "System Default",
+    "settings_theme_light": "Light",
+    "settings_theme_dark": "Dark",
+
+    "low_battery_warning": "Battery low — location accuracy and shake threshold adjusted automatically."
 }

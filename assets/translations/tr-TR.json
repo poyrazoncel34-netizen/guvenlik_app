@@ -763,5 +763,20 @@
 
     "subscription_error_purchase": "Satın alma başarısız. Tekrar deneyin.",
     "subscription_error_restore": "Geri yükleme başarısız. Tekrar deneyin.",
-    "subscription_error_offline": "İnternet bağlantısı gerekli"
+    "subscription_error_offline": "İnternet bağlantısı gerekli",
+
+    "onboarding_4_title": "PIN ile Güvenli Kilit",
+    "onboarding_4_body": "Uygulamanız yerel PIN ile korunur. Parmak izi veya yüz tanıma kasıtlı olarak devre dışıdır; baskı altında çözülemez.",
+
+    "device_security_warning_title": "Güvenlik Uyarısı",
+    "device_security_warning_body": "Bu cihaz root'lu veya jailbreak'li görünüyor. Hassas veriler risk altında olabilir. Devam etmek istediğinizden emin misiniz?",
+
+    "btn_continue": "Devam Et",
+
+    "settings_theme_label": "Tema",
+    "settings_theme_system": "Sistem Varsayılanı",
+    "settings_theme_light": "Açık",
+    "settings_theme_dark": "Koyu",
+
+    "low_battery_warning": "Pil düzeyi düşük — konum doğruluğu ve sarsıntı eşiği otomatik olarak ayarlandı."
 }

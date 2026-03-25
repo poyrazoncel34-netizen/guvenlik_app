@@ -5,6 +5,7 @@ import 'package:sensors_plus/sensors_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../constants/app_constants.dart';
 import 'emergency_platform_service.dart';
+import 'resource_monitor_service.dart';
 
 /// Shake sensitivity levels.
 enum ShakeSensitivity {
@@ -39,11 +40,14 @@ class ShakeDetectorService {
   final List<DateTime> _shakeTimestamps = [];
   DateTime? _lastTrigger;
   bool _isListening = false;
+  bool _lowBattery = false;
+  StreamSubscription<bool>? _lowBatterySubscription;
 
   bool get isEnabled => _isEnabled;
   bool get isListening => _isListening;
   ShakeSensitivity get sensitivity => _sensitivity;
-  double get currentThreshold => _thresholds[_sensitivity] ?? 15.0;
+  double get currentThreshold =>
+      _lowBattery ? 22.0 : (_thresholds[_sensitivity] ?? 15.0);
 
   /// Load saved enablement and sensitivity from preferences.
   Future<void> loadPreferences() async {
@@ -86,6 +90,8 @@ class ShakeDetectorService {
   /// Start listening for shake events
   void startListening({required VoidCallback onShakeDetected}) {
     onShake = onShakeDetected;
+    _lowBatterySubscription ??= ResourceMonitorService.instance.lowBatteryStream
+        .listen((isLow) => _lowBattery = isLow);
     if (!_isEnabled || _isListening) return;
 
     if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
@@ -159,6 +165,7 @@ class ShakeDetectorService {
   }
 
   void dispose() {
+    _lowBatterySubscription?.cancel();
     stopListening();
   }
 }

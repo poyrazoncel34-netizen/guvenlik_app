@@ -6,7 +6,7 @@ import 'package:flutter/foundation.dart';
 /// this service applies necessary migrations automatically.
 class DataMigrationService {
   static const String _versionKey = 'data_schema_version';
-  static const int _currentVersion = 1;
+  static const int _currentVersion = 2;
 
   /// Run all pending migrations on app startup.
   static Future<void> migrate() async {
@@ -35,15 +35,13 @@ class DataMigrationService {
         debugPrint('DataMigration: v1 — initial schema set');
         break;
 
-      // Future migrations go here:
-      // case 2:
-      //   // Example: Rename a SharedPreferences key
-      //   final oldValue = prefs.getString('old_key');
-      //   if (oldValue != null) {
-      //     await prefs.setString('new_key', oldValue);
-      //     await prefs.remove('old_key');
-      //   }
-      //   break;
+      case 2:
+        // v2: Switched to EncryptedSharedPreferences on Android.
+        // Existing secure storage data is unreadable after this change.
+        // Reset PIN setup flag so the user re-enters their PIN once.
+        await prefs.setBool('pref_pin_setup_done', false);
+        debugPrint('DataMigration: v2 — secure storage reset, PIN re-setup required');
+        break;
 
       default:
         debugPrint('DataMigration: unknown version $version, skipping');

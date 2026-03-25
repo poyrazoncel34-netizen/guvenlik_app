@@ -13,6 +13,7 @@ import 'legal/onboarding_legal_flow.dart';
 import 'main_navigation.dart';
 import 'onboarding_screen.dart';
 import 'package:easy_localization/easy_localization.dart';
+import '../services/device_security_service.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -150,6 +151,26 @@ class _SplashScreenState extends State<SplashScreen>
 
   Future<void> _goNext() async {
     if (!mounted) return;
+
+    final compromised = await DeviceSecurityService().isCompromised();
+    if (compromised && mounted) {
+      await showDialog<void>(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => AlertDialog(
+          title: Text('device_security_warning_title'.tr()),
+          content: Text('device_security_warning_body'.tr()),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('btn_continue'.tr()),
+            ),
+          ],
+        ),
+      );
+    }
+    if (!mounted) return;
+
     final prefs = await SharedPreferences.getInstance();
     final legalAccepted =
         prefs.getBool(AppConstants.prefLegalAcceptedV1) ?? false;
