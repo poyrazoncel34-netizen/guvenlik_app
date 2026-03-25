@@ -12,6 +12,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/app_colors.dart';
+import '../core/widgets/theme_selector.dart';
 import '../core/constants/app_constants.dart';
 import '../core/widgets/feature_warning_dialog.dart';
 import '../core/utils/app_reset_helper.dart';
@@ -356,6 +357,34 @@ class _SettingsPageState extends State<SettingsPage> {
                     ),
                   );
                 },
+              ),
+            ]),
+            const SizedBox(height: 28),
+
+            // Appearance / Theme
+            _buildSectionTitle('settings_theme_section'.tr()),
+            const SizedBox(height: 14),
+            _buildSettingsCard([
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'settings_theme_title'.tr(),
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    ThemeSelector(
+                      selected: provider.themeMode,
+                      onChanged: provider.setThemeMode,
+                    ),
+                  ],
+                ),
               ),
             ]),
             const SizedBox(height: 28),

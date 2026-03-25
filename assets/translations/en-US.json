@@ -763,5 +763,11 @@
 
     "subscription_error_purchase": "Purchase failed. Please try again.",
     "subscription_error_restore": "Restore failed. Please try again.",
-    "subscription_error_offline": "Internet connection required"
+    "subscription_error_offline": "Internet connection required",
+
+    "settings_theme_section": "Appearance",
+    "settings_theme_title": "Theme",
+    "theme_system": "System",
+    "theme_light": "Light",
+    "theme_dark": "Dark"
 }

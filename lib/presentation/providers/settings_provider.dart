@@ -19,6 +19,7 @@ class SettingsProvider extends ChangeNotifier {
   bool _volumeTriggerEnabled = false;
   bool _shakeEnabled = true;
   ShakeSensitivity _shakeSensitivity = ShakeSensitivity.medium;
+  ThemeMode _themeMode = ThemeMode.dark;
   bool _loaded = false;
   final SecureStorage _secureStorage = serviceLocator<SecureStorage>();
 
@@ -29,6 +30,7 @@ class SettingsProvider extends ChangeNotifier {
   String _medicalConditions = '';
   String _emergencyNotes = '';
 
+  ThemeMode get themeMode => _themeMode;
   bool get notificationsEnabled => _notificationsEnabled;
   bool get locationEnabled => _locationEnabled;
   bool get soundEnabled => _soundEnabled;
@@ -62,6 +64,10 @@ class SettingsProvider extends ChangeNotifier {
       _shakeEnabled = prefs.getBool(AppConstants.prefShakeEnabled) ?? true;
       final shakeSenIdx = prefs.getInt(AppConstants.prefShakeSensitivity) ?? 1;
       _shakeSensitivity = ShakeSensitivity.values[shakeSenIdx.clamp(0, 2)];
+      final themeModeIdx =
+          prefs.getInt(AppConstants.prefThemeMode) ?? ThemeMode.dark.index;
+      _themeMode =
+          ThemeMode.values[themeModeIdx.clamp(0, ThemeMode.values.length - 1)];
       _loaded = true;
     }
     notifyListeners();
@@ -209,6 +215,13 @@ class SettingsProvider extends ChangeNotifier {
     _shakeEnabled = value;
     notifyListeners();
     await ShakeDetectorService.instance.setEnabled(value);
+  }
+
+  Future<void> setThemeMode(ThemeMode mode) async {
+    _themeMode = mode;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(AppConstants.prefThemeMode, mode.index);
   }
 
   Future<void> setShakeSensitivity(ShakeSensitivity level) async {

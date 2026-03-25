@@ -763,5 +763,11 @@
 
     "subscription_error_purchase": "Satın alma başarısız. Tekrar deneyin.",
     "subscription_error_restore": "Geri yükleme başarısız. Tekrar deneyin.",
-    "subscription_error_offline": "İnternet bağlantısı gerekli"
+    "subscription_error_offline": "İnternet bağlantısı gerekli",
+
+    "settings_theme_section": "Görünüm",
+    "settings_theme_title": "Tema",
+    "theme_system": "Sistem",
+    "theme_light": "Açık",
+    "theme_dark": "Koyu"
 }
