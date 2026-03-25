@@ -16,6 +16,9 @@ import '../core/services/sms_service.dart';
 import '../presentation/providers/contacts_provider.dart';
 import '../presentation/providers/home_provider.dart';
 import '../widgets/emergency_contact_consent_dialog.dart';
+import '../presentation/providers/subscription_provider.dart';
+import 'subscription/paywall_screen.dart';
+import '../core/services/subscription_gate.dart';
 
 class ContactsPage extends StatefulWidget {
   const ContactsPage({super.key});
@@ -758,6 +761,11 @@ class _ContactsPageState extends State<ContactsPage> {
   }
 
   void _showAddContactSheet(BuildContext context) {
+    final isPro = context.read<SubscriptionProvider>().isPro;
+    if (!SubscriptionGate.canAddContact(currentCount: context.read<ContactsProvider>().emergencyContacts.length, isPro: isPro)) {
+      Navigator.push(context, MaterialPageRoute(builder: (_) => const PaywallScreen()));
+      return;
+    }
     _showContactKvkkInfoIfNeeded();
     final nameController = TextEditingController();
     final phoneController = TextEditingController();
