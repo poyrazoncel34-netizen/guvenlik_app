@@ -154,6 +154,7 @@ void main() async {
       supportedLocales: const [Locale('tr', 'TR'), Locale('en', 'US')],
       path: 'assets/translations',
       fallbackLocale: const Locale('tr', 'TR'),
+      startLocale: const Locale('tr', 'TR'),
       child: const KoruBeniApp(),
     ),
   );

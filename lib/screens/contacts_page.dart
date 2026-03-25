@@ -364,12 +364,15 @@ class _ContactsPageState extends State<ContactsPage> {
                     children: [
                       Row(
                         children: [
-                          Text(
-                            contact.name,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.textPrimary,
+                          Flexible(
+                            child: Text(
+                              contact.name,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.textPrimary,
+                              ),
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                           if (isEmergency) ...[

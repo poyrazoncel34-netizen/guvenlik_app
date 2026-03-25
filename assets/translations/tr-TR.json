@@ -763,5 +763,7 @@
 
     "subscription_error_purchase": "Satın alma başarısız. Tekrar deneyin.",
     "subscription_error_restore": "Geri yükleme başarısız. Tekrar deneyin.",
-    "subscription_error_offline": "İnternet bağlantısı gerekli"
+    "subscription_error_offline": "İnternet bağlantısı gerekli",
+    "emergency_failed_title": "Acil Durum Bildirimi Gönderilemedi",
+    "emergency_failed_consent_body": "Acil kişilerinize SMS veya arama yapılamadı. Lütfen Ayarlar > Acil Kişiler bölümünden izinleri kontrol edin."
 }

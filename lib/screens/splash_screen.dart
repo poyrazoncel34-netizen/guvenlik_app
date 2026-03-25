@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/app_colors.dart';
 import '../core/constants/app_constants.dart';
+import '../constants/legal_texts.dart';
 import '../presentation/providers/subscription_provider.dart';
 import 'legal/onboarding_legal_flow.dart';
 import 'main_navigation.dart';
@@ -161,7 +162,8 @@ class _SplashScreenState extends State<SplashScreen>
     final savedTermsVersion = prefs.getString(AppConstants.prefTermsVersion) ?? '';
     final savedKvkkVersion = prefs.getString(AppConstants.prefKvkkVersion) ?? '';
     final needsReConsent = legalAccepted &&
-        (savedTermsVersion != '2.0.0' || savedKvkkVersion != '2.0.0');
+        (savedTermsVersion != LegalTexts.termsVersion ||
+            savedKvkkVersion != LegalTexts.kvkkVersion);
 
     if (!mounted) return;
 

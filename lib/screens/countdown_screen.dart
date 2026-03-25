@@ -240,10 +240,21 @@ class _CountdownScreenState extends State<CountdownScreen>
     if (!smsResult.isSuccess && !callResult.isSuccess) {
       await KoruBeniForegroundService.stop();
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('emergency_action_failed'.tr())));
-        Navigator.pop(context);
+        await showDialog<void>(
+          context: context,
+          barrierDismissible: false,
+          builder: (_) => AlertDialog(
+            title: Text('emergency_failed_title'.tr()),
+            content: Text('emergency_failed_consent_body'.tr()),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: Text('ok'.tr()),
+              ),
+            ],
+          ),
+        );
+        if (mounted) Navigator.pop(context);
       }
       return;
     }

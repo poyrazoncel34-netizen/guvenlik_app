@@ -763,5 +763,7 @@
 
     "subscription_error_purchase": "Purchase failed. Please try again.",
     "subscription_error_restore": "Restore failed. Please try again.",
-    "subscription_error_offline": "Internet connection required"
+    "subscription_error_offline": "Internet connection required",
+    "emergency_failed_title": "Emergency Notification Failed",
+    "emergency_failed_consent_body": "Could not send SMS or make a call to your emergency contacts. Please check permissions in Settings > Emergency Contacts."
 }
