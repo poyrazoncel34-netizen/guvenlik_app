@@ -70,6 +70,10 @@ dependencies:
   # RevenueCat in-app purchases & subscriptions
   purchases_flutter: ^8.10.1
   purchases_ui_flutter: ^8.10.1
+  # Crash reporting (optional — enable via --dart-define=SENTRY_DSN=... at build time)
+  sentry_flutter: ^8.12.0
+  # Root/jailbreak detection
+  flutter_jailbreak_detection: ^1.10.0
 
 dev_dependencies:
   flutter_test:
@@ -83,6 +87,7 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
+  mocktail: ^0.3.0
   flutter_launcher_icons: ^0.13.1
   flutter_native_splash: ^2.4.1
 
