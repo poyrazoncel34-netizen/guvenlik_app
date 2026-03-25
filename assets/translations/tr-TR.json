@@ -775,10 +775,15 @@
 
     "btn_continue": "Devam Et",
 
+    "settings_theme_section": "Görünüm",
+    "settings_theme_title": "Tema",
     "settings_theme_label": "Tema",
     "settings_theme_system": "Sistem Varsayılanı",
     "settings_theme_light": "Açık",
     "settings_theme_dark": "Koyu",
+    "theme_system": "Sistem",
+    "theme_light": "Açık",
+    "theme_dark": "Koyu",
 
     "low_battery_warning": "Pil düzeyi düşük — konum doğruluğu ve sarsıntı eşiği otomatik olarak ayarlandı."
 }

@@ -1,0 +1,12 @@
+{
+  "session_id": "815f1da3-418e-4cb3-822e-4eb3eab5c1b8",
+  "transcript_path": "/Users/poyrazoncel/.claude/projects/-Users-poyrazoncel-Desktop-guvenlik-app--claude-worktrees-relaxed-diffie/815f1da3-418e-4cb3-822e-4eb3eab5c1b8.jsonl",
+  "hook_event_name": "PostToolUse",
+  "tool_name": "Edit",
+  "tool_input": {
+    "file_path": "/Users/poyrazoncel/Desktop/guvenlik_app/.claude/worktrees/relaxed-diffie/lib/presentation/providers/settings_provider.dart",
+    "old_string": "  Future<void> setShakeEnabled(bool value) async {\n    _shakeEnabled = value;\n    notifyListeners();\n    await ShakeDetectorService.instance.setEnabled(value);\n  }\n\n  Future<void> setShakeSensitivity(ShakeSensitivity level) async {\n    _shakeSensitivity = level;\n    notifyListeners();\n    await ShakeDetectorService.instance.setSensitivity(level);\n  }\n}",
+    "new_string": "}",
+    "replace_all": false
+  }
+}
