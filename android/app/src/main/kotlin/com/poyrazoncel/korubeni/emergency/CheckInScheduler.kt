@@ -119,18 +119,26 @@ object CheckInScheduler {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         val pendingIntent = buildPendingIntent(context)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (!canScheduleExactAlarms(context)) {
-                android.util.Log.w("CheckInScheduler", "Exact alarm permission denied — alarm may fire late")
+            if (canScheduleExactAlarms(context)) {
+                alarmManager.setExactAndAllowWhileIdle(
+                    AlarmManager.RTC_WAKEUP,
+                    deadlineMs,
+                    pendingIntent
+                )
+            } else {
+                // Fallback: inexact alarm (~9 min window) when exact alarm
+                // permission is denied on Android 14+.
+                android.util.Log.w("CheckInScheduler", "Exact alarm permission denied — using inexact fallback")
                 EmergencyEventBus.persist(
                     context,
                     mapOf("type" to "exactAlarmDenied", "timestamp" to System.currentTimeMillis())
                 )
+                alarmManager.setAndAllowWhileIdle(
+                    AlarmManager.RTC_WAKEUP,
+                    deadlineMs,
+                    pendingIntent
+                )
             }
-            alarmManager.setExactAndAllowWhileIdle(
-                AlarmManager.RTC_WAKEUP,
-                deadlineMs,
-                pendingIntent
-            )
         } else {
             alarmManager.setExact(AlarmManager.RTC_WAKEUP, deadlineMs, pendingIntent)
         }
