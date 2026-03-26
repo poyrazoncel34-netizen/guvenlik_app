@@ -34,7 +34,6 @@
     <uses-permission android:name="android.permission.CALL_PHONE" />
     <!-- Foreground Service for keeping app alive in background -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
     <!-- FOREGROUND_SERVICE_MICROPHONE removed — audio recording feature disabled -->
     <!-- Required for BackgroundService (timer/check-in keepalive, specialUse type) -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
@@ -126,7 +125,6 @@
             android:exported="false">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
-                <action android:name="android.intent.action.LOCKED_BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
         <receiver

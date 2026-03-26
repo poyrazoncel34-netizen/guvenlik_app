@@ -6,6 +6,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.provider.Settings
+import android.os.Build
 import android.telephony.SmsManager
 import android.telephony.TelephonyManager
 import androidx.core.content.ContextCompat
@@ -53,7 +54,12 @@ object SmsSender {
             return mapOf("status" to "failed", "error" to "sim_unavailable")
         }
 
-        val smsManager = SmsManager.getDefault()
+        val smsManager = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            context.getSystemService(SmsManager::class.java)
+        } else {
+            @Suppress("DEPRECATION")
+            SmsManager.getDefault()
+        }
         cleaned.forEachIndexed { index, recipient ->
             executor.execute {
                 try {

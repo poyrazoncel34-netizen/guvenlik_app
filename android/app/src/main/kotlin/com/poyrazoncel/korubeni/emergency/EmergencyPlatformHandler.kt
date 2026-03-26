@@ -91,14 +91,6 @@ class EmergencyPlatformHandler(
                 "openBatterySettings" -> {
                     result.success(openBatterySettings())
                 }
-                "startRecordingSession" -> {
-                    RecordingSessionService.start(context)
-                    result.success(true)
-                }
-                "stopRecordingSession" -> {
-                    RecordingSessionService.stop(context)
-                    result.success(true)
-                }
                 else -> result.notImplemented()
             }
         } catch (e: Exception) {
