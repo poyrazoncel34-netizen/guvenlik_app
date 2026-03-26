@@ -124,8 +124,8 @@ class ResourceMonitorService {
   Future<int?> _getMemoryUsage() async {
     try {
       if (Platform.isAndroid || Platform.isIOS) {
-        // For now, return null - can be implemented with platform channels
-        // TODO: Implement native memory tracking
+        // Memory tracking requires a native platform channel plugin — out of scope.
+        // Battery monitoring remains active.
         return null;
       }
       return null;

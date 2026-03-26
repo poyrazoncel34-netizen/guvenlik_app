@@ -3,11 +3,17 @@ import 'package:guvenlik_app/core/services/call_service.dart';
 
 /// M3: Phone number validation — numbers shorter than 7 digits should fail.
 /// H4: Consent gate should not block emergency calls.
+/// CallService.callTimeout must exist for plugin safety.
 void main() {
   test('startEmergencyCall rejects phone numbers shorter than 7 digits', () async {
     // '123' has only 3 digits — should fail validation
     final result = await CallService.startEmergencyCall('123');
     expect(result.isSuccess, isFalse);
     expect(result.status, EmergencyCallStatus.failed);
+  });
+
+  test('CallService has a call timeout constant for plugin safety', () {
+    expect(CallService.callTimeout, isA<Duration>());
+    expect(CallService.callTimeout.inSeconds, lessThanOrEqualTo(5));
   });
 }

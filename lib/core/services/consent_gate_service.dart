@@ -18,7 +18,7 @@ class ConsentGateService {
 
   /// Acil durum kişileri verisi işleme için rıza kontrolü
   static bool isEmergencyContactsAllowed() {
-    return _isGranted(ConsentRecord.typeEmergencyContacts);
+    return _isGranted(ConsentRecord.typeEmergencyContacts, defaultOnError: true);
   }
 
   /// Ses kaydı verisi işleme için rıza kontrolü
@@ -41,13 +41,13 @@ class ConsentGateService {
     return _isGranted(ConsentRecord.typeBiometric);
   }
 
-  static bool _isGranted(String consentType) {
+  static bool _isGranted(String consentType, {bool defaultOnError = false}) {
     try {
       final cm = serviceLocator<ConsentManager>();
       return cm.isGranted(consentType);
     } catch (e) {
       // ConsentManager henüz initialize edilmemişse güvenli tarafta kal
-      return false;
+      return defaultOnError;
     }
   }
 }

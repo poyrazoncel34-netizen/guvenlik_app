@@ -151,7 +151,7 @@ class _SafeWalkScreenState extends State<SafeWalkScreen>
     );
   }
 
-  void _onTimerExpired() {
+  Future<void> _onTimerExpired() async {
     // Timer expired without user checking in - trigger emergency
     HapticFeedback.heavyImpact();
     setState(() {

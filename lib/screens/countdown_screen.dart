@@ -15,11 +15,10 @@ import '../core/security/secure_storage.dart';
 import '../core/security/secure_storage_keys.dart';
 import '../core/app_colors.dart';
 import '../core/services/contact_service.dart';
-import '../core/services/sms_service.dart';
 import '../domain/repositories/contacts_repository.dart';
 import '../core/services/activity_service.dart';
 import '../core/services/call_service.dart';
-import '../core/services/connectivity_service.dart';
+
 import '../core/services/pin_lockout_service.dart';
 import '../core/services/offline_queue_service.dart';
 import '../domain/models/activity_event.dart';
@@ -29,6 +28,7 @@ import '../core/services/haptic_service.dart';
 import '../core/services/notification_service.dart';
 import '../core/services/emergency_core_service.dart';
 import '../core/utils/emergency_message_helper.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
 class CountdownScreen extends StatefulWidget {
   final bool isTestMode;
@@ -56,6 +56,8 @@ class _CountdownScreenState extends State<CountdownScreen>
   bool _handoffToEmergencyScreen = false;
   bool _isNavigating = false;
   DateTime? _startTime;
+  List<String> _emergencyNumbers = [];
+  EmergencyMessagePayload? _prefetchedPayload;
 
   DateTime? _lockoutEndTime;
   StreamSubscription<int>? _lockoutSubscription;
@@ -79,6 +81,8 @@ class _CountdownScreenState extends State<CountdownScreen>
 
     _loadPin();
     _loadEmergencyContact();
+    _loadEmergencyNumbers();
+    _prefetchLocation();
     _syncLockoutState();
     _startCountdown();
     KoruBeniForegroundService.start();
@@ -109,6 +113,22 @@ class _CountdownScreenState extends State<CountdownScreen>
     }
   }
 
+  Future<void> _loadEmergencyNumbers() async {
+    _emergencyNumbers = await _contactsRepository.getAllEmergencyNumbers();
+  }
+
+  Future<void> _prefetchLocation() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final customTemplate = prefs.getString(AppConstants.prefSmsTemplate);
+      _prefetchedPayload = await EmergencyMessageHelper.buildCountdownMessage(
+        customTemplate: customTemplate,
+      );
+    } catch (e) {
+      debugPrint('CountdownScreen: Location prefetch failed: $e');
+    }
+  }
+
   void _startCountdown() {
     _startTime = DateTime.now();
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
@@ -129,6 +149,9 @@ class _CountdownScreenState extends State<CountdownScreen>
   }
 
   Future<void> _makeEmergencyCall() async {
+    // WakeLock safety net: ensure CPU stays awake during emergency execution
+    try { await WakelockPlus.enable(); } catch (_) {}
+
     if (widget.isTestMode) {
       await KoruBeniForegroundService.stop();
       if (mounted) {
@@ -143,7 +166,12 @@ class _CountdownScreenState extends State<CountdownScreen>
       return;
     }
 
-    final numbers = await _contactsRepository.getAllEmergencyNumbers();
+    // Use pre-loaded numbers, fallback to fresh load
+    if (_emergencyNumbers.isEmpty) {
+      _emergencyNumbers = await _contactsRepository.getAllEmergencyNumbers();
+    }
+    final numbers = _emergencyNumbers;
+
     if (numbers.isEmpty) {
       await KoruBeniForegroundService.stop();
       if (mounted) {
@@ -155,68 +183,54 @@ class _CountdownScreenState extends State<CountdownScreen>
       return;
     }
 
+
+    final primaryNumber =
+        _emergencyContact?.phone ?? (numbers.isNotEmpty ? numbers.first : null);
+
     try {
-    final prefs = await SharedPreferences.getInstance();
-    final customTemplate = prefs.getString(AppConstants.prefSmsTemplate);
-    // System 4E: Timeout prevents GPS hang from blocking emergency flow
-    final messagePayload = await EmergencyMessageHelper.buildCountdownMessage(
-      customTemplate: customTemplate,
-    ).timeout(
-      const Duration(seconds: 8),
-      onTimeout: () => EmergencyMessagePayload(
-        message: customTemplate ?? 'countdown_emergency_msg_no_loc'.tr(),
-        locationStatusMessage: 'emergency_location_status_unavailable'.tr(),
-        locationSource: LocationSource.none,
+    // Use prefetched payload if available, otherwise build with timeout
+    final messagePayload = _prefetchedPayload ??
+        await EmergencyMessageHelper.buildCountdownMessage(
+          customTemplate: (await SharedPreferences.getInstance()).getString(AppConstants.prefSmsTemplate),
+        ).timeout(
+          const Duration(seconds: 8),
+          onTimeout: () => EmergencyMessagePayload(
+            message: 'countdown_emergency_msg_no_loc'.tr(),
+            locationStatusMessage: 'emergency_location_status_unavailable'.tr(),
+            locationSource: LocationSource.none,
+          ),
+        );
+    final message = messagePayload.message;
+
+    // Always enqueue to offline queue (offline-first, no cloud backend)
+    OfflineQueueService.instance.enqueue(
+      OfflineEvent(
+        type: 'emergency',
+        title: "countdown_emergency_title".tr(),
+        description: message,
+        data: {
+          'message': message,
+          'maps_url': messagePayload.mapsUrl,
+          'location_status': messagePayload.locationStatusMessage,
+        },
       ),
     );
-    final message = messagePayload.message;
-    final locationLink = messagePayload.mapsUrl;
 
-    final isOnline = ConnectivityService.instance.isOnline;
-
-    if (isOnline) {
-      try {
-        // Offline-first: No cloud sync, emergency handled locally via EmergencyCoreService
-        debugPrint('Emergency event logged locally (no Firebase)');
-        if (locationLink != null) {
-          debugPrint('Location link: $locationLink');
-        }
-        debugPrint('Message: $message');
-      } catch (e) {
-        debugPrint('>>> API failed, SMS fallback active: $e');
-      }
-    } else {
-      await OfflineQueueService.instance.enqueue(
-        OfflineEvent(
-          type: 'emergency',
-          title: "countdown_emergency_title".tr(),
-          description: message,
-          data: {
-            'message': message,
-            'maps_url': messagePayload.mapsUrl,
-            'location_status': messagePayload.locationStatusMessage,
-          },
-        ),
-      );
-    }
-
-    await ActivityService.logEvent(
+    // Fire-and-forget: activity log, haptic, notification
+    ActivityService.logEvent(
       type: ActivityType.emergencyTriggered,
       title: "countdown_emergency_title".tr(),
       description: "countdown_emergency_desc".tr(),
     );
-
-    await HapticService.emergencyTriggered();
-
-    // Send local push notification for alarm
-    await NotificationService.instance.showEmergencyAlert(
+    HapticService.emergencyTriggered();
+    NotificationService.instance.showEmergencyAlert(
       id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
       title: 'countdown_emergency_title'.tr(),
       body: 'alarm_notification_body'.tr(),
     );
 
-    final primaryNumber =
-        _emergencyContact?.phone ?? (numbers.isNotEmpty ? numbers.first : null);
+    // Store payload for navigation screen
+    _prefetchedPayload = messagePayload;
 
     // System 2: Multi-channel failover via EmergencyOrchestrator
     // SMS and Call run as fully independent channels with retry + native fallback
@@ -259,6 +273,7 @@ class _CountdownScreenState extends State<CountdownScreen>
     if (mounted && !_isNavigating) {
       _isNavigating = true;
       _handoffToEmergencyScreen = true;
+      final locationStatus = _prefetchedPayload?.locationStatusMessage ?? '';
       try {
         Navigator.pushReplacement(
           context,
@@ -268,7 +283,7 @@ class _CountdownScreenState extends State<CountdownScreen>
               phone: calledNumber,
               callResult: callResult,
               smsResult: smsResult,
-              locationStatusMessage: messagePayload.locationStatusMessage,
+              locationStatusMessage: locationStatus,
             ),
           ),
         );
@@ -291,6 +306,7 @@ class _CountdownScreenState extends State<CountdownScreen>
       }
     }
   }
+
 
   @override
   void dispose() {

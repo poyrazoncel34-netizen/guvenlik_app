@@ -111,7 +111,7 @@ class EmergencyOrchestrator {
       return result;
     } catch (e) {
       debugPrint('[Orchestrator] SMS channel error: $e');
-      return SmsComposeResult.failed();
+      return SmsComposeResult.failed('SMS channel error');
     }
   }
 

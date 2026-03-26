@@ -61,6 +61,7 @@ class EmergencyCallResult {
 }
 
 class CallService {
+  static const Duration callTimeout = Duration(seconds: 3);
   CallService._();
 
   static Future<EmergencyCallResult> startEmergencyCall(String number) async {
@@ -94,8 +95,7 @@ class CallService {
         }
 
         final directCallStarted =
-            await FlutterDirectCallerPlugin.callNumber(normalized)
-                .timeout(const Duration(seconds: 3), onTimeout: () => false) ?? false;
+            await FlutterDirectCallerPlugin.callNumber(normalized).timeout(callTimeout, onTimeout: () => false) ?? false;
         if (directCallStarted) {
           return EmergencyCallResult.direct(normalized);
         }

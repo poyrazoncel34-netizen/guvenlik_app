@@ -58,6 +58,7 @@ class KoruBeniForegroundService {
           initialNotificationTitle: 'KoruBeni Aktif',
           initialNotificationContent: 'Acil durum modu aktif — konum paylaşılıyor',
           foregroundServiceNotificationId: kForegroundNotificationId,
+          foregroundServiceTypes: [AndroidForegroundType.specialUse],
         ),
         iosConfiguration: IosConfiguration(
           autoStart: false,
@@ -191,7 +192,7 @@ Future<void> _onStart(ServiceInstance service) async {
     try {
       if (service is AndroidServiceInstance) {
         if (await service.isForegroundService()) {
-          notificationsPlugin.show(
+          await notificationsPlugin.show(
             kForegroundNotificationId,
             'KoruBeni Aktif',
             'Acil durum modu aktif — konum paylaşılıyor',
@@ -208,7 +209,7 @@ Future<void> _onStart(ServiceInstance service) async {
         }
       }
     } catch (e) {
-      debugPrint('ForegroundService: Heartbeat error: $e');
+      debugPrint('ForegroundService: Heartbeat failed: \$e');
     }
   });
 
