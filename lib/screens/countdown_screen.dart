@@ -10,6 +10,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/di/service_locator.dart';
 import '../core/constants/app_constants.dart';
+import '../core/services/emergency_orchestrator.dart';
 import '../core/security/secure_storage.dart';
 import '../core/security/secure_storage_keys.dart';
 import '../core/app_colors.dart';
@@ -18,7 +19,6 @@ import '../core/services/sms_service.dart';
 import '../domain/repositories/contacts_repository.dart';
 import '../core/services/activity_service.dart';
 import '../core/services/call_service.dart';
-import '../core/utils/permission_helper.dart';
 import '../core/services/connectivity_service.dart';
 import '../core/services/pin_lockout_service.dart';
 import '../core/services/offline_queue_service.dart';
@@ -27,6 +27,7 @@ import 'emergency_call_screen.dart';
 import '../core/services/foreground_service.dart';
 import '../core/services/haptic_service.dart';
 import '../core/services/notification_service.dart';
+import '../core/services/emergency_core_service.dart';
 import '../core/utils/emergency_message_helper.dart';
 
 class CountdownScreen extends StatefulWidget {
@@ -54,6 +55,7 @@ class _CountdownScreenState extends State<CountdownScreen>
   late final SecureStorage _secureStorage = serviceLocator<SecureStorage>();
   bool _handoffToEmergencyScreen = false;
   bool _isNavigating = false;
+  DateTime? _startTime;
 
   DateTime? _lockoutEndTime;
   StreamSubscription<int>? _lockoutSubscription;
@@ -108,10 +110,15 @@ class _CountdownScreenState extends State<CountdownScreen>
   }
 
   void _startCountdown() {
+    _startTime = DateTime.now();
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (_countdown > 0) {
-        setState(() => _countdown--);
-        HapticService.countdownTick(secondsRemaining: _countdown);
+      final startTime = _startTime;
+      if (startTime == null) return;
+      final elapsed = DateTime.now().difference(startTime).inSeconds;
+      final remaining = 10 - elapsed;
+      if (remaining > 0) {
+        setState(() => _countdown = remaining);
+        HapticService.countdownTick(secondsRemaining: remaining);
         // ── Tick bounce animation ──
         _tickBounceController.forward(from: 0);
       } else {
@@ -148,10 +155,19 @@ class _CountdownScreenState extends State<CountdownScreen>
       return;
     }
 
+    try {
     final prefs = await SharedPreferences.getInstance();
     final customTemplate = prefs.getString(AppConstants.prefSmsTemplate);
+    // System 4E: Timeout prevents GPS hang from blocking emergency flow
     final messagePayload = await EmergencyMessageHelper.buildCountdownMessage(
       customTemplate: customTemplate,
+    ).timeout(
+      const Duration(seconds: 8),
+      onTimeout: () => EmergencyMessagePayload(
+        message: customTemplate ?? 'countdown_emergency_msg_no_loc'.tr(),
+        locationStatusMessage: 'emergency_location_status_unavailable'.tr(),
+        locationSource: LocationSource.none,
+      ),
     );
     final message = messagePayload.message;
     final locationLink = messagePayload.mapsUrl;
@@ -199,51 +215,37 @@ class _CountdownScreenState extends State<CountdownScreen>
       body: 'alarm_notification_body'.tr(),
     );
 
-    final smsResult = await SmsService.sendSms(
-      numbers: numbers,
-      message: message,
-    );
-
     final primaryNumber =
         _emergencyContact?.phone ?? (numbers.isNotEmpty ? numbers.first : null);
 
-    // Prominent disclosure before requesting CALL_PHONE permission (Play Store compliance)
-    if (mounted) {
-      await PermissionHelper.requestCallPhonePermission(context);
+    // System 2: Multi-channel failover via EmergencyOrchestrator
+    // SMS and Call run as fully independent channels with retry + native fallback
+    final orchestratorResult = await EmergencyOrchestrator.execute(
+      numbers: numbers,
+      message: message,
+      primaryNumber: primaryNumber,
+    );
+
+    final callResult = orchestratorResult.callResult;
+    final smsResult = orchestratorResult.smsResult;
+    final calledNumber = orchestratorResult.calledNumber;
+
+    // Show failover notification if a different contact was called
+    if (calledNumber != primaryNumber && calledNumber.isNotEmpty && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'emergency_failover_called'.tr(
+              namedArgs: {'number': calledNumber},
+            ),
+          ),
+          backgroundColor: AppColors.warning,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
     }
 
-    // Failover: try each number until one succeeds
-    EmergencyCallResult callResult = EmergencyCallResult.failed('');
-    String calledNumber = primaryNumber ?? '';
-    if (primaryNumber != null && primaryNumber.isNotEmpty) {
-      callResult = await CallService.startEmergencyCall(primaryNumber);
-      if (!callResult.isSuccess && numbers.length > 1) {
-        // Try remaining numbers as failover
-        for (final fallbackNumber in numbers) {
-          if (fallbackNumber == primaryNumber) continue;
-          callResult = await CallService.startEmergencyCall(fallbackNumber);
-          if (callResult.isSuccess) {
-            calledNumber = fallbackNumber;
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    'emergency_failover_called'.tr(
-                      namedArgs: {'number': fallbackNumber},
-                    ),
-                  ),
-                  backgroundColor: AppColors.warning,
-                  behavior: SnackBarBehavior.floating,
-                ),
-              );
-            }
-            break;
-          }
-        }
-      }
-    }
-
-    if (!smsResult.isSuccess && !callResult.isSuccess) {
+    if (!orchestratorResult.atLeastOneChannelSucceeded) {
       await KoruBeniForegroundService.stop();
       if (mounted) {
         ScaffoldMessenger.of(
@@ -274,6 +276,18 @@ class _CountdownScreenState extends State<CountdownScreen>
         debugPrint('CountdownScreen: Navigation failed: $e');
         _isNavigating = false;
         _handoffToEmergencyScreen = false;
+      }
+    }
+    } catch (e) {
+      // M1: Best-effort fallback — try to call even if other steps failed
+      debugPrint('CountdownScreen: Emergency flow error: $e');
+      try {
+        final fallbackNumbers = await _contactsRepository.getAllEmergencyNumbers();
+        if (fallbackNumbers.isNotEmpty) {
+          await CallService.startEmergencyCall(fallbackNumbers.first);
+        }
+      } catch (_) {
+        debugPrint('CountdownScreen: Fallback call also failed');
       }
     }
   }

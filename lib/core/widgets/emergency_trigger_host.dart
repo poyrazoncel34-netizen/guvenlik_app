@@ -9,6 +9,7 @@ import '../navigation/app_navigator.dart';
 import '../services/app_lifecycle_handler.dart';
 import '../services/check_in_service.dart';
 import '../services/emergency_platform_service.dart';
+import '../services/emergency_readiness_service.dart';
 import '../services/volume_trigger_service.dart';
 
 class EmergencyTriggerHost extends StatefulWidget {
@@ -32,6 +33,8 @@ class _EmergencyTriggerHostState extends State<EmergencyTriggerHost>
     WidgetsBinding.instance.addObserver(this);
     CheckInService.instance.initialize();
     _bindPlatformEvents();
+    // System 3B: Non-blocking startup readiness check
+    EmergencyReadinessService.instance.checkReadiness();
     _startForegroundTriggers();
   }
 
@@ -64,9 +67,6 @@ class _EmergencyTriggerHostState extends State<EmergencyTriggerHost>
   Future<void> _startVolumeIfEnabled() async {
     if (!VolumeTriggerService.isSupported) return;
 
-    VolumeTriggerService.instance.startListening(
-      onPanicTriggered: _openCountdown,
-    );
     await VolumeTriggerService.instance.loadPreference();
     if (!mounted || !_foregroundTriggersEnabled) return;
 
@@ -139,11 +139,14 @@ class _EmergencyTriggerHostState extends State<EmergencyTriggerHost>
     }
 
     _countdownOpen = true;
-    await HapticFeedback.heavyImpact();
-    await navigator.push(
-      MaterialPageRoute(builder: (_) => const CountdownScreen()),
-    );
-    _countdownOpen = false;
+    try {
+      await HapticFeedback.heavyImpact();
+      await navigator.push(
+        MaterialPageRoute(builder: (_) => const CountdownScreen()),
+      );
+    } finally {
+      _countdownOpen = false;
+    }
   }
 
   @override

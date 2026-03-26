@@ -16,6 +16,7 @@ class OfflineQueueService {
 
   static const String _queueKey = 'offline_event_queue';
   static const int _maxQueueSize = 100;
+  static const int _maxEventSize = 512; // bytes — prevent SharedPreferences overflow
   bool _initialized = false;
   StreamSubscription<bool>? _connectivitySubscription;
 
@@ -43,7 +44,13 @@ class OfflineQueueService {
       queue.removeAt(0);
       debugPrint('OfflineQueue: Queue full, dropped oldest event');
     }
-    queue.add(event.toJson());
+    final json = event.toJson();
+    final encoded = jsonEncode(json);
+    if (encoded.length > _maxEventSize) {
+      // Truncate description to fit within size limit
+      json["description"] = (json["description"] as String? ?? "").substring(0, min(100, (json["description"] as String? ?? "").length));
+    }
+    queue.add(json);
     await prefs.setStringList(
       _queueKey,
       queue.map((e) => jsonEncode(e)).toList(),

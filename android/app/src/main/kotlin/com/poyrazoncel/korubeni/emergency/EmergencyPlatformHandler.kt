@@ -82,6 +82,13 @@ class EmergencyPlatformHandler(
                     response["call"] = openCall(primaryNumber)
                     result.success(response)
                 }
+                "executeEmergencyNative" -> {
+                    val recipients = call.argument<List<String>>("recipients") ?: emptyList()
+                    val message = call.argument<String>("message").orEmpty()
+                    val primaryNumber = call.argument<String>("primaryNumber").orEmpty()
+                    EmergencyExecutor.executeEmergency(context, recipients, message, primaryNumber)
+                    result.success(mapOf("status" to "dispatched"))
+                }
                 "getDeviceState" -> {
                     result.success(getDeviceState())
                 }
@@ -192,11 +199,11 @@ class EmergencyPlatformHandler(
                 PackageManager.PERMISSION_GRANTED
         val intent = if (canDirectCall) {
             Intent(Intent.ACTION_CALL).apply {
-                data = Uri.parse("tel:$cleaned")
+                data = Uri.parse("tel:${Uri.encode(cleaned)}")
             }
         } else {
             Intent(Intent.ACTION_DIAL).apply {
-                data = Uri.parse("tel:$cleaned")
+                data = Uri.parse("tel:${Uri.encode(cleaned)}")
             }
         }
 
