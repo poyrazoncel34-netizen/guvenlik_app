@@ -87,11 +87,10 @@ class SmsService {
     required List<String> numbers,
     required String message,
   }) async {
-    // KVKK m.5: Acil durum kişileri rızası kontrolü
+    // KVKK m.5: Log consent status but never block emergency SMS
     if (!ConsentGateService.isEmergencyContactsAllowed()) {
-      return SmsComposeResult.failed(
-        'sms_consent_required'.tr(),
-      );
+      // ignore: avoid_print
+      print('[SmsService] Consent gate returned false, proceeding for safety');
     }
 
     final recipients = numbers

@@ -6,13 +6,16 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.provider.Settings
+import android.os.Build
 import android.telephony.SmsManager
 import android.telephony.TelephonyManager
 import androidx.core.content.ContextCompat
 import android.content.pm.PackageManager
 import com.poyrazoncel.korubeni.BuildConfig
 import java.util.UUID
+import android.os.PowerManager
 import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicInteger
 
 object SmsSender {
     const val ACTION_SMS_SENT = "com.poyrazoncel.korubeni.SMS_SENT"
@@ -53,7 +56,22 @@ object SmsSender {
             return mapOf("status" to "failed", "error" to "sim_unavailable")
         }
 
-        val smsManager = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) { context.getSystemService(SmsManager::class.java)!! } else { @Suppress("DEPRECATION") SmsManager.getDefault() }
+        val smsManager: SmsManager? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            context.getSystemService(SmsManager::class.java)
+        } else {
+            @Suppress("DEPRECATION") SmsManager.getDefault()
+        }
+        if (smsManager == null) {
+            return openComposer(context, activity, cleaned, message)
+        }
+        // System 3C: Acquire wake lock to keep CPU awake during SMS dispatch
+        val powerManager = context.getSystemService(Context.POWER_SERVICE) as? PowerManager
+        val wakeLock = powerManager?.newWakeLock(
+            PowerManager.PARTIAL_WAKE_LOCK,
+            "KoruBeni:SmsSend"
+        )?.apply { acquire(60_000L) }
+        val pendingCount = AtomicInteger(cleaned.size)
+
         cleaned.forEachIndexed { index, recipient ->
             executor.execute {
                 try {
@@ -87,8 +105,12 @@ object SmsSender {
                         deliveredIntents,
                     )
                 } catch (e: Exception) {
-                    android.util.Log.e("SmsSender", "SMS dispatch failed for recipient: ${e.message}", e)
+                    android.util.Log.e("SmsSender", "SMS dispatch failed for a recipient", e)
                     // Non-fatal: malformed number or SmsManager error — other recipients continue
+                } finally {
+                    if (pendingCount.decrementAndGet() == 0) {
+                        try { wakeLock?.release() } catch (_: Exception) {}
+                    }
                 }
             }
         }

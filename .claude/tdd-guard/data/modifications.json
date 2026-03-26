@@ -1,12 +1,12 @@
 {
-  "session_id": "0577cff0-59c7-4bdc-900a-913103b315b6",
-  "transcript_path": "/Users/poyrazoncel/.claude/projects/-Users-poyrazoncel-Desktop-guvenlik-app--claude-worktrees-hungry-jennings/0577cff0-59c7-4bdc-900a-913103b315b6.jsonl",
+  "session_id": "dee90e0e-da71-447f-ae44-464e0bc58eed",
+  "transcript_path": "/Users/poyrazoncel/.claude/projects/-Users-poyrazoncel-Desktop-guvenlik-app--claude-worktrees-priceless-germain/dee90e0e-da71-447f-ae44-464e0bc58eed.jsonl",
   "hook_event_name": "PreToolUse",
   "tool_name": "Edit",
   "tool_input": {
-    "file_path": "/Users/poyrazoncel/Desktop/guvenlik_app/.claude/worktrees/hungry-jennings/lib/screens/home_page.dart",
-    "old_string": "<<<<<<< HEAD\nimport '../presentation/providers/subscription_provider.dart';\nimport 'subscription/paywall_screen.dart';\nimport '../core/services/subscription_gate.dart';\n=======\nimport 'battery_optimization_wizard.dart';\n>>>>>>> 5fddd27 (fix: güvenilirlik, lokalizasyon ve hata yönetimi iyileştirmeleri)",
-    "new_string": "import '../presentation/providers/subscription_provider.dart';\nimport 'subscription/paywall_screen.dart';\nimport '../core/services/subscription_gate.dart';\nimport 'battery_optimization_wizard.dart';",
+    "file_path": "/Users/poyrazoncel/Desktop/guvenlik_app/.claude/worktrees/priceless-germain/lib/core/services/emergency_orchestrator.dart",
+    "old_string": "      return SmsComposeResult.failed();",
+    "new_string": "      return SmsComposeResult.failed('SMS channel error');",
     "replace_all": false
   }
 }

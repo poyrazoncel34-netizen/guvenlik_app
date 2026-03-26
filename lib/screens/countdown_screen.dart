@@ -10,14 +10,15 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/di/service_locator.dart';
 import '../core/constants/app_constants.dart';
+import '../core/services/emergency_orchestrator.dart';
 import '../core/security/secure_storage.dart';
 import '../core/security/secure_storage_keys.dart';
 import '../core/app_colors.dart';
 import '../core/services/contact_service.dart';
-import '../core/services/sms_service.dart';
 import '../domain/repositories/contacts_repository.dart';
 import '../core/services/activity_service.dart';
 import '../core/services/call_service.dart';
+
 import '../core/services/pin_lockout_service.dart';
 import '../core/services/offline_queue_service.dart';
 import '../domain/models/activity_event.dart';
@@ -25,6 +26,7 @@ import 'emergency_call_screen.dart';
 import '../core/services/foreground_service.dart';
 import '../core/services/haptic_service.dart';
 import '../core/services/notification_service.dart';
+import '../core/services/emergency_core_service.dart';
 import '../core/utils/emergency_message_helper.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
@@ -53,6 +55,7 @@ class _CountdownScreenState extends State<CountdownScreen>
   late final SecureStorage _secureStorage = serviceLocator<SecureStorage>();
   bool _handoffToEmergencyScreen = false;
   bool _isNavigating = false;
+  DateTime? _startTime;
   List<String> _emergencyNumbers = [];
   EmergencyMessagePayload? _prefetchedPayload;
 
@@ -127,10 +130,15 @@ class _CountdownScreenState extends State<CountdownScreen>
   }
 
   void _startCountdown() {
+    _startTime = DateTime.now();
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (_countdown > 0) {
-        setState(() => _countdown--);
-        HapticService.countdownTick(secondsRemaining: _countdown);
+      final startTime = _startTime;
+      if (startTime == null) return;
+      final elapsed = DateTime.now().difference(startTime).inSeconds;
+      final remaining = 10 - elapsed;
+      if (remaining > 0) {
+        setState(() => _countdown = remaining);
+        HapticService.countdownTick(secondsRemaining: remaining);
         // ── Tick bounce animation ──
         _tickBounceController.forward(from: 0);
       } else {
@@ -175,26 +183,83 @@ class _CountdownScreenState extends State<CountdownScreen>
       return;
     }
 
+
     final primaryNumber =
         _emergencyContact?.phone ?? (numbers.isNotEmpty ? numbers.first : null);
 
-    // ── TRACK 1: CALL fires IMMEDIATELY — no awaits before this ──
-    final callFuture = _executeCall(primaryNumber, numbers);
+    try {
+    // Use prefetched payload if available, otherwise build with timeout
+    final messagePayload = _prefetchedPayload ??
+        await EmergencyMessageHelper.buildCountdownMessage(
+          customTemplate: (await SharedPreferences.getInstance()).getString(AppConstants.prefSmsTemplate),
+        ).timeout(
+          const Duration(seconds: 8),
+          onTimeout: () => EmergencyMessagePayload(
+            message: 'countdown_emergency_msg_no_loc'.tr(),
+            locationStatusMessage: 'emergency_location_status_unavailable'.tr(),
+            locationSource: LocationSource.none,
+          ),
+        );
+    final message = messagePayload.message;
 
-    // ── TRACK 2: SMS + supporting actions run in PARALLEL ──
-    final smsFuture = _executeSmsFlow(numbers);
-
-    // Wait for call result (priority), SMS with timeout
-    final callResultPair = await callFuture;
-    final smsResult = await smsFuture.timeout(
-      const Duration(seconds: 8),
-      onTimeout: () => SmsComposeResult.failed('SMS timeout'),
+    // Always enqueue to offline queue (offline-first, no cloud backend)
+    OfflineQueueService.instance.enqueue(
+      OfflineEvent(
+        type: 'emergency',
+        title: "countdown_emergency_title".tr(),
+        description: message,
+        data: {
+          'message': message,
+          'maps_url': messagePayload.mapsUrl,
+          'location_status': messagePayload.locationStatusMessage,
+        },
+      ),
     );
 
-    final callResult = callResultPair.$1;
-    final calledNumber = callResultPair.$2;
+    // Fire-and-forget: activity log, haptic, notification
+    ActivityService.logEvent(
+      type: ActivityType.emergencyTriggered,
+      title: "countdown_emergency_title".tr(),
+      description: "countdown_emergency_desc".tr(),
+    );
+    HapticService.emergencyTriggered();
+    NotificationService.instance.showEmergencyAlert(
+      id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+      title: 'countdown_emergency_title'.tr(),
+      body: 'alarm_notification_body'.tr(),
+    );
 
-    if (!smsResult.isSuccess && !callResult.isSuccess) {
+    // Store payload for navigation screen
+    _prefetchedPayload = messagePayload;
+
+    // System 2: Multi-channel failover via EmergencyOrchestrator
+    // SMS and Call run as fully independent channels with retry + native fallback
+    final orchestratorResult = await EmergencyOrchestrator.execute(
+      numbers: numbers,
+      message: message,
+      primaryNumber: primaryNumber,
+    );
+
+    final callResult = orchestratorResult.callResult;
+    final smsResult = orchestratorResult.smsResult;
+    final calledNumber = orchestratorResult.calledNumber;
+
+    // Show failover notification if a different contact was called
+    if (calledNumber != primaryNumber && calledNumber.isNotEmpty && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'emergency_failover_called'.tr(
+              namedArgs: {'number': calledNumber},
+            ),
+          ),
+          backgroundColor: AppColors.warning,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+
+    if (!orchestratorResult.atLeastOneChannelSucceeded) {
       await KoruBeniForegroundService.stop();
       if (mounted) {
         ScaffoldMessenger.of(
@@ -208,7 +273,6 @@ class _CountdownScreenState extends State<CountdownScreen>
     if (mounted && !_isNavigating) {
       _isNavigating = true;
       _handoffToEmergencyScreen = true;
-      // Use prefetched payload for location status, fallback to empty
       final locationStatus = _prefetchedPayload?.locationStatusMessage ?? '';
       try {
         Navigator.pushReplacement(
@@ -229,93 +293,20 @@ class _CountdownScreenState extends State<CountdownScreen>
         _handoffToEmergencyScreen = false;
       }
     }
-  }
-
-  /// TRACK 1: Execute emergency call with failover — runs independently
-  Future<(EmergencyCallResult, String)> _executeCall(
-    String? primaryNumber,
-    List<String> numbers,
-  ) async {
-    EmergencyCallResult callResult = EmergencyCallResult.failed('');
-    String calledNumber = primaryNumber ?? '';
-    if (primaryNumber != null && primaryNumber.isNotEmpty) {
-      callResult = await CallService.startEmergencyCall(primaryNumber);
-      if (!callResult.isSuccess && numbers.length > 1) {
-        for (final fallbackNumber in numbers) {
-          if (fallbackNumber == primaryNumber) continue;
-          callResult = await CallService.startEmergencyCall(fallbackNumber);
-          if (callResult.isSuccess) {
-            calledNumber = fallbackNumber;
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    'emergency_failover_called'.tr(
-                      namedArgs: {'number': fallbackNumber},
-                    ),
-                  ),
-                  backgroundColor: AppColors.warning,
-                  behavior: SnackBarBehavior.floating,
-                ),
-              );
-            }
-            break;
-          }
+    } catch (e) {
+      // M1: Best-effort fallback — try to call even if other steps failed
+      debugPrint('CountdownScreen: Emergency flow error: $e');
+      try {
+        final fallbackNumbers = await _contactsRepository.getAllEmergencyNumbers();
+        if (fallbackNumbers.isNotEmpty) {
+          await CallService.startEmergencyCall(fallbackNumbers.first);
         }
+      } catch (_) {
+        debugPrint('CountdownScreen: Fallback call also failed');
       }
     }
-    return (callResult, calledNumber);
   }
 
-  /// TRACK 2: Build message + send SMS + log activity — runs independently
-  Future<SmsComposeResult> _executeSmsFlow(List<String> numbers) async {
-    try {
-      // Use prefetched payload if available, otherwise build fresh
-      final messagePayload = _prefetchedPayload ??
-          await EmergencyMessageHelper.buildCountdownMessage(
-            customTemplate: null,
-          );
-      final message = messagePayload.message;
-
-      // Always enqueue to offline queue (offline-first, no cloud backend)
-      OfflineQueueService.instance.enqueue(
-        OfflineEvent(
-          type: 'emergency',
-          title: "countdown_emergency_title".tr(),
-          description: message,
-          data: {
-            'message': message,
-            'maps_url': messagePayload.mapsUrl,
-            'location_status': messagePayload.locationStatusMessage,
-          },
-        ),
-      );
-
-      // Fire-and-forget: activity log, haptic, notification
-      ActivityService.logEvent(
-        type: ActivityType.emergencyTriggered,
-        title: "countdown_emergency_title".tr(),
-        description: "countdown_emergency_desc".tr(),
-      );
-      HapticService.emergencyTriggered();
-      NotificationService.instance.showEmergencyAlert(
-        id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
-        title: 'countdown_emergency_title'.tr(),
-        body: 'alarm_notification_body'.tr(),
-      );
-
-      // Store payload for navigation screen
-      _prefetchedPayload = messagePayload;
-
-      return await SmsService.sendSms(
-        numbers: numbers,
-        message: message,
-      );
-    } catch (e) {
-      debugPrint('CountdownScreen: SMS flow failed: $e');
-      return SmsComposeResult.failed('SMS flow error');
-    }
-  }
 
   @override
   void dispose() {

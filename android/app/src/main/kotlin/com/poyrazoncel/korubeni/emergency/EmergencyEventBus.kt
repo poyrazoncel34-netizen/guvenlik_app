@@ -48,13 +48,13 @@ object EmergencyEventBus {
     fun persist(context: Context, payload: Map<String, Any?>) {
         EmergencyPrefs.prefs(context).edit()
             .putString(EmergencyPrefs.KEY_PENDING_TRIGGER, JSONObject(payload).toString())
-            .apply()
+            .commit()
     }
 
     fun consumePendingTrigger(context: Context): Map<String, Any?>? {
         val prefs = EmergencyPrefs.prefs(context)
         val raw = prefs.getString(EmergencyPrefs.KEY_PENDING_TRIGGER, null) ?: return null
-        prefs.edit().remove(EmergencyPrefs.KEY_PENDING_TRIGGER).apply()
+        prefs.edit().remove(EmergencyPrefs.KEY_PENDING_TRIGGER).commit()
         return try {
             val json = JSONObject(raw)
             val data = hashMapOf<String, Any?>()
