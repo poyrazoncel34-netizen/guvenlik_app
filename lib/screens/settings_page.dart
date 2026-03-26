@@ -468,8 +468,8 @@ class _SettingsPageState extends State<SettingsPage> {
               _buildNavigationTile(
                 icon: Icons.open_in_browser_rounded,
                 iconColor: AppColors.info,
-                title: 'Gizlilik Politikası (Web)',
-                subtitle: 'App Store gereksinimleri için çevrimiçi sürüm',
+                title: 'settings_privacy_web_title'.tr(),
+                subtitle: 'settings_privacy_web_subtitle'.tr(),
                 onTap: () async {
                   final uri = Uri.parse(AppConstants.privacyPolicyWebUrl);
                   try {
@@ -481,8 +481,8 @@ class _SettingsPageState extends State<SettingsPage> {
               _buildNavigationTile(
                 icon: Icons.balance_rounded,
                 iconColor: const Color(0xFF9F7AEA),
-                title: '⚖️ Yasal Bilgiler',
-                subtitle: 'Kullanım şartları, KVKK, veri yönetimi',
+                title: 'settings_legal_info_title'.tr(),
+                subtitle: 'settings_legal_info_subtitle'.tr(),
                 onTap: () => Navigator.push(
                   context,
                   MaterialPageRoute(builder: (_) => const LegalInfoScreen()),

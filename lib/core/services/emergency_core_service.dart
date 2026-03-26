@@ -137,7 +137,7 @@ class EmergencyCoreService {
     // Level 2: Last known (in-memory cache)
     if (_lastKnownPosition != null && _lastPositionTime != null) {
       final age = DateTime.now().difference(_lastPositionTime!);
-      if (age.inMinutes < 30) {
+      if (age.inMinutes < 10) {
         debugPrint('✅ Level 2: Cached (${age.inMinutes}m old)');
         return LocationResultWithSource(
           position: _lastKnownPosition,

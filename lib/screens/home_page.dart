@@ -27,6 +27,7 @@ import 'check_in_screen.dart';
 import '../presentation/providers/subscription_provider.dart';
 import 'subscription/paywall_screen.dart';
 import '../core/services/subscription_gate.dart';
+import 'battery_optimization_wizard.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -87,8 +88,20 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<HomeProvider>().initialize();
       _initConnectivity();
+      _checkBatteryOptimizationWizard();
     });
     // Analytics removed (offline-first)
+  }
+
+  Future<void> _checkBatteryOptimizationWizard() async {
+    final shouldShow = await BatteryOptimizationWizard.shouldShow();
+    if (shouldShow && mounted) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => const BatteryOptimizationWizard(checkFirstLaunch: true),
+        ),
+      );
+    }
   }
 
   void _initConnectivity() {
