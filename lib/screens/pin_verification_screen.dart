@@ -5,7 +5,6 @@ import 'package:easy_localization/easy_localization.dart';
 import '../core/app_colors.dart';
 import '../core/services/contact_service.dart';
 import '../core/services/call_service.dart';
-import '../core/utils/permission_helper.dart';
 import '../core/services/sms_service.dart';
 import '../core/di/service_locator.dart';
 import '../core/security/secure_storage.dart';
@@ -76,8 +75,11 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
     });
   }
 
-  // --- DUAL-ACTION: SMS + ARAMA (ZERO-FAULT) ---
+  // --- DUAL-ACTION: SMS + ARAMA (ZERO-FAULT, PARALLEL) ---
   Future<void> _triggerSOS() async {
+    // WakeLock safety net
+    try { await WakelockPlus.enable(); } catch (_) {}
+
     final emergencyNumber = await ContactService.getEmergencyNumber();
 
     if (emergencyNumber == null || emergencyNumber.isEmpty) {
@@ -90,24 +92,18 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
       return;
     }
 
-    final messagePayload =
-        await EmergencyMessageHelper.buildPanicButtonMessage();
-    final smsMessage = messagePayload.message;
-
-    // 2. Tüm acil kişilere SMS gönder (arka planda, hata olsa bile aramaya geç)
     try {
-      final allNumbers = await ContactService.getAllEmergencyNumbers();
-      final smsNumbers = allNumbers.isNotEmpty ? allNumbers : [emergencyNumber];
-      final smsResult = await SmsService.sendSms(
-        numbers: smsNumbers,
-        message: smsMessage,
-      );
+      // TRACK 1: Call fires IMMEDIATELY — no permission dialog, no SMS wait
+      final callFuture = CallService.startEmergencyCall(emergencyNumber);
 
-      // Prominent disclosure before requesting CALL_PHONE permission (Play Store compliance)
-      if (mounted) {
-        await PermissionHelper.requestCallPhonePermission(context);
-      }
-      final callResult = await CallService.startEmergencyCall(emergencyNumber);
+      // TRACK 2: SMS runs in parallel
+      final smsFuture = _executeSmsFlow(emergencyNumber);
+
+      final callResult = await callFuture;
+      final smsResult = await smsFuture.timeout(
+        const Duration(seconds: 8),
+        onTimeout: () => SmsComposeResult.failed('SMS timeout'),
+      );
 
       if (!smsResult.isSuccess && !callResult.isSuccess) {
         if (mounted) {
@@ -130,7 +126,7 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
               phone: emergencyNumber,
               callResult: callResult,
               smsResult: smsResult,
-              locationStatusMessage: messagePayload.locationStatusMessage,
+              locationStatusMessage: _lastLocationStatus,
             ),
           ),
         );
@@ -144,6 +140,22 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
         Navigator.pop(context);
       }
     }
+  }
+
+  String _lastLocationStatus = '';
+
+  Future<SmsComposeResult> _executeSmsFlow(String emergencyNumber) async {
+    final messagePayload =
+        await EmergencyMessageHelper.buildPanicButtonMessage();
+    final smsMessage = messagePayload.message;
+    _lastLocationStatus = messagePayload.locationStatusMessage;
+
+    final allNumbers = await ContactService.getAllEmergencyNumbers();
+    final smsNumbers = allNumbers.isNotEmpty ? allNumbers : [emergencyNumber];
+    return SmsService.sendSms(
+      numbers: smsNumbers,
+      message: smsMessage,
+    );
   }
 
   void _onNumberPress(String number) {

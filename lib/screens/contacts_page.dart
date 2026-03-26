@@ -11,6 +11,7 @@ import 'package:fluttercontactpicker_plus/fluttercontactpicker_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../core/app_colors.dart';
+import '../core/utils/permission_helper.dart';
 import '../core/constants/app_constants.dart';
 import '../core/services/sms_service.dart';
 import '../presentation/providers/contacts_provider.dart';
@@ -927,6 +928,10 @@ class _ContactsPageState extends State<ContactsPage> {
                       return;
                     }
 
+                    // Request CALL_PHONE permission proactively after adding contact
+                    if (sheetContext.mounted) {
+                      PermissionHelper.requestCallPhonePermission(sheetContext);
+                    }
                     if (!sheetContext.mounted) {
                       return;
                     }
