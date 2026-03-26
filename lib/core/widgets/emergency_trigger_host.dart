@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:async';
@@ -78,18 +79,22 @@ class _EmergencyTriggerHostState extends State<EmergencyTriggerHost>
     EmergencyPlatformService.instance.initialize();
     _platformEventsSubscription = EmergencyPlatformService.instance.events
         .listen((event) async {
-          final type = event['type']?.toString();
-          if (type == 'checkInGraceStarted') {
-            await CheckInService.instance.handleNativeGraceStarted();
-            return;
-          }
-          if (type == 'checkInExpired') {
-            if (CheckInService.instance.isActive ||
-                CheckInService.instance.isGracePeriod) {
-              await CheckInService.instance.handleNativeExpired();
-            } else {
-              await _openCountdown();
+          try {
+            final type = event['type']?.toString();
+            if (type == 'checkInGraceStarted') {
+              await CheckInService.instance.handleNativeGraceStarted();
+              return;
             }
+            if (type == 'checkInExpired') {
+              if (CheckInService.instance.isActive ||
+                  CheckInService.instance.isGracePeriod) {
+                await CheckInService.instance.handleNativeExpired();
+              } else {
+                await _openCountdown();
+              }
+            }
+          } catch (e) {
+            debugPrint('EmergencyTriggerHost: Platform event error: \$e');
           }
         });
     _consumePendingTrigger();

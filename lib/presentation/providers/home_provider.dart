@@ -152,13 +152,17 @@ class HomeProvider extends ChangeNotifier {
     _locationShareTimer = Timer.periodic(const Duration(seconds: 30), (
       timer,
     ) async {
-      if (_locationShareEndAt == null) return;
-      final remaining = _locationShareEndAt!.difference(DateTime.now());
-      if (remaining.isNegative || remaining.inSeconds == 0) {
-        stopLocationSharing(manual: false);
-      } else {
-        await _refreshLocationShareState(remaining);
-        notifyListeners();
+      try {
+        if (_locationShareEndAt == null) return;
+        final remaining = _locationShareEndAt!.difference(DateTime.now());
+        if (remaining.isNegative || remaining.inSeconds == 0) {
+          stopLocationSharing(manual: false);
+        } else {
+          await _refreshLocationShareState(remaining);
+          notifyListeners();
+        }
+      } catch (e) {
+        debugPrint('HomeProvider: Location share timer error: \$e');
       }
     });
     await KoruBeniForegroundService.start();
