@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:async';
 
 import '../../screens/countdown_screen.dart';
-import '../constants/app_constants.dart';
 import '../navigation/app_navigator.dart';
 import '../services/app_lifecycle_handler.dart';
 import '../services/check_in_service.dart';
@@ -64,20 +62,11 @@ class _EmergencyTriggerHostState extends State<EmergencyTriggerHost>
   Future<void> _startVolumeIfEnabled() async {
     if (!VolumeTriggerService.isSupported) return;
 
+    // Set callback first, then loadPreference auto-starts if enabled
     VolumeTriggerService.instance.startListening(
       onPanicTriggered: _openCountdown,
     );
     await VolumeTriggerService.instance.loadPreference();
-    if (!mounted || !_foregroundTriggersEnabled) return;
-
-    final prefs = await SharedPreferences.getInstance();
-    final volumeEnabled =
-        prefs.getBool(AppConstants.prefVolumeTrigger) ?? false;
-    if (volumeEnabled) {
-      VolumeTriggerService.instance.startListening(
-        onPanicTriggered: _openCountdown,
-      );
-    }
   }
 
   void _stopForegroundTriggers() {

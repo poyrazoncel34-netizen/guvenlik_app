@@ -115,7 +115,7 @@ class EmergencyMessageHelper {
       );
     }
 
-    return EmergencyCoreService.instance.getLocationWithFallback();
+    return EmergencyCoreService.instance.getLocationWithFallback(gpsTimeout: const Duration(seconds: 3));
   }
 
   static EmergencyMessagePayload _payloadFromLocation({

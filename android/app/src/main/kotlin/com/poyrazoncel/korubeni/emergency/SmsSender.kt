@@ -53,7 +53,7 @@ object SmsSender {
             return mapOf("status" to "failed", "error" to "sim_unavailable")
         }
 
-        val smsManager = SmsManager.getDefault()
+        val smsManager = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) { context.getSystemService(SmsManager::class.java)!! } else { @Suppress("DEPRECATION") SmsManager.getDefault() }
         cleaned.forEachIndexed { index, recipient ->
             executor.execute {
                 try {
