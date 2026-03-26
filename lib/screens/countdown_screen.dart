@@ -55,6 +55,7 @@ class _CountdownScreenState extends State<CountdownScreen>
   late final SecureStorage _secureStorage = serviceLocator<SecureStorage>();
   bool _handoffToEmergencyScreen = false;
   bool _isNavigating = false;
+  bool _emergencyInProgress = false;
   DateTime? _startTime;
   List<String> _emergencyNumbers = [];
   EmergencyMessagePayload? _prefetchedPayload;
@@ -149,6 +150,10 @@ class _CountdownScreenState extends State<CountdownScreen>
   }
 
   Future<void> _makeEmergencyCall() async {
+    // RACE-1: Prevent double execution if timer fires while orchestrator is running
+    if (_emergencyInProgress) return;
+    _emergencyInProgress = true;
+
     // WakeLock safety net: ensure CPU stays awake during emergency execution
     try { await WakelockPlus.enable(); } catch (_) {}
 

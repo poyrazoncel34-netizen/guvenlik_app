@@ -46,9 +46,17 @@ object EmergencyEventBus {
     }
 
     fun persist(context: Context, payload: Map<String, Any?>) {
-        EmergencyPrefs.prefs(context).edit()
-            .putString(EmergencyPrefs.KEY_PENDING_TRIGGER, JSONObject(payload).toString())
+        val data = JSONObject(payload).toString()
+        val success = EmergencyPrefs.prefs(context).edit()
+            .putString(EmergencyPrefs.KEY_PENDING_TRIGGER, data)
             .commit()
+        // SILENT-5: Retry once if commit fails
+        if (!success) {
+            android.util.Log.w("EmergencyEventBus", "persist commit failed, retrying")
+            EmergencyPrefs.prefs(context).edit()
+                .putString(EmergencyPrefs.KEY_PENDING_TRIGGER, data)
+                .commit()
+        }
     }
 
     fun consumePendingTrigger(context: Context): Map<String, Any?>? {

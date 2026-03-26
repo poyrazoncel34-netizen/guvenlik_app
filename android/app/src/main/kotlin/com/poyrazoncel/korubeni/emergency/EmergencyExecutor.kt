@@ -36,6 +36,13 @@ object EmergencyExecutor {
 
         executor.execute {
             try {
+                // SILENT-2: Persist dispatch-attempted flag for Flutter to check on resume
+                context.getSharedPreferences("emergency_executor", Context.MODE_PRIVATE)
+                    .edit()
+                    .putBoolean("nativeDispatchAttempted", true)
+                    .putLong("nativeDispatchTimestamp", System.currentTimeMillis())
+                    .commit()
+
                 // Dispatch SMS
                 try {
                     SmsSender.send(context, null, recipients, message)

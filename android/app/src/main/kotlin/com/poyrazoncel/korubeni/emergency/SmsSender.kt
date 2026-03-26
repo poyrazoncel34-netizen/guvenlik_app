@@ -72,10 +72,14 @@ object SmsSender {
         )?.apply { acquire(60_000L) }
         val pendingCount = AtomicInteger(cleaned.size)
 
+        // SILENT-1: Register dispatch for failure tracking
+        val dispatchId = UUID.randomUUID().toString()
+        SmsStatusReceiver.registerDispatch(dispatchId, cleaned.size)
+
         cleaned.forEachIndexed { index, recipient ->
             executor.execute {
                 try {
-                    val messageId = UUID.randomUUID().toString()
+                    val messageId = dispatchId
                     val parts = smsManager.divideMessage(message)
                     val sentIntents = ArrayList<PendingIntent>(parts.size)
                     val deliveredIntents = ArrayList<PendingIntent>(parts.size)

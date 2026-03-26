@@ -38,6 +38,7 @@ class _SafeWalkScreenState extends State<SafeWalkScreen>
   DateTime? _endTime;
   int _remainingSeconds = 0;
   bool _preWarningFired = false;
+  bool _timerExpiredHandled = false;
 
   final List<int> _durations = [5, 10, 15, 30, 60];
 
@@ -152,6 +153,10 @@ class _SafeWalkScreenState extends State<SafeWalkScreen>
   }
 
   Future<void> _onTimerExpired() async {
+    // RACE-3: Prevent double trigger from timer + native grace alarm race
+    if (_timerExpiredHandled) return;
+    _timerExpiredHandled = true;
+
     // Timer expired without user checking in - trigger emergency
     HapticFeedback.heavyImpact();
     setState(() {
