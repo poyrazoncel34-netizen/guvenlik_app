@@ -130,7 +130,7 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
                   context,
                   MaterialPageRoute(builder: (_) => const LegalInfoScreen()),
                 ),
-                tooltip: 'Yasal Bilgiler',
+                tooltip: 'settings_legal_info_tooltip'.tr(),
               ),
             ],
           ),

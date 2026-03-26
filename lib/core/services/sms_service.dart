@@ -64,7 +64,7 @@ class SmsComposeResult {
   String get statusMessage {
     switch (status) {
       case SmsComposeStatus.nativeDispatched:
-        return 'Yerel SMS gonderimi baslatildi';
+        return 'sms_native_dispatched'.tr();
       case SmsComposeStatus.composerOpened:
         return 'sms_composer_opened'.tr();
       case SmsComposeStatus.composerOpenedPrimaryOnly:
@@ -87,11 +87,10 @@ class SmsService {
     required List<String> numbers,
     required String message,
   }) async {
-    // KVKK m.5: Acil durum kişileri rızası kontrolü
+    // KVKK m.5: Log consent status but never block emergency SMS
     if (!ConsentGateService.isEmergencyContactsAllowed()) {
-      return SmsComposeResult.failed(
-        'SMS göndermek için acil durum kişileri rızası gereklidir.',
-      );
+      // ignore: avoid_print
+      print('[SmsService] Consent gate returned false, proceeding for safety');
     }
 
     final recipients = numbers
@@ -172,9 +171,9 @@ class SmsService {
   static String _mapNativeError(Object? error) {
     switch (error?.toString()) {
       case 'airplane_mode':
-        return 'Ucak modu acik. SMS gonderilemez.';
+        return 'sms_error_airplane_mode'.tr();
       case 'sim_unavailable':
-        return 'SIM kart bulunamadi veya hazir degil.';
+        return 'sms_error_sim_unavailable'.tr();
       case 'no_recipients':
         return 'sms_no_recipients'.tr();
       default:

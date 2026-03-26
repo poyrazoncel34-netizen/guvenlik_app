@@ -12,6 +12,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/app_colors.dart';
+import '../core/widgets/theme_selector.dart';
 import '../core/constants/app_constants.dart';
 import '../core/utils/app_reset_helper.dart';
 import '../core/utils/pin_settings_helper.dart';
@@ -23,6 +24,7 @@ import '../presentation/providers/subscription_provider.dart';
 import 'battery_optimization_wizard.dart';
 import 'settings_legal/legal_settings_screen.dart';
 import 'subscription/paywall_screen.dart';
+import '../core/services/subscription_gate.dart';
 import 'subscription/subscription_management_screen.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -206,6 +208,114 @@ class _SettingsPageState extends State<SettingsPage> {
                   onChanged: provider.setVolumeTrigger,
                 ),
               ],
+              _buildDivider(),
+              _buildSwitchTile(
+                icon: Icons.vibration_rounded,
+                iconColor: AppColors.warning,
+                title: 'settings_shake_title'.tr(),
+                subtitle: 'settings_shake_subtitle'.tr(),
+                value: provider.shakeEnabled,
+                onChanged: (val) async {
+                  if (val) {
+                    final isPro = context.read<SubscriptionProvider>().isPro;
+                    if (!SubscriptionGate.canUseProFeature(isPro: isPro)) {
+                      Navigator.push(context, MaterialPageRoute(builder: (_) => const PaywallScreen()));
+                      return;
+                    }
+                    final ok = await FeatureWarningHelper.showIfNeeded(
+                      context,
+                      prefKey: AppConstants.prefWarningShake,
+                      featureName: 'shake_detection',
+                      title: FeatureWarningHelper.shakeTitle,
+                      content: FeatureWarningHelper.shakeContent,
+                    );
+                    if (!ok || !context.mounted) return;
+                  }
+                  provider.setShakeEnabled(val);
+                },
+              ),
+              if (provider.shakeEnabled) ...[
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'settings_shake_sensitivity'.tr(),
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: AppColors.textSecondary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: ShakeSensitivity.values.map((level) {
+                          final isSelected =
+                              provider.shakeSensitivity == level;
+                          final label = {
+                            ShakeSensitivity.low:
+                                'shake_sensitivity_low'.tr(),
+                            ShakeSensitivity.medium:
+                                'shake_sensitivity_medium'.tr(),
+                            ShakeSensitivity.high:
+                                'shake_sensitivity_high'.tr(),
+                          }[level]!;
+                          return Expanded(
+                            child: Padding(
+                              padding: EdgeInsets.only(
+                                  right: level != ShakeSensitivity.high
+                                      ? 8
+                                      : 0),
+                              child: GestureDetector(
+                                onTap: () {
+                                  HapticFeedback.lightImpact();
+                                  provider.setShakeSensitivity(level);
+                                },
+                                child: AnimatedContainer(
+                                  duration: const Duration(
+                                      milliseconds: 200),
+                                  padding:
+                                      const EdgeInsets.symmetric(
+                                          vertical: 10),
+                                  decoration: BoxDecoration(
+                                    color: isSelected
+                                        ? AppColors.primary
+                                            .withValues(alpha: 0.15)
+                                        : AppColors.surface,
+                                    borderRadius:
+                                        BorderRadius.circular(10),
+                                    border: Border.all(
+                                      color: isSelected
+                                          ? AppColors.primary
+                                          : AppColors.border,
+                                      width: isSelected ? 1.5 : 1,
+                                    ),
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      label,
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: isSelected
+                                            ? FontWeight.w700
+                                            : FontWeight.w500,
+                                        color: isSelected
+                                            ? AppColors.primary
+                                            : AppColors.textSecondary,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ]),
             const SizedBox(height: 28),
 
@@ -251,6 +361,34 @@ class _SettingsPageState extends State<SettingsPage> {
                     ),
                   );
                 },
+              ),
+            ]),
+            const SizedBox(height: 28),
+
+            // Appearance / Theme
+            _buildSectionTitle('settings_theme_section'.tr()),
+            const SizedBox(height: 14),
+            _buildSettingsCard([
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'settings_theme_title'.tr(),
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    ThemeSelector(
+                      selected: provider.themeMode,
+                      onChanged: provider.setThemeMode,
+                    ),
+                  ],
+                ),
               ),
             ]),
             const SizedBox(height: 28),
@@ -330,8 +468,8 @@ class _SettingsPageState extends State<SettingsPage> {
               _buildNavigationTile(
                 icon: Icons.open_in_browser_rounded,
                 iconColor: AppColors.info,
-                title: 'Gizlilik Politikası (Web)',
-                subtitle: 'App Store gereksinimleri için çevrimiçi sürüm',
+                title: 'settings_privacy_web_title'.tr(),
+                subtitle: 'settings_privacy_web_subtitle'.tr(),
                 onTap: () async {
                   final uri = Uri.parse(AppConstants.privacyPolicyWebUrl);
                   try {
@@ -343,8 +481,8 @@ class _SettingsPageState extends State<SettingsPage> {
               _buildNavigationTile(
                 icon: Icons.balance_rounded,
                 iconColor: const Color(0xFF9F7AEA),
-                title: '⚖️ Yasal Bilgiler',
-                subtitle: 'Kullanım şartları, KVKK, veri yönetimi',
+                title: 'settings_legal_info_title'.tr(),
+                subtitle: 'settings_legal_info_subtitle'.tr(),
                 onTap: () => Navigator.push(
                   context,
                   MaterialPageRoute(builder: (_) => const LegalInfoScreen()),

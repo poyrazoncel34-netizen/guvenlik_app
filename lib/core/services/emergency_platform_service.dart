@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
-import 'consent_gate_service.dart';
 
 class EmergencyPlatformService {
   EmergencyPlatformService._();
@@ -69,18 +68,27 @@ class EmergencyPlatformService {
     if (!isSupported) {
       return;
     }
-    await _methodChannel.invokeMethod<void>('scheduleCheckIn', {
-      'phase': phase,
-      'deadlineMs': deadline.millisecondsSinceEpoch,
-      'graceDurationMs': graceDuration.inMilliseconds,
-    });
+    try {
+      await _methodChannel.invokeMethod<void>('scheduleCheckIn', {
+        'phase': phase,
+        'deadlineMs': deadline.millisecondsSinceEpoch,
+        'graceDurationMs': graceDuration.inMilliseconds,
+      }).timeout(const Duration(seconds: 5));
+    } on TimeoutException {
+      debugPrint('[EmergencyPlatform] scheduleCheckIn timed out');
+    }
   }
 
   Future<void> cancelCheckIn() async {
     if (!isSupported) {
       return;
     }
-    await _methodChannel.invokeMethod<void>('cancelCheckIn');
+    try {
+      await _methodChannel.invokeMethod<void>('cancelCheckIn')
+          .timeout(const Duration(seconds: 5));
+    } on TimeoutException {
+      debugPrint('[EmergencyPlatform] cancelCheckIn timed out');
+    }
   }
 
   Future<Map<String, dynamic>?> consumePendingTrigger() async {
@@ -135,11 +143,16 @@ class EmergencyPlatformService {
     if (!isSupported) {
       return const <String, dynamic>{};
     }
-    final response = await _methodChannel.invokeMethod<dynamic>('sendSms', {
-      'recipients': recipients,
-      'message': message,
-    });
-    return _toMap(response) ?? const <String, dynamic>{};
+    try {
+      final response = await _methodChannel.invokeMethod<dynamic>('sendSms', {
+        'recipients': recipients,
+        'message': message,
+      }).timeout(const Duration(seconds: 5));
+      return _toMap(response) ?? const <String, dynamic>{};
+    } on TimeoutException {
+      debugPrint('[EmergencyPlatform] sendSms timed out');
+      return const <String, dynamic>{};
+    }
   }
 
   Future<Map<String, dynamic>> triggerEmergency({
@@ -150,35 +163,44 @@ class EmergencyPlatformService {
     if (!isSupported) {
       return const <String, dynamic>{};
     }
-    final response = await _methodChannel.invokeMethod<dynamic>(
-      'triggerEmergency',
-      {
-        'recipients': recipients,
-        'message': message,
-        'primaryNumber': primaryNumber,
-      },
-    );
-    return _toMap(response) ?? const <String, dynamic>{};
+    try {
+      final response = await _methodChannel.invokeMethod<dynamic>(
+        'triggerEmergency',
+        {
+          'recipients': recipients,
+          'message': message,
+          'primaryNumber': primaryNumber,
+        },
+      ).timeout(const Duration(seconds: 5));
+      return _toMap(response) ?? const <String, dynamic>{};
+    } on TimeoutException {
+      debugPrint('[EmergencyPlatform] triggerEmergency timed out');
+      return const <String, dynamic>{};
+    }
   }
 
-  Future<void> startRecordingSession() async {
-    if (!isSupported) {
-      return;
+  Future<void> executeEmergencyNative({
+    required List<String> recipients,
+    required String message,
+    required String primaryNumber,
+  }) async {
+    if (!isSupported) return;
+    try {
+      await _methodChannel.invokeMethod<dynamic>(
+        'executeEmergencyNative',
+        {
+          'recipients': recipients,
+          'message': message,
+          'primaryNumber': primaryNumber,
+        },
+      ).timeout(const Duration(seconds: 3));
+    } on TimeoutException {
+      debugPrint('[EmergencyPlatform] executeEmergencyNative timed out');
+    } catch (e) {
+      debugPrint('[EmergencyPlatform] executeEmergencyNative failed: $e');
     }
-    // KVKK m.5 + TCK m.133: Ses kaydı rızası kontrolü
-    if (!ConsentGateService.isAudioAllowed()) {
-      debugPrint('[EmergencyPlatform] Ses kaydı rızası verilmemiş — kayıt başlatılmadı');
-      return;
-    }
-    await _methodChannel.invokeMethod<void>('startRecordingSession');
   }
 
-  Future<void> stopRecordingSession() async {
-    if (!isSupported) {
-      return;
-    }
-    await _methodChannel.invokeMethod<void>('stopRecordingSession');
-  }
 
   Map<String, dynamic>? _toMap(dynamic event) {
     if (event is Map) {

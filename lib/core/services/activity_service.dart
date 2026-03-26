@@ -44,6 +44,12 @@ class ActivityService {
 
     final db = await serviceLocator<LocalDatabaseService>().database;
     await db.insert('activity_events', event.toMap());
+
+    // Retention: keep only the most recent 1000 rows
+    await db.rawDelete(
+      'DELETE FROM activity_events WHERE id NOT IN '
+      '(SELECT id FROM activity_events ORDER BY timestamp DESC LIMIT 1000)',
+    );
   }
 
   static Future<void> clearAll() async {

@@ -185,23 +185,27 @@ Future<void> _onStart(ServiceInstance service) async {
 
   // Periyodik "yaşıyorum" sinyali — her 30 saniyede bildirim güncelle
   heartbeatTimer = Timer.periodic(const Duration(seconds: 30), (timer) async {
-    if (service is AndroidServiceInstance) {
-      if (await service.isForegroundService()) {
-        notificationsPlugin.show(
-          kForegroundNotificationId,
-          'KoruBeni Aktif',
-          'Acil durum modu aktif — konum paylaşılıyor',
-          const NotificationDetails(
-            android: AndroidNotificationDetails(
-              kForegroundChannelId,
-              kForegroundChannelName,
-              icon: 'ic_bg_service_small',
-              ongoing: true,
-              autoCancel: false,
+    try {
+      if (service is AndroidServiceInstance) {
+        if (await service.isForegroundService()) {
+          await notificationsPlugin.show(
+            kForegroundNotificationId,
+            'KoruBeni Aktif',
+            'Acil durum modu aktif — konum paylaşılıyor',
+            const NotificationDetails(
+              android: AndroidNotificationDetails(
+                kForegroundChannelId,
+                kForegroundChannelName,
+                icon: 'ic_bg_service_small',
+                ongoing: true,
+                autoCancel: false,
+              ),
             ),
-          ),
-        );
+          );
+        }
       }
+    } catch (e) {
+      debugPrint('ForegroundService: Heartbeat failed: \$e');
     }
   });
 

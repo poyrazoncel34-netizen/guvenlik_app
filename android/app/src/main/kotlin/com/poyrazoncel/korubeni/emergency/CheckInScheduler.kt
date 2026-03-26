@@ -24,7 +24,7 @@ object CheckInScheduler {
             .putString(EmergencyPrefs.KEY_CHECK_IN_PHASE, phase)
             .putLong(EmergencyPrefs.KEY_CHECK_IN_DEADLINE, deadlineMs)
             .putLong(EmergencyPrefs.KEY_CHECK_IN_GRACE_MS, graceDurationMs)
-            .apply()
+            .commit()
 
         scheduleAlarm(context, deadlineMs)
     }
@@ -37,7 +37,7 @@ object CheckInScheduler {
             .remove(EmergencyPrefs.KEY_CHECK_IN_PHASE)
             .remove(EmergencyPrefs.KEY_CHECK_IN_DEADLINE)
             .remove(EmergencyPrefs.KEY_CHECK_IN_GRACE_MS)
-            .apply()
+            .commit()
     }
 
     fun canScheduleExactAlarms(context: Context): Boolean {
@@ -70,6 +70,11 @@ object CheckInScheduler {
         val now = System.currentTimeMillis()
 
         if (deadlineMs <= 0L) {
+            android.util.Log.w("CheckInScheduler", "Corrupted deadlineMs=$deadlineMs, cancelling check-in")
+            EmergencyEventBus.persist(
+                context,
+                mapOf("type" to "checkInCorrupted", "timestamp" to now)
+            )
             cancel(context)
             return
         }
@@ -123,6 +128,11 @@ object CheckInScheduler {
             } else {
                 // Fallback: inexact alarm (~9 min window) when exact alarm
                 // permission is denied on Android 14+.
+                android.util.Log.w("CheckInScheduler", "Exact alarm permission denied — using inexact fallback")
+                EmergencyEventBus.persist(
+                    context,
+                    mapOf("type" to "exactAlarmDenied", "timestamp" to System.currentTimeMillis())
+                )
                 alarmManager.setAndAllowWhileIdle(
                     AlarmManager.RTC_WAKEUP,
                     deadlineMs,

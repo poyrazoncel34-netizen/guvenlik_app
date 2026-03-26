@@ -6,6 +6,8 @@ import android.content.Intent
 
 class CheckInAlarmReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent?) {
+        val pendingResult = goAsync()
+        try {
         EmergencyNotificationHelper.ensureChannels(context)
 
         val prefs = EmergencyPrefs.prefs(context)
@@ -47,5 +49,8 @@ class CheckInAlarmReceiver : BroadcastReceiver() {
             "Guvenli yuruyus zamani doldu.",
             "checkInExpired"
         )
+        } finally {
+            pendingResult.finish()
+        }
     }
 }
