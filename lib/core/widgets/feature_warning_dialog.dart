@@ -70,7 +70,7 @@ class FeatureWarningHelper {
       'Yalnızca belirlediğin kişilere otomatik bildirim göndermeye yardımcı olur.\n\n'
       '• Çalışması internet ve GPS bağlantısına bağlıdır\n'
       '• Bildirimler SMS ile gönderilir; operatör gecikmesi yaşanabilir\n'
-      '• Fiziksel güvenliğin için her zaman resmi acil servisleri kullan';
+      '• Fiziksel güvenliğin için her zaman resmi acil servisleri kullan\n• Zamanlayıcı aktifken cihaz yeniden başlatılırsa otomatik olarak devam eder';
 
   static const String sirenTitle = '🔊 Alarm Sireni — Bilgilendirme';
   static const String sirenContent =

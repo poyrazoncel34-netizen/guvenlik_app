@@ -28,6 +28,7 @@ import '../core/services/haptic_service.dart';
 import '../core/services/notification_service.dart';
 import '../core/services/emergency_core_service.dart';
 import '../core/utils/emergency_message_helper.dart';
+import '../core/utils/permission_helper.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
 class CountdownScreen extends StatefulWidget {
@@ -232,6 +233,11 @@ class _CountdownScreenState extends State<CountdownScreen>
     // Store payload for navigation screen
     _prefetchedPayload = messagePayload;
 
+    // Prominent disclosure before requesting CALL_PHONE permission (Play Store compliance)
+    // Must appear BEFORE emergency actions to ensure informed consent
+    if (mounted) {
+      await PermissionHelper.requestCallPhonePermission(context);
+    }
     // System 2: Multi-channel failover via EmergencyOrchestrator
     // SMS and Call run as fully independent channels with retry + native fallback
     final orchestratorResult = await EmergencyOrchestrator.execute(
