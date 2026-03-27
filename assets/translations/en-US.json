@@ -389,6 +389,8 @@
     "perm_location_prominent_msg": "KoruBeni needs location access to send your location to emergency contacts via SMS during a panic situation. Location data is only used for this purpose and is never sent to any server.",
     "perm_call_prominent_title": "Phone Call Permission Required",
     "perm_call_prominent_msg": "KoruBeni needs phone call permission to automatically call your emergency contact during a panic alert. This permission is only used during panic emergencies.",
+    "perm_phone_state_prominent_title": "Phone State Permission Required",
+    "perm_phone_state_prominent_msg": "KoruBeni needs phone state access to detect real incoming calls during the fake call screen. This ensures fake calls stop automatically when a real call arrives. This permission is only used during fake call mode.",
     "perm_battery_prominent_title": "Battery Optimization Exemption",
     "perm_battery_prominent_msg": "KoruBeni must be exempt from battery optimization to run in the background during emergencies. Otherwise, the system may kill the app and interrupt emergency call or message preparation flows.",
     "biometric_fingerprint": "Fingerprint",

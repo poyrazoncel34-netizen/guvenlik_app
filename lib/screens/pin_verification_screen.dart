@@ -10,6 +10,7 @@ import '../core/di/service_locator.dart';
 import '../core/security/secure_storage.dart';
 import '../core/security/secure_storage_keys.dart';
 import '../core/utils/emergency_message_helper.dart';
+import '../core/utils/permission_helper.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'emergency_call_screen.dart';
 
@@ -93,6 +94,10 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
     }
 
     try {
+      // Prominent disclosure before requesting CALL_PHONE permission (Play Store compliance)
+      if (mounted) {
+        await PermissionHelper.requestCallPhonePermission(context);
+      }
       // TRACK 1: Call fires IMMEDIATELY — no permission dialog, no SMS wait
       final callFuture = CallService.startEmergencyCall(emergencyNumber);
 

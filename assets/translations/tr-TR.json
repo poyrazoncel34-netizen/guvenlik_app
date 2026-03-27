@@ -389,6 +389,8 @@
     "perm_location_prominent_msg": "KoruBeni, panik durumunda acil durum kişilerinize konumunuzu SMS ile göndermek için konum bilginize ihtiyaç duyar. Konum verileriniz yalnızca bu amaçla kullanılır ve hiçbir sunucuya gönderilmez.",
     "perm_call_prominent_title": "Telefon Arama İzni Gerekli",
     "perm_call_prominent_msg": "KoruBeni, panik durumunda acil durum kişinizi otomatik olarak arayabilmek için telefon arama iznine ihtiyaç duyar. Bu izin yalnızca panik uyarısı sırasında kullanılır.",
+    "perm_phone_state_prominent_title": "Telefon Durumu İzni Gerekli",
+    "perm_phone_state_prominent_msg": "KoruBeni, sahte arama ekranında gerçek gelen aramaları tespit etmek için telefon durumu iznine ihtiyaç duyar. Bu sayede gerçek bir arama geldiğinde sahte arama otomatik olarak durur. Bu izin yalnızca sahte arama modunda kullanılır.",
     "perm_battery_prominent_title": "Pil Optimizasyonu Muafiyeti",
     "perm_battery_prominent_msg": "KoruBeni, acil durumlarda arka planda çalışabilmek için pil optimizasyonundan muaf tutulmalıdır. Aksi halde sistem uygulamayı kapatabilir ve acil arama veya mesaj hazırlama akışı kesilebilir.",
     "biometric_fingerprint": "Parmak İzi",

@@ -11,10 +11,6 @@
 
     <!-- Offline-first core with optional online map tiles and connectivity checks -->
     <!-- Contact Picker uses Intent.ACTION_PICK — no READ_CONTACTS permission needed -->
-    <!-- Photo Library Permission (Android 13+) -->
-    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
-    <!-- Photo Library Permission (pre-Android 13) -->
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
     <!-- Notifications (Android 13+) -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <!-- RECORD_AUDIO removed — audio recording feature disabled -->
@@ -129,10 +125,6 @@
                 <action android:name="android.intent.action.QUICKBOOT_POWERON" />
             </intent-filter>
         </receiver>
-        <receiver
-            android:name=".emergency.SmsStatusReceiver"
-            android:enabled="true"
-            android:exported="false" />
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data
