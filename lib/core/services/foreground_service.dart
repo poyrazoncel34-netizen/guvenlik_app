@@ -58,7 +58,7 @@ class KoruBeniForegroundService {
           initialNotificationTitle: 'KoruBeni Aktif',
           initialNotificationContent: 'Acil durum modu aktif — konum paylaşılıyor',
           foregroundServiceNotificationId: kForegroundNotificationId,
-          foregroundServiceTypes: [AndroidForegroundType.dataSync],
+          foregroundServiceTypes: [AndroidForegroundType.specialUse],
         ),
         iosConfiguration: IosConfiguration(
           autoStart: false,

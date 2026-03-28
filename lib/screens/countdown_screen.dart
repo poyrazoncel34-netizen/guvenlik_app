@@ -347,10 +347,11 @@ class _CountdownScreenState extends State<CountdownScreen>
       return;
     }
 
-    if (_pin.length < 4) {
+    final maxLen = _correctPin?.length ?? 4;
+    if (_pin.length < maxLen) {
       setState(() => _pin += key);
 
-      if (_pin.length == 4) {
+      if (_pin.length == maxLen) {
         if (_correctPin != null && _pin == _correctPin && !_isNavigating) {
           _isNavigating = true;
           _timer?.cancel();
@@ -662,7 +663,7 @@ class _CountdownScreenState extends State<CountdownScreen>
                       },
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
-                        children: List.generate(4, (index) {
+                        children: List.generate(_correctPin?.length ?? 4, (index) {
                           final isFilled = index < _pin.length;
                           return AnimatedContainer(
                             duration: const Duration(milliseconds: 150),

@@ -64,9 +64,6 @@ class _EmergencyTriggerHostState extends State<EmergencyTriggerHost>
   Future<void> _startVolumeIfEnabled() async {
     if (!VolumeTriggerService.isSupported) return;
 
-    VolumeTriggerService.instance.startListening(
-      onPanicTriggered: _openCountdown,
-    );
     await VolumeTriggerService.instance.loadPreference();
     if (!mounted || !_foregroundTriggersEnabled) return;
 
