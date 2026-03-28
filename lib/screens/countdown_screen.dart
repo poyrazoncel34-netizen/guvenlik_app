@@ -410,10 +410,12 @@ class _CountdownScreenState extends State<CountdownScreen>
     final isUrgent = _countdown <= 5;
     final urgentColor = isUrgent ? AppColors.emergency : AppColors.warning;
 
-    return Semantics(
-      label: "semantics_countdown".tr(),
-      hint: "semantics_countdown_hint".tr(),
-      child: Scaffold(
+    return PopScope(
+      canPop: false,
+      child: Semantics(
+        label: "semantics_countdown".tr(),
+        hint: "semantics_countdown_hint".tr(),
+        child: Scaffold(
         backgroundColor: AppColors.background,
         body: AnimatedBuilder(
           animation: _glowController,
@@ -699,6 +701,7 @@ class _CountdownScreenState extends State<CountdownScreen>
             ),
           ),
         ),
+      ),
       ),
     );
   }

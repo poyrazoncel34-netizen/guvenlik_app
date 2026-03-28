@@ -25,6 +25,7 @@ class _PanicButtonState extends State<PanicButton>
   late AnimationController _armedPulseController;
   late AnimationController _progressController;
   bool _isArmed = false;
+  bool _buttonHeld = false;
   Timer? _hapticTimer;
   int _holdSeconds = 0;
   Timer? _holdTimer;
@@ -63,6 +64,7 @@ class _PanicButtonState extends State<PanicButton>
   }
 
   Future<void> _onPressStart(LongPressStartDetails details) async {
+    _buttonHeld = true;
     // İlk kullanımda uyarı dialogu göster; dialog varsa press iptal edilir.
     final shown = await FeatureWarningHelper.showIfNeeded(
       context,
@@ -72,6 +74,7 @@ class _PanicButtonState extends State<PanicButton>
       content: FeatureWarningHelper.panicContent,
     );
     if (!shown || !mounted) return;
+    if (!_buttonHeld) return;
     HapticFeedback.heavyImpact();
     setState(() {
       _isArmed = true;
@@ -98,6 +101,8 @@ class _PanicButtonState extends State<PanicButton>
   }
 
   void _onPressEnd(LongPressEndDetails details) {
+    _buttonHeld = false;
+    final wasArmed = _isArmed;
     setState(() => _isArmed = false);
     _armedPulseController.stop();
     _armedPulseController.reset();
@@ -110,10 +115,11 @@ class _PanicButtonState extends State<PanicButton>
     // Vibrate and open PIN verification immediately
     HapticFeedback.vibrate();
 
-    _openCountdownScreen();
+    if (wasArmed) _openCountdownScreen();
   }
 
   void _openCountdownScreen() {
+    if (!mounted) return;
     Navigator.push(
       context,
       PageRouteBuilder(
