@@ -92,6 +92,24 @@ void main() {
               '_buttonHeld = false must be the first statement in _onPressEnd, '
               'before setState, so the flag is cleared synchronously.');
     });
+
+    test('PanicButton accepts hasEmergencyContact parameter', () {
+      final source = File('lib/widgets/panic_button.dart').readAsStringSync();
+      expect(source.contains('hasEmergencyContact'), isTrue,
+          reason: 'PanicButton must have a hasEmergencyContact parameter to block arming with no contact');
+    });
+
+    test('PanicButton accepts onNoContact callback', () {
+      final source = File('lib/widgets/panic_button.dart').readAsStringSync();
+      expect(source.contains('onNoContact'), isTrue,
+          reason: 'PanicButton must have an onNoContact callback to notify caller when no contact is set');
+    });
+
+    test('PanicButton blocks arming when hasEmergencyContact is false', () {
+      final source = File('lib/widgets/panic_button.dart').readAsStringSync();
+      expect(source.contains('widget.hasEmergencyContact'), isTrue,
+          reason: 'PanicButton._onPressStart must check widget.hasEmergencyContact before arming');
+    });
   });
 
   group('CountdownScreen', () {

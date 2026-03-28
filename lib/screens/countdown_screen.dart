@@ -171,8 +171,10 @@ class _CountdownScreenState extends State<CountdownScreen>
     if (_emergencyNumbers.isEmpty) {
       _emergencyNumbers = await _contactsRepository.getAllEmergencyNumbers();
     }
-    final numbers = _emergencyNumbers;
-
+    final numbers = _emergencyNumbers.where((n) {
+      final digits = normalizePhoneNumber(n).replaceAll('+', '');
+      return digits.length >= 7 && digits.length <= 15;
+    }).toList();
     if (numbers.isEmpty) {
       await KoruBeniForegroundService.stop();
       if (mounted) {
