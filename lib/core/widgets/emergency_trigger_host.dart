@@ -64,9 +64,6 @@ class _EmergencyTriggerHostState extends State<EmergencyTriggerHost>
   Future<void> _startVolumeIfEnabled() async {
     if (!VolumeTriggerService.isSupported) return;
 
-    VolumeTriggerService.instance.startListening(
-      onPanicTriggered: _openCountdown,
-    );
     await VolumeTriggerService.instance.loadPreference();
     if (!mounted || !_foregroundTriggersEnabled) return;
 
@@ -133,8 +130,17 @@ class _EmergencyTriggerHostState extends State<EmergencyTriggerHost>
       return;
     }
 
-    final navigator = rootNavigatorKey.currentState;
+    // Retry up to 3 times if navigator not ready yet (e.g. app cold-starting).
+    NavigatorState? navigator;
+    for (int attempt = 0; attempt < 3; attempt++) {
+      navigator = rootNavigatorKey.currentState;
+      if (navigator != null) break;
+      debugPrint('[EMERGENCY] Navigator not ready, retrying (attempt ${attempt + 1})');
+      await Future<void>.delayed(const Duration(milliseconds: 500));
+    }
+
     if (navigator == null) {
+      debugPrint('[EMERGENCY] CRITICAL: Navigator still null after retries');
       return;
     }
 

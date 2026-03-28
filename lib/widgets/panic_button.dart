@@ -9,7 +9,9 @@ import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../core/app_colors.dart';
 import '../core/constants/app_constants.dart';
+import '../core/di/service_locator.dart';
 import '../core/widgets/feature_warning_dialog.dart';
+import '../domain/repositories/contacts_repository.dart';
 import '../screens/countdown_screen.dart';
 
 class PanicButton extends StatefulWidget {
@@ -113,7 +115,32 @@ class _PanicButtonState extends State<PanicButton>
     _openCountdownScreen();
   }
 
-  void _openCountdownScreen() {
+  Future<void> _openCountdownScreen() async {
+    try {
+      final numbers =
+          await serviceLocator<ContactsRepository>().getAllEmergencyNumbers();
+      if (numbers.isEmpty) {
+        if (!mounted) return;
+        await showDialog<void>(
+          context: context,
+          barrierDismissible: false,
+          builder: (_) => AlertDialog(
+            title: Text('emergency_no_contact_title'.tr()),
+            content: Text('emergency_no_contact_body'.tr()),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text('ok'.tr()),
+              ),
+            ],
+          ),
+        );
+        return;
+      }
+    } catch (_) {
+      // DB error: proceed anyway — attempting emergency is safer than blocking.
+    }
+    if (!mounted) return;
     Navigator.push(
       context,
       PageRouteBuilder(

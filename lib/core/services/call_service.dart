@@ -84,8 +84,8 @@ class CallService {
         if (directCallStarted) {
           return EmergencyCallResult.direct(normalized);
         }
-      } catch (_) {
-        // Fallback to dialer below.
+      } catch (e) {
+        debugPrint('[EMERGENCY] Direct call plugin threw: $e — falling back to dialer');
       }
     }
 

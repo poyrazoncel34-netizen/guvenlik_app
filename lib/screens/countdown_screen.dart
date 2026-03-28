@@ -207,10 +207,8 @@ class _CountdownScreenState extends State<CountdownScreen>
     final primaryNumber =
         _emergencyContact?.phone ?? (numbers.isNotEmpty ? numbers.first : null);
 
-    // Prominent disclosure before requesting CALL_PHONE permission (Play Store compliance)
-    if (mounted) {
-      await PermissionHelper.requestCallPhonePermission(context);
-    }
+    // No permission dialog during emergency. CallService handles CALL_PHONE
+    // internally and falls back to the dialer if permission is not granted.
 
     // Failover: try each number until one succeeds
     EmergencyCallResult callResult = EmergencyCallResult.failed('');
@@ -244,12 +242,56 @@ class _CountdownScreenState extends State<CountdownScreen>
     }
 
     if (!smsResult.isSuccess && !callResult.isSuccess) {
-      await KoruBeniForegroundService.stop();
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('emergency_action_failed'.tr())));
-        Navigator.pop(context);
+        await showDialog<void>(
+          context: context,
+          barrierDismissible: false,
+          builder: (ctx) => AlertDialog(
+            backgroundColor: AppColors.emergency,
+            title: Text(
+              'emergency_total_failure_title'.tr(),
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+            content: Text(
+              'emergency_total_failure_body'.tr(),
+              style: const TextStyle(color: Colors.white),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () async {
+                  Navigator.pop(ctx);
+                  for (final n in numbers) {
+                    final opened = await AndroidIntentService.openDialer(n);
+                    if (opened) break;
+                  }
+                },
+                child: Text(
+                  'emergency_retry_call'.tr(),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  KoruBeniForegroundService.stop();
+                  if (mounted) Navigator.pop(context);
+                },
+                child: Text(
+                  'close'.tr(),
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.7),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
       }
       return;
     }
@@ -273,7 +315,7 @@ class _CountdownScreenState extends State<CountdownScreen>
       } catch (e) {
         debugPrint('CountdownScreen: Navigation failed: $e');
         _isNavigating = false;
-        _handoffToEmergencyScreen = false;
+        // _handoffToEmergencyScreen stays true — call is still active.
       }
     }
   }
