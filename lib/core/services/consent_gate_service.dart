@@ -46,7 +46,8 @@ class ConsentGateService {
       final cm = serviceLocator<ConsentManager>();
       return cm.isGranted(consentType);
     } catch (e) {
-      // ConsentManager henüz initialize edilmemişse güvenli tarafta kal
+      // ConsentManager not yet initialized (cold-start race / init failure).
+      // Emergency contacts fail-open; other consent types remain fail-closed.
       return defaultOnError;
     }
   }
