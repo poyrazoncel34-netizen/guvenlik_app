@@ -327,7 +327,12 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                         _buildOnboardingCard(provider),
                       ],
                       SizedBox(height: sectionSpacing),
-                      const Center(child: PanicButton()),
+                      Center(
+                        child: PanicButton(
+                          hasEmergencyContact: provider.emergencyContact != null,
+                          onNoContact: _onPanicNoContact,
+                        ),
+                      ),
                       SizedBox(height: spacing),
                       _buildTestModeButton(),
                       SizedBox(height: largeSectionSpacing),
@@ -969,6 +974,18 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         builder: (_) => const CountdownScreen(isTestMode: true),
       ),
     );
+  }
+
+  void _onPanicNoContact() {
+    HapticFeedback.heavyImpact();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text("panic_no_contact_warning".tr()),
+        backgroundColor: AppColors.emergency,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+    _openContacts();
   }
 
   Future<void> _openContacts() async {

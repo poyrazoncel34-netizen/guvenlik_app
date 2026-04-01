@@ -9,7 +9,7 @@ import 'local_database_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 String normalizePhoneNumber(String raw) {
-  return raw.replaceAll(RegExp(r'[\s\-\(\)]'), '');
+  return raw.replaceAll(RegExp(r'[\s\-\(\)\.]'), '');
 }
 
 class ContactService {

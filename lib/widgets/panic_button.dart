@@ -13,7 +13,14 @@ import '../core/widgets/feature_warning_dialog.dart';
 import '../screens/countdown_screen.dart';
 
 class PanicButton extends StatefulWidget {
-  const PanicButton({super.key});
+  final bool hasEmergencyContact;
+  final VoidCallback? onNoContact;
+
+  const PanicButton({
+    super.key,
+    this.hasEmergencyContact = true,
+    this.onNoContact,
+  });
 
   @override
   State<PanicButton> createState() => _PanicButtonState();
@@ -64,6 +71,10 @@ class _PanicButtonState extends State<PanicButton>
   }
 
   Future<void> _onPressStart(LongPressStartDetails details) async {
+    if (!widget.hasEmergencyContact) {
+      widget.onNoContact?.call();
+      return;
+    }
     _buttonHeld = true;
     // İlk kullanımda uyarı dialogu göster; dialog varsa press iptal edilir.
     final shown = await FeatureWarningHelper.showIfNeeded(
