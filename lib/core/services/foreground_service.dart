@@ -102,6 +102,9 @@ class KoruBeniForegroundService {
       }
 
       _service.invoke('stop');
+      // invoke() is fire-and-forget IPC; give the background isolate time to
+      // call stopSelf() before continuing cleanup.
+      await Future.delayed(const Duration(milliseconds: 200));
       debugPrint('ForegroundService: Stopped');
     } catch (e) {
       debugPrint('ForegroundService: Stop failed: $e');
