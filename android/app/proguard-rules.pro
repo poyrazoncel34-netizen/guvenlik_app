@@ -76,15 +76,6 @@
     public void onReceive(android.content.Context, android.content.Intent);
 }
 
-# ── SensorEventListener callbacks (ShakeDetectorService) ────────────────────
-# SensorManager dispatches accelerometer events via the registered listener
-# interface. R8's devirtualization can inline these calls if it thinks only
-# one implementation exists, silently killing shake detection in release builds.
--keepclassmembers class * implements android.hardware.SensorEventListener {
-    public void onSensorChanged(android.hardware.SensorEvent);
-    public void onAccuracyChanged(android.hardware.Sensor, int);
-}
-
 # ── AlarmManager / PendingIntent receiver class names ────────────────────────
 # CheckInAlarmReceiver's class name is baked into the PendingIntent at
 # scheduling time and must match exactly when the alarm fires after reboot.

@@ -87,7 +87,7 @@ object SmsSender {
                         deliveredIntents,
                     )
                 } catch (e: Exception) {
-                    android.util.Log.e("SmsSender", "SMS dispatch failed for recipient: ${e.message}", e)
+                    android.util.Log.e("SmsSender", "SMS dispatch failed", e)
                     // Non-fatal: malformed number or SmsManager error — other recipients continue
                 }
             }

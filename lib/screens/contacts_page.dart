@@ -366,6 +366,8 @@ class _ContactsPageState extends State<ContactsPage> {
                         children: [
                           Text(
                             contact.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w700,
@@ -401,6 +403,8 @@ class _ContactsPageState extends State<ContactsPage> {
                       const SizedBox(height: 4),
                       Text(
                         contact.phone,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
                           fontSize: 14,
                           color: AppColors.textSecondary,

@@ -140,10 +140,7 @@ class OfflineQueueService {
         final lat = (data['lat'] as num?)?.toDouble();
         final lng = (data['lng'] as num?)?.toDouble();
         
-        // Log the emergency locally
-        debugPrint('Emergency queued: ${event.title}');
-        debugPrint('Location: ${lat != null && lng != null ? "$lat, $lng" : "N/A"}');
-        debugPrint('Message: $message');
+        debugPrint('Emergency queued for offline processing');
         
         return true;
       } catch (e) {

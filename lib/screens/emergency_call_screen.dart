@@ -120,6 +120,8 @@ class _EmergencyCallScreenState extends State<EmergencyCallScreen>
                                   ? "pin_verify_emergency_contact".tr()
                                   : widget.name,
                               textAlign: TextAlign.center,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 32,
@@ -130,6 +132,8 @@ class _EmergencyCallScreenState extends State<EmergencyCallScreen>
                             if (widget.phone.isNotEmpty)
                               Text(
                                 widget.phone,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(
                                   color: Colors.white54,
                                   fontSize: 18,

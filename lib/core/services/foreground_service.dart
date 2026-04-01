@@ -74,23 +74,29 @@ class KoruBeniForegroundService {
     }
   }
 
-  /// Foreground service'i başlat (alarm modu aktifleştiğinde çağır)
-  static Future<void> start() async {
-    if (kIsWeb) return;
+  /// Foreground service'i başlat (alarm modu aktifleştiğinde çağır).
+  ///
+  /// Returns `true` if the service started (or was already running).
+  /// Returns `false` if the service could not be started — callers in the
+  /// emergency flow MUST check the return value and abort if false.
+  static Future<bool> start() async {
+    if (kIsWeb) return true; // web has no foreground service — not a failure
     try {
       if (!_isConfigured) await configure();
 
       final isRunning = await _service.isRunning();
       if (isRunning) {
         debugPrint('ForegroundService: Already running');
-        return;
+        return true;
       }
 
       await _service.startService();
       await WakelockPlus.enable();
       debugPrint('ForegroundService: Started + Wakelock enabled');
+      return true;
     } catch (e) {
       debugPrint('ForegroundService: Start failed: $e');
+      return false;
     }
   }
 

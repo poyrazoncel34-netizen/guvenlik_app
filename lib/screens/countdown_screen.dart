@@ -3,10 +3,12 @@
 // ============================================================================
 
 import 'dart:async';
+import 'dart:io';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/di/service_locator.dart';
 import '../core/constants/app_constants.dart';
@@ -18,7 +20,6 @@ import '../core/services/sms_service.dart';
 import '../domain/repositories/contacts_repository.dart';
 import '../core/services/activity_service.dart';
 import '../core/services/call_service.dart';
-import '../core/utils/permission_helper.dart';
 import '../core/services/connectivity_service.dart';
 import '../core/services/pin_lockout_service.dart';
 import '../core/services/offline_queue_service.dart';
@@ -78,8 +79,145 @@ class _CountdownScreenState extends State<CountdownScreen>
     _loadPin();
     _loadEmergencyContact();
     _syncLockoutState();
+    _initEmergency();
+  }
+
+  /// Validates all preconditions before countdown starts.
+  ///
+  /// Order:
+  ///   1. Foreground service — retry loop, never silently exit.
+  ///   2. Emergency contacts — blocking error if empty.
+  ///   3. CALL_PHONE permission — blocking gate, loop until granted.
+  ///
+  /// Countdown NEVER starts unless all three pass.
+  Future<void> _initEmergency() async {
+    // ── 1. Foreground service ────────────────────────────────────────────────
+    // If start fails, show a Retry-only dialog. User cannot exit this loop —
+    // dismissing would silently drop the emergency.
+    while (mounted) {
+      final serviceStarted = await KoruBeniForegroundService.start();
+      if (serviceStarted) break;
+      if (!mounted) return;
+      await showDialog<void>(
+        context: context,
+        barrierDismissible: false,
+        builder: (ctx) => AlertDialog(
+          title: Text('emergency_service_error_title'.tr()),
+          content: Text('emergency_service_error_body'.tr()),
+          actions: [
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.emergency,
+                foregroundColor: Colors.white,
+              ),
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: Text('retry'.tr()),
+            ),
+          ],
+        ),
+      );
+      // Loop: try startService again after dialog dismissal.
+    }
+    if (!mounted) return;
+
+    // ── 2. Emergency contacts ────────────────────────────────────────────────
+    if (!widget.isTestMode) {
+      final numbers = await _contactsRepository.getAllEmergencyNumbers();
+      if (numbers.isEmpty) {
+        await KoruBeniForegroundService.stop();
+        if (!mounted) return;
+        await showDialog<void>(
+          context: context,
+          barrierDismissible: false,
+          builder: (ctx) => AlertDialog(
+            title: Text('emergency_no_contact_title'.tr()),
+            content: Text('emergency_no_contact_body'.tr()),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(ctx).pop();
+                  if (mounted) Navigator.of(context).pop();
+                },
+                child: Text('ok'.tr()),
+              ),
+            ],
+          ),
+        );
+        return;
+      }
+    }
+
+    // ── 3. CALL_PHONE permission ─────────────────────────────────────────────
+    // Emergency calls MUST be direct — ACTION_DIAL requires the user to press
+    // "Call" manually, which is unacceptable under duress. Block until granted.
+    if (Platform.isAndroid && !widget.isTestMode) {
+      await _ensureCallPhonePermission();
+      if (!mounted) return;
+    }
+
     _startCountdown();
-    KoruBeniForegroundService.start();
+  }
+
+  /// Blocking permission gate for CALL_PHONE.
+  ///
+  /// Shows a non-dismissible dialog with [Grant Permission]. Loops until the
+  /// permission is granted. If permanently denied, offers [Open Settings] and
+  /// waits for the user to return and re-check.
+  Future<void> _ensureCallPhonePermission() async {
+    while (mounted) {
+      final status = await Permission.phone.status;
+      if (status.isGranted) return;
+
+      if (!mounted) return;
+
+      if (status.isPermanentlyDenied) {
+        // Settings-redirect dialog — still no cancel/dismiss path.
+        await showDialog<void>(
+          context: context,
+          barrierDismissible: false,
+          builder: (ctx) => AlertDialog(
+            title: Text('perm_call_required_title'.tr()),
+            content: Text('perm_call_permanently_denied_body'.tr()),
+            actions: [
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                ),
+                onPressed: () async {
+                  Navigator.of(ctx).pop();
+                  await openAppSettings();
+                },
+                child: Text('perm_go_settings'.tr()),
+              ),
+            ],
+          ),
+        );
+        // After returning from settings, loop re-checks status.
+      } else {
+        // Show prominent disclosure then system dialog.
+        await showDialog<void>(
+          context: context,
+          barrierDismissible: false,
+          builder: (ctx) => AlertDialog(
+            title: Text('perm_call_required_title'.tr()),
+            content: Text('perm_call_required_body'.tr()),
+            actions: [
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                ),
+                onPressed: () => Navigator.of(ctx).pop(),
+                child: Text('perm_grant'.tr()),
+              ),
+            ],
+          ),
+        );
+        await Permission.phone.request();
+        // Loop re-checks whether the system dialog was accepted.
+      }
+    }
   }
 
 
@@ -137,13 +275,27 @@ class _CountdownScreenState extends State<CountdownScreen>
     }
 
     final numbers = await _contactsRepository.getAllEmergencyNumbers();
+    // contacts were pre-validated in _initEmergency(); empty only if DB error
     if (numbers.isEmpty) {
       await KoruBeniForegroundService.stop();
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text("countdown_no_contact".tr())));
-        Navigator.pop(context);
+        await showDialog<void>(
+          context: context,
+          barrierDismissible: false,
+          builder: (ctx) => AlertDialog(
+            title: Text('emergency_no_contact_title'.tr()),
+            content: Text('emergency_no_contact_body'.tr()),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(ctx).pop();
+                  if (mounted) Navigator.of(context).pop();
+                },
+                child: Text('ok'.tr()),
+              ),
+            ],
+          ),
+        );
       }
       return;
     }
@@ -159,16 +311,7 @@ class _CountdownScreenState extends State<CountdownScreen>
     final isOnline = ConnectivityService.instance.isOnline;
 
     if (isOnline) {
-      try {
-        // Offline-first: No cloud sync, emergency handled locally via EmergencyCoreService
-        debugPrint('Emergency event logged locally (no Firebase)');
-        if (locationLink != null) {
-          debugPrint('Location link: $locationLink');
-        }
-        debugPrint('Message: $message');
-      } catch (e) {
-        debugPrint('>>> API failed, SMS fallback active: $e');
-      }
+      // Offline-first: no cloud sync, emergency handled locally.
     } else {
       await OfflineQueueService.instance.enqueue(
         OfflineEvent(
@@ -207,10 +350,10 @@ class _CountdownScreenState extends State<CountdownScreen>
     final primaryNumber =
         _emergencyContact?.phone ?? (numbers.isNotEmpty ? numbers.first : null);
 
-    // Prominent disclosure before requesting CALL_PHONE permission (Play Store compliance)
-    if (mounted) {
-      await PermissionHelper.requestCallPhonePermission(context);
-    }
+    // CALL_PHONE permission is NOT requested here. If the permission was not
+    // granted during onboarding, openCall() on the native side automatically
+    // falls back to ACTION_DIAL — the user confirms the call in the system
+    // dialer. No dialogs are shown during an active emergency.
 
     // Failover: try each number until one succeeds
     EmergencyCallResult callResult = EmergencyCallResult.failed('');
@@ -244,12 +387,45 @@ class _CountdownScreenState extends State<CountdownScreen>
     }
 
     if (!smsResult.isSuccess && !callResult.isSuccess) {
+      // Both channels failed — user must know. Blocking dialog with the
+      // emergency number displayed so they can call manually.
       await KoruBeniForegroundService.stop();
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('emergency_action_failed'.tr())));
-        Navigator.pop(context);
+        final fallbackNumber = primaryNumber ?? '';
+        await showDialog<void>(
+          context: context,
+          barrierDismissible: false,
+          builder: (ctx) => AlertDialog(
+            title: Text('emergency_action_failed_title'.tr()),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('emergency_action_failed_body'.tr()),
+                if (fallbackNumber.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  SelectableText(
+                    fallbackNumber,
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.emergency,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(ctx).pop();
+                  if (mounted) Navigator.of(context).pop();
+                },
+                child: Text('ok'.tr()),
+              ),
+            ],
+          ),
+        );
       }
       return;
     }
@@ -292,7 +468,7 @@ class _CountdownScreenState extends State<CountdownScreen>
   }
 
   void _cancelWithoutPin() {
-    if (_isNavigating) return;
+    if (_isNavigating || !mounted) return;
     _isNavigating = true;
     _timer?.cancel();
     ActivityService.logEvent(
@@ -301,7 +477,7 @@ class _CountdownScreenState extends State<CountdownScreen>
       description: "emergency_cancelled_no_pin".tr(),
     );
     KoruBeniForegroundService.stop();
-    Navigator.pop(context);
+    if (mounted) Navigator.pop(context);
   }
 
   bool get _isPinLockedOut =>
@@ -362,7 +538,7 @@ class _CountdownScreenState extends State<CountdownScreen>
             description: "countdown_cancelled_pin".tr(),
           );
           KoruBeniForegroundService.stop();
-          Navigator.pop(context);
+          if (mounted) Navigator.pop(context);
         } else {
           _shakeController.forward(from: 0);
           HapticFeedback.vibrate();

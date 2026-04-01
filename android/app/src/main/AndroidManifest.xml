@@ -42,17 +42,15 @@
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
-    <!-- 
+    <!--
     ⚠️ GOOGLE PLAY POLICY WARNING ⚠️
     REQUEST_IGNORE_BATTERY_OPTIMIZATIONS is a RESTRICTED permission.
-    Google Play often REJECTS apps using this unless:
-    1. The app's core functionality requires background operation (emergency app ✓)
-    2. You provide clear justification in the Play Console declaration form
-    3. The app prompts users to whitelist it (not automatically)
-    
+    Google Play requires justification in the Play Console declaration form.
+
     For KoruBeni: This is justified because the app MUST run in background
-    to detect emergency triggers (panic button, shake detection) at all times.
-    User lives may depend on this working 24/7.
+    to keep the emergency check-in foreground service alive at all times.
+    The SafeWalk check-in timer must fire reliably — a missed deadline means
+    a missed emergency alert. User lives depend on this working 24/7.
     -->
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
     <!-- Screen size compatibility -->
@@ -104,16 +102,6 @@
             <property
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
                 android:value="emergency_checkin_keepalive" />
-        </service>
-        <service
-            android:name=".emergency.ShakeDetectorService"
-            android:enabled="true"
-            android:exported="false"
-            android:foregroundServiceType="specialUse"
-            android:stopWithTask="false">
-            <property
-                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-                android:value="emergency_shake_monitoring" />
         </service>
         <!-- RecordingSessionService removed — audio recording feature disabled -->
         <receiver

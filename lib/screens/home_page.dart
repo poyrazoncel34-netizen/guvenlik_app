@@ -358,6 +358,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               const SizedBox(height: 4),
               Text(
                 displayName,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
                   fontSize: 30,
                   fontWeight: FontWeight.w800,
@@ -471,6 +473,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                     hasContact
                         ? "$name • $phone"
                         : "tap_to_select_contact".tr(),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,

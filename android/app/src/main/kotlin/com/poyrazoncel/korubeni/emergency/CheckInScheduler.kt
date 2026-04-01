@@ -114,11 +114,23 @@ object CheckInScheduler {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         val pendingIntent = buildPendingIntent(context)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            alarmManager.setExactAndAllowWhileIdle(
-                AlarmManager.RTC_WAKEUP,
-                deadlineMs,
-                pendingIntent
-            )
+            if (canScheduleExactAlarms(context)) {
+                // Exact alarm: fires precisely at deadline, even in Doze mode.
+                alarmManager.setExactAndAllowWhileIdle(
+                    AlarmManager.RTC_WAKEUP,
+                    deadlineMs,
+                    pendingIntent
+                )
+            } else {
+                // Inexact fallback (Android 12+ when SCHEDULE_EXACT_ALARM not granted):
+                // OS may delay by a few minutes, but alarm still fires in Doze mode.
+                // This is better than silently dropping the check-in timer.
+                alarmManager.setAndAllowWhileIdle(
+                    AlarmManager.RTC_WAKEUP,
+                    deadlineMs,
+                    pendingIntent
+                )
+            }
         } else {
             alarmManager.setExact(AlarmManager.RTC_WAKEUP, deadlineMs, pendingIntent)
         }

@@ -68,22 +68,18 @@ class CallService {
 
     if (Platform.isAndroid) {
       try {
-        final phonePermission = await Permission.phone.request();
-        if (!phonePermission.isGranted) {
-          final dialerOpened = await AndroidIntentService.openDialer(
-            normalized,
-          );
-          if (dialerOpened) {
-            return EmergencyCallResult.dialer(normalized);
+        // Permission is pre-granted before countdown starts — do NOT request
+        // here (no dialogs during active emergency). Check status only.
+        final phonePermission = await Permission.phone.status;
+        if (phonePermission.isGranted) {
+          final directCallStarted =
+              await FlutterDirectCallerPlugin.callNumber(normalized) ?? false;
+          if (directCallStarted) {
+            return EmergencyCallResult.direct(normalized);
           }
-          return EmergencyCallResult.failed(normalized);
         }
-
-        final directCallStarted =
-            await FlutterDirectCallerPlugin.callNumber(normalized) ?? false;
-        if (directCallStarted) {
-          return EmergencyCallResult.direct(normalized);
-        }
+        // If permission somehow not granted (e.g. revoked mid-session),
+        // fall through to dialer as last resort.
       } catch (_) {
         // Fallback to dialer below.
       }

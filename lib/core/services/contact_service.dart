@@ -8,8 +8,15 @@ import '../security/secure_storage_keys.dart';
 import 'local_database_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+/// Strips formatting characters from [raw] and returns the digit-only (+ optional
+/// leading +) string, or an empty string if the result is not a plausible phone
+/// number (fewer than 7 or more than 15 digits per ITU-T E.164).
 String normalizePhoneNumber(String raw) {
-  return raw.replaceAll(RegExp(r'[\s\-\(\)]'), '');
+  final stripped = raw.replaceAll(RegExp(r'[\s\-\(\)\.]'), '');
+  final digits = stripped.replaceAll(RegExp(r'[^\d]'), '');
+  if (digits.length < 7 || digits.length > 15) return '';
+  // Re-attach a leading '+' if it was present in the original stripped string.
+  return stripped.startsWith('+') ? '+$digits' : digits;
 }
 
 class ContactService {
@@ -65,19 +72,23 @@ class ContactService {
     }
 
     final db = await _databaseService.database;
-    await db.transaction((txn) async {
-      await txn.delete('contacts');
-      for (final contact in deduplicated) {
-        await txn.insert('contacts', {
-          'name': contact.name,
-          'phone': contact.phone,
-          'is_primary': primary != null && primary.matchesPhone(contact.phone)
-              ? 1
-              : 0,
-          'created_at': DateTime.now().toIso8601String(),
-        });
-      }
-    });
+    try {
+      await db.transaction((txn) async {
+        await txn.delete('contacts');
+        for (final contact in deduplicated) {
+          await txn.insert('contacts', {
+            'name': contact.name,
+            'phone': contact.phone,
+            'is_primary': primary != null && primary.matchesPhone(contact.phone)
+                ? 1
+                : 0,
+            'created_at': DateTime.now().toIso8601String(),
+          });
+        }
+      });
+    } catch (_) {
+      rethrow;
+    }
   }
 
   static Future<List<String>> getContacts() async {
@@ -193,8 +204,12 @@ class ContactService {
   }
 
   static Future<List<String>> getAllEmergencyNumbers() async {
-    final contacts = await getContactRecords();
-    return contacts.map((contact) => contact.phone).toList(growable: false);
+    try {
+      final contacts = await getContactRecords();
+      return contacts.map((contact) => contact.phone).toList(growable: false);
+    } catch (_) {
+      return const [];
+    }
   }
 
   static Future<String?> getEmergencyNumber() async {

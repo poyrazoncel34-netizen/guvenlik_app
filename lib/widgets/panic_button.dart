@@ -9,7 +9,9 @@ import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../core/app_colors.dart';
 import '../core/constants/app_constants.dart';
+import '../core/di/service_locator.dart';
 import '../core/widgets/feature_warning_dialog.dart';
+import '../domain/repositories/contacts_repository.dart';
 import '../screens/countdown_screen.dart';
 
 class PanicButton extends StatefulWidget {
@@ -107,13 +109,39 @@ class _PanicButtonState extends State<PanicButton>
     _holdTimer?.cancel();
     _holdSeconds = 0;
 
-    // Vibrate and open PIN verification immediately
     HapticFeedback.vibrate();
+
+    _checkContactsThenOpenCountdown();
+  }
+
+  Future<void> _checkContactsThenOpenCountdown() async {
+    final repo = serviceLocator<ContactsRepository>();
+    final numbers = await repo.getAllEmergencyNumbers();
+    if (!mounted) return;
+
+    if (numbers.isEmpty) {
+      await showDialog<void>(
+        context: context,
+        barrierDismissible: false,
+        builder: (ctx) => AlertDialog(
+          title: Text('emergency_no_contact_title'.tr()),
+          content: Text('emergency_no_contact_body'.tr()),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: Text('ok'.tr()),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
 
     _openCountdownScreen();
   }
 
   void _openCountdownScreen() {
+    if (!mounted) return;
     Navigator.push(
       context,
       PageRouteBuilder(
