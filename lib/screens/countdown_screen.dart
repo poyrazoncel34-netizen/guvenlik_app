@@ -29,7 +29,6 @@ import '../core/services/android_intent_service.dart';
 import '../core/services/foreground_service.dart';
 import '../core/services/haptic_service.dart';
 import '../core/services/notification_service.dart';
-import '../core/services/emergency_core_service.dart';
 import '../core/utils/emergency_message_helper.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
