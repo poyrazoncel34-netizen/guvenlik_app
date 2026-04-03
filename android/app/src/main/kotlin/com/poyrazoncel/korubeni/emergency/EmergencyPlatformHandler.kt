@@ -76,6 +76,21 @@ class EmergencyPlatformHandler(
                 "openBatterySettings" -> {
                     result.success(openBatterySettings())
                 }
+                "scheduleCountdownAlarm" -> {
+                    val deadlineMs = call.argument<Number>("deadlineMs")?.toLong() ?: 0L
+                    val recipients = call.argument<List<String>>("recipients") ?: emptyList()
+                    val message = call.argument<String>("message").orEmpty()
+                    val primaryNumber = call.argument<String>("primaryNumber").orEmpty()
+                    CountdownAlarmScheduler.schedule(context, deadlineMs, recipients, message, primaryNumber)
+                    result.success(true)
+                }
+                "cancelCountdownAlarm" -> {
+                    CountdownAlarmScheduler.cancel(context)
+                    result.success(true)
+                }
+                "didCountdownAlarmFire" -> {
+                    result.success(CountdownAlarmScheduler.didAlarmFire(context))
+                }
                 else -> result.notImplemented()
             }
         } catch (e: Exception) {

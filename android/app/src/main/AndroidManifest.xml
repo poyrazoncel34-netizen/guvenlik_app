@@ -116,6 +116,11 @@
             android:name=".emergency.CheckInAlarmReceiver"
             android:enabled="true"
             android:exported="false" />
+        <!-- C4 safety net: fires if Dart timer freezes under Doze mode -->
+        <receiver
+            android:name=".emergency.CountdownAlarmReceiver"
+            android:enabled="true"
+            android:exported="false" />
         <receiver
             android:name=".emergency.BootCompletedReceiver"
             android:enabled="true"
