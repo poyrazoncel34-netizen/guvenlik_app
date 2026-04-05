@@ -12,8 +12,9 @@ class RevenueCatService {
   // ---------------------------------------------------------------------------
   // Constants
   // ---------------------------------------------------------------------------
+  // TODO(BEFORE_RELEASE): Replace with production Android key from RevenueCat dashboard!
   static const String _androidApiKey = 'test_hyyuitzShQIhaUMJcRDQBhwrZBP';
-  // Replace with your iOS API key from RevenueCat dashboard before iOS release:
+  // TODO(BEFORE_RELEASE): Replace with production iOS key from RevenueCat dashboard before iOS release!
   static const String _iosApiKey = 'REVENUECAT_IOS_API_KEY_PLACEHOLDER';
 
   /// The entitlement identifier configured in the RevenueCat dashboard.

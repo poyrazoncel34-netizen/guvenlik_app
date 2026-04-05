@@ -25,28 +25,6 @@ class EmergencyPlatformHandler(
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
         try {
             when (call.method) {
-                "armShake" -> {
-                    EmergencyPrefs.prefs(context).edit()
-                        .putBoolean(EmergencyPrefs.KEY_SHAKE_ENABLED, true)
-                        .apply()
-                    ShakeDetectorService.start(context)
-                    result.success(true)
-                }
-                "disarmShake" -> {
-                    EmergencyPrefs.prefs(context).edit()
-                        .putBoolean(EmergencyPrefs.KEY_SHAKE_ENABLED, false)
-                        .apply()
-                    ShakeDetectorService.stop(context)
-                    result.success(true)
-                }
-                "setShakeSensitivity" -> {
-                    val level = call.argument<Int>("level") ?: 1
-                    EmergencyPrefs.prefs(context).edit()
-                        .putInt(EmergencyPrefs.KEY_SHAKE_SENSITIVITY, level.coerceIn(0, 2))
-                        .apply()
-                    ShakeDetectorService.update(context)
-                    result.success(true)
-                }
                 "scheduleCheckIn" -> {
                     val phase = call.argument<String>("phase") ?: CheckInScheduler.PHASE_MAIN
                     val deadlineMs = call.argument<Number>("deadlineMs")?.toLong() ?: 0L
@@ -82,6 +60,13 @@ class EmergencyPlatformHandler(
                     response["call"] = openCall(primaryNumber)
                     result.success(response)
                 }
+                "executeEmergencyNative" -> {
+                    val recipients = call.argument<List<String>>("recipients") ?: emptyList()
+                    val message = call.argument<String>("message").orEmpty()
+                    val primaryNumber = call.argument<String>("primaryNumber").orEmpty()
+                    EmergencyExecutor.executeEmergency(context, recipients, message, primaryNumber)
+                    result.success(mapOf("status" to "dispatched"))
+                }
                 "getDeviceState" -> {
                     result.success(getDeviceState())
                 }
@@ -91,13 +76,20 @@ class EmergencyPlatformHandler(
                 "openBatterySettings" -> {
                     result.success(openBatterySettings())
                 }
-                "startRecordingSession" -> {
-                    RecordingSessionService.start(context)
+                "scheduleCountdownAlarm" -> {
+                    val deadlineMs = call.argument<Number>("deadlineMs")?.toLong() ?: 0L
+                    val recipients = call.argument<List<String>>("recipients") ?: emptyList()
+                    val message = call.argument<String>("message").orEmpty()
+                    val primaryNumber = call.argument<String>("primaryNumber").orEmpty()
+                    CountdownAlarmScheduler.schedule(context, deadlineMs, recipients, message, primaryNumber)
                     result.success(true)
                 }
-                "stopRecordingSession" -> {
-                    RecordingSessionService.stop(context)
+                "cancelCountdownAlarm" -> {
+                    CountdownAlarmScheduler.cancel(context)
                     result.success(true)
+                }
+                "didCountdownAlarmFire" -> {
+                    result.success(CountdownAlarmScheduler.didAlarmFire(context))
                 }
                 else -> result.notImplemented()
             }
@@ -192,11 +184,11 @@ class EmergencyPlatformHandler(
                 PackageManager.PERMISSION_GRANTED
         val intent = if (canDirectCall) {
             Intent(Intent.ACTION_CALL).apply {
-                data = Uri.parse("tel:$cleaned")
+                data = Uri.parse("tel:${Uri.encode(cleaned)}")
             }
         } else {
             Intent(Intent.ACTION_DIAL).apply {
-                data = Uri.parse("tel:$cleaned")
+                data = Uri.parse("tel:${Uri.encode(cleaned)}")
             }
         }
 

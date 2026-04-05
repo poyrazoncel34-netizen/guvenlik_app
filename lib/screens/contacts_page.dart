@@ -11,11 +11,16 @@ import 'package:fluttercontactpicker_plus/fluttercontactpicker_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../core/app_colors.dart';
+import '../core/utils/permission_helper.dart';
 import '../core/constants/app_constants.dart';
+import '../core/services/contact_service.dart';
 import '../core/services/sms_service.dart';
 import '../presentation/providers/contacts_provider.dart';
 import '../presentation/providers/home_provider.dart';
 import '../widgets/emergency_contact_consent_dialog.dart';
+import '../presentation/providers/subscription_provider.dart';
+import 'subscription/paywall_screen.dart';
+import '../core/services/subscription_gate.dart';
 
 class ContactsPage extends StatefulWidget {
   const ContactsPage({super.key});
@@ -758,6 +763,11 @@ class _ContactsPageState extends State<ContactsPage> {
   }
 
   void _showAddContactSheet(BuildContext context) {
+    final isPro = context.read<SubscriptionProvider>().isPro;
+    if (!SubscriptionGate.canAddContact(currentCount: context.read<ContactsProvider>().emergencyContacts.length, isPro: isPro)) {
+      Navigator.push(context, MaterialPageRoute(builder: (_) => const PaywallScreen()));
+      return;
+    }
     _showContactKvkkInfoIfNeeded();
     final nameController = TextEditingController();
     final phoneController = TextEditingController();
@@ -881,9 +891,14 @@ class _ContactsPageState extends State<ContactsPage> {
               TextField(
                 controller: phoneController,
                 keyboardType: TextInputType.phone,
+                maxLength: 16,
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp(r'[0-9+]')),
+                ],
                 decoration: InputDecoration(
                   hintText: 'Telefon numarasi',
                   prefixIcon: const Icon(Icons.phone_outlined),
+                  counterText: '',
                 ),
               ),
               const SizedBox(height: 16),
@@ -894,14 +909,16 @@ class _ContactsPageState extends State<ContactsPage> {
                     final name = nameController.text.trim().isEmpty
                         ? "contacts_unknown".tr()
                         : nameController.text.trim();
-                    final phone = phoneController.text.trim();
-                    if (phone.isEmpty) {
+                    final rawPhone = phoneController.text.trim();
+                    final digitsOnly = rawPhone.replaceAll(RegExp(r'[^\d]'), '');
+                    if (rawPhone.isEmpty || digitsOnly.length < 7 || digitsOnly.length > 15) {
                       _showSnack(
-                        "contacts_no_phone".tr(),
+                        "contacts_invalid_phone".tr(),
                         backgroundColor: AppColors.warning,
                       );
                       return;
                     }
+                    final phone = rawPhone;
 
                     // KVKK: Kişi ekleme öncesi rıza onayı
                     if (!sheetContext.mounted) return;
@@ -927,6 +944,10 @@ class _ContactsPageState extends State<ContactsPage> {
                       return;
                     }
 
+                    // Request CALL_PHONE permission proactively after adding contact
+                    if (sheetContext.mounted) {
+                      PermissionHelper.requestCallPhonePermission(sheetContext);
+                    }
                     if (!sheetContext.mounted) {
                       return;
                     }
@@ -969,13 +990,13 @@ class _ContactsPageState extends State<ContactsPage> {
         return;
       }
       final contact = await FlutterContactPicker.pickPhoneContact(
-        askForPermission: false,
+        askForPermission: true,
       );
       if (!mounted) return;
       final name = (contact.fullName?.trim().isNotEmpty ?? false)
           ? contact.fullName!.trim()
           : "contacts_unknown".tr();
-      final phone = contact.phoneNumber?.number?.trim() ?? "";
+      final phone = normalizePhoneNumber(contact.phoneNumber?.number?.trim() ?? "");
 
       if (phone.isEmpty) {
         _showSnack(
@@ -1010,6 +1031,15 @@ class _ContactsPageState extends State<ContactsPage> {
       HapticFeedback.mediumImpact();
     } on UserCancelledPickingException {
       // kullanıcı vazgeçti
+    } on PlatformException catch (e) {
+      final isPermission = e.code.toLowerCase().contains('permission') ||
+          e.message?.toLowerCase().contains('permission') == true;
+      _showSnack(
+        isPermission
+            ? "contacts_permission_denied".tr()
+            : "contacts_picker_failed".tr(),
+        backgroundColor: AppColors.emergency,
+      );
     } catch (_) {
       _showSnack(
         "contacts_picker_failed".tr(),

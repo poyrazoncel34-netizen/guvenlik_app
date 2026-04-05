@@ -11,10 +11,6 @@
 
     <!-- Offline-first core with optional online map tiles and connectivity checks -->
     <!-- Contact Picker uses Intent.ACTION_PICK — no READ_CONTACTS permission needed -->
-    <!-- Photo Library Permission (Android 13+) -->
-    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
-    <!-- Photo Library Permission (pre-Android 13) -->
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
     <!-- Notifications (Android 13+) -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <!-- RECORD_AUDIO removed — audio recording feature disabled -->
@@ -34,7 +30,6 @@
     <uses-permission android:name="android.permission.CALL_PHONE" />
     <!-- Foreground Service for keeping app alive in background -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
     <!-- FOREGROUND_SERVICE_MICROPHONE removed — audio recording feature disabled -->
     <!-- Required for BackgroundService (timer/check-in keepalive, specialUse type) -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
@@ -68,6 +63,7 @@
         android:label="KoruBeni${appLabelSuffix}"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
+        android:allowBackup="false"
         android:networkSecurityConfig="@xml/network_security_config"
         android:usesCleartextTraffic="false">
         <activity
@@ -120,19 +116,20 @@
             android:name=".emergency.CheckInAlarmReceiver"
             android:enabled="true"
             android:exported="false" />
+        <!-- C4 safety net: fires if Dart timer freezes under Doze mode -->
+        <receiver
+            android:name=".emergency.CountdownAlarmReceiver"
+            android:enabled="true"
+            android:exported="false" />
         <receiver
             android:name=".emergency.BootCompletedReceiver"
             android:enabled="true"
             android:exported="false">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
-                <action android:name="android.intent.action.LOCKED_BOOT_COMPLETED" />
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
             </intent-filter>
         </receiver>
-        <receiver
-            android:name=".emergency.SmsStatusReceiver"
-            android:enabled="true"
-            android:exported="false" />
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data

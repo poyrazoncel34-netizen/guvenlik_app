@@ -12,6 +12,7 @@ import '../core/di/service_locator.dart';
 import '../core/security/secure_storage.dart';
 import '../core/security/secure_storage_keys.dart';
 import '../core/utils/emergency_message_helper.dart';
+import '../core/utils/permission_helper.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'emergency_call_screen.dart';
 
@@ -77,7 +78,7 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
     });
   }
 
-  // --- DUAL-ACTION: SMS + ARAMA (ZERO-FAULT) ---
+  // --- DUAL-ACTION: SMS + ARAMA (ZERO-FAULT, PARALLEL) ---
   Future<void> _triggerSOS() async {
     try {
       await _executeSOS();
@@ -230,6 +231,22 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  String _lastLocationStatus = '';
+
+  Future<SmsComposeResult> _executeSmsFlow(String emergencyNumber) async {
+    final messagePayload =
+        await EmergencyMessageHelper.buildPanicButtonMessage();
+    final smsMessage = messagePayload.message;
+    _lastLocationStatus = messagePayload.locationStatusMessage;
+
+    final allNumbers = await ContactService.getAllEmergencyNumbers();
+    final smsNumbers = allNumbers.isNotEmpty ? allNumbers : [emergencyNumber];
+    return SmsService.sendSms(
+      numbers: smsNumbers,
+      message: smsMessage,
     );
   }
 

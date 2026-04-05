@@ -87,9 +87,15 @@ class ContactsProvider extends ChangeNotifier {
 
   bool containsPhone(String phone) {
     final normalized = normalizePhoneNumber(phone);
-    return _emergencyContacts.any(
-      (item) => normalizePhoneNumber(item.phone) == normalized,
-    );
+    final suffix = normalized.length >= 9
+        ? normalized.substring(normalized.length - 9)
+        : normalized;
+    return _emergencyContacts.any((item) {
+      final n = normalizePhoneNumber(item.phone);
+      if (n == normalized) return true;
+      final s = n.length >= 9 ? n.substring(n.length - 9) : n;
+      return s == suffix;
+    });
   }
 
   Future<bool> addContact({required String name, required String phone}) async {
@@ -100,7 +106,7 @@ class ContactsProvider extends ChangeNotifier {
     _emergencyContacts.add(
       ContactItem(
         name: name.trim(),
-        phone: phone.trim(),
+        phone: normalizePhoneNumber(phone),
         icon: Icons.person_rounded,
         color: _getColorForIndex(_emergencyContacts.length),
       ),
@@ -157,12 +163,8 @@ class ContactsProvider extends ChangeNotifier {
               EmergencyContact(name: contact.name, phone: contact.phone),
         )
         .toList(growable: false);
-    final numbers = contacts
-        .map((contact) => contact.phone)
-        .toList(growable: false);
 
     await _repository.saveContactRecords(contacts);
-    await _repository.saveEmergencyNumbers(numbers);
   }
 
   /// Reorder contacts by moving item from oldIndex to newIndex.

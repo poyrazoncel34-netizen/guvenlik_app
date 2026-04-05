@@ -45,6 +45,27 @@ class EmergencyMessageHelper {
       '\n\nBu mesaj KoruBeni uygulaması tarafından otomatik gönderilmiştir. '
       'Uygulama acil servislerin yerini tutmaz. Gerekirse 112\'yi arayın.';
 
+  /// Builds a countdown message payload with no location data.
+  /// Used as a timeout fallback when GPS/location resolution takes too long.
+  static Future<EmergencyMessagePayload> buildNoLocationMessage({
+    String? customTemplate,
+  }) async {
+    final locationResult = LocationResultWithSource(
+      position: null,
+      source: LocationSource.none,
+    );
+    final baseMessage = _buildCountdownBaseMessage(
+      locationResult: locationResult,
+      mapsUrl: null,
+      customTemplate: customTemplate,
+    );
+    return _payloadFromLocation(
+      locationResult: locationResult,
+      baseMessage: baseMessage,
+      mapsUrl: null,
+    );
+  }
+
   static Future<EmergencyMessagePayload> buildCountdownMessage({
     String? customTemplate,
   }) async {
@@ -115,7 +136,7 @@ class EmergencyMessageHelper {
       );
     }
 
-    return EmergencyCoreService.instance.getLocationWithFallback();
+    return EmergencyCoreService.instance.getLocationWithFallback(gpsTimeout: const Duration(seconds: 3));
   }
 
   static EmergencyMessagePayload _payloadFromLocation({

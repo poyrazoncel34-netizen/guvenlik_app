@@ -11,6 +11,7 @@ import 'package:provider/provider.dart';
 import 'core/app_theme.dart';
 import 'core/navigation/app_navigator.dart';
 import 'presentation/providers/providers.dart';
+import 'presentation/providers/settings_provider.dart';
 import 'screens/splash_screen.dart';
 import 'core/services/offline_queue_service.dart';
 import 'core/services/crash_log_service.dart';
@@ -181,7 +182,8 @@ class KoruBeniApp extends StatelessWidget {
     return MultiProvider(
       providers: AppProviders.providers,
       child: EmergencyTriggerHost(
-        child: MaterialApp(
+        child: Consumer<SettingsProvider>(
+          builder: (context, settings, _) => MaterialApp(
           navigatorKey: rootNavigatorKey,
           debugShowCheckedModeBanner: false,
           title: 'KoruBeni',
@@ -207,11 +209,12 @@ class KoruBeniApp extends StatelessWidget {
             );
           },
           darkTheme: AppTheme.darkTheme,
-          themeMode: ThemeMode.dark,
+          themeMode: settings.themeMode,
           localizationsDelegates: context.localizationDelegates,
           supportedLocales: context.supportedLocales,
           locale: context.locale,
           home: const SplashScreen(),
+        ),
         ),
       ),
     );

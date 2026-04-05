@@ -99,7 +99,7 @@ class ShakeDetectorService : Service(), SensorEventListener {
 
         accelerometer?.let {
             sensorManager.unregisterListener(this)
-            sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_GAME)
+            sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_NORMAL)
         }
     }
 
