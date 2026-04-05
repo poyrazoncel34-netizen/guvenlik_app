@@ -5,8 +5,9 @@ import 'package:easy_localization/easy_localization.dart';
 import '../core/app_colors.dart';
 import '../core/services/contact_service.dart';
 import '../core/services/call_service.dart';
-import '../core/utils/permission_helper.dart';
 import '../core/services/sms_service.dart';
+import '../core/services/android_intent_service.dart';
+import 'package:flutter/services.dart';
 import '../core/di/service_locator.dart';
 import '../core/security/secure_storage.dart';
 import '../core/security/secure_storage_keys.dart';
@@ -78,14 +79,30 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
 
   // --- DUAL-ACTION: SMS + ARAMA (ZERO-FAULT) ---
   Future<void> _triggerSOS() async {
+    try {
+      await _executeSOS();
+    } catch (e) {
+      debugPrint("SOS execution crashed: $e");
+      if (mounted) {
+        await _showBlockingFailure(
+          title: 'emergency_total_failure_title'.tr(),
+          body: 'emergency_total_failure_body'.tr(),
+          phoneNumber: _emergencyContact?.phone ?? '',
+        );
+      }
+    }
+  }
+
+  Future<void> _executeSOS() async {
     final emergencyNumber = await ContactService.getEmergencyNumber();
 
     if (emergencyNumber == null || emergencyNumber.isEmpty) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text("pin_verify_no_number".tr())));
-        Navigator.pop(context);
+        await _showBlockingFailure(
+          title: 'countdown_no_contact_title'.tr(),
+          body: 'countdown_no_contact_body'.tr(),
+          phoneNumber: '',
+        );
       }
       return;
     }
@@ -94,56 +111,126 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
         await EmergencyMessageHelper.buildPanicButtonMessage();
     final smsMessage = messagePayload.message;
 
-    // 2. Tüm acil kişilere SMS gönder (arka planda, hata olsa bile aramaya geç)
-    try {
-      final allNumbers = await ContactService.getAllEmergencyNumbers();
-      final smsNumbers = allNumbers.isNotEmpty ? allNumbers : [emergencyNumber];
-      final smsResult = await SmsService.sendSms(
-        numbers: smsNumbers,
-        message: smsMessage,
-      );
+    final allNumbers = await ContactService.getAllEmergencyNumbers();
+    final smsNumbers = allNumbers.isNotEmpty ? allNumbers : [emergencyNumber];
+    final smsResult = await SmsService.sendSms(
+      numbers: smsNumbers,
+      message: smsMessage,
+    );
 
-      // Prominent disclosure before requesting CALL_PHONE permission (Play Store compliance)
+    // NO permission dialog here. Check silently, use dialer fallback.
+    final callResult = await CallService.startEmergencyCall(emergencyNumber);
+
+    // BOTH completely failed — show blocking fullscreen error
+    if (smsResult.isFailed && callResult.isFailed) {
       if (mounted) {
-        await PermissionHelper.requestCallPhonePermission(context);
-      }
-      final callResult = await CallService.startEmergencyCall(emergencyNumber);
-
-      if (!smsResult.isSuccess && !callResult.isSuccess) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('emergency_action_failed'.tr())),
-          );
-          Navigator.pop(context);
-        }
-        return;
-      }
-
-      if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => EmergencyCallScreen(
-              name:
-                  _emergencyContact?.name ??
-                  "pin_verify_emergency_contact".tr(),
-              phone: emergencyNumber,
-              callResult: callResult,
-              smsResult: smsResult,
-              locationStatusMessage: messagePayload.locationStatusMessage,
-            ),
-          ),
+        await _showBlockingFailure(
+          title: 'emergency_total_failure_title'.tr(),
+          body: 'emergency_total_failure_body'.tr(),
+          phoneNumber: emergencyNumber,
+          emergencyMessage: smsMessage,
         );
       }
-    } catch (e) {
-      debugPrint("Arama hatası: $e");
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text("pin_verify_call_failed".tr())));
-        Navigator.pop(context);
-      }
+      return;
     }
+
+    if (mounted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => EmergencyCallScreen(
+            name:
+                _emergencyContact?.name ??
+                "pin_verify_emergency_contact".tr(),
+            phone: emergencyNumber,
+            callResult: callResult,
+            smsResult: smsResult,
+            locationStatusMessage: messagePayload.locationStatusMessage,
+            emergencyMessage: smsMessage,
+          ),
+        ),
+      );
+    }
+  }
+
+  /// Shows a FULLSCREEN BLOCKING failure dialog. No snackbar. No silent path.
+  Future<void> _showBlockingFailure({
+    required String title,
+    required String body,
+    required String phoneNumber,
+    String? emergencyMessage,
+  }) async {
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => PopScope(
+        canPop: false,
+        child: AlertDialog(
+          backgroundColor: const Color(0xFF1C1C1E),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 72,
+                height: 72,
+                decoration: BoxDecoration(
+                  color: AppColors.emergency.withValues(alpha: 0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.error_rounded, color: AppColors.emergency, size: 42),
+              ),
+              const SizedBox(height: 16),
+              Text(title, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: Colors.white), textAlign: TextAlign.center),
+              const SizedBox(height: 12),
+              Text(body, style: const TextStyle(fontSize: 14, color: Colors.white70, height: 1.5), textAlign: TextAlign.center),
+              if (phoneNumber.isNotEmpty) ...[
+                const SizedBox(height: 18),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(12)),
+                  child: Text(phoneNumber, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: Colors.white, letterSpacing: 1.5), textAlign: TextAlign.center),
+                ),
+              ],
+            ],
+          ),
+          actions: [
+            if (phoneNumber.isNotEmpty)
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () async => await AndroidIntentService.openDialer(phoneNumber),
+                  icon: const Icon(Icons.call, size: 20),
+                  label: Text('emergency_manual_call_now'.tr(), style: const TextStyle(fontWeight: FontWeight.w700)),
+                  style: ElevatedButton.styleFrom(backgroundColor: AppColors.emergency, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                ),
+              ),
+            if (emergencyMessage != null)
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    Clipboard.setData(ClipboardData(text: emergencyMessage));
+                    ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text('emergency_message_copied'.tr()), backgroundColor: AppColors.success));
+                  },
+                  icon: const Icon(Icons.copy, size: 18),
+                  label: Text('emergency_copy_message'.tr()),
+                  style: OutlinedButton.styleFrom(foregroundColor: Colors.white70, side: const BorderSide(color: Colors.white24), padding: const EdgeInsets.symmetric(vertical: 12), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                ),
+              ),
+            const SizedBox(height: 4),
+            SizedBox(
+              width: double.infinity,
+              child: TextButton(
+                onPressed: () { Navigator.pop(ctx); Navigator.pop(context); },
+                child: Text('emergency_dismiss'.tr(), style: const TextStyle(color: Colors.white38, fontSize: 13)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   void _onNumberPress(String number) {
