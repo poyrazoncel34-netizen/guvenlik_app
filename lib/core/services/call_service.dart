@@ -44,7 +44,20 @@ class EmergencyCallResult {
     );
   }
 
+  /// True ONLY when a direct call was placed by the OS (no user action needed).
+  bool get isConfirmed => status == EmergencyCallStatus.directCallStarted;
+
+  /// True when dialer opened but USER MUST PRESS THE GREEN CALL BUTTON.
+  bool get requiresUserAction =>
+      status == EmergencyCallStatus.dialerOpened;
+
+  /// True when the action completely failed (nothing opened).
+  bool get isFailed => status == EmergencyCallStatus.failed;
+
+  /// True when at least something happened (call placed OR dialer opened).
+  /// WARNING: This does NOT mean the call connected.
   bool get isSuccess => status != EmergencyCallStatus.failed;
+
   bool get requiresManualConfirmation =>
       status == EmergencyCallStatus.dialerOpened;
 

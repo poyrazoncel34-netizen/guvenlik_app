@@ -58,7 +58,21 @@ class SmsComposeResult {
     );
   }
 
+  /// True ONLY when SMS was actually dispatched by the OS (no user action needed).
+  bool get isConfirmed => status == SmsComposeStatus.nativeDispatched;
+
+  /// True when composer/dialer opened but USER MUST PRESS SEND.
+  bool get requiresUserAction =>
+      status == SmsComposeStatus.composerOpened ||
+      status == SmsComposeStatus.composerOpenedPrimaryOnly;
+
+  /// True when the action completely failed (nothing opened, nothing sent).
+  bool get isFailed => status == SmsComposeStatus.failed;
+
+  /// True when at least something happened (sent OR composer opened).
+  /// WARNING: This does NOT mean the message was delivered.
   bool get isSuccess => status != SmsComposeStatus.failed;
+
   bool get isPartial => status == SmsComposeStatus.composerOpenedPrimaryOnly;
 
   String get statusMessage {

@@ -18,8 +18,8 @@ import '../core/services/contact_service.dart';
 import '../domain/repositories/contacts_repository.dart';
 import '../core/services/activity_service.dart';
 import '../core/services/call_service.dart';
-import '../core/services/emergency_platform_service.dart';
-
+import '../core/services/android_intent_service.dart';
+import '../core/services/connectivity_service.dart';
 import '../core/services/pin_lockout_service.dart';
 import '../core/services/offline_queue_service.dart';
 import '../domain/models/activity_event.dart';
@@ -87,9 +87,73 @@ class _CountdownScreenState extends State<CountdownScreen>
     _loadEmergencyNumbers();
     _prefetchLocation();
     _syncLockoutState();
-    _startCountdown();
-    _scheduleNativeBackupAlarm();
+    _showHonestyWarningThenStart();
     KoruBeniForegroundService.start();
+  }
+
+  /// Shows a mandatory honesty warning before countdown begins.
+  /// User MUST acknowledge that this app requires manual confirmation.
+  Future<void> _showHonestyWarningThenStart() async {
+    if (widget.isTestMode) {
+      _startCountdown();
+      return;
+    }
+    // Allow frame to build before showing dialog
+    await Future.delayed(const Duration(milliseconds: 300));
+    if (!mounted) return;
+
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF1C1C1E),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 64,
+              height: 64,
+              decoration: BoxDecoration(
+                color: AppColors.warning.withValues(alpha: 0.15),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.warning_amber_rounded, color: AppColors.warning, size: 36),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'countdown_honesty_title'.tr(),
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.white),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'countdown_honesty_body'.tr(),
+              style: const TextStyle(fontSize: 14, color: Colors.white70, height: 1.5),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+        actions: [
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () => Navigator.pop(ctx),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.warning,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              child: Text('countdown_honesty_accept'.tr(),
+                  style: const TextStyle(fontWeight: FontWeight.w700)),
+            ),
+          ),
+        ],
+      ),
+    );
+    if (!mounted) return;
+    _startCountdown();
   }
 
 
@@ -219,28 +283,33 @@ class _CountdownScreenState extends State<CountdownScreen>
       return;
     }
 
-    // Use pre-loaded numbers, fallback to fresh load
-    if (_emergencyNumbers.isEmpty) {
-      _emergencyNumbers = await _contactsRepository.getAllEmergencyNumbers();
+    try {
+      await _executeEmergency();
+    } catch (e) {
+      // FAIL-SAFE: If ANY unhandled exception occurs, show blocking error with manual call option.
+      debugPrint('CountdownScreen: Emergency execution crashed: $e');
+      await KoruBeniForegroundService.stop();
+      if (mounted) {
+        final primaryNumber = _emergencyContact?.phone ?? '';
+        await _showBlockingFailure(
+          title: 'emergency_total_failure_title'.tr(),
+          body: 'emergency_total_failure_body'.tr(),
+          phoneNumber: primaryNumber,
+        );
+      }
     }
-    List<String> numbers = _emergencyNumbers.where((n) {
-      final digits = normalizePhoneNumber(n).replaceAll('+', '');
-      return digits.length >= 7 && digits.length <= 15;
-    }).toList();
+  }
+
+  Future<void> _executeEmergency() async {
+    final numbers = await _contactsRepository.getAllEmergencyNumbers();
     if (numbers.isEmpty) {
-      // DB query failed or returned empty — try in-memory contact loaded at init.
-      final cachedPhone = _emergencyContact?.phone;
-      if (cachedPhone != null && cachedPhone.isNotEmpty) {
-        numbers = [cachedPhone];
-      } else {
-        await KoruBeniForegroundService.stop();
-        if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text("countdown_no_contact".tr())));
-          Navigator.pop(context);
-        }
-        return;
+      await KoruBeniForegroundService.stop();
+      if (mounted) {
+        await _showBlockingFailure(
+          title: 'countdown_no_contact_title'.tr(),
+          body: 'countdown_no_contact_body'.tr(),
+          phoneNumber: '',
+        );
       }
     }
 
@@ -278,14 +347,30 @@ class _CountdownScreenState extends State<CountdownScreen>
       ),
     );
 
-    // Fire-and-forget: activity log, haptic, notification
-    ActivityService.logEvent(
+    if (!isOnline) {
+      await OfflineQueueService.instance.enqueue(
+        OfflineEvent(
+          type: 'emergency',
+          title: "countdown_emergency_title".tr(),
+          description: message,
+          data: {
+            'message': message,
+            'maps_url': messagePayload.mapsUrl,
+            'location_status': messagePayload.locationStatusMessage,
+          },
+        ),
+      );
+    }
+
+    await ActivityService.logEvent(
       type: ActivityType.emergencyTriggered,
       title: "countdown_emergency_title".tr(),
       description: "countdown_emergency_desc".tr(),
     );
-    HapticService.emergencyTriggered();
-    NotificationService.instance.showEmergencyAlert(
+
+    await HapticService.emergencyTriggered();
+
+    await NotificationService.instance.showEmergencyAlert(
       id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
       title: 'countdown_emergency_title'.tr(),
       body: 'alarm_notification_body'.tr(),
@@ -307,34 +392,36 @@ class _CountdownScreenState extends State<CountdownScreen>
     final smsResult = orchestratorResult.smsResult;
     String calledNumber = orchestratorResult.calledNumber;
 
-    // Show failover notification if a different contact was called
-    if (calledNumber != primaryNumber && calledNumber.isNotEmpty && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'emergency_failover_called'.tr(
-              namedArgs: {'number': calledNumber},
-            ),
-          ),
-          backgroundColor: AppColors.warning,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    }
+    // NO permission dialog here. Check permission silently, use dialer fallback.
+    // Permission should have been requested during onboarding/settings.
 
-    // Last-resort: if orchestrator couldn't make a direct call, open system dialer.
-    // ACTION_DIAL never requires CALL_PHONE permission and cannot return "failed".
-    if (!callResult.isSuccess && calledNumber.isNotEmpty) {
-      final dialerOpened = await AndroidIntentService.openDialer(calledNumber);
-      if (dialerOpened) {
-        callResult = EmergencyCallResult.dialer(calledNumber);
+    // Failover: try each number until one succeeds
+    EmergencyCallResult callResult = EmergencyCallResult.failed('');
+    String calledNumber = primaryNumber ?? '';
+    if (primaryNumber != null && primaryNumber.isNotEmpty) {
+      callResult = await CallService.startEmergencyCall(primaryNumber);
+      if (!callResult.isSuccess && numbers.length > 1) {
+        for (final fallbackNumber in numbers) {
+          if (fallbackNumber == primaryNumber) continue;
+          callResult = await CallService.startEmergencyCall(fallbackNumber);
+          if (callResult.isSuccess) {
+            calledNumber = fallbackNumber;
+            break;
+          }
+        }
       }
     }
 
-    if (!smsResult.isSuccess && !callResult.isSuccess) {
+    // BOTH completely failed — show blocking fullscreen error
+    if (smsResult.isFailed && callResult.isFailed) {
       await KoruBeniForegroundService.stop();
       if (mounted) {
-        _showFullScreenError(calledNumber);
+        await _showBlockingFailure(
+          title: 'emergency_total_failure_title'.tr(),
+          body: 'emergency_total_failure_body'.tr(),
+          phoneNumber: calledNumber,
+          emergencyMessage: message,
+        );
       }
       return;
     }
@@ -352,16 +439,32 @@ class _CountdownScreenState extends State<CountdownScreen>
         ),
       );
       try {
-        if (mounted) {
-          Navigator.pushReplacement(context, route);
-        } else {
-          // Widget disposed (screen off / OS reclaim) — use root navigator.
-          rootNavigatorKey.currentState?.pushReplacement(route);
-        }
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => EmergencyCallScreen(
+              name: _emergencyContact?.name ?? "countdown_emergency_label".tr(),
+              phone: calledNumber,
+              callResult: callResult,
+              smsResult: smsResult,
+              locationStatusMessage: messagePayload.locationStatusMessage,
+              emergencyMessage: message,
+            ),
+          ),
+        );
       } catch (e) {
         debugPrint('CountdownScreen: Navigation failed: $e');
         _isNavigating = false;
         _handoffToEmergencyScreen = false;
+        // Even navigation failure gets a blocking dialog
+        if (mounted) {
+          await _showBlockingFailure(
+            title: 'emergency_total_failure_title'.tr(),
+            body: 'emergency_total_failure_body'.tr(),
+            phoneNumber: calledNumber,
+            emergencyMessage: message,
+          );
+        }
       }
     }
     } catch (e) {
@@ -378,6 +481,135 @@ class _CountdownScreenState extends State<CountdownScreen>
     }
   }
 
+  /// Shows a FULLSCREEN BLOCKING failure dialog. User MUST interact.
+  /// No silent dismissal. No snackbar. This is the fail-safe.
+  Future<void> _showBlockingFailure({
+    required String title,
+    required String body,
+    required String phoneNumber,
+    String? emergencyMessage,
+  }) async {
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => PopScope(
+        canPop: false,
+        child: AlertDialog(
+          backgroundColor: const Color(0xFF1C1C1E),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 72,
+                height: 72,
+                decoration: BoxDecoration(
+                  color: AppColors.emergency.withValues(alpha: 0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.error_rounded, color: AppColors.emergency, size: 42),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                title,
+                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: Colors.white),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                body,
+                style: const TextStyle(fontSize: 14, color: Colors.white70, height: 1.5),
+                textAlign: TextAlign.center,
+              ),
+              if (phoneNumber.isNotEmpty) ...[
+                const SizedBox(height: 18),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    phoneNumber,
+                    style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: Colors.white, letterSpacing: 1.5),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ],
+              if (emergencyMessage != null) ...[
+                const SizedBox(height: 12),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: SelectableText(
+                    emergencyMessage,
+                    style: const TextStyle(fontSize: 12, color: Colors.white60, height: 1.4),
+                  ),
+                ),
+              ],
+            ],
+          ),
+          actions: [
+            if (phoneNumber.isNotEmpty)
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () async {
+                    await AndroidIntentService.openDialer(phoneNumber);
+                  },
+                  icon: const Icon(Icons.call, size: 20),
+                  label: Text('emergency_manual_call_now'.tr(),
+                      style: const TextStyle(fontWeight: FontWeight.w700)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.emergency,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+              ),
+            if (emergencyMessage != null)
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    Clipboard.setData(ClipboardData(text: emergencyMessage));
+                    ScaffoldMessenger.of(ctx).showSnackBar(
+                      SnackBar(content: Text('emergency_message_copied'.tr()), backgroundColor: AppColors.success),
+                    );
+                  },
+                  icon: const Icon(Icons.copy, size: 18),
+                  label: Text('emergency_copy_message'.tr()),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.white70,
+                    side: const BorderSide(color: Colors.white24),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+              ),
+            const SizedBox(height: 4),
+            SizedBox(
+              width: double.infinity,
+              child: TextButton(
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  Navigator.pop(context);
+                },
+                child: Text('emergency_dismiss'.tr(),
+                    style: const TextStyle(color: Colors.white38, fontSize: 13)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   @override
   void dispose() {
