@@ -202,6 +202,51 @@ class EmergencyPlatformService {
   }
 
 
+  /// Schedule a native AlarmManager backup for the countdown timer.
+  /// If the Dart Timer.periodic freezes under Doze, this alarm fires and
+  /// executes the emergency natively via EmergencyExecutor.
+  Future<void> scheduleCountdownAlarm({
+    required DateTime deadline,
+    required List<String> recipients,
+    required String message,
+    required String primaryNumber,
+  }) async {
+    if (!isSupported) return;
+    try {
+      await _methodChannel.invokeMethod<void>('scheduleCountdownAlarm', {
+        'deadlineMs': deadline.millisecondsSinceEpoch,
+        'recipients': recipients,
+        'message': message,
+        'primaryNumber': primaryNumber,
+      }).timeout(const Duration(seconds: 5));
+    } on TimeoutException {
+      debugPrint('[EmergencyPlatform] scheduleCountdownAlarm timed out');
+    }
+  }
+
+  /// Cancel the countdown backup alarm (user entered correct PIN).
+  Future<void> cancelCountdownAlarm() async {
+    if (!isSupported) return;
+    try {
+      await _methodChannel.invokeMethod<void>('cancelCountdownAlarm')
+          .timeout(const Duration(seconds: 5));
+    } on TimeoutException {
+      debugPrint('[EmergencyPlatform] cancelCountdownAlarm timed out');
+    }
+  }
+
+  /// Check if the native alarm already fired (Dart timer was frozen).
+  /// Used to prevent double-execution when the Dart side resumes.
+  Future<bool> didCountdownAlarmFire() async {
+    if (!isSupported) return false;
+    try {
+      return await _methodChannel.invokeMethod<bool>('didCountdownAlarmFire') ?? false;
+    } catch (e) {
+      debugPrint('[EmergencyPlatform] didCountdownAlarmFire failed: $e');
+      return false;
+    }
+  }
+
   Map<String, dynamic>? _toMap(dynamic event) {
     if (event is Map) {
       return event.map(

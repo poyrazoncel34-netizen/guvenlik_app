@@ -23,7 +23,6 @@ class EmergencyTriggerHost extends StatefulWidget {
 class _EmergencyTriggerHostState extends State<EmergencyTriggerHost>
     with WidgetsBindingObserver {
   bool _countdownOpen = false;
-  bool _foregroundTriggersEnabled = false;
   StreamSubscription<Map<String, dynamic>>? _platformEventsSubscription;
 
   @override
@@ -59,7 +58,6 @@ class _EmergencyTriggerHostState extends State<EmergencyTriggerHost>
   }
 
   void _startForegroundTriggers() {
-    _foregroundTriggersEnabled = true;
     _startVolumeIfEnabled();
   }
 
@@ -71,7 +69,6 @@ class _EmergencyTriggerHostState extends State<EmergencyTriggerHost>
   }
 
   void _stopForegroundTriggers() {
-    _foregroundTriggersEnabled = false;
     VolumeTriggerService.instance.stopListening();
   }
 
