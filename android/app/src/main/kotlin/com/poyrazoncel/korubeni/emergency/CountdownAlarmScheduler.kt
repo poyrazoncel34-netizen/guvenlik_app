@@ -14,9 +14,9 @@ import android.util.Log
  * may be frozen and Timer.periodic stops ticking. This alarm guarantees the
  * emergency fires even if the Flutter engine is suspended.
  *
- * Emergency data (recipients, message, primaryNumber) is persisted to
- * SharedPreferences so that [CountdownAlarmReceiver] can invoke
- * [EmergencyExecutor] without any Flutter involvement.
+ * The primaryNumber is persisted to SharedPreferences so that
+ * [CountdownAlarmReceiver] can invoke [EmergencyExecutor] without any
+ * Flutter involvement.
  */
 object CountdownAlarmScheduler {
     private const val TAG = "CountdownAlarmScheduler"
@@ -25,8 +25,6 @@ object CountdownAlarmScheduler {
     fun schedule(
         context: Context,
         deadlineMs: Long,
-        recipients: List<String>,
-        message: String,
         primaryNumber: String,
     ) {
         val prefs = EmergencyPrefs.prefs(context)
@@ -34,8 +32,6 @@ object CountdownAlarmScheduler {
             .putBoolean(EmergencyPrefs.KEY_COUNTDOWN_ACTIVE, true)
             .putLong(EmergencyPrefs.KEY_COUNTDOWN_DEADLINE_MS, deadlineMs)
             .putBoolean(EmergencyPrefs.KEY_COUNTDOWN_ALARM_FIRED, false)
-            .putString(EmergencyPrefs.KEY_COUNTDOWN_RECIPIENTS, recipients.joinToString(","))
-            .putString(EmergencyPrefs.KEY_COUNTDOWN_MESSAGE, message)
             .putString(EmergencyPrefs.KEY_COUNTDOWN_PRIMARY_NUMBER, primaryNumber)
             .commit()
 
@@ -71,8 +67,6 @@ object CountdownAlarmScheduler {
             .remove(EmergencyPrefs.KEY_COUNTDOWN_ACTIVE)
             .remove(EmergencyPrefs.KEY_COUNTDOWN_DEADLINE_MS)
             .remove(EmergencyPrefs.KEY_COUNTDOWN_ALARM_FIRED)
-            .remove(EmergencyPrefs.KEY_COUNTDOWN_RECIPIENTS)
-            .remove(EmergencyPrefs.KEY_COUNTDOWN_MESSAGE)
             .remove(EmergencyPrefs.KEY_COUNTDOWN_PRIMARY_NUMBER)
             .commit()
         Log.i(TAG, "Countdown alarm cancelled")

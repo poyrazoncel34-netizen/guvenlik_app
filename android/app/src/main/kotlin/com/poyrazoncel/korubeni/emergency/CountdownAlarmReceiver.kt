@@ -37,17 +37,13 @@ class CountdownAlarmReceiver : BroadcastReceiver() {
             .commit()
 
         // Read persisted emergency data
-        val recipientsRaw = prefs.getString(EmergencyPrefs.KEY_COUNTDOWN_RECIPIENTS, "") ?: ""
-        val message = prefs.getString(EmergencyPrefs.KEY_COUNTDOWN_MESSAGE, "") ?: ""
         val primaryNumber = prefs.getString(EmergencyPrefs.KEY_COUNTDOWN_PRIMARY_NUMBER, "") ?: ""
 
-        val recipients = recipientsRaw.split(",").filter { it.isNotBlank() }
-
-        if (recipients.isEmpty() && primaryNumber.isBlank()) {
+        if (primaryNumber.isBlank()) {
             Log.e(TAG, "No emergency data persisted — cannot execute")
             return
         }
 
-        EmergencyExecutor.executeEmergency(context, recipients, message, primaryNumber)
+        EmergencyExecutor.executeEmergency(context, primaryNumber)
     }
 }

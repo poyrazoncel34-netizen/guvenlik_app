@@ -136,63 +136,14 @@ class EmergencyPlatformService {
         false;
   }
 
-  Future<Map<String, dynamic>> sendSms({
-    required List<String> recipients,
-    required String message,
-  }) async {
-    if (!isSupported) {
-      return const <String, dynamic>{};
-    }
-    try {
-      final response = await _methodChannel.invokeMethod<dynamic>('sendSms', {
-        'recipients': recipients,
-        'message': message,
-      }).timeout(const Duration(seconds: 5));
-      return _toMap(response) ?? const <String, dynamic>{};
-    } on TimeoutException {
-      debugPrint('[EmergencyPlatform] sendSms timed out');
-      return const <String, dynamic>{};
-    }
-  }
-
-  Future<Map<String, dynamic>> triggerEmergency({
-    required List<String> recipients,
-    required String message,
-    required String primaryNumber,
-  }) async {
-    if (!isSupported) {
-      return const <String, dynamic>{};
-    }
-    try {
-      final response = await _methodChannel.invokeMethod<dynamic>(
-        'triggerEmergency',
-        {
-          'recipients': recipients,
-          'message': message,
-          'primaryNumber': primaryNumber,
-        },
-      ).timeout(const Duration(seconds: 5));
-      return _toMap(response) ?? const <String, dynamic>{};
-    } on TimeoutException {
-      debugPrint('[EmergencyPlatform] triggerEmergency timed out');
-      return const <String, dynamic>{};
-    }
-  }
-
   Future<void> executeEmergencyNative({
-    required List<String> recipients,
-    required String message,
     required String primaryNumber,
   }) async {
     if (!isSupported) return;
     try {
       await _methodChannel.invokeMethod<dynamic>(
         'executeEmergencyNative',
-        {
-          'recipients': recipients,
-          'message': message,
-          'primaryNumber': primaryNumber,
-        },
+        {'primaryNumber': primaryNumber},
       ).timeout(const Duration(seconds: 3));
     } on TimeoutException {
       debugPrint('[EmergencyPlatform] executeEmergencyNative timed out');
@@ -201,22 +152,17 @@ class EmergencyPlatformService {
     }
   }
 
-
   /// Schedule a native AlarmManager backup for the countdown timer.
   /// If the Dart Timer.periodic freezes under Doze, this alarm fires and
   /// executes the emergency natively via EmergencyExecutor.
   Future<void> scheduleCountdownAlarm({
     required DateTime deadline,
-    required List<String> recipients,
-    required String message,
     required String primaryNumber,
   }) async {
     if (!isSupported) return;
     try {
       await _methodChannel.invokeMethod<void>('scheduleCountdownAlarm', {
         'deadlineMs': deadline.millisecondsSinceEpoch,
-        'recipients': recipients,
-        'message': message,
         'primaryNumber': primaryNumber,
       }).timeout(const Duration(seconds: 5));
     } on TimeoutException {

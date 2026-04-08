@@ -9,10 +9,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/app_colors.dart';
 import '../core/services/activity_service.dart';
-import '../core/services/sms_service.dart';
-import '../core/di/service_locator.dart';
 import '../domain/models/activity_event.dart';
-import '../domain/repositories/contacts_repository.dart';
 
 class SafetyTimelineScreen extends StatefulWidget {
   const SafetyTimelineScreen({super.key});
@@ -133,24 +130,6 @@ class _SafetyTimelineScreenState extends State<SafetyTimelineScreen> {
   }
 
   Future<void> _shareEntry(Map<String, dynamic> entry) async {
-    final contactsRepo = serviceLocator<ContactsRepository>();
-    final numbers = await contactsRepo.getAllEmergencyNumbers();
-    if (numbers.isEmpty) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("emergency_contact_not_found".tr()),
-            backgroundColor: AppColors.warning,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-        );
-      }
-      return;
-    }
-
     final destination = entry['destination'] ?? '';
     final plan = entry['plan'] ?? '';
     final notes = entry['notes'] ?? '';
@@ -171,29 +150,19 @@ class _SafetyTimelineScreenState extends State<SafetyTimelineScreen> {
       parts.add("timeline_share_notes".tr(namedArgs: {'notes': notes}));
     }
 
-    final message = parts.join('\n');
-    final smsResult = await SmsService.sendSms(
-      numbers: numbers,
-      message: message,
-    );
+    await Clipboard.setData(ClipboardData(text: parts.join('\n')));
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Row(
             children: [
-              const Icon(Icons.send_rounded, color: Colors.white, size: 20),
+              const Icon(Icons.copy_rounded, color: Colors.white, size: 20),
               const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  smsResult.inlineNotice ?? "timeline_shared_ready".tr(),
-                ),
-              ),
+              Expanded(child: Text("timeline_shared_ready".tr())),
             ],
           ),
-          backgroundColor: smsResult.isSuccess
-              ? AppColors.primary
-              : AppColors.warning,
+          backgroundColor: AppColors.primary,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),

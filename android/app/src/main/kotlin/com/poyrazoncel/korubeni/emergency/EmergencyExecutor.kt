@@ -12,19 +12,17 @@ import java.util.concurrent.Executors
 
 /**
  * Native-side emergency executor — runs independently of Flutter.
- * If the Flutter engine dies mid-emergency, this continues dispatching
- * SMS and call on the Android side.
+ * If the Flutter engine dies mid-emergency, this continues the call
+ * dispatch on the Android side.
  *
  * Acquires a partial wake lock to prevent CPU sleep during dispatch.
  */
 object EmergencyExecutor {
     private const val TAG = "EmergencyExecutor"
-    private val executor = Executors.newFixedThreadPool(3)
+    private val executor = Executors.newFixedThreadPool(1)
 
     fun executeEmergency(
         context: Context,
-        recipients: List<String>,
-        message: String,
         primaryNumber: String,
     ) {
         // Acquire wake lock to keep CPU alive during dispatch
@@ -36,14 +34,6 @@ object EmergencyExecutor {
 
         executor.execute {
             try {
-                // Dispatch SMS
-                try {
-                    SmsSender.send(context, null, recipients, message)
-                    Log.i(TAG, "SMS dispatched to ${recipients.size} recipients")
-                } catch (e: Exception) {
-                    Log.e(TAG, "SMS dispatch failed", e)
-                }
-
                 // Dispatch call
                 try {
                     openCallDirect(context, primaryNumber)
