@@ -106,11 +106,6 @@ class MainActivity : FlutterFragmentActivity() {
                     .setMethodCallHandler { call, result ->
                         try {
                             when (call.method) {
-                                "composeSms" -> {
-                                    val numbers = call.argument<List<String>>("numbers") ?: emptyList()
-                                    val message = call.argument<String>("message").orEmpty()
-                                    result.success(composeSms(numbers, message))
-                                }
                                 "openDialer" -> {
                                     val number = call.argument<String>("number").orEmpty()
                                     result.success(openDialer(number))
@@ -204,29 +199,6 @@ class MainActivity : FlutterFragmentActivity() {
             android.util.Log.e("MainActivity", "Cleanup failed: ${e.message}")
         }
         super.onDestroy()
-    }
-
-    private fun composeSms(numbers: List<String>, message: String): Boolean {
-        if (numbers.isEmpty()) {
-            return false
-        }
-
-        val recipients = numbers
-            .map { it.trim() }
-            .filter { it.isNotEmpty() }
-            .joinToString(";")
-
-        if (recipients.isEmpty()) {
-            return false
-        }
-
-        val intent = Intent(Intent.ACTION_SENDTO).apply {
-            data = Uri.parse("smsto:${Uri.encode(recipients)}")
-            putExtra("address", recipients)
-            putExtra("sms_body", message)
-        }
-
-        return startExternalIntent(intent)
     }
 
     private fun openDialer(number: String): Boolean {

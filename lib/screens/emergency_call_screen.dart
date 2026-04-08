@@ -12,14 +12,10 @@ import '../core/app_colors.dart';
 import '../core/services/android_intent_service.dart';
 import '../core/services/call_service.dart';
 import '../core/services/foreground_service.dart';
-import '../core/services/sms_service.dart';
-
 class EmergencyCallScreen extends StatefulWidget {
   final String name;
   final String phone;
   final EmergencyCallResult callResult;
-  final SmsComposeResult? smsResult;
-  final String? locationStatusMessage;
   final String? emergencyMessage;
 
   const EmergencyCallScreen({
@@ -27,8 +23,6 @@ class EmergencyCallScreen extends StatefulWidget {
     this.name = '',
     this.phone = '',
     required this.callResult,
-    this.smsResult,
-    this.locationStatusMessage,
     this.emergencyMessage,
   });
 
@@ -55,13 +49,9 @@ class _EmergencyCallScreenState extends State<EmergencyCallScreen>
   }
 
   void _scheduleFailSafe() {
-    final smsConfirmed = widget.smsResult?.isConfirmed ?? false;
-    final callConfirmed = widget.callResult.isConfirmed;
+    if (widget.callResult.isConfirmed) return;
 
-    // If at least one action is confirmed (direct call placed or native SMS sent), no fail-safe needed
-    if (smsConfirmed || callConfirmed) return;
-
-    // Everything requires user action or failed — trigger fail-safe after 5s
+    // Call requires user action or failed — trigger fail-safe after 5s
     Timer(const Duration(seconds: 5), () {
       if (!mounted || _failSafeShown) return;
       _failSafeShown = true;
@@ -198,24 +188,14 @@ class _EmergencyCallScreenState extends State<EmergencyCallScreen>
   @override
   Widget build(BuildContext context) {
     final callPresentation = _buildCallPresentation(widget.callResult);
-    final smsPresentation = widget.smsResult == null
-        ? null
-        : _buildSmsPresentation(widget.smsResult!);
-    final requiresAttention =
-        callPresentation.requiresAction ||
-        (smsPresentation?.requiresAction ?? false);
-    final hasFailure =
-        callPresentation.isFailure || (smsPresentation?.isFailure ?? false);
-
-    // Determine if anything was actually confirmed (no user action needed)
-    final smsConfirmed = widget.smsResult?.isConfirmed ?? false;
+    final requiresAttention = callPresentation.requiresAction;
+    final hasFailure = callPresentation.isFailure;
     final callConfirmed = widget.callResult.isConfirmed;
-    final anythingConfirmed = smsConfirmed || callConfirmed;
 
     final headerPresentation = _buildHeaderPresentation(
       requiresAttention: requiresAttention,
       hasFailure: hasFailure,
-      anythingConfirmed: anythingConfirmed,
+      anythingConfirmed: callConfirmed,
     );
 
     return Scaffold(
@@ -299,18 +279,6 @@ class _EmergencyCallScreenState extends State<EmergencyCallScreen>
                         title: 'emergency_status_call'.tr(),
                         presentation: callPresentation,
                       ),
-                      if (smsPresentation != null) ...[
-                        const SizedBox(height: 14),
-                        _buildStatusCard(
-                          title: 'emergency_status_message'.tr(),
-                          presentation: smsPresentation,
-                        ),
-                      ],
-                      if (widget.locationStatusMessage != null &&
-                          widget.locationStatusMessage!.isNotEmpty) ...[
-                        const SizedBox(height: 14),
-                        _buildLocationCard(widget.locationStatusMessage!),
-                      ],
                     ],
                   ),
                 ),
@@ -487,39 +455,6 @@ class _EmergencyCallScreenState extends State<EmergencyCallScreen>
     );
   }
 
-  Widget _buildLocationCard(String locationStatusMessage) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: AppColors.info.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.info.withValues(alpha: 0.35)),
-      ),
-      child: Row(
-        children: [
-          const Icon(
-            Icons.location_on_rounded,
-            color: AppColors.info,
-            size: 22,
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              '${'emergency_location_label'.tr()}: $locationStatusMessage',
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                height: 1.4,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   _StatusPresentation _buildHeaderPresentation({
     required bool requiresAttention,
     required bool hasFailure,
@@ -594,41 +529,6 @@ class _EmergencyCallScreenState extends State<EmergencyCallScreen>
     }
   }
 
-  _StatusPresentation _buildSmsPresentation(SmsComposeResult result) {
-    switch (result.status) {
-      case SmsComposeStatus.nativeDispatched:
-        return _StatusPresentation(
-          icon: Icons.sms_rounded,
-          color: AppColors.success,
-          summary: result.statusMessage,
-          detail: 'sms_native_dispatched_hint'.tr(),
-        );
-      case SmsComposeStatus.composerOpened:
-        return _StatusPresentation(
-          icon: Icons.touch_app_rounded,
-          color: AppColors.warning,
-          summary: result.statusMessage,
-          detail: 'emergency_sms_manual_hint'.tr(),
-          requiresAction: true,
-        );
-      case SmsComposeStatus.composerOpenedPrimaryOnly:
-        return _StatusPresentation(
-          icon: Icons.content_copy_rounded,
-          color: AppColors.warning,
-          summary: result.statusMessage,
-          detail: 'emergency_sms_partial_hint'.tr(),
-          requiresAction: true,
-        );
-      case SmsComposeStatus.failed:
-        return _StatusPresentation(
-          icon: Icons.sms_failed_rounded,
-          color: AppColors.emergency,
-          summary: result.statusMessage,
-          detail: 'emergency_sms_failed_hint'.tr(),
-          isFailure: true,
-        );
-    }
-  }
 }
 
 class _StatusPresentation {

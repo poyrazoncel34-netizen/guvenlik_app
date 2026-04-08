@@ -18,15 +18,7 @@
     <uses-permission android:name="android.permission.VIBRATE" />
     <!-- Phone state for detecting real calls during fake call (PhoneStateStreamHandler) -->
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
-    <!-- 
-    ⚠️ CRITICAL EMERGENCY PERMISSIONS ⚠️
-    Emergency flow:
-    1. Opens the user's SMS app with a prefilled emergency message
-    2. Makes a direct phone call when the user confirms
-    
-    ZERO-FAULT GUARANTEE: If SMS composer cannot open, the call flow can still proceed.
-    Runtime permissions are checked/requested before each action.
-    -->
+    <!-- CALL_PHONE: direct emergency call (falls back to dialer if permission denied) -->
     <uses-permission android:name="android.permission.CALL_PHONE" />
     <!-- Foreground Service for keeping app alive in background -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
@@ -150,14 +142,6 @@
             <action android:name="android.intent.action.DIAL" />
             <data android:scheme="tel" />
         </intent>
-        <!-- SMS composer visibility (Android 11+ package visibility) -->
-        <intent>
-            <action android:name="android.intent.action.SENDTO" />
-            <data android:scheme="smsto" />
-        </intent>
-        <intent>
-            <action android:name="android.intent.action.VIEW" />
-            <data android:scheme="sms" />
-        </intent>
+
     </queries>
 </manifest>

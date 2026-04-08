@@ -9,8 +9,6 @@ import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/di/service_locator.dart';
-import '../core/constants/app_constants.dart';
-import '../core/services/emergency_orchestrator.dart';
 import '../core/security/secure_storage.dart';
 import '../core/security/secure_storage_keys.dart';
 import '../core/app_colors.dart';
@@ -25,11 +23,10 @@ import '../core/services/offline_queue_service.dart';
 import '../domain/models/activity_event.dart';
 import 'emergency_call_screen.dart';
 import '../core/navigation/app_navigator.dart';
-import '../core/services/android_intent_service.dart';
 import '../core/services/foreground_service.dart';
 import '../core/services/haptic_service.dart';
 import '../core/services/notification_service.dart';
-import '../core/utils/emergency_message_helper.dart';
+import '../core/services/emergency_platform_service.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
 class CountdownScreen extends StatefulWidget {
@@ -60,8 +57,6 @@ class _CountdownScreenState extends State<CountdownScreen>
   bool _emergencyDispatched = false;
   DateTime? _startTime;
   List<String> _emergencyNumbers = [];
-  EmergencyMessagePayload? _prefetchedPayload;
-
   DateTime? _lockoutEndTime;
   StreamSubscription<int>? _lockoutSubscription;
   int _lockoutRemaining = 0;
@@ -85,7 +80,6 @@ class _CountdownScreenState extends State<CountdownScreen>
     _loadPin();
     _loadEmergencyContact();
     _loadEmergencyNumbers();
-    _prefetchLocation();
     _syncLockoutState();
     _showHonestyWarningThenStart();
     KoruBeniForegroundService.start();
@@ -185,35 +179,12 @@ class _CountdownScreenState extends State<CountdownScreen>
     _emergencyNumbers = await _contactsRepository.getAllEmergencyNumbers();
   }
 
-  Future<void> _prefetchLocation() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final customTemplate = prefs.getString(AppConstants.prefSmsTemplate);
-      _prefetchedPayload = await EmergencyMessageHelper.buildCountdownMessage(
-        customTemplate: customTemplate,
-      );
-    } catch (e) {
-      debugPrint('CountdownScreen: Location prefetch failed: $e');
-    }
-  }
-
   /// C4 FIX: Schedule a native AlarmManager backup that fires at countdown end.
   /// If Android Doze freezes the Dart isolate, the alarm triggers
   /// EmergencyExecutor on the native side — guaranteed execution.
   Future<void> _scheduleNativeBackupAlarm() async {
     try {
       final numbers = await _contactsRepository.getAllEmergencyNumbers();
-      final prefs = await SharedPreferences.getInstance();
-      final customTemplate = prefs.getString(AppConstants.prefSmsTemplate);
-      final payload = _prefetchedPayload ??
-          await EmergencyMessageHelper.buildCountdownMessage(
-            customTemplate: customTemplate,
-          ).timeout(
-            const Duration(seconds: 2),
-            onTimeout: () => EmergencyMessageHelper.buildNoLocationMessage(
-              customTemplate: customTemplate,
-            ),
-          );
       final primaryNumber = _emergencyContact?.phone ??
           (numbers.isNotEmpty ? numbers.first : '');
 
@@ -221,8 +192,6 @@ class _CountdownScreenState extends State<CountdownScreen>
       final deadline = DateTime.now().add(const Duration(seconds: 12));
       await EmergencyPlatformService.instance.scheduleCountdownAlarm(
         deadline: deadline,
-        recipients: numbers,
-        message: payload.message,
         primaryNumber: primaryNumber,
       );
     } catch (e) {
@@ -311,56 +280,20 @@ class _CountdownScreenState extends State<CountdownScreen>
           phoneNumber: '',
         );
       }
+      return;
     }
-
 
     final primaryNumber =
         _emergencyContact?.phone ?? (numbers.isNotEmpty ? numbers.first : null);
 
-    try {
-    final prefs = await SharedPreferences.getInstance();
-    final customTemplate = prefs.getString(AppConstants.prefSmsTemplate);
-    // Use prefetched payload if available (already resolved during countdown).
-    // Otherwise build with 3s hard cap — GPS stall must not block the call.
-    final messagePayload = _prefetchedPayload ??
-        await EmergencyMessageHelper.buildCountdownMessage(
-          customTemplate: customTemplate,
-        ).timeout(
-          const Duration(seconds: 3),
-          onTimeout: () => EmergencyMessageHelper.buildNoLocationMessage(
-            customTemplate: customTemplate,
-          ),
-        );
-    final message = messagePayload.message;
-
-    // Always enqueue to offline queue (offline-first, no cloud backend)
     OfflineQueueService.instance.enqueue(
       OfflineEvent(
         type: 'emergency',
         title: "countdown_emergency_title".tr(),
-        description: message,
-        data: {
-          'message': message,
-          'maps_url': messagePayload.mapsUrl,
-          'location_status': messagePayload.locationStatusMessage,
-        },
+        description: "countdown_emergency_desc".tr(),
+        data: const {},
       ),
     );
-
-    if (!isOnline) {
-      await OfflineQueueService.instance.enqueue(
-        OfflineEvent(
-          type: 'emergency',
-          title: "countdown_emergency_title".tr(),
-          description: message,
-          data: {
-            'message': message,
-            'maps_url': messagePayload.mapsUrl,
-            'location_status': messagePayload.locationStatusMessage,
-          },
-        ),
-      );
-    }
 
     await ActivityService.logEvent(
       type: ActivityType.emergencyTriggered,
@@ -376,28 +309,9 @@ class _CountdownScreenState extends State<CountdownScreen>
       body: 'alarm_notification_body'.tr(),
     );
 
-    // Store payload for navigation screen
-    _prefetchedPayload = messagePayload;
-
-    // Multi-channel failover via EmergencyOrchestrator.
-    // SMS and Call run as fully independent channels with retry + native fallback.
-    // Permission dialog removed: it blocks if phone is in pocket during panic.
-    final orchestratorResult = await EmergencyOrchestrator.execute(
-      numbers: numbers,
-      message: message,
-      primaryNumber: primaryNumber,
-    );
-
-    EmergencyCallResult callResult = orchestratorResult.callResult;
-    final smsResult = orchestratorResult.smsResult;
-    String calledNumber = orchestratorResult.calledNumber;
-
-    // NO permission dialog here. Check permission silently, use dialer fallback.
-    // Permission should have been requested during onboarding/settings.
-
     // Failover: try each number until one succeeds
-    EmergencyCallResult callResult = EmergencyCallResult.failed('');
-    String calledNumber = primaryNumber ?? '';
+    var callResult = EmergencyCallResult.failed('');
+    var calledNumber = primaryNumber ?? '';
     if (primaryNumber != null && primaryNumber.isNotEmpty) {
       callResult = await CallService.startEmergencyCall(primaryNumber);
       if (!callResult.isSuccess && numbers.length > 1) {
@@ -412,15 +326,13 @@ class _CountdownScreenState extends State<CountdownScreen>
       }
     }
 
-    // BOTH completely failed — show blocking fullscreen error
-    if (smsResult.isFailed && callResult.isFailed) {
+    if (callResult.isFailed) {
       await KoruBeniForegroundService.stop();
       if (mounted) {
         await _showBlockingFailure(
           title: 'emergency_total_failure_title'.tr(),
           body: 'emergency_total_failure_body'.tr(),
           phoneNumber: calledNumber,
-          emergencyMessage: message,
         );
       }
       return;
@@ -429,15 +341,6 @@ class _CountdownScreenState extends State<CountdownScreen>
     if (!_isNavigating) {
       _isNavigating = true;
       _handoffToEmergencyScreen = true;
-      final route = MaterialPageRoute(
-        builder: (_) => EmergencyCallScreen(
-          name: _emergencyContact?.name ?? "countdown_emergency_label".tr(),
-          phone: calledNumber,
-          callResult: callResult,
-          smsResult: smsResult,
-          locationStatusMessage: messagePayload.locationStatusMessage,
-        ),
-      );
       try {
         Navigator.pushReplacement(
           context,
@@ -446,9 +349,6 @@ class _CountdownScreenState extends State<CountdownScreen>
               name: _emergencyContact?.name ?? "countdown_emergency_label".tr(),
               phone: calledNumber,
               callResult: callResult,
-              smsResult: smsResult,
-              locationStatusMessage: messagePayload.locationStatusMessage,
-              emergencyMessage: message,
             ),
           ),
         );
@@ -456,27 +356,13 @@ class _CountdownScreenState extends State<CountdownScreen>
         debugPrint('CountdownScreen: Navigation failed: $e');
         _isNavigating = false;
         _handoffToEmergencyScreen = false;
-        // Even navigation failure gets a blocking dialog
         if (mounted) {
           await _showBlockingFailure(
             title: 'emergency_total_failure_title'.tr(),
             body: 'emergency_total_failure_body'.tr(),
             phoneNumber: calledNumber,
-            emergencyMessage: message,
           );
         }
-      }
-    }
-    } catch (e) {
-      // M1: Best-effort fallback — try to call even if other steps failed
-      debugPrint('CountdownScreen: Emergency flow error: $e');
-      try {
-        final fallbackNumbers = await _contactsRepository.getAllEmergencyNumbers();
-        if (fallbackNumbers.isNotEmpty) {
-          await CallService.startEmergencyCall(fallbackNumbers.first);
-        }
-      } catch (_) {
-        debugPrint('CountdownScreen: Fallback call also failed');
       }
     }
   }

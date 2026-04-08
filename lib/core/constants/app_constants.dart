@@ -40,8 +40,6 @@ class AppConstants {
   static const String prefAllergies = 'profile_allergies';
   static const String prefMedicalConditions = 'profile_medical_conditions';
   static const String prefEmergencyNotes = 'profile_emergency_notes';
-  static const String prefSmsTemplate = 'pref_sms_template';
-
   // Hukuki onay v1 (KVKK Kurul Kararı 2018/90 — aydınlatma + açık rıza ayrı kaydedilir)
   static const String prefLegalAcceptedV1 = 'legal_accepted_v1';
   static const String prefLegalTimestamp = 'legal_accepted_timestamp';

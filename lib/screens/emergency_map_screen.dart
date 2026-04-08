@@ -107,15 +107,7 @@ class _EmergencyMapScreenState extends State<EmergencyMapScreen> {
                     onPressed: () async {
                       HapticFeedback.lightImpact();
                       final provider = context.read<HomeProvider>();
-                      final result = await provider.startLocationSharing(10);
-                      if (!result.isSuccess) {
-                        provider.stopLocationSharing(manual: true);
-                      }
-                      final notice =
-                          result.inlineNotice ??
-                          "emergency_map_shared_ready".tr();
-                      if (!context.mounted) return;
-                      _showSnack(context, notice);
+                      await provider.startLocationSharing(10);
                     },
                     icon: const Icon(Icons.share_location, color: Colors.white),
                     label: Text(
