@@ -10,13 +10,11 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:provider/provider.dart';
 import '../core/app_colors.dart';
 import '../core/services/connectivity_service.dart';
-import '../core/utils/permission_helper.dart';
 // Analytics service removed (offline-first)
 import 'package:easy_localization/easy_localization.dart';
 import '../presentation/providers/home_provider.dart';
 import '../presentation/providers/settings_provider.dart';
 import '../widgets/legal_disclaimer_banner.dart';
-import '../widgets/panic_button.dart';
 import '../widgets/siren_dialog.dart';
 import 'fake_call_screen.dart';
 import 'contacts_page.dart';
@@ -284,18 +282,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                         _buildOnboardingCard(provider),
                       ],
                       SizedBox(height: sectionSpacing),
-                      Center(
-                        child: PanicButton(
-                          hasEmergencyContact: provider.emergencyContact != null,
-                          onNoContact: _onPanicNoContact,
-                        ),
-                      ),
-                      SizedBox(height: spacing),
                       _buildTestModeButton(),
                       SizedBox(height: largeSectionSpacing),
                       _buildQuickActions(),
-                      SizedBox(height: largeSectionSpacing),
-                      _buildLocationCard(provider),
                       SizedBox(height: largeSectionSpacing),
                       _buildSafetyTips(),
                       SizedBox(height: shortScreen ? 10 : 16),
@@ -612,6 +601,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     );
     if (!proceed || !mounted) return;
 
+
     final provider = context.read<HomeProvider>();
     final message = await provider.requestLocationPermission(context: context);
     if (message != null && mounted) _showSnack(message);
@@ -630,6 +620,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       body: 'perm_rationale_contacts_body'.tr(),
     );
     if (!proceed || !mounted) return;
+
 
     final provider = context.read<HomeProvider>();
     final message = await provider.requestContactsPermission();
@@ -933,18 +924,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     );
   }
 
-  void _onPanicNoContact() {
-    HapticFeedback.heavyImpact();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text("panic_no_contact_warning".tr()),
-        backgroundColor: AppColors.emergency,
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
-    _openContacts();
-  }
-
   Future<void> _openContacts() async {
     await Navigator.push(
       context,
@@ -955,7 +934,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   }
 
   Widget _buildQuickActions() {
-    final provider = context.read<HomeProvider>();
+
     final shortScreen = MediaQuery.sizeOf(context).height < 700;
     final gap = shortScreen ? 10.0 : 14.0;
 
@@ -1176,192 +1155,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       barrierDismissible: false,
       builder: (context) => const SirenDialog(),
     );
-  }
-
-  Widget _buildLocationCard(HomeProvider provider) {
-    final shortScreen = MediaQuery.sizeOf(context).height < 700;
-    return Container(
-      padding: EdgeInsets.all(shortScreen ? 14 : 18),
-      decoration: BoxDecoration(
-        color: AppColors.cardBg,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.shadow,
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: shortScreen ? 42 : 48,
-            height: shortScreen ? 42 : 48,
-            decoration: BoxDecoration(
-              color: AppColors.info.withValues(alpha: 0.12),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              Icons.location_on_rounded,
-              color: AppColors.info,
-              size: shortScreen ? 20 : 24,
-            ),
-          ),
-          SizedBox(width: shortScreen ? 12 : 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "location_sharing".tr(),
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  provider.isLocationSharing
-                      ? _buildLocationShareStatus(provider)
-                      : "share_location_with_network".tr(),
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Transform.scale(
-            scale: 0.8,
-            child: Switch(
-              value: provider.isLocationSharing,
-              onChanged: (value) {
-                if (value) {
-                  _showLocationShareOptions();
-                } else {
-                  provider.stopLocationSharing(manual: true);
-                }
-              },
-              activeThumbColor: AppColors.info,
-              activeTrackColor: AppColors.info.withValues(alpha: 0.3),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showLocationShareOptions() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        decoration: const BoxDecoration(
-          color: AppColors.cardBg,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: AppColors.border,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(height: 18),
-            Text(
-              "location_share_duration".tr(),
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w800,
-                color: AppColors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 16),
-            _buildShareOption("minutes_10".tr(), 10),
-            _buildShareOption("minutes_30".tr(), 30),
-            _buildShareOption("hour_1".tr(), 60),
-            const SizedBox(height: 12),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildShareOption(String label, int minutes) {
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
-      title: Text(
-        label,
-        style: const TextStyle(
-          fontWeight: FontWeight.w700,
-          color: AppColors.textPrimary,
-        ),
-      ),
-      trailing: const Icon(
-        Icons.chevron_right_rounded,
-        color: AppColors.textSecondary,
-      ),
-      onTap: () {
-        Navigator.pop(context);
-        _startLocationSharing(minutes);
-      },
-    );
-  }
-
-  Future<void> _startLocationSharing(int minutes) async {
-    final notificationsAllowed =
-        await PermissionHelper.requestNotificationPermission(context);
-    if (!mounted) return;
-    if (!notificationsAllowed) {
-      _showSnack(
-        "notification_session_permission_required".tr(),
-        backgroundColor: AppColors.warning,
-      );
-      return;
-    }
-
-    final provider = context.read<HomeProvider>();
-    HapticFeedback.lightImpact();
-    await provider.startLocationSharing(minutes);
-  }
-
-  String _formatRemaining(DateTime? endAt) {
-    if (endAt == null) return "";
-    final remaining = endAt.difference(DateTime.now());
-    final minutes = remaining.inMinutes;
-    final seconds = remaining.inSeconds % 60;
-    if (minutes <= 0) {
-      return "${seconds}s";
-    }
-    return "${minutes}dk ${seconds}s";
-  }
-
-  String _buildLocationShareStatus(HomeProvider provider) {
-    final remaining = _formatRemaining(provider.locationShareEndAt);
-    final lastUpdatedAt = provider.locationShareLastUpdatedAt;
-
-    if (lastUpdatedAt != null) {
-      return "${"sharing".tr()} • $remaining • ${"location_share_last_updated".tr(namedArgs: {'time': _formatClock(lastUpdatedAt)})}";
-    }
-
-    return provider.locationShareEndAt != null
-        ? "${"sharing".tr()} • $remaining"
-        : "your_location_is_sharing".tr();
-  }
-
-  String _formatClock(DateTime value) {
-    final hour = value.hour.toString().padLeft(2, '0');
-    final minute = value.minute.toString().padLeft(2, '0');
-    return '$hour:$minute';
   }
 
   void _showSnack(String message, {Color backgroundColor = AppColors.primary}) {
