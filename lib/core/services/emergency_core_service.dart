@@ -109,17 +109,17 @@ class EmergencyCoreService {
   // GPS 5-LEVEL FALLBACK - Zero Fault Location
   // ============================================================================
   
-  Future<LocationResultWithSource> getLocationWithFallback({Duration gpsTimeout = const Duration(seconds: 10)}) async {
+  Future<LocationResultWithSource> getLocationWithFallback() async {
     debugPrint('📍 Getting location with 5-level fallback...');
     
     // Level 1: Real-time GPS
     try {
       final position = await Geolocator.getCurrentPosition(
-        locationSettings: LocationSettings(
+        locationSettings: const LocationSettings(
           accuracy: LocationAccuracy.high,
-          timeLimit: gpsTimeout,
+          timeLimit: Duration(seconds: 10),
         ),
-      );
+      ).timeout(Duration(seconds: 10));
       
       final latLng = LatLng(position.latitude, position.longitude);
       _lastKnownPosition = latLng;
@@ -137,7 +137,7 @@ class EmergencyCoreService {
     // Level 2: Last known (in-memory cache)
     if (_lastKnownPosition != null && _lastPositionTime != null) {
       final age = DateTime.now().difference(_lastPositionTime!);
-      if (age.inMinutes < 10) {
+      if (age.inMinutes < 30) {
         debugPrint('✅ Level 2: Cached (${age.inMinutes}m old)');
         return LocationResultWithSource(
           position: _lastKnownPosition,

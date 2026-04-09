@@ -19,7 +19,6 @@ import '../core/security/secure_storage.dart';
 import '../core/security/secure_storage_keys.dart';
 import '../core/services/activity_service.dart';
 import '../core/services/emergency_platform_service.dart';
-import '../core/utils/permission_helper.dart';
 import '../domain/models/activity_event.dart';
 
 class FakeCallScreen extends StatefulWidget {
@@ -143,11 +142,7 @@ class _FakeCallScreenState extends State<FakeCallScreen>
     super.dispose();
   }
 
-  Future<void> _listenForRealCalls() async {
-    // Prominent Disclosure: READ_PHONE_STATE for detecting real calls
-    if (mounted) {
-      await PermissionHelper.requestPhoneStatePermission(context);
-    }
+  void _listenForRealCalls() {
     if (!EmergencyPlatformService.instance.isSupported) {
       return;
     }

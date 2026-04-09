@@ -92,7 +92,7 @@ class _SirenDialogState extends State<SirenDialog> with TickerProviderStateMixin
       if (!kIsWeb) {
         try {
           _originalAlarmVolume = await _audioControl.invokeMethod<int>('setMaxAlarmVolume');
-        } catch (e) { debugPrint("SirenDialog: $e"); } // best-effort: non-fatal if permission denied
+        } catch (_) {} // best-effort: non-fatal if permission denied
       }
 
       if (kIsWeb) {
