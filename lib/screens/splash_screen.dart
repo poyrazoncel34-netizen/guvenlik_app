@@ -9,7 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../core/app_colors.dart';
 import '../core/constants/app_constants.dart';
 import '../presentation/providers/subscription_provider.dart';
-import 'legal/onboarding_legal_flow.dart';
+import 'legal/unified_consent_screen.dart';
 import 'main_navigation.dart';
 import 'onboarding_screen.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -188,7 +188,7 @@ class _SplashScreenState extends State<SplashScreen>
 
     final Widget nextScreen;
     if (!legalAccepted || needsReConsent) {
-      nextScreen = const OnboardingLegalFlow();
+      nextScreen = const UnifiedConsentScreen();
     } else if (!onboardingDone) {
       nextScreen = const OnboardingScreen();
     } else {

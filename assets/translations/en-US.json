@@ -756,5 +756,10 @@
   "theme_light": "Light",
   "theme_dark": "Dark",
   "low_battery_warning": "Battery low — location accuracy and shake threshold adjusted automatically.",
-  "map_location": "Your Location"
+  "map_location": "Your Location",
+  "legal_unified_title": "Setup & Consent",
+  "legal_unified_subtitle": "Please complete the following legal requirements before using the app.",
+  "legal_unified_cta": "Continue and Complete Setup",
+  "legal_expand": "View Details",
+  "legal_collapse": "Hide"
 }

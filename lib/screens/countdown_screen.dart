@@ -32,8 +32,13 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 
 class CountdownScreen extends StatefulWidget {
   final bool isTestMode;
+  final bool instantCallTriggered;
 
-  const CountdownScreen({super.key, this.isTestMode = false});
+  const CountdownScreen({
+    super.key,
+    this.isTestMode = false,
+    this.instantCallTriggered = false,
+  });
 
   @override
   State<CountdownScreen> createState() => _CountdownScreenState();
@@ -89,7 +94,7 @@ class _CountdownScreenState extends State<CountdownScreen>
   /// Shows a mandatory honesty warning before countdown begins.
   /// User MUST acknowledge that this app requires manual confirmation.
   Future<void> _showHonestyWarningThenStart() async {
-    if (widget.isTestMode) {
+    if (widget.isTestMode || widget.instantCallTriggered) {
       _startCountdown();
       return;
     }
@@ -215,6 +220,13 @@ class _CountdownScreenState extends State<CountdownScreen>
   }
 
   Future<void> _makeEmergencyCall() async {
+    // When the call was already triggered instantly on button release,
+    // skip duplicate execution — the native layer already placed the call.
+    if (widget.instantCallTriggered) {
+      await KoruBeniForegroundService.stop();
+      if (mounted) Navigator.pop(context);
+      return;
+    }
     if (_emergencyDispatched) return;
     _emergencyDispatched = true;
 
