@@ -15,6 +15,7 @@ import 'package:easy_localization/easy_localization.dart';
 import '../presentation/providers/home_provider.dart';
 import '../presentation/providers/settings_provider.dart';
 import '../widgets/legal_disclaimer_banner.dart';
+import '../widgets/panic_button.dart';
 import '../widgets/siren_dialog.dart';
 import 'fake_call_screen.dart';
 import 'contacts_page.dart';
