@@ -55,7 +55,7 @@
     "minutes_30": "30 dakika",
     "hour_1": "1 saat",
     "security_tip": "Güvenlik İpucu",
-    "shake_phone_tip": "Panik butonuna basılı tutarak acil durum başlatabilirsiniz.",
+    "shake_phone_tip": "Telefonunuzu sallayarak veya panik butonuna basılı tutarak acil durum başlatabilirsiniz.",
     "notifications": "Bildirimler",
     "security_check": "Güvenlik Kontrolü",
     "daily_check_complete": "Günlük kontrol tamamlandı",
@@ -123,11 +123,6 @@
     "settings_about_app": "Uygulama Hakkında",
     "settings_privacy_policy": "Gizlilik Politikası",
     "settings_privacy_subtitle": "Verileriniz güvende",
-    "settings_privacy_web_title": "Gizlilik Politikası (Web)",
-    "settings_privacy_web_subtitle": "App Store gereksinimleri için çevrimiçi sürüm",
-    "settings_legal_info_title": "Yasal Bilgiler",
-    "settings_legal_info_subtitle": "Kullanım şartları, KVKK, veri yönetimi",
-    "settings_legal_info_tooltip": "Yasal Bilgiler",
     "settings_help": "Yardım & Destek",
     "settings_help_subtitle": "SSS ve iletişim",
     "settings_share_app": "Uygulamayı Paylaş",
@@ -774,15 +769,10 @@
 
     "btn_continue": "Devam Et",
 
-    "settings_theme_section": "Görünüm",
-    "settings_theme_title": "Tema",
     "settings_theme_label": "Tema",
     "settings_theme_system": "Sistem Varsayılanı",
     "settings_theme_light": "Açık",
     "settings_theme_dark": "Koyu",
-    "theme_system": "Sistem",
-    "theme_light": "Açık",
-    "theme_dark": "Koyu",
 
     "low_battery_warning": "Pil düzeyi düşük — konum doğruluğu ve sarsıntı eşiği otomatik olarak ayarlandı."
 }

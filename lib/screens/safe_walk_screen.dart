@@ -151,7 +151,7 @@ class _SafeWalkScreenState extends State<SafeWalkScreen>
     );
   }
 
-  Future<void> _onTimerExpired() async {
+  void _onTimerExpired() {
     // Timer expired without user checking in - trigger emergency
     HapticFeedback.heavyImpact();
     setState(() {
@@ -159,7 +159,7 @@ class _SafeWalkScreenState extends State<SafeWalkScreen>
       _timer?.cancel();
     });
     EmergencyPlatformService.instance.cancelCheckIn();
-    await _clearPersistedState();
+    _clearPersistedState();
 
     // Auto-play siren before navigating to countdown
     showDialog(
@@ -180,12 +180,12 @@ class _SafeWalkScreenState extends State<SafeWalkScreen>
     });
   }
 
-  Future<void> _checkIn() async {
+  void _checkIn() {
     HapticFeedback.lightImpact();
     _timer?.cancel();
     KoruBeniForegroundService.stop();
     EmergencyPlatformService.instance.cancelCheckIn();
-    await _clearPersistedState();
+    _clearPersistedState();
     // Analytics removed (offline-first)
     ActivityService.logEvent(
       type: ActivityType.safetyCheck,
@@ -218,12 +218,12 @@ class _SafeWalkScreenState extends State<SafeWalkScreen>
     );
   }
 
-  Future<void> _cancelWalk() async {
+  void _cancelWalk() {
     HapticFeedback.lightImpact();
     _timer?.cancel();
     KoruBeniForegroundService.stop();
     EmergencyPlatformService.instance.cancelCheckIn();
-    await _clearPersistedState();
+    _clearPersistedState();
     setState(() {
       _isActive = false;
       _endTime = null;

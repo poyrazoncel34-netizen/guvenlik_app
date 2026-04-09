@@ -13,6 +13,7 @@ import '../core/security/secure_storage.dart';
 import '../core/security/secure_storage_keys.dart';
 import '../core/app_colors.dart';
 import '../core/services/contact_service.dart';
+import '../core/services/sms_service.dart';
 import '../domain/repositories/contacts_repository.dart';
 import '../core/services/activity_service.dart';
 import '../core/services/call_service.dart';
@@ -200,15 +201,10 @@ class _CountdownScreenState extends State<CountdownScreen>
   }
 
   void _startCountdown() {
-    _startTime = DateTime.now();
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      final startTime = _startTime;
-      if (startTime == null) return;
-      final elapsed = DateTime.now().difference(startTime).inSeconds;
-      final remaining = 10 - elapsed;
-      if (remaining > 0) {
-        setState(() => _countdown = remaining);
-        HapticService.countdownTick(secondsRemaining: remaining);
+      if (_countdown > 0) {
+        setState(() => _countdown--);
+        HapticService.countdownTick(secondsRemaining: _countdown);
         // ── Tick bounce animation ──
         _tickBounceController.forward(from: 0);
       } else {
@@ -338,7 +334,7 @@ class _CountdownScreenState extends State<CountdownScreen>
       return;
     }
 
-    if (!_isNavigating) {
+    if (mounted && !_isNavigating) {
       _isNavigating = true;
       _handoffToEmergencyScreen = true;
       try {
@@ -633,12 +629,10 @@ class _CountdownScreenState extends State<CountdownScreen>
     final isUrgent = _countdown <= 5;
     final urgentColor = isUrgent ? AppColors.emergency : AppColors.warning;
 
-    return PopScope(
-      canPop: false,
-      child: Semantics(
-        label: "semantics_countdown".tr(),
-        hint: "semantics_countdown_hint".tr(),
-        child: Scaffold(
+    return Semantics(
+      label: "semantics_countdown".tr(),
+      hint: "semantics_countdown_hint".tr(),
+      child: Scaffold(
         backgroundColor: AppColors.background,
         body: AnimatedBuilder(
           animation: _glowController,
@@ -924,7 +918,6 @@ class _CountdownScreenState extends State<CountdownScreen>
             ),
           ),
         ),
-      ),
       ),
     );
   }

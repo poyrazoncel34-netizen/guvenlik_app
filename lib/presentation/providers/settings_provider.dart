@@ -27,12 +27,12 @@ class SettingsProvider extends ChangeNotifier {
   String _medicalConditions = '';
   String _emergencyNotes = '';
 
-  ThemeMode get themeMode => _themeMode;
   bool get notificationsEnabled => _notificationsEnabled;
   bool get locationEnabled => _locationEnabled;
   bool get soundEnabled => _soundEnabled;
   bool get vibrationEnabled => _vibrationEnabled;
   bool get volumeTriggerEnabled => _volumeTriggerEnabled;
+  ThemeMode get themeMode => _themeMode;
   String get profileName =>
       _profileName.isEmpty ? "settings_default_user".tr() : _profileName;
   String get profileEmail => _profileEmail.isEmpty ? '' : _profileEmail;

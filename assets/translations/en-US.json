@@ -55,7 +55,7 @@
     "minutes_30": "30 minutes",
     "hour_1": "1 hour",
     "security_tip": "Security Tip",
-    "shake_phone_tip": "You can start an emergency by holding the panic button.",
+    "shake_phone_tip": "You can start an emergency by shaking your phone or holding the panic button.",
     "notifications": "Notifications",
     "security_check": "Security Check",
     "daily_check_complete": "Daily check complete",
@@ -123,11 +123,6 @@
     "settings_about_app": "About App",
     "settings_privacy_policy": "Privacy Policy",
     "settings_privacy_subtitle": "Your data is safe",
-    "settings_privacy_web_title": "Privacy Policy (Web)",
-    "settings_privacy_web_subtitle": "Online version for App Store requirements",
-    "settings_legal_info_title": "Legal Information",
-    "settings_legal_info_subtitle": "Terms of use, KVKK, data management",
-    "settings_legal_info_tooltip": "Legal Information",
     "settings_help": "Help & Support",
     "settings_help_subtitle": "FAQ and contact",
     "settings_share_app": "Share App",
@@ -774,15 +769,10 @@
 
     "btn_continue": "Continue",
 
-    "settings_theme_section": "Appearance",
-    "settings_theme_title": "Theme",
     "settings_theme_label": "Theme",
     "settings_theme_system": "System Default",
     "settings_theme_light": "Light",
     "settings_theme_dark": "Dark",
-    "theme_system": "System",
-    "theme_light": "Light",
-    "theme_dark": "Dark",
 
     "low_battery_warning": "Battery low — location accuracy and shake threshold adjusted automatically."
 }

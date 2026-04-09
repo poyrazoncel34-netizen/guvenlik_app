@@ -113,26 +113,6 @@ class PermissionHelper {
     return result.isGranted;
   }
 
-  /// READ_PHONE_STATE izni — Prominent Disclosure ile.
-  /// Play Store: Sahte arama sırasında gerçek aramaları tespit etmek için gerekli.
-  /// Returns true if permission is granted (or was already granted).
-  static Future<bool> requestPhoneStatePermission(BuildContext context) async {
-    if (!Platform.isAndroid) return true;
-
-    final status = await Permission.phone.status;
-    if (status.isGranted) return true;
-
-    if (!context.mounted) return false;
-    final accepted = await _showProminentDisclosure(
-      context,
-      title: 'perm_phone_state_prominent_title'.tr(),
-      message: 'perm_phone_state_prominent_msg'.tr(),
-    );
-    if (accepted != true) return false;
-
-    final result = await Permission.phone.request();
-    return result.isGranted;
-  }
   static Future<bool> hasNotificationPermission() async {
     if (kIsWeb) return true;
     if (!Platform.isAndroid && !Platform.isIOS) return true;

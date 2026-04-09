@@ -1,11 +1,13 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class SecureStorage {
-  static const bool encryptedPrefsEnabled = true;
-
   // Android: EncryptedSharedPreferences (Keystore-backed AES-256)
-  static final _storage = FlutterSecureStorage(
-    aOptions: const AndroidOptions(encryptedSharedPreferences: true),
+  // iOS: Keychain with first_unlock_this_device accessibility
+  static const _storage = FlutterSecureStorage(
+    aOptions: AndroidOptions(encryptedSharedPreferences: true),
+    iOptions: IOSOptions(
+      accessibility: KeychainAccessibility.first_unlock_this_device,
+    ),
   );
 
   Future<void> write({required String key, required String value}) {

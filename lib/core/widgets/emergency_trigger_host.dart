@@ -1,14 +1,14 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:async';
 
 import '../../screens/countdown_screen.dart';
+import '../constants/app_constants.dart';
 import '../navigation/app_navigator.dart';
 import '../services/app_lifecycle_handler.dart';
 import '../services/check_in_service.dart';
 import '../services/emergency_platform_service.dart';
-import '../services/emergency_readiness_service.dart';
 import '../services/volume_trigger_service.dart';
 
 class EmergencyTriggerHost extends StatefulWidget {
@@ -31,8 +31,6 @@ class _EmergencyTriggerHostState extends State<EmergencyTriggerHost>
     WidgetsBinding.instance.addObserver(this);
     CheckInService.instance.initialize();
     _bindPlatformEvents();
-    // System 3B: Non-blocking startup readiness check
-    EmergencyReadinessService.instance.checkReadiness();
     _startForegroundTriggers();
   }
 
@@ -64,8 +62,20 @@ class _EmergencyTriggerHostState extends State<EmergencyTriggerHost>
   Future<void> _startVolumeIfEnabled() async {
     if (!VolumeTriggerService.isSupported) return;
 
-
+    VolumeTriggerService.instance.startListening(
+      onPanicTriggered: _openCountdown,
+    );
     await VolumeTriggerService.instance.loadPreference();
+    if (!mounted || !_foregroundTriggersEnabled) return;
+
+    final prefs = await SharedPreferences.getInstance();
+    final volumeEnabled =
+        prefs.getBool(AppConstants.prefVolumeTrigger) ?? false;
+    if (volumeEnabled) {
+      VolumeTriggerService.instance.startListening(
+        onPanicTriggered: _openCountdown,
+      );
+    }
   }
 
   void _stopForegroundTriggers() {
@@ -76,22 +86,18 @@ class _EmergencyTriggerHostState extends State<EmergencyTriggerHost>
     EmergencyPlatformService.instance.initialize();
     _platformEventsSubscription = EmergencyPlatformService.instance.events
         .listen((event) async {
-          try {
-            final type = event['type']?.toString();
-            if (type == 'checkInGraceStarted') {
-              await CheckInService.instance.handleNativeGraceStarted();
-              return;
+          final type = event['type']?.toString();
+          if (type == 'checkInGraceStarted') {
+            await CheckInService.instance.handleNativeGraceStarted();
+            return;
+          }
+          if (type == 'checkInExpired') {
+            if (CheckInService.instance.isActive ||
+                CheckInService.instance.isGracePeriod) {
+              await CheckInService.instance.handleNativeExpired();
+            } else {
+              await _openCountdown();
             }
-            if (type == 'checkInExpired') {
-              if (CheckInService.instance.isActive ||
-                  CheckInService.instance.isGracePeriod) {
-                await CheckInService.instance.handleNativeExpired();
-              } else {
-                await _openCountdown();
-              }
-            }
-          } catch (e) {
-            debugPrint('EmergencyTriggerHost: Platform event error: \$e');
           }
         });
     _consumePendingTrigger();
@@ -130,14 +136,11 @@ class _EmergencyTriggerHostState extends State<EmergencyTriggerHost>
     }
 
     _countdownOpen = true;
-    try {
-      await HapticFeedback.heavyImpact();
-      await navigator.push(
-        MaterialPageRoute(builder: (_) => const CountdownScreen()),
-      );
-    } finally {
-      _countdownOpen = false;
-    }
+    await HapticFeedback.heavyImpact();
+    await navigator.push(
+      MaterialPageRoute(builder: (_) => const CountdownScreen()),
+    );
+    _countdownOpen = false;
   }
 
   @override

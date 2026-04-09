@@ -160,7 +160,7 @@ class BatteryOptimizationService {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_prefKeyManufacturer, manufacturer);
-    } catch (e) { debugPrint("BatteryOptimization: $e"); }
+    } catch (_) {}
   }
 
   /// Load cached manufacturer from prefs (survives hot-restart).
@@ -168,7 +168,7 @@ class BatteryOptimizationService {
     try {
       final prefs = await SharedPreferences.getInstance();
       _cachedManufacturer = prefs.getString(_prefKeyManufacturer) ?? '';
-    } catch (e) { debugPrint("BatteryOptimization: $e"); }
+    } catch (_) {}
   }
 
   /// Opens the manufacturer-specific auto-start / protected-apps settings
