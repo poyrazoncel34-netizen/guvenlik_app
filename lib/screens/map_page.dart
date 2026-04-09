@@ -866,26 +866,14 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      _locationStatus == LocationStatus.success
-                          ? "map_location_received".tr()
-                          : "map_location_waiting".tr(),
+                      "map_location".tr(),
                       style: const TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
                         color: AppColors.textPrimary,
                       ),
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      _currentLocation != null
-                          ? "${_currentLocation!.latitude.toStringAsFixed(4)}, ${_currentLocation!.longitude.toStringAsFixed(4)}"
-                          : "map_location_loading".tr(),
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: AppColors.textSecondary,
-                        fontFamily: 'monospace',
-                      ),
-                    ),
+
                   ],
                 ),
               ),
@@ -904,76 +892,7 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
             ],
           ),
         ),
-        const SizedBox(height: 14),
 
-        // Action buttons
-        Row(
-          children: [
-            Expanded(
-              child: ElevatedButton.icon(
-                onPressed: () => _toggleLocationSharing(provider),
-                icon: Icon(
-                  provider.isLocationSharing
-                      ? Icons.stop_rounded
-                      : Icons.share_location_rounded,
-                  color: Colors.white,
-                  size: 20,
-                ),
-                label: Text(
-                  provider.isLocationSharing
-                      ? "map_stop_sharing".tr()
-                      : "map_share_location".tr(),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: provider.isLocationSharing
-                      ? AppColors.warning
-                      : AppColors.primary,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  elevation: 0,
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  HapticFeedback.heavyImpact();
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const CountdownScreen()),
-                  );
-                },
-                icon: const Icon(
-                  Icons.sos_rounded,
-                  color: Colors.white,
-                  size: 20,
-                ),
-                label: Text(
-                  "map_emergency_help".tr(),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.emergency,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  elevation: 0,
-                ),
-              ),
-            ),
-          ],
-        ),
       ],
     );
   }
