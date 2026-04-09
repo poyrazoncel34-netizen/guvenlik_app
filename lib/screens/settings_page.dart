@@ -12,7 +12,6 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/app_colors.dart';
-import '../core/widgets/theme_selector.dart';
 import '../core/constants/app_constants.dart';
 import '../core/utils/app_reset_helper.dart';
 import '../core/utils/pin_settings_helper.dart';
@@ -337,8 +336,8 @@ class _SettingsPageState extends State<SettingsPage> {
               _buildNavigationTile(
                 icon: Icons.open_in_browser_rounded,
                 iconColor: AppColors.info,
-                title: 'settings_privacy_web_title'.tr(),
-                subtitle: 'settings_privacy_web_subtitle'.tr(),
+                title: 'Gizlilik Politikası (Web)',
+                subtitle: 'App Store gereksinimleri için çevrimiçi sürüm',
                 onTap: () async {
                   final uri = Uri.parse(AppConstants.privacyPolicyWebUrl);
                   try {
@@ -350,8 +349,8 @@ class _SettingsPageState extends State<SettingsPage> {
               _buildNavigationTile(
                 icon: Icons.balance_rounded,
                 iconColor: const Color(0xFF9F7AEA),
-                title: 'settings_legal_info_title'.tr(),
-                subtitle: 'settings_legal_info_subtitle'.tr(),
+                title: '⚖️ Yasal Bilgiler',
+                subtitle: 'Kullanım şartları, KVKK, veri yönetimi',
                 onTap: () => Navigator.push(
                   context,
                   MaterialPageRoute(builder: (_) => const LegalInfoScreen()),

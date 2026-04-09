@@ -125,18 +125,6 @@ class LocationService {
       _lastKnownPosition = latLng;
 
       return LocationResult(status: LocationStatus.success, position: latLng);
-    } on TimeoutException {
-      // GPS timeout — fall back to cached position instead of blocking emergency
-      if (_lastKnownPosition != null) {
-        return LocationResult(
-          status: LocationStatus.success,
-          position: _lastKnownPosition,
-        );
-      }
-      return LocationResult(
-        status: LocationStatus.error,
-        errorMessage: 'location_error_failed'.tr(),
-      );
     } catch (e) {
       return LocationResult(
         status: LocationStatus.error,

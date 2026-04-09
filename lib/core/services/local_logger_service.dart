@@ -81,7 +81,7 @@ class LocalLoggerService {
         final trimmed = lines.skip(lines.length - _maxLines).join('\n');
         await file.writeAsString('$trimmed\n');
       }
-    } catch (e) { debugPrint("LocalLogger: $e"); }
+    } catch (_) {}
   }
 
   /// Returns the full log content for display in a debug screen.
@@ -100,6 +100,6 @@ class LocalLoggerService {
       if (_logFile != null && await _logFile!.exists()) {
         await _logFile!.writeAsString('');
       }
-    } catch (e) { debugPrint("LocalLogger: $e"); }
+    } catch (_) {}
   }
 }
