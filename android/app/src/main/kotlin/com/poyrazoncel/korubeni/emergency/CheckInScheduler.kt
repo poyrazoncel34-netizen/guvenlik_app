@@ -24,7 +24,7 @@ object CheckInScheduler {
             .putString(EmergencyPrefs.KEY_CHECK_IN_PHASE, phase)
             .putLong(EmergencyPrefs.KEY_CHECK_IN_DEADLINE, deadlineMs)
             .putLong(EmergencyPrefs.KEY_CHECK_IN_GRACE_MS, graceDurationMs)
-            .commit()
+            .apply()
 
         scheduleAlarm(context, deadlineMs)
     }
@@ -37,7 +37,7 @@ object CheckInScheduler {
             .remove(EmergencyPrefs.KEY_CHECK_IN_PHASE)
             .remove(EmergencyPrefs.KEY_CHECK_IN_DEADLINE)
             .remove(EmergencyPrefs.KEY_CHECK_IN_GRACE_MS)
-            .commit()
+            .apply()
     }
 
     fun canScheduleExactAlarms(context: Context): Boolean {
@@ -70,11 +70,6 @@ object CheckInScheduler {
         val now = System.currentTimeMillis()
 
         if (deadlineMs <= 0L) {
-            android.util.Log.w("CheckInScheduler", "Corrupted deadlineMs=$deadlineMs, cancelling check-in")
-            EmergencyEventBus.persist(
-                context,
-                mapOf("type" to "checkInCorrupted", "timestamp" to now)
-            )
             cancel(context)
             return
         }
@@ -119,26 +114,11 @@ object CheckInScheduler {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         val pendingIntent = buildPendingIntent(context)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (canScheduleExactAlarms(context)) {
-                alarmManager.setExactAndAllowWhileIdle(
-                    AlarmManager.RTC_WAKEUP,
-                    deadlineMs,
-                    pendingIntent
-                )
-            } else {
-                // Fallback: inexact alarm (~9 min window) when exact alarm
-                // permission is denied on Android 14+.
-                android.util.Log.w("CheckInScheduler", "Exact alarm permission denied — using inexact fallback")
-                EmergencyEventBus.persist(
-                    context,
-                    mapOf("type" to "exactAlarmDenied", "timestamp" to System.currentTimeMillis())
-                )
-                alarmManager.setAndAllowWhileIdle(
-                    AlarmManager.RTC_WAKEUP,
-                    deadlineMs,
-                    pendingIntent
-                )
-            }
+            alarmManager.setExactAndAllowWhileIdle(
+                AlarmManager.RTC_WAKEUP,
+                deadlineMs,
+                pendingIntent
+            )
         } else {
             alarmManager.setExact(AlarmManager.RTC_WAKEUP, deadlineMs, pendingIntent)
         }

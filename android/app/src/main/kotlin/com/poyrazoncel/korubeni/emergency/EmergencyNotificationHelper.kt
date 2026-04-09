@@ -5,13 +5,9 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.Manifest
-import android.content.pm.PackageManager
 import android.os.Build
-import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
-import androidx.core.content.ContextCompat
 import com.poyrazoncel.korubeni.MainActivity
 import com.poyrazoncel.korubeni.R
 
@@ -110,18 +106,6 @@ object EmergencyNotificationHelper {
             .setAutoCancel(true)
             .setContentIntent(buildLaunchPendingIntent(context, triggerType))
             .build()
-
-        // On Android 13+ (API 33), POST_NOTIFICATIONS must be granted.
-        // Log a warning if missing so the issue is visible in diagnostics.
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            val granted = ContextCompat.checkSelfPermission(
-                context, Manifest.permission.POST_NOTIFICATIONS
-            ) == PackageManager.PERMISSION_GRANTED
-            if (!granted) {
-                Log.w("EmergencyNotification",
-                    "POST_NOTIFICATIONS permission not granted — alert will be dropped")
-            }
-        }
 
         NotificationManagerCompat.from(context).notify(id, notification)
     }

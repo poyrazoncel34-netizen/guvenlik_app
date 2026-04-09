@@ -11,15 +11,11 @@ import 'package:fluttercontactpicker_plus/fluttercontactpicker_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../core/app_colors.dart';
-import '../core/utils/permission_helper.dart';
 import '../core/constants/app_constants.dart';
 import '../core/services/contact_service.dart';
 import '../presentation/providers/contacts_provider.dart';
 import '../presentation/providers/home_provider.dart';
 import '../widgets/emergency_contact_consent_dialog.dart';
-import '../presentation/providers/subscription_provider.dart';
-import 'subscription/paywall_screen.dart';
-import '../core/services/subscription_gate.dart';
 
 class ContactsPage extends StatefulWidget {
   const ContactsPage({super.key});
@@ -67,10 +63,6 @@ class _ContactsPageState extends State<ContactsPage> {
         body: ListView(
           padding: const EdgeInsets.all(20),
           children: [
-            // Quick dial section
-            _buildQuickDialSection(),
-            const SizedBox(height: 28),
-
             // Loading state
             if (provider.isLoading) ...[
               const Center(child: CircularProgressIndicator()),
@@ -201,122 +193,6 @@ class _ContactsPageState extends State<ContactsPage> {
   Future<void> _refreshHomeProvider() async {
     if (!mounted) return;
     await context.read<HomeProvider>().refreshAfterContactsChanged();
-  }
-
-  Widget _buildQuickDialSection() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            AppColors.emergency,
-            AppColors.emergency.withValues(alpha: 0.85),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.emergency.withValues(alpha: 0.3),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              const Icon(
-                Icons.emergency_rounded,
-                color: Colors.white,
-                size: 24,
-              ),
-              const SizedBox(width: 12),
-              Text(
-                "contacts_quick_dial".tr(),
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: _buildQuickDialButton(
-                  AppConstants.turkeyEmergencyNumber,
-                  "contacts_police".tr(),
-                  Icons.local_police_rounded,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildQuickDialButton(
-                  AppConstants.turkeyEmergencyNumber,
-                  "contacts_ambulance".tr(),
-                  Icons.medical_services_rounded,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildQuickDialButton(
-                  AppConstants.turkeyEmergencyNumber,
-                  "contacts_fire".tr(),
-                  Icons.fire_truck_rounded,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildQuickDialButton(String number, String label, IconData icon) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () {
-          HapticFeedback.mediumImpact();
-          _dialNumber(number);
-        },
-        borderRadius: BorderRadius.circular(14),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 14),
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.2),
-            borderRadius: BorderRadius.circular(14),
-          ),
-          child: Column(
-            children: [
-              Icon(icon, color: Colors.white, size: 26),
-              const SizedBox(height: 6),
-              Text(
-                number,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-              Text(
-                label,
-                style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.9),
-                  fontSize: 11,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
   }
 
   Widget _buildContactCard(
@@ -727,11 +603,6 @@ class _ContactsPageState extends State<ContactsPage> {
   }
 
   void _showAddContactSheet(BuildContext context) {
-    final isPro = context.read<SubscriptionProvider>().isPro;
-    if (!SubscriptionGate.canAddContact(currentCount: context.read<ContactsProvider>().emergencyContacts.length, isPro: isPro)) {
-      Navigator.push(context, MaterialPageRoute(builder: (_) => const PaywallScreen()));
-      return;
-    }
     _showContactKvkkInfoIfNeeded();
     showModalBottomSheet(
       context: context,
@@ -839,7 +710,8 @@ class _ContactsPageState extends State<ContactsPage> {
       final name = (contact.fullName?.trim().isNotEmpty ?? false)
           ? contact.fullName!.trim()
           : "contacts_unknown".tr();
-      final phone = normalizePhoneNumber(contact.phoneNumber?.number?.trim() ?? "");
+      final rawPhone = contact.phoneNumber?.number?.trim() ?? "";
+      final phone = normalizePhoneNumber(rawPhone);
 
       if (phone.isEmpty) {
         _showSnack(
@@ -875,12 +747,9 @@ class _ContactsPageState extends State<ContactsPage> {
     } on UserCancelledPickingException {
       // kullanıcı vazgeçti
     } on PlatformException catch (e) {
-      final isPermission = e.code.toLowerCase().contains('permission') ||
-          e.message?.toLowerCase().contains('permission') == true;
+      debugPrint('PlatformException picking contact: \$e');
       _showSnack(
-        isPermission
-            ? "contacts_permission_denied".tr()
-            : "contacts_picker_failed".tr(),
+        "contacts_picker_failed".tr(),
         backgroundColor: AppColors.emergency,
       );
     } catch (_) {

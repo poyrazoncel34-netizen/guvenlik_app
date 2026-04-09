@@ -34,4 +34,11 @@ void main() {
     });
   });
 
+  group('ContactsPage quick dial section', () {
+    test('quick dial section is not shown in contacts page', () {
+      final source = File('lib/screens/contacts_page.dart').readAsStringSync();
+      expect(source.contains('_buildQuickDialSection()'), isFalse,
+          reason: 'Quick dial (kırmızı 112 bölümü) contacts page\'den kaldırılmalı');
+    });
+  });
 }

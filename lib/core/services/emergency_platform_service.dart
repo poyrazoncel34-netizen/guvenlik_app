@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
+import 'consent_gate_service.dart';
 
 class EmergencyPlatformService {
   EmergencyPlatformService._();
@@ -68,27 +69,18 @@ class EmergencyPlatformService {
     if (!isSupported) {
       return;
     }
-    try {
-      await _methodChannel.invokeMethod<void>('scheduleCheckIn', {
-        'phase': phase,
-        'deadlineMs': deadline.millisecondsSinceEpoch,
-        'graceDurationMs': graceDuration.inMilliseconds,
-      }).timeout(const Duration(seconds: 5));
-    } on TimeoutException {
-      debugPrint('[EmergencyPlatform] scheduleCheckIn timed out');
-    }
+    await _methodChannel.invokeMethod<void>('scheduleCheckIn', {
+      'phase': phase,
+      'deadlineMs': deadline.millisecondsSinceEpoch,
+      'graceDurationMs': graceDuration.inMilliseconds,
+    });
   }
 
   Future<void> cancelCheckIn() async {
     if (!isSupported) {
       return;
     }
-    try {
-      await _methodChannel.invokeMethod<void>('cancelCheckIn')
-          .timeout(const Duration(seconds: 5));
-    } on TimeoutException {
-      debugPrint('[EmergencyPlatform] cancelCheckIn timed out');
-    }
+    await _methodChannel.invokeMethod<void>('cancelCheckIn');
   }
 
   Future<Map<String, dynamic>?> consumePendingTrigger() async {
