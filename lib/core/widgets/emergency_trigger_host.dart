@@ -66,7 +66,7 @@ class _EmergencyTriggerHostState extends State<EmergencyTriggerHost>
       onPanicTriggered: _openCountdown,
     );
     await VolumeTriggerService.instance.loadPreference();
-    if (!mounted || !_foregroundTriggersEnabled) return;
+    if (!mounted) return;
 
     final prefs = await SharedPreferences.getInstance();
     final volumeEnabled =

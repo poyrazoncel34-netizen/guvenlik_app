@@ -24,6 +24,7 @@ import 'battery_optimization_wizard.dart';
 import 'settings_legal/legal_settings_screen.dart';
 import 'subscription/paywall_screen.dart';
 import 'subscription/subscription_management_screen.dart';
+import '../core/widgets/theme_selector.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -73,7 +74,7 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
         );
       }
-    }
+    } catch (_) {}
   }
 
   Future<void> _rateApp() async {

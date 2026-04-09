@@ -87,7 +87,7 @@ class CallService {
         final phoneStatus = await Permission.phone.status;
         if (phoneStatus.isGranted) {
           final directCallStarted =
-              await FlutterDirectCallerPlugin.callNumber(normalized).timeout(callTimeout, onTimeout: () => false) ?? false;
+              await FlutterDirectCallerPlugin.callNumber(normalized).timeout(const Duration(seconds: 8), onTimeout: () => false) ?? false;
           if (directCallStarted) {
             return EmergencyCallResult.direct(normalized);
           }
