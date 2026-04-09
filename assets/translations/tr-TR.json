@@ -641,11 +641,6 @@
   "legal_age_minor": "18 yaşından küçüğüm",
   "legal_age_minor_sub": "Ebeveyn/veli onayım var",
   "legal_age_notice": "Yaş beyanınız, KVKK kapsamında kişisel veri işleme rızanızın geçerliliği için kaydedilir. Beyanınızın doğruluğundan münhasıran siz sorumlusunuz.",
-  "legal_unified_title": "Kurulum ve Onay",
-  "legal_unified_subtitle": "Uygulamayı kullanmadan önce aşağıdaki yasal gereklilikleri tamamlayın.",
-  "legal_unified_cta": "Devam Et ve Kurulumu Tamamla",
-  "legal_expand": "Detayı Gör",
-  "legal_collapse": "Gizle",
   "audio_consent_title": "Ses Kaydı Uyarısı",
   "audio_consent_warning": "TCK m.133: Kişiler arasındaki aleni olmayan konuşmaları rızasız kaydetmek 2 ila 5 yıl hapis cezası ile cezalandırılır. Kaydettiğiniz kişilerin açık rızasını almak TAMAMEN SİZİN SORUMLULUĞUNUZDADIR.",
   "audio_consent_confirm_text": "Ses kaydını başlatmadan önce ortamdaki tüm kişilerin rızasını aldığınızı onaylayın.",
@@ -761,5 +756,10 @@
   "theme_light": "Açık",
   "theme_dark": "Koyu",
   "low_battery_warning": "Pil düzeyi düşük — konum doğruluğu ve sarsıntı eşiği otomatik olarak ayarlandı.",
-  "map_location": "Konumunuz"
+  "map_location": "Konumunuz",
+  "legal_unified_title": "Kurulum ve Onay",
+  "legal_unified_subtitle": "Uygulamayı kullanmadan önce aşağıdaki yasal gereklilikleri tamamlayın.",
+  "legal_unified_cta": "Devam Et ve Kurulumu Tamamla",
+  "legal_expand": "Detayı Gör",
+  "legal_collapse": "Gizle"
 }

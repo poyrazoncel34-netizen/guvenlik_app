@@ -641,11 +641,6 @@
   "legal_age_minor": "I am under 18",
   "legal_age_minor_sub": "I have parental/guardian consent",
   "legal_age_notice": "Your age declaration is recorded for the validity of your data processing consent under KVKK. You are solely responsible for the accuracy of your declaration.",
-  "legal_unified_title": "Setup & Consent",
-  "legal_unified_subtitle": "Please complete the following legal requirements before using the app.",
-  "legal_unified_cta": "Continue and Complete Setup",
-  "legal_expand": "View Details",
-  "legal_collapse": "Hide",
   "audio_consent_title": "Audio Recording Warning",
   "audio_consent_warning": "TCK Article 133: Recording private conversations without consent is punishable by 2 to 5 years of imprisonment. Obtaining explicit consent from all persons being recorded is ENTIRELY YOUR RESPONSIBILITY.",
   "audio_consent_confirm_text": "Please confirm that you have obtained consent from all persons present before starting the recording.",
@@ -761,5 +756,10 @@
   "theme_light": "Light",
   "theme_dark": "Dark",
   "low_battery_warning": "Battery low — location accuracy and shake threshold adjusted automatically.",
-  "map_location": "Your Location"
+  "map_location": "Your Location",
+  "legal_unified_title": "Setup & Consent",
+  "legal_unified_subtitle": "Please complete the following legal requirements before using the app.",
+  "legal_unified_cta": "Continue and Complete Setup",
+  "legal_expand": "View Details",
+  "legal_collapse": "Hide"
 }
