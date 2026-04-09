@@ -16,6 +16,16 @@ void main() {
     });
   });
 
+  group('ContactsPage manual entry removed', () {
+    test('does not contain manual entry UI', () {
+      final source = File('lib/screens/contacts_page.dart').readAsStringSync();
+      expect(source.contains('Manuel numara ekle'), isFalse,
+          reason: 'Manual entry was removed — contacts can only be added from device contacts');
+      expect(source.contains('veya manuel gir'), isFalse,
+          reason: 'Manual entry divider must be removed');
+    });
+  });
+
   group('ContactsPage._pickContactFromDevice catch block', () {
     test('handles PlatformException separately from generic errors', () {
       final source = File('lib/screens/contacts_page.dart').readAsStringSync();
@@ -24,17 +34,4 @@ void main() {
     });
   });
 
-  group('ContactsPage manual entry phone field', () {
-    test('phone TextField has maxLength of 16', () {
-      final source = File('lib/screens/contacts_page.dart').readAsStringSync();
-      expect(source.contains('maxLength: 16'), isTrue,
-          reason: 'Phone TextField must limit input to 16 chars (+ and up to 15 digits)');
-    });
-
-    test('rejects phone numbers with fewer than 7 digits', () {
-      final source = File('lib/screens/contacts_page.dart').readAsStringSync();
-      expect(source.contains('digitsOnly.length < 7'), isTrue,
-          reason: 'Save callback must reject numbers with fewer than 7 digits');
-    });
-  });
 }

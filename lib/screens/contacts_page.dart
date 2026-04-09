@@ -733,8 +733,6 @@ class _ContactsPageState extends State<ContactsPage> {
       return;
     }
     _showContactKvkkInfoIfNeeded();
-    final nameController = TextEditingController();
-    final phoneController = TextEditingController();
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -817,131 +815,12 @@ class _ContactsPageState extends State<ContactsPage> {
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: Divider(
-                      color: AppColors.border.withValues(alpha: 0.7),
-                    ),
-                  ),
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 12),
-                    child: Text(
-                      'veya manuel gir',
-                      style: TextStyle(
-                        color: AppColors.textSecondary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    child: Divider(
-                      color: AppColors.border.withValues(alpha: 0.7),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: nameController,
-                textCapitalization: TextCapitalization.words,
-                decoration: InputDecoration(
-                  hintText: 'Isim',
-                  prefixIcon: const Icon(Icons.person_outline_rounded),
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: phoneController,
-                keyboardType: TextInputType.phone,
-                maxLength: 16,
-                inputFormatters: [
-                  FilteringTextInputFormatter.allow(RegExp(r'[0-9+]')),
-                ],
-                decoration: InputDecoration(
-                  hintText: 'Telefon numarasi',
-                  prefixIcon: const Icon(Icons.phone_outlined),
-                  counterText: '',
-                ),
-              ),
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton(
-                  onPressed: () async {
-                    final name = nameController.text.trim().isEmpty
-                        ? "contacts_unknown".tr()
-                        : nameController.text.trim();
-                    final rawPhone = phoneController.text.trim();
-                    final digitsOnly = rawPhone.replaceAll(RegExp(r'[^\d]'), '');
-                    if (rawPhone.isEmpty || digitsOnly.length < 7 || digitsOnly.length > 15) {
-                      _showSnack(
-                        "contacts_invalid_phone".tr(),
-                        backgroundColor: AppColors.warning,
-                      );
-                      return;
-                    }
-                    final phone = rawPhone;
-
-                    // KVKK: Kişi ekleme öncesi rıza onayı
-                    if (!sheetContext.mounted) return;
-                    final consentGiven =
-                        await EmergencyContactConsentDialog.show(
-                      context: sheetContext,
-                      contactName: name,
-                    );
-                    if (!consentGiven || !sheetContext.mounted) return;
-
-                    final provider = context.read<ContactsProvider>();
-                    final added = await provider.addContact(
-                      name: name,
-                      phone: phone,
-                    );
-                    if (!added) {
-                      _showSnack(
-                        provider.isAtLimit
-                            ? "contacts_max_reached".tr()
-                            : "contacts_already_in_list".tr(),
-                        backgroundColor: AppColors.warning,
-                      );
-                      return;
-                    }
-
-                    // Request CALL_PHONE permission proactively after adding contact
-                    if (sheetContext.mounted) {
-                      PermissionHelper.requestCallPhonePermission(sheetContext);
-                    }
-                    if (!sheetContext.mounted) {
-                      return;
-                    }
-                    Navigator.pop(sheetContext);
-                    await _refreshHomeProvider();
-                    _showSnack("contacts_added".tr(namedArgs: {"name": name}));
-                  },
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.primary,
-                    side: const BorderSide(color: AppColors.primary),
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
-                  child: const Text(
-                    'Manuel numara ekle',
-                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 24),
             ],
           ),
         ),
       ),
-    ).whenComplete(() {
-      nameController.dispose();
-      phoneController.dispose();
-    });
+    );
   }
 
   Future<void> _pickContactFromDevice() async {
