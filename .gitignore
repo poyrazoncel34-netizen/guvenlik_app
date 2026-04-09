@@ -44,6 +44,10 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
+# Claude Code tooling
+.claude/
+.claire/
+
 # Security - NEVER commit these
 key.properties
 android/key.properties

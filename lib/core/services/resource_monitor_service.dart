@@ -43,6 +43,10 @@ class ResourceMonitorService {
   final Battery _battery = Battery();
   Timer? _monitorTimer;
   bool _isMonitoring = false;
+  final StreamController<bool> _lowBatteryController = StreamController<bool>.broadcast();
+
+  /// Emits true when battery drops to or below [lowBatteryThreshold].
+  Stream<bool> get lowBatteryStream => _lowBatteryController.stream;
   
   // Thresholds
   static const int highMemoryThresholdMb = 200;
@@ -146,6 +150,7 @@ class ResourceMonitorService {
       // Battery threshold check
       if (snapshot.batteryLevel <= lowBatteryThreshold) {
         debugPrint('🔋 LOW BATTERY: ${snapshot.batteryLevel}%');
+        _lowBatteryController.add(true);
       }
       
     } catch (e) {

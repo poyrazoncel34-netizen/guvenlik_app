@@ -10,8 +10,7 @@
     <!-- Background location removed for store compliance (request only if truly required) -->
 
     <!-- Offline-first core with optional online map tiles and connectivity checks -->
-    <!-- Contacts Permission -->
-    <uses-permission android:name="android.permission.READ_CONTACTS" />
+    <!-- Contact Picker uses Intent.ACTION_PICK — no READ_CONTACTS permission needed -->
     <!-- Photo Library Permission (Android 13+) -->
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
     <!-- Photo Library Permission (pre-Android 13) -->

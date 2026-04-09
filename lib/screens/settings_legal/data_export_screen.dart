@@ -72,7 +72,6 @@ class _DataExportScreenState extends State<DataExportScreen> {
         'soundEnabled': prefs.getBool(AppConstants.prefSound) ?? true,
         'vibrationEnabled':
             prefs.getBool(AppConstants.prefVibration) ?? true,
-        'shakeEnabled': prefs.getBool(AppConstants.prefShakeEnabled) ?? false,
       };
 
       final exportData = {

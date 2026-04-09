@@ -364,15 +364,12 @@ class _ContactsPageState extends State<ContactsPage> {
                     children: [
                       Row(
                         children: [
-                          Flexible(
-                            child: Text(
-                              contact.name,
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.textPrimary,
-                              ),
-                              overflow: TextOverflow.ellipsis,
+                          Text(
+                            contact.name,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textPrimary,
                             ),
                           ),
                           if (isEmergency) ...[
@@ -972,7 +969,7 @@ class _ContactsPageState extends State<ContactsPage> {
         return;
       }
       final contact = await FlutterContactPicker.pickPhoneContact(
-        askForPermission: true,
+        askForPermission: false,
       );
       if (!mounted) return;
       final name = (contact.fullName?.trim().isNotEmpty ?? false)

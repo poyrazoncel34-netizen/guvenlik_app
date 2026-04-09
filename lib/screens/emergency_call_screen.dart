@@ -1,11 +1,15 @@
 // ============================================================================
-// ACIL DURUM DURUM EKRANI
+// ACIL DURUM DURUM EKRANI — HONEST STATUS DISPLAY
 // ============================================================================
+
+import 'dart:async';
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../core/app_colors.dart';
+import '../core/services/android_intent_service.dart';
 import '../core/services/call_service.dart';
 import '../core/services/foreground_service.dart';
 import '../core/services/sms_service.dart';
@@ -16,6 +20,7 @@ class EmergencyCallScreen extends StatefulWidget {
   final EmergencyCallResult callResult;
   final SmsComposeResult? smsResult;
   final String? locationStatusMessage;
+  final String? emergencyMessage;
 
   const EmergencyCallScreen({
     super.key,
@@ -24,6 +29,7 @@ class EmergencyCallScreen extends StatefulWidget {
     required this.callResult,
     this.smsResult,
     this.locationStatusMessage,
+    this.emergencyMessage,
   });
 
   @override
@@ -33,6 +39,7 @@ class EmergencyCallScreen extends StatefulWidget {
 class _EmergencyCallScreenState extends State<EmergencyCallScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _pulseController;
+  bool _failSafeShown = false;
 
   @override
   void initState() {
@@ -41,6 +48,145 @@ class _EmergencyCallScreenState extends State<EmergencyCallScreen>
       vsync: this,
       duration: const Duration(milliseconds: 1300),
     )..repeat(reverse: true);
+
+    // FAIL-SAFE TRUTH MODE: If nothing is confirmed after 5 seconds,
+    // show fullscreen red alert.
+    _scheduleFailSafe();
+  }
+
+  void _scheduleFailSafe() {
+    final smsConfirmed = widget.smsResult?.isConfirmed ?? false;
+    final callConfirmed = widget.callResult.isConfirmed;
+
+    // If at least one action is confirmed (direct call placed or native SMS sent), no fail-safe needed
+    if (smsConfirmed || callConfirmed) return;
+
+    // Everything requires user action or failed — trigger fail-safe after 5s
+    Timer(const Duration(seconds: 5), () {
+      if (!mounted || _failSafeShown) return;
+      _failSafeShown = true;
+      _showFailSafeAlert();
+    });
+  }
+
+  Future<void> _showFailSafeAlert() async {
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => PopScope(
+        canPop: false,
+        child: AlertDialog(
+          backgroundColor: const Color(0xFF2C0000),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 72,
+                height: 72,
+                decoration: BoxDecoration(
+                  color: AppColors.emergency.withValues(alpha: 0.3),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.warning_rounded, color: AppColors.emergency, size: 42),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'failsafe_title'.tr(),
+                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: Colors.white),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'failsafe_body'.tr(),
+                style: const TextStyle(fontSize: 14, color: Colors.white70, height: 1.5),
+                textAlign: TextAlign.center,
+              ),
+              if (widget.phone.isNotEmpty) ...[
+                const SizedBox(height: 18),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    widget.phone,
+                    style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: 2),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ],
+              if (widget.emergencyMessage != null) ...[
+                const SizedBox(height: 12),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: SelectableText(
+                    widget.emergencyMessage!,
+                    style: const TextStyle(fontSize: 11, color: Colors.white54, height: 1.4),
+                  ),
+                ),
+              ],
+            ],
+          ),
+          actions: [
+            if (widget.phone.isNotEmpty)
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () async {
+                    await AndroidIntentService.openDialer(widget.phone);
+                  },
+                  icon: const Icon(Icons.call, size: 20),
+                  label: Text('emergency_manual_call_now'.tr(),
+                      style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.emergency,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+              ),
+            if (widget.emergencyMessage != null)
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    Clipboard.setData(ClipboardData(text: widget.emergencyMessage!));
+                    ScaffoldMessenger.of(ctx).showSnackBar(
+                      SnackBar(content: Text('emergency_message_copied'.tr()), backgroundColor: AppColors.success),
+                    );
+                  },
+                  icon: const Icon(Icons.copy, size: 18),
+                  label: Text('emergency_copy_message'.tr()),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.white70,
+                    side: const BorderSide(color: Colors.white24),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+              ),
+            const SizedBox(height: 4),
+            SizedBox(
+              width: double.infinity,
+              child: TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: Text('emergency_dismiss'.tr(),
+                    style: const TextStyle(color: Colors.white38, fontSize: 13)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -60,9 +206,16 @@ class _EmergencyCallScreenState extends State<EmergencyCallScreen>
         (smsPresentation?.requiresAction ?? false);
     final hasFailure =
         callPresentation.isFailure || (smsPresentation?.isFailure ?? false);
+
+    // Determine if anything was actually confirmed (no user action needed)
+    final smsConfirmed = widget.smsResult?.isConfirmed ?? false;
+    final callConfirmed = widget.callResult.isConfirmed;
+    final anythingConfirmed = smsConfirmed || callConfirmed;
+
     final headerPresentation = _buildHeaderPresentation(
       requiresAttention: requiresAttention,
       hasFailure: hasFailure,
+      anythingConfirmed: anythingConfirmed,
     );
 
     return Scaffold(
@@ -166,15 +319,6 @@ class _EmergencyCallScreenState extends State<EmergencyCallScreen>
                 padding: const EdgeInsets.fromLTRB(24, 0, 24, 32),
                 child: Column(
                   children: [
-                    Text(
-                      "emergency_call_end_note".tr(),
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        color: Colors.white54,
-                        fontSize: 13,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
                     Text(
                       "emergency_call_disclaimer".tr(),
                       textAlign: TextAlign.center,
@@ -379,10 +523,12 @@ class _EmergencyCallScreenState extends State<EmergencyCallScreen>
   _StatusPresentation _buildHeaderPresentation({
     required bool requiresAttention,
     required bool hasFailure,
+    required bool anythingConfirmed,
   }) {
+    // If ANYTHING requires user action, header is WARNING — never green
     if (requiresAttention) {
       return _StatusPresentation(
-        icon: Icons.warning_amber_rounded,
+        icon: Icons.touch_app_rounded,
         color: AppColors.warning,
         summary: 'emergency_flow_attention_title'.tr(),
         detail: 'emergency_flow_attention_body'.tr(),
@@ -392,18 +538,31 @@ class _EmergencyCallScreenState extends State<EmergencyCallScreen>
 
     if (hasFailure) {
       return _StatusPresentation(
-        icon: Icons.info_outline_rounded,
-        color: AppColors.info,
+        icon: Icons.error_outline_rounded,
+        color: AppColors.emergency,
         summary: 'emergency_flow_partial_title'.tr(),
         detail: 'emergency_flow_partial_body'.tr(),
       );
     }
 
+    // Only show green if at least one action was CONFIRMED (not just "opened")
+    if (anythingConfirmed) {
+      return _StatusPresentation(
+        icon: Icons.check_circle_rounded,
+        color: AppColors.success,
+        summary: 'emergency_flow_confirmed_title'.tr(),
+        detail: 'emergency_flow_confirmed_body'.tr(),
+      );
+    }
+
+    // Fallback: nothing confirmed, nothing requires action, nothing failed
+    // This shouldn't happen, but treat as warning
     return _StatusPresentation(
-      icon: Icons.check_circle_rounded,
-      color: AppColors.success,
-      summary: 'emergency_flow_started_title'.tr(),
-      detail: 'emergency_flow_started_body'.tr(),
+      icon: Icons.info_outline_rounded,
+      color: AppColors.warning,
+      summary: 'emergency_flow_attention_title'.tr(),
+      detail: 'emergency_flow_attention_body'.tr(),
+      requiresAction: true,
     );
   }
 
@@ -418,7 +577,7 @@ class _EmergencyCallScreenState extends State<EmergencyCallScreen>
         );
       case EmergencyCallStatus.dialerOpened:
         return _StatusPresentation(
-          icon: Icons.call_rounded,
+          icon: Icons.touch_app_rounded,
           color: AppColors.warning,
           summary: result.statusMessage,
           detail: 'emergency_call_manual_hint'.tr(),
@@ -442,11 +601,11 @@ class _EmergencyCallScreenState extends State<EmergencyCallScreen>
           icon: Icons.sms_rounded,
           color: AppColors.success,
           summary: result.statusMessage,
-          detail: 'SMS gonderimi cihaz seviyesinde baslatildi.',
+          detail: 'sms_native_dispatched_hint'.tr(),
         );
       case SmsComposeStatus.composerOpened:
         return _StatusPresentation(
-          icon: Icons.sms_rounded,
+          icon: Icons.touch_app_rounded,
           color: AppColors.warning,
           summary: result.statusMessage,
           detail: 'emergency_sms_manual_hint'.tr(),

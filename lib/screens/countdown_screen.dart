@@ -18,6 +18,7 @@ import '../core/services/sms_service.dart';
 import '../domain/repositories/contacts_repository.dart';
 import '../core/services/activity_service.dart';
 import '../core/services/call_service.dart';
+import '../core/services/android_intent_service.dart';
 import '../core/services/connectivity_service.dart';
 import '../core/services/pin_lockout_service.dart';
 import '../core/services/offline_queue_service.dart';
@@ -77,8 +78,73 @@ class _CountdownScreenState extends State<CountdownScreen>
     _loadPin();
     _loadEmergencyContact();
     _syncLockoutState();
-    _startCountdown();
+    _showHonestyWarningThenStart();
     KoruBeniForegroundService.start();
+  }
+
+  /// Shows a mandatory honesty warning before countdown begins.
+  /// User MUST acknowledge that this app requires manual confirmation.
+  Future<void> _showHonestyWarningThenStart() async {
+    if (widget.isTestMode) {
+      _startCountdown();
+      return;
+    }
+    // Allow frame to build before showing dialog
+    await Future.delayed(const Duration(milliseconds: 300));
+    if (!mounted) return;
+
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF1C1C1E),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 64,
+              height: 64,
+              decoration: BoxDecoration(
+                color: AppColors.warning.withValues(alpha: 0.15),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.warning_amber_rounded, color: AppColors.warning, size: 36),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'countdown_honesty_title'.tr(),
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.white),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'countdown_honesty_body'.tr(),
+              style: const TextStyle(fontSize: 14, color: Colors.white70, height: 1.5),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+        actions: [
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () => Navigator.pop(ctx),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.warning,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              child: Text('countdown_honesty_accept'.tr(),
+                  style: const TextStyle(fontWeight: FontWeight.w700)),
+            ),
+          ),
+        ],
+      ),
+    );
+    if (!mounted) return;
+    _startCountdown();
   }
 
 
@@ -135,14 +201,33 @@ class _CountdownScreenState extends State<CountdownScreen>
       return;
     }
 
+    try {
+      await _executeEmergency();
+    } catch (e) {
+      // FAIL-SAFE: If ANY unhandled exception occurs, show blocking error with manual call option.
+      debugPrint('CountdownScreen: Emergency execution crashed: $e');
+      await KoruBeniForegroundService.stop();
+      if (mounted) {
+        final primaryNumber = _emergencyContact?.phone ?? '';
+        await _showBlockingFailure(
+          title: 'emergency_total_failure_title'.tr(),
+          body: 'emergency_total_failure_body'.tr(),
+          phoneNumber: primaryNumber,
+        );
+      }
+    }
+  }
+
+  Future<void> _executeEmergency() async {
     final numbers = await _contactsRepository.getAllEmergencyNumbers();
     if (numbers.isEmpty) {
       await KoruBeniForegroundService.stop();
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text("countdown_no_contact".tr())));
-        Navigator.pop(context);
+        await _showBlockingFailure(
+          title: 'countdown_no_contact_title'.tr(),
+          body: 'countdown_no_contact_body'.tr(),
+          phoneNumber: '',
+        );
       }
       return;
     }
@@ -153,22 +238,10 @@ class _CountdownScreenState extends State<CountdownScreen>
       customTemplate: customTemplate,
     );
     final message = messagePayload.message;
-    final locationLink = messagePayload.mapsUrl;
 
     final isOnline = ConnectivityService.instance.isOnline;
 
-    if (isOnline) {
-      try {
-        // Offline-first: No cloud sync, emergency handled locally via EmergencyCoreService
-        debugPrint('Emergency event logged locally (no Firebase)');
-        if (locationLink != null) {
-          debugPrint('Location link: $locationLink');
-        }
-        debugPrint('Message: $message');
-      } catch (e) {
-        debugPrint('>>> API failed, SMS fallback active: $e');
-      }
-    } else {
+    if (!isOnline) {
       await OfflineQueueService.instance.enqueue(
         OfflineEvent(
           type: 'emergency',
@@ -191,7 +264,6 @@ class _CountdownScreenState extends State<CountdownScreen>
 
     await HapticService.emergencyTriggered();
 
-    // Send local push notification for alarm
     await NotificationService.instance.showEmergencyAlert(
       id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
       title: 'countdown_emergency_title'.tr(),
@@ -206,55 +278,36 @@ class _CountdownScreenState extends State<CountdownScreen>
     final primaryNumber =
         _emergencyContact?.phone ?? (numbers.isNotEmpty ? numbers.first : null);
 
+    // NO permission dialog here. Check permission silently, use dialer fallback.
+    // Permission should have been requested during onboarding/settings.
+
     // Failover: try each number until one succeeds
     EmergencyCallResult callResult = EmergencyCallResult.failed('');
     String calledNumber = primaryNumber ?? '';
     if (primaryNumber != null && primaryNumber.isNotEmpty) {
       callResult = await CallService.startEmergencyCall(primaryNumber);
       if (!callResult.isSuccess && numbers.length > 1) {
-        // Try remaining numbers as failover
         for (final fallbackNumber in numbers) {
           if (fallbackNumber == primaryNumber) continue;
           callResult = await CallService.startEmergencyCall(fallbackNumber);
           if (callResult.isSuccess) {
             calledNumber = fallbackNumber;
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    'emergency_failover_called'.tr(
-                      namedArgs: {'number': fallbackNumber},
-                    ),
-                  ),
-                  backgroundColor: AppColors.warning,
-                  behavior: SnackBarBehavior.floating,
-                ),
-              );
-            }
             break;
           }
         }
       }
     }
 
-    if (!smsResult.isSuccess && !callResult.isSuccess) {
+    // BOTH completely failed — show blocking fullscreen error
+    if (smsResult.isFailed && callResult.isFailed) {
       await KoruBeniForegroundService.stop();
       if (mounted) {
-        await showDialog<void>(
-          context: context,
-          barrierDismissible: false,
-          builder: (_) => AlertDialog(
-            title: Text('emergency_failed_title'.tr()),
-            content: Text('emergency_failed_consent_body'.tr()),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: Text('ok'.tr()),
-              ),
-            ],
-          ),
+        await _showBlockingFailure(
+          title: 'emergency_total_failure_title'.tr(),
+          body: 'emergency_total_failure_body'.tr(),
+          phoneNumber: calledNumber,
+          emergencyMessage: message,
         );
-        if (mounted) Navigator.pop(context);
       }
       return;
     }
@@ -272,6 +325,7 @@ class _CountdownScreenState extends State<CountdownScreen>
               callResult: callResult,
               smsResult: smsResult,
               locationStatusMessage: messagePayload.locationStatusMessage,
+              emergencyMessage: message,
             ),
           ),
         );
@@ -279,8 +333,147 @@ class _CountdownScreenState extends State<CountdownScreen>
         debugPrint('CountdownScreen: Navigation failed: $e');
         _isNavigating = false;
         _handoffToEmergencyScreen = false;
+        // Even navigation failure gets a blocking dialog
+        if (mounted) {
+          await _showBlockingFailure(
+            title: 'emergency_total_failure_title'.tr(),
+            body: 'emergency_total_failure_body'.tr(),
+            phoneNumber: calledNumber,
+            emergencyMessage: message,
+          );
+        }
       }
     }
+  }
+
+  /// Shows a FULLSCREEN BLOCKING failure dialog. User MUST interact.
+  /// No silent dismissal. No snackbar. This is the fail-safe.
+  Future<void> _showBlockingFailure({
+    required String title,
+    required String body,
+    required String phoneNumber,
+    String? emergencyMessage,
+  }) async {
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => PopScope(
+        canPop: false,
+        child: AlertDialog(
+          backgroundColor: const Color(0xFF1C1C1E),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 72,
+                height: 72,
+                decoration: BoxDecoration(
+                  color: AppColors.emergency.withValues(alpha: 0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.error_rounded, color: AppColors.emergency, size: 42),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                title,
+                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: Colors.white),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                body,
+                style: const TextStyle(fontSize: 14, color: Colors.white70, height: 1.5),
+                textAlign: TextAlign.center,
+              ),
+              if (phoneNumber.isNotEmpty) ...[
+                const SizedBox(height: 18),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    phoneNumber,
+                    style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: Colors.white, letterSpacing: 1.5),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ],
+              if (emergencyMessage != null) ...[
+                const SizedBox(height: 12),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: SelectableText(
+                    emergencyMessage,
+                    style: const TextStyle(fontSize: 12, color: Colors.white60, height: 1.4),
+                  ),
+                ),
+              ],
+            ],
+          ),
+          actions: [
+            if (phoneNumber.isNotEmpty)
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () async {
+                    await AndroidIntentService.openDialer(phoneNumber);
+                  },
+                  icon: const Icon(Icons.call, size: 20),
+                  label: Text('emergency_manual_call_now'.tr(),
+                      style: const TextStyle(fontWeight: FontWeight.w700)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.emergency,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+              ),
+            if (emergencyMessage != null)
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    Clipboard.setData(ClipboardData(text: emergencyMessage));
+                    ScaffoldMessenger.of(ctx).showSnackBar(
+                      SnackBar(content: Text('emergency_message_copied'.tr()), backgroundColor: AppColors.success),
+                    );
+                  },
+                  icon: const Icon(Icons.copy, size: 18),
+                  label: Text('emergency_copy_message'.tr()),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.white70,
+                    side: const BorderSide(color: Colors.white24),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+              ),
+            const SizedBox(height: 4),
+            SizedBox(
+              width: double.infinity,
+              child: TextButton(
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  Navigator.pop(context);
+                },
+                child: Text('emergency_dismiss'.tr(),
+                    style: const TextStyle(color: Colors.white38, fontSize: 13)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override

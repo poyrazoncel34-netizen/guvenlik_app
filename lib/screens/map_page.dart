@@ -919,20 +919,6 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
             ],
           ),
         ),
-        if (_locationStatus == LocationStatus.permissionDenied ||
-            _locationStatus == LocationStatus.permissionDeniedForever) ...[
-          const SizedBox(height: 8),
-          TextButton.icon(
-            onPressed: () => _locationStatus == LocationStatus.permissionDeniedForever
-                ? _locationRepository.openAppSettings()
-                : _initLocation(),
-            icon: const Icon(Icons.settings_outlined, size: 18),
-            label: Text('map_grant_permission'.tr()),
-            style: TextButton.styleFrom(
-              foregroundColor: AppColors.warning,
-            ),
-          ),
-        ],
         const SizedBox(height: 14),
 
         // Action buttons

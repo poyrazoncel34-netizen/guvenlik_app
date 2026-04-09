@@ -6,11 +6,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../core/app_colors.dart';
 import '../core/constants/app_constants.dart';
 import '../core/services/legal_log_service.dart';
+import '../core/services/app_reset_service.dart';
 
 class LegalInfoScreen extends StatelessWidget {
   const LegalInfoScreen({super.key});
@@ -268,8 +268,7 @@ class LegalInfoScreen extends StatelessWidget {
 
   Future<void> _deleteAllData(BuildContext context) async {
     await LegalLogService.instance.logEvent('user_data_deleted');
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.clear();
+    await AppResetService.clearLocalData(); // prefs + SecureStorage (PIN) + SQLite (contacts)
     await LegalLogService.instance.deleteLogs();
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(

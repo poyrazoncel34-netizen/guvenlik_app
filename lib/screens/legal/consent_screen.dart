@@ -35,7 +35,6 @@ class _ConsentScreenState extends State<ConsentScreen> {
   bool _consentEmergencyContacts = false;
   bool _consentProfile = false;
   bool _loading = false;
-  bool _consentsLoaded = false;
 
   // Zorunlu rızalar: konum ve acil kişiler temel işlevsellik için gerekli
   // (Bununla birlikte KVKK, rızanın özgür iradeyle verilmesini şart koşar —
@@ -56,7 +55,6 @@ class _ConsentScreenState extends State<ConsentScreen> {
       _consentEmergencyContacts =
           cm.isGranted(ConsentRecord.typeEmergencyContacts);
       _consentProfile = cm.isGranted(ConsentRecord.typeProfile);
-      _consentsLoaded = true;
     });
   }
 
@@ -230,7 +228,7 @@ class _ConsentScreenState extends State<ConsentScreen> {
             child: SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: (_loading || !_consentAge || !_consentsLoaded) ? null : _saveConsents,
+                onPressed: (_loading || !_consentAge) ? null : _saveConsents,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,

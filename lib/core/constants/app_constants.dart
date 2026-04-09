@@ -36,8 +36,6 @@ class AppConstants {
       'pref_notification_permission_prompted';
   static const String prefDemoMode = 'pref_demo_mode';
   static const String prefVolumeTrigger = 'pref_volume_trigger';
-  static const String prefShakeEnabled = 'pref_shake_enabled';
-  static const String prefShakeSensitivity = 'pref_shake_sensitivity';
   static const String prefBloodType = 'profile_blood_type';
   static const String prefAllergies = 'profile_allergies';
   static const String prefMedicalConditions = 'profile_medical_conditions';
@@ -69,7 +67,6 @@ class AppConstants {
   static const String prefWarningWalk = 'warning_walk_shown';
   static const String prefWarningSiren = 'warning_siren_shown';
   static const String prefWarningLocation = 'warning_location_shown';
-  static const String prefWarningShake = 'warning_shake_shown';
 
   // Yasal belgeler URL'leri
   static const String termsOfServiceUrl =

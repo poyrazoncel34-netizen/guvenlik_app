@@ -8,7 +8,6 @@ import '../../core/constants/app_constants.dart';
 import '../../core/di/service_locator.dart';
 import '../../core/security/secure_storage.dart';
 import '../../core/security/secure_storage_keys.dart';
-import '../../core/services/shake_detector_service.dart';
 import '../../core/services/volume_trigger_service.dart';
 
 class SettingsProvider extends ChangeNotifier {
@@ -17,8 +16,7 @@ class SettingsProvider extends ChangeNotifier {
   bool _soundEnabled = true;
   bool _vibrationEnabled = true;
   bool _volumeTriggerEnabled = false;
-  bool _shakeEnabled = true;
-  ShakeSensitivity _shakeSensitivity = ShakeSensitivity.medium;
+  ThemeMode _themeMode = ThemeMode.system;
   bool _loaded = false;
   final SecureStorage _secureStorage = serviceLocator<SecureStorage>();
 
@@ -34,8 +32,7 @@ class SettingsProvider extends ChangeNotifier {
   bool get soundEnabled => _soundEnabled;
   bool get vibrationEnabled => _vibrationEnabled;
   bool get volumeTriggerEnabled => _volumeTriggerEnabled;
-  bool get shakeEnabled => _shakeEnabled;
-  ShakeSensitivity get shakeSensitivity => _shakeSensitivity;
+  ThemeMode get themeMode => _themeMode;
   String get profileName =>
       _profileName.isEmpty ? "settings_default_user".tr() : _profileName;
   String get profileEmail => _profileEmail.isEmpty ? '' : _profileEmail;
@@ -59,12 +56,34 @@ class SettingsProvider extends ChangeNotifier {
       _vibrationEnabled = prefs.getBool(AppConstants.prefVibration) ?? true;
       _volumeTriggerEnabled =
           prefs.getBool(AppConstants.prefVolumeTrigger) ?? false;
-      _shakeEnabled = prefs.getBool(AppConstants.prefShakeEnabled) ?? true;
-      final shakeSenIdx = prefs.getInt(AppConstants.prefShakeSensitivity) ?? 1;
-      _shakeSensitivity = ShakeSensitivity.values[shakeSenIdx.clamp(0, 2)];
+      final themeModeStr = prefs.getString(AppConstants.prefThemeMode) ?? 'system';
+      _themeMode = _themeModeFromString(themeModeStr);
       _loaded = true;
     }
     notifyListeners();
+  }
+
+  Future<void> setThemeMode(ThemeMode mode) async {
+    _themeMode = mode;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(AppConstants.prefThemeMode, _themeModeToString(mode));
+    notifyListeners();
+  }
+
+  static ThemeMode _themeModeFromString(String value) {
+    switch (value) {
+      case 'light': return ThemeMode.light;
+      case 'dark': return ThemeMode.dark;
+      default: return ThemeMode.system;
+    }
+  }
+
+  static String _themeModeToString(ThemeMode mode) {
+    switch (mode) {
+      case ThemeMode.light: return 'light';
+      case ThemeMode.dark: return 'dark';
+      default: return 'system';
+    }
   }
 
   Future<void> updateProfile({
@@ -205,15 +224,4 @@ class SettingsProvider extends ChangeNotifier {
     await VolumeTriggerService.instance.setEnabled(value);
   }
 
-  Future<void> setShakeEnabled(bool value) async {
-    _shakeEnabled = value;
-    notifyListeners();
-    await ShakeDetectorService.instance.setEnabled(value);
-  }
-
-  Future<void> setShakeSensitivity(ShakeSensitivity level) async {
-    _shakeSensitivity = level;
-    notifyListeners();
-    await ShakeDetectorService.instance.setSensitivity(level);
-  }
 }
