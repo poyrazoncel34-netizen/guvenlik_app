@@ -267,6 +267,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                         _buildOnboardingCard(provider),
                       ],
                       SizedBox(height: sectionSpacing),
+                      const Center(child: PanicButton()),
+                      SizedBox(height: sectionSpacing),
                       _buildTestModeButton(),
                       SizedBox(height: largeSectionSpacing),
                       _buildQuickActions(),
