@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
-import '../../core/services/sms_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/services/activity_service.dart';
 import '../../core/services/contact_service.dart';
@@ -120,29 +119,9 @@ class HomeProvider extends ChangeNotifier {
     return null;
   }
 
-  Future<SmsComposeResult> startLocationSharing(int minutes) async {
-    final numbers = await _contactsRepository.getAllEmergencyNumbers();
-    if (numbers.isEmpty) {
-      return SmsComposeResult.failed('emergency_contact_not_found'.tr());
-    }
-
+  Future<void> startLocationSharing(int minutes) async {
     final result = await _locationService.getCurrentLocation();
-    if (!result.isSuccess || result.position == null) {
-      return SmsComposeResult.failed('location_unavailable'.tr());
-    }
-
-    final lat = result.position!.latitude;
-    final lng = result.position!.longitude;
-    final url = 'https://www.google.com/maps/search/?api=1&query=$lat,$lng';
-    final message = 'location_share_message'.tr(namedArgs: {'url': url});
-    final smsResult = await SmsService.sendSms(
-      numbers: numbers,
-      message: message,
-    );
-
-    if (!smsResult.isSuccess) {
-      return smsResult;
-    }
+    if (!result.isSuccess || result.position == null) return;
 
     _locationShareEndAt = DateTime.now().add(Duration(minutes: minutes));
     _isLocationSharing = true;
@@ -152,13 +131,17 @@ class HomeProvider extends ChangeNotifier {
     _locationShareTimer = Timer.periodic(const Duration(seconds: 30), (
       timer,
     ) async {
-      if (_locationShareEndAt == null) return;
-      final remaining = _locationShareEndAt!.difference(DateTime.now());
-      if (remaining.isNegative || remaining.inSeconds == 0) {
-        stopLocationSharing(manual: false);
-      } else {
-        await _refreshLocationShareState(remaining);
-        notifyListeners();
+      try {
+        if (_locationShareEndAt == null) return;
+        final remaining = _locationShareEndAt!.difference(DateTime.now());
+        if (remaining.isNegative || remaining.inSeconds == 0) {
+          stopLocationSharing(manual: false);
+        } else {
+          await _refreshLocationShareState(remaining);
+          notifyListeners();
+        }
+      } catch (e) {
+        debugPrint('HomeProvider: Location share timer error: $e');
       }
     });
     await KoruBeniForegroundService.start();
@@ -174,7 +157,6 @@ class HomeProvider extends ChangeNotifier {
         namedArgs: {'minutes': '$minutes'},
       ),
     );
-    return smsResult;
   }
 
   void stopLocationSharing({bool manual = false}) {
@@ -194,14 +176,6 @@ class HomeProvider extends ChangeNotifier {
     final message = _pendingMessage;
     _pendingMessage = null;
     return message;
-  }
-
-  Future<SmsComposeResult> sendQuickMessage(String message) async {
-    final numbers = await _contactsRepository.getAllEmergencyNumbers();
-    if (numbers.isEmpty) {
-      return SmsComposeResult.failed('emergency_contact_not_found'.tr());
-    }
-    return SmsService.sendSms(numbers: numbers, message: message);
   }
 
   @override

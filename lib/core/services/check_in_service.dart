@@ -20,8 +20,6 @@ import '../services/emergency_platform_service.dart';
 import '../services/foreground_service.dart';
 import '../services/haptic_service.dart';
 import '../services/notification_service.dart';
-import '../services/sms_service.dart';
-import '../utils/emergency_message_helper.dart';
 
 /// Manages check-in timer logic — if user doesn't confirm safety within the
 /// set duration + grace period, an emergency is automatically triggered.
@@ -324,15 +322,6 @@ class CheckInService extends ChangeNotifier {
       final contactsRepo = serviceLocator<ContactsRepository>();
       final numbers = await contactsRepo.getAllEmergencyNumbers();
       final primaryContact = await contactsRepo.getPrimaryEmergencyContact();
-      final emergencyMessage =
-          await EmergencyMessageHelper.buildCheckInMessage();
-
-      final smsResult = numbers.isEmpty
-          ? SmsComposeResult.failed('emergency_contact_not_found'.tr())
-          : await SmsService.sendSms(
-              numbers: numbers,
-              message: emergencyMessage.message,
-            );
 
       final primaryNumber =
           primaryContact?.phone ?? (numbers.isNotEmpty ? numbers.first : '');
@@ -356,8 +345,7 @@ class CheckInService extends ChangeNotifier {
         }
       }
 
-      final shouldKeepForeground = smsResult.isSuccess || callResult.isSuccess;
-      await _clearMonitoringState(stopForeground: !shouldKeepForeground);
+      await _clearMonitoringState(stopForeground: !callResult.isSuccess);
 
       final navigator = rootNavigatorKey.currentState;
       if (navigator != null) {
@@ -367,12 +355,10 @@ class CheckInService extends ChangeNotifier {
               name: primaryContact?.name ?? "pin_verify_emergency_contact".tr(),
               phone: calledNumber,
               callResult: callResult,
-              smsResult: smsResult,
-              locationStatusMessage: emergencyMessage.locationStatusMessage,
             ),
           ),
         );
-      } else if (shouldKeepForeground) {
+      } else if (callResult.isSuccess) {
         await KoruBeniForegroundService.stop();
       }
     } catch (e) {

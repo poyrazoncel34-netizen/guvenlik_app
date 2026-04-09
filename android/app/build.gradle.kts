@@ -46,16 +46,7 @@ android {
     productFlavors {
         create("play") {
             dimension = "distribution"
-            buildConfigField("boolean", "ALLOW_DIRECT_SMS", "false")
             manifestPlaceholders["appLabelSuffix"] = ""
-        }
-
-        create("full") {
-            dimension = "distribution"
-            applicationIdSuffix = ".full"
-            versionNameSuffix = "-full"
-            buildConfigField("boolean", "ALLOW_DIRECT_SMS", "true")
-            manifestPlaceholders["appLabelSuffix"] = " Full"
         }
     }
 

@@ -5,13 +5,11 @@ import 'package:easy_localization/easy_localization.dart';
 import '../core/app_colors.dart';
 import '../core/services/contact_service.dart';
 import '../core/services/call_service.dart';
-import '../core/services/sms_service.dart';
 import '../core/services/android_intent_service.dart';
 import 'package:flutter/services.dart';
 import '../core/di/service_locator.dart';
 import '../core/security/secure_storage.dart';
 import '../core/security/secure_storage_keys.dart';
-import '../core/utils/emergency_message_helper.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'emergency_call_screen.dart';
 
@@ -77,7 +75,6 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
     });
   }
 
-  // --- DUAL-ACTION: SMS + ARAMA (ZERO-FAULT) ---
   Future<void> _triggerSOS() async {
     try {
       await _executeSOS();
@@ -107,28 +104,15 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
       return;
     }
 
-    final messagePayload =
-        await EmergencyMessageHelper.buildPanicButtonMessage();
-    final smsMessage = messagePayload.message;
-
-    final allNumbers = await ContactService.getAllEmergencyNumbers();
-    final smsNumbers = allNumbers.isNotEmpty ? allNumbers : [emergencyNumber];
-    final smsResult = await SmsService.sendSms(
-      numbers: smsNumbers,
-      message: smsMessage,
-    );
-
     // NO permission dialog here. Check silently, use dialer fallback.
     final callResult = await CallService.startEmergencyCall(emergencyNumber);
 
-    // BOTH completely failed — show blocking fullscreen error
-    if (smsResult.isFailed && callResult.isFailed) {
+    if (callResult.isFailed) {
       if (mounted) {
         await _showBlockingFailure(
           title: 'emergency_total_failure_title'.tr(),
           body: 'emergency_total_failure_body'.tr(),
           phoneNumber: emergencyNumber,
-          emergencyMessage: smsMessage,
         );
       }
       return;
@@ -144,9 +128,6 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
                 "pin_verify_emergency_contact".tr(),
             phone: emergencyNumber,
             callResult: callResult,
-            smsResult: smsResult,
-            locationStatusMessage: messagePayload.locationStatusMessage,
-            emergencyMessage: smsMessage,
           ),
         ),
       );

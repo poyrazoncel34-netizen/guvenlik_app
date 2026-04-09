@@ -128,56 +128,61 @@ class EmergencyPlatformService {
         false;
   }
 
-  Future<Map<String, dynamic>> sendSms({
-    required List<String> recipients,
-    required String message,
-  }) async {
-    if (!isSupported) {
-      return const <String, dynamic>{};
-    }
-    final response = await _methodChannel.invokeMethod<dynamic>('sendSms', {
-      'recipients': recipients,
-      'message': message,
-    });
-    return _toMap(response) ?? const <String, dynamic>{};
-  }
-
-  Future<Map<String, dynamic>> triggerEmergency({
-    required List<String> recipients,
-    required String message,
+  Future<void> executeEmergencyNative({
     required String primaryNumber,
   }) async {
-    if (!isSupported) {
-      return const <String, dynamic>{};
+    if (!isSupported) return;
+    try {
+      await _methodChannel.invokeMethod<dynamic>(
+        'executeEmergencyNative',
+        {'primaryNumber': primaryNumber},
+      ).timeout(const Duration(seconds: 3));
+    } on TimeoutException {
+      debugPrint('[EmergencyPlatform] executeEmergencyNative timed out');
+    } catch (e) {
+      debugPrint('[EmergencyPlatform] executeEmergencyNative failed: $e');
     }
-    final response = await _methodChannel.invokeMethod<dynamic>(
-      'triggerEmergency',
-      {
-        'recipients': recipients,
-        'message': message,
+  }
+
+  /// Schedule a native AlarmManager backup for the countdown timer.
+  /// If the Dart Timer.periodic freezes under Doze, this alarm fires and
+  /// executes the emergency natively via EmergencyExecutor.
+  Future<void> scheduleCountdownAlarm({
+    required DateTime deadline,
+    required String primaryNumber,
+  }) async {
+    if (!isSupported) return;
+    try {
+      await _methodChannel.invokeMethod<void>('scheduleCountdownAlarm', {
+        'deadlineMs': deadline.millisecondsSinceEpoch,
         'primaryNumber': primaryNumber,
-      },
-    );
-    return _toMap(response) ?? const <String, dynamic>{};
+      }).timeout(const Duration(seconds: 5));
+    } on TimeoutException {
+      debugPrint('[EmergencyPlatform] scheduleCountdownAlarm timed out');
+    }
   }
 
-  Future<void> startRecordingSession() async {
-    if (!isSupported) {
-      return;
+  /// Cancel the countdown backup alarm (user entered correct PIN).
+  Future<void> cancelCountdownAlarm() async {
+    if (!isSupported) return;
+    try {
+      await _methodChannel.invokeMethod<void>('cancelCountdownAlarm')
+          .timeout(const Duration(seconds: 5));
+    } on TimeoutException {
+      debugPrint('[EmergencyPlatform] cancelCountdownAlarm timed out');
     }
-    // KVKK m.5 + TCK m.133: Ses kaydı rızası kontrolü
-    if (!ConsentGateService.isAudioAllowed()) {
-      debugPrint('[EmergencyPlatform] Ses kaydı rızası verilmemiş — kayıt başlatılmadı');
-      return;
-    }
-    await _methodChannel.invokeMethod<void>('startRecordingSession');
   }
 
-  Future<void> stopRecordingSession() async {
-    if (!isSupported) {
-      return;
+  /// Check if the native alarm already fired (Dart timer was frozen).
+  /// Used to prevent double-execution when the Dart side resumes.
+  Future<bool> didCountdownAlarmFire() async {
+    if (!isSupported) return false;
+    try {
+      return await _methodChannel.invokeMethod<bool>('didCountdownAlarmFire') ?? false;
+    } catch (e) {
+      debugPrint('[EmergencyPlatform] didCountdownAlarmFire failed: $e');
+      return false;
     }
-    await _methodChannel.invokeMethod<void>('stopRecordingSession');
   }
 
   Map<String, dynamic>? _toMap(dynamic event) {

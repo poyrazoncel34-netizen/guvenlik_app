@@ -68,19 +68,10 @@ class EmergencyPlatformHandler(
                     CheckInScheduler.openExactAlarmSettings(context)
                     result.success(true)
                 }
-                "sendSms" -> {
-                    val recipients = call.argument<List<String>>("recipients") ?: emptyList()
-                    val message = call.argument<String>("message").orEmpty()
-                    result.success(SmsSender.send(context, activity, recipients, message))
-                }
-                "triggerEmergency" -> {
-                    val recipients = call.argument<List<String>>("recipients") ?: emptyList()
-                    val message = call.argument<String>("message").orEmpty()
+                "executeEmergencyNative" -> {
                     val primaryNumber = call.argument<String>("primaryNumber").orEmpty()
-                    val response = HashMap<String, Any?>()
-                    response["sms"] = SmsSender.send(context, activity, recipients, message)
-                    response["call"] = openCall(primaryNumber)
-                    result.success(response)
+                    EmergencyExecutor.executeEmergency(context, primaryNumber)
+                    result.success(mapOf("status" to "dispatched"))
                 }
                 "getDeviceState" -> {
                     result.success(getDeviceState())
@@ -91,13 +82,18 @@ class EmergencyPlatformHandler(
                 "openBatterySettings" -> {
                     result.success(openBatterySettings())
                 }
-                "startRecordingSession" -> {
-                    RecordingSessionService.start(context)
+                "scheduleCountdownAlarm" -> {
+                    val deadlineMs = call.argument<Number>("deadlineMs")?.toLong() ?: 0L
+                    val primaryNumber = call.argument<String>("primaryNumber").orEmpty()
+                    CountdownAlarmScheduler.schedule(context, deadlineMs, primaryNumber)
                     result.success(true)
                 }
-                "stopRecordingSession" -> {
-                    RecordingSessionService.stop(context)
+                "cancelCountdownAlarm" -> {
+                    CountdownAlarmScheduler.cancel(context)
                     result.success(true)
+                }
+                "didCountdownAlarmFire" -> {
+                    result.success(CountdownAlarmScheduler.didAlarmFire(context))
                 }
                 else -> result.notImplemented()
             }
@@ -109,9 +105,6 @@ class EmergencyPlatformHandler(
     private fun getDeviceState(): Map<String, Any?> {
         val powerManager = context.getSystemService(Context.POWER_SERVICE) as? PowerManager
         val telephonyManager = context.getSystemService(Context.TELEPHONY_SERVICE) as? TelephonyManager
-        val smsGranted =
-            ContextCompat.checkSelfPermission(context, Manifest.permission.SEND_SMS) ==
-                PackageManager.PERMISSION_GRANTED
         val callGranted =
             ContextCompat.checkSelfPermission(context, Manifest.permission.CALL_PHONE) ==
                 PackageManager.PERMISSION_GRANTED
@@ -134,9 +127,7 @@ class EmergencyPlatformHandler(
                     true
                 }),
             "canScheduleExactAlarms" to CheckInScheduler.canScheduleExactAlarms(context),
-            "smsPermissionGranted" to smsGranted,
             "callPermissionGranted" to callGranted,
-            "directSmsAllowed" to com.poyrazoncel.korubeni.BuildConfig.ALLOW_DIRECT_SMS,
         )
     }
 

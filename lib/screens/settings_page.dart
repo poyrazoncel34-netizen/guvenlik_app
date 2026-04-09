@@ -59,15 +59,7 @@ class _SettingsPageState extends State<SettingsPage> {
     final shareText = defaultTargetPlatform == TargetPlatform.iOS
         ? 'settings_share_text_ios'.tr()
         : 'settings_share_text'.tr();
-    final uri = Uri(
-      scheme: 'sms',
-      path: '',
-      queryParameters: {'body': shareText},
-    );
     try {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    } catch (_) {
-      // Fallback: copy to clipboard
       await Clipboard.setData(ClipboardData(text: shareText));
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -255,16 +247,30 @@ class _SettingsPageState extends State<SettingsPage> {
             ]),
             const SizedBox(height: 28),
 
-            // SMS Template
-            _buildSectionTitle('settings_sms_section'.tr()),
+            // Appearance / Theme
+            _buildSectionTitle('settings_theme_section'.tr()),
             const SizedBox(height: 14),
             _buildSettingsCard([
-              _buildNavigationTile(
-                icon: Icons.sms_rounded,
-                iconColor: AppColors.accent,
-                title: 'settings_sms_template_title'.tr(),
-                subtitle: 'settings_sms_template_subtitle'.tr(),
-                onTap: () => _showSmsTemplateDialog(context),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'settings_theme_title'.tr(),
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    ThemeSelector(
+                      selected: provider.themeMode,
+                      onChanged: provider.setThemeMode,
+                    ),
+                  ],
+                ),
               ),
             ]),
             const SizedBox(height: 28),
@@ -821,124 +827,4 @@ class _SettingsPageState extends State<SettingsPage> {
     AppResetHelper.showResetDialog(context);
   }
 
-  void _showSmsTemplateDialog(BuildContext context) async {
-    final prefs = await SharedPreferences.getInstance();
-    final saved = prefs.getString('pref_sms_template') ?? '';
-    final controller = TextEditingController(text: saved);
-
-    if (!context.mounted) return;
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (ctx) => Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(ctx).viewInsets.bottom,
-        ),
-        child: Container(
-          decoration: const BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-          ),
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 40, height: 4,
-                  decoration: BoxDecoration(
-                    color: Colors.white24,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 18),
-              Text(
-                'settings_sms_template_title'.tr(),
-                style: const TextStyle(
-                  color: AppColors.textPrimary,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'sms_template_hint'.tr(),
-                style: const TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: 12,
-                ),
-              ),
-              const SizedBox(height: 14),
-              TextField(
-                controller: controller,
-                maxLines: 4,
-                style: const TextStyle(color: AppColors.textPrimary),
-                decoration: InputDecoration(
-                  hintText: 'sms_template_placeholder'.tr(),
-                  hintStyle: const TextStyle(color: AppColors.textSecondary),
-                  filled: true,
-                  fillColor: AppColors.cardBg,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: BorderSide(color: AppColors.border),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: BorderSide(color: AppColors.border),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () async {
-                        await prefs.remove('pref_sms_template');
-                        if (ctx.mounted) Navigator.pop(ctx);
-                      },
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: AppColors.textSecondary,
-                        side: BorderSide(color: AppColors.border),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                      ),
-                      child: Text('sms_template_reset'.tr()),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () async {
-                        await prefs.setString(
-                          'pref_sms_template',
-                          controller.text.trim(),
-                        );
-                        if (ctx.mounted) Navigator.pop(ctx);
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                      ),
-                      child: Text('save'.tr(),
-                          style: const TextStyle(fontWeight: FontWeight.w700)),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 }

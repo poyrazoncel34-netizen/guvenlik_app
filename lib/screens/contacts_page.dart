@@ -12,7 +12,7 @@ import 'package:provider/provider.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../core/app_colors.dart';
 import '../core/constants/app_constants.dart';
-import '../core/services/sms_service.dart';
+import '../core/services/contact_service.dart';
 import '../presentation/providers/contacts_provider.dart';
 import '../presentation/providers/home_provider.dart';
 import '../widgets/emergency_contact_consent_dialog.dart';
@@ -486,41 +486,6 @@ class _ContactsPageState extends State<ContactsPage> {
             const SizedBox(height: 24),
             Row(
               children: [
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () async {
-                      Navigator.pop(context);
-                      final smsResult = await SmsService.sendSms(
-                        numbers: [contact.phone],
-                        message: "help_needed_template".tr(),
-                      );
-                      if (!mounted) return;
-                      final notice = smsResult.inlineNotice;
-                      if (notice != null) {
-                        _showSnack(
-                          notice,
-                          backgroundColor: smsResult.isSuccess
-                              ? AppColors.warning
-                              : AppColors.emergency,
-                        );
-                      }
-                    },
-                    icon: const Icon(Icons.message_rounded, size: 20),
-                    label: Text(
-                      "contacts_message".tr(),
-                      style: const TextStyle(fontWeight: FontWeight.w700),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
                 Expanded(
                   child: ElevatedButton.icon(
                     onPressed: () async {

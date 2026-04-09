@@ -9,7 +9,6 @@ import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/di/service_locator.dart';
-import '../core/constants/app_constants.dart';
 import '../core/security/secure_storage.dart';
 import '../core/security/secure_storage_keys.dart';
 import '../core/app_colors.dart';
@@ -24,10 +23,12 @@ import '../core/services/pin_lockout_service.dart';
 import '../core/services/offline_queue_service.dart';
 import '../domain/models/activity_event.dart';
 import 'emergency_call_screen.dart';
+import '../core/navigation/app_navigator.dart';
 import '../core/services/foreground_service.dart';
 import '../core/services/haptic_service.dart';
 import '../core/services/notification_service.dart';
-import '../core/utils/emergency_message_helper.dart';
+import '../core/services/emergency_platform_service.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
 class CountdownScreen extends StatefulWidget {
   final bool isTestMode;
@@ -54,7 +55,9 @@ class _CountdownScreenState extends State<CountdownScreen>
   late final SecureStorage _secureStorage = serviceLocator<SecureStorage>();
   bool _handoffToEmergencyScreen = false;
   bool _isNavigating = false;
-
+  bool _emergencyDispatched = false;
+  DateTime? _startTime;
+  List<String> _emergencyNumbers = [];
   DateTime? _lockoutEndTime;
   StreamSubscription<int>? _lockoutSubscription;
   int _lockoutRemaining = 0;
@@ -77,6 +80,7 @@ class _CountdownScreenState extends State<CountdownScreen>
 
     _loadPin();
     _loadEmergencyContact();
+    _loadEmergencyNumbers();
     _syncLockoutState();
     _showHonestyWarningThenStart();
     KoruBeniForegroundService.start();
@@ -172,6 +176,30 @@ class _CountdownScreenState extends State<CountdownScreen>
     }
   }
 
+  Future<void> _loadEmergencyNumbers() async {
+    _emergencyNumbers = await _contactsRepository.getAllEmergencyNumbers();
+  }
+
+  /// C4 FIX: Schedule a native AlarmManager backup that fires at countdown end.
+  /// If Android Doze freezes the Dart isolate, the alarm triggers
+  /// EmergencyExecutor on the native side — guaranteed execution.
+  Future<void> _scheduleNativeBackupAlarm() async {
+    try {
+      final numbers = await _contactsRepository.getAllEmergencyNumbers();
+      final primaryNumber = _emergencyContact?.phone ??
+          (numbers.isNotEmpty ? numbers.first : '');
+
+      // Schedule alarm for 12 seconds from now (10s countdown + 2s grace)
+      final deadline = DateTime.now().add(const Duration(seconds: 12));
+      await EmergencyPlatformService.instance.scheduleCountdownAlarm(
+        deadline: deadline,
+        primaryNumber: primaryNumber,
+      );
+    } catch (e) {
+      debugPrint('CountdownScreen: Native alarm scheduling failed: $e');
+    }
+  }
+
   void _startCountdown() {
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (_countdown > 0) {
@@ -187,6 +215,25 @@ class _CountdownScreenState extends State<CountdownScreen>
   }
 
   Future<void> _makeEmergencyCall() async {
+    if (_emergencyDispatched) return;
+    _emergencyDispatched = true;
+
+    // C4: Check if the native alarm already fired (Dart timer was frozen by Doze).
+    // If so, EmergencyExecutor already dispatched SMS+call — skip duplicate execution.
+    try {
+      final alarmFired =
+          await EmergencyPlatformService.instance.didCountdownAlarmFire();
+      if (alarmFired) {
+        debugPrint('CountdownScreen: Native alarm already fired — skipping Dart dispatch');
+        await KoruBeniForegroundService.stop();
+        if (mounted) Navigator.pop(context);
+        return;
+      }
+    } catch (_) {}
+
+    // WakeLock safety net: ensure CPU stays awake during emergency execution
+    try { await WakelockPlus.enable(); } catch (_) {}
+
     if (widget.isTestMode) {
       await KoruBeniForegroundService.stop();
       if (mounted) {
@@ -232,29 +279,17 @@ class _CountdownScreenState extends State<CountdownScreen>
       return;
     }
 
-    final prefs = await SharedPreferences.getInstance();
-    final customTemplate = prefs.getString(AppConstants.prefSmsTemplate);
-    final messagePayload = await EmergencyMessageHelper.buildCountdownMessage(
-      customTemplate: customTemplate,
+    final primaryNumber =
+        _emergencyContact?.phone ?? (numbers.isNotEmpty ? numbers.first : null);
+
+    OfflineQueueService.instance.enqueue(
+      OfflineEvent(
+        type: 'emergency',
+        title: "countdown_emergency_title".tr(),
+        description: "countdown_emergency_desc".tr(),
+        data: const {},
+      ),
     );
-    final message = messagePayload.message;
-
-    final isOnline = ConnectivityService.instance.isOnline;
-
-    if (!isOnline) {
-      await OfflineQueueService.instance.enqueue(
-        OfflineEvent(
-          type: 'emergency',
-          title: "countdown_emergency_title".tr(),
-          description: message,
-          data: {
-            'message': message,
-            'maps_url': messagePayload.mapsUrl,
-            'location_status': messagePayload.locationStatusMessage,
-          },
-        ),
-      );
-    }
 
     await ActivityService.logEvent(
       type: ActivityType.emergencyTriggered,
@@ -270,20 +305,9 @@ class _CountdownScreenState extends State<CountdownScreen>
       body: 'alarm_notification_body'.tr(),
     );
 
-    final smsResult = await SmsService.sendSms(
-      numbers: numbers,
-      message: message,
-    );
-
-    final primaryNumber =
-        _emergencyContact?.phone ?? (numbers.isNotEmpty ? numbers.first : null);
-
-    // NO permission dialog here. Check permission silently, use dialer fallback.
-    // Permission should have been requested during onboarding/settings.
-
     // Failover: try each number until one succeeds
-    EmergencyCallResult callResult = EmergencyCallResult.failed('');
-    String calledNumber = primaryNumber ?? '';
+    var callResult = EmergencyCallResult.failed('');
+    var calledNumber = primaryNumber ?? '';
     if (primaryNumber != null && primaryNumber.isNotEmpty) {
       callResult = await CallService.startEmergencyCall(primaryNumber);
       if (!callResult.isSuccess && numbers.length > 1) {
@@ -298,15 +322,13 @@ class _CountdownScreenState extends State<CountdownScreen>
       }
     }
 
-    // BOTH completely failed — show blocking fullscreen error
-    if (smsResult.isFailed && callResult.isFailed) {
+    if (callResult.isFailed) {
       await KoruBeniForegroundService.stop();
       if (mounted) {
         await _showBlockingFailure(
           title: 'emergency_total_failure_title'.tr(),
           body: 'emergency_total_failure_body'.tr(),
           phoneNumber: calledNumber,
-          emergencyMessage: message,
         );
       }
       return;
@@ -323,9 +345,6 @@ class _CountdownScreenState extends State<CountdownScreen>
               name: _emergencyContact?.name ?? "countdown_emergency_label".tr(),
               phone: calledNumber,
               callResult: callResult,
-              smsResult: smsResult,
-              locationStatusMessage: messagePayload.locationStatusMessage,
-              emergencyMessage: message,
             ),
           ),
         );
@@ -333,13 +352,11 @@ class _CountdownScreenState extends State<CountdownScreen>
         debugPrint('CountdownScreen: Navigation failed: $e');
         _isNavigating = false;
         _handoffToEmergencyScreen = false;
-        // Even navigation failure gets a blocking dialog
         if (mounted) {
           await _showBlockingFailure(
             title: 'emergency_total_failure_title'.tr(),
             body: 'emergency_total_failure_body'.tr(),
             phoneNumber: calledNumber,
-            emergencyMessage: message,
           );
         }
       }
@@ -483,7 +500,9 @@ class _CountdownScreenState extends State<CountdownScreen>
     _shakeController.dispose();
     _tickBounceController.dispose();
     _glowController.dispose();
-    if (!_handoffToEmergencyScreen) {
+    if (!_handoffToEmergencyScreen && !_emergencyDispatched) {
+      // Only cancel alarm if we're not handing off to emergency
+      EmergencyPlatformService.instance.cancelCountdownAlarm();
       KoruBeniForegroundService.stop();
     }
     super.dispose();
@@ -493,6 +512,7 @@ class _CountdownScreenState extends State<CountdownScreen>
     if (_isNavigating) return;
     _isNavigating = true;
     _timer?.cancel();
+    EmergencyPlatformService.instance.cancelCountdownAlarm();
     ActivityService.logEvent(
       type: ActivityType.emergencyCancelled,
       title: "countdown_cancelled_title".tr(),
@@ -552,6 +572,7 @@ class _CountdownScreenState extends State<CountdownScreen>
         if (_correctPin != null && _pin == _correctPin && !_isNavigating) {
           _isNavigating = true;
           _timer?.cancel();
+          EmergencyPlatformService.instance.cancelCountdownAlarm();
           _lockoutSubscription?.cancel();
           PinLockoutService.instance.reset();
           ActivityService.logEvent(
@@ -937,6 +958,15 @@ class _CountdownScreenState extends State<CountdownScreen>
     );
   }
 
+  void _showFullScreenError(String number) {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (_) => _EmergencyFailureScreen(emergencyNumber: number),
+      ),
+    );
+  }
+
   Widget _buildPadButton({required Widget child, required VoidCallback onTap}) {
     return _ScaleTapButton(
       onTap: onTap,
@@ -1004,6 +1034,104 @@ class _ScaleTapButtonState extends State<_ScaleTapButton>
       },
       onTapCancel: () => _ctrl.reverse(),
       child: ScaleTransition(scale: _scale, child: widget.child),
+    );
+  }
+}
+
+/// Full-screen emergency failure UI — replaces the tiny snackbar so the user
+/// can clearly see that both SMS and call failed, and manually dial.
+class _EmergencyFailureScreen extends StatelessWidget {
+  final String emergencyNumber;
+
+  const _EmergencyFailureScreen({required this.emergencyNumber});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 96,
+                height: 96,
+                decoration: BoxDecoration(
+                  color: AppColors.emergency.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.error_outline_rounded,
+                  color: AppColors.emergency,
+                  size: 56,
+                ),
+              ),
+              const SizedBox(height: 28),
+              Text(
+                'emergency_action_failed'.tr(),
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w900,
+                  color: AppColors.emergency,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'emergency_failure_instruction'.tr(),
+                style: const TextStyle(
+                  fontSize: 16,
+                  color: AppColors.textSecondary,
+                  height: 1.5,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 40),
+              if (emergencyNumber.isNotEmpty) ...[
+                SizedBox(
+                  width: double.infinity,
+                  height: 56,
+                  child: ElevatedButton.icon(
+                    onPressed: () async {
+                      HapticFeedback.heavyImpact();
+                      await AndroidIntentService.openDialer(emergencyNumber);
+                    },
+                    icon: const Icon(Icons.call_rounded, size: 24),
+                    label: Text(
+                      '${"call_now".tr()} $emergencyNumber',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.emergency,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(
+                  'go_back'.tr(),
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

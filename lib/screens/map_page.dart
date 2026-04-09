@@ -384,22 +384,7 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
       }
       return;
     }
-
-    final result = await provider.startLocationSharing(minutes);
-    if (!result.isSuccess) {
-      provider.stopLocationSharing(manual: true);
-    }
-    final notice = result.inlineNotice;
-    if (notice != null && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(notice),
-          backgroundColor: result.isSuccess
-              ? AppColors.warning
-              : AppColors.emergency,
-        ),
-      );
-    }
+    await provider.startLocationSharing(minutes);
   }
 
   bool get _shouldUseOfflineMapFallback {
