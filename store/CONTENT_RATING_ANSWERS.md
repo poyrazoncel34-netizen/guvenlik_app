@@ -33,7 +33,7 @@ Content rating anketinde (IARC) aşağıdaki gibi yanıtlayın. KoruBeni bir gü
 - **Shares location:** Yes — only when user triggers emergency or location sharing (açıkça belirtin)
 
 ### Diğer
-- **Social interaction:** Yes — emergency contacts, SMS/call
+- **Social interaction:** Yes — emergency contacts, phone call
 - **Personal information shared:** Yes — location, phone to emergency contacts when user triggers
 
 ---

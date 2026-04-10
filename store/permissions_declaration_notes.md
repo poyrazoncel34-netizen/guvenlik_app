@@ -4,7 +4,7 @@
 
 | İzin | Manifest'te Var mı? | Declaration Gerekiyor mu? |
 |------|---------------------|--------------------------|
-| SEND_SMS | **HAYIR** | **HAYIR** — SMS composer intent kullanılıyor |
+| SEND_SMS | **HAYIR** | **HAYIR** — Uygulama SMS göndermez |
 | CALL_PHONE | EVET | EVET — aşağıda açıklanmıştır |
 | ACCESS_BACKGROUND_LOCATION | **HAYIR** | **HAYIR** — manifest'ten kaldırıldı |
 | REQUEST_IGNORE_BATTERY_OPTIMIZATIONS | EVET | EVET — aşağıda açıklanmıştır |
@@ -13,17 +13,7 @@
 
 ## SEND_SMS — Declaration GEREKMEZ
 
-**Neden manifest'te yok?**
-Uygulama, direkt SMS göndermek yerine kullanıcının varsayılan SMS uygulamasını önceden doldurulmuş mesajla açar.
-Bu yaklaşım `android.intent.action.SENDTO` intent'i kullanır ve `SEND_SMS` izni **gerektirmez**.
-
-**Avantajlar:**
-- Play Store'da kısıtlı izin beyanı gerekmez
-- Kullanıcı SMS göndermeden önce içeriği görebilir ve onaylayabilir
-- Daha az Play Store review engeli
-
-**Alternatif (uygulanmadı):**
-Direkt SMS (`SmsManager.sendTextMessage`) için `SEND_SMS` gerekir ve SMS Permission Declaration Form doldurulması şarttır.
+Uygulama SMS göndermez. Acil durum akışı yalnızca telefon araması yapar.
 
 ---
 
@@ -32,7 +22,7 @@ Direkt SMS (`SmsManager.sendTextMessage`) için `SEND_SMS` gerekir ve SMS Permis
 **Beyan kategorisi:** Safety / Emergency
 
 **Core functionality açıklaması:**
-"Acil durum tetiklendiğinde kullanıcının belirlediği acil durum kişisini aramak için kullanılır. Kullanıcı panik butonunu tetikler, uygulama önce SMS composer'ı açar, ardından telefon araması yapar. Kullanıcı bilinçsiz veya hareket edemez durumda olabileceğinden otomatik arama kritiktir."
+"Acil durum tetiklendiğinde kullanıcının belirlediği acil durum kişisini aramak için kullanılır. Kullanıcı panik butonunu tetikler, uygulama otomatik telefon araması yapar. Kullanıcı bilinçsiz veya hareket edemez durumda olabileceğinden otomatik arama kritiktir."
 
 **Neden gerekli:**
 Acil durumda kullanıcı telefonu kullanamıyor olabilir. Otomatik arama, yardım çağırmanın en güvenilir yoludur.
@@ -59,15 +49,14 @@ Güvenli yürüyüş özelliği, arka planda konum takibi yapmaz; yalnızca acil
 
 ---
 
-## Video Demo Gereksinimleri (SMS Declaration Form için)
+## Video Demo Gereksinimleri
 
-Declaration Form'da SMS izni beyan edilmediği için video demo gerekmez.
-Ancak genel Play Store inceleme sürecinde hazır bulundurulması önerilen demo:
+Play Store inceleme sürecinde hazır bulundurulması önerilen demo:
 
 **1-3 dakikalık ekran kaydı içeriği:**
 1. İlk açılış → KVKK/yasal onay akışı
 2. Acil durum kişisi ekleme
-3. Panik butonu tetikleme → SMS composer açılması
+3. Panik butonu tetikleme → acil arama
 4. Güvenli yürüyüş başlatma ve check-in
 5. Ayarlar → veri silme
 
@@ -75,4 +64,5 @@ Ancak genel Play Store inceleme sürecinde hazır bulundurulması önerilen demo
 
 ## Güncelleme Geçmişi
 
-- 2026-03-18: İlk oluşturma. SEND_SMS manifest'ten kaldırıldı, SMS composer intent yaklaşımı benimsendi.
+- 2026-03-18: İlk oluşturma. SEND_SMS manifest'ten kaldırıldı.
+- 2026-04-10: SMS tamamen kaldırıldı. Uygulama yalnızca acil arama yapar.

@@ -81,7 +81,7 @@ Bu dosya, uygulama çıkışı öncesi kritik akışların manuel test senaryola
 
 | Senaryo | Kontrol Edilecek |
 |---------|------------------|
-| Uçak modu | Offline uyarısı, acil durum akışı (SMS/arama olmadan) |
+| Uçak modu | Offline uyarısı, acil durum akışı (arama olmadan) |
 | İzin reddi | Konum / rehber reddedildiğinde uygulama çökmeden çalışıyor mu? |
 | Pil optimizasyonu | Uygulama arka planda kapatılırsa bildirim/foreground service |
 | Sallama tetiklemesi | Telefon sallanınca CountdownScreen’e geçiş |
@@ -91,9 +91,9 @@ Bu dosya, uygulama çıkışı öncesi kritik akışların manuel test senaryola
 
 ## Öncelik Sırası
 
-1. **Kritik:** Panik butonu → PIN → geri sayım → acil arama/SMS
+1. **Kritik:** Panik butonu → PIN → geri sayım → acil arama
 2. **Yüksek:** Splash → Onboarding → Ana sayfa, Kişiler ekleme
 3. **Orta:** Harita, Ayarlar, Sahte çağrı, Siren
 4. **Düşük:** Arka plan, sallama/ses tetikleme, dil değişimi
 
-Bu senaryolari gercek Android cihazda test edin; emulatorde izinler ve arama/SMS davranisi farkli olabilir.
+Bu senaryolari gercek Android cihazda test edin; emulatorde izinler ve arama davranisi farkli olabilir.

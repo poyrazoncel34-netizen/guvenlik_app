@@ -36,7 +36,7 @@
 
 ### QA
 - [ ] Gercek Android cihazda test
-- [ ] SMS + arama akisi test
+- [ ] Acil arama akisi test
 - [ ] PIN kurulum akisi test
 - [ ] Izin reddedilme senaryolari test
 - [ ] Offline senaryolar test

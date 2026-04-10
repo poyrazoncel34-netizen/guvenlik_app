@@ -21,7 +21,7 @@ class CrashLogService {
       });
     } catch (_) {
       // Storage full or database unavailable — swallow silently so the
-      // emergency flow (SMS, siren) is never interrupted by a logging failure.
+      // emergency flow (call, siren) is never interrupted by a logging failure.
     }
   }
 

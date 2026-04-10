@@ -23,7 +23,7 @@ const int kForegroundNotificationId = 7777;
 /// Alarm modu veya takip modu aktifken arka planda çalışmaya devam etmeyi sağlar.
 /// - Bildirim çubuğunda "KoruBeni Aktif" bildirimi gösterir
 /// - CPU'yu uyanık tutar (Wakelock)
-/// - GPS ve SMS fonksiyonlarının arka planda çalışmasını garanti eder
+/// - GPS ve acil arama fonksiyonlarının arka planda çalışmasını garanti eder
 class KoruBeniForegroundService {
   static final FlutterBackgroundService _service = FlutterBackgroundService();
   static bool _isConfigured = false;

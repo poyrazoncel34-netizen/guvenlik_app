@@ -58,8 +58,8 @@ class FeatureWarningHelper {
   static const String panicContent =
       'Bu özellik GERÇEK ACİL DURUMLARDA kullanılmak için tasarlanmıştır.\n\n'
       'Nasıl çalışır:\n'
-      '• Butonu basılı tut → bırak → PIN girmezsen acil kişilerine SMS gider\n'
-      '• SMS; internet bağlantısı ve operatör altyapısına bağlıdır\n'
+      '• Butonu basılı tut → bırak → PIN girmezsen acil kişin otomatik aranır\n'
+      '• Arama; operatör altyapısına bağlıdır\n'
       '• Yanlışlıkla tetiklenirse acil kişilerin gereksiz uyarılmasından sen sorumlusun\n\n'
       '⚠️ Bu uygulama 112\'nin YERİNİ TUTMAZ.\n'
       'Gerçek tehlikede önce 112\'yi ara.';
@@ -69,7 +69,7 @@ class FeatureWarningHelper {
       'Bu özellik fiziksel koruma SAĞLAMAZ.\n'
       'Yalnızca belirlediğin kişilere otomatik bildirim göndermeye yardımcı olur.\n\n'
       '• Çalışması internet ve GPS bağlantısına bağlıdır\n'
-      '• Bildirimler SMS ile gönderilir; operatör gecikmesi yaşanabilir\n'
+      '• Bildirimler arama ile iletilir; operatör gecikmesi yaşanabilir\n'
       '• Fiziksel güvenliğin için her zaman resmi acil servisleri kullan';
 
   static const String sirenTitle = '🔊 Alarm Sireni — Bilgilendirme';
@@ -81,7 +81,7 @@ class FeatureWarningHelper {
 
   static const String locationTitle = '📍 Konum Paylaşımı — Bilgilendirme';
   static const String locationContent =
-      'Konum bilginiz seçtiğiniz kişilere SMS ile gönderilecektir.\n\n'
+      'Konum bilginiz acil durum araması sırasında kullanılacaktır.\n\n'
       '• GPS doğruluğu cihaz ve çevre koşullarına bağlıdır; geliştirici garanti vermez\n'
       '• Konum bilginizi kiminle paylaştığınız sizin sorumluluğunuzdadır\n'
       '• Konum bilgisinin yetersiz, hatalı veya gecikmeli olmasından geliştirici sorumlu tutulamaz\n'

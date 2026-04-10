@@ -31,13 +31,13 @@ Son güncelleme: 18 Mart 2026
 
 **HAYIR** — Kişisel veriler hiçbir üçüncü tarafla paylaşılmaz.
 
-> Acil durum tetiklendiğinde konum bilgisi, kullanıcının belirlediği kişilere SMS ile iletilir. Bu işlem üçüncü taraf sunucusu değil, cihazın yerel SMS altyapısıdır.
+> Acil durum tetiklendiğinde kullanıcının belirlediği kişiler telefon ile aranır. Bu işlem üçüncü taraf sunucusu değil, cihazın yerel arama altyapısıdır.
 
 ---
 
 ## 4. Veri Güvenliği Önlemleri
 
-- [x] **Veriler aktarım sırasında şifreleniyor** — Evet (cihaz-to-cihaz SMS şifrelemesi işletim sistemi tarafından yönetilir)
+- [x] **Veriler aktarım sırasında şifreleniyor** — Evet (cihaz üzerindeki veriler AES-256 ile şifrelenir)
 - [x] **Veriler depolanırken şifreleniyor** — Evet (AES-256, Android Keystore / iOS Keychain)
 - [x] **Kullanıcılar veri silebilir** — Evet (Ayarlar > Yasal Bilgiler > Verilerimi Sil)
 

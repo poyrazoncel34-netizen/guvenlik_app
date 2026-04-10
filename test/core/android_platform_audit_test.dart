@@ -108,22 +108,6 @@ void main() {
               'on Android 13+ to avoid silently dropping emergency alerts');
     });
 
-    test('SmsSender must use context-based SmsManager on API 31+', () {
-      // SmsManager.getDefault() is deprecated on API 31+. Must use
-      // context.getSystemService(SmsManager::class.java) to correctly
-      // resolve the default subscription on dual-SIM devices.
-      final file = File(
-        'android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/SmsSender.kt',
-      );
-      expect(file.existsSync(), isTrue);
-      final content = file.readAsStringSync();
-
-      // Must use context.getSystemService for API 31+ (with legacy fallback OK)
-      expect(content, contains('getSystemService(SmsManager::class.java)'),
-          reason:
-              'SmsManager.getDefault() is deprecated on API 31+. '
-              'Must use context.getSystemService(SmsManager::class.java).');
-    });
 
     test('foreground_service.dart should not use WakelockPlus', () {
       // WakelockPlus is a screen-on wakelock. flutter_background_service

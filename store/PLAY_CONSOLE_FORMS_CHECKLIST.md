@@ -25,7 +25,7 @@ Play Console'da doldurulacak formlar ve ilgili rehberler.
 | Contacts | Collected, device-stored |
 | Audio | Optional, not shared |
 | App activity (crash, analytics) | Not collected |
-| Encryption in transit | Do not answer "Yes" for SMS-based emergency delivery |
+| Encryption in transit | Do not answer "Yes" — emergency delivery uses phone calls |
 | Users can request deletion | Yes |
 
 ---
