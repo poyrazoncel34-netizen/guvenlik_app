@@ -68,5 +68,27 @@ void main() {
             '— call first, navigate second',
       );
     });
+
+    test('NO bare await before executeEmergencyNative in panic flow', () {
+      // Find the _onPressEnd method body
+      final onPressEndIdx = source.indexOf('_onPressEnd');
+      expect(
+        onPressEndIdx,
+        isNot(-1),
+        reason: '_onPressEnd must exist in panic_button.dart',
+      );
+      // Extract the region from _onPressEnd to executeEmergencyNative
+      final callIdx = source.indexOf('executeEmergencyNative', onPressEndIdx);
+      expect(callIdx, isNot(-1));
+      final region = source.substring(onPressEndIdx, callIdx);
+      // There must be no bare "await " (with space) before the native call
+      // — the call itself is wrapped in unawaited(), not directly awaited
+      expect(
+        region.contains('await '),
+        isFalse,
+        reason: 'No bare await must appear between _onPressEnd and '
+            'executeEmergencyNative — the call must be unawaited (fire-and-forget)',
+      );
+    });
   });
 }

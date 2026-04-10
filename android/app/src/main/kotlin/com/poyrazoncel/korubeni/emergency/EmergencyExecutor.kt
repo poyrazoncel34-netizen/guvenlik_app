@@ -37,7 +37,6 @@ object EmergencyExecutor {
                 // Dispatch call
                 try {
                     openCallDirect(context, primaryNumber)
-                    Log.i(TAG, "Call initiated to primary number")
                 } catch (e: Exception) {
                     Log.e(TAG, "Call dispatch failed", e)
                 }
@@ -56,6 +55,8 @@ object EmergencyExecutor {
             context, Manifest.permission.CALL_PHONE
         ) == PackageManager.PERMISSION_GRANTED
 
+        Log.i(TAG, "EMERGENCY_CALL_TRIGGERED number=$cleaned CALL_PATH=${if (canDirect) "ACTION_CALL" else "ACTION_DIAL"}")
+
         val intent = if (canDirect) {
             Intent(Intent.ACTION_CALL).apply {
                 data = Uri.parse("tel:${Uri.encode(cleaned)}")
@@ -70,7 +71,7 @@ object EmergencyExecutor {
         try {
             context.startActivity(intent)
         } catch (e: Exception) {
-            Log.e(TAG, "Primary call intent failed", e)
+            Log.e(TAG, "FALLBACK_112 primary intent failed: ${e.message}")
             // HARD FAILSAFE — open 112 dialer no matter what
             try {
                 val fallback = Intent(Intent.ACTION_DIAL).apply {
