@@ -9,7 +9,7 @@ Bu dosya, mevcut offline-first mimariye göre hazırlanmış daha güvenli cevap
 **Does your app collect or share any of the required user data types?**  
 → Yes
 
-Not: KoruBeni geliştirici sunucularına veri göndermez. Ancak kullanıcı tetiklediğinde konum SMS ile acil kişilere iletilebildiği için formu boş bırakmak doğru olmaz.
+Not: KoruBeni geliştirici sunucularına veri göndermez. Ancak kullanıcı tetiklediğinde acil kişiler arandığı için formu boş bırakmak doğru olmaz.
 
 ---
 
@@ -21,12 +21,12 @@ Not: KoruBeni geliştirici sunucularına veri göndermez. Ancak kullanıcı teti
 |------|-------|
 | Approximate location | ✅ Processed when emergency or location sharing is triggered |
 | Precise location | ✅ Processed when emergency or location sharing is triggered |
-| Paylaşım | ✅ May be shared with emergency contacts via SMS |
+| Paylaşım | ✅ May be shared with emergency contacts via phone call |
 | Amaç | App functionality — Emergency assistance, location sharing |
 | Zorunlu / Opsiyonel | Optional — User action required |
 
 **Short explanation:**  
-Location is used only when the user triggers an emergency flow or starts location sharing. It may be included in an SMS sent to the user’s chosen emergency contacts.
+Location is used only when the user triggers an emergency flow or starts location sharing.
 
 ---
 
@@ -88,7 +88,7 @@ The app does not use Firebase Analytics, Crashlytics, or another telemetry backe
 
 ## Veri Güvenliği
 
-- **Encryption in transit:** Conservative answer: do not mark blanket `Yes` for all data, because emergency delivery can use carrier SMS.
+- **Encryption in transit:** Conservative answer: do not mark blanket `Yes` for all data, because emergency delivery uses phone calls.
 - **Users can request data deletion:** Yes — deleting the app or clearing app storage removes on-device data.
 - **Data sold:** No
 

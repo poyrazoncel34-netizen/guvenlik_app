@@ -55,28 +55,6 @@ void main() {
       expect(stopwatch.elapsed.inSeconds, lessThanOrEqualTo(6));
       stopwatch.stop();
     });
-    test('sendSms returns empty map when native side hangs', () async {
-      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockMethodCallHandler(channel, (MethodCall call) async {
-        if (call.method == 'sendSms') {
-          await Future.delayed(const Duration(seconds: 30));
-          return null;
-        }
-        return null;
-      });
-
-      final service = EmergencyPlatformService.instance;
-      final stopwatch = Stopwatch()..start();
-
-      final result = await service.sendSms(
-        recipients: ['5551234567'],
-        message: 'test emergency',
-      );
-
-      expect(stopwatch.elapsed.inSeconds, lessThanOrEqualTo(6));
-      expect(result, isA<Map<String, dynamic>>());
-      stopwatch.stop();
-    });
     test('triggerEmergency returns empty map when native side hangs', () async {
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(channel, (MethodCall call) async {

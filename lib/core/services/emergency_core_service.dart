@@ -7,7 +7,7 @@
 // - Sistem sağlık kontrolü
 //
 // NOT: Asıl acil durum tetikleme mantığı CountdownScreen ve
-// PinVerificationScreen'de bulunur (dual-action: SMS + Call).
+// PinVerificationScreen'de bulunur (acil arama tetikleme).
 // ============================================================================
 
 import 'dart:async';
@@ -214,9 +214,6 @@ class EmergencyCoreService {
       } catch (e) {
         health['battery_ok'] = true; // Assume OK
       }
-      
-      // SMS is composer-based; no restricted SMS permission required.
-      health['sms_permission'] = true;
       
       // Call Permission
       try {

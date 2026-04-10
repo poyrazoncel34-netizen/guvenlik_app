@@ -230,7 +230,7 @@ class _CountdownScreenState extends State<CountdownScreen>
     _emergencyDispatched = true;
 
     // C4: Check if the native alarm already fired (Dart timer was frozen by Doze).
-    // If so, EmergencyExecutor already dispatched SMS+call — skip duplicate execution.
+    // If so, EmergencyExecutor already dispatched call — skip duplicate execution.
     try {
       final alarmFired =
           await EmergencyPlatformService.instance.didCountdownAlarmFire();
@@ -1050,7 +1050,7 @@ class _ScaleTapButtonState extends State<_ScaleTapButton>
 }
 
 /// Full-screen emergency failure UI — replaces the tiny snackbar so the user
-/// can clearly see that both SMS and call failed, and manually dial.
+/// can clearly see that the call failed, and manually dial.
 class _EmergencyFailureScreen extends StatelessWidget {
   final String emergencyNumber;
 

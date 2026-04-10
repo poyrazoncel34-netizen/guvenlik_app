@@ -92,7 +92,7 @@ class HapticService {
   // ─────────────────────────────────────────────────────────────────
   // 3. EMERGENCY TRIGGERED — alarm başlatıldığında uzun uyarı
   // ─────────────────────────────────────────────────────────────────
-  /// SMS/API gönderildiğinde çağrılır.
+  /// Acil arama tetiklendiğinde çağrılır.
   /// Uzun sürekli titreşim: kullanıcı "yardım çağrıldı" hissi alır.
   static Future<void> emergencyTriggered() async {
     if (!_hasVibrator) {

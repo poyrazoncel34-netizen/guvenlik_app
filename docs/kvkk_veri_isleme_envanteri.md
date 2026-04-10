@@ -15,7 +15,7 @@ KoruBeni **tamamen çevrimdışı (offline-first)** çalışır. Tüm veriler ya
 - **Yerel veritabanı:** SQLite (sqflite)
 - **Hassas veri depolama:** FlutterSecureStorage (AES-256 şifreleme)
 - **Crash raporlama:** Yalnızca yerel log (`crash_log_service.dart`) — üçüncü taraf crash raporlama servisi **kullanılmaz**
-- **Ağ bağlantısı:** Yalnızca SMS gönderimi ve telefon araması için sistem API'leri kullanılır; uygulama kendi ağ bağlantısı kurmaz
+- **Ağ bağlantısı:** Yalnızca telefon araması için sistem API'leri kullanılır; uygulama kendi ağ bağlantısı kurmaz
 
 ---
 
@@ -31,7 +31,7 @@ KoruBeni **tamamen çevrimdışı (offline-first)** çalışır. Tüm veriler ya
 | **Saklama süresi** | İşlem anında kullanılır, kalıcı olarak saklanmaz |
 | **Güvenlik önlemi** | Yalnızca acil durum tetiklendiğinde ve rıza mevcut olduğunda erişilir |
 | **Rıza tipi** | `consent_location` — Granüler, geri çekilebilir |
-| **Aktarım** | Yalnızca kullanıcının belirlediği acil durum kişilerine SMS ile |
+| **Aktarım** | Yalnızca kullanıcının belirlediği acil durum kişilerine telefon araması ile |
 
 ### 2.2 Acil Durum Kişileri
 
@@ -39,7 +39,7 @@ KoruBeni **tamamen çevrimdışı (offline-first)** çalışır. Tüm veriler ya
 |------|-------|
 | **Veri türü** | İsim, telefon numarası |
 | **Hukuki dayanak** | KVKK m.5/1 — Açık rıza |
-| **İşleme amacı** | Acil durumda SMS/arama ile bilgilendirme |
+| **İşleme amacı** | Acil durumda arama ile bilgilendirme |
 | **Saklama süresi** | Kullanıcı silene kadar |
 | **Güvenlik önlemi** | FlutterSecureStorage (AES-256 şifreleme) |
 | **Rıza tipi** | `consent_emergency_contacts` — Granüler, geri çekilebilir |

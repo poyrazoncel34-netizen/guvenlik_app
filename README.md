@@ -10,7 +10,7 @@
 
 | Özellik | Açıklama |
 |---|---|
-| 🚨 **Panik Butonu** | Basılı tut → bırak → PIN girmezsen otomatik SMS + arama |
+| 🚨 **Panik Butonu** | Basılı tut → bırak → PIN girmezsen otomatik acil arama |
 | 📍 **Konum Paylaşımı** | Acil durumlarda GPS konumun Google Maps linki ile iletilir |
 | 🚶 **Güvenli Yürüyüş** | Zamanlayıcı + check-in + otomatik acil durum |
 | 📞 **Sahte Çağrı** | Özelleştirilebilir isim/fotoğraf ile sahte arama |

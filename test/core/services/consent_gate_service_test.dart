@@ -12,7 +12,7 @@ void main() {
     'ConsentManager is not registered — emergency must never be blocked',
     () {
       // Do NOT register ConsentManager in GetIt.
-      // If the DI container fails to initialize, emergency calls and SMS
+      // If the DI container fails to initialize, emergency calls
       // must NOT be silently blocked in a life-critical app.
       expect(ConsentGateService.isEmergencyContactsAllowed(), isTrue);
     },

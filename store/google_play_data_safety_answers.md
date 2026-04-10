@@ -12,7 +12,7 @@
 - Kesin konum: **EVET**
 - Toplama amacı: Uygulama işlevselliği (acil durum konum paylaşımı)
 - Zorunlu mu: **EVET**
-- Paylaşılıyor mu: **HAYIR** (yalnızca kullanıcının seçtiği kişilere SMS ile — cihazdan gönderilen SMS, üçüncü taraf sunucuya değil)
+- Paylaşılıyor mu: **HAYIR** (yalnızca kullanıcının seçtiği kişilere telefon araması ile — üçüncü taraf sunucuya değil)
 - İşleme: Cihazda geçici (acil durum sırasında)
 
 ### Kişisel Bilgiler
@@ -23,7 +23,7 @@
   - İşleme: Cihazda (SQLite)
 
 - Telefon numarası: **EVET** (acil durum kişileri)
-  - Toplama amacı: Uygulama işlevselliği (acil durum SMS / arama)
+  - Toplama amacı: Uygulama işlevselliği (acil durum araması)
   - Zorunlu mu: **EVET**
   - Paylaşılıyor mu: **HAYIR**
   - İşleme: Cihazda (SQLite)
@@ -41,7 +41,7 @@
 
 | Konu | Durum |
 |------|-------|
-| Veri aktarım sırasında şifreleniyor mu? | Uygulamanın kendi veri akışı yok. SMS operatör kanalı üzerinden gider (düz metin — bu GSM standardıdır). |
+| Veri aktarım sırasında şifreleniyor mu? | Uygulamanın kendi veri akışı yok. Acil arama operatör kanalı üzerinden yapılır. |
 | Veri silinebilir mi? | **EVET** — uygulama içinden tam silme mevcut |
 | Veri sunucuya gönderilmiyor | **DOĞRU** — tamamen offline, sıfır bulut bağlantısı |
 | Veri üçüncü tarafla paylaşılmıyor | **DOĞRU** — analytics, crashlytics, reklam servisi yok |
