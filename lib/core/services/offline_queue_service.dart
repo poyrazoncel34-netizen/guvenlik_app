@@ -16,6 +16,7 @@ class OfflineQueueService {
 
   static const String _queueKey = 'offline_event_queue';
   static const int _maxQueueSize = 100;
+  static const int _maxEventSize = 1024;
   bool _initialized = false;
   StreamSubscription<bool>? _connectivitySubscription;
 
@@ -24,11 +25,12 @@ class OfflineQueueService {
     if (_initialized) return;
     _initialized = true;
 
-    _connectivitySubscription = ConnectivityService.instance.onStatusChange.listen((online) {
-      if (online) {
-        syncPendingEvents();
-      }
-    });
+    _connectivitySubscription = ConnectivityService.instance.onStatusChange
+        .listen((online) {
+          if (online) {
+            syncPendingEvents();
+          }
+        });
 
     if (ConnectivityService.instance.isOnline) {
       await syncPendingEvents();
@@ -39,11 +41,17 @@ class OfflineQueueService {
   Future<void> enqueue(OfflineEvent event) async {
     final prefs = await SharedPreferences.getInstance();
     final queue = _loadQueue(prefs);
+    final payload = event.toJson();
+    final encodedPayload = jsonEncode(payload);
+    if (encodedPayload.length > _maxEventSize) {
+      debugPrint('OfflineQueue: Event too large, dropped');
+      return;
+    }
     if (queue.length >= _maxQueueSize) {
       queue.removeAt(0);
       debugPrint('OfflineQueue: Queue full, dropped oldest event');
     }
-    queue.add(event.toJson());
+    queue.add(payload);
     await prefs.setStringList(
       _queueKey,
       queue.map((e) => jsonEncode(e)).toList(),
@@ -66,14 +74,21 @@ class OfflineQueueService {
 
         // Drop events after max retries
         if (event.retryCount >= 10) {
-          debugPrint('OfflineQueue: Dropping event after 10 retries: ${event.title}');
+          debugPrint(
+            'OfflineQueue: Dropping event after 10 retries: ${event.title}',
+          );
           continue;
         }
 
         // Exponential backoff check
         if (event.retryCount > 0 && event.lastAttemptAt != null) {
-          final backoffMs = min(60000, 1000 * pow(2, event.retryCount - 1).toInt());
-          final elapsed = DateTime.now().difference(event.lastAttemptAt!).inMilliseconds;
+          final backoffMs = min(
+            60000,
+            1000 * pow(2, event.retryCount - 1).toInt(),
+          );
+          final elapsed = DateTime.now()
+              .difference(event.lastAttemptAt!)
+              .inMilliseconds;
           if (elapsed < backoffMs) {
             failedEvents.add(eventMap);
             continue;
@@ -136,15 +151,19 @@ class OfflineQueueService {
       try {
         final data = event.data ?? {};
         final message =
-            data['message'] as String? ?? event.description ?? 'default_emergency_message'.tr();
+            data['message'] as String? ??
+            event.description ??
+            'default_emergency_message'.tr();
         final lat = (data['lat'] as num?)?.toDouble();
         final lng = (data['lng'] as num?)?.toDouble();
-        
+
         // Log the emergency locally
         debugPrint('Emergency queued: ${event.title}');
-        debugPrint('Location: ${lat != null && lng != null ? "$lat, $lng" : "N/A"}');
+        debugPrint(
+          'Location: ${lat != null && lng != null ? "$lat, $lng" : "N/A"}',
+        );
         debugPrint('Message: $message');
-        
+
         return true;
       } catch (e) {
         debugPrint('OfflineQueue: Emergency sync failed: $e');
@@ -182,10 +201,7 @@ class OfflineEvent {
     this.lastAttemptAt,
   }) : createdAt = createdAt ?? DateTime.now();
 
-  OfflineEvent copyWith({
-    int? retryCount,
-    DateTime? lastAttemptAt,
-  }) {
+  OfflineEvent copyWith({int? retryCount, DateTime? lastAttemptAt}) {
     return OfflineEvent(
       type: type,
       title: title,

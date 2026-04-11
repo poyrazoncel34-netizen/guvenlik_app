@@ -125,12 +125,15 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
             automaticallyImplyLeading: !widget.requiredSetup,
             actions: [
               IconButton(
-                icon: const Icon(Icons.info_outline, color: AppColors.textSecondary),
+                icon: const Icon(
+                  Icons.info_outline,
+                  color: AppColors.textSecondary,
+                ),
                 onPressed: () => Navigator.push(
                   context,
                   MaterialPageRoute(builder: (_) => const LegalInfoScreen()),
                 ),
-                tooltip: 'Yasal Bilgiler',
+                tooltip: 'settings_legal_info_tooltip'.tr(),
               ),
             ],
           ),

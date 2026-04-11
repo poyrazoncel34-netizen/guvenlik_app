@@ -9,7 +9,7 @@ Bu dosya, mevcut offline-first mimariye göre hazırlanmış daha güvenli cevap
 **Does your app collect or share any of the required user data types?**  
 → Yes
 
-Not: KoruBeni geliştirici sunucularına veri göndermez. Ancak kullanıcı tetiklediğinde konum SMS ile acil kişilere iletilebildiği için formu boş bırakmak doğru olmaz.
+Not: KoruBeni geliştirici sunucularına veri göndermez. Konum, kişi ve profil verileri cihazda işlenir. Harita karoları, Play Billing ve üretimde açıkça yapılandırılmış crash reporting gibi üçüncü taraf bileşenler ayrı değerlendirilmelidir.
 
 ---
 
@@ -19,14 +19,14 @@ Not: KoruBeni geliştirici sunucularına veri göndermez. Ancak kullanıcı teti
 
 | Soru | Yanıt |
 |------|-------|
-| Approximate location | ✅ Processed when emergency or location sharing is triggered |
-| Precise location | ✅ Processed when emergency or location sharing is triggered |
-| Paylaşım | ✅ May be shared with emergency contacts via SMS |
-| Amaç | App functionality — Emergency assistance, location sharing |
+| Approximate location | ✅ Processed when emergency or location session is triggered |
+| Precise location | ✅ Processed when emergency or location session is triggered |
+| Paylaşım | ❌ Not automatically shared by the app |
+| Amaç | App functionality — Emergency assistance, location session |
 | Zorunlu / Opsiyonel | Optional — User action required |
 
 **Short explanation:**  
-Location is used only when the user triggers an emergency flow or starts location sharing. It may be included in an SMS sent to the user’s chosen emergency contacts.
+Location is used only when the user triggers an emergency flow or starts a location session. The app does not automatically send location messages to emergency contacts.
 
 ---
 
@@ -88,7 +88,7 @@ The app does not use Firebase Analytics, Crashlytics, or another telemetry backe
 
 ## Veri Güvenliği
 
-- **Encryption in transit:** Conservative answer: do not mark blanket `Yes` for all data, because emergency delivery can use carrier SMS.
+- **Encryption in transit:** Do not mark blanket `Yes` for all data. The app has no developer backend, but map, billing, and configured crash reporting traffic are handled by their providers.
 - **Users can request data deletion:** Yes — deleting the app or clearing app storage removes on-device data.
 - **Data sold:** No
 
@@ -97,11 +97,11 @@ The app does not use Firebase Analytics, Crashlytics, or another telemetry backe
 ## Özet (Copy-Paste için)
 
 **Data used by the app:**
-- Location, only during emergency/location sharing flows
+- Location, only during emergency/location session flows
 - Contacts, only for choosing emergency contacts
 - Optional profile name/photo, device-only
 - Optional audio recordings, device-only
 
-**Shared with:** Emergency contacts chosen by the user, only when the user triggers an emergency/location sharing action
+**Shared with:** Not automatically shared by the app. Emergency contacts are used for call flow only.
 
 **Not used:** Firebase auth, cloud database, analytics, crash reporting

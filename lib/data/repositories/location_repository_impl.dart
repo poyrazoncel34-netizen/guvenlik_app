@@ -39,5 +39,5 @@ class LocationRepositoryImpl implements LocationRepository {
   }
 
   @override
-  LatLng get lastKnownPosition => _locationService.lastKnownPosition;
+  LatLng? get lastKnownPosition => _locationService.lastKnownPosition;
 }

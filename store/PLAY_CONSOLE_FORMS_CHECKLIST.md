@@ -20,12 +20,12 @@ Play Console'da doldurulacak formlar ve ilgili rehberler.
 | Adım | Durum |
 |------|-------|
 | Does your app collect or share data? | Yes |
-| Konum (approximate, precise) | Collected, shared with emergency contacts |
+| Konum (approximate, precise) | Collected for emergency/location session, not automatically shared |
 | Personal info (optional profile name/photo) | Device-only |
 | Contacts | Collected, device-stored |
 | Audio | Optional, not shared |
 | App activity (crash, analytics) | Not collected |
-| Encryption in transit | Do not answer "Yes" for SMS-based emergency delivery |
+| Encryption in transit | No developer backend; evaluate map/billing/crash SDK traffic separately |
 | Users can request deletion | Yes |
 
 ---

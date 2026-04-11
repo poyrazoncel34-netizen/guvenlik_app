@@ -10,20 +10,20 @@
 ### Konum
 - Yaklaşık konum: **EVET**
 - Kesin konum: **EVET**
-- Toplama amacı: Uygulama işlevselliği (acil durum konum paylaşımı)
+- Toplama amacı: Uygulama işlevselliği (acil durum konum durumu / konum oturumu)
 - Zorunlu mu: **EVET**
-- Paylaşılıyor mu: **HAYIR** (yalnızca kullanıcının seçtiği kişilere SMS ile — cihazdan gönderilen SMS, üçüncü taraf sunucuya değil)
+- Paylaşılıyor mu: **HAYIR** (uygulama konumu otomatik mesajla paylaşmaz)
 - İşleme: Cihazda geçici (acil durum sırasında)
 
 ### Kişisel Bilgiler
 - Ad: **EVET**
-  - Toplama amacı: Uygulama işlevselliği (profil / acil durum mesajı)
+  - Toplama amacı: Uygulama işlevselliği (profil / acil arama akışı)
   - Zorunlu mu: **HAYIR**
   - Paylaşılıyor mu: **HAYIR**
   - İşleme: Cihazda (SQLite)
 
 - Telefon numarası: **EVET** (acil durum kişileri)
-  - Toplama amacı: Uygulama işlevselliği (acil durum SMS / arama)
+  - Toplama amacı: Uygulama işlevselliği (acil durum arama akışı)
   - Zorunlu mu: **EVET**
   - Paylaşılıyor mu: **HAYIR**
   - İşleme: Cihazda (SQLite)
@@ -41,9 +41,9 @@
 
 | Konu | Durum |
 |------|-------|
-| Veri aktarım sırasında şifreleniyor mu? | Uygulamanın kendi veri akışı yok. SMS operatör kanalı üzerinden gider (düz metin — bu GSM standardıdır). |
+| Veri aktarım sırasında şifreleniyor mu? | Geliştirici backend'i yok. Harita, billing ve yapılandırılmış crash reporting trafiği kendi sağlayıcı altyapısına tabidir. |
 | Veri silinebilir mi? | **EVET** — uygulama içinden tam silme mevcut |
-| Veri sunucuya gönderilmiyor | **DOĞRU** — tamamen offline, sıfır bulut bağlantısı |
+| Veri sunucuya gönderilmiyor | **DOĞRU** — geliştirici backend'i yok; harita/billing/crash reporting sağlayıcıları ayrıca değerlendirilir |
 | Veri üçüncü tarafla paylaşılmıyor | **DOĞRU** — analytics, crashlytics, reklam servisi yok |
 
 ---

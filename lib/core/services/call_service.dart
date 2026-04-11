@@ -5,7 +5,6 @@ import 'package:flutter_direct_caller_plugin/flutter_direct_caller_plugin.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import 'android_intent_service.dart';
-import 'consent_gate_service.dart';
 
 enum EmergencyCallStatus { directCallStarted, dialerOpened, failed }
 
@@ -40,8 +39,7 @@ class EmergencyCallResult {
   bool get isConfirmed => status == EmergencyCallStatus.directCallStarted;
 
   /// True when dialer opened but USER MUST PRESS THE GREEN CALL BUTTON.
-  bool get requiresUserAction =>
-      status == EmergencyCallStatus.dialerOpened;
+  bool get requiresUserAction => status == EmergencyCallStatus.dialerOpened;
 
   /// True when the action completely failed (nothing opened).
   bool get isFailed => status == EmergencyCallStatus.failed;
@@ -68,12 +66,9 @@ class EmergencyCallResult {
 class CallService {
   CallService._();
 
-  static Future<EmergencyCallResult> startEmergencyCall(String number) async {
-    // KVKK m.5: Acil durum kişileri rızası kontrolü
-    if (!ConsentGateService.isEmergencyContactsAllowed()) {
-      return EmergencyCallResult.failed(number);
-    }
+  static const Duration callTimeout = Duration(seconds: 5);
 
+  static Future<EmergencyCallResult> startEmergencyCall(String number) async {
     final normalized = AndroidIntentService.normalizePhoneNumber(number);
     if (normalized.isEmpty) {
       return EmergencyCallResult.failed(normalized);
@@ -87,7 +82,10 @@ class CallService {
         final phoneStatus = await Permission.phone.status;
         if (phoneStatus.isGranted) {
           final directCallStarted =
-              await FlutterDirectCallerPlugin.callNumber(normalized).timeout(const Duration(seconds: 8), onTimeout: () => false) ?? false;
+              await FlutterDirectCallerPlugin.callNumber(
+                normalized,
+              ).timeout(callTimeout, onTimeout: () => false) ??
+              false;
           if (directCallStarted) {
             return EmergencyCallResult.direct(normalized);
           }

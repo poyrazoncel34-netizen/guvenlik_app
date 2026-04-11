@@ -10,7 +10,6 @@ import 'package:provider/provider.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../core/app_colors.dart';
 import '../core/constants/app_constants.dart';
 import '../core/utils/app_reset_helper.dart';
@@ -57,9 +56,7 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future<void> _shareApp() async {
-    final shareText = defaultTargetPlatform == TargetPlatform.iOS
-        ? 'settings_share_text_ios'.tr()
-        : 'settings_share_text'.tr();
+    final shareText = 'settings_share_text'.tr();
     try {
       await Clipboard.setData(ClipboardData(text: shareText));
       if (mounted) {
@@ -107,9 +104,7 @@ class _SettingsPageState extends State<SettingsPage> {
             // KoruBeni Pro
             _buildSectionTitle('subscription_section_title'.tr()),
             const SizedBox(height: 14),
-            _buildSettingsCard([
-              _buildProTile(isPro),
-            ]),
+            _buildSettingsCard([_buildProTile(isPro)]),
             const SizedBox(height: 28),
 
             // Security settings
@@ -225,9 +220,11 @@ class _SettingsPageState extends State<SettingsPage> {
                     context: context,
                     builder: (ctx) => AlertDialog(
                       title: Text('settings_language_confirm_title'.tr()),
-                      content: Text('settings_language_confirm_body'.tr(
-                        namedArgs: {'language': langName},
-                      )),
+                      content: Text(
+                        'settings_language_confirm_body'.tr(
+                          namedArgs: {'language': langName},
+                        ),
+                      ),
                       actions: [
                         TextButton(
                           onPressed: () => Navigator.pop(ctx),
@@ -253,7 +250,10 @@ class _SettingsPageState extends State<SettingsPage> {
             const SizedBox(height: 14),
             _buildSettingsCard([
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 14,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -337,8 +337,8 @@ class _SettingsPageState extends State<SettingsPage> {
               _buildNavigationTile(
                 icon: Icons.open_in_browser_rounded,
                 iconColor: AppColors.info,
-                title: 'Gizlilik Politikası (Web)',
-                subtitle: 'App Store gereksinimleri için çevrimiçi sürüm',
+                title: 'legal_settings_privacy_web'.tr(),
+                subtitle: 'legal_settings_privacy_web_subtitle'.tr(),
                 onTap: () async {
                   final uri = Uri.parse(AppConstants.privacyPolicyWebUrl);
                   try {
@@ -519,7 +519,10 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
             if (isPro)
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.success.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(20),
@@ -827,5 +830,4 @@ class _SettingsPageState extends State<SettingsPage> {
   void _showLogoutDialog(BuildContext context) {
     AppResetHelper.showResetDialog(context);
   }
-
 }

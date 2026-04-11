@@ -12,7 +12,8 @@ class LegalTexts {
   static const String lastUpdatedEn = 'March 19, 2026';
 
   // ── Kullanım Sözleşmesi — Türkçe ─────────────────────────────────────────
-  static const String termsOfServiceTr = '''
+  static const String termsOfServiceTr =
+      '''
 KULLANIM SÖZLEŞMESİ (SON KULLANICI LİSANS SÖZLEŞMESİ — EULA)
 Sürüm $termsVersion | Son Güncelleme: $lastUpdated
 
@@ -21,7 +22,7 @@ Bu Kullanım Sözleşmesi ("Sözleşme"), Poyraz Öncel ("Geliştirici") ile uyg
 ──────────────────────────────────────
 1. UYGULAMANIN AMACI VE KAPSAMI
 ──────────────────────────────────────
-KoruBeni, kişisel güvenlik farkındalığını desteklemek amacıyla geliştirilmiş ÜCRETSİZ bir mobil yardımcı uygulamadır. Uygulama; panik butonu, sahte çağrı, güvenli yürüyüş takibi, acil durum SMS gönderimi ve konum paylaşımı gibi özellikler sunmaktadır.
+KoruBeni, kişisel güvenlik farkındalığını desteklemek amacıyla geliştirilmiş ÜCRETSİZ bir Android yardımcı uygulamadır. Uygulama; panik butonu, sahte çağrı, güvenli yürüyüş takibi, acil arama akışı ve konum oturumu gibi özellikler sunmaktadır.
 
 6502 Sayılı Tüketicinin Korunması Hakkında Kanun kapsamında bilgilendirme: Bu uygulama ücretsiz bir yardımcı araçtır. Profesyonel güvenlik hizmeti, acil müdahale servisi veya herhangi bir mesleki güvenlik çözümü DEĞİLDİR. Herhangi bir hizmet seviyesi taahhüdü verilmemektedir.
 
@@ -35,7 +36,7 @@ Bu uygulamayı kullanmak için 18 yaşından büyük olmanız veya ebeveyn/veli 
 ──────────────────────────────────────
 • Bu uygulama profesyonel güvenlik hizmeti, acil servis veya polis hizmetinin yerini ALMAZ ve ALMAYACAKTIR.
 • Acil durumlarda 112'yi aramak KULLANICININ SORUMLULUĞUNDADIR. Uygulama yalnızca yardımcı bir araçtır.
-• Uygulama; SMS/arama iletimini, konum doğruluğunu veya bildirim teslimatını garanti ETMEZ.
+• Uygulama; arama bağlantısını, konum doğruluğunu veya bildirim teslimatını garanti ETMEZ.
 • Ağ sorunları, cihaz ayarları, operatör kaynaklı aksaklıklar veya pil tükenmesi nedeniyle yaşanan gecikmeler ve iletim hatalarından GELİŞTİRİCİ SORUMLU TUTULAMAZ.
 • GPS donanımının doğruluk payından kaynaklanan konum hatalarından geliştirici sorumlu değildir.
 
@@ -55,16 +56,16 @@ Kullanıcı aşağıdakileri kabul eder:
 Sahte çağrı özelliği YALNIZCA kişisel güvenlik amaçlı tasarlanmıştır (örn. tacizden kaçmak için ortamdan uzaklaşma). Bu özelliğin dolandırıcılık, taciz, başkasını yanıltma veya herhangi bir suç eyleminde kullanılması YASALARA AYKIRIDIR. Söz konusu kötüye kullanımlardan doğan TÜM HUKUKİ VE CEZAİ SORUMLULUK KULLANICIYA AİTTİR.
 
 ──────────────────────────────────────
-6. KONUM PAYLAŞIMI
+6. KONUM OTURUMU
 ──────────────────────────────────────
-• Konum verisi yalnızca kullanıcının açıkça tetiklemesiyle paylaşılır.
-• Paylaşılan konumun doğruluğu GPS donanımına bağlıdır; geliştirici tarafından garanti edilmez.
-• Konum, yalnızca kullanıcının belirlediği kişilere SMS yoluyla iletilir; üçüncü taraf sunuculara gönderilmez.
+• Konum verisi yalnızca kullanıcının açıkça tetiklemesiyle harita/konum oturumu için kullanılır.
+• Gösterilen konumun doğruluğu GPS donanımına bağlıdır; geliştirici tarafından garanti edilmez.
+• Konum alınamazsa uygulama sahte koordinat göstermez. Çevrimiçi harita karoları OpenStreetMap bağlantısı gerektirir.
 
 ──────────────────────────────────────
 7. ACİL DURUM KİŞİLERİ VE ÜÇÜNCÜ KİŞİ HAKLARI
 ──────────────────────────────────────
-• Kullanıcı, acil durum kişisi olarak eklediği kişilerin ad ve telefon numarası bilgilerini kaydetme ve bu kişilere SMS gönderme yetkisine sahip olduğunu beyan eder.
+• Kullanıcı, acil durum kişisi olarak eklediği kişilerin ad ve telefon numarası bilgilerini kaydetme ve bu kişileri acil durumda arama yetkisine sahip olduğunu beyan eder.
 • Bu kişilerin KVKK kapsamındaki haklarından kullanıcı sorumludur. Kişilerin rızasının alınması kullanıcının yükümlülüğündedir.
 • Acil durum kişisi olarak eklenen üçüncü kişiler, KVKK Madde 11 kapsamındaki haklarını korubeni.destek@gmail.com adresine başvurarak kullanabilir. Geliştirici, başvuru üzerine ilgili veriyi kullanıcıya bildirerek silinmesini talep edecektir.
 
@@ -114,7 +115,8 @@ Geliştirici bu Sözleşme'yi dilediği zaman güncelleme hakkını saklı tutar
 ''';
 
   // ── Kullanım Sözleşmesi — İngilizce ──────────────────────────────────────
-  static const String termsOfServiceEn = '''
+  static const String termsOfServiceEn =
+      '''
 TERMS OF SERVICE (END USER LICENSE AGREEMENT — EULA)
 Version $termsVersion | Last Updated: $lastUpdatedEn
 
@@ -123,7 +125,7 @@ This Terms of Service Agreement ("Agreement") is entered into between Poyraz Ön
 ──────────────────────────────────────
 1. PURPOSE AND SCOPE
 ──────────────────────────────────────
-KoruBeni is a FREE mobile utility application developed to support personal safety awareness. The app offers features such as a panic button, fake call, safe walk tracking, emergency SMS sending, and location sharing.
+KoruBeni is a FREE Android utility application developed to support personal safety awareness. The app offers features such as a panic button, fake call, safe walk tracking, emergency call flow, and location session.
 
 Notice under Consumer Protection Law No. 6502: This application is a free auxiliary tool. It is NOT a professional security service, emergency response service, or any professional security solution. No service level commitment is provided.
 
@@ -137,7 +139,7 @@ You must be at least 18 years old or have parental/guardian consent to use this 
 ──────────────────────────────────────
 • This application does NOT and WILL NOT replace professional security services, emergency services, or police services.
 • Calling 112 in emergency situations IS THE USER'S RESPONSIBILITY. The app is only an auxiliary tool.
-• The application does NOT guarantee SMS/call delivery, location accuracy, or notification delivery.
+• The application does NOT guarantee call connection, location accuracy, or notification delivery.
 • The Developer CANNOT BE HELD RESPONSIBLE for delays and delivery failures due to network issues, device settings, carrier outages, or battery depletion.
 • The Developer is not responsible for location errors arising from GPS hardware inaccuracy.
 
@@ -157,16 +159,16 @@ The User agrees to:
 The fake call feature is designed ONLY for personal safety purposes (e.g., leaving a situation to escape harassment). Using this feature for fraud, harassment, deception of others, or any criminal act IS ILLEGAL. ALL LEGAL AND CRIMINAL RESPONSIBILITY for such misuse BELONGS TO THE USER.
 
 ──────────────────────────────────────
-6. LOCATION SHARING
+6. LOCATION SESSION
 ──────────────────────────────────────
-• Location data is shared only when explicitly triggered by the user.
-• The accuracy of the shared location depends on GPS hardware and is not guaranteed by the Developer.
-• Location is transmitted only to persons designated by the user via SMS; not sent to third-party servers.
+• Location data is used for map/location sessions only when explicitly triggered by the user.
+• The accuracy of the displayed location depends on GPS hardware and is not guaranteed by the Developer.
+• If location cannot be obtained, the app does not show fake coordinates. Online map tiles require OpenStreetMap connectivity.
 
 ──────────────────────────────────────
 7. EMERGENCY CONTACTS AND THIRD-PARTY RIGHTS
 ──────────────────────────────────────
-• The User declares that they have the authority to save and send SMS to the persons added as emergency contacts.
+• The User declares that they have the authority to save and call the persons added as emergency contacts in an emergency.
 • The User is responsible for the rights of these persons under applicable privacy laws.
 • Third parties added as emergency contacts may exercise their rights under KVKK Article 11 by contacting korubeni.destek@gmail.com. The Developer will notify the relevant user and request deletion of the data.
 
@@ -216,7 +218,8 @@ Contact: korubeni.destek@gmail.com
 ''';
 
   // ── KVKK Aydınlatma Metni — Türkçe ───────────────────────────────────────
-  static const String kvkkDisclosureTr = '''
+  static const String kvkkDisclosureTr =
+      '''
 KİŞİSEL VERİLERİN KORUNMASI KANUNU (KVKK)
 AYDINLATMA METNİ
 Sürüm $kvkkVersion | Son Güncelleme: $lastUpdated
@@ -237,8 +240,8 @@ E-posta   : korubeni.destek@gmail.com
 Kategori          | Veri                              | Amaç                                  | Hukuki Sebep
 ────────────────────────────────────────────────────────────────────────────────────────────────────────
 Kimlik            | Ad, profil fotoğrafı              | Uygulama profili                      | Açık rıza
-İletişim          | Acil kişi adı, telefon numarası   | Acil durumda SMS gönderimi            | Açık rıza
-Konum             | GPS koordinatları                 | Acil durum konum paylaşımı            | Açık rıza
+İletişim          | Acil kişi adı, telefon numarası   | Acil durumda arama akışı              | Açık rıza
+Konum             | GPS koordinatları                 | Harita ve konum oturumu               | Açık rıza
 Ses               | Ortam ses kaydı                   | Kullanıcı inisiyatifinde kanıt toplama| Açık rıza
 Güvenlik          | PIN kodu (şifreli)                | Uygulama erişim kontrolü              | Meşru menfaat
 Cihaz             | Cihaz tipi, OS versiyonu          | Teknik uyumluluk & rıza logu          | Meşru menfaat
@@ -247,7 +250,7 @@ Yasal Rıza Logu   | Rıza türü, tarih, versiyon        | KVKK uyum kaydı    
 ──────────────────────────────────────
 3. VERİLERİN İŞLENME AMACI
 ──────────────────────────────────────
-• Acil durum SMS ve konum paylaşımı hizmetinin sağlanması
+• Acil arama, harita ve konum oturumu işlevlerinin sağlanması
 • Uygulama güvenliğinin ve erişim kontrolünün sağlanması
 • KVKK kapsamında rıza kayıtlarının tutulması
 • Kullanıcı deneyiminin kişiselleştirilmesi
@@ -255,7 +258,7 @@ Yasal Rıza Logu   | Rıza türü, tarih, versiyon        | KVKK uyum kaydı    
 ──────────────────────────────────────
 4. VERİ AKTARIMI
 ──────────────────────────────────────
-Kişisel verileriniz HİÇBİR üçüncü taraf sunucusuna aktarılmaz. Tüm veriler YALNIZCA CİHAZINIZDA saklanır. Acil durum tetiklendiğinde, yalnızca sizin belirlediğiniz kişilere SMS yoluyla konum bilginiz iletilir; bu iletim doğrudan cihazınızın SMS altyapısı üzerinden gerçekleşir.
+Kişisel verileriniz geliştirici sunucusuna aktarılmaz. Tüm veriler cihazınızda saklanır. Çevrimiçi harita görünümü OpenStreetMap karo servisine ağ isteği yapabilir; acil akış otomatik mesaj göndermez.
 
 Kişisel verileriniz TÜRKİYE DIŞINA aktarılmaz.
 
@@ -264,7 +267,7 @@ Kişisel verileriniz TÜRKİYE DIŞINA aktarılmaz.
 ──────────────────────────────────────
 • Profil bilgileri     : Uygulama kullanıldığı sürece; siz silene kadar
 • Acil durum kişileri  : Siz silene kadar
-• Konum paylaşım geçmişi: 90 gün (kullanıcı ayarlayabilir: 30/60/90 gün)
+• Konum oturumu geçmişi: 30 gün
 • Ses kayıtları        : Siz silene kadar (otomatik temizleme seçeneği mevcuttur)
 • Rıza logları         : Uygulama kullanıldığı sürece; hesap silinene kadar
 • PIN (şifreli)        : Siz değiştirene veya silene kadar
@@ -272,8 +275,8 @@ Kişisel verileriniz TÜRKİYE DIŞINA aktarılmaz.
 ──────────────────────────────────────
 6. VERİ GÜVENLİĞİ
 ──────────────────────────────────────
-• Tüm hassas veriler AES-256 şifrelemesi ile korunmaktadır.
-• PIN ve kişisel bilgiler FlutterSecureStorage (Android Keystore / iOS Keychain) üzerinde saklanmaktadır.
+• PIN ve ilk müdahale bilgileri FlutterSecureStorage üzerinde saklanmaktadır.
+• Acil kişi verisi cihaz içi yerel veritabanında saklanır; yedekleme kapalıdır ve gereksiz kopyalar temizlenir.
 • Uygulama, internete herhangi bir kişisel veri göndermemektedir.
 
 ──────────────────────────────────────
@@ -313,7 +316,8 @@ Bu metin, KVKK ve ilgili mevzuattaki değişiklikler doğrultusunda güncelleneb
 ''';
 
   // ── KVKK Aydınlatma Metni — İngilizce ────────────────────────────────────
-  static const String kvkkDisclosureEn = '''
+  static const String kvkkDisclosureEn =
+      '''
 PERSONAL DATA PROTECTION LAW (KVKK)
 DISCLOSURE NOTICE
 Version $kvkkVersion | Last Updated: $lastUpdatedEn
@@ -334,8 +338,8 @@ E-mail    : korubeni.destek@gmail.com
 Category          | Data                              | Purpose                               | Legal Basis
 ─────────────────────────────────────────────────────────────────────────────────────────────────────────
 Identity          | Name, profile photo               | Application profile                   | Explicit consent
-Contact           | Emergency contact name, phone     | Emergency SMS sending                 | Explicit consent
-Location          | GPS coordinates                   | Emergency location sharing            | Explicit consent
+Contact           | Emergency contact name, phone     | Emergency call flow                   | Explicit consent
+Location          | GPS coordinates                   | Map and location session              | Explicit consent
 Audio             | Ambient audio recording           | User-initiated evidence collection    | Explicit consent
 Security          | PIN code (encrypted)              | App access control                    | Legitimate interest
 Device            | Device type, OS version           | Technical compatibility & consent log | Legitimate interest
@@ -344,7 +348,7 @@ Legal Consent Log | Consent type, date, version       | KVKK compliance record  
 ──────────────────────────────────────
 3. PURPOSES OF PROCESSING
 ──────────────────────────────────────
-• Providing emergency SMS and location sharing services
+• Providing emergency call, map and location-session features
 • Ensuring application security and access control
 • Maintaining consent records under KVKK
 • Personalizing the user experience
@@ -352,7 +356,7 @@ Legal Consent Log | Consent type, date, version       | KVKK compliance record  
 ──────────────────────────────────────
 4. DATA TRANSFER
 ──────────────────────────────────────
-Your personal data is NOT transferred to any third-party server. All data is stored ONLY ON YOUR DEVICE. When an emergency is triggered, your location is transmitted only to persons you have designated via SMS; this transmission occurs directly through your device's SMS infrastructure.
+Your personal data is not transferred to developer servers. Data is stored on your device. Online map display may request OpenStreetMap tiles; the emergency flow does not send automatic messages.
 
 Your personal data is NOT TRANSFERRED OUTSIDE OF TURKEY.
 
@@ -361,7 +365,7 @@ Your personal data is NOT TRANSFERRED OUTSIDE OF TURKEY.
 ──────────────────────────────────────
 • Profile information      : While the app is in use; until you delete it
 • Emergency contacts       : Until you delete them
-• Location sharing history : 90 days (user configurable: 30/60/90 days)
+• Location session history : 30 days
 • Audio recordings         : Until you delete them (auto-cleanup option available)
 • Consent logs             : While the app is in use; until account deletion
 • PIN (encrypted)          : Until you change or delete it
@@ -369,8 +373,8 @@ Your personal data is NOT TRANSFERRED OUTSIDE OF TURKEY.
 ──────────────────────────────────────
 6. DATA SECURITY
 ──────────────────────────────────────
-• All sensitive data is protected with AES-256 encryption.
-• PIN and personal information is stored on FlutterSecureStorage (Android Keystore / iOS Keychain).
+• PIN and first-responder information is stored in FlutterSecureStorage.
+• Emergency contact data is stored in the local on-device database; backup is disabled and unnecessary legacy copies are cleaned up.
 • The application does not send any personal data to the internet.
 
 ──────────────────────────────────────

@@ -125,7 +125,7 @@
 
         <div class="warning-box">
             <strong>⚠️ ÖNEMLİ UYARI</strong><br>
-            Bu uygulama kişisel güvenliğinizi destekleyen bir <strong>YARDIMCI ARAÇTIR</strong>. 112 Acil, 155 Polis, 156 Jandarma veya herhangi bir resmi acil servisin yerini tutmaz. Uygulama; internet kesilmesi, GPS sinyali alınamaması, telefon arızası, pil bitmesi, SMS operatör gecikmesi veya öngörülemeyen teknik nedenlerle beklenen şekilde çalışmayabilir. Bu riskleri kabul ederek uygulamayı kullanıyorsunuz.
+            Bu uygulama kişisel güvenliğinizi destekleyen bir <strong>YARDIMCI ARAÇTIR</strong>. 112 Acil, 155 Polis, 156 Jandarma veya herhangi bir resmi acil servisin yerini tutmaz. Uygulama; internet kesilmesi, GPS sinyali alınamaması, telefon arızası, pil bitmesi, Android arka plan kısıtları veya öngörülemeyen teknik nedenlerle beklenen şekilde çalışmayabilir. Bu riskleri kabul ederek uygulamayı kullanıyorsunuz.
         </div>
 
         <h2>1. Veri Sorumlusunun Kimliği</h2>
@@ -158,12 +158,12 @@
                 </tr>
                 <tr>
                     <td><strong>Konum verisi (GPS)</strong></td>
-                    <td>Acil durum tetiklendiğinde belirlenen kişilere Google Maps linki içeren SMS ile iletmek</td>
+                    <td>Acil durum veya konum oturumu sırasında konum durumunu uygulama içinde göstermek</td>
                     <td>Md. 5/2-a: İlgili kişinin açık rızası</td>
                 </tr>
                 <tr>
                     <td><strong>Acil durum kişisi adı ve telefon numarası</strong></td>
-                    <td>Acil durum SMS gönderimi için alıcı bilgisi olarak kullanmak</td>
+                    <td>Acil durum arama akışı için kişi bilgisi olarak kullanmak</td>
                     <td>Md. 5/2-a: İlgili kişinin açık rızası</td>
                 </tr>
                 <tr>
@@ -211,8 +211,8 @@
         <h2>4. Kişisel Verilerin Aktarılması</h2>
         <p>Kişisel verileriniz yalnızca aşağıdaki sınırlı durumlarda ve şekillerde aktarılır:</p>
         <ul>
-            <li><strong>Acil durum kişileri:</strong> Acil durum tetiklendiğinde belirlediğiniz kişilere SMS operatörü altyapısı üzerinden tek yönlü SMS gönderilir. Veriler operatör tarafından okunamaz.</li>
-            <li><strong>Google Maps:</strong> Konum verisi yalnızca "https://www.google.com/maps/..." formatında link olarak SMS içine eklenir. Google'a doğrudan kişisel veri aktarımı yapılmaz.</li>
+            <li><strong>Acil durum kişileri:</strong> Acil durum tetiklendiğinde belirlediğiniz kişi için Android arama akışı başlatılır veya arama ekranı hazırlanır.</li>
+            <li><strong>Harita servisi:</strong> Çevrimiçi harita görünümü harita karo servisine ağ isteği yapabilir; konum alınamazsa sahte koordinat gösterilmez.</li>
             <li><strong>OpenStreetMap:</strong> Harita görüntüleme için kullanılır; kişisel veri aktarımı gerçekleşmez.</li>
             <li><strong>Yetkili makamlar:</strong> Mahkeme kararı veya yasal zorunluluk halinde ilgili kurum ve kuruluşlara aktarılabilir.</li>
         </ul>
@@ -237,7 +237,7 @@
         <h2>7. Kişisel Veri Güvenliği</h2>
         <ul>
             <li>Hassas veriler AES-256 şifreleme ile korunur.</li>
-            <li>PIN ve biyometrik veriler cihazın güvenli depolama alanında (iOS Keychain / Android Keystore) saklanır.</li>
+            <li>PIN ve biyometrik doğrulama bilgileri Android'in güvenli depolama altyapısı üzerinden yönetilir.</li>
             <li>Uygulama tamamen çevrimdışı (offline) çalışır; veriler geliştirici sunucularına gönderilmez.</li>
             <li>Hiçbir kişisel veri harici hata izleme veya analitik servislerine aktarılmaz.</li>
         </ul>

@@ -10,5 +10,5 @@ abstract class LocationRepository {
   });
   Future<bool> openAppSettings();
   Future<bool> openLocationSettings();
-  LatLng get lastKnownPosition;
+  LatLng? get lastKnownPosition;
 }

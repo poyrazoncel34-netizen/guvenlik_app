@@ -26,21 +26,23 @@ class EmergencyReadinessService {
 
       _lastState = ReadinessState(
         batteryOptimizationWhitelisted:
-            deviceState['isBatteryOptimizationDisabled'] == true,
-        exactAlarmPermission:
-            deviceState['canScheduleExactAlarms'] == true,
+            deviceState['batteryOptimizationsIgnored'] == true,
+        exactAlarmPermission: deviceState['canScheduleExactAlarms'] == true,
+        callPermission: deviceState['callPermissionGranted'] == true,
       );
     } on TimeoutException {
       debugPrint('[EmergencyReadiness] checkReadiness timed out');
       _lastState = const ReadinessState(
         batteryOptimizationWhitelisted: false,
         exactAlarmPermission: false,
+        callPermission: false,
       );
     } catch (e) {
       debugPrint('[EmergencyReadiness] checkReadiness failed: $e');
       _lastState = const ReadinessState(
         batteryOptimizationWhitelisted: false,
         exactAlarmPermission: false,
+        callPermission: false,
       );
     }
 
@@ -51,9 +53,11 @@ class EmergencyReadinessService {
 class ReadinessState {
   final bool batteryOptimizationWhitelisted;
   final bool exactAlarmPermission;
+  final bool callPermission;
 
   const ReadinessState({
     required this.batteryOptimizationWhitelisted,
     required this.exactAlarmPermission,
+    required this.callPermission,
   });
 }

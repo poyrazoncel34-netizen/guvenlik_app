@@ -591,7 +591,9 @@ class _ContactsPageState extends State<ContactsPage> {
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
             onPressed: () => Navigator.pop(ctx),
             child: const Text('Anladım'),
@@ -747,7 +749,7 @@ class _ContactsPageState extends State<ContactsPage> {
     } on UserCancelledPickingException {
       // kullanıcı vazgeçti
     } on PlatformException catch (e) {
-      debugPrint('PlatformException picking contact: \$e');
+      debugPrint('PlatformException picking contact: ${e.code}');
       _showSnack(
         "contacts_picker_failed".tr(),
         backgroundColor: AppColors.emergency,

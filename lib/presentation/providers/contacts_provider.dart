@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/app_colors.dart';
@@ -86,10 +85,7 @@ class ContactsProvider extends ChangeNotifier {
   }
 
   bool containsPhone(String phone) {
-    final normalized = normalizePhoneNumber(phone);
-    return _emergencyContacts.any(
-      (item) => normalizePhoneNumber(item.phone) == normalized,
-    );
+    return _emergencyContacts.any((item) => _phonesMatch(item.phone, phone));
   }
 
   Future<bool> addContact({required String name, required String phone}) async {
@@ -100,7 +96,7 @@ class ContactsProvider extends ChangeNotifier {
     _emergencyContacts.add(
       ContactItem(
         name: name.trim(),
-        phone: phone.trim(),
+        phone: normalizePhoneNumber(phone),
         icon: Icons.person_rounded,
         color: _getColorForIndex(_emergencyContacts.length),
       ),
@@ -157,12 +153,8 @@ class ContactsProvider extends ChangeNotifier {
               EmergencyContact(name: contact.name, phone: contact.phone),
         )
         .toList(growable: false);
-    final numbers = contacts
-        .map((contact) => contact.phone)
-        .toList(growable: false);
 
     await _repository.saveContactRecords(contacts);
-    await _repository.saveEmergencyNumbers(numbers);
   }
 
   /// Reorder contacts by moving item from oldIndex to newIndex.
@@ -177,7 +169,25 @@ class ContactsProvider extends ChangeNotifier {
   int _findIndexByPhone(String phone) {
     final normalized = normalizePhoneNumber(phone);
     return _emergencyContacts.indexWhere(
-      (contact) => normalizePhoneNumber(contact.phone) == normalized,
+      (contact) => _phonesMatch(contact.phone, normalized),
     );
+  }
+
+  bool _phonesMatch(String left, String right) {
+    final leftDigits = normalizePhoneNumber(left).replaceAll(RegExp(r'\D'), '');
+    final rightDigits = normalizePhoneNumber(
+      right,
+    ).replaceAll(RegExp(r'\D'), '');
+    if (leftDigits.isEmpty || rightDigits.isEmpty) return false;
+    if (leftDigits == rightDigits) return true;
+    if (leftDigits.length < 7 || rightDigits.length < 7) return false;
+    final suffixLength = leftDigits.length < rightDigits.length
+        ? leftDigits.length
+        : rightDigits.length;
+    final leftSuffix = leftDigits.substring(leftDigits.length - suffixLength);
+    final rightSuffix = rightDigits.substring(
+      rightDigits.length - suffixLength,
+    );
+    return leftSuffix == rightSuffix;
   }
 }

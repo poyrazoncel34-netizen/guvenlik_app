@@ -1,10 +1,11 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class SecureStorage {
-  // Android: EncryptedSharedPreferences (Keystore-backed AES-256)
-  // iOS: Keychain with first_unlock_this_device accessibility
+  static const bool encryptedPrefsEnabled = true;
+
+  // Android: flutter_secure_storage uses platform-backed encrypted storage.
   static const _storage = FlutterSecureStorage(
-    aOptions: AndroidOptions(encryptedSharedPreferences: true),
+    aOptions: AndroidOptions(),
     iOptions: IOSOptions(
       accessibility: KeychainAccessibility.first_unlock_this_device,
     ),

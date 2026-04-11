@@ -19,7 +19,6 @@ import '../core/utils/permission_helper.dart';
 import '../core/utils/map_utils.dart';
 import '../presentation/providers/home_provider.dart';
 import '../domain/repositories/location_repository.dart';
-import 'countdown_screen.dart';
 
 class MapPage extends StatefulWidget {
   const MapPage({super.key});
@@ -91,12 +90,9 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
 
       if (result.isSuccess && result.position != null) {
         _currentLocation = result.position;
+        _usingFallbackLocation = false;
       } else {
-        // Use default location if failed
-        if (_currentLocation == null) {
-          _currentLocation = LocationService.defaultLocation;
-          _usingFallbackLocation = true;
-        }
+        _usingFallbackLocation = _currentLocation == null;
       }
     });
 
@@ -130,6 +126,7 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
     if (result.isSuccess && result.position != null) {
       setState(() {
         _currentLocation = result.position;
+        _usingFallbackLocation = false;
       });
       _animateToLocation(result.position!);
 
@@ -156,6 +153,9 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
         );
       }
     } else {
+      if (mounted && _currentLocation == null) {
+        setState(() => _usingFallbackLocation = true);
+      }
       _showPermissionError(result);
     }
   }
@@ -463,19 +463,30 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
                 left: 16,
                 right: 16,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 10,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.warning.withValues(alpha: 0.95),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.warning_amber_rounded, color: Colors.white, size: 20),
+                      const Icon(
+                        Icons.warning_amber_rounded,
+                        color: Colors.white,
+                        size: 20,
+                      ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           "map_fallback_location".tr(),
-                          style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                     ],
@@ -500,7 +511,7 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
   }
 
   Widget _buildMap() {
-    final center = _currentLocation ?? LocationService.defaultLocation;
+    final center = _currentLocation ?? LocationService.fallbackMapCenter;
 
     return FlutterMap(
       mapController: _mapController,
@@ -542,8 +553,6 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
   }
 
   Widget _buildOfflineMapSurface() {
-    final location = _currentLocation ?? LocationService.defaultLocation;
-
     return Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
@@ -626,15 +635,26 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
                           ),
                         ),
                         const SizedBox(height: 8),
-                        SelectableText(
-                          '${location.latitude.toStringAsFixed(6)}, ${location.longitude.toStringAsFixed(6)}',
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textPrimary,
+                        if (_currentLocation != null)
+                          Text(
+                            "map_location_available".tr(),
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textPrimary,
+                            ),
+                          )
+                        else
+                          Text(
+                            "map_location_unavailable".tr(),
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textPrimary,
+                            ),
                           ),
-                        ),
                       ],
                     ),
                   ),
@@ -873,7 +893,6 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
                         color: AppColors.textPrimary,
                       ),
                     ),
-
                   ],
                 ),
               ),
@@ -892,7 +911,6 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
             ],
           ),
         ),
-
       ],
     );
   }

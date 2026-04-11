@@ -8,7 +8,6 @@ import android.net.Uri
 import android.os.PowerManager
 import android.util.Log
 import androidx.core.content.ContextCompat
-import java.util.concurrent.Executors
 
 /**
  * Native-side emergency executor — runs independently of Flutter.
@@ -19,12 +18,11 @@ import java.util.concurrent.Executors
  */
 object EmergencyExecutor {
     private const val TAG = "EmergencyExecutor"
-    private val executor = Executors.newFixedThreadPool(1)
 
     fun executeEmergency(
         context: Context,
         primaryNumber: String,
-    ) {
+    ): Map<String, Any?> {
         // Acquire wake lock to keep CPU alive during dispatch
         val powerManager = context.getSystemService(Context.POWER_SERVICE) as? PowerManager
         val wakeLock = powerManager?.newWakeLock(
@@ -32,26 +30,25 @@ object EmergencyExecutor {
             "KoruBeni:EmergencyExec"
         )?.apply { acquire(120_000) } // 2 minutes max
 
-        executor.execute {
+        return try {
+            val result = openCall(context, primaryNumber)
+            Log.i(TAG, "Call dispatch result: ${result["status"]}")
+            result
+        } catch (e: Exception) {
+            Log.e(TAG, "Call dispatch failed")
+            mapOf("status" to "failed", "number" to primaryNumber.trim())
+        } finally {
             try {
-                // Dispatch call
-                try {
-                    openCallDirect(context, primaryNumber)
-                    Log.i(TAG, "Call initiated to primary number")
-                } catch (e: Exception) {
-                    Log.e(TAG, "Call dispatch failed", e)
-                }
-            } finally {
-                try {
-                    wakeLock?.release()
-                } catch (_: Exception) {}
-            }
+                wakeLock?.release()
+            } catch (_: Exception) {}
         }
     }
 
-    private fun openCallDirect(context: Context, number: String) {
+    private fun openCall(context: Context, number: String): Map<String, Any?> {
         val cleaned = number.trim()
-        if (cleaned.isEmpty()) return
+        if (cleaned.isEmpty()) {
+            return mapOf("status" to "failed", "number" to cleaned)
+        }
 
         val canDirect = ContextCompat.checkSelfPermission(
             context, Manifest.permission.CALL_PHONE
@@ -68,5 +65,9 @@ object EmergencyExecutor {
         }
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         context.startActivity(intent)
+        return mapOf(
+            "status" to if (canDirect) "directCallStarted" else "dialerOpened",
+            "number" to cleaned,
+        )
     }
 }

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:get_it/get_it.dart';
 import '../../core/services/location_service.dart';
 import '../../core/services/local_database_service.dart';
@@ -15,7 +16,7 @@ final GetIt serviceLocator = GetIt.instance;
 
 Future<void> setupServiceLocator() async {
   // Offline-first services - no Firebase, no network dependencies
-  if (!serviceLocator.isRegistered<LocalDatabaseService>()) {
+  if (!kIsWeb && !serviceLocator.isRegistered<LocalDatabaseService>()) {
     final databaseService = LocalDatabaseService();
     await databaseService.initialize();
     serviceLocator.registerSingleton<LocalDatabaseService>(databaseService);

@@ -1,17 +1,16 @@
 // countdown_screen.dart'taki hata durumu davranışını test eder.
-// Bug: SMS ve arama ikisi de başarısız olduğunda sadece SnackBar + pop yapılıyor.
+// Bug: arama akışı başarısız olduğunda sadece SnackBar + pop yapılıyor.
 // Kullanıcı "uygulama kapandı" sanıyor; açıklayıcı dialog gösterilmeli.
 
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('CountdownScreen — acil çağrı başarısız durumu', () {
-    test('SMS ve arama başarısız olduğunda dialog gösterilmeli', () {
-      const smsSuccess = false;
+    test('arama akışı başarısız olduğunda dialog gösterilmeli', () {
       const callSuccess = false;
 
-      // Düzeltilmiş mantık: her ikisi başarısız → dialog göster
-      final shouldShowDialog = !smsSuccess && !callSuccess;
+      // Düzeltilmiş mantık: arama akışı başarısız → dialog göster
+      final shouldShowDialog = !callSuccess;
 
       expect(
         shouldShowDialog,

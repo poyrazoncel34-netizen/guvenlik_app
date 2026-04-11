@@ -35,12 +35,12 @@ class LocationService {
   factory LocationService() => _instance;
   LocationService._internal();
 
-  // Default location: Istanbul, Turkey
-  static const LatLng defaultLocation = LatLng(41.0082, 28.9784);
+  // Neutral map viewport center. This is never presented as the user's location.
+  static const LatLng fallbackMapCenter = LatLng(39.0, 35.0);
 
   // Cache for last known position
   LatLng? _lastKnownPosition;
-  LatLng get lastKnownPosition => _lastKnownPosition ?? defaultLocation;
+  LatLng? get lastKnownPosition => _lastKnownPosition;
 
   bool _lowBattery = false;
   StreamSubscription<bool>? _lowBatterySubscription;
@@ -125,6 +125,17 @@ class LocationService {
       _lastKnownPosition = latLng;
 
       return LocationResult(status: LocationStatus.success, position: latLng);
+    } on TimeoutException catch (e) {
+      if (_lastKnownPosition != null) {
+        return LocationResult(
+          status: LocationStatus.success,
+          position: _lastKnownPosition,
+        );
+      }
+      return LocationResult(
+        status: LocationStatus.error,
+        errorMessage: '${'location_error_failed'.tr()}: ${e.runtimeType}',
+      );
     } catch (e) {
       return LocationResult(
         status: LocationStatus.error,

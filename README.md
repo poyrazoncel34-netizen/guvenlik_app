@@ -1,7 +1,7 @@
 # 🛡️ KoruBeni — Kişisel Güvenlik Uygulaması
 
 <p align="center">
-  <strong>Tek dokunuşla acil yardım çağır. Konumunu paylaş. Kendini güvende hisset.</strong>
+  <strong>Android'de acil arama akışını başlat. Konumunu gör. Güvenlik oturumlarını dürüstçe takip et.</strong>
 </p>
 
 ---
@@ -10,15 +10,15 @@
 
 | Özellik | Açıklama |
 |---|---|
-| 🚨 **Panik Butonu** | Basılı tut → bırak → PIN girmezsen otomatik SMS + arama |
-| 📍 **Konum Paylaşımı** | Acil durumlarda GPS konumun Google Maps linki ile iletilir |
-| 🚶 **Güvenli Yürüyüş** | Zamanlayıcı + check-in + otomatik acil durum |
+| 🚨 **Panik Butonu** | Basılı tut → bırak → geri sayım → PIN girilmezse acil arama akışı |
+| 📍 **Konum Oturumu** | Konum alınırsa haritada gösterilir; alınamazsa açık hata durumu gösterilir |
+| 🚶 **Güvenli Yürüyüş** | Uygulama canlıyken yardımcı check-in; Android arka plan kısıtlarında garanti değildir |
 | 📞 **Sahte Çağrı** | Özelleştirilebilir isim/fotoğraf ile sahte arama |
 | 🔊 **Siren** | Dikkat çekmek için yüksek sesli siren |
-| 📳 **Shake Algılama** | Telefonunu salla → acil durum tetiklenir |
+| 📳 **Shake Algılama** | Bu Android Play sürümünde varsayılan olarak devre dışıdır |
 | 🔐 **PIN Koruması** | 4 haneli PIN güvenliği |
 | 🌍 **Çok Dilli** | Türkçe + İngilizce |
-| 📡 **Offline Destek** | İnternet bağlantısı gerekmez, tamamen çevrimdışı çalışır |
+| 📡 **Offline-First** | Geliştirici sunucusu yoktur; harita/billing gibi üçüncü taraf servisler ağ kullanabilir |
 
 ## 🏗️ Teknoloji
 
@@ -31,7 +31,7 @@
 
 ### Gereksinimler
 - Flutter 3.29+ (Dart ≥ 3.10)
-- Android SDK 21+ / iOS 13+
+- Android SDK 21+
 - `flutter_jailbreak_detection` için Android: `minSdkVersion 21`
 
 ### Adımlar
@@ -91,7 +91,7 @@ Katkılar memnuniyetle karşılanır! Lütfen aşağıdaki adımları izleyin:
 4. **Pull Request** açın — `main` branch'e karşı.
 
 ### Kural ve Kısıtlamalar
-- Uygulama **%100 offline** çalışmalıdır — uzak backend eklemeyin.
+- Geliştirici sunucusu veya cloud DB eklemeyin; harita, Play Billing ve crash reporting gibi üçüncü taraf entegrasyonlarının gerçek ağ davranışını metinlerde açık yazın.
 - Biyometrik kimlik doğrulama **yasaktır** (baskı saldırısı riski).
 - Tüm yeni özellikler için test yazılması zorunludur.
 

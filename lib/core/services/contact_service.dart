@@ -9,7 +9,11 @@ import 'local_database_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 String normalizePhoneNumber(String raw) {
-  return raw.replaceAll(RegExp(r'[\s\-\(\)]'), '');
+  final normalized = raw.trim().replaceAll(RegExp(r'[^\d+]'), '');
+  if (normalized.startsWith('+')) {
+    return '+${normalized.substring(1).replaceAll('+', '')}';
+  }
+  return normalized.replaceAll('+', '');
 }
 
 class ContactService {
@@ -62,6 +66,9 @@ class ContactService {
         continue;
       }
       deduplicated.add(sanitized);
+      if (deduplicated.length == 5) {
+        break;
+      }
     }
 
     final db = await _databaseService.database;
@@ -240,6 +247,7 @@ class ContactService {
         phone: primary.phone,
       );
     }
+    await _clearLegacyContactStorage();
   }
 
   static Future<List<String>> _readLegacyContacts() async {
@@ -269,6 +277,16 @@ class ContactService {
     final legacyName =
         prefs.getString('emergency_contact_name') ?? _unknownNameFallback;
     return EmergencyContact(name: legacyName, phone: legacyPhone);
+  }
+
+  static Future<void> _clearLegacyContactStorage() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('saved_contacts');
+    await prefs.remove('emergency_contact_phone');
+    await prefs.remove('emergency_contact_name');
+    await _secureStorage.delete(key: SecureStorageKeys.contactsData);
+    await _secureStorage.delete(key: SecureStorageKeys.emergencyContactPhone);
+    await _secureStorage.delete(key: SecureStorageKeys.emergencyContactName);
   }
 
   static List<EmergencyContact> _decodeContacts(String? raw) {

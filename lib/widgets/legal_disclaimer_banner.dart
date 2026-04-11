@@ -35,9 +35,9 @@ class LegalDisclaimerBanner extends StatelessWidget {
       case LegalBannerContext.safeWalk:
         return 'Bu özellik yardımcı bir araçtır; güvenliğinizi garanti etmez. Tehlike durumunda 112\'yi arayın.';
       case LegalBannerContext.emergencyContact:
-        return 'Bu kişiyi uygulamaya eklediğinizi ve acil durumda SMS alacağını ilgili kişiye bildirmeniz gerekmektedir.';
+        return 'Bu kişiyi uygulamaya eklediğinizi ve acil durumda aranabileceğini ilgili kişiye bildirmeniz gerekmektedir.';
       case LegalBannerContext.panicButton:
-        return 'SMS gönderimi ağ bağlantısına bağlıdır ve garanti edilmez. Acil durumlarda 112\'yi de arayın.';
+        return 'Panik akışı geri sayım bitmeden arama başlatmaz. Acil durumlarda 112\'yi de arayın.';
     }
   }
 

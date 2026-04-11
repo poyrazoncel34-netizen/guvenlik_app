@@ -7,7 +7,7 @@
 // - Sistem sağlık kontrolü
 //
 // NOT: Asıl acil durum tetikleme mantığı CountdownScreen ve
-// PinVerificationScreen'de bulunur (dual-action: SMS + Call).
+// PinVerificationScreen ve CountdownScreen'de bulunur (call flow only).
 // ============================================================================
 
 import 'dart:async';
@@ -23,7 +23,7 @@ class EmergencyResult {
   final bool success;
   final String message;
   final EmergencyContext context;
-  
+
   EmergencyResult({
     required this.success,
     required this.message,
@@ -39,7 +39,7 @@ class EmergencyContext {
   final LatLng? location;
   final DateTime timestamp;
   final String? errorDetails;
-  
+
   EmergencyContext({
     required this.isOnline,
     required this.batteryLevel,
@@ -48,7 +48,7 @@ class EmergencyContext {
     required this.timestamp,
     this.errorDetails,
   });
-  
+
   Map<String, dynamic> toMap() {
     return {
       'is_online': isOnline,
@@ -65,11 +65,11 @@ class EmergencyContext {
 
 /// Location source types
 enum LocationSource {
-  gps,        // Real-time GPS
-  cached,     // Last known (in-memory)
-  system,     // System last known
-  ip,         // IP-based (fallback)
-  none,       // No location available
+  gps, // Real-time GPS
+  cached, // Last known (in-memory)
+  system, // System last known
+  ip, // IP-based (fallback)
+  none, // No location available
 }
 
 /// Location result with source info
@@ -77,13 +77,13 @@ class LocationResultWithSource {
   final LatLng? position;
   final LocationSource source;
   final int? ageMinutes;
-  
+
   LocationResultWithSource({
     required this.position,
     required this.source,
     this.ageMinutes,
   });
-  
+
   bool get isAvailable => position != null;
   bool get isReliable => source == LocationSource.gps && ageMinutes == null;
 }
@@ -95,23 +95,23 @@ class EmergencyCoreService {
   static final EmergencyCoreService _instance = EmergencyCoreService._();
   static EmergencyCoreService get instance => _instance;
   EmergencyCoreService._();
-  
+
   // Battery monitoring
   final Battery _battery = Battery();
   static const int criticalBatteryLevel = 10;
   static const int lowBatteryLevel = 20;
-  
+
   // Location caching
   LatLng? _lastKnownPosition;
   DateTime? _lastPositionTime;
-  
+
   // ============================================================================
   // GPS 5-LEVEL FALLBACK - Zero Fault Location
   // ============================================================================
-  
+
   Future<LocationResultWithSource> getLocationWithFallback() async {
     debugPrint('📍 Getting location with 5-level fallback...');
-    
+
     // Level 1: Real-time GPS
     try {
       final position = await Geolocator.getCurrentPosition(
@@ -119,12 +119,12 @@ class EmergencyCoreService {
           accuracy: LocationAccuracy.high,
           timeLimit: Duration(seconds: 10),
         ),
-      ).timeout(Duration(seconds: 10));
-      
+      );
+
       final latLng = LatLng(position.latitude, position.longitude);
       _lastKnownPosition = latLng;
       _lastPositionTime = DateTime.now();
-      
+
       debugPrint('✅ Level 1: GPS success');
       return LocationResultWithSource(
         position: latLng,
@@ -133,11 +133,11 @@ class EmergencyCoreService {
     } catch (e) {
       debugPrint('❌ Level 1 failed: $e');
     }
-    
+
     // Level 2: Last known (in-memory cache)
     if (_lastKnownPosition != null && _lastPositionTime != null) {
       final age = DateTime.now().difference(_lastPositionTime!);
-      if (age.inMinutes < 30) {
+      if (age.inMinutes < 10) {
         debugPrint('✅ Level 2: Cached (${age.inMinutes}m old)');
         return LocationResultWithSource(
           position: _lastKnownPosition,
@@ -146,7 +146,7 @@ class EmergencyCoreService {
         );
       }
     }
-    
+
     // Level 3: System last known
     try {
       final lastKnown = await Geolocator.getLastKnownPosition();
@@ -162,22 +162,24 @@ class EmergencyCoreService {
     } catch (e) {
       debugPrint('❌ Level 3 failed: $e');
     }
-    
+
     // Level 4 removed: IP-based location requires internet (offline-first app)
-    
+
     // Level 5: No location (ama crash yok!)
-    debugPrint('⚠️ Level 5: No location available - all fallback methods exhausted');
-    
+    debugPrint(
+      '⚠️ Level 5: No location available - all fallback methods exhausted',
+    );
+
     return LocationResultWithSource(
       position: null,
       source: LocationSource.none,
     );
   }
-  
+
   // ============================================================================
   // BATTERY LEVEL CHECK - Zero Fault
   // ============================================================================
-  
+
   Future<int> getBatteryLevel() async {
     try {
       final level = await _battery.batteryLevel;
@@ -188,25 +190,25 @@ class EmergencyCoreService {
       return 20; // Fallback: safe conservative value (not 100!)
     }
   }
-  
+
   // ============================================================================
   // HEALTH CHECK - System Status (Offline-First)
   // ============================================================================
-  
+
   Future<Map<String, bool>> checkSystemHealth() async {
     final health = <String, bool>{};
-    
+
     try {
       // Network
       health['network'] = ConnectivityService.instance.isOnline;
-      
+
       // GPS
       try {
         health['gps'] = await Geolocator.isLocationServiceEnabled();
       } catch (e) {
         health['gps'] = false;
       }
-      
+
       // Battery
       try {
         final level = await _battery.batteryLevel;
@@ -214,17 +216,14 @@ class EmergencyCoreService {
       } catch (e) {
         health['battery_ok'] = true; // Assume OK
       }
-      
-      // SMS is composer-based; no restricted SMS permission required.
-      health['sms_permission'] = true;
-      
+
       // Call Permission
       try {
         health['call_permission'] = await Permission.phone.isGranted;
       } catch (e) {
         health['call_permission'] = false;
       }
-      
+
       debugPrint('🏥 System health: $health');
       return health;
     } catch (e) {

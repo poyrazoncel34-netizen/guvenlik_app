@@ -10,12 +10,12 @@
 
 ## 1. Genel Mimari
 
-KoruBeni **tamamen çevrimdışı (offline-first)** çalışır. Tüm veriler yalnızca kullanıcının cihazında saklanır. **Hiçbir sunucu, bulut veritabanı veya üçüncü taraf servise veri aktarımı yapılmaz.**
+KoruBeni **offline-first** çalışır. Uygulama geliştirici tarafından işletilen bir backend veya bulut veritabanına kişisel veri göndermez. Harita karoları, Play Billing veya üretimde açıkça yapılandırılmış crash reporting gibi üçüncü taraf SDK/servisleri kendi teknik ağ davranışlarına sahip olabilir.
 
 - **Yerel veritabanı:** SQLite (sqflite)
 - **Hassas veri depolama:** FlutterSecureStorage (AES-256 şifreleme)
-- **Crash raporlama:** Yalnızca yerel log (`crash_log_service.dart`) — üçüncü taraf crash raporlama servisi **kullanılmaz**
-- **Ağ bağlantısı:** Yalnızca SMS gönderimi ve telefon araması için sistem API'leri kullanılır; uygulama kendi ağ bağlantısı kurmaz
+- **Crash raporlama:** Yerel log (`crash_log_service.dart`); üretimde DSN verilirse PII kapalı Sentry entegrasyonu
+- **Ağ bağlantısı:** Acil arama için Android sistem arama akışı kullanılır; harita karoları ve Play Billing ağ kullanabilir
 
 ---
 
@@ -27,11 +27,11 @@ KoruBeni **tamamen çevrimdışı (offline-first)** çalışır. Tüm veriler ya
 |------|-------|
 | **Veri türü** | GPS koordinatları (enlem/boylam), adres bilgisi |
 | **Hukuki dayanak** | KVKK m.5/1 — Açık rıza |
-| **İşleme amacı** | Acil durum mesajlarına konum bilgisi ekleme |
+| **İşleme amacı** | Konumu haritada göstermek ve acil arama akışında durum bilgisini desteklemek |
 | **Saklama süresi** | İşlem anında kullanılır, kalıcı olarak saklanmaz |
 | **Güvenlik önlemi** | Yalnızca acil durum tetiklendiğinde ve rıza mevcut olduğunda erişilir |
 | **Rıza tipi** | `consent_location` — Granüler, geri çekilebilir |
-| **Aktarım** | Yalnızca kullanıcının belirlediği acil durum kişilerine SMS ile |
+| **Aktarım** | Uygulama acil durumda konumu otomatik mesajla göndermez; çevrimiçi harita görünümü harita karo servisine ağ isteği yapabilir |
 
 ### 2.2 Acil Durum Kişileri
 
@@ -39,7 +39,7 @@ KoruBeni **tamamen çevrimdışı (offline-first)** çalışır. Tüm veriler ya
 |------|-------|
 | **Veri türü** | İsim, telefon numarası |
 | **Hukuki dayanak** | KVKK m.5/1 — Açık rıza |
-| **İşleme amacı** | Acil durumda SMS/arama ile bilgilendirme |
+| **İşleme amacı** | Acil durumda arama akışında kullanılacak kişiyi saklama |
 | **Saklama süresi** | Kullanıcı silene kadar |
 | **Güvenlik önlemi** | FlutterSecureStorage (AES-256 şifreleme) |
 | **Rıza tipi** | `consent_emergency_contacts` — Granüler, geri çekilebilir |
@@ -134,7 +134,7 @@ KoruBeni **tamamen çevrimdışı (offline-first)** çalışır. Tüm veriler ya
 - AES-256 şifreleme (FlutterSecureStorage) — hassas veriler için
 - Yerel PIN kilidi — uygulama erişim kontrolü
 - Biyometrik kilit desteği (opsiyonel, kullanıcı rızasına bağlı)
-- Tamamen çevrimdışı mimari — ağ üzerinden veri sızıntısı riski yok
+- Offline-first mimari — geliştirici sunucusu yoktur; üçüncü taraf SDK ağ davranışları ayrı değerlendirilmelidir
 - Granüler rıza yönetimi — her veri kategorisi için ayrı onay/red
 - Merkezi rıza kapısı (ConsentGateService) — rıza olmadan veri işleme engellenir
 - Her ses kaydı öncesi ayrı TCK m.133 onayı

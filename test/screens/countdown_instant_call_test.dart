@@ -1,5 +1,3 @@
-// Tests verifying CountdownScreen skips the honesty dialog and duplicate
-// emergency call when instantCallTriggered is true.
 import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -10,41 +8,35 @@ void main() {
     source = File('lib/screens/countdown_screen.dart').readAsStringSync();
   });
 
-  group('CountdownScreen instantCallTriggered', () {
-    test('accepts instantCallTriggered constructor parameter', () {
+  group('CountdownScreen deterministic dispatch contract', () {
+    test('does not accept instantCallTriggered constructor parameter', () {
       expect(
         source.contains('instantCallTriggered'),
-        isTrue,
-        reason: 'CountdownScreen must accept instantCallTriggered param so '
-            'PanicButton can signal the call is already in flight',
+        isFalse,
+        reason: 'No native call may be in flight before countdown expiry.',
       );
     });
 
-    test('guards _executeEmergency with instantCallTriggered check', () {
-      // Find the _makeEmergencyCall method and verify it has an early return
-      // when instantCallTriggered is true — before _executeEmergency is called.
+    test('dispatch is gated by _emergencyDispatched', () {
       final makeCallIdx = source.indexOf('_makeEmergencyCall');
-      final executeIdx = source.indexOf('_executeEmergency()');
-      final guardIdx = source.indexOf(
-        'instantCallTriggered',
-        makeCallIdx,
-      );
+      final gateIdx = source.indexOf('_emergencyDispatched', makeCallIdx);
+      final executeIdx = source.indexOf('_executeEmergency()', makeCallIdx);
       expect(
-        guardIdx != -1 && guardIdx < executeIdx,
+        gateIdx != -1 && gateIdx < executeIdx,
         isTrue,
-        reason: 'widget.instantCallTriggered guard must appear inside '
-            '_makeEmergencyCall before _executeEmergency() is called',
+        reason:
+            'Countdown must prevent duplicate dispatch before executing native flow.',
       );
     });
 
-    test('skips honesty dialog when instantCallTriggered is true', () {
-      // When instantCallTriggered, we must not await the blocking dialog before
-      // starting the countdown — the call is already in flight.
+    test('executeEmergencyNative is called from countdown path', () {
+      final executeIdx = source.indexOf('_executeEmergency');
+      final nativeIdx = source.indexOf('executeEmergencyNative', executeIdx);
       expect(
-        source.contains('widget.instantCallTriggered'),
+        nativeIdx > executeIdx,
         isTrue,
-        reason: 'CountdownScreen must check widget.instantCallTriggered to '
-            'bypass the honesty dialog and start countdown immediately',
+        reason:
+            'Native emergency call must live under countdown execution, not PanicButton.',
       );
     });
   });

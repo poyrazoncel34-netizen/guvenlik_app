@@ -29,16 +29,14 @@ Son güncelleme: 18 Mart 2026
 
 ## 3. Veri Paylaşımı
 
-**HAYIR** — Kişisel veriler hiçbir üçüncü tarafla paylaşılmaz.
-
-> Acil durum tetiklendiğinde konum bilgisi, kullanıcının belirlediği kişilere SMS ile iletilir. Bu işlem üçüncü taraf sunucusu değil, cihazın yerel SMS altyapısıdır.
+**HAYIR** — Uygulama acil durumda kişisel veriyi otomatik mesajla üçüncü kişilere göndermez. Harita, billing ve üretimde açıkça yapılandırılmış crash reporting gibi SDK/servislerin teknik ağ davranışı ayrıca beyan edilmelidir.
 
 ---
 
 ## 4. Veri Güvenliği Önlemleri
 
-- [x] **Veriler aktarım sırasında şifreleniyor** — Evet (cihaz-to-cihaz SMS şifrelemesi işletim sistemi tarafından yönetilir)
-- [x] **Veriler depolanırken şifreleniyor** — Evet (AES-256, Android Keystore / iOS Keychain)
+- [x] **Veriler aktarım sırasında şifreleniyor** — Geliştirici backend'i yok; üçüncü taraf SDK trafiği kendi TLS/Play altyapısına tabidir
+- [x] **Veriler depolanırken şifreleniyor** — Evet (Android Keystore / Flutter Secure Storage; yerel DB için backup kapalı ve veri yüzeyi azaltılmıştır)
 - [x] **Kullanıcılar veri silebilir** — Evet (Ayarlar > Yasal Bilgiler > Verilerimi Sil)
 
 ---

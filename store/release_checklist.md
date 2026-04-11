@@ -6,7 +6,7 @@
 - Her store gonderiminde build number artir: `./scripts/bump_version.sh`
 - Gizlilik politikasını senkronize et: `./scripts/sync_privacy_policy.sh`
 - Version format: `major.minor.patch+build` (orn. 1.0.0+1)
-- Production build: `flutter build apk --release --dart-define=ENV=production --dart-define=ENCRYPTION_KEY=your_key`
+- Production build: `flutter build appbundle --release --flavor play --dart-define=ENV=production --dart-define=ENCRYPTION_KEY=your_key`
 
 ### Security
 - [x] Encryption key dart-define ile disaridan veriliyor
@@ -36,7 +36,7 @@
 
 ### QA
 - [ ] Gercek Android cihazda test
-- [ ] SMS + arama akisi test
+- [ ] Geri sayım sonrası arama akışı ve dialer fallback test
 - [ ] PIN kurulum akisi test
 - [ ] Izin reddedilme senaryolari test
 - [ ] Offline senaryolar test
@@ -48,13 +48,13 @@
 # Development
 flutter run --dart-define=ENV=dev
 
-# Production APK
-flutter build apk --release \
+# Production AAB (Play)
+flutter build appbundle --release --flavor play \
   --dart-define=ENV=production \
   --dart-define=ENCRYPTION_KEY=your_base64_key
 
 # Production AAB (Play Store)
-flutter build appbundle --release \
+flutter build appbundle --release --flavor play \
   --dart-define=ENV=production \
   --dart-define=ENCRYPTION_KEY=your_base64_key
 

@@ -7,16 +7,13 @@ void main() {
     GetIt.instance.reset();
   });
 
-  test(
-    'isEmergencyContactsAllowed returns true (fail-open) when '
-    'ConsentManager is not registered — emergency must never be blocked',
-    () {
-      // Do NOT register ConsentManager in GetIt.
-      // If the DI container fails to initialize, emergency calls and SMS
-      // must NOT be silently blocked in a life-critical app.
-      expect(ConsentGateService.isEmergencyContactsAllowed(), isTrue);
-    },
-  );
+  test('isEmergencyContactsAllowed returns true (fail-open) when '
+      'ConsentManager is not registered — emergency must never be blocked', () {
+    // Do NOT register ConsentManager in GetIt.
+    // If the DI container fails to initialize, emergency calls
+    // must NOT be silently blocked in a life-critical app.
+    expect(ConsentGateService.isEmergencyContactsAllowed(), isTrue);
+  });
 
   test(
     'isAudioAllowed returns false (fail-closed) when '

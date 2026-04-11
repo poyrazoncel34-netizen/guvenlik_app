@@ -12,9 +12,11 @@ class RevenueCatService {
   // ---------------------------------------------------------------------------
   // Constants
   // ---------------------------------------------------------------------------
-  static const String _androidApiKey = 'test_hyyuitzShQIhaUMJcRDQBhwrZBP';
-  // Replace with your iOS API key from RevenueCat dashboard before iOS release:
-  static const String _iosApiKey = 'REVENUECAT_IOS_API_KEY_PLACEHOLDER';
+  static const String _androidApiKey = String.fromEnvironment(
+    'REVENUECAT_ANDROID_API_KEY',
+  );
+  static const bool _isProduction =
+      String.fromEnvironment('ENV') == 'production';
 
   /// The entitlement identifier configured in the RevenueCat dashboard.
   static const String entitlementId = 'KoruBeni Pro';
@@ -24,16 +26,23 @@ class RevenueCatService {
   // ---------------------------------------------------------------------------
 
   /// Configure the RevenueCat SDK. Call once at app startup.
-  /// Safe to call on web (no-op) and handles errors gracefully.
+  /// Android-only Google Play billing setup.
   Future<void> initialize() async {
-    if (kIsWeb) return;
+    if (kIsWeb || !Platform.isAndroid) return;
     try {
-      await Purchases.setLogLevel(
-        kDebugMode ? LogLevel.debug : LogLevel.error,
-      );
+      if (_androidApiKey.isEmpty) {
+        if (_isProduction) {
+          throw StateError('RevenueCat Android API key is not configured');
+        }
+        await LocalLoggerService.instance.warning(
+          'RevenueCatService.initialize',
+          'RevenueCat disabled: Android API key is not configured',
+        );
+        return;
+      }
+      await Purchases.setLogLevel(kDebugMode ? LogLevel.debug : LogLevel.error);
 
-      final apiKey = Platform.isAndroid ? _androidApiKey : _iosApiKey;
-      final config = PurchasesConfiguration(apiKey);
+      final config = PurchasesConfiguration(_androidApiKey);
       await Purchases.configure(config);
     } catch (e, st) {
       LocalLoggerService.instance.error('RevenueCatService.initialize', e, st);
@@ -57,7 +66,7 @@ class RevenueCatService {
   /// Fetches the latest [CustomerInfo] from RevenueCat (or local cache when
   /// offline). Returns null on failure.
   Future<CustomerInfo?> getCustomerInfo() async {
-    if (kIsWeb) return null;
+    if (kIsWeb || !Platform.isAndroid) return null;
     try {
       return await Purchases.getCustomerInfo();
     } on PlatformException catch (e) {
@@ -75,7 +84,7 @@ class RevenueCatService {
 
   /// Returns the current [Offerings] from RevenueCat, or null on failure.
   Future<Offerings?> getOfferings() async {
-    if (kIsWeb) return null;
+    if (kIsWeb || !Platform.isAndroid) return null;
     try {
       return await Purchases.getOfferings();
     } on PlatformException catch (e) {
@@ -106,10 +115,10 @@ class RevenueCatService {
         throw RevenueCatPurchaseException.offline();
       }
       LocalLoggerService.instance.error('RevenueCatService.purchasePackage', e);
-      throw RevenueCatPurchaseException(e.message ?? 'Purchase failed');
+      throw RevenueCatPurchaseException.generic();
     } catch (e) {
       LocalLoggerService.instance.error('RevenueCatService.purchasePackage', e);
-      throw RevenueCatPurchaseException(e.toString());
+      throw RevenueCatPurchaseException.generic();
     }
   }
 
@@ -131,13 +140,13 @@ class RevenueCatService {
         'RevenueCatService.restorePurchases',
         e,
       );
-      throw RevenueCatPurchaseException(e.message ?? 'Restore failed');
+      throw RevenueCatPurchaseException.generic();
     } catch (e) {
       LocalLoggerService.instance.error(
         'RevenueCatService.restorePurchases',
         e,
       );
-      throw RevenueCatPurchaseException(e.toString());
+      throw RevenueCatPurchaseException.generic();
     }
   }
 }
@@ -168,6 +177,9 @@ class RevenueCatPurchaseException implements Exception {
         'No internet connection',
         isOffline: true,
       );
+
+  factory RevenueCatPurchaseException.generic() =>
+      const RevenueCatPurchaseException('Purchase service unavailable');
 
   @override
   String toString() => 'RevenueCatPurchaseException: $message';

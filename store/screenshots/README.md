@@ -29,7 +29,7 @@ store/screenshots/
 |---|-------|----------|
 | 1 | Ana sayfa | Panik butonu görünür olmalı |
 | 2 | Acil kişiler | Kişi listesi dolu halde |
-| 3 | Harita / Konum paylaşımı | Canlı konum paylaşım ekranı |
+| 3 | Harita / Konum oturumu | Konum durumu ekranı |
 | 4 | Güvenli yürüyüş | Zamanlayıcı aktif |
 | 5 | Sahte arama | Gelen sahte arama ekranı |
 | 6 | Ayarlar | Genel ayarlar sayfası |

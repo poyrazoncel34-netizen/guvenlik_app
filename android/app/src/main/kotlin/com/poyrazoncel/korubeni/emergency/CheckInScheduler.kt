@@ -70,6 +70,10 @@ object CheckInScheduler {
         val now = System.currentTimeMillis()
 
         if (deadlineMs <= 0L) {
+            EmergencyEventBus.persist(
+                context,
+                mapOf("type" to "checkInCorrupted", "timestamp" to now)
+            )
             cancel(context)
             return
         }
@@ -114,11 +118,19 @@ object CheckInScheduler {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         val pendingIntent = buildPendingIntent(context)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            alarmManager.setExactAndAllowWhileIdle(
-                AlarmManager.RTC_WAKEUP,
-                deadlineMs,
-                pendingIntent
-            )
+            if (canScheduleExactAlarms(context)) {
+                alarmManager.setExactAndAllowWhileIdle(
+                    AlarmManager.RTC_WAKEUP,
+                    deadlineMs,
+                    pendingIntent
+                )
+            } else {
+                alarmManager.setAndAllowWhileIdle(
+                    AlarmManager.RTC_WAKEUP,
+                    deadlineMs,
+                    pendingIntent
+                )
+            }
         } else {
             alarmManager.setExact(AlarmManager.RTC_WAKEUP, deadlineMs, pendingIntent)
         }

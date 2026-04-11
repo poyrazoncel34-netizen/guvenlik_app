@@ -1,5 +1,3 @@
-// Tests verifying PanicButton triggers an instant native emergency call
-// on finger release — before any UI navigation or async work.
 import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -10,62 +8,48 @@ void main() {
     source = File('lib/widgets/panic_button.dart').readAsStringSync();
   });
 
-  group('PanicButton instant call on release', () {
-    test('loads primary contact number into cached field on init', () {
+  group('PanicButton countdown-only contract', () {
+    test('does not preload contact numbers in the button widget', () {
       expect(
         source.contains('_preloadEmergencyNumber') ||
-            source.contains('getPrimaryEmergencyContact'),
-        isTrue,
-        reason: 'PanicButton must load the emergency number from '
-            'ContactsRepository in initState so it is ready before release',
+            source.contains('getPrimaryEmergencyContact') ||
+            source.contains('_cachedEmergencyNumber'),
+        isFalse,
+        reason:
+            'PanicButton must not preload numbers; countdown owns dispatch.',
       );
     });
 
-    test('pre-loads emergency number field with 112 as fail-safe default', () {
+    test('does not pass instantCallTriggered to CountdownScreen', () {
       expect(
-        source.contains('_cachedEmergencyNumber'),
-        isTrue,
-        reason: 'PanicButton must cache the emergency number so it is '
-            'available the instant the finger is released',
-      );
-      expect(
-        source.contains("'112'"),
-        isTrue,
-        reason: 'Must default to 112 when no contact is loaded yet',
+        source.contains('instantCallTriggered'),
+        isFalse,
+        reason:
+            'There must be no pre-dispatch flag because no call starts early.',
       );
     });
 
-    test('passes instantCallTriggered true to CountdownScreen', () {
-      expect(
-        source.contains('instantCallTriggered: true'),
-        isTrue,
-        reason: 'CountdownScreen must know the call was already triggered '
-            'so it does not duplicate the call',
-      );
-    });
-
-    test('uses unawaited for fire-and-forget native call', () {
-      expect(
-        source.contains('unawaited'),
-        isTrue,
-        reason: 'Native call must be unawaited (fire-and-forget) so the release '
-            'handler is not blocked by the async platform channel',
-      );
-    });
-
-    test('calls executeEmergencyNative in _onPressEnd before navigation', () {
+    test('does not fire-and-forget native emergency calls on release', () {
       expect(
         source.contains('executeEmergencyNative'),
-        isTrue,
-        reason: '_onPressEnd must trigger the native call immediately on release',
+        isFalse,
+        reason:
+            'Native emergency execution must happen only after countdown expiry.',
       );
-      final nativeCallIndex = source.indexOf('executeEmergencyNative');
+    });
+
+    test('release opens CountdownScreen only', () {
+      expect(
+        source.contains('const CountdownScreen()'),
+        isTrue,
+        reason: 'PanicButton release should navigate to countdown.',
+      );
+      final pressEndIndex = source.indexOf('_onPressEnd');
       final navIndex = source.indexOf('_openCountdownScreen');
       expect(
-        nativeCallIndex < navIndex,
+        pressEndIndex < navIndex,
         isTrue,
-        reason: 'executeEmergencyNative must appear before _openCountdownScreen '
-            '— call first, navigate second',
+        reason: '_onPressEnd should delegate only to countdown navigation.',
       );
     });
   });

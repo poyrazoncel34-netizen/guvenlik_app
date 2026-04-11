@@ -7,21 +7,21 @@ One-tap access to your safety network in emergencies. Panic, location, SOS.
 **Full Description (4000 characters):**
 KoruBeni is a personal safety app that puts your security first, helping you quickly connect with your safety network in emergencies.
 
-When you feel unsafe, press the panic button or shake your phone — KoruBeni starts the emergency calling flow, prepares your location link, and helps you reach your safety network quickly.
+When you feel unsafe, press the panic button — KoruBeni starts the emergency calling flow only after the countdown expires and shows location status inside the app.
 
 ★ CORE FEATURES ★
 
 ◉ Panic Button
-Hold to trigger or shake your phone to start an emergency. A 10-second countdown prevents accidental activation.
+Hold to trigger an emergency. A 10-second countdown prevents accidental activation.
 
 ◉ Emergency Contact Calling
-Quickly start a call for trusted contacts from your address book and prepare an emergency message draft.
+Quickly start a call flow for trusted contacts from your address book.
 
-◉ Location Sharing
-Prepare and share your current location link with emergency contacts for 10 minutes, 30 minutes, or 1 hour.
+◉ Location Session
+Show your current location when available; show a clear unavailable state when it cannot be acquired.
 
 ◉ Safe Walk
-Track your location during night or unsafe situations. Let your emergency contacts know where you are.
+Start a helper check-in session during night or unsafe situations. Background behavior depends on Android settings.
 
 ◉ Fake Call
 Create a realistic incoming call to escape uncomfortable situations.
@@ -29,19 +29,19 @@ Create a realistic incoming call to escape uncomfortable situations.
 ◉ Siren
 Draw attention with a loud alarm.
 
-◉ Quick Message
-Open your messaging app with one-tap emergency message templates for your contacts.
+◉ Shake Trigger
+Disabled by default in this Android Play release.
 
 ★ SECURITY ★
 
 • 4-digit PIN app protection
 • AES-256 encryption
 • Secure on-device storage
-• Offline-first architecture
+• Offline-first architecture without a developer backend
 
 ★ PRIVACY ★
 
-• Location is only collected when you actively share it
+• Location is processed only during emergency or location sessions
 • We don’t sell your data to third parties
 • All sensitive data is encrypted
 
@@ -52,4 +52,4 @@ KoruBeni — Your safety, one tap away.
 **Contact Email:** korubeni.destek@gmail.com
 **Privacy Policy URL:** https://poyrazoncel34-netizen.github.io/guvenlik_app/privacy_policy.html
 
-**Tags:** safety, emergency, panic button, location sharing, personal security, SOS, fake call
+**Tags:** safety, emergency, panic button, location session, personal security, SOS, fake call

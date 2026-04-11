@@ -29,5 +29,34 @@ jobs:
       - name: Analyze
         run: flutter analyze --no-fatal-infos
 
-      - name: Build APK (debug, play flavor)
-        run: flutter build apk --debug --flavor play
+      - name: Test
+        run: flutter test --no-pub
+
+      - name: Create CI release signing key
+        run: |
+          keytool -genkeypair \
+            -v \
+            -storetype JKS \
+            -keystore android/app/ci-release.jks \
+            -storepass ci_store_password \
+            -keypass ci_key_password \
+            -alias ci_upload \
+            -keyalg RSA \
+            -keysize 2048 \
+            -validity 1 \
+            -dname "CN=CI,O=KoruBeni,C=TR"
+          cat > android/key.properties << EOF
+          storePassword=ci_store_password
+          keyPassword=ci_key_password
+          keyAlias=ci_upload
+          storeFile=app/ci-release.jks
+          EOF
+
+      - name: Build AAB (release smoke, play flavor)
+        run: |
+          flutter build appbundle \
+            --release \
+            --flavor play \
+            --dart-define=ENV=production \
+            --dart-define=ENCRYPTION_KEY="${{ secrets.CI_ENCRYPTION_KEY || 'MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=' }}" \
+            --dart-define=REVENUECAT_ANDROID_API_KEY="${{ secrets.REVENUECAT_ANDROID_API_KEY || 'ci_smoke_key' }}"

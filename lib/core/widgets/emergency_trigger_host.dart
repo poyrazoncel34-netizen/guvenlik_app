@@ -9,6 +9,7 @@ import '../navigation/app_navigator.dart';
 import '../services/app_lifecycle_handler.dart';
 import '../services/check_in_service.dart';
 import '../services/emergency_platform_service.dart';
+import '../services/emergency_readiness_service.dart';
 import '../services/volume_trigger_service.dart';
 
 class EmergencyTriggerHost extends StatefulWidget {
@@ -30,6 +31,7 @@ class _EmergencyTriggerHostState extends State<EmergencyTriggerHost>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     CheckInService.instance.initialize();
+    unawaited(EmergencyReadinessService.instance.checkReadiness());
     _bindPlatformEvents();
     _startForegroundTriggers();
   }
@@ -37,6 +39,7 @@ class _EmergencyTriggerHostState extends State<EmergencyTriggerHost>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
+      unawaited(EmergencyReadinessService.instance.checkReadiness());
       _startForegroundTriggers();
       CheckInService.instance.handleAppResumed();
       _consumePendingTrigger();
@@ -86,18 +89,23 @@ class _EmergencyTriggerHostState extends State<EmergencyTriggerHost>
     EmergencyPlatformService.instance.initialize();
     _platformEventsSubscription = EmergencyPlatformService.instance.events
         .listen((event) async {
-          final type = event['type']?.toString();
-          if (type == 'checkInGraceStarted') {
-            await CheckInService.instance.handleNativeGraceStarted();
-            return;
-          }
-          if (type == 'checkInExpired') {
-            if (CheckInService.instance.isActive ||
-                CheckInService.instance.isGracePeriod) {
-              await CheckInService.instance.handleNativeExpired();
-            } else {
-              await _openCountdown();
+          try {
+            final type = event['type']?.toString();
+            if (type == 'checkInGraceStarted') {
+              await CheckInService.instance.handleNativeGraceStarted();
+              return;
             }
+            if (type == 'checkInExpired') {
+              if (CheckInService.instance.isActive ||
+                  CheckInService.instance.isGracePeriod) {
+                await CheckInService.instance.handleNativeExpired();
+              } else {
+                await _openCountdown();
+              }
+            }
+          } catch (_) {
+            // Native event handling must never crash the root widget.
+            return;
           }
         });
     _consumePendingTrigger();

@@ -4,26 +4,25 @@
 
 | İzin | Manifest'te Var mı? | Declaration Gerekiyor mu? |
 |------|---------------------|--------------------------|
-| SEND_SMS | **HAYIR** | **HAYIR** — SMS composer intent kullanılıyor |
+| Mesaj gönderim izni | **HAYIR** | **HAYIR** — mesaj gönderimi bu Android Play sürümünde yok |
 | CALL_PHONE | EVET | EVET — aşağıda açıklanmıştır |
 | ACCESS_BACKGROUND_LOCATION | **HAYIR** | **HAYIR** — manifest'ten kaldırıldı |
 | REQUEST_IGNORE_BATTERY_OPTIMIZATIONS | EVET | EVET — aşağıda açıklanmıştır |
 
 ---
 
-## SEND_SMS — Declaration GEREKMEZ
+## Mesaj Gönderim İzni — Declaration GEREKMEZ
 
 **Neden manifest'te yok?**
-Uygulama, direkt SMS göndermek yerine kullanıcının varsayılan SMS uygulamasını önceden doldurulmuş mesajla açar.
-Bu yaklaşım `android.intent.action.SENDTO` intent'i kullanır ve `SEND_SMS` izni **gerektirmez**.
+Uygulama bu Android Play sürümünde mesaj göndermez ve mesaj uygulaması açmaz. Manifest'te mesaj gönderim izni veya mesaj intent'i bulunmamalıdır.
 
 **Avantajlar:**
-- Play Store'da kısıtlı izin beyanı gerekmez
-- Kullanıcı SMS göndermeden önce içeriği görebilir ve onaylayabilir
-- Daha az Play Store review engeli
+- Kısıtlı mesaj izni beyanı gerekmez
+- Kullanıcıya otomatik iletim vaadi verilmez
+- Play Store review yüzeyi küçülür
 
 **Alternatif (uygulanmadı):**
-Direkt SMS (`SmsManager.sendTextMessage`) için `SEND_SMS` gerekir ve SMS Permission Declaration Form doldurulması şarttır.
+Direkt mesaj gönderimi veya mesaj composer bu sürümün kapsamı dışındadır.
 
 ---
 
@@ -32,7 +31,7 @@ Direkt SMS (`SmsManager.sendTextMessage`) için `SEND_SMS` gerekir ve SMS Permis
 **Beyan kategorisi:** Safety / Emergency
 
 **Core functionality açıklaması:**
-"Acil durum tetiklendiğinde kullanıcının belirlediği acil durum kişisini aramak için kullanılır. Kullanıcı panik butonunu tetikler, uygulama önce SMS composer'ı açar, ardından telefon araması yapar. Kullanıcı bilinçsiz veya hareket edemez durumda olabileceğinden otomatik arama kritiktir."
+"Acil durum geri sayımı tamamlandığında kullanıcının belirlediği acil durum kişisini aramak için kullanılır. Kullanıcı panik butonunu tetikler, geri sayımı PIN ile iptal etmezse Android arama akışı başlatılır. İzin yoksa arama ekranı açılır ve kullanıcı aramayı manuel onaylar."
 
 **Neden gerekli:**
 Acil durumda kullanıcı telefonu kullanamıyor olabilir. Otomatik arama, yardım çağırmanın en güvenilir yoludur.
@@ -45,7 +44,7 @@ Acil durumda kullanıcı telefonu kullanamıyor olabilir. Otomatik arama, yardı
 ## REQUEST_IGNORE_BATTERY_OPTIMIZATIONS Beyanı
 
 **Core functionality açıklaması:**
-"KoruBeni'nin güvenli yürüyüş özelliği, kullanıcı check-in yapmazsa arka planda acil durum tetiklemesi yapabilmek için 7/24 çalışması gereken bir zamanlayıcı servisi içerir. Pil optimizasyonu bu servisi durdurursa kullanıcı tehlikede olduğunda bildirimi gönderemeyiz."
+"KoruBeni'nin güvenli yürüyüş/check-in özelliği, kullanıcı uygulama açıkken başlattığı oturumlarda zamanlayıcı ve bildirim desteği kullanır. Android pil optimizasyonu bu yardımcı akışı kısıtlayabilir; uygulama bunu garanti bir acil servis olarak sunmaz ve kullanıcıya degraded davranışı açıklar."
 
 **Neden gerekli:**
 Kullanıcı güvenli yürüyüş başlattığında, belirtilen süre içinde check-in yapmazsa otomatik acil durum tetiklenmesi gerekir. Bu Android'in normal doze/standby modlarında kesilebilir.
@@ -59,15 +58,14 @@ Güvenli yürüyüş özelliği, arka planda konum takibi yapmaz; yalnızca acil
 
 ---
 
-## Video Demo Gereksinimleri (SMS Declaration Form için)
+## Video Demo Gereksinimleri
 
-Declaration Form'da SMS izni beyan edilmediği için video demo gerekmez.
-Ancak genel Play Store inceleme sürecinde hazır bulundurulması önerilen demo:
+Mesaj izni beyan edilmediği için mesaj izni demo videosu yoktur. Genel Play Store inceleme sürecinde hazır bulundurulması önerilen demo:
 
 **1-3 dakikalık ekran kaydı içeriği:**
 1. İlk açılış → KVKK/yasal onay akışı
 2. Acil durum kişisi ekleme
-3. Panik butonu tetikleme → SMS composer açılması
+3. Panik butonu tetikleme → geri sayım → arama akışı / dialer fallback
 4. Güvenli yürüyüş başlatma ve check-in
 5. Ayarlar → veri silme
 
@@ -75,4 +73,4 @@ Ancak genel Play Store inceleme sürecinde hazır bulundurulması önerilen demo
 
 ## Güncelleme Geçmişi
 
-- 2026-03-18: İlk oluşturma. SEND_SMS manifest'ten kaldırıldı, SMS composer intent yaklaşımı benimsendi.
+- 2026-04-11: Android Play sürümü mesaj gönderimsiz, call-only panic kontratına hizalandı.

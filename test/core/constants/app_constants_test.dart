@@ -58,9 +58,12 @@ void main() {
         AppConstants.prefAllergies,
         AppConstants.prefMedicalConditions,
         AppConstants.prefEmergencyNotes,
-        AppConstants.prefSmsTemplate,
       ];
-      expect(keys.toSet().length, keys.length, reason: 'Duplicate pref key found');
+      expect(
+        keys.toSet().length,
+        keys.length,
+        reason: 'Duplicate pref key found',
+      );
     });
   });
 }

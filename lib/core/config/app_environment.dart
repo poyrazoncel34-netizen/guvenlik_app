@@ -3,7 +3,7 @@
 // ============================================================================
 // Kullanım:
 //   flutter run --dart-define=ENV=production
-//   flutter build apk --dart-define=ENV=production
+//   flutter build appbundle --release --flavor play --dart-define=ENV=production
 //
 // NOTE: KoruBeni is offline-first. No third-party crash reporting (KVKK compliance).
 // ============================================================================

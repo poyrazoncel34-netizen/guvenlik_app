@@ -3,7 +3,7 @@
 // ============================================================================
 
 import 'dart:ui';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb, kReleaseMode;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'core/di/service_locator.dart';
@@ -34,7 +34,10 @@ void main() async {
 
   // 0) ErrorWidget.builder MUST be set BEFORE runApp so ANY error is caught
   ErrorWidget.builder = (FlutterErrorDetails details) {
-    debugPrint('ErrorWidget caught: ${details.exception}');
+    assert(() {
+      debugPrint('ErrorWidget caught: ${details.exception}');
+      return true;
+    }());
     final errorTitle = 'error_title'.tr();
     final errorRestart = 'error_restart'.tr();
     return MaterialApp(
@@ -62,9 +65,11 @@ void main() async {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  details.exception.toString().length > 200
-                      ? details.exception.toString().substring(0, 200)
-                      : details.exception.toString(),
+                  kReleaseMode
+                      ? 'Uygulama bu ekrani yukleyemedi. Lutfen tekrar deneyin.'
+                      : (details.exception.toString().length > 200
+                            ? details.exception.toString().substring(0, 200)
+                            : details.exception.toString()),
                   textAlign: TextAlign.center,
                   style: const TextStyle(color: Colors.white70, fontSize: 12),
                 ),
@@ -153,15 +158,22 @@ void main() async {
   // --dart-define=SENTRY_DSN=https://... ile aktif edilir.
   await SentryFlutter.init(
     (options) {
-      options.dsn = const String.fromEnvironment('SENTRY_DSN', defaultValue: '');
+      options.dsn = const String.fromEnvironment(
+        'SENTRY_DSN',
+        defaultValue: '',
+      );
       options.tracesSampleRate = 0.3;
       options.sendDefaultPii = false;
-      options.environment = const String.fromEnvironment('ENV', defaultValue: 'development');
+      options.environment = const String.fromEnvironment(
+        'ENV',
+        defaultValue: 'development',
+      );
     },
     appRunner: () => runApp(
       EasyLocalization(
         supportedLocales: const [Locale('tr', 'TR'), Locale('en', 'US')],
         path: 'assets/translations',
+        startLocale: const Locale('tr', 'TR'),
         fallbackLocale: const Locale('tr', 'TR'),
         child: const KoruBeniApp(),
       ),
@@ -199,7 +211,7 @@ class KoruBeniApp extends StatelessWidget {
                 child: AppPrivacyShield(
                   child: Semantics(
                     label: 'KoruBeni güvenlik uygulaması',
-                    hint: 'Acil durumlarda yardım çağırın, konum paylaşın',
+                    hint: 'Acil durumlarda yardım çağırın ve konumunuzu görün',
                     child: child ?? const SizedBox.shrink(),
                   ),
                 ),

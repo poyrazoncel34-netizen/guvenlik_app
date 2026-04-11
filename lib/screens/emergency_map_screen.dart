@@ -56,8 +56,6 @@ class _EmergencyMapScreenState extends State<EmergencyMapScreen> {
       _isLoading = false;
       if (result.isSuccess && result.position != null) {
         _currentLocation = result.position;
-      } else {
-        _currentLocation ??= LocationService.defaultLocation;
       }
     });
 
@@ -152,7 +150,7 @@ class _EmergencyMapScreenState extends State<EmergencyMapScreen> {
   }
 
   Widget _buildMap() {
-    final center = _currentLocation ?? LocationService.defaultLocation;
+    final center = _currentLocation ?? LocationService.fallbackMapCenter;
     return FlutterMap(
       mapController: _mapController,
       options: MapOptions(
@@ -202,8 +200,6 @@ class _EmergencyMapScreenState extends State<EmergencyMapScreen> {
   }
 
   Widget _buildOfflineMapSurface() {
-    final location = _currentLocation ?? LocationService.defaultLocation;
-
     return Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
@@ -279,15 +275,26 @@ class _EmergencyMapScreenState extends State<EmergencyMapScreen> {
                           ),
                         ),
                         const SizedBox(height: 8),
-                        SelectableText(
-                          '${location.latitude.toStringAsFixed(6)}, ${location.longitude.toStringAsFixed(6)}',
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textPrimary,
+                        if (_currentLocation != null)
+                          Text(
+                            "map_location_available".tr(),
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textPrimary,
+                            ),
+                          )
+                        else
+                          Text(
+                            "map_location_unavailable".tr(),
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textPrimary,
+                            ),
                           ),
-                        ),
                       ],
                     ),
                   ),
@@ -310,17 +317,6 @@ class _EmergencyMapScreenState extends State<EmergencyMapScreen> {
       child: const Text(
         "© OpenStreetMap contributors",
         style: TextStyle(fontSize: 10, color: Colors.white70),
-      ),
-    );
-  }
-
-  void _showSnack(BuildContext context, String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: AppColors.primary,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
   }

@@ -16,7 +16,7 @@ class LocalLoggerService {
   LocalLoggerService._();
 
   static const String _logFileName = 'korubeni_errors.log';
-  static const int _maxLines = 500;
+  static const int _maxLines = 200;
 
   File? _logFile;
   bool _initialized = false;
@@ -57,17 +57,40 @@ class LocalLoggerService {
 
   String _format(String level, String tag, String message, String? stack) {
     final ts = DateTime.now().toIso8601String();
-    final base = '[$ts][$level][$tag] $message';
-    return stack != null ? '$base\n$stack' : base;
+    final safeMessage = redactSensitive(message);
+    final safeStack = stack == null ? null : redactSensitive(stack);
+    final base = '[$ts][$level][$tag] $safeMessage';
+    return safeStack != null ? '$base\n$safeStack' : base;
+  }
+
+  static String redactSensitive(String value) {
+    return value
+        .replaceAll(RegExp(r'\+?\d[\d\s\-\(\)]{6,}\d'), '[redacted-phone]')
+        .replaceAll(
+          RegExp(r'\b[-+]?\d{1,2}\.\d{4,}\s*,\s*[-+]?\d{1,3}\.\d{4,}\b'),
+          '[redacted-location]',
+        )
+        .replaceAll(
+          RegExp(
+            r'\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b',
+            caseSensitive: false,
+          ),
+          '[redacted-email]',
+        )
+        .replaceAll(RegExp(r'(/[A-Za-z0-9._-]+){2,}'), '[redacted-path]');
   }
 
   Future<void> _write(String line) async {
     if (_logFile == null) return;
     try {
-      await _logFile!.writeAsString('$line\n', mode: FileMode.append, flush: true);
+      await _logFile!.writeAsString(
+        '$line\n',
+        mode: FileMode.append,
+        flush: true,
+      );
       await _rotate();
-    } catch (_) {
-      // Never crash the app due to logging
+    } catch (e) {
+      debugPrint('LocalLogger: write skipped: ${e.runtimeType}');
     }
   }
 
@@ -81,7 +104,9 @@ class LocalLoggerService {
         final trimmed = lines.skip(lines.length - _maxLines).join('\n');
         await file.writeAsString('$trimmed\n');
       }
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('LocalLogger: rotate skipped: ${e.runtimeType}');
+    }
   }
 
   /// Returns the full log content for display in a debug screen.
@@ -89,7 +114,8 @@ class LocalLoggerService {
     try {
       if (_logFile == null || !await _logFile!.exists()) return '';
       return await _logFile!.readAsString();
-    } catch (_) {
+    } catch (e) {
+      debugPrint('LocalLogger: read skipped: ${e.runtimeType}');
       return '';
     }
   }
@@ -100,6 +126,8 @@ class LocalLoggerService {
       if (_logFile != null && await _logFile!.exists()) {
         await _logFile!.writeAsString('');
       }
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('LocalLogger: clear skipped: ${e.runtimeType}');
+    }
   }
 }

@@ -18,6 +18,7 @@ object EmergencyPrefs {
     const val KEY_COUNTDOWN_DEADLINE_MS = "countdown_deadline_ms"
     const val KEY_COUNTDOWN_ALARM_FIRED = "countdown_alarm_fired"
     const val KEY_COUNTDOWN_PRIMARY_NUMBER = "countdown_primary_number"
+    const val KEY_COUNTDOWN_DISPATCH_ID = "countdown_dispatch_id"
 
     fun prefs(context: Context) =
         context.getSharedPreferences(FILE_NAME, Context.MODE_PRIVATE)

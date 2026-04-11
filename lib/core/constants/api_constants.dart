@@ -1,2 +1,2 @@
-// KoruBeni is 100% offline-only. There is no remote API.
-// This file is intentionally empty. Do NOT add remote URLs or endpoints.
+// KoruBeni has no developer-operated remote API.
+// Network can still be used by platform services such as maps and billing.

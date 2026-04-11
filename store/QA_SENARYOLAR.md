@@ -9,7 +9,7 @@ Bu dosya, uygulama çıkışı öncesi kritik akışların manuel test senaryola
 | Adım | Ekran | Kontrol Edilecek |
 |------|-------|------------------|
 | 1 | SplashScreen | Logo ve "KoruBeni yükleniyor" görünüyor mu? ~1.8s sonra otomatik geçiş |
-| 2 | OnboardingScreen | 3 sayfa: "Tek dokunuşla acil yardım", "Acil kişilerinizi seçin", "Konum paylaşımı" |
+| 2 | OnboardingScreen | 3 sayfa: acil arama, acil kişi seçimi, konum oturumu |
 | 3 | Onboarding | Atla / İleri / Başla butonları çalışıyor mu? |
 | 4 | MainNavigation | Başla ile ana menüye geçiş yapılıyor mu? |
 
@@ -62,7 +62,7 @@ Bu dosya, uygulama çıkışı öncesi kritik akışların manuel test senaryola
 |------|-------|------------------|
 | 1 | MapPage | Harita yükleniyor mu? Mevcut konum gösteriliyor mu? |
 | 2 | Konum izni | İzin reddedilirse uyarı mesajı |
-| 3 | Konum paylaşımı | "Konum Paylaş" başlatıp bitirme akışı |
+| 3 | Konum oturumu | Konum alınırsa gösterim, alınamazsa "konum alınamadı" durumu |
 
 ---
 
@@ -81,19 +81,19 @@ Bu dosya, uygulama çıkışı öncesi kritik akışların manuel test senaryola
 
 | Senaryo | Kontrol Edilecek |
 |---------|------------------|
-| Uçak modu | Offline uyarısı, acil durum akışı (SMS/arama olmadan) |
+| Uçak modu | Offline uyarısı, acil arama fallback davranışı |
 | İzin reddi | Konum / rehber reddedildiğinde uygulama çökmeden çalışıyor mu? |
 | Pil optimizasyonu | Uygulama arka planda kapatılırsa bildirim/foreground service |
-| Sallama tetiklemesi | Telefon sallanınca CountdownScreen’e geçiş |
+| Sallama tetiklemesi | Bu sürümde aktif tetikleyici olmadığı doğrulanır |
 | Ses tuşu tetiklemesi | (destekleniyorsa) Volume tuşu ile panik tetikleme |
 
 ---
 
 ## Öncelik Sırası
 
-1. **Kritik:** Panik butonu → PIN → geri sayım → acil arama/SMS
+1. **Kritik:** Panik butonu → geri sayım → PIN iptali veya acil arama/dialer fallback
 2. **Yüksek:** Splash → Onboarding → Ana sayfa, Kişiler ekleme
 3. **Orta:** Harita, Ayarlar, Sahte çağrı, Siren
 4. **Düşük:** Arka plan, sallama/ses tetikleme, dil değişimi
 
-Bu senaryolari gercek Android cihazda test edin; emulatorde izinler ve arama/SMS davranisi farkli olabilir.
+Bu senaryolari gercek Android cihazda test edin; emulatorde izinler ve arama davranisi farkli olabilir.

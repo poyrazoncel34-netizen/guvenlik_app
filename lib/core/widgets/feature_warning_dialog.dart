@@ -58,8 +58,9 @@ class FeatureWarningHelper {
   static const String panicContent =
       'Bu özellik GERÇEK ACİL DURUMLARDA kullanılmak için tasarlanmıştır.\n\n'
       'Nasıl çalışır:\n'
-      '• Butonu basılı tut → bırak → PIN girmezsen acil kişilerine SMS gider\n'
-      '• SMS; internet bağlantısı ve operatör altyapısına bağlıdır\n'
+      '• Butonu basılı tut → bırak → geri sayım başlar\n'
+      '• PIN girmezsen süre sonunda acil arama akışı başlatılır\n'
+      '• Arama izni yoksa arama ekranı açılır; yeşil tuşa basman gerekir\n'
       '• Yanlışlıkla tetiklenirse acil kişilerin gereksiz uyarılmasından sen sorumlusun\n\n'
       '⚠️ Bu uygulama 112\'nin YERİNİ TUTMAZ.\n'
       'Gerçek tehlikede önce 112\'yi ara.';
@@ -67,9 +68,10 @@ class FeatureWarningHelper {
   static const String checkinTitle = '🚶 Check-in Zamanlayıcı — Bilgilendirme';
   static const String checkinContent =
       'Bu özellik fiziksel koruma SAĞLAMAZ.\n'
-      'Yalnızca belirlediğin kişilere otomatik bildirim göndermeye yardımcı olur.\n\n'
-      '• Çalışması internet ve GPS bağlantısına bağlıdır\n'
-      '• Bildirimler SMS ile gönderilir; operatör gecikmesi yaşanabilir\n'
+      'Yalnızca zamanlı kontrol ve hatırlatma akışına yardımcı olur.\n\n'
+      '• Arka planda çalışması cihaz, bildirim ve alarm izinlerine bağlıdır\n'
+      '• Uygulama kapatılırsa veya alarm izni reddedilirse davranış güvenilir olmayabilir\n'
+      '• Cihaz yeniden başlatılırsa aktif check-in yeniden başlatılmaya çalışılır; alarm ve bildirim izinleri yine belirleyicidir\n'
       '• Fiziksel güvenliğin için her zaman resmi acil servisleri kullan';
 
   static const String sirenTitle = '🔊 Alarm Sireni — Bilgilendirme';
@@ -79,15 +81,14 @@ class FeatureWarningHelper {
       '• Gereksiz kullanım çevre sakinlerini rahatsız edebilir\n'
       '• Bu özellikten doğacak şikayetler kullanıcının sorumluluğundadır';
 
-  static const String locationTitle = '📍 Konum Paylaşımı — Bilgilendirme';
+  static const String locationTitle = '📍 Konum Oturumu — Bilgilendirme';
   static const String locationContent =
-      'Konum bilginiz seçtiğiniz kişilere SMS ile gönderilecektir.\n\n'
+      'Konum bilginiz harita ve yerel konum oturumu için kullanılır.\n\n'
       '• GPS doğruluğu cihaz ve çevre koşullarına bağlıdır; geliştirici garanti vermez\n'
-      '• Konum bilginizi kiminle paylaştığınız sizin sorumluluğunuzdadır\n'
-      '• Konum bilgisinin yetersiz, hatalı veya gecikmeli olmasından geliştirici sorumlu tutulamaz\n'
-      '• Konum paylaşımından doğan sonuçların tüm sorumluluğu kullanıcıya aittir\n\n'
+      '• Konum alınamazsa uygulama sahte koordinat göstermez\n'
+      '• Çevrimiçi harita karoları OpenStreetMap bağlantısı gerektirir\n'
+      '• Konum bilgisinin yetersiz, hatalı veya gecikmeli olmasından geliştirici sorumlu tutulamaz\n\n'
       '⚠️ Gerçek acil durumda mutlaka 112\'yi arayın.';
-
 }
 
 class _FeatureWarningDialog extends StatelessWidget {

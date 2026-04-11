@@ -27,7 +27,9 @@ class HapticService {
       final amplitude = await Vibration.hasAmplitudeControl();
       _hasAmplitudeControl = amplitude == true;
       _initialized = true;
-      debugPrint('>>> HapticService: vibrator=$_hasVibrator, amplitude=$_hasAmplitudeControl');
+      debugPrint(
+        '>>> HapticService: vibrator=$_hasVibrator, amplitude=$_hasAmplitudeControl',
+      );
     } catch (e) {
       debugPrint('>>> HapticService init failed: $e');
     }
@@ -51,9 +53,7 @@ class HapticService {
           intensities: [0, 255, 0, 255, 0, 255],
         );
       } else {
-        await Vibration.vibrate(
-          pattern: [0, 120, 80, 120, 80, 120],
-        );
+        await Vibration.vibrate(pattern: [0, 120, 80, 120, 80, 120]);
       }
     } catch (_) {
       await HapticFeedback.heavyImpact();
@@ -92,8 +92,7 @@ class HapticService {
   // ─────────────────────────────────────────────────────────────────
   // 3. EMERGENCY TRIGGERED — alarm başlatıldığında uzun uyarı
   // ─────────────────────────────────────────────────────────────────
-  /// SMS/API gönderildiğinde çağrılır.
-  /// Uzun sürekli titreşim: kullanıcı "yardım çağrıldı" hissi alır.
+  /// Acil arama akışı başlatıldığında çağrılır.
   static Future<void> emergencyTriggered() async {
     if (!_hasVibrator) {
       await HapticFeedback.heavyImpact();
@@ -125,7 +124,10 @@ class HapticService {
   static Future<void> emergencyCancelled() async {
     if (_hasVibrator) {
       try {
-        await Vibration.vibrate(duration: 50, amplitude: _hasAmplitudeControl ? 100 : -1);
+        await Vibration.vibrate(
+          duration: 50,
+          amplitude: _hasAmplitudeControl ? 100 : -1,
+        );
       } catch (_) {
         await HapticFeedback.lightImpact();
       }

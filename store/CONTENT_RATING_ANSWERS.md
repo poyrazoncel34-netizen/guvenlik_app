@@ -30,11 +30,11 @@ Content rating anketinde (IARC) aşağıdaki gibi yanıtlayın. KoruBeni bir gü
 - **Simulated gambling:** None
 - **Unrestricted web access:** No (uygulama harici tarayıcı açmıyor)
 - **User-generated content:** No
-- **Shares location:** Yes — only when user triggers emergency or location sharing (açıkça belirtin)
+- **Shares location:** No automatic sharing — location is processed for emergency/location session when user triggers it
 
 ### Diğer
-- **Social interaction:** Yes — emergency contacts, SMS/call
-- **Personal information shared:** Yes — location, phone to emergency contacts when user triggers
+- **Social interaction:** Yes — emergency contacts / call flow
+- **Personal information shared:** No automatic app-to-contact sharing. Emergency calls may expose the caller's phone number through the phone network; location is processed for the emergency/map session when user triggers it.
 
 ---
 

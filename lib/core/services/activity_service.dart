@@ -9,6 +9,7 @@ import 'local_database_service.dart';
 
 class ActivityService {
   static const String _legacyStorageKey = 'activity_events';
+  static const int _retentionLimit = 200;
 
   static Future<List<ActivityEvent>> getEvents() async {
     final db = await serviceLocator<LocalDatabaseService>().database;
@@ -44,6 +45,17 @@ class ActivityService {
 
     final db = await serviceLocator<LocalDatabaseService>().database;
     await db.insert('activity_events', event.toMap());
+    await db.rawDelete(
+      '''
+      DELETE FROM activity_events
+      WHERE id NOT IN (
+        SELECT id FROM activity_events
+        ORDER BY timestamp DESC
+        LIMIT ?
+      )
+      ''',
+      [_retentionLimit],
+    );
   }
 
   static Future<void> clearAll() async {

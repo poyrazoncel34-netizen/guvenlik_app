@@ -2,30 +2,19 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
-/// System 1: CallService must have a retry method that uses phone state
-/// verification to confirm calls actually connected.
+/// CallService must not promise call-connection guarantees. Android can start
+/// a direct call or prepare the dialer; connection depends on carrier/device.
 void main() {
-  test('CallService should have startEmergencyCallWithRetry method', () {
-    final source = File('lib/core/services/call_service.dart').readAsStringSync();
+  test('CallService should not expose retry-as-guarantee API', () {
+    final source = File(
+      'lib/core/services/call_service.dart',
+    ).readAsStringSync();
 
     expect(
       source.contains('startEmergencyCallWithRetry'),
-      isTrue,
-      reason: 'CallService must have retry method for call guarantee system',
-    );
-
-    // Must subscribe to phone state for verification
-    expect(
-      source.contains('phoneStates'),
-      isTrue,
-      reason: 'Call retry must use phone state stream for call verification',
-    );
-
-    // Must have retry loop
-    expect(
-      source.contains('maxRetries') || source.contains('attempt'),
-      isTrue,
-      reason: 'Call retry must track attempt count',
+      isFalse,
+      reason:
+          'Retry API implies a guarantee and risks duplicate call attempts; countdown dispatch is single-shot with dialer fallback.',
     );
   });
 }

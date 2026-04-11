@@ -11,7 +11,6 @@ import 'dart:ui';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:wakelock_plus/wakelock_plus.dart';
 
 /// Foreground service notification channel ID
 const String kForegroundChannelId = 'korubeni_foreground';
@@ -22,8 +21,8 @@ const int kForegroundNotificationId = 7777;
 ///
 /// Alarm modu veya takip modu aktifken arka planda çalışmaya devam etmeyi sağlar.
 /// - Bildirim çubuğunda "KoruBeni Aktif" bildirimi gösterir
-/// - CPU'yu uyanık tutar (Wakelock)
-/// - GPS ve SMS fonksiyonlarının arka planda çalışmasını garanti eder
+/// - Kritik akış aktifken kalıcı bildirim gösterir; işletim sistemi kısıtları
+///   altında arka plan çalışması garanti edilmez.
 class KoruBeniForegroundService {
   static final FlutterBackgroundService _service = FlutterBackgroundService();
   static bool _isConfigured = false;
@@ -56,9 +55,9 @@ class KoruBeniForegroundService {
           isForegroundMode: true,
           notificationChannelId: kForegroundChannelId,
           initialNotificationTitle: 'KoruBeni Aktif',
-          initialNotificationContent: 'Acil durum modu aktif — konum paylaşılıyor',
+          initialNotificationContent: 'Acil durum modu aktif',
           foregroundServiceNotificationId: kForegroundNotificationId,
-          foregroundServiceTypes: [AndroidForegroundType.dataSync],
+          foregroundServiceTypes: [AndroidForegroundType.specialUse],
         ),
         iosConfiguration: IosConfiguration(
           autoStart: false,
@@ -87,8 +86,7 @@ class KoruBeniForegroundService {
       }
 
       await _service.startService();
-      await WakelockPlus.enable();
-      debugPrint('ForegroundService: Started + Wakelock enabled');
+      debugPrint('ForegroundService: Started');
     } catch (e) {
       debugPrint('ForegroundService: Start failed: $e');
     }
@@ -105,8 +103,7 @@ class KoruBeniForegroundService {
       }
 
       _service.invoke('stop');
-      await WakelockPlus.disable();
-      debugPrint('ForegroundService: Stopped + Wakelock disabled');
+      debugPrint('ForegroundService: Stopped');
     } catch (e) {
       debugPrint('ForegroundService: Stop failed: $e');
     }
@@ -189,23 +186,27 @@ Future<void> _onStart(ServiceInstance service) async {
 
   // Periyodik "yaşıyorum" sinyali — her 30 saniyede bildirim güncelle
   heartbeatTimer = Timer.periodic(const Duration(seconds: 30), (timer) async {
-    if (service is AndroidServiceInstance) {
-      if (await service.isForegroundService()) {
-        notificationsPlugin.show(
-          kForegroundNotificationId,
-          'KoruBeni Aktif',
-          'Acil durum modu aktif — konum paylaşılıyor',
-          const NotificationDetails(
-            android: AndroidNotificationDetails(
-              kForegroundChannelId,
-              kForegroundChannelName,
-              icon: 'ic_bg_service_small',
-              ongoing: true,
-              autoCancel: false,
+    try {
+      if (service is AndroidServiceInstance) {
+        if (await service.isForegroundService()) {
+          notificationsPlugin.show(
+            kForegroundNotificationId,
+            'KoruBeni Aktif',
+            'Acil durum modu aktif',
+            const NotificationDetails(
+              android: AndroidNotificationDetails(
+                kForegroundChannelId,
+                kForegroundChannelName,
+                icon: 'ic_bg_service_small',
+                ongoing: true,
+                autoCancel: false,
+              ),
             ),
-          ),
-        );
+          );
+        }
       }
+    } catch (e) {
+      debugPrint('ForegroundService: heartbeat failed: $e');
     }
   });
 

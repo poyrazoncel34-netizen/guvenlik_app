@@ -18,7 +18,13 @@ class ConsentGateService {
 
   /// Acil durum kişileri verisi işleme için rıza kontrolü
   static bool isEmergencyContactsAllowed() {
-    return _isGranted(ConsentRecord.typeEmergencyContacts);
+    try {
+      final cm = serviceLocator<ConsentManager>();
+      return cm.isGranted(ConsentRecord.typeEmergencyContacts);
+    } catch (_) {
+      // Emergency call flow must not be blocked by DI/bootstrap failure.
+      return true;
+    }
   }
 
   /// Ses kaydı verisi işleme için rıza kontrolü

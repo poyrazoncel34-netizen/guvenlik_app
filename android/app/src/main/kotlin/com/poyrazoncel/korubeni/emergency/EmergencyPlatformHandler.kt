@@ -27,10 +27,10 @@ class EmergencyPlatformHandler(
             when (call.method) {
                 "armShake" -> {
                     EmergencyPrefs.prefs(context).edit()
-                        .putBoolean(EmergencyPrefs.KEY_SHAKE_ENABLED, true)
+                        .putBoolean(EmergencyPrefs.KEY_SHAKE_ENABLED, false)
                         .apply()
-                    ShakeDetectorService.start(context)
-                    result.success(true)
+                    ShakeDetectorService.stop(context)
+                    result.success(false)
                 }
                 "disarmShake" -> {
                     EmergencyPrefs.prefs(context).edit()
@@ -44,7 +44,6 @@ class EmergencyPlatformHandler(
                     EmergencyPrefs.prefs(context).edit()
                         .putInt(EmergencyPrefs.KEY_SHAKE_SENSITIVITY, level.coerceIn(0, 2))
                         .apply()
-                    ShakeDetectorService.update(context)
                     result.success(true)
                 }
                 "scheduleCheckIn" -> {
@@ -52,7 +51,10 @@ class EmergencyPlatformHandler(
                     val deadlineMs = call.argument<Number>("deadlineMs")?.toLong() ?: 0L
                     val graceDurationMs = call.argument<Number>("graceDurationMs")?.toLong() ?: 0L
                     CheckInScheduler.schedule(context, phase, deadlineMs, graceDurationMs)
-                    result.success(true)
+                    result.success(mapOf(
+                        "scheduled" to true,
+                        "exact" to CheckInScheduler.canScheduleExactAlarms(context)
+                    ))
                 }
                 "cancelCheckIn" -> {
                     CheckInScheduler.cancel(context)
@@ -70,8 +72,7 @@ class EmergencyPlatformHandler(
                 }
                 "executeEmergencyNative" -> {
                     val primaryNumber = call.argument<String>("primaryNumber").orEmpty()
-                    EmergencyExecutor.executeEmergency(context, primaryNumber)
-                    result.success(mapOf("status" to "dispatched"))
+                    result.success(EmergencyExecutor.executeEmergency(context, primaryNumber))
                 }
                 "getDeviceState" -> {
                     result.success(getDeviceState())
@@ -85,20 +86,29 @@ class EmergencyPlatformHandler(
                 "scheduleCountdownAlarm" -> {
                     val deadlineMs = call.argument<Number>("deadlineMs")?.toLong() ?: 0L
                     val primaryNumber = call.argument<String>("primaryNumber").orEmpty()
-                    CountdownAlarmScheduler.schedule(context, deadlineMs, primaryNumber)
-                    result.success(true)
+                    val dispatchId = call.argument<String>("dispatchId").orEmpty()
+                    if (deadlineMs <= 0L || primaryNumber.isBlank() || dispatchId.isBlank()) {
+                        result.success(mapOf("scheduled" to false, "exact" to false))
+                        return
+                    }
+                    CountdownAlarmScheduler.schedule(context, deadlineMs, primaryNumber, dispatchId)
+                    result.success(mapOf(
+                        "scheduled" to true,
+                        "exact" to CheckInScheduler.canScheduleExactAlarms(context)
+                    ))
                 }
                 "cancelCountdownAlarm" -> {
-                    CountdownAlarmScheduler.cancel(context)
-                    result.success(true)
+                    val dispatchId = call.argument<String>("dispatchId")
+                    result.success(CountdownAlarmScheduler.cancel(context, dispatchId))
                 }
                 "didCountdownAlarmFire" -> {
-                    result.success(CountdownAlarmScheduler.didAlarmFire(context))
+                    val dispatchId = call.argument<String>("dispatchId").orEmpty()
+                    result.success(CountdownAlarmScheduler.didAlarmFire(context, dispatchId))
                 }
                 else -> result.notImplemented()
             }
         } catch (e: Exception) {
-            result.error("EMERGENCY_PLATFORM_ERROR", e.message, null)
+            result.error("EMERGENCY_PLATFORM_ERROR", "Emergency platform request failed", null)
         }
     }
 
@@ -170,32 +180,6 @@ class EmergencyPlatformHandler(
             Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS),
         )
         return candidates.firstOrNull { launchIntent(it) } != null
-    }
-
-    private fun openCall(number: String): Map<String, Any?> {
-        val cleaned = number.trim()
-        if (cleaned.isEmpty()) {
-            return mapOf("status" to "failed")
-        }
-
-        val canDirectCall =
-            ContextCompat.checkSelfPermission(context, Manifest.permission.CALL_PHONE) ==
-                PackageManager.PERMISSION_GRANTED
-        val intent = if (canDirectCall) {
-            Intent(Intent.ACTION_CALL).apply {
-                data = Uri.parse("tel:$cleaned")
-            }
-        } else {
-            Intent(Intent.ACTION_DIAL).apply {
-                data = Uri.parse("tel:$cleaned")
-            }
-        }
-
-        return if (launchIntent(intent)) {
-            mapOf("status" to if (canDirectCall) "directCallStarted" else "dialerOpened")
-        } else {
-            mapOf("status" to "failed")
-        }
     }
 
     private fun launchIntent(intent: Intent): Boolean {

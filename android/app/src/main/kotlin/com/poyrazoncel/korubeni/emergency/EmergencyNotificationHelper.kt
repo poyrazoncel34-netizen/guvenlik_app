@@ -1,11 +1,14 @@
 package com.poyrazoncel.korubeni.emergency
 
+import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Build
+import androidx.core.content.ContextCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.poyrazoncel.korubeni.MainActivity
@@ -95,6 +98,9 @@ object EmergencyNotificationHelper {
         body: String,
         triggerType: String,
     ) {
+        if (!canPostNotifications(context)) {
+            return
+        }
         ensureChannels(context)
         val notification = NotificationCompat.Builder(context, CHANNEL_ALERTS)
             .setSmallIcon(R.drawable.ic_bg_service_small)
@@ -108,5 +114,15 @@ object EmergencyNotificationHelper {
             .build()
 
         NotificationManagerCompat.from(context).notify(id, notification)
+    }
+
+    private fun canPostNotifications(context: Context): Boolean {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            return true
+        }
+        return ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.POST_NOTIFICATIONS
+        ) == PackageManager.PERMISSION_GRANTED
     }
 }

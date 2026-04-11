@@ -100,7 +100,7 @@
 
         <h3 style="font-size:16px; margin-top:16px; margin-bottom:8px;">b) Otomatik Toplanan Veriler</h3>
         <ul>
-            <li><strong>Konum verileri:</strong> Yalnizca kullanici konum paylasimini aktif ettiginde veya acil durum tetiklendiginde</li>
+            <li><strong>Konum verileri:</strong> Yalnizca kullanici konum oturumunu aktif ettiginde veya acil durum tetiklendiginde</li>
             <li><strong>Cihaz uzerinde tutulan teknik durum bilgisi:</strong> Uygulama ici calisma icin gecici durum verileri</li>
         </ul>
 
@@ -115,20 +115,20 @@
 
         <h2>2. Verilerin Kullanim Amaclari</h2>
         <ul>
-            <li>Acil durumlarda belirlenen kisilere SMS ile konum ve uyari gonerimi</li>
+            <li>Acil durumlarda belirlenen kisi icin Android arama akisini baslatma</li>
             <li>Guvenli yuruyus ve check-in akislarinda kullaniciya yardimci olma</li>
             <li>Yerel bildirimler gosterme</li>
             <li>PIN dogrulama ile uygulama guvenligini saglama</li>
         </ul>
 
         <div class="highlight">
-            <strong>Onemli:</strong> Konum verileriniz yalnizca siz aktif olarak paylastiginizda veya acil durum tetiklendiginde toplanir. Arka planda surekli konum takibi yapilmaz.
+            <strong>Onemli:</strong> Konum verileriniz yalnizca siz konum oturumu baslattiginizda veya acil durum tetiklendiginde islenir. Arka planda surekli konum takibi yapilmaz.
         </div>
 
         <h2>3. Veri Paylasimi</h2>
         <p>Verilerinizi ucuncu taraflara <strong>satmiyoruz</strong>. Verileriniz <strong>HICBIR ucuncu taraf sunucusuna aktarilmaz</strong>. Veriler yalnizca su durumlarda paylasilir:</p>
         <ul>
-            <li><strong>Acil durum kisileri:</strong> Acil durum tetiklendiginde, sectiginiz kisilere SMS ile konumunuz ve durum bilginiz iletilir</li>
+            <li><strong>Acil durum kisileri:</strong> Acil durum tetiklendiginde, sectiginiz kisi icin Android arama akisi baslatilir veya arama ekrani hazirlanir</li>
             <li><strong>Harita servisleri:</strong> Harita ekrani acildiginda OpenStreetMap altyapisi kullanilabilir</li>
             <li><strong>Yasal zorunluluklar:</strong> Mahkeme karari veya yasal zorunluluk halinde</li>
         </ul>
@@ -194,8 +194,8 @@
         <h2>10. Ucuncu Taraf Hizmetler</h2>
         <p>Uygulamamiz asagidaki ucuncu taraf hizmetleri kullanabilir (KVKK Md. 10/1-c bildirimi):</p>
         <ul>
-            <li><strong>Google Maps:</strong> Acil durum SMS mesajina konum linki eklenmesi amaciyla kullanilir. Konum verisi Google sunucularina aktarilmaz; yalnizca "https://www.google.com/maps/..." formatinda bir URL olusturularak SMS icinde gonderilir.</li>
-            <li><strong>OpenStreetMap:</strong> Uygulama ici harita goruntuleme. Kisisel veri aktarimi gerceklesmez.</li>
+            <li><strong>Harita servisleri:</strong> Cevrimici harita goruntuleme icin karo servisine ag istegi yapilabilir. Konum alinamazsa sahte koordinat gosterilmez.</li>
+            <li><strong>OpenStreetMap:</strong> Uygulama ici harita goruntuleme.</li>
         </ul>
         <p>Bu hizmetlerin kendi gizlilik politikalari gecerlidir:</p>
         <ul>
@@ -226,13 +226,13 @@
             <tr>
                 <td style="border:1px solid #ddd; padding:8px;">Iletisim</td>
                 <td style="border:1px solid #ddd; padding:8px;">Acil kisi adi, telefon</td>
-                <td style="border:1px solid #ddd; padding:8px;">Acil durumda SMS</td>
+                <td style="border:1px solid #ddd; padding:8px;">Acil arama akisi</td>
                 <td style="border:1px solid #ddd; padding:8px;">Acik riza</td>
             </tr>
             <tr>
                 <td style="border:1px solid #ddd; padding:8px;">Konum</td>
                 <td style="border:1px solid #ddd; padding:8px;">GPS koordinatlari</td>
-                <td style="border:1px solid #ddd; padding:8px;">Acil durum konum paylasimi</td>
+                <td style="border:1px solid #ddd; padding:8px;">Acil durum konum durumu</td>
                 <td style="border:1px solid #ddd; padding:8px;">Acik riza</td>
             </tr>
             <tr>
@@ -260,7 +260,7 @@
                 <td style="border:1px solid #ddd; padding:8px;">Hukuki yukumluluk (KVKK Md. 5/2-c)</td>
             </tr>
         </table>
-        <p>(*) Biyometrik veri OZEL NITELIKLI KISISEL VERI kapsamindadir. Uygulama biyometrik veriyi dogrudan islemez; cihazin yerel guvenlik altyapisi (Android Keystore / iOS Keychain) kullanilir.</p>
+        <p>(*) Biyometrik veri OZEL NITELIKLI KISISEL VERI kapsamindadir. Uygulama biyometrik veriyi dogrudan islemez; Android'in yerel guvenlik altyapisi kullanilir.</p>
 
         <h2>13. Ozel Nitelikli Veri Isleme</h2>
         <p>Uygulama, biyometrik kimlik dogrulama icin yalnizca cihazin yerlesik guvenlik API'sini kullanir. Biyometrik veriler uygulama tarafindan saklanmaz, erisilmez veya islenmez.</p>
@@ -269,7 +269,7 @@
         <p>Uygulama, kullanici hakkinda otomatik karar verme veya profilleme yapmaz. Tum islemler yalnizca kullanicinin acikca baslattigi eylemler sonucunda gerceklesir.</p>
 
         <h2>15. Uluslararasi Veri Aktarimi</h2>
-        <p>Kisisel veriler Turkiye disina aktarilmaz. Tum veriler cihazda saklanir. Veriler <strong>HICBIR ucuncu taraf sunucusuna aktarilmaz</strong>. Acil durum SMS'leri dogrudan cihazin SMS altyapisi uzerinden gonderilir.</p>
+        <p>Kisisel veriler gelistirici sunucularina aktarilmaz. Ana veriler cihazda saklanir. Harita, Play Billing veya uretimde acikca yapilandirilmis crash reporting gibi ucuncu taraf bilesenlerin teknik ag davranislari kendi saglayici politikalari kapsamindadir.</p>
 
         <h2>16. Veri Ihlali Bildirimi</h2>
         <p>Olasi bir veri ihlali durumunda KVKK'nin 12. maddesi uyarinca en kisa surede ilgili kisiler ve Kisisel Verileri Koruma Kurulu bilgilendirilecektir.</p>

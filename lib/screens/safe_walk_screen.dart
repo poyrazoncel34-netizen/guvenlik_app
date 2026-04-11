@@ -62,7 +62,7 @@ class _SafeWalkScreenState extends State<SafeWalkScreen>
       final remaining = _endTime!.difference(DateTime.now());
       if (remaining.isNegative || remaining.inSeconds <= 0) {
         _timer?.cancel();
-        _onTimerExpired();
+        unawaited(_onTimerExpired());
       } else {
         setState(() {
           _remainingSeconds = remaining.inSeconds;
@@ -151,15 +151,16 @@ class _SafeWalkScreenState extends State<SafeWalkScreen>
     );
   }
 
-  void _onTimerExpired() {
+  Future<void> _onTimerExpired() async {
     // Timer expired without user checking in - trigger emergency
     HapticFeedback.heavyImpact();
     setState(() {
       _isActive = false;
       _timer?.cancel();
     });
-    EmergencyPlatformService.instance.cancelCheckIn();
-    _clearPersistedState();
+    await EmergencyPlatformService.instance.cancelCheckIn();
+    await _clearPersistedState();
+    if (!mounted) return;
 
     // Auto-play siren before navigating to countdown
     showDialog(
@@ -180,12 +181,13 @@ class _SafeWalkScreenState extends State<SafeWalkScreen>
     });
   }
 
-  void _checkIn() {
+  Future<void> _checkIn() async {
     HapticFeedback.lightImpact();
     _timer?.cancel();
-    KoruBeniForegroundService.stop();
-    EmergencyPlatformService.instance.cancelCheckIn();
-    _clearPersistedState();
+    await KoruBeniForegroundService.stop();
+    await EmergencyPlatformService.instance.cancelCheckIn();
+    await _clearPersistedState();
+    if (!mounted) return;
     // Analytics removed (offline-first)
     ActivityService.logEvent(
       type: ActivityType.safetyCheck,
@@ -218,12 +220,12 @@ class _SafeWalkScreenState extends State<SafeWalkScreen>
     );
   }
 
-  void _cancelWalk() {
+  Future<void> _cancelWalk() async {
     HapticFeedback.lightImpact();
     _timer?.cancel();
-    KoruBeniForegroundService.stop();
-    EmergencyPlatformService.instance.cancelCheckIn();
-    _clearPersistedState();
+    await KoruBeniForegroundService.stop();
+    await EmergencyPlatformService.instance.cancelCheckIn();
+    await _clearPersistedState();
     setState(() {
       _isActive = false;
       _endTime = null;
@@ -241,7 +243,7 @@ class _SafeWalkScreenState extends State<SafeWalkScreen>
       final remaining = _endTime!.difference(DateTime.now());
       if (remaining.isNegative || remaining.inSeconds <= 0) {
         timer.cancel();
-        _onTimerExpired();
+        unawaited(_onTimerExpired());
       } else {
         setState(() {
           _remainingSeconds = remaining.inSeconds;

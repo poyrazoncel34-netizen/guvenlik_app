@@ -11,7 +11,11 @@ class AndroidIntentService {
   );
 
   static String normalizePhoneNumber(String raw) {
-    return raw.replaceAll(RegExp(r'[\s\-\(\)]'), '');
+    final normalized = raw.trim().replaceAll(RegExp(r'[^\d+]'), '');
+    if (normalized.startsWith('+')) {
+      return '+${normalized.substring(1).replaceAll('+', '')}';
+    }
+    return normalized.replaceAll('+', '');
   }
 
   static Future<bool> openDialer(String number) async {

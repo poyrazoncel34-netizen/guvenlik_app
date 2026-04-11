@@ -15,7 +15,7 @@ class EncryptionService {
   EncryptionService() {
     final keyBase64 = AppConstants.encryptionKeyBase64;
     if (keyBase64.isEmpty) {
-      debugPrint('WARNING: ENCRYPTION_KEY not set. Encryption disabled.');
+      debugPrint('WARNING: ENCRYPTION_KEY not set. Encryption unavailable.');
       return;
     }
     try {
@@ -43,7 +43,7 @@ class EncryptionService {
   /// Output format: base64(IV + ciphertext)
   String encrypt(String value) {
     if (!_ready || _encrypter == null) {
-      return base64Encode(utf8.encode(value));
+      throw StateError('Encryption key is not configured');
     }
     final iv = _generateRandomIV();
     final encrypted = _encrypter!.encrypt(value, iv: iv);
@@ -58,17 +58,12 @@ class EncryptionService {
   /// Also handles legacy data encrypted with static IV (plain base64 ciphertext).
   String decrypt(String encrypted) {
     if (!_ready || _encrypter == null) {
-      try {
-        return utf8.decode(base64Decode(encrypted));
-      } catch (_) {
-        return encrypted;
-      }
+      throw StateError('Encryption key is not configured');
     }
     try {
       final combined = base64Decode(encrypted);
       if (combined.length <= _ivLength) {
-        // Too short to contain IV + ciphertext, return as-is
-        return utf8.decode(combined);
+        throw const FormatException('Encrypted payload is too short');
       }
       // Extract IV from first 16 bytes
       final ivBytes = Uint8List.sublistView(combined, 0, _ivLength);
@@ -89,13 +84,18 @@ class EncryptionService {
         );
         return decrypted;
       } catch (_) {
-        // Last resort: try plain base64
-        try {
-          return utf8.decode(base64Decode(encrypted));
-        } catch (_) {
-          return encrypted;
-        }
+        throw const FormatException('Unable to decrypt payload');
       }
+    }
+  }
+
+  /// Legacy migration helper for old plaintext-base64 values. Do not use this
+  /// for new writes; it is intentionally separate from [decrypt].
+  String? tryDecodeLegacyBase64(String encoded) {
+    try {
+      return utf8.decode(base64Decode(encoded));
+    } catch (_) {
+      return null;
     }
   }
 }

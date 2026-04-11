@@ -23,6 +23,7 @@ import 'countdown_screen.dart';
 import 'safe_walk_screen.dart';
 import 'safety_timeline_screen.dart';
 import 'check_in_screen.dart';
+import 'battery_optimization_wizard.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -83,8 +84,21 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<HomeProvider>().initialize();
       _initConnectivity();
+      unawaited(_maybeShowBatteryOptimizationWizard());
     });
     // Analytics removed (offline-first)
+  }
+
+  Future<void> _maybeShowBatteryOptimizationWizard() async {
+    if (kIsWeb || !mounted) return;
+    final shouldShow = await BatteryOptimizationWizard.shouldShow();
+    if (!mounted || !shouldShow) return;
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const BatteryOptimizationWizard(checkFirstLaunch: true),
+      ),
+    );
   }
 
   void _initConnectivity() {
@@ -103,7 +117,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     _cardsController.dispose();
     super.dispose();
   }
-
 
   void _showNotifications(BuildContext context) {
     showModalBottomSheet(
@@ -276,7 +289,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                       _buildSafetyTips(),
                       SizedBox(height: shortScreen ? 10 : 16),
                       const LegalDisclaimerBanner(
-                          bannerContext: LegalBannerContext.home),
+                        bannerContext: LegalBannerContext.home,
+                      ),
                       SizedBox(height: bottomPadding),
                     ],
                   ),
@@ -588,7 +602,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     );
     if (!proceed || !mounted) return;
 
-
     final provider = context.read<HomeProvider>();
     final message = await provider.requestLocationPermission(context: context);
     if (message != null && mounted) _showSnack(message);
@@ -607,7 +620,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       body: 'perm_rationale_contacts_body'.tr(),
     );
     if (!proceed || !mounted) return;
-
 
     final provider = context.read<HomeProvider>();
     final message = await provider.requestContactsPermission();
@@ -634,10 +646,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         ),
         content: Text(
           body,
-          style: const TextStyle(
-            color: AppColors.textSecondary,
-            fontSize: 14,
-          ),
+          style: const TextStyle(color: AppColors.textSecondary, fontSize: 14),
         ),
         actions: [
           TextButton(
@@ -697,9 +706,13 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             const SizedBox(height: 16),
             _buildFakeCallOption('fake_call_delay_now'.tr(), Duration.zero),
             _buildFakeCallOption(
-                'fake_call_delay_1min'.tr(), const Duration(minutes: 1)),
+              'fake_call_delay_1min'.tr(),
+              const Duration(minutes: 1),
+            ),
             _buildFakeCallOption(
-                'fake_call_delay_3min'.tr(), const Duration(minutes: 3)),
+              'fake_call_delay_3min'.tr(),
+              const Duration(minutes: 3),
+            ),
             const SizedBox(height: 12),
           ],
         ),
@@ -731,8 +744,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('fake_call_delay_scheduled'
-                  .tr(namedArgs: {'seconds': '${delay.inSeconds}'})),
+              content: Text(
+                'fake_call_delay_scheduled'.tr(
+                  namedArgs: {'seconds': '${delay.inSeconds}'},
+                ),
+              ),
               backgroundColor: AppColors.primary,
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(
@@ -916,7 +932,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   }
 
   Widget _buildQuickActions() {
-
     final shortScreen = MediaQuery.sizeOf(context).height < 700;
     final gap = shortScreen ? 10.0 : 14.0;
 

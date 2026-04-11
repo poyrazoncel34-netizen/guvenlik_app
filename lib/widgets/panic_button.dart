@@ -9,10 +9,7 @@ import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../core/app_colors.dart';
 import '../core/constants/app_constants.dart';
-import '../core/di/service_locator.dart';
-import '../core/services/emergency_platform_service.dart';
 import '../core/widgets/feature_warning_dialog.dart';
-import '../domain/repositories/contacts_repository.dart';
 import '../screens/countdown_screen.dart';
 
 class PanicButton extends StatefulWidget {
@@ -31,9 +28,6 @@ class _PanicButtonState extends State<PanicButton>
   Timer? _hapticTimer;
   int _holdSeconds = 0;
   Timer? _holdTimer;
-  // Pre-loaded emergency number — ready the instant finger releases.
-  // Defaults to '112' as fail-safe when no contact has been loaded yet.
-  String _cachedEmergencyNumber = '112';
 
   @override
   void initState() {
@@ -56,26 +50,6 @@ class _PanicButtonState extends State<PanicButton>
       vsync: this,
       duration: const Duration(seconds: 3),
     );
-
-    // Pre-load emergency contact number from repository.
-    unawaited(_preloadEmergencyNumber());
-  }
-
-  Future<void> _preloadEmergencyNumber() async {
-    try {
-      final repo = serviceLocator<ContactsRepository>();
-      final contact = await repo.getPrimaryEmergencyContact();
-      if (contact != null && contact.phone.isNotEmpty) {
-        _cachedEmergencyNumber = contact.phone;
-        return;
-      }
-      final numbers = await repo.getAllEmergencyNumbers();
-      if (numbers.isNotEmpty) {
-        _cachedEmergencyNumber = numbers.first;
-      }
-    } catch (_) {
-      // Keep '112' fail-safe default on any error.
-    }
   }
 
   @override
@@ -136,14 +110,6 @@ class _PanicButtonState extends State<PanicButton>
     // Vibrate
     HapticFeedback.vibrate();
 
-    // INSTANT CALL: fire native emergency call before any UI navigation.
-    // Fire-and-forget — Kotlin executes synchronously on its thread pool.
-    unawaited(
-      EmergencyPlatformService.instance.executeEmergencyNative(
-        primaryNumber: _cachedEmergencyNumber,
-      ),
-    );
-
     _openCountdownScreen();
   }
 
@@ -152,7 +118,7 @@ class _PanicButtonState extends State<PanicButton>
       context,
       PageRouteBuilder(
         pageBuilder: (context, animation, secondaryAnimation) =>
-            const CountdownScreen(instantCallTriggered: true),
+            const CountdownScreen(),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return FadeTransition(
             opacity: animation,

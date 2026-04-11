@@ -1,5 +1,6 @@
 import '../di/service_locator.dart';
 import 'local_database_service.dart';
+import 'local_logger_service.dart';
 
 class CrashLogService {
   CrashLogService._();
@@ -15,13 +16,19 @@ class CrashLogService {
       final db = await serviceLocator<LocalDatabaseService>().database;
       await db.insert('crash_logs', {
         'source': source,
-        'error': error.toString(),
-        'stack': stackTrace?.toString(),
+        'error': LocalLoggerService.redactSensitive(error.toString()),
+        'stack': stackTrace == null
+            ? null
+            : LocalLoggerService.redactSensitive(stackTrace.toString()),
         'created_at': DateTime.now().toIso8601String(),
       });
+      await db.delete(
+        'crash_logs',
+        where:
+            'id NOT IN (SELECT id FROM crash_logs ORDER BY created_at DESC LIMIT 100)',
+      );
     } catch (_) {
-      // Storage full or database unavailable — swallow silently so the
-      // emergency flow (SMS, siren) is never interrupted by a logging failure.
+      // Storage full or database unavailable: never interrupt emergency flow.
     }
   }
 

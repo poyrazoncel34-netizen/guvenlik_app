@@ -25,7 +25,7 @@ KoruBeni için güvenli ve güncel beyan yaklaşımı:
 
 | Veri türü | Toplama / paylaşma | Amaç (kısa) |
 |------------|--------------------|-------------|
-| **Konum** (approximate / precise) | Acil durumda veya kullanıcı konum paylaşımını başlatınca işlenir; SMS ile acil kişiye aktarılabilir | Acil durumda konum paylaşımı |
+| **Konum** (approximate / precise) | Acil durumda veya kullanıcı konum oturumunu başlatınca işlenir; uygulama otomatik mesajla paylaşmaz | Acil durumda konum durumu |
 | **Kişiler** (rehber) | Cihazda erişilir, seçilen kişi cihazda saklanır | Acil kişi seçimi |
 | **Ses kaydı** (mikrofon) | Opsiyonel, cihazda kalır | Kanıt / delil kaydı |
 | **Profil bilgisi** (ad/fotoğraf) | Opsiyonel, cihazda kalır | Uygulama içi kişiselleştirme |

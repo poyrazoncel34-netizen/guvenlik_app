@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
-import 'consent_gate_service.dart';
+import 'call_service.dart';
 
 class EmergencyPlatformService {
   EmergencyPlatformService._();
@@ -61,126 +61,189 @@ class EmergencyPlatformService {
     _initialized = true;
   }
 
-  Future<void> scheduleCheckIn({
+  static const Duration _defaultTimeout = Duration(seconds: 5);
+  static const Duration _dispatchTimeout = Duration(seconds: 5);
+
+  Future<bool> scheduleCheckIn({
     required String phase,
     required DateTime deadline,
     Duration graceDuration = const Duration(seconds: 60),
   }) async {
     if (!isSupported) {
-      return;
+      return false;
     }
-    await _methodChannel.invokeMethod<void>('scheduleCheckIn', {
-      'phase': phase,
-      'deadlineMs': deadline.millisecondsSinceEpoch,
-      'graceDurationMs': graceDuration.inMilliseconds,
-    });
+    final response = await _invokeMap(
+      'scheduleCheckIn',
+      arguments: <String, Object?>{
+        'phase': phase,
+        'deadlineMs': deadline.millisecondsSinceEpoch,
+        'graceDurationMs': graceDuration.inMilliseconds,
+      },
+    );
+    return response['scheduled'] == true;
   }
 
   Future<void> cancelCheckIn() async {
     if (!isSupported) {
       return;
     }
-    await _methodChannel.invokeMethod<void>('cancelCheckIn');
+    try {
+      await _methodChannel
+          .invokeMethod<void>('cancelCheckIn')
+          .timeout(_defaultTimeout);
+    } on TimeoutException {
+      debugPrint('[EmergencyPlatform] cancelCheckIn timed out');
+    } on PlatformException catch (e) {
+      debugPrint('[EmergencyPlatform] cancelCheckIn failed: ${e.code}');
+    }
   }
 
   Future<Map<String, dynamic>?> consumePendingTrigger() async {
     if (!isSupported) {
       return null;
     }
-    final response = await _methodChannel.invokeMethod<dynamic>(
-      'consumePendingTrigger',
-    );
-    return _toMap(response);
+    return _invokeMap('consumePendingTrigger');
   }
 
   Future<Map<String, dynamic>> getDeviceState() async {
     if (!isSupported) {
       return const <String, dynamic>{};
     }
-    final response = await _methodChannel.invokeMethod<dynamic>(
-      'getDeviceState',
-    );
-    return _toMap(response) ?? const <String, dynamic>{};
+    return _invokeMap('getDeviceState');
   }
 
   Future<bool> canScheduleExactAlarms() async {
     if (!isSupported) {
       return false;
     }
-    return await _methodChannel.invokeMethod<bool>('canScheduleExactAlarms') ??
-        false;
+    return await _invokeBool('canScheduleExactAlarms');
   }
 
   Future<void> requestExactAlarmPermission() async {
     if (!isSupported) {
       return;
     }
-    await _methodChannel.invokeMethod<void>('requestExactAlarmPermission');
+    try {
+      await _methodChannel
+          .invokeMethod<void>('requestExactAlarmPermission')
+          .timeout(_defaultTimeout);
+    } on TimeoutException {
+      debugPrint('[EmergencyPlatform] requestExactAlarmPermission timed out');
+    } on PlatformException catch (e) {
+      debugPrint(
+        '[EmergencyPlatform] requestExactAlarmPermission failed: ${e.code}',
+      );
+    }
   }
 
   Future<bool> openManufacturerSettings() async {
     if (!isSupported) {
       return false;
     }
-    return await _methodChannel.invokeMethod<bool>(
-          'openManufacturerSettings',
-        ) ??
-        false;
+    return _invokeBool('openManufacturerSettings');
   }
 
-  Future<void> executeEmergencyNative({
+  Future<EmergencyCallResult> executeEmergencyNative({
     required String primaryNumber,
   }) async {
-    if (!isSupported) return;
-    try {
-      await _methodChannel.invokeMethod<dynamic>(
-        'executeEmergencyNative',
-        {'primaryNumber': primaryNumber},
-      ).timeout(const Duration(seconds: 3));
-    } on TimeoutException {
-      debugPrint('[EmergencyPlatform] executeEmergencyNative timed out');
-    } catch (e) {
-      debugPrint('[EmergencyPlatform] executeEmergencyNative failed: $e');
+    if (!isSupported) {
+      return EmergencyCallResult.failed(primaryNumber);
+    }
+    final response = await _invokeMap(
+      'executeEmergencyNative',
+      arguments: <String, Object?>{'primaryNumber': primaryNumber},
+      timeout: _dispatchTimeout,
+    );
+    final number = response['number'] as String? ?? primaryNumber;
+    switch (response['status']) {
+      case 'directCallStarted':
+        return EmergencyCallResult.direct(number);
+      case 'dialerOpened':
+        return EmergencyCallResult.dialer(number);
+      default:
+        return EmergencyCallResult.failed(number);
     }
   }
 
   /// Schedule a native AlarmManager backup for the countdown timer.
   /// If the Dart Timer.periodic freezes under Doze, this alarm fires and
   /// executes the emergency natively via EmergencyExecutor.
-  Future<void> scheduleCountdownAlarm({
+  Future<bool> scheduleCountdownAlarm({
     required DateTime deadline,
     required String primaryNumber,
+    required String dispatchId,
   }) async {
-    if (!isSupported) return;
-    try {
-      await _methodChannel.invokeMethod<void>('scheduleCountdownAlarm', {
+    if (!isSupported) return false;
+    final response = await _invokeMap(
+      'scheduleCountdownAlarm',
+      arguments: {
         'deadlineMs': deadline.millisecondsSinceEpoch,
         'primaryNumber': primaryNumber,
-      }).timeout(const Duration(seconds: 5));
-    } on TimeoutException {
-      debugPrint('[EmergencyPlatform] scheduleCountdownAlarm timed out');
-    }
+        'dispatchId': dispatchId,
+      },
+    );
+    return response['scheduled'] == true;
   }
 
   /// Cancel the countdown backup alarm (user entered correct PIN).
-  Future<void> cancelCountdownAlarm() async {
+  Future<void> cancelCountdownAlarm({String? dispatchId}) async {
     if (!isSupported) return;
     try {
-      await _methodChannel.invokeMethod<void>('cancelCountdownAlarm')
+      await _methodChannel
+          .invokeMethod<void>('cancelCountdownAlarm', <String, Object?>{
+            'dispatchId': dispatchId,
+          })
           .timeout(const Duration(seconds: 5));
     } on TimeoutException {
       debugPrint('[EmergencyPlatform] cancelCountdownAlarm timed out');
+    } on PlatformException catch (e) {
+      debugPrint('[EmergencyPlatform] cancelCountdownAlarm failed: ${e.code}');
     }
   }
 
   /// Check if the native alarm already fired (Dart timer was frozen).
   /// Used to prevent double-execution when the Dart side resumes.
-  Future<bool> didCountdownAlarmFire() async {
+  Future<bool> didCountdownAlarmFire({required String dispatchId}) async {
     if (!isSupported) return false;
+    return _invokeBool(
+      'didCountdownAlarmFire',
+      arguments: <String, Object?>{'dispatchId': dispatchId},
+    );
+  }
+
+  Future<Map<String, dynamic>> _invokeMap(
+    String method, {
+    Map<String, Object?>? arguments,
+    Duration timeout = _defaultTimeout,
+  }) async {
     try {
-      return await _methodChannel.invokeMethod<bool>('didCountdownAlarmFire') ?? false;
-    } catch (e) {
-      debugPrint('[EmergencyPlatform] didCountdownAlarmFire failed: $e');
+      final response = await _methodChannel
+          .invokeMethod<dynamic>(method, arguments)
+          .timeout(timeout);
+      return _toMap(response) ?? const <String, dynamic>{};
+    } on TimeoutException {
+      debugPrint('[EmergencyPlatform] $method timed out');
+      return const <String, dynamic>{};
+    } on PlatformException catch (e) {
+      debugPrint('[EmergencyPlatform] $method failed: ${e.code}');
+      return const <String, dynamic>{};
+    }
+  }
+
+  Future<bool> _invokeBool(
+    String method, {
+    Map<String, Object?>? arguments,
+  }) async {
+    try {
+      return await _methodChannel
+              .invokeMethod<bool>(method, arguments)
+              .timeout(_defaultTimeout) ??
+          false;
+    } on TimeoutException {
+      debugPrint('[EmergencyPlatform] $method timed out');
+      return false;
+    } on PlatformException catch (e) {
+      debugPrint('[EmergencyPlatform] $method failed: ${e.code}');
       return false;
     }
   }
