@@ -36,7 +36,7 @@ object EmergencyExecutor {
             result
         } catch (e: Exception) {
             Log.e(TAG, "Call dispatch failed")
-            mapOf("status" to "failed", "number" to primaryNumber.trim())
+            mapOf("status" to "failed", "number" to primaryNumber.trim().ifEmpty { "112" })
         } finally {
             try {
                 wakeLock?.release()
@@ -45,14 +45,12 @@ object EmergencyExecutor {
     }
 
     private fun openCall(context: Context, number: String): Map<String, Any?> {
-        val cleaned = number.trim()
-        if (cleaned.isEmpty()) {
-            return mapOf("status" to "failed", "number" to cleaned)
-        }
+        val cleaned = number.trim().ifEmpty { "112" }
 
         val canDirect = ContextCompat.checkSelfPermission(
             context, Manifest.permission.CALL_PHONE
         ) == PackageManager.PERMISSION_GRANTED
+        Log.i(TAG, "EMERGENCY_CALL_TRIGGERED path=${if (canDirect) "ACTION_CALL" else "ACTION_DIAL"}")
 
         val intent = if (canDirect) {
             Intent(Intent.ACTION_CALL).apply {
@@ -64,7 +62,17 @@ object EmergencyExecutor {
             }
         }
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        context.startActivity(intent)
+        try {
+            context.startActivity(intent)
+        } catch (e: Exception) {
+            Log.e(TAG, "FALLBACK_112 primary call intent failed")
+            val fallback = Intent(Intent.ACTION_DIAL).apply {
+                data = Uri.parse("tel:112")
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            context.startActivity(fallback)
+            return mapOf("status" to "dialerOpened", "number" to "112")
+        }
         return mapOf(
             "status" to if (canDirect) "directCallStarted" else "dialerOpened",
             "number" to cleaned,

@@ -52,5 +52,22 @@ void main() {
         reason: '_onPressEnd should delegate only to countdown navigation.',
       );
     });
+
+    test('NO native emergency dispatch in panic button press flow', () {
+      final onPressEndIdx = source.indexOf('_onPressEnd');
+      expect(
+        onPressEndIdx,
+        isNot(-1),
+        reason: '_onPressEnd must exist in panic_button.dart',
+      );
+
+      final region = source.substring(onPressEndIdx);
+      expect(
+        region.contains('executeEmergencyNative'),
+        isFalse,
+        reason:
+            'PanicButton must not call native emergency dispatch before countdown expiry.',
+      );
+    });
   });
 }
