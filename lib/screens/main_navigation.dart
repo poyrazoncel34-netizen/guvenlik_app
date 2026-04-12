@@ -7,12 +7,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../core/app_colors.dart';
 import '../core/constants/app_constants.dart';
 import '../core/di/service_locator.dart';
 import '../core/security/secure_storage.dart';
 import '../core/security/secure_storage_keys.dart';
+import '../core/services/subscription_gate.dart';
 import '../core/utils/permission_helper.dart';
 // Firebase and notification services removed (offline-first)
 import '../widgets/connectivity_banner.dart';
@@ -29,11 +29,8 @@ class MainNavigation extends StatefulWidget {
   State<MainNavigation> createState() => _MainNavigationState();
 }
 
-class _MainNavigationState extends State<MainNavigation>
-    with TickerProviderStateMixin {
+class _MainNavigationState extends State<MainNavigation> {
   int _selectedIndex = 0;
-  late AnimationController _fabController;
-  late Animation<double> _fabScale;
   bool _pinPromptVisible = false;
   bool _notificationPromptVisible = false;
 
@@ -48,39 +45,12 @@ class _MainNavigationState extends State<MainNavigation>
   void initState() {
     super.initState();
     // Firebase services removed (offline-first)
-
-    _fabController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 600),
-    );
-    _fabScale = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _fabController, curve: Curves.elasticOut),
-    );
-    // Delay FAB entrance
-    Future.delayed(const Duration(milliseconds: 400), () {
-      if (mounted) _fabController.forward();
-    });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _runStartupChecks();
     });
   }
 
-  @override
-  void dispose() {
-    _fabController.dispose();
-    super.dispose();
-  }
-
   // Firebase services removed (offline-first architecture)
-
-  Future<void> _makeCall(String number) async {
-    final uri = Uri(scheme: 'tel', path: number);
-    try {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    } catch (e) {
-      debugPrint('Could not launch $uri: $e');
-    }
-  }
 
   Future<void> _ensurePinSetup() async {
     if (!mounted || _pinPromptVisible) return;
@@ -161,157 +131,6 @@ class _MainNavigationState extends State<MainNavigation>
     }
   }
 
-  void _showQuickHelp(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        decoration: BoxDecoration(
-          color: AppColors.cardBg,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.primary.withValues(alpha: 0.08),
-              blurRadius: 20,
-              offset: const Offset(0, -4),
-            ),
-          ],
-        ),
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: AppColors.border,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(height: 20),
-            Text(
-              "how_can_we_help".tr(),
-              style: const TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.w800,
-                color: AppColors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 24),
-            _buildHelpOption(
-              icon: Icons.local_police_rounded,
-              color: AppColors.info,
-              title: "call_police".tr(),
-              subtitle: AppConstants.turkeyEmergencyNumber,
-              onTap: () {
-                Navigator.pop(context);
-                _makeCall(AppConstants.turkeyEmergencyNumber);
-              },
-            ),
-            const SizedBox(height: 12),
-            _buildHelpOption(
-              icon: Icons.medical_services_rounded,
-              color: AppColors.emergency,
-              title: "call_ambulance".tr(),
-              subtitle: AppConstants.turkeyEmergencyNumber,
-              onTap: () {
-                Navigator.pop(context);
-                _makeCall(AppConstants.turkeyEmergencyNumber);
-              },
-            ),
-            const SizedBox(height: 12),
-            _buildHelpOption(
-              icon: Icons.fire_truck_rounded,
-              color: AppColors.warning,
-              title: "call_fire".tr(),
-              subtitle: AppConstants.turkeyEmergencyNumber,
-              onTap: () {
-                Navigator.pop(context);
-                _makeCall(AppConstants.turkeyEmergencyNumber);
-              },
-            ),
-            const SizedBox(height: 16),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHelpOption({
-    required IconData icon,
-    required Color color,
-    required String title,
-    required String subtitle,
-    required VoidCallback onTap,
-  }) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () {
-          HapticFeedback.mediumImpact();
-          onTap();
-        },
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.08),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: color.withValues(alpha: 0.2)),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 50,
-                height: 50,
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.15),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(icon, color: color, size: 26),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    Text(
-                      subtitle,
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: color,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-                child: const Icon(
-                  Icons.call_rounded,
-                  color: Colors.white,
-                  size: 22,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -323,38 +142,10 @@ class _MainNavigationState extends State<MainNavigation>
             top: 0,
             left: 0,
             right: 0,
-            child: SafeArea(
-              bottom: false,
-              child: ConnectivityBanner(),
-            ),
+            child: SafeArea(bottom: false, child: ConnectivityBanner()),
           ),
         ],
       ),
-      // Floating Action Button - Only on Home screen
-      floatingActionButton: _selectedIndex == 0
-          ? ScaleTransition(
-              scale: _fabScale,
-              child: FloatingActionButton.extended(
-                onPressed: () {
-                  HapticFeedback.mediumImpact();
-                  _showQuickHelp(context);
-                },
-                backgroundColor: AppColors.emergency,
-                elevation: 8,
-                icon: const Icon(Icons.flash_on_rounded, color: Colors.white),
-                label: Text(
-                  "quick_help".tr(),
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w800,
-                    color: Colors.white,
-                    letterSpacing: 0.3,
-                  ),
-                ),
-              ),
-            )
-          : null,
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-
       // ── Modern Frosted Glass Bottom Navigation Bar ──
       bottomNavigationBar: ClipRRect(
         child: BackdropFilter(
@@ -418,8 +209,15 @@ class _MainNavigationState extends State<MainNavigation>
 
     return Expanded(
       child: GestureDetector(
-        onTap: () {
+        onTap: () async {
           HapticFeedback.lightImpact();
+          if (index == 2) {
+            final allowed = await SubscriptionGate.ensureAccess(
+              context,
+              PremiumFeature.contacts,
+            );
+            if (!allowed || !mounted) return;
+          }
           setState(() => _selectedIndex = index);
         },
         behavior: HitTestBehavior.opaque,

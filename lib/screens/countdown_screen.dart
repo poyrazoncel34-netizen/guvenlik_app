@@ -232,7 +232,7 @@ class _CountdownScreenState extends State<CountdownScreen>
   }
 
   Future<void> _makeEmergencyCall() async {
-    if (_emergencyDispatched) return;
+    if (_emergencyDispatched || _isNavigating) return;
     _emergencyDispatched = true;
 
     // If native backup already fired, skip duplicate execution.
@@ -593,7 +593,7 @@ class _CountdownScreenState extends State<CountdownScreen>
     required String description,
     bool resetPinLockout = false,
   }) async {
-    if (_isNavigating) return;
+    if (_isNavigating || _emergencyDispatched) return;
     _isNavigating = true;
     _timer?.cancel();
     await EmergencyPlatformService.instance.cancelCountdownAlarm(
@@ -647,7 +647,7 @@ class _CountdownScreenState extends State<CountdownScreen>
   }
 
   void _handlePinInput(String key) {
-    if (_isPinLockedOut || _isNavigating) return;
+    if (_isPinLockedOut || _isNavigating || _emergencyDispatched) return;
     HapticFeedback.lightImpact();
 
     if (key == "DEL") {

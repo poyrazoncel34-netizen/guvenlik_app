@@ -55,5 +55,5 @@ echo "════════════════════════�
 echo "  ✅ Hazırlık tamamlandı!"
 echo "═══════════════════════════════════════════════════════════"
 echo ""
-echo "Sonraki: ENCRYPTION_KEY='...' ./scripts/build_production.sh"
+echo "Sonraki: ENCRYPTION_KEY='...' REVENUECAT_ANDROID_API_KEY='goog_...' ./scripts/build_production.sh"
 echo ""

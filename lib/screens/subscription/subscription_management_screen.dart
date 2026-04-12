@@ -31,7 +31,7 @@ class _SubscriptionManagementScreenState
     if (error != null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(error),
+          content: Text(error.tr()),
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -124,9 +124,7 @@ class _SubscriptionManagementScreenState
                   final provider = context.read<SubscriptionProvider>();
                   await Navigator.push(
                     context,
-                    MaterialPageRoute(
-                      builder: (_) => const PaywallScreen(),
-                    ),
+                    MaterialPageRoute(builder: (_) => const PaywallScreen()),
                   );
                   if (mounted) provider.refresh();
                 },
@@ -239,8 +237,8 @@ class _SubscriptionManagementScreenState
                           namedArgs: {'date': expiresDate},
                         )
                       : isPro
-                          ? 'subscription_lifetime_active'.tr()
-                          : 'subscription_free_desc'.tr(),
+                      ? 'subscription_lifetime_active'.tr()
+                      : 'subscription_free_desc'.tr(),
                   style: const TextStyle(
                     fontSize: 13,
                     color: AppColors.textSecondary,
@@ -258,25 +256,27 @@ class _SubscriptionManagementScreenState
     final features = [
       (Icons.security_rounded, AppColors.primary, 'subscription_feature_1'),
       (Icons.location_on_rounded, AppColors.info, 'subscription_feature_2'),
-      (Icons.notifications_active_rounded, AppColors.warning, 'subscription_feature_3'),
+      (
+        Icons.notifications_active_rounded,
+        AppColors.warning,
+        'subscription_feature_3',
+      ),
       (Icons.support_agent_rounded, AppColors.accent, 'subscription_feature_4'),
     ];
     return _buildCard(
-      features.indexed
-          .expand<Widget>((e) {
-            final (index, (icon, color, key)) = e;
-            return [
-              _buildFeatureTile(icon: icon, iconColor: color, title: key.tr()),
-              if (index < features.length - 1)
-                Divider(
-                  height: 1,
-                  thickness: 1,
-                  color: AppColors.border.withValues(alpha: 0.5),
-                  indent: 60,
-                ),
-            ];
-          })
-          .toList(),
+      features.indexed.expand<Widget>((e) {
+        final (index, (icon, color, key)) = e;
+        return [
+          _buildFeatureTile(icon: icon, iconColor: color, title: key.tr()),
+          if (index < features.length - 1)
+            Divider(
+              height: 1,
+              thickness: 1,
+              color: AppColors.border.withValues(alpha: 0.5),
+              indent: 60,
+            ),
+        ];
+      }).toList(),
     );
   }
 
@@ -399,11 +399,7 @@ class _SubscriptionManagementScreenState
               ),
             ),
           ),
-          Icon(
-            Icons.check_circle_rounded,
-            color: AppColors.success,
-            size: 20,
-          ),
+          Icon(Icons.check_circle_rounded, color: AppColors.success, size: 20),
         ],
       ),
     );

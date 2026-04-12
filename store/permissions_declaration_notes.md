@@ -34,7 +34,7 @@ Direkt mesaj gönderimi veya mesaj composer bu sürümün kapsamı dışındadı
 "Acil durum geri sayımı tamamlandığında kullanıcının belirlediği acil durum kişisini aramak için kullanılır. Kullanıcı panik butonunu tetikler, geri sayımı PIN ile iptal etmezse Android arama akışı başlatılır. İzin yoksa arama ekranı açılır ve kullanıcı aramayı manuel onaylar."
 
 **Neden gerekli:**
-Acil durumda kullanıcı telefonu kullanamıyor olabilir. Otomatik arama, yardım çağırmanın en güvenilir yoludur.
+CALL_PHONE, kullanıcı açıkça tetiklediği panik veya check-in akışında geri sayım tamamlandıktan sonra doğrudan arama denemesi yapmak için kullanılır. Arama bağlantısı garanti edilmez; izin yoksa arama ekranı açılır ve kullanıcı aramayı manuel onaylar.
 
 **Alternatif:**
 `ACTION_DIAL` intent kullanılabilir (izin gerektirmez, kullanıcı onayı gerekir). Ancak kullanıcı bilincini yitirmişse bu alternatif işe yaramaz. Bu nedenle `CALL_PHONE` kullanılmaktadır.
@@ -47,7 +47,7 @@ Acil durumda kullanıcı telefonu kullanamıyor olabilir. Otomatik arama, yardı
 "KoruBeni'nin güvenli yürüyüş/check-in özelliği, kullanıcı uygulama açıkken başlattığı oturumlarda zamanlayıcı ve bildirim desteği kullanır. Android pil optimizasyonu bu yardımcı akışı kısıtlayabilir; uygulama bunu garanti bir acil servis olarak sunmaz ve kullanıcıya degraded davranışı açıklar."
 
 **Neden gerekli:**
-Kullanıcı güvenli yürüyüş başlattığında, belirtilen süre içinde check-in yapmazsa otomatik acil durum tetiklenmesi gerekir. Bu Android'in normal doze/standby modlarında kesilebilir.
+Kullanıcı güvenli yürüyüş başlattığında, belirtilen süre içinde check-in yapmazsa yardımcı acil durum akışının tetiklenmesi hedeflenir. Bu akış Android'in doze/standby ve üretici pil kısıtları nedeniyle gecikebilir veya kesilebilir.
 
 ---
 

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # KoruBeni - Production Build Script (Play Store AAB)
-# Kullanım: ENCRYPTION_KEY='base64key' ./scripts/build_production.sh
+# Kullanım: ENCRYPTION_KEY='base64key' REVENUECAT_ANDROID_API_KEY='goog_...' ./scripts/build_production.sh
 # Key üretmek: openssl rand -base64 32
 
 set -euo pipefail
@@ -19,25 +19,38 @@ if [ ! -f "android/key.properties" ]; then
     exit 1
 fi
 
+# İlk parametre encryption key olabilir
+if [ -n "${1:-}" ]; then
+    ENCRYPTION_KEY="$1"
+fi
+
 # Encryption key kontrolü
-if [ -z "$ENCRYPTION_KEY" ]; then
+if [ -z "${ENCRYPTION_KEY:-}" ]; then
     echo "⚠️  ENCRYPTION_KEY bulunamadı!"
     echo ""
     echo "Lütfen encryption key'i belirle:"
     echo "export ENCRYPTION_KEY='senin-key-buraya'"
     echo ""
     echo "Veya script'e parametre olarak ver:"
-    echo "./scripts/build_production.sh 'senin-key-buraya'"
+    echo "REVENUECAT_ANDROID_API_KEY='goog_...' ./scripts/build_production.sh 'senin-key-buraya'"
     echo ""
     exit 1
 fi
 
-# İlk parametre encryption key olabilir
-if [ -n "${1:-}" ]; then
-    ENCRYPTION_KEY="$1"
+echo "🔐 Encryption key set (not logged for security)."
+echo ""
+
+# RevenueCat Android API key kontrolü
+if [ -z "${REVENUECAT_ANDROID_API_KEY:-}" ]; then
+    echo "❌ REVENUECAT_ANDROID_API_KEY bulunamadı!"
+    echo ""
+    echo "Production abonelik akışı için RevenueCat Android API key gerekli:"
+    echo "export REVENUECAT_ANDROID_API_KEY='goog_...'"
+    echo ""
+    exit 1
 fi
 
-echo "🔐 Encryption key set (not logged for security)."
+echo "🐱 RevenueCat Android API key set (not logged for security)."
 echo ""
 
 # Flutter clean
@@ -52,12 +65,14 @@ echo ""
 
 # Android AAB Build
 echo "🤖 Android AAB build başlıyor..."
-AAB_PATH="build/app/outputs/bundle/release/app-release.aab"
+AAB_PATH="build/app/outputs/bundle/playRelease/app-play-release.aab"
 BUILD_LOG="$(mktemp /tmp/korubeni_android_build.XXXXXX.log)"
 
 set +e
 flutter build appbundle --release \
+  --flavor play \
   --dart-define=ENV=production \
+  --dart-define=REVENUECAT_ANDROID_API_KEY="$REVENUECAT_ANDROID_API_KEY" \
   --dart-define=ENCRYPTION_KEY="$ENCRYPTION_KEY" 2>&1 | tee "$BUILD_LOG"
 ANDROID_BUILD_EXIT=$?
 set -e

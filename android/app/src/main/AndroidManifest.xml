@@ -11,6 +11,9 @@
 
     <!-- Offline-first core with optional online map tiles and connectivity checks -->
     <!-- Contact Picker uses Intent.ACTION_PICK — no READ_CONTACTS permission needed -->
+    <uses-permission
+        android:name="android.permission.READ_CONTACTS"
+        tools:node="remove" />
     <!-- Notifications (Android 13+) -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <!-- RECORD_AUDIO removed — audio recording feature disabled -->
@@ -93,6 +96,10 @@
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
                 android:value="emergency_checkin_keepalive" />
         </service>
+        <!-- Geolocator's foreground location service is not used in this Play release. -->
+        <service
+            android:name="com.baseflow.geolocator.GeolocatorLocationService"
+            tools:node="remove" />
         <!-- Shake detection is disabled in this release; service kept out of manifest. -->
         <!-- RecordingSessionService removed — audio recording feature disabled -->
         <receiver

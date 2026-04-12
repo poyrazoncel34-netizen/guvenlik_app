@@ -4,7 +4,7 @@
 KoruBeni — Kişisel Güvenlik
 
 ## Kısa Açıklama (80 karakter)
-Tek dokunuşla acil arama akışını başlat. Konumunu gör. Güvende kal.
+Tek dokunuşla acil arama akışını başlat. Konum durumunu gör.
 
 ## Uzun Açıklama
 
@@ -19,7 +19,7 @@ Panik butonuna basılı tutun, bırakın. Geri sayım PIN ile iptal edilmezse be
 Konum alınabilirse haritada gösterilir; alınamazsa açıkça "konum alınamadı" durumu gösterilir.
 
 🚶 GÜVENLİ YÜRÜYÜŞ
-Zamanlayıcı ayarlayın, check-in yapın. Süre dolduğunda yanıt vermezseniz otomatik acil durum tetiklenir.
+Zamanlayıcı ayarlayın, check-in yapın. Süre dolduğunda yanıt vermezseniz acil arama akışı hazırlanır; arka plan davranışı Android ayarlarına bağlıdır.
 
 📞 SAHTE ÇAĞRI
 Rahatsız edici durumlardan güvenle çıkmanız için özelleştirilebilir sahte arama.
@@ -31,7 +31,7 @@ Dikkat çekmek için yüksek sesli acil durum sireni.
 Bu Android Play sürümünde sallama tetikleyici varsayılan olarak devre dışıdır.
 
 🔐 GÜVENLİK
-PIN kodu ve biyometrik (parmak izi / yüz tanıma) koruma.
+Yerel PIN koruması. Biyometrik kilit bu Android Play sürümünde devre dışıdır.
 
 🌍 ÇOK DİLLİ
 Türkçe ve İngilizce desteği.
@@ -40,15 +40,15 @@ Türkçe ve İngilizce desteği.
 Geliştirici sunucusu yoktur. Harita ve Play servisleri ağ kullanabilir.
 
 🛡️ GİZLİLİK
-• Tüm verileriniz SADECE cihazınızda kalır
-• Hiçbir sunucuya veri gönderilmez
-• KVKK uyumlu
+• Kişisel verilerin ana kopyası cihazınızda tutulur
+• Geliştirici backend'i yoktur; harita ve Play servisleri kendi ağ davranışlarına sahip olabilir
+• KVKK bilgilendirme ve veri silme akışları
 • Verilerinizi istediğiniz zaman silebilirsiniz
 
 ⚙️ İZİNLER HAKKINDA
 • Konum: Konumunuzu göstermek ve acil durum akışını desteklemek için
 • Telefon: Acil durum araması yapmak için
-• Kişiler: Acil durum kişilerinizi seçmek için
+• Pil optimizasyonu: Check-in ve güvenli yürüyüş yardımcı zamanlayıcılarını desteklemek için
 Bu izinler YALNIZCA acil durum amaçlı kullanılır.
 
 ---
@@ -58,3 +58,4 @@ Bu izinler YALNIZCA acil durum amaçlı kullanılır.
 - Mesaj gönderimi yoktur; uygulama bu sürümde mesaj uygulaması açmaz.
 - Konum: Yalnızca acil durum veya kullanıcı başlattığı konum oturumu sırasında erişilir.
 - Sunucu: Geliştirici backend'i yoktur; harita ve Play servisleri ağ kullanabilir.
+- Kişiler: READ_CONTACTS izni kullanılmaz; acil kişiler rehber seçici veya manuel girişle eklenir.

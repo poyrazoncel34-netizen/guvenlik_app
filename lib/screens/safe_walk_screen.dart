@@ -9,6 +9,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/app_colors.dart';
 import '../core/services/activity_service.dart';
+import '../core/services/check_in_expiry_coordinator.dart';
 import '../core/services/emergency_platform_service.dart';
 import '../core/services/foreground_service.dart';
 import '../core/services/notification_service.dart';
@@ -97,6 +98,9 @@ class _SafeWalkScreenState extends State<SafeWalkScreen>
       _endTime = endAt;
       _remainingSeconds = remaining.inSeconds;
     });
+    CheckInExpiryCoordinator.instance.arm(
+      CheckInExpiryCoordinator.safeWalkSession,
+    );
     _startTicker();
   }
 
@@ -117,6 +121,9 @@ class _SafeWalkScreenState extends State<SafeWalkScreen>
       _endTime = endTime;
       _remainingSeconds = _selectedMinutes * 60;
     });
+    CheckInExpiryCoordinator.instance.arm(
+      CheckInExpiryCoordinator.safeWalkSession,
+    );
 
     // Analytics removed (offline-first)
     ActivityService.logEvent(
@@ -152,6 +159,21 @@ class _SafeWalkScreenState extends State<SafeWalkScreen>
   }
 
   Future<void> _onTimerExpired() async {
+    if (!CheckInExpiryCoordinator.instance.tryClaim(
+      'safe_walk_timer',
+      sessionId: CheckInExpiryCoordinator.safeWalkSession,
+    )) {
+      _timer?.cancel();
+      await _clearPersistedState();
+      if (mounted) {
+        setState(() {
+          _isActive = false;
+          _endTime = null;
+          _remainingSeconds = 0;
+        });
+      }
+      return;
+    }
     // Timer expired without user checking in - trigger emergency
     HapticFeedback.heavyImpact();
     setState(() {
@@ -182,8 +204,12 @@ class _SafeWalkScreenState extends State<SafeWalkScreen>
   }
 
   Future<void> _checkIn() async {
+    if (CheckInExpiryCoordinator.instance.isClaimed) return;
     HapticFeedback.lightImpact();
     _timer?.cancel();
+    CheckInExpiryCoordinator.instance.reset(
+      sessionId: CheckInExpiryCoordinator.safeWalkSession,
+    );
     await KoruBeniForegroundService.stop();
     await EmergencyPlatformService.instance.cancelCheckIn();
     await _clearPersistedState();
@@ -221,8 +247,12 @@ class _SafeWalkScreenState extends State<SafeWalkScreen>
   }
 
   Future<void> _cancelWalk() async {
+    if (CheckInExpiryCoordinator.instance.isClaimed) return;
     HapticFeedback.lightImpact();
     _timer?.cancel();
+    CheckInExpiryCoordinator.instance.reset(
+      sessionId: CheckInExpiryCoordinator.safeWalkSession,
+    );
     await KoruBeniForegroundService.stop();
     await EmergencyPlatformService.instance.cancelCheckIn();
     await _clearPersistedState();

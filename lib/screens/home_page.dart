@@ -10,10 +10,12 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:provider/provider.dart';
 import '../core/app_colors.dart';
 import '../core/services/connectivity_service.dart';
+import '../core/services/subscription_gate.dart';
 // Analytics service removed (offline-first)
 import 'package:easy_localization/easy_localization.dart';
 import '../presentation/providers/home_provider.dart';
 import '../presentation/providers/settings_provider.dart';
+import '../presentation/providers/subscription_provider.dart';
 import '../widgets/legal_disclaimer_banner.dart';
 import '../widgets/panic_button.dart';
 import '../widgets/siren_dialog.dart';
@@ -212,6 +214,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<HomeProvider>();
+    final isPro = context.watch<SubscriptionProvider>().isPro;
     final pendingMessage = provider.takeMessage();
     if (pendingMessage != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -227,7 +230,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     final spacing = shortScreen ? 8.0 : 14.0;
     final sectionSpacing = shortScreen ? 12.0 : 20.0;
     final largeSectionSpacing = shortScreen ? 16.0 : 24.0;
-    // Space for FAB + bottom nav so content doesn't sit under the button
+    // Space for bottom nav so content does not sit under navigation.
     final bottomPadding = 72.0 + padding.bottom;
 
     return Scaffold(
@@ -277,14 +280,16 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                       _buildReadinessCard(provider),
                       if (!provider.onboardingDismissed) ...[
                         SizedBox(height: shortScreen ? 10 : 16),
-                        _buildOnboardingCard(provider),
+                        _buildOnboardingCard(provider, isPro),
                       ],
                       SizedBox(height: sectionSpacing),
                       const Center(child: PanicButton()),
-                      SizedBox(height: sectionSpacing),
-                      _buildTestModeButton(),
+                      if (isPro) ...[
+                        SizedBox(height: sectionSpacing),
+                        _buildTestModeButton(),
+                      ],
                       SizedBox(height: largeSectionSpacing),
-                      _buildQuickActions(),
+                      _buildQuickActions(isPro),
                       SizedBox(height: largeSectionSpacing),
                       _buildSafetyTips(),
                       SizedBox(height: shortScreen ? 10 : 16),
@@ -608,6 +613,12 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   }
 
   Future<void> _requestContactsPermission() async {
+    final allowed = await SubscriptionGate.ensureAccess(
+      context,
+      PremiumFeature.contacts,
+    );
+    if (!allowed || !mounted) return;
+
     if (kIsWeb) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("home_contacts_web_unsupported".tr())),
@@ -769,7 +780,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildOnboardingCard(HomeProvider provider) {
+  Widget _buildOnboardingCard(HomeProvider provider, bool isPro) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -784,7 +795,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             children: [
               Expanded(
                 child: Text(
-                  "get_ready_in_3_steps".tr(),
+                  isPro ? "get_ready_in_3_steps".tr() : "home_ready_title".tr(),
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w800,
@@ -815,12 +826,13 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             subtitle: "location_permission_required_desc".tr(),
             onTap: _requestLocationPermission,
           ),
-          _buildOnboardingStep(
-            index: "3",
-            title: "run_test_mode".tr(),
-            subtitle: "try_flow_without_real_call".tr(),
-            onTap: _startTestMode,
-          ),
+          if (isPro)
+            _buildOnboardingStep(
+              index: "3",
+              title: "run_test_mode".tr(),
+              subtitle: "try_flow_without_real_call".tr(),
+              onTap: _startTestMode,
+            ),
         ],
       ),
     );
@@ -913,7 +925,13 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     );
   }
 
-  void _startTestMode() {
+  Future<void> _startTestMode() async {
+    final allowed = await SubscriptionGate.ensureAccess(
+      context,
+      PremiumFeature.testMode,
+    );
+    if (!allowed || !mounted) return;
+
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -923,6 +941,12 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   }
 
   Future<void> _openContacts() async {
+    final allowed = await SubscriptionGate.ensureAccess(
+      context,
+      PremiumFeature.contacts,
+    );
+    if (!allowed || !mounted) return;
+
     await Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => const ContactsPage()),
@@ -931,7 +955,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     await context.read<HomeProvider>().refreshAfterContactsChanged();
   }
 
-  Widget _buildQuickActions() {
+  Widget _buildQuickActions(bool isPro) {
     final shortScreen = MediaQuery.sizeOf(context).height < 700;
     final gap = shortScreen ? 10.0 : 14.0;
 
@@ -941,18 +965,21 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         "fake_call".tr(),
         Icons.phone_in_talk_rounded,
         AppColors.primary,
+        PremiumFeature.fakeCall,
         () => _showFakeCallDelayOptions(),
       ),
       _ActionData(
         "siren".tr(),
         Icons.notifications_active_rounded,
         AppColors.warning,
+        PremiumFeature.siren,
         _activateSiren,
       ),
       _ActionData(
         "safe_walk".tr(),
         Icons.directions_walk_rounded,
         AppColors.accent,
+        PremiumFeature.safeWalk,
         () {
           Navigator.push(
             context,
@@ -964,12 +991,14 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         "contacts".tr(),
         Icons.people_rounded,
         AppColors.info,
+        PremiumFeature.contacts,
         _openContacts,
       ),
       _ActionData(
         "timeline".tr(),
         Icons.timeline_rounded,
         AppColors.accent,
+        PremiumFeature.timeline,
         () {
           Navigator.push(
             context,
@@ -981,6 +1010,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         "check_in".tr(),
         Icons.verified_user_rounded,
         AppColors.success,
+        PremiumFeature.checkIn,
         () {
           Navigator.push(
             context,
@@ -1009,7 +1039,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           Row(
             children: [
               Expanded(
-                child: _buildAnimatedActionCard(actions[row * 2], row * 2),
+                child: _buildAnimatedActionCard(
+                  actions[row * 2],
+                  row * 2,
+                  isPro,
+                ),
               ),
               SizedBox(width: gap),
               if (row * 2 + 1 < actions.length)
@@ -1017,6 +1051,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                   child: _buildAnimatedActionCard(
                     actions[row * 2 + 1],
                     row * 2 + 1,
+                    isPro,
                   ),
                 )
               else
@@ -1028,9 +1063,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildAnimatedActionCard(_ActionData data, int index) {
+  Widget _buildAnimatedActionCard(_ActionData data, int index, bool isPro) {
+    final isLocked = SubscriptionGate.isProFeature(data.feature) && !isPro;
     if (index >= _cardFadeAnimations.length) {
-      return _buildActionCard(data.title, data.icon, data.color, data.onTap);
+      return _buildActionCard(data, isLocked: isLocked);
     }
     return AnimatedBuilder(
       animation: _cardsController,
@@ -1043,16 +1079,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           ),
         );
       },
-      child: _buildActionCard(data.title, data.icon, data.color, data.onTap),
+      child: _buildActionCard(data, isLocked: isLocked),
     );
   }
 
-  Widget _buildActionCard(
-    String title,
-    IconData icon,
-    Color color,
-    VoidCallback onTap,
-  ) {
+  Widget _buildActionCard(_ActionData data, {required bool isLocked}) {
     final shortScreen = MediaQuery.sizeOf(context).height < 700;
     final cardPadding = shortScreen ? 14.0 : 20.0;
     final iconSize = shortScreen ? 44.0 : 52.0;
@@ -1061,7 +1092,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     return _ScaleTapCard(
       onTap: () {
         HapticFeedback.lightImpact();
-        onTap();
+        _runGated(data.feature, data.onTap);
       },
       child: ClipRRect(
         borderRadius: BorderRadius.circular(16),
@@ -1080,46 +1111,78 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               ),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: color.withValues(alpha: 0.15),
+                color: data.color.withValues(alpha: 0.15),
                 width: 1,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: color.withValues(alpha: 0.06),
+                  color: data.color.withValues(alpha: 0.06),
                   blurRadius: 12,
                   offset: const Offset(0, 4),
                 ),
               ],
             ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+            child: Stack(
+              alignment: Alignment.center,
               children: [
-                Container(
-                  width: iconSize,
-                  height: iconSize,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        color.withValues(alpha: 0.18),
-                        color.withValues(alpha: 0.08),
-                      ],
+                if (isLocked)
+                  Positioned(
+                    top: 8,
+                    right: 10,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(999),
+                        border: Border.all(
+                          color: AppColors.primary.withValues(alpha: 0.22),
+                        ),
+                      ),
+                      child: const Icon(
+                        Icons.lock_rounded,
+                        color: AppColors.primary,
+                        size: 14,
+                      ),
                     ),
-                    shape: BoxShape.circle,
                   ),
-                  child: Icon(icon, color: color, size: iconInnerSize),
-                ),
-                SizedBox(height: shortScreen ? 8 : 12),
-                Text(
-                  title,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: fontSize,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
-                    letterSpacing: -0.2,
-                  ),
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: iconSize,
+                      height: iconSize,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            data.color.withValues(alpha: 0.18),
+                            data.color.withValues(alpha: 0.08),
+                          ],
+                        ),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        data.icon,
+                        color: data.color,
+                        size: iconInnerSize,
+                      ),
+                    ),
+                    SizedBox(height: shortScreen ? 8 : 12),
+                    Text(
+                      data.title,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: fontSize,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
+                        letterSpacing: -0.2,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -1127,6 +1190,14 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         ),
       ),
     );
+  }
+
+  void _runGated(PremiumFeature feature, VoidCallback action) {
+    unawaited(() async {
+      final allowed = await SubscriptionGate.ensureAccess(context, feature);
+      if (!mounted || !allowed) return;
+      action();
+    }());
   }
 
   void _activateSiren() {
@@ -1205,8 +1276,15 @@ class _ActionData {
   final String title;
   final IconData icon;
   final Color color;
+  final PremiumFeature feature;
   final VoidCallback onTap;
-  const _ActionData(this.title, this.icon, this.color, this.onTap);
+  const _ActionData(
+    this.title,
+    this.icon,
+    this.color,
+    this.feature,
+    this.onTap,
+  );
 }
 
 // ── Scale-bounce tap card ──

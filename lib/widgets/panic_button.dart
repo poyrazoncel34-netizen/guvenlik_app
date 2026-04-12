@@ -9,6 +9,7 @@ import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../core/app_colors.dart';
 import '../core/constants/app_constants.dart';
+import '../core/services/subscription_gate.dart';
 import '../core/widgets/feature_warning_dialog.dart';
 import '../screens/countdown_screen.dart';
 
@@ -25,6 +26,7 @@ class _PanicButtonState extends State<PanicButton>
   late AnimationController _armedPulseController;
   late AnimationController _progressController;
   bool _isArmed = false;
+  bool _countdownOpening = false;
   Timer? _hapticTimer;
   int _holdSeconds = 0;
   Timer? _holdTimer;
@@ -63,6 +65,12 @@ class _PanicButtonState extends State<PanicButton>
   }
 
   Future<void> _onPressStart(LongPressStartDetails details) async {
+    final allowed = await SubscriptionGate.ensureAccess(
+      context,
+      PremiumFeature.panic,
+    );
+    if (!allowed || !mounted) return;
+
     // İlk kullanımda uyarı dialogu göster; dialog varsa press iptal edilir.
     final shown = await FeatureWarningHelper.showIfNeeded(
       context,
@@ -98,6 +106,7 @@ class _PanicButtonState extends State<PanicButton>
   }
 
   void _onPressEnd(LongPressEndDetails details) {
+    final wasArmed = _isArmed;
     setState(() => _isArmed = false);
     _armedPulseController.stop();
     _armedPulseController.reset();
@@ -110,10 +119,13 @@ class _PanicButtonState extends State<PanicButton>
     // Vibrate
     HapticFeedback.vibrate();
 
+    if (!wasArmed) return;
     _openCountdownScreen();
   }
 
   void _openCountdownScreen() {
+    if (_countdownOpening || !mounted) return;
+    _countdownOpening = true;
     Navigator.push(
       context,
       PageRouteBuilder(
@@ -139,7 +151,7 @@ class _PanicButtonState extends State<PanicButton>
         },
         transitionDuration: const Duration(milliseconds: 300),
       ),
-    );
+    ).whenComplete(() => _countdownOpening = false);
   }
 
   @override

@@ -16,6 +16,7 @@ import '../di/service_locator.dart';
 import '../navigation/app_navigator.dart';
 import '../services/activity_service.dart';
 import '../services/call_service.dart';
+import '../services/check_in_expiry_coordinator.dart';
 import '../services/emergency_platform_service.dart';
 import '../services/foreground_service.dart';
 import '../services/haptic_service.dart';
@@ -61,6 +62,9 @@ class CheckInService extends ChangeNotifier {
   /// Start a check-in timer with [minutes] duration.
   Future<void> start(int minutes) async {
     await stop();
+    CheckInExpiryCoordinator.instance.arm(
+      CheckInExpiryCoordinator.checkInSession,
+    );
 
     _totalSeconds = minutes * 60;
     _remainingSeconds = _totalSeconds;
@@ -87,9 +91,15 @@ class CheckInService extends ChangeNotifier {
 
   /// User confirms they are safe — resets the timer.
   Future<void> confirmSafe() async {
-    if (!_isActive || _totalSeconds <= 0) {
+    if (!_isActive ||
+        _totalSeconds <= 0 ||
+        _emergencyInProgress ||
+        CheckInExpiryCoordinator.instance.isClaimed) {
       return;
     }
+    CheckInExpiryCoordinator.instance.arm(
+      CheckInExpiryCoordinator.checkInSession,
+    );
 
     _isGracePeriod = false;
     _graceEndAt = null;
@@ -120,6 +130,9 @@ class CheckInService extends ChangeNotifier {
     _remainingSeconds = 0;
     _totalSeconds = 0;
     _emergencyInProgress = false;
+    CheckInExpiryCoordinator.instance.reset(
+      sessionId: CheckInExpiryCoordinator.checkInSession,
+    );
 
     await _clearPersistedState();
     await EmergencyPlatformService.instance.cancelCheckIn();
@@ -301,6 +314,12 @@ class CheckInService extends ChangeNotifier {
 
   Future<void> _triggerEmergency() async {
     if (_emergencyInProgress) {
+      return;
+    }
+    if (!CheckInExpiryCoordinator.instance.tryClaim(
+      'check_in_service',
+      sessionId: CheckInExpiryCoordinator.checkInSession,
+    )) {
       return;
     }
     _emergencyInProgress = true;

@@ -62,9 +62,9 @@ KoruBeni için güvenli ve güncel beyan yaklaşımı:
 
 - **Nerede:** Play Console → **Release** → **Testing** (Internal / Closed) veya **Production**
 - **Ne yap:**
-  1. Yerelde: `ENCRYPTION_KEY='...' ./scripts/build_production.sh` veya  
-     `flutter build appbundle --release --dart-define=ENV=production --dart-define=ENCRYPTION_KEY=...`
-  2. Oluşan dosya: `build/app/outputs/bundle/release/app-release.aab`
+  1. Yerelde: `ENCRYPTION_KEY='...' REVENUECAT_ANDROID_API_KEY='goog_...' ./scripts/build_production.sh` veya
+     `flutter build appbundle --release --flavor play --dart-define=ENV=production --dart-define=REVENUECAT_ANDROID_API_KEY=goog_... --dart-define=ENCRYPTION_KEY=...`
+  2. Oluşan dosya: `build/app/outputs/bundle/playRelease/app-play-release.aab`
   3. Play Console’da ilgili track’i seç → **Create new release** → AAB dosyasını yükle.
   4. Release notları yaz (opsiyonel ama önerilir).
   5. İncelemeye gönder.

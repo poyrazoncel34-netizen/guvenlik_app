@@ -85,7 +85,7 @@
         </div>
 
         <p>KoruBeni ("Uygulama", "biz", "bizim"), kullanicilarinin guvenligini saglamak amaciyla gelistirilmis bir kisisel guvenlik uygulamasidir. Bu gizlilik politikasi, hangi verilerin islendigini, nasil kullanildigini ve nasil korundugunu aciklar.</p>
-        <p><strong>KoruBeni offline-first calisir.</strong> Verileriniz HIC BIR ucuncu taraf sunucusuna aktarilmaz; verilerin ana kopyasi cihazinizda tutulur.</p>
+        <p><strong>KoruBeni offline-first calisir.</strong> Verileriniz gelistirici backend'ine veya bulut veritabanina gonderilmez; verilerin ana kopyasi cihazinizda tutulur. Harita, Play Billing ve uretimde acikca yapilandirilmis crash reporting gibi ucuncu taraf servislerin teknik ag davranislari kendi saglayici politikalarina tabidir.</p>
 
         <h2>1. Topladigimiz Veriler</h2>
 
@@ -126,7 +126,7 @@
         </div>
 
         <h2>3. Veri Paylasimi</h2>
-        <p>Verilerinizi ucuncu taraflara <strong>satmiyoruz</strong>. Verileriniz <strong>HICBIR ucuncu taraf sunucusuna aktarilmaz</strong>. Veriler yalnizca su durumlarda paylasilir:</p>
+        <p>Verilerinizi ucuncu taraflara <strong>satmiyoruz</strong>. Kisisel veriler gelistirici backend'ine veya bulut veritabanina aktarilmaz. Veriler yalnizca su durumlarda islenebilir:</p>
         <ul>
             <li><strong>Acil durum kisileri:</strong> Acil durum tetiklendiginde, sectiginiz kisi icin Android arama akisi baslatilir veya arama ekrani hazirlanir</li>
             <li><strong>Harita servisleri:</strong> Harita ekrani acildiginda OpenStreetMap altyapisi kullanilabilir</li>
@@ -138,7 +138,7 @@
             <li>Hassas veriler AES-256 sifreleme ile korunur</li>
             <li>PIN kodlari cihaz uzerinde guvenli depolamada (Keychain/Keystore) saklanir</li>
             <li>Verilerin ana kopyasi cihazda tutulur</li>
-            <li>Tum veriler cihaz uzerinde kalir, HIC BIR ucuncu taraf sunucusuna aktarilmaz</li>
+            <li>Verilerin ana kopyasi cihazda tutulur; harita, Play Billing ve acikca yapilandirilmis crash reporting servisleri kendi teknik ag davranislarina sahip olabilir</li>
         </ul>
 
         <h2>5. Veri Saklama Suresi</h2>
@@ -236,10 +236,10 @@
                 <td style="border:1px solid #ddd; padding:8px;">Acik riza</td>
             </tr>
             <tr>
-                <td style="border:1px solid #ddd; padding:8px;"><strong>Biyometrik (*)</strong></td>
-                <td style="border:1px solid #ddd; padding:8px;">Parmak izi/yuz tanima</td>
-                <td style="border:1px solid #ddd; padding:8px;">Giris guvenligi</td>
-                <td style="border:1px solid #ddd; padding:8px;">Acik riza</td>
+                <td style="border:1px solid #ddd; padding:8px;"><strong>Biyometrik kilit</strong></td>
+                <td style="border:1px solid #ddd; padding:8px;">Yok</td>
+                <td style="border:1px solid #ddd; padding:8px;">Bu Android Play surumunde devre disi</td>
+                <td style="border:1px solid #ddd; padding:8px;">Islenmez</td>
             </tr>
             <tr>
                 <td style="border:1px solid #ddd; padding:8px;">Ses</td>
@@ -260,10 +260,10 @@
                 <td style="border:1px solid #ddd; padding:8px;">Hukuki yukumluluk (KVKK Md. 5/2-c)</td>
             </tr>
         </table>
-        <p>(*) Biyometrik veri OZEL NITELIKLI KISISEL VERI kapsamindadir. Uygulama biyometrik veriyi dogrudan islemez; Android'in yerel guvenlik altyapisi kullanilir.</p>
+        <p>Biyometrik kilit bu Android Play surumunde devre disidir; uygulama biyometrik veri toplamaz.</p>
 
         <h2>13. Ozel Nitelikli Veri Isleme</h2>
-        <p>Uygulama, biyometrik kimlik dogrulama icin yalnizca cihazin yerlesik guvenlik API'sini kullanir. Biyometrik veriler uygulama tarafindan saklanmaz, erisilmez veya islenmez.</p>
+        <p>Bu Android Play surumunde biyometrik kimlik dogrulama kullanilmaz. Uygulama biyometrik verileri saklamaz, erisemez veya islemez.</p>
 
         <h2>14. Otomatik Karar Verme</h2>
         <p>Uygulama, kullanici hakkinda otomatik karar verme veya profilleme yapmaz. Tum islemler yalnizca kullanicinin acikca baslattigi eylemler sonucunda gerceklesir.</p>

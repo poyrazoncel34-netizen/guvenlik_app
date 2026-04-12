@@ -13,6 +13,7 @@ import 'package:easy_localization/easy_localization.dart';
 import '../core/app_colors.dart';
 import '../core/constants/app_constants.dart';
 import '../core/services/contact_service.dart';
+import '../core/services/subscription_gate.dart';
 import '../presentation/providers/contacts_provider.dart';
 import '../presentation/providers/home_provider.dart';
 import '../widgets/emergency_contact_consent_dialog.dart';
@@ -56,7 +57,14 @@ class _ContactsPageState extends State<ContactsPage> {
                   color: AppColors.primary,
                 ),
               ),
-              onPressed: () => _showAddContactSheet(context),
+              onPressed: () async {
+                final allowed = await SubscriptionGate.ensureAccess(
+                  context,
+                  PremiumFeature.emergencyContactAdd,
+                );
+                if (!allowed || !context.mounted) return;
+                _showAddContactSheet(context);
+              },
             ),
           ],
         ),
@@ -84,7 +92,14 @@ class _ContactsPageState extends State<ContactsPage> {
                 ),
                 TextButton.icon(
                   onPressed: provider.hasContacts
-                      ? () => _showEmergencyPicker(context)
+                      ? () async {
+                          final allowed = await SubscriptionGate.ensureAccess(
+                            context,
+                            PremiumFeature.emergencyContactSelect,
+                          );
+                          if (!allowed || !context.mounted) return;
+                          _showEmergencyPicker(context);
+                        }
                       : null,
                   icon: const Icon(Icons.shield_rounded, size: 18),
                   label: Text("contacts_select_emergency".tr()),
@@ -319,7 +334,7 @@ class _ContactsPageState extends State<ContactsPage> {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (context) => Container(
+      builder: (sheetContext) => Container(
         decoration: const BoxDecoration(
           color: AppColors.cardBg,
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
@@ -369,7 +384,7 @@ class _ContactsPageState extends State<ContactsPage> {
                 Expanded(
                   child: ElevatedButton.icon(
                     onPressed: () async {
-                      Navigator.pop(context);
+                      Navigator.pop(sheetContext);
                       await _dialNumber(contact.phone);
                     },
                     icon: const Icon(Icons.call_rounded, size: 20),
@@ -394,7 +409,12 @@ class _ContactsPageState extends State<ContactsPage> {
               width: double.infinity,
               child: OutlinedButton.icon(
                 onPressed: () async {
-                  Navigator.pop(context);
+                  Navigator.pop(sheetContext);
+                  final allowed = await SubscriptionGate.ensureAccess(
+                    context,
+                    PremiumFeature.emergencyContactSelect,
+                  );
+                  if (!allowed || !mounted) return;
                   await provider.selectEmergencyContact(contact);
                   await _refreshHomeProvider();
                   if (!mounted) return;
@@ -501,7 +521,14 @@ class _ContactsPageState extends State<ContactsPage> {
           ),
           const SizedBox(height: 20),
           ElevatedButton.icon(
-            onPressed: () => _pickContactFromDevice(),
+            onPressed: () async {
+              final allowed = await SubscriptionGate.ensureAccess(
+                context,
+                PremiumFeature.emergencyContactAdd,
+              );
+              if (!allowed || !mounted) return;
+              await _pickContactFromDevice();
+            },
             icon: const Icon(Icons.person_add_rounded, size: 18),
             label: Text(
               "contacts_add_person".tr(),
@@ -697,6 +724,12 @@ class _ContactsPageState extends State<ContactsPage> {
   }
 
   Future<void> _pickContactFromDevice() async {
+    final allowed = await SubscriptionGate.ensureAccess(
+      context,
+      PremiumFeature.emergencyContactAdd,
+    );
+    if (!allowed || !mounted) return;
+
     try {
       if (kIsWeb) {
         _showSnack(
@@ -771,7 +804,7 @@ class _ContactsPageState extends State<ContactsPage> {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (context) => Container(
+      builder: (sheetContext) => Container(
         decoration: const BoxDecoration(
           color: AppColors.cardBg,
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
@@ -830,7 +863,12 @@ class _ContactsPageState extends State<ContactsPage> {
                   color: isSelected ? AppColors.accent : AppColors.border,
                 ),
                 onTap: () async {
-                  Navigator.pop(context);
+                  Navigator.pop(sheetContext);
+                  final allowed = await SubscriptionGate.ensureAccess(
+                    context,
+                    PremiumFeature.emergencyContactSelect,
+                  );
+                  if (!allowed || !mounted) return;
                   await provider.selectEmergencyContact(contact);
                   await _refreshHomeProvider();
                   if (!mounted) return;

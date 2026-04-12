@@ -89,8 +89,9 @@ void main() async {
   // OPTIMIZED COLD START: Run independent services in parallel
   // Web: Skip NotificationService & ForegroundService (platform plugins don't support web)
   try {
+    await setupServiceLocator();
+
     final services = <Future<void>>[
-      setupServiceLocator(),
       DataMigrationService.migrate(),
       OfflineQueueService.instance.initialize(),
       AtomicStorageService.instance.checkIntegrity(),

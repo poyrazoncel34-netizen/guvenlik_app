@@ -5,7 +5,7 @@
 Acil durumlarda tek dokunuşla güvenlik ağınıza ulaşın. Panik, konum, SOS.
 
 **Full Description (4000 karakter):**
-KoruBeni, kişisel güvenliğinizi ön planda tutan, acil durumlarda güvenlik ağınızla hızlıca iletişim kurmanızı sağlayan bir güvenlik uygulamasıdır.
+KoruBeni, acil arama akışını başlatmanıza, konum durumunu görmenize ve yardımcı check-in oturumları yürütmenize yardımcı olan bir kişisel güvenlik uygulamasıdır.
 
 Kendinizi güvende hissetmediğiniz anlarda panik butonuna basın — KoruBeni geri sayım tamamlanırsa acil arama akışını başlatır ve konum durumunu uygulama içinde gösterir.
 
@@ -35,17 +35,16 @@ Bu Android Play sürümünde varsayılan olarak devre dışıdır.
 ★ GÜVENLİK ★
 
 • 4 haneli PIN ile uygulama koruması
-• AES-256 şifreleme
-• Güvenli veri depolama
+• Seçili hassas veriler için güvenli cihaz içi depolama
 • Geliştirici sunucusu olmayan offline-first mimari
 
 ★ GİZLİLİK ★
 
 • Konum verileriniz yalnızca acil durum veya konum oturumu sırasında işlenir
 • Verilerinizi üçüncü taraflara satmıyoruz
-• Tüm hassas veriler şifrelenir
+• Seçili hassas veriler cihazda saklanır; harita, Play Billing ve yapılandırılmış crash reporting sağlayıcılarının kendi teknik ağ davranışları olabilir
 
-KoruBeni — Güvenliğiniz bir dokunuş uzağınızda.
+KoruBeni — Panik akışı, konum durumu ve yardımcı check-in.
 
 **Category:** Tools / Safety
 **Content Rating:** Everyone

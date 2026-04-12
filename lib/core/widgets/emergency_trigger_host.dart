@@ -7,6 +7,7 @@ import '../../screens/countdown_screen.dart';
 import '../constants/app_constants.dart';
 import '../navigation/app_navigator.dart';
 import '../services/app_lifecycle_handler.dart';
+import '../services/check_in_expiry_coordinator.dart';
 import '../services/check_in_service.dart';
 import '../services/emergency_platform_service.dart';
 import '../services/emergency_readiness_service.dart';
@@ -96,12 +97,7 @@ class _EmergencyTriggerHostState extends State<EmergencyTriggerHost>
               return;
             }
             if (type == 'checkInExpired') {
-              if (CheckInService.instance.isActive ||
-                  CheckInService.instance.isGracePeriod) {
-                await CheckInService.instance.handleNativeExpired();
-              } else {
-                await _openCountdown();
-              }
+              await _handleCheckInExpired();
             }
           } catch (_) {
             // Native event handling must never crash the root widget.
@@ -124,13 +120,22 @@ class _EmergencyTriggerHostState extends State<EmergencyTriggerHost>
       return;
     }
     if (type == 'checkInExpired') {
-      if (CheckInService.instance.isActive ||
-          CheckInService.instance.isGracePeriod) {
-        await CheckInService.instance.handleNativeExpired();
-      } else {
-        await _openCountdown();
-      }
+      await _handleCheckInExpired();
     }
+  }
+
+  Future<void> _handleCheckInExpired() async {
+    if (CheckInService.instance.isActive ||
+        CheckInService.instance.isGracePeriod) {
+      await CheckInService.instance.handleNativeExpired();
+      return;
+    }
+    if (!CheckInExpiryCoordinator.instance.tryClaim(
+      'native_check_in_expired',
+    )) {
+      return;
+    }
+    await _openCountdown();
   }
 
   Future<void> _openCountdown() async {
@@ -144,11 +149,14 @@ class _EmergencyTriggerHostState extends State<EmergencyTriggerHost>
     }
 
     _countdownOpen = true;
-    await HapticFeedback.heavyImpact();
-    await navigator.push(
-      MaterialPageRoute(builder: (_) => const CountdownScreen()),
-    );
-    _countdownOpen = false;
+    try {
+      await HapticFeedback.heavyImpact();
+      await navigator.push(
+        MaterialPageRoute(builder: (_) => const CountdownScreen()),
+      );
+    } finally {
+      _countdownOpen = false;
+    }
   }
 
   @override

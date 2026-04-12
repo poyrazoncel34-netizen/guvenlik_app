@@ -50,7 +50,7 @@ Son güncelleme: 18 Mart 2026
 
 ## 6. Şeffaflık Notu
 
-> "Tüm verileriniz cihazınızda kalır. Hiçbir sunucuya gönderilmez. KVKK uyumlu. Verilerinizi istediğiniz zaman silebilirsiniz."
+> "Kişisel verilerin ana kopyası cihazınızda tutulur. Geliştirici backend'i yoktur; harita ve Play servisleri kendi ağ davranışlarına sahip olabilir. KVKK bilgilendirme ve veri silme akışları sunulur."
 
 ---
 

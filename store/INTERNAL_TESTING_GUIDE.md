@@ -9,22 +9,23 @@ Plan Madde 6-7: AAB build, Internal Testing yükleme, inceleme gönderimi.
 - [ ] `android/key.properties` dolduruldu (storePassword, keyPassword, storeFile, keyAlias)
 - [ ] `assets/icon/app_icon.png` mevcut
 - [ ] ENCRYPTION_KEY hazır (`openssl rand -base64 32`)
+- [ ] REVENUECAT_ANDROID_API_KEY hazır
 
 ---
 
 ## 1. AAB Build Al
 
 ```bash
-ENCRYPTION_KEY='base64_key_buraya' ./scripts/release_to_play_store.sh
+ENCRYPTION_KEY='base64_key_buraya' REVENUECAT_ANDROID_API_KEY='goog_...' ./scripts/release_to_play_store.sh
 ```
 
 veya:
 
 ```bash
-ENCRYPTION_KEY='base64_key_buraya' ./scripts/build_production.sh
+ENCRYPTION_KEY='base64_key_buraya' REVENUECAT_ANDROID_API_KEY='goog_...' ./scripts/build_production.sh
 ```
 
-**Çıktı:** `build/app/outputs/bundle/release/app-release.aab`
+**Çıktı:** `build/app/outputs/bundle/playRelease/app-play-release.aab`
 
 ---
 
@@ -33,7 +34,7 @@ ENCRYPTION_KEY='base64_key_buraya' ./scripts/build_production.sh
 1. [Play Console](https://play.google.com/console) → Uygulamanızı seçin
 2. **Release** → **Testing** → **Internal testing**
 3. **Create new release**
-4. **App bundles** → Upload → `app-release.aab` dosyasını seçin
+4. **App bundles** → Upload → `app-play-release.aab` dosyasını seçin
 5. **Release name** ve **Release notes** girin
 6. **Save** → **Review release**
 

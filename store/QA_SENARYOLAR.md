@@ -30,7 +30,7 @@ Bu dosya, uygulama çıkışı öncesi kritik akışların manuel test senaryola
 
 **Olası sorunlar:**
 - Panik butonu uzun basma süresi (3s) UX beklentisi ile uyuşuyor mu?
-- PIN ekranında biyometrik varsa "Face ID / Parmak izi ile iptal" çalışıyor mu?
+- PIN ekranında yalnız PIN ile iptal kontratı korunuyor mu?
 
 ---
 

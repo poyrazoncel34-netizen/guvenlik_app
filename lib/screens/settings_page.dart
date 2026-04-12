@@ -12,6 +12,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../core/app_colors.dart';
 import '../core/constants/app_constants.dart';
+import '../core/services/subscription_gate.dart';
 import '../core/utils/app_reset_helper.dart';
 import '../core/utils/pin_settings_helper.dart';
 import 'legal_info_screen.dart';
@@ -191,7 +192,14 @@ class _SettingsPageState extends State<SettingsPage> {
                   title: "settings_volume_trigger_title".tr(),
                   subtitle: "settings_volume_trigger_subtitle".tr(),
                   value: provider.volumeTriggerEnabled,
-                  onChanged: provider.setVolumeTrigger,
+                  onChanged: (value) async {
+                    final allowed = await SubscriptionGate.ensureAccess(
+                      context,
+                      PremiumFeature.volumeTrigger,
+                    );
+                    if (!allowed || !mounted) return;
+                    await provider.setVolumeTrigger(value);
+                  },
                 ),
               ],
             ]),

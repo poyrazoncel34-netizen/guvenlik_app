@@ -25,6 +25,15 @@ class SubscriptionProvider extends ChangeNotifier {
   Offerings? get offerings => _offerings;
   CustomerInfo? get customerInfo => _customerInfo;
   String? get errorMessage => _errorMessage;
+  Offering? get currentOffering => _offerings?.current;
+  Package? get monthlyPackage =>
+      currentOffering?.monthly ?? _packageByType(PackageType.monthly);
+  Package? get annualPackage =>
+      currentOffering?.annual ?? _packageByType(PackageType.annual);
+  bool get hasRequiredPackages =>
+      currentOffering != null &&
+      monthlyPackage != null &&
+      annualPackage != null;
 
   RevenueCatService get _rcService => serviceLocator<RevenueCatService>();
 
@@ -50,7 +59,7 @@ class SubscriptionProvider extends ChangeNotifier {
       _offerings = offs;
       _errorMessage = null;
     } catch (e) {
-      _errorMessage = e.toString();
+      _errorMessage = 'subscription_error_plans_unavailable';
     } finally {
       _setLoading(false);
     }
@@ -70,16 +79,22 @@ class SubscriptionProvider extends ChangeNotifier {
       _customerInfo = info;
       _isPro = _rcService.isPro(info);
       notifyListeners();
+      if (!_isPro) {
+        _errorMessage = 'subscription_error_entitlement';
+        return _errorMessage;
+      }
       return null;
     } on RevenueCatPurchaseException catch (e) {
       if (e.isCancelled) return null; // User cancelled — not an error
-      _errorMessage = e.message;
+      _errorMessage = e.isOffline
+          ? 'subscription_error_offline'
+          : 'subscription_error_purchase';
       notifyListeners();
-      return e.message;
+      return _errorMessage;
     } catch (e) {
-      _errorMessage = e.toString();
+      _errorMessage = 'subscription_error_purchase';
       notifyListeners();
-      return e.toString();
+      return _errorMessage;
     } finally {
       _setLoading(false);
     }
@@ -100,13 +115,15 @@ class SubscriptionProvider extends ChangeNotifier {
       notifyListeners();
       return null;
     } on RevenueCatPurchaseException catch (e) {
-      _errorMessage = e.message;
+      _errorMessage = e.isOffline
+          ? 'subscription_error_offline'
+          : 'subscription_error_restore';
       notifyListeners();
-      return e.message;
+      return _errorMessage;
     } catch (e) {
-      _errorMessage = e.toString();
+      _errorMessage = 'subscription_error_restore';
       notifyListeners();
-      return e.toString();
+      return _errorMessage;
     } finally {
       _setLoading(false);
     }
@@ -129,6 +146,21 @@ class SubscriptionProvider extends ChangeNotifier {
     } catch (_) {}
   }
 
+  Future<void> refreshOfferings() async {
+    if (kIsWeb) return;
+    _setLoading(true);
+    try {
+      _offerings = await _rcService.getOfferings();
+      _errorMessage = _offerings == null
+          ? 'subscription_error_plans_unavailable'
+          : null;
+    } catch (_) {
+      _errorMessage = 'subscription_error_plans_unavailable';
+    } finally {
+      _setLoading(false);
+    }
+  }
+
   // ---------------------------------------------------------------------------
   // Helpers
   // ---------------------------------------------------------------------------
@@ -136,5 +168,14 @@ class SubscriptionProvider extends ChangeNotifier {
   void _setLoading(bool value) {
     _isLoading = value;
     notifyListeners();
+  }
+
+  Package? _packageByType(PackageType type) {
+    final packages = currentOffering?.availablePackages;
+    if (packages == null) return null;
+    for (final package in packages) {
+      if (package.packageType == type) return package;
+    }
+    return null;
   }
 }

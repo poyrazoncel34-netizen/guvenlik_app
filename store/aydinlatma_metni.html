@@ -172,9 +172,9 @@
                     <td>Md. 5/2-f: Veri sorumlusunun meşru menfaatleri için zorunlu olması (uygulama güvenliği)</td>
                 </tr>
                 <tr>
-                    <td><strong>Biyometrik veri (Face ID / Touch ID)</strong></td>
-                    <td>Biyometrik kimlik doğrulama ile hızlı ve güvenli uygulama açma</td>
-                    <td>Md. 5/2-a ve KVKK Md. 6/2: İlgili kişinin açık rızası (özel nitelikli veri)</td>
+                    <td><strong>Biyometrik kilit</strong></td>
+                    <td>Bu Android Play sürümünde devre dışı; biyometrik veri işlenmez</td>
+                    <td>İşlenmez</td>
                 </tr>
                 <tr>
                     <td><strong>Ses (Ortam ses kaydı)</strong></td>
@@ -195,7 +195,7 @@
         </table>
 
         <div class="highlight">
-            <strong>Önemli:</strong> Tüm kişisel veriler <strong>yalnızca cihazınızda</strong> işlenir ve saklanır. Geliştirici sunucularına, bulut sistemlerine veya herhangi bir üçüncü taraf altyapısına aktarılmaz.
+            <strong>Önemli:</strong> Kişisel verilerin ana kopyası cihazınızda tutulur. Geliştirici backend'ine veya bulut veritabanına aktarılmaz; harita, Play Billing ve açıkça yapılandırılmış crash reporting sağlayıcıları kendi teknik ağ davranışlarına sahip olabilir.
         </div>
 
         <h2>3. Kişisel Verilerin Toplanma Yöntemi</h2>
@@ -203,7 +203,7 @@
             <li><strong>Kullanıcı tarafından doğrudan girilmesi:</strong> Acil durum kişi bilgileri, PIN kodu, profil adı, profil fotoğrafı</li>
             <li><strong>Cihaz sensörleri:</strong> GPS konum verisi (yalnızca konum izni verildiğinde)</li>
             <li><strong>Otomatik olarak:</strong> Acil durum tetiklendiğinde anlık konum bilgisi</li>
-            <li><strong>Biyometrik okuyucu:</strong> Face ID / Touch ID (yalnızca kullanıcı etkinleştirdiğinde, cihazın güvenli alanında işlenir)</li>
+            <li><strong>Biyometrik okuyucu:</strong> Bu Android Play sürümünde kullanılmaz</li>
             <li><strong>Mikrofon:</strong> Ortam ses kaydı (yalnızca kullanıcı tarafından başlatıldığında)</li>
             <li><strong>Otomatik cihaz bilgisi:</strong> Cihaz tipi ve OS versiyonu (teknik uyumluluk amacıyla)</li>
         </ul>
@@ -217,7 +217,7 @@
             <li><strong>Yetkili makamlar:</strong> Mahkeme kararı veya yasal zorunluluk halinde ilgili kurum ve kuruluşlara aktarılabilir.</li>
         </ul>
         <div class="highlight">
-            <strong>Kişisel verileriniz HİÇBİR üçüncü taraf sunucusuna aktarılmaz.</strong> Tüm veriler yalnızca cihazınızda kalır. Kişisel verileriniz TÜRKİYE DIŞINA aktarılmaz.
+            <strong>Kişisel verileriniz geliştirici backend'ine aktarılmaz.</strong> Verilerin ana kopyası cihazınızda kalır. Harita, Play Billing ve açıkça yapılandırılmış crash reporting sağlayıcıları kendi teknik ağ davranışlarına sahip olabilir.
         </div>
 
         <h2>5. Kişisel Verilerin Saklanma Süreleri</h2>
@@ -225,7 +225,7 @@
             <li><strong>Konum verisi:</strong> Acil durum paylaşımı sona erdiğinde cihaz belleğinden silinir; kalıcı olarak depolanmaz.</li>
             <li><strong>Acil durum kişileri (ad + telefon):</strong> Kullanıcı uygulamadan silene kadar yalnızca cihazda şifreli olarak saklanır.</li>
             <li><strong>PIN kodu:</strong> Kullanıcı değiştirene veya silene kadar cihazın güvenli depolama alanında (Keychain/Keystore) şifreli olarak tutulur.</li>
-            <li><strong>Biyometrik veri:</strong> Cihazın güvenli donanım alanında (Secure Enclave / TEE) saklanır; uygulama bu veriye doğrudan erişemez.</li>
+            <li><strong>Biyometrik veri:</strong> Bu Android Play sürümünde kullanılmaz ve uygulama tarafından işlenmez.</li>
             <li><strong>Ses kayıtları:</strong> Siz silene kadar cihazda saklanır (otomatik temizleme seçeneği mevcuttur).</li>
             <li><strong>Rıza logları:</strong> Uygulama kullanıldığı sürece cihazda tutulur.</li>
             <li><strong>Hukuki log kayıtları:</strong> Maksimum 2 yıl süre ile yalnızca cihazda tutulur; ispat amacıyla kullanılır.</li>
@@ -237,8 +237,8 @@
         <h2>7. Kişisel Veri Güvenliği</h2>
         <ul>
             <li>Hassas veriler AES-256 şifreleme ile korunur.</li>
-            <li>PIN ve biyometrik doğrulama bilgileri Android'in güvenli depolama altyapısı üzerinden yönetilir.</li>
-            <li>Uygulama tamamen çevrimdışı (offline) çalışır; veriler geliştirici sunucularına gönderilmez.</li>
+            <li>PIN doğrulama bilgileri Android'in güvenli depolama altyapısı üzerinden yönetilir.</li>
+            <li>Uygulama offline-first çalışır; veriler geliştirici backend'ine gönderilmez.</li>
             <li>Hiçbir kişisel veri harici hata izleme veya analitik servislerine aktarılmaz.</li>
         </ul>
 

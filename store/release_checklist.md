@@ -6,7 +6,8 @@
 - Her store gonderiminde build number artir: `./scripts/bump_version.sh`
 - Gizlilik politikasını senkronize et: `./scripts/sync_privacy_policy.sh`
 - Version format: `major.minor.patch+build` (orn. 1.0.0+1)
-- Production build: `flutter build appbundle --release --flavor play --dart-define=ENV=production --dart-define=ENCRYPTION_KEY=your_key`
+- Production build: `flutter build appbundle --release --flavor play --dart-define=ENV=production --dart-define=REVENUECAT_ANDROID_API_KEY=your_revenuecat_android_key --dart-define=ENCRYPTION_KEY=your_key`
+- Production AAB output: `build/app/outputs/bundle/playRelease/app-play-release.aab`
 
 ### Security
 - [x] Encryption key dart-define ile disaridan veriliyor
@@ -51,11 +52,13 @@ flutter run --dart-define=ENV=dev
 # Production AAB (Play)
 flutter build appbundle --release --flavor play \
   --dart-define=ENV=production \
+  --dart-define=REVENUECAT_ANDROID_API_KEY=your_revenuecat_android_key \
   --dart-define=ENCRYPTION_KEY=your_base64_key
 
 # Production AAB (Play Store)
 flutter build appbundle --release --flavor play \
   --dart-define=ENV=production \
+  --dart-define=REVENUECAT_ANDROID_API_KEY=your_revenuecat_android_key \
   --dart-define=ENCRYPTION_KEY=your_base64_key
 
 # Build numarasi artir

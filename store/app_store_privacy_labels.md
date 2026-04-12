@@ -36,7 +36,7 @@ Son güncelleme: 18 Mart 2026
 ## Notlar
 
 1. **Konum**: Yalnızca acil durum tetiklendiğinde ve kullanıcı açıkça izin verdiğinde toplanır. Sunucuya gönderilmez.
-2. **Biyometrik**: Uygulama biyometrik veriyi işlemez. Apple'ın Face ID / Touch ID API'si kullanılır.
+2. **Biyometrik**: Bu sürümde biyometrik kilit kullanılmaz; uygulama biyometrik veriyi işlemez.
 3. **Ses**: Kullanıcı başlatır, yalnızca cihazda saklanır. İCloud'a veya sunucuya gönderilmez.
 4. **Kişiler**: Yalnızca kullanıcının seçtiği kişiler saklanır. Rehber taranmaz.
 
