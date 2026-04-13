@@ -9,13 +9,13 @@ import 'package:flutter/foundation.dart'
 import 'package:provider/provider.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../core/app_colors.dart';
 import '../core/constants/app_constants.dart';
 import '../core/services/subscription_gate.dart';
 import '../core/utils/app_reset_helper.dart';
 import '../core/utils/pin_settings_helper.dart';
-import 'legal_info_screen.dart';
 import 'profile_page.dart';
 import 'settings_detail_page.dart';
 import '../presentation/providers/settings_provider.dart';
@@ -24,7 +24,6 @@ import 'battery_optimization_wizard.dart';
 import 'settings_legal/legal_settings_screen.dart';
 import 'subscription/paywall_screen.dart';
 import 'subscription/subscription_management_screen.dart';
-import '../core/widgets/theme_selector.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -59,19 +58,7 @@ class _SettingsPageState extends State<SettingsPage> {
   Future<void> _shareApp() async {
     final shareText = 'settings_share_text'.tr();
     try {
-      await Clipboard.setData(ClipboardData(text: shareText));
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('link_copied'.tr()),
-            backgroundColor: AppColors.success,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-        );
-      }
+      await SharePlus.instance.share(ShareParams(text: shareText));
     } catch (_) {}
   }
 
@@ -121,15 +108,6 @@ class _SettingsPageState extends State<SettingsPage> {
                 onChanged: provider.setNotifications,
               ),
               _buildDivider(),
-              _buildSwitchTile(
-                icon: Icons.location_on_rounded,
-                iconColor: AppColors.info,
-                title: "settings_location_title".tr(),
-                subtitle: "settings_location_subtitle".tr(),
-                value: provider.locationEnabled,
-                onChanged: provider.setLocation,
-              ),
-              _buildDivider(),
               _buildNavigationTile(
                 icon: Icons.lock_rounded,
                 iconColor: AppColors.primary,
@@ -174,15 +152,6 @@ class _SettingsPageState extends State<SettingsPage> {
                 subtitle: "settings_sound_subtitle".tr(),
                 value: provider.soundEnabled,
                 onChanged: provider.setSound,
-              ),
-              _buildDivider(),
-              _buildSwitchTile(
-                icon: Icons.vibration_rounded,
-                iconColor: AppColors.emergency,
-                title: "settings_vibration_title".tr(),
-                subtitle: "settings_vibration_subtitle".tr(),
-                value: provider.vibrationEnabled,
-                onChanged: provider.setVibration,
               ),
               if (defaultTargetPlatform == TargetPlatform.android) ...[
                 _buildDivider(),
@@ -249,37 +218,6 @@ class _SettingsPageState extends State<SettingsPage> {
                     ),
                   );
                 },
-              ),
-            ]),
-            const SizedBox(height: 28),
-
-            // Appearance / Theme
-            _buildSectionTitle('settings_theme_section'.tr()),
-            const SizedBox(height: 14),
-            _buildSettingsCard([
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 14,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'settings_theme_title'.tr(),
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    ThemeSelector(
-                      selected: provider.themeMode,
-                      onChanged: provider.setThemeMode,
-                    ),
-                  ],
-                ),
               ),
             ]),
             const SizedBox(height: 28),
@@ -353,17 +291,6 @@ class _SettingsPageState extends State<SettingsPage> {
                     await launchUrl(uri, mode: LaunchMode.externalApplication);
                   } catch (_) {}
                 },
-              ),
-              _buildDivider(),
-              _buildNavigationTile(
-                icon: Icons.balance_rounded,
-                iconColor: const Color(0xFF9F7AEA),
-                title: '⚖️ Yasal Bilgiler',
-                subtitle: 'Kullanım şartları, KVKK, veri yönetimi',
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const LegalInfoScreen()),
-                ),
               ),
               _buildDivider(),
               _buildNavigationTile(
@@ -540,7 +467,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
                 child: Text(
                   'subscription_badge_pro'.tr(),
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
                     color: AppColors.success,
@@ -548,7 +475,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
               )
             else
-              Icon(
+              const Icon(
                 Icons.chevron_right_rounded,
                 color: AppColors.textSecondary,
                 size: 20,
@@ -578,7 +505,7 @@ class _SettingsPageState extends State<SettingsPage> {
         child: Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            gradient: LinearGradient(
+            gradient: const LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [AppColors.primary, AppColors.primaryLight],
@@ -687,10 +614,10 @@ class _SettingsPageState extends State<SettingsPage> {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.border),
         boxShadow: [
-          BoxShadow(
+          const BoxShadow(
             color: AppColors.shadow,
             blurRadius: 8,
-            offset: const Offset(0, 2),
+            offset: Offset(0, 2),
           ),
         ],
       ),

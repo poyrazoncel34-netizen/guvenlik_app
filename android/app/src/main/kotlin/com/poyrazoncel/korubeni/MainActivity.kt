@@ -24,6 +24,7 @@ class MainActivity : FlutterFragmentActivity() {
     companion object {
         private const val ANDROID_INTENTS_CHANNEL = "com.poyrazoncel.korubeni/android_intents"
         private const val SETTINGS_CHANNEL = "com.poyrazoncel.korubeni/settings"
+        private const val AUDIO_CONTROL_CHANNEL = "com.poyrazoncel.korubeni/audio_control"
     }
 
     private val volumeDetector = VolumeButtonDetector()
@@ -77,6 +78,51 @@ class MainActivity : FlutterFragmentActivity() {
                 android.util.Log.d("MainActivity", "Volume detector MethodChannel configured")
             } catch (e: Exception) {
                 android.util.Log.e("MainActivity", "Volume MethodChannel failed: ${e.message}", e)
+            }
+
+            try {
+                MethodChannel(messenger, AUDIO_CONTROL_CHANNEL)
+                    .setMethodCallHandler { call, result ->
+                        try {
+                            val audioManager =
+                                getSystemService(Context.AUDIO_SERVICE) as AudioManager
+                            when (call.method) {
+                                "setMaxAlarmVolume" -> {
+                                    val original =
+                                        audioManager.getStreamVolume(AudioManager.STREAM_ALARM)
+                                    val max =
+                                        audioManager.getStreamMaxVolume(AudioManager.STREAM_ALARM)
+                                    audioManager.setStreamVolume(
+                                        AudioManager.STREAM_ALARM,
+                                        max,
+                                        0
+                                    )
+                                    result.success(original)
+                                }
+                                "restoreAlarmVolume" -> {
+                                    val requested = call.arguments as? Int
+                                    if (requested != null) {
+                                        val max = audioManager.getStreamMaxVolume(
+                                            AudioManager.STREAM_ALARM
+                                        )
+                                        audioManager.setStreamVolume(
+                                            AudioManager.STREAM_ALARM,
+                                            requested.coerceIn(0, max),
+                                            0
+                                        )
+                                    }
+                                    result.success(true)
+                                }
+                                else -> result.notImplemented()
+                            }
+                        } catch (e: Exception) {
+                            android.util.Log.e("MainActivity", "Audio control error: ${e.message}")
+                            result.error("AUDIO_CONTROL_ERROR", e.message, null)
+                        }
+                    }
+                android.util.Log.d("MainActivity", "Audio control MethodChannel configured")
+            } catch (e: Exception) {
+                android.util.Log.e("MainActivity", "Audio control channel failed: ${e.message}", e)
             }
 
             // Doze Mode handler — battery optimization bypass

@@ -8,16 +8,15 @@ class CheckInAlarmReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent?) {
         EmergencyNotificationHelper.ensureChannels(context)
 
-        val prefs = EmergencyPrefs.prefs(context)
-        val phase = prefs.getString(EmergencyPrefs.KEY_CHECK_IN_PHASE, CheckInScheduler.PHASE_MAIN)
-            ?: CheckInScheduler.PHASE_MAIN
-        val graceDurationMs = prefs.getLong(EmergencyPrefs.KEY_CHECK_IN_GRACE_MS, 0L)
+        val sessionId = CheckInScheduler.sessionFromIntent(intent)
+        val phase = CheckInScheduler.phase(context, sessionId)
+        val graceDurationMs = CheckInScheduler.graceDurationMs(context, sessionId)
         val now = System.currentTimeMillis()
 
         if (phase == CheckInScheduler.PHASE_MAIN && graceDurationMs > 0L) {
             EmergencyEventBus.emitOrPersist(
                 context,
-                mapOf("type" to "checkInGraceStarted", "timestamp" to now)
+                mapOf("type" to "checkInGraceStarted", "timestamp" to now, "sessionId" to sessionId)
             )
             EmergencyNotificationHelper.showAlert(
                 context,
@@ -28,6 +27,7 @@ class CheckInAlarmReceiver : BroadcastReceiver() {
             )
             CheckInScheduler.schedule(
                 context,
+                sessionId,
                 CheckInScheduler.PHASE_GRACE,
                 now + graceDurationMs,
                 0L,
@@ -35,10 +35,10 @@ class CheckInAlarmReceiver : BroadcastReceiver() {
             return
         }
 
-        CheckInScheduler.cancel(context)
+        CheckInScheduler.cancel(context, sessionId)
         EmergencyEventBus.emitOrPersist(
             context,
-            mapOf("type" to "checkInExpired", "timestamp" to now)
+            mapOf("type" to "checkInExpired", "timestamp" to now, "sessionId" to sessionId)
         )
         EmergencyNotificationHelper.showAlert(
             context,

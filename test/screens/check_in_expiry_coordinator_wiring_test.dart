@@ -45,9 +45,14 @@ void main() {
         'lib/core/widgets/emergency_trigger_host.dart',
       ).readAsStringSync();
 
-      expect(source, contains('Future<void> _handleCheckInExpired()'));
+      expect(
+        source,
+        contains('Future<void> _handleCheckInExpired({String? sessionId})'),
+      );
       expect(source, contains('tryClaim'));
       expect(source, contains("'native_check_in_expired'"));
+      expect(source, contains('CheckInExpiryCoordinator.checkInSession'));
+      expect(source, contains('CheckInExpiryCoordinator.safeWalkSession'));
     });
   });
 }

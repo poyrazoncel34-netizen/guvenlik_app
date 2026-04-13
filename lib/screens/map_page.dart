@@ -802,14 +802,14 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              CircularProgressIndicator(
+              const CircularProgressIndicator(
                 strokeWidth: 3,
                 valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               Text(
                 "map_loading_location".tr(),
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
                   color: AppColors.textPrimary,
@@ -843,6 +843,9 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
 
   Widget _buildBottomControls() {
     final provider = context.watch<HomeProvider>();
+    final locationText = _currentLocation != null
+        ? '${_currentLocation!.latitude.toStringAsFixed(5)}, ${_currentLocation!.longitude.toStringAsFixed(5)}'
+        : "map_location_unavailable".tr();
     return Column(
       children: [
         // Status card
@@ -891,6 +894,14 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
                         color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      locationText,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: AppColors.textSecondary,
                       ),
                     ),
                   ],

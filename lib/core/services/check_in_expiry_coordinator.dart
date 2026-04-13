@@ -6,37 +6,51 @@ class CheckInExpiryCoordinator {
   static const String checkInSession = 'check_in';
   static const String safeWalkSession = 'safe_walk';
 
-  String? _activeSessionId;
-  String? _claimedBy;
+  final Set<String> _activeSessionIds = <String>{};
+  final Map<String, String> _claimsBySession = <String, String>{};
 
-  bool get isClaimed => _claimedBy != null;
+  bool get isClaimed => _claimsBySession.isNotEmpty;
+
+  bool isClaimedFor(String sessionId) =>
+      _claimsBySession.containsKey(sessionId);
 
   void arm(String sessionId) {
-    _activeSessionId = sessionId;
-    _claimedBy = null;
+    _activeSessionIds.add(sessionId);
+    _claimsBySession.remove(sessionId);
   }
 
   bool tryClaim(String source, {String? sessionId}) {
-    if (_claimedBy != null) {
+    if (sessionId == null) {
+      if (_claimsBySession.isNotEmpty || _activeSessionIds.length > 1) {
+        return false;
+      }
+      final resolvedSessionId = _activeSessionIds.isEmpty
+          ? '_legacy'
+          : _activeSessionIds.first;
+      _activeSessionIds.add(resolvedSessionId);
+      _claimsBySession[resolvedSessionId] = source;
+      return true;
+    }
+
+    if (_claimsBySession.containsKey(sessionId)) {
       return false;
     }
-    if (sessionId != null &&
-        _activeSessionId != null &&
-        _activeSessionId != sessionId) {
+    if (_activeSessionIds.isNotEmpty &&
+        !_activeSessionIds.contains(sessionId)) {
       return false;
     }
-    _activeSessionId = sessionId ?? _activeSessionId;
-    _claimedBy = source;
+    _activeSessionIds.add(sessionId);
+    _claimsBySession[sessionId] = source;
     return true;
   }
 
   void reset({String? sessionId}) {
-    if (sessionId != null &&
-        _activeSessionId != null &&
-        _activeSessionId != sessionId) {
+    if (sessionId != null) {
+      _activeSessionIds.remove(sessionId);
+      _claimsBySession.remove(sessionId);
       return;
     }
-    _activeSessionId = null;
-    _claimedBy = null;
+    _activeSessionIds.clear();
+    _claimsBySession.clear();
   }
 }

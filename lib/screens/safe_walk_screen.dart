@@ -136,6 +136,7 @@ class _SafeWalkScreenState extends State<SafeWalkScreen>
 
     await KoruBeniForegroundService.start();
     await EmergencyPlatformService.instance.scheduleCheckIn(
+      sessionId: CheckInExpiryCoordinator.safeWalkSession,
       phase: 'grace',
       deadline: endTime,
       graceDuration: Duration.zero,
@@ -180,7 +181,9 @@ class _SafeWalkScreenState extends State<SafeWalkScreen>
       _isActive = false;
       _timer?.cancel();
     });
-    await EmergencyPlatformService.instance.cancelCheckIn();
+    await EmergencyPlatformService.instance.cancelCheckIn(
+      sessionId: CheckInExpiryCoordinator.safeWalkSession,
+    );
     await _clearPersistedState();
     if (!mounted) return;
 
@@ -204,14 +207,20 @@ class _SafeWalkScreenState extends State<SafeWalkScreen>
   }
 
   Future<void> _checkIn() async {
-    if (CheckInExpiryCoordinator.instance.isClaimed) return;
+    if (CheckInExpiryCoordinator.instance.isClaimedFor(
+      CheckInExpiryCoordinator.safeWalkSession,
+    )) {
+      return;
+    }
     HapticFeedback.lightImpact();
     _timer?.cancel();
     CheckInExpiryCoordinator.instance.reset(
       sessionId: CheckInExpiryCoordinator.safeWalkSession,
     );
     await KoruBeniForegroundService.stop();
-    await EmergencyPlatformService.instance.cancelCheckIn();
+    await EmergencyPlatformService.instance.cancelCheckIn(
+      sessionId: CheckInExpiryCoordinator.safeWalkSession,
+    );
     await _clearPersistedState();
     if (!mounted) return;
     // Analytics removed (offline-first)
@@ -247,14 +256,20 @@ class _SafeWalkScreenState extends State<SafeWalkScreen>
   }
 
   Future<void> _cancelWalk() async {
-    if (CheckInExpiryCoordinator.instance.isClaimed) return;
+    if (CheckInExpiryCoordinator.instance.isClaimedFor(
+      CheckInExpiryCoordinator.safeWalkSession,
+    )) {
+      return;
+    }
     HapticFeedback.lightImpact();
     _timer?.cancel();
     CheckInExpiryCoordinator.instance.reset(
       sessionId: CheckInExpiryCoordinator.safeWalkSession,
     );
     await KoruBeniForegroundService.stop();
-    await EmergencyPlatformService.instance.cancelCheckIn();
+    await EmergencyPlatformService.instance.cancelCheckIn(
+      sessionId: CheckInExpiryCoordinator.safeWalkSession,
+    );
     await _clearPersistedState();
     setState(() {
       _isActive = false;

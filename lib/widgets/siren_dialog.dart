@@ -11,6 +11,7 @@ import 'package:audioplayers/audioplayers.dart';
 import '../core/app_colors.dart';
 import '../core/constants/app_constants.dart';
 import '../core/services/activity_service.dart';
+import '../core/services/app_settings_service.dart';
 import '../core/widgets/feature_warning_dialog.dart';
 import '../domain/models/activity_event.dart';
 
@@ -21,8 +22,11 @@ class SirenDialog extends StatefulWidget {
   State<SirenDialog> createState() => _SirenDialogState();
 }
 
-class _SirenDialogState extends State<SirenDialog> with TickerProviderStateMixin {
-  static const _audioControl = MethodChannel('com.poyrazoncel.korubeni/audio_control');
+class _SirenDialogState extends State<SirenDialog>
+    with TickerProviderStateMixin {
+  static const _audioControl = MethodChannel(
+    'com.poyrazoncel.korubeni/audio_control',
+  );
 
   late AnimationController _colorController;
   late AnimationController _scaleController;
@@ -67,23 +71,29 @@ class _SirenDialogState extends State<SirenDialog> with TickerProviderStateMixin
   }
 
   Future<void> _startSirenSound() async {
+    if (!await AppSettingsService.soundEnabled()) {
+      return;
+    }
+
     try {
       // Force audio to main speaker even when headphones are connected
       if (!kIsWeb) {
-        await _audioPlayer.setAudioContext(AudioContext(
-          android: const AudioContextAndroid(
-            usageType: AndroidUsageType.alarm,
-            contentType: AndroidContentType.sonification,
-            audioFocus: AndroidAudioFocus.gainTransientExclusive,
+        await _audioPlayer.setAudioContext(
+          AudioContext(
+            android: const AudioContextAndroid(
+              usageType: AndroidUsageType.alarm,
+              contentType: AndroidContentType.sonification,
+              audioFocus: AndroidAudioFocus.gainTransientExclusive,
+            ),
+            iOS: AudioContextIOS(
+              category: AVAudioSessionCategory.playback,
+              options: {
+                AVAudioSessionOptions.defaultToSpeaker,
+                AVAudioSessionOptions.duckOthers,
+              },
+            ),
           ),
-          iOS: AudioContextIOS(
-            category: AVAudioSessionCategory.playback,
-            options: {
-              AVAudioSessionOptions.defaultToSpeaker,
-              AVAudioSessionOptions.duckOthers,
-            },
-          ),
-        ));
+        );
       }
       await _audioPlayer.setVolume(1.0);
       await _audioPlayer.setReleaseMode(ReleaseMode.loop);
@@ -91,7 +101,9 @@ class _SirenDialogState extends State<SirenDialog> with TickerProviderStateMixin
       // Force device alarm stream to max so siren is audible even in silent mode
       if (!kIsWeb) {
         try {
-          _originalAlarmVolume = await _audioControl.invokeMethod<int>('setMaxAlarmVolume');
+          _originalAlarmVolume = await _audioControl.invokeMethod<int>(
+            'setMaxAlarmVolume',
+          );
         } catch (_) {} // best-effort: non-fatal if permission denied
       }
 
@@ -170,7 +182,13 @@ class _SirenDialogState extends State<SirenDialog> with TickerProviderStateMixin
                             color: Colors.white.withValues(alpha: 0.3),
                             shape: BoxShape.circle,
                           ),
-                          child: Icon(_sirenFailed ? Icons.volume_off_rounded : Icons.volume_up_rounded, size: 60, color: Colors.white),
+                          child: Icon(
+                            _sirenFailed
+                                ? Icons.volume_off_rounded
+                                : Icons.volume_up_rounded,
+                            size: 60,
+                            color: Colors.white,
+                          ),
                         ),
                       );
                     },
@@ -178,25 +196,45 @@ class _SirenDialogState extends State<SirenDialog> with TickerProviderStateMixin
                   const SizedBox(height: 28),
                   Text(
                     "siren_active".tr(),
-                    style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: 2),
+                    style: const TextStyle(
+                      fontSize: 26,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.white,
+                      letterSpacing: 2,
+                    ),
                   ),
                   if (_sirenFailed) ...[
                     const SizedBox(height: 8),
                     Text(
                       "siren_audio_failed".tr(),
-                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white70),
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white70,
+                      ),
                     ),
                   ],
                   const SizedBox(height: 16),
                   Text(
                     "siren_loud_alarm".tr(),
                     textAlign: TextAlign.center,
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white, letterSpacing: 1),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                      letterSpacing: 1,
+                    ),
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    "siren_duration".tr(namedArgs: {"seconds": _duration.toString()}),
-                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Colors.white),
+                    "siren_duration".tr(
+                      namedArgs: {"seconds": _duration.toString()},
+                    ),
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                    ),
                   ),
                   const SizedBox(height: 32),
                   SizedBox(
@@ -206,7 +244,9 @@ class _SirenDialogState extends State<SirenDialog> with TickerProviderStateMixin
                         ActivityService.logEvent(
                           type: ActivityType.sirenUsed,
                           title: "siren_activity_title".tr(),
-                          description: "siren_activity_desc".tr(namedArgs: {"seconds": _duration.toString()}),
+                          description: "siren_activity_desc".tr(
+                            namedArgs: {"seconds": _duration.toString()},
+                          ),
                         );
                         Navigator.pop(context);
                       },
@@ -215,11 +255,17 @@ class _SirenDialogState extends State<SirenDialog> with TickerProviderStateMixin
                         foregroundColor: AppColors.emergency,
                         padding: const EdgeInsets.symmetric(vertical: 18),
                         elevation: 0,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
                       ),
                       child: Text(
                         "siren_stop".tr(),
-                        style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 17, letterSpacing: 1),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w900,
+                          fontSize: 17,
+                          letterSpacing: 1,
+                        ),
                       ),
                     ),
                   ),

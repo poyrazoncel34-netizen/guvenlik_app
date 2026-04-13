@@ -1,7 +1,7 @@
 // ============================================================================
 // CONSENT GATE SERVICE — KVKK Rıza Kontrol Kapısı
-// Tüm veri işleme operasyonlarından ÖNCE çağrılır.
-// Rıza verilmemişse operasyonu engeller (KVKK m.5 uyumu).
+// Bu servis yalnızca açıkça bağlanan akışlarda rıza durumunu okur.
+// Zorunlu güvenlik akışları ayrı izin/onay adımlarıyla çalışır.
 // ============================================================================
 
 import '../../models/consent_record.dart';

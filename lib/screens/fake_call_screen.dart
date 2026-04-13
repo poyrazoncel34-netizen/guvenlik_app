@@ -18,6 +18,7 @@ import '../services/consent_manager.dart';
 import '../core/security/secure_storage.dart';
 import '../core/security/secure_storage_keys.dart';
 import '../core/services/activity_service.dart';
+import '../core/services/app_settings_service.dart';
 import '../core/services/emergency_platform_service.dart';
 import '../domain/models/activity_event.dart';
 
@@ -54,7 +55,9 @@ class _FakeCallScreenState extends State<FakeCallScreen>
     _loadSavedSettings();
     _startRingtone();
     _listenForRealCalls();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _checkFirstUseWarning());
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => _checkFirstUseWarning(),
+    );
   }
 
   Future<void> _checkFirstUseWarning() async {
@@ -77,8 +80,11 @@ class _FakeCallScreenState extends State<FakeCallScreen>
                 color: const Color(0xFFFFB547).withValues(alpha: 0.12),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.warning_amber_rounded,
-                  color: Color(0xFFFFB547), size: 22),
+              child: const Icon(
+                Icons.warning_amber_rounded,
+                color: Color(0xFFFFB547),
+                size: 22,
+              ),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -104,8 +110,10 @@ class _FakeCallScreenState extends State<FakeCallScreen>
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text('cancel'.tr(),
-                style: const TextStyle(color: Color(0xFF9BB0C7))),
+            child: Text(
+              'cancel'.tr(),
+              style: const TextStyle(color: Color(0xFF9BB0C7)),
+            ),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
@@ -113,7 +121,8 @@ class _FakeCallScreenState extends State<FakeCallScreen>
               backgroundColor: const Color(0xFFFFB547),
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10)),
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
             child: Text('fake_call_warning_accept'.tr()),
           ),
@@ -206,6 +215,10 @@ class _FakeCallScreenState extends State<FakeCallScreen>
   }
 
   Future<void> _startRingtone() async {
+    if (!await AppSettingsService.soundEnabled()) {
+      return;
+    }
+
     try {
       // Set volume to maximum
       await _audioPlayer.setVolume(1.0);

@@ -1,5 +1,7 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
+import 'app_settings_service.dart';
+
 const String kEmergencyAlertsChannelId = 'emergency_alerts';
 const String kEmergencyAlertsChannelName = 'Acil Bildirimler';
 const String kServiceStatusChannelId = 'service_status';
@@ -63,6 +65,10 @@ class NotificationService {
     required String title,
     required String body,
   }) async {
+    if (!await AppSettingsService.notificationsEnabled()) {
+      return;
+    }
+
     await initialize();
     _activeNotificationCount++;
 

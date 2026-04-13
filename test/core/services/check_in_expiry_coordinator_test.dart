@@ -40,5 +40,35 @@ void main() {
         isTrue,
       );
     });
+
+    test('allows safe-walk and check-in claims to stay isolated', () {
+      final coordinator = CheckInExpiryCoordinator.instance;
+      coordinator
+        ..arm(CheckInExpiryCoordinator.safeWalkSession)
+        ..arm(CheckInExpiryCoordinator.checkInSession);
+
+      expect(
+        coordinator.tryClaim(
+          'safe_walk_timer',
+          sessionId: CheckInExpiryCoordinator.safeWalkSession,
+        ),
+        isTrue,
+      );
+      expect(
+        coordinator.tryClaim(
+          'check_in_service',
+          sessionId: CheckInExpiryCoordinator.checkInSession,
+        ),
+        isTrue,
+      );
+      expect(
+        coordinator.isClaimedFor(CheckInExpiryCoordinator.safeWalkSession),
+        isTrue,
+      );
+      expect(
+        coordinator.isClaimedFor(CheckInExpiryCoordinator.checkInSession),
+        isTrue,
+      );
+    });
   });
 }

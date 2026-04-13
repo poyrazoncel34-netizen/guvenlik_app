@@ -10,11 +10,8 @@ import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../core/app_colors.dart';
-import '../core/constants/app_constants.dart';
-import '../core/di/service_locator.dart';
-import '../core/services/local_database_service.dart';
+import '../core/services/user_data_export_service.dart';
 
 /// Section keys used for content lookup (locale-independent).
 /// Must match the keys passed from settings_page (e.g. settings_about_app).
@@ -30,7 +27,10 @@ class SettingsDetailPage extends StatelessWidget {
     required this.icon,
   });
 
-  List<_DetailSection> _sectionsForTitle({String? version, String? buildNumber}) {
+  List<_DetailSection> _sectionsForTitle({
+    String? version,
+    String? buildNumber,
+  }) {
     final ver = version ?? '-';
     final build = buildNumber ?? '-';
     switch (sectionKey) {
@@ -46,7 +46,9 @@ class SettingsDetailPage extends StatelessWidget {
           ),
           _DetailSection(
             heading: "detail_about_heading_version".tr(),
-            body: "detail_about_body_version".tr(namedArgs: {'version': ver, 'build': build}),
+            body: "detail_about_body_version".tr(
+              namedArgs: {'version': ver, 'build': build},
+            ),
           ),
           _DetailSection(
             heading: "detail_about_heading_disclaimer".tr(),
@@ -81,11 +83,15 @@ class SettingsDetailPage extends StatelessWidget {
           ),
           _DetailSection(
             heading: "detail_privacy_heading_7".tr(),
-            body: "detail_privacy_body_7".tr(namedArgs: {'rights_contact': "support_contact_rights".tr()}),
+            body: "detail_privacy_body_7".tr(
+              namedArgs: {'rights_contact': "support_contact_rights".tr()},
+            ),
           ),
           _DetailSection(
             heading: "detail_privacy_heading_8".tr(),
-            body: "detail_privacy_body_8".tr(namedArgs: {'email_line': "support_email_line".tr()}),
+            body: "detail_privacy_body_8".tr(
+              namedArgs: {'email_line': "support_email_line".tr()},
+            ),
           ),
         ];
       case 'settings_help':
@@ -100,7 +106,9 @@ class SettingsDetailPage extends StatelessWidget {
           ),
           _DetailSection(
             heading: "detail_help_heading_support".tr(),
-            body: "detail_help_body_support".tr(namedArgs: {'email_line': "support_email_line".tr()}),
+            body: "detail_help_body_support".tr(
+              namedArgs: {'email_line': "support_email_line".tr()},
+            ),
           ),
           _DetailSection(
             heading: "detail_help_heading_emergency".tr(),
@@ -147,7 +155,10 @@ class SettingsDetailPage extends StatelessWidget {
         builder: (context, snapshot) {
           final version = snapshot.data?.version;
           final buildNumber = snapshot.data?.buildNumber;
-          final sections = _sectionsForTitle(version: version, buildNumber: buildNumber);
+          final sections = _sectionsForTitle(
+            version: version,
+            buildNumber: buildNumber,
+          );
           return _buildBody(context, sections);
         },
       );
@@ -265,31 +276,7 @@ class _DataExportButtonState extends State<_DataExportButton> {
     if (_exporting) return;
     setState(() => _exporting = true);
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final db = serviceLocator<LocalDatabaseService>();
-
-      final profile = {
-        'name': prefs.getString(AppConstants.prefProfileName),
-        'email': prefs.getString(AppConstants.prefProfileEmail),
-        'blood_type': prefs.getString(AppConstants.prefBloodType),
-        'allergies': prefs.getString(AppConstants.prefAllergies),
-        'medical_conditions': prefs.getString(AppConstants.prefMedicalConditions),
-      };
-
-      final dbInstance = await db.database;
-      final contacts = await dbInstance.query('contacts');
-      final activities = await dbInstance.query('activity_events', orderBy: 'timestamp DESC', limit: 200);
-      final consentLogs = await db.getConsentLogs();
-
-      final exportData = {
-        'export_date': DateTime.now().toIso8601String(),
-        'app': AppConstants.appName,
-        'profile': profile,
-        'contacts': contacts,
-        'activity_events': activities,
-        'consent_logs': consentLogs,
-      };
-
+      final exportData = await UserDataExportService.buildExportData();
       final jsonStr = const JsonEncoder.withIndent('  ').convert(exportData);
       final dir = await getTemporaryDirectory();
       final file = File('${dir.path}/korubeni_verilerim.json');
@@ -305,7 +292,7 @@ class _DataExportButtonState extends State<_DataExportButton> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Dışa aktarma başarısız: $e'),
+            content: Text('data_export_error'.tr()),
             backgroundColor: Colors.red,
           ),
         );
@@ -353,7 +340,10 @@ class _DataExportButtonState extends State<_DataExportButton> {
                   ? const SizedBox(
                       width: 16,
                       height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
                     )
                   : const Icon(Icons.download_rounded, size: 18),
               label: Text(_exporting ? 'Hazırlanıyor...' : 'Verilerimi İndir'),
@@ -361,7 +351,9 @@ class _DataExportButtonState extends State<_DataExportButton> {
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
             ),
           ),

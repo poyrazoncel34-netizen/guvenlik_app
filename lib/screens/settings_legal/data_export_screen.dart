@@ -8,15 +8,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 import '../../core/app_colors.dart';
-import '../../core/constants/app_constants.dart';
-import '../../core/di/service_locator.dart';
-import '../../core/security/secure_storage.dart';
-import '../../core/security/secure_storage_keys.dart';
-import '../../services/consent_manager.dart';
+import '../../core/services/user_data_export_service.dart';
 
 class DataExportScreen extends StatefulWidget {
   const DataExportScreen({super.key});
@@ -34,66 +29,14 @@ class _DataExportScreenState extends State<DataExportScreen> {
     HapticFeedback.mediumImpact();
 
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final secure = serviceLocator<SecureStorage>();
-      final cm = serviceLocator<ConsentManager>();
-
-      // Profil verisi
-      final profileData = {
-        'name': prefs.getString(AppConstants.prefProfileName) ?? '',
-        'email': prefs.getString(AppConstants.prefProfileEmail) ?? '',
-        'bloodType': prefs.getString(AppConstants.prefBloodType) ?? '',
-        'allergies': prefs.getString(AppConstants.prefAllergies) ?? '',
-        'medicalConditions':
-            prefs.getString(AppConstants.prefMedicalConditions) ?? '',
-        'emergencyNotes':
-            prefs.getString(AppConstants.prefEmergencyNotes) ?? '',
-      };
-
-      // Acil durum kişileri
-      final contactsRaw =
-          await secure.read(key: SecureStorageKeys.contactsList);
-      dynamic contactsData;
-      try {
-        contactsData =
-            contactsRaw != null ? jsonDecode(contactsRaw) : [];
-      } catch (_) {
-        contactsData = [];
-      }
-
-      // Rıza log'ları
-      final consentExport = await cm.exportConsentLog();
-
-      // Ayarlar
-      final settingsData = {
-        'notificationsEnabled':
-            prefs.getBool(AppConstants.prefNotifications) ?? true,
-        'locationEnabled': prefs.getBool(AppConstants.prefLocation) ?? true,
-        'soundEnabled': prefs.getBool(AppConstants.prefSound) ?? true,
-        'vibrationEnabled':
-            prefs.getBool(AppConstants.prefVibration) ?? true,
-      };
-
-      final exportData = {
-        'exportInfo': {
-          'exportDate': DateTime.now().toIso8601String(),
-          'appName': AppConstants.appName,
-          'dataController': 'Poyraz Öncel — korubeni.destek@gmail.com',
-          'kvkkNote':
-              'Bu dışa aktarım KVKK Madde 11/ğ kapsamında veri portabilitesi hakkı çerçevesinde oluşturulmuştur.',
-        },
-        'profile': profileData,
-        'emergencyContacts': contactsData,
-        'settings': settingsData,
-        'consentLog': consentExport,
-      };
-
+      final exportData = await UserDataExportService.buildExportData();
       final jsonStr = const JsonEncoder.withIndent('  ').convert(exportData);
 
       // Geçici dosya oluştur
       final dir = await getTemporaryDirectory();
       final file = File(
-          '${dir.path}/korubeni_data_export_${DateTime.now().millisecondsSinceEpoch}.json');
+        '${dir.path}/korubeni_data_export_${DateTime.now().millisecondsSinceEpoch}.json',
+      );
       await file.writeAsString(jsonStr, encoding: utf8);
 
       if (!mounted) return;
@@ -112,8 +55,9 @@ class _DataExportScreenState extends State<DataExportScreen> {
           content: Text('data_export_error'.tr()),
           backgroundColor: AppColors.emergency,
           behavior: SnackBarBehavior.floating,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
       );
     } finally {
@@ -136,8 +80,10 @@ class _DataExportScreenState extends State<DataExportScreen> {
           ),
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded,
-              color: AppColors.textSecondary),
+          icon: const Icon(
+            Icons.arrow_back_rounded,
+            color: AppColors.textSecondary,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
         elevation: 0,
@@ -156,16 +102,18 @@ class _DataExportScreenState extends State<DataExportScreen> {
             decoration: BoxDecoration(
               color: AppColors.info.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(16),
-              border:
-                  Border.all(color: AppColors.info.withValues(alpha: 0.4)),
+              border: Border.all(color: AppColors.info.withValues(alpha: 0.4)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.download_rounded,
-                        color: AppColors.info, size: 20),
+                    const Icon(
+                      Icons.download_rounded,
+                      color: AppColors.info,
+                      size: 20,
+                    ),
                     const SizedBox(width: 10),
                     Text(
                       'data_export_kvkk_right'.tr(),
@@ -200,14 +148,26 @@ class _DataExportScreenState extends State<DataExportScreen> {
             ),
           ),
           const SizedBox(height: 14),
-          _buildIncludeItem(Icons.person_rounded, AppColors.primary,
-              'data_export_profile'),
-          _buildIncludeItem(Icons.contacts_rounded, AppColors.accent,
-              'data_export_contacts'),
-          _buildIncludeItem(Icons.verified_user_rounded, AppColors.success,
-              'data_export_consent_log'),
-          _buildIncludeItem(Icons.settings_rounded, AppColors.textSecondary,
-              'data_export_settings'),
+          _buildIncludeItem(
+            Icons.person_rounded,
+            AppColors.primary,
+            'data_export_profile',
+          ),
+          _buildIncludeItem(
+            Icons.contacts_rounded,
+            AppColors.accent,
+            'data_export_contacts',
+          ),
+          _buildIncludeItem(
+            Icons.verified_user_rounded,
+            AppColors.success,
+            'data_export_consent_log',
+          ),
+          _buildIncludeItem(
+            Icons.settings_rounded,
+            AppColors.textSecondary,
+            'data_export_settings',
+          ),
 
           const SizedBox(height: 24),
 
@@ -218,7 +178,8 @@ class _DataExportScreenState extends State<DataExportScreen> {
               color: AppColors.warning.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                  color: AppColors.warning.withValues(alpha: 0.4)),
+                color: AppColors.warning.withValues(alpha: 0.4),
+              ),
             ),
             child: Text(
               'data_export_security_note'.tr(),
@@ -241,7 +202,9 @@ class _DataExportScreenState extends State<DataExportScreen> {
                       width: 18,
                       height: 18,
                       child: CircularProgressIndicator(
-                          strokeWidth: 2, color: Colors.white),
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
                     )
                   : const Icon(Icons.share_rounded),
               label: Text(
@@ -249,14 +212,17 @@ class _DataExportScreenState extends State<DataExportScreen> {
                     ? 'data_export_exporting'.tr()
                     : 'data_export_button'.tr(),
                 style: const TextStyle(
-                    fontSize: 16, fontWeight: FontWeight.w700),
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14)),
+                  borderRadius: BorderRadius.circular(14),
+                ),
                 elevation: 0,
               ),
             ),
@@ -266,8 +232,7 @@ class _DataExportScreenState extends State<DataExportScreen> {
     );
   }
 
-  Widget _buildIncludeItem(
-      IconData icon, Color color, String labelKey) {
+  Widget _buildIncludeItem(IconData icon, Color color, String labelKey) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(

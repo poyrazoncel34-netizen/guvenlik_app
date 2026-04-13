@@ -47,17 +47,19 @@ class EmergencyPlatformHandler(
                     result.success(true)
                 }
                 "scheduleCheckIn" -> {
+                    val sessionId = call.argument<String>("sessionId") ?: CheckInScheduler.SESSION_CHECK_IN
                     val phase = call.argument<String>("phase") ?: CheckInScheduler.PHASE_MAIN
                     val deadlineMs = call.argument<Number>("deadlineMs")?.toLong() ?: 0L
                     val graceDurationMs = call.argument<Number>("graceDurationMs")?.toLong() ?: 0L
-                    CheckInScheduler.schedule(context, phase, deadlineMs, graceDurationMs)
+                    CheckInScheduler.schedule(context, sessionId, phase, deadlineMs, graceDurationMs)
                     result.success(mapOf(
                         "scheduled" to true,
                         "exact" to CheckInScheduler.canScheduleExactAlarms(context)
                     ))
                 }
                 "cancelCheckIn" -> {
-                    CheckInScheduler.cancel(context)
+                    val sessionId = call.argument<String>("sessionId") ?: CheckInScheduler.SESSION_CHECK_IN
+                    CheckInScheduler.cancel(context, sessionId)
                     result.success(true)
                 }
                 "consumePendingTrigger" -> {

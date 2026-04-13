@@ -7,6 +7,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:optimize_battery/optimize_battery.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../app_colors.dart';
+import '../services/app_settings_service.dart';
 
 /// Centralized permission handling with user-friendly dialogs.
 /// Play Store Prominent Disclosure: Tehlikeli izinler (arka plan konum, pil optimizasyonu)
@@ -144,6 +145,10 @@ class PermissionHelper {
   static Future<bool> requestNotificationPermission(
     BuildContext context,
   ) async {
+    if (!await AppSettingsService.notificationsEnabled()) {
+      return false;
+    }
+
     if (await hasNotificationPermission()) {
       return true;
     }
@@ -204,7 +209,7 @@ class PermissionHelper {
                   color: AppColors.info.withValues(alpha: 0.12),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(
+                child: const Icon(
                   Icons.info_outline_rounded,
                   color: AppColors.info,
                   size: 32,

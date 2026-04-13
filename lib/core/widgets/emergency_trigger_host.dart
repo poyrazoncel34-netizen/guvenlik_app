@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:async';
 
+import '../../presentation/providers/subscription_provider.dart';
 import '../../screens/countdown_screen.dart';
 import '../constants/app_constants.dart';
 import '../navigation/app_navigator.dart';
@@ -66,15 +68,22 @@ class _EmergencyTriggerHostState extends State<EmergencyTriggerHost>
   Future<void> _startVolumeIfEnabled() async {
     if (!VolumeTriggerService.isSupported) return;
 
-    VolumeTriggerService.instance.startListening(
-      onPanicTriggered: _openCountdown,
-    );
     await VolumeTriggerService.instance.loadPreference();
     if (!mounted) return;
 
     final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
     final volumeEnabled =
         prefs.getBool(AppConstants.prefVolumeTrigger) ?? false;
+    if (volumeEnabled) {
+      final subscription = context.read<SubscriptionProvider>();
+      await subscription.initialize();
+      if (!mounted) return;
+      if (!subscription.isPro) {
+        await VolumeTriggerService.instance.setEnabled(false);
+        return;
+      }
+    }
     if (volumeEnabled) {
       VolumeTriggerService.instance.startListening(
         onPanicTriggered: _openCountdown,
@@ -92,12 +101,16 @@ class _EmergencyTriggerHostState extends State<EmergencyTriggerHost>
         .listen((event) async {
           try {
             final type = event['type']?.toString();
+            final sessionId = event['sessionId']?.toString();
             if (type == 'checkInGraceStarted') {
-              await CheckInService.instance.handleNativeGraceStarted();
+              if (sessionId == null ||
+                  sessionId == CheckInExpiryCoordinator.checkInSession) {
+                await CheckInService.instance.handleNativeGraceStarted();
+              }
               return;
             }
             if (type == 'checkInExpired') {
-              await _handleCheckInExpired();
+              await _handleCheckInExpired(sessionId: sessionId);
             }
           } catch (_) {
             // Native event handling must never crash the root widget.
@@ -115,23 +128,34 @@ class _EmergencyTriggerHostState extends State<EmergencyTriggerHost>
     }
 
     final type = pending['type']?.toString();
+    final sessionId = pending['sessionId']?.toString();
     if (type == 'checkInGraceStarted') {
-      await CheckInService.instance.handleNativeGraceStarted();
+      if (sessionId == null ||
+          sessionId == CheckInExpiryCoordinator.checkInSession) {
+        await CheckInService.instance.handleNativeGraceStarted();
+      }
       return;
     }
     if (type == 'checkInExpired') {
-      await _handleCheckInExpired();
+      await _handleCheckInExpired(sessionId: sessionId);
     }
   }
 
-  Future<void> _handleCheckInExpired() async {
-    if (CheckInService.instance.isActive ||
-        CheckInService.instance.isGracePeriod) {
+  Future<void> _handleCheckInExpired({String? sessionId}) async {
+    final isCheckIn =
+        sessionId == null ||
+        sessionId == CheckInExpiryCoordinator.checkInSession;
+    if (isCheckIn &&
+        (CheckInService.instance.isActive ||
+            CheckInService.instance.isGracePeriod)) {
       await CheckInService.instance.handleNativeExpired();
       return;
     }
+    final resolvedSessionId =
+        sessionId ?? CheckInExpiryCoordinator.safeWalkSession;
     if (!CheckInExpiryCoordinator.instance.tryClaim(
       'native_check_in_expired',
+      sessionId: resolvedSessionId,
     )) {
       return;
     }

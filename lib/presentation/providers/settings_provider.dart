@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:easy_localization/easy_localization.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/constants/app_constants.dart';
@@ -12,11 +12,8 @@ import '../../core/services/volume_trigger_service.dart';
 
 class SettingsProvider extends ChangeNotifier {
   bool _notificationsEnabled = true;
-  bool _locationEnabled = true;
   bool _soundEnabled = true;
-  bool _vibrationEnabled = true;
   bool _volumeTriggerEnabled = false;
-  ThemeMode _themeMode = ThemeMode.system;
   bool _loaded = false;
   final SecureStorage _secureStorage = serviceLocator<SecureStorage>();
 
@@ -28,11 +25,8 @@ class SettingsProvider extends ChangeNotifier {
   String _emergencyNotes = '';
 
   bool get notificationsEnabled => _notificationsEnabled;
-  bool get locationEnabled => _locationEnabled;
   bool get soundEnabled => _soundEnabled;
-  bool get vibrationEnabled => _vibrationEnabled;
   bool get volumeTriggerEnabled => _volumeTriggerEnabled;
-  ThemeMode get themeMode => _themeMode;
   String get profileName =>
       _profileName.isEmpty ? "settings_default_user".tr() : _profileName;
   String get profileEmail => _profileEmail.isEmpty ? '' : _profileEmail;
@@ -51,39 +45,12 @@ class SettingsProvider extends ChangeNotifier {
     if (!_loaded) {
       _notificationsEnabled =
           prefs.getBool(AppConstants.prefNotifications) ?? true;
-      _locationEnabled = prefs.getBool(AppConstants.prefLocation) ?? true;
       _soundEnabled = prefs.getBool(AppConstants.prefSound) ?? true;
-      _vibrationEnabled = prefs.getBool(AppConstants.prefVibration) ?? true;
       _volumeTriggerEnabled =
           prefs.getBool(AppConstants.prefVolumeTrigger) ?? false;
-      final themeModeStr = prefs.getString(AppConstants.prefThemeMode) ?? 'system';
-      _themeMode = _themeModeFromString(themeModeStr);
       _loaded = true;
     }
     notifyListeners();
-  }
-
-  Future<void> setThemeMode(ThemeMode mode) async {
-    _themeMode = mode;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(AppConstants.prefThemeMode, _themeModeToString(mode));
-    notifyListeners();
-  }
-
-  static ThemeMode _themeModeFromString(String value) {
-    switch (value) {
-      case 'light': return ThemeMode.light;
-      case 'dark': return ThemeMode.dark;
-      default: return ThemeMode.system;
-    }
-  }
-
-  static String _themeModeToString(ThemeMode mode) {
-    switch (mode) {
-      case ThemeMode.light: return 'light';
-      case ThemeMode.dark: return 'dark';
-      default: return 'system';
-    }
   }
 
   Future<void> updateProfile({
@@ -195,25 +162,11 @@ class SettingsProvider extends ChangeNotifier {
     await prefs.setBool(AppConstants.prefNotifications, value);
   }
 
-  Future<void> setLocation(bool value) async {
-    _locationEnabled = value;
-    notifyListeners();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(AppConstants.prefLocation, value);
-  }
-
   Future<void> setSound(bool value) async {
     _soundEnabled = value;
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(AppConstants.prefSound, value);
-  }
-
-  Future<void> setVibration(bool value) async {
-    _vibrationEnabled = value;
-    notifyListeners();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(AppConstants.prefVibration, value);
   }
 
   Future<void> setVolumeTrigger(bool value) async {
@@ -223,5 +176,4 @@ class SettingsProvider extends ChangeNotifier {
     await prefs.setBool(AppConstants.prefVolumeTrigger, value);
     await VolumeTriggerService.instance.setEnabled(value);
   }
-
 }

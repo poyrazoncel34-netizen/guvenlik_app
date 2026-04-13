@@ -94,7 +94,9 @@ class CheckInService extends ChangeNotifier {
     if (!_isActive ||
         _totalSeconds <= 0 ||
         _emergencyInProgress ||
-        CheckInExpiryCoordinator.instance.isClaimed) {
+        CheckInExpiryCoordinator.instance.isClaimedFor(
+          CheckInExpiryCoordinator.checkInSession,
+        )) {
       return;
     }
     CheckInExpiryCoordinator.instance.arm(
@@ -135,7 +137,9 @@ class CheckInService extends ChangeNotifier {
     );
 
     await _clearPersistedState();
-    await EmergencyPlatformService.instance.cancelCheckIn();
+    await EmergencyPlatformService.instance.cancelCheckIn(
+      sessionId: CheckInExpiryCoordinator.checkInSession,
+    );
     await KoruBeniForegroundService.stop();
     notifyListeners();
   }
@@ -439,7 +443,9 @@ class CheckInService extends ChangeNotifier {
     _totalSeconds = 0;
 
     await _clearPersistedState();
-    await EmergencyPlatformService.instance.cancelCheckIn();
+    await EmergencyPlatformService.instance.cancelCheckIn(
+      sessionId: CheckInExpiryCoordinator.checkInSession,
+    );
     if (stopForeground) {
       await KoruBeniForegroundService.stop();
     }
@@ -475,6 +481,7 @@ class CheckInService extends ChangeNotifier {
       return;
     }
     await EmergencyPlatformService.instance.scheduleCheckIn(
+      sessionId: CheckInExpiryCoordinator.checkInSession,
       phase: 'main',
       deadline: _endAt!,
       graceDuration: const Duration(seconds: _gracePeriodSeconds),
@@ -486,6 +493,7 @@ class CheckInService extends ChangeNotifier {
       return;
     }
     await EmergencyPlatformService.instance.scheduleCheckIn(
+      sessionId: CheckInExpiryCoordinator.checkInSession,
       phase: 'grace',
       deadline: _graceEndAt!,
       graceDuration: Duration.zero,

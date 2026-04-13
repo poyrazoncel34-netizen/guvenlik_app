@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 import 'call_service.dart';
+import 'check_in_expiry_coordinator.dart';
 
 class EmergencyPlatformService {
   EmergencyPlatformService._();
@@ -65,6 +66,7 @@ class EmergencyPlatformService {
   static const Duration _dispatchTimeout = Duration(seconds: 5);
 
   Future<bool> scheduleCheckIn({
+    String sessionId = CheckInExpiryCoordinator.checkInSession,
     required String phase,
     required DateTime deadline,
     Duration graceDuration = const Duration(seconds: 60),
@@ -75,6 +77,7 @@ class EmergencyPlatformService {
     final response = await _invokeMap(
       'scheduleCheckIn',
       arguments: <String, Object?>{
+        'sessionId': sessionId,
         'phase': phase,
         'deadlineMs': deadline.millisecondsSinceEpoch,
         'graceDurationMs': graceDuration.inMilliseconds,
@@ -83,13 +86,17 @@ class EmergencyPlatformService {
     return response['scheduled'] == true;
   }
 
-  Future<void> cancelCheckIn() async {
+  Future<void> cancelCheckIn({
+    String sessionId = CheckInExpiryCoordinator.checkInSession,
+  }) async {
     if (!isSupported) {
       return;
     }
     try {
       await _methodChannel
-          .invokeMethod<void>('cancelCheckIn')
+          .invokeMethod<void>('cancelCheckIn', <String, Object?>{
+            'sessionId': sessionId,
+          })
           .timeout(_defaultTimeout);
     } on TimeoutException {
       debugPrint('[EmergencyPlatform] cancelCheckIn timed out');
