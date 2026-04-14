@@ -74,6 +74,14 @@
             margin: 16px 0;
         }
 
+        .warning {
+            background: #fff3e0;
+            border-left: 4px solid #ff9800;
+            padding: 16px;
+            border-radius: 8px;
+            margin: 16px 0;
+        }
+
         .contact-box {
             background: #f0f4f8;
             border-radius: 12px;
@@ -90,6 +98,30 @@
             text-decoration: underline;
         }
 
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0;
+            font-size: 14px;
+        }
+
+        table th,
+        table td {
+            border: 1px solid #ddd;
+            padding: 10px 12px;
+            text-align: left;
+        }
+
+        table th {
+            background: #f0f4f8;
+            font-weight: 600;
+            color: #0A1B2A;
+        }
+
+        table tr:nth-child(even) {
+            background: #fafbfc;
+        }
+
         footer {
             text-align: center;
             margin-top: 32px;
@@ -104,25 +136,30 @@
 <body>
     <div class="container">
         <h1>KoruBeni Privacy Policy</h1>
-        <p class="subtitle">Last updated: March 7, 2026</p>
+        <p class="subtitle">Last updated: March 19, 2026 &mdash; Version 3.0.0</p>
 
-        <p>KoruBeni ("App", "we", "our") is a personal safety application designed to protect its users. This privacy
+        <p>KoruBeni ("App", "we", "our") is a personal safety application designed to support its users. This privacy
             policy explains what data we collect, how we use it, and how we protect it.</p>
-        <p><strong>KoruBeni works offline-first.</strong> The primary copy of your data stays on your device and is not sent to a developer-operated cloud backend.</p>
+        <p><strong>KoruBeni works offline-first.</strong> The primary copy of your app data stays on your device and is not sent to a developer-operated cloud backend. Online map tiles and Google Play Billing may have their own technical network behavior under their providers' policies.</p>
 
-        <h2>1. Data We Collect</h2>
+        <h2>1. Age Restriction</h2>
+        <p>KoruBeni is intended for users aged <strong>18 and older</strong>. The app performs age verification during onboarding. Users under 18 may only use the app with explicit parental or legal guardian consent, in accordance with <strong>KVKK Article 6</strong> (processing of personal data of minors requires parental consent). If we become aware that a user under 18 is using the app without parental consent, we will take steps to delete their data from the device.</p>
+
+        <h2>2. Data We Collect</h2>
 
         <h3 style="font-size:16px; margin-top:16px; margin-bottom:8px;">a) User-Provided Data</h3>
         <ul>
             <li><strong>Emergency contacts:</strong> Names and phone numbers of contacts selected from your device</li>
             <li><strong>Profile information:</strong> Name and profile photo (optional)</li>
             <li><strong>PIN code:</strong> Stored encrypted on-device only, never sent to any server</li>
+            <li><strong>Fake call data:</strong> Caller name and configuration for the fake call feature, stored on-device only</li>
         </ul>
 
         <h3 style="font-size:16px; margin-top:16px; margin-bottom:8px;">b) Automatically Collected Data</h3>
         <ul>
-            <li><strong>Location data:</strong> Only when you actively enable location sharing or trigger an emergency</li>
+            <li><strong>Location data:</strong> Only when you actively start a location session or trigger an emergency</li>
             <li><strong>Device-side runtime state:</strong> Temporary technical state needed for app flows</li>
+            <li><strong>Legal consent log:</strong> Timestamps and versions of your consent to KVKK and privacy policies, stored on-device only</li>
         </ul>
 
         <h3 style="font-size:16px; margin-top:16px; margin-bottom:8px;">c) Data We Do NOT Collect</h3>
@@ -135,83 +172,178 @@
             <li>Financial information</li>
         </ul>
 
-        <h2>2. How We Use Data</h2>
+        <div class="highlight">
+            <strong>No Developer Backend:</strong> No app data is sent to developer-operated servers or cloud databases. Online map tiles and Google Play Billing are governed by those providers.
+        </div>
+
+        <h2>3. Optional Pro Subscription</h2>
+        <p>The app may provide basic free functionality and optional KoruBeni Pro subscription features. Pro purchases, renewals, cancellations, and restore operations are handled through Google Play. Payment data is processed by Google Play and is not stored by a developer-operated backend.</p>
+
+        <h2>4. How We Use Data</h2>
         <ul>
-            <li>Send location and alerts to designated emergency contacts via SMS</li>
+            <li>Start the Android call flow for your designated emergency contact</li>
             <li>Support Safe Walk and check-in flows</li>
             <li>Show local notifications</li>
-            <li>Protect app access with PIN and biometric authentication</li>
+            <li>Protect app access with PIN authentication</li>
+            <li>Simulate on-device fake incoming calls for discreet exit from uncomfortable situations</li>
         </ul>
 
         <div class="highlight">
-            <strong>Important:</strong> Your location data is only collected when you actively share it or when an
+            <strong>Important:</strong> Your location data is only processed when you start a location session or when an
             emergency is triggered. There is no continuous background location tracking.
         </div>
 
-        <h2>3. Data Sharing</h2>
-        <p>We do <strong>not sell</strong> your data to third parties. Data is shared only in these cases:</p>
+        <h2>5. Data Sharing</h2>
+        <p>We do <strong>not sell</strong> your data to third parties. No data is sent to a developer-operated backend. Third-party network behavior is limited to online map tiles and Google Play Billing.</p>
         <ul>
-            <li><strong>Emergency contacts:</strong> When an emergency is triggered, your location and status are sent
-                to your selected contacts via SMS</li>
+            <li><strong>Emergency contacts:</strong> When an emergency is triggered, the Android call flow is started or the dialer is prepared for your selected contact</li>
             <li><strong>Map providers:</strong> OpenStreetMap infrastructure may be contacted when map screens are opened</li>
             <li><strong>Legal requirements:</strong> When required by law or court order</li>
         </ul>
 
-        <h2>4. Data Security</h2>
+        <h2>6. Emergency Contacts &mdash; Third-Party Data Subject Rights</h2>
+        <p>When you add emergency contacts, you store their names and phone numbers on your device. These individuals are also data subjects under <strong>KVKK Article 11</strong> and have the following rights:</p>
         <ul>
-            <li>Sensitive data is protected with AES-256 encryption</li>
-            <li>PIN codes are stored in secure device storage (Keychain/Keystore)</li>
-            <li>The primary copy of sensitive data remains on the device</li>
-            <li>Biometric authentication (Face ID/Touch ID) support</li>
+            <li><strong>Right to be informed:</strong> Emergency contacts have the right to know that their data is stored in this app</li>
+            <li><strong>Right to request deletion:</strong> Emergency contacts may request the removal of their data</li>
+            <li><strong>Right to object:</strong> Emergency contacts may object to the processing of their data</li>
+        </ul>
+        <p>It is the user's responsibility to inform their emergency contacts that their name and phone number are stored in this app and to obtain their consent where applicable. To exercise these rights, the data subject may contact us at the email address listed below.</p>
+
+        <h2>7. Data Security</h2>
+        <ul>
+            <li>PIN code and first-responder profile information are stored with secure device storage where supported by the operating system</li>
+            <li>Emergency contact records are stored in the app's local on-device database</li>
+            <li>Fake call settings and optional avatar files are stored locally on the device</li>
+            <li>No app data is sent to a developer-operated cloud backend; online map tiles and Google Play Billing may have their own technical network behavior</li>
         </ul>
 
-        <h2>5. Data Retention</h2>
+        <h2>8. Data Retention</h2>
         <ul>
             <li>Profile data: Until the user deletes it on the device</li>
             <li>Emergency contacts: Until the user deletes them on the device</li>
-            <li>Audio recordings: Until the user deletes them on the device</li>
             <li>Location data: Used only during active emergency and sharing flows</li>
+            <li>Fake call settings and avatar files: Until the user deletes app data on the device</li>
+            <li>Legal consent log: Retained on-device for the duration of app usage</li>
         </ul>
 
-        <h2>6. Your Rights</h2>
+        <h2>9. KVKK Article 10 &mdash; Data Controller Disclosure Table</h2>
+        <p>In accordance with KVKK Article 10, the following table discloses the categories of personal data processed, the purposes of processing, and the legal basis for each.</p>
+        <table>
+            <thead>
+                <tr>
+                    <th>Data Category</th>
+                    <th>Purpose</th>
+                    <th>Legal Basis</th>
+                    <th>Storage</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Name, Profile Photo</td>
+                    <td>User identification within the app</td>
+                    <td>Explicit consent</td>
+                    <td>On-device only</td>
+                </tr>
+                <tr>
+                    <td>PIN Code</td>
+                    <td>App access protection</td>
+                    <td>Legitimate interest (security)</td>
+                    <td>Encrypted on-device (Keystore/Keychain)</td>
+                </tr>
+                <tr>
+                    <td>Emergency Contacts (Name, Phone)</td>
+                    <td>Emergency call flow</td>
+                    <td>Explicit consent + vital interest (KVKK Art. 5/2-e)</td>
+                    <td>On-device only</td>
+                </tr>
+                <tr>
+                    <td>Location Data</td>
+                    <td>Location status during emergency, map, and location sessions</td>
+                    <td>Explicit consent</td>
+                    <td>On-device, transient</td>
+                </tr>
+                <tr>
+                    <td>Fake Call Configuration</td>
+                    <td>Simulating incoming calls for user safety</td>
+                    <td>Explicit consent</td>
+                    <td>On-device only</td>
+                </tr>
+                <tr>
+                    <td>Legal Consent Log</td>
+                    <td>Recording user's KVKK and privacy policy consents with timestamps</td>
+                    <td>Legal obligation (KVKK Art. 12 accountability)</td>
+                    <td>On-device only</td>
+                </tr>
+            </tbody>
+        </table>
+        <p><strong>No data is transferred to developer-operated servers.</strong> The primary copy of app data remains on the user's device. Online map tiles and Google Play Billing may have technical network behavior governed by their providers' policies.</p>
+
+        <h2>10. Your Rights (KVKK Article 11)</h2>
         <ul>
             <li><strong>Access:</strong> Request access to your data</li>
             <li><strong>Correction:</strong> Request correction of inaccurate data</li>
             <li><strong>Deletion:</strong> Delete app data by clearing storage or uninstalling the app</li>
-            <li><strong>Permission management:</strong> Change location, contacts, and notification permissions at any
+            <li><strong>Permission management:</strong> Change location, phone, and notification permissions at any
                 time</li>
             <li><strong>Data portability:</strong> Request a copy of your data</li>
+            <li><strong>Right to object:</strong> Object to processing of your data</li>
+            <li><strong>Right to complain:</strong> File a complaint with the Personal Data Protection Board (KVKK Kurulu)</li>
         </ul>
 
-        <h2>7. Children's Privacy</h2>
-        <p>KoruBeni does not knowingly collect data from children under 13.</p>
+        <h2>11. Children's Privacy</h2>
+        <p>KoruBeni is intended for users aged 18 and older. The app performs age verification during onboarding. We do not knowingly collect data from children under 18 without parental consent. If a parent or guardian becomes aware that their child has provided personal data without their consent, they should contact us so we can delete such data from the device.</p>
 
-        <h2>8. Third-Party Services</h2>
+        <h2>12. Third-Party Services</h2>
         <ul>
-            <li><strong>OpenStreetMap:</strong> Map display</li>
+            <li><strong>OpenStreetMap:</strong> Map display (tile data only, no personal data sent)</li>
+            <li><strong>Google Play Billing:</strong> Optional Pro subscription purchase, renewal, cancellation, and restore handling</li>
         </ul>
         <p>Their respective privacy policies apply:</p>
         <ul>
             <li><a href="https://wiki.osmfoundation.org/wiki/Privacy_Policy" target="_blank">OpenStreetMap Privacy
                     Policy</a></li>
         </ul>
+        <p><strong>No advertising or third-party analytics SDK is used in this release.</strong></p>
 
-        <h2>9. Policy Changes</h2>
+        <h2>13. Limitation of Liability</h2>
+        <p>KoruBeni is provided <strong>"as is"</strong> without any warranty, express or implied. To the maximum extent permitted by applicable law:</p>
+        <ul>
+            <li>The developer shall not be liable for any direct, indirect, incidental, special, or consequential damages arising from the use or inability to use the app</li>
+            <li>The total aggregate liability of the developer shall not exceed the total amount paid by the user through Google Play for KoruBeni Pro during the 12 months before the claim, or <strong>0 TL</strong> for users without a paid subscription</li>
+            <li>This limitation does not apply to damages caused by <strong>gross negligence (a&#x11F;&#x131;r ihmal)</strong> or <strong>willful misconduct (kast)</strong> in accordance with <strong>TBK Article 115</strong></li>
+        </ul>
+
+        <h2>14. Indemnification</h2>
+        <p>You agree to indemnify, defend, and hold harmless the developer from and against any claims, damages, losses, liabilities, costs, and expenses (including reasonable attorneys' fees) arising out of or related to your misuse of the app, violation of this privacy policy, or violation of any applicable law.</p>
+
+        <h2>15. Force Majeure</h2>
+        <p>The developer shall not be liable for any failure or delay in the performance of obligations due to causes beyond reasonable control, including but not limited to: natural disasters, war, terrorism, government actions, power failures, internet or telecommunications failures, device hardware failures, or operating system changes by device manufacturers.</p>
+
+        <h2>16. Consumer Protection Notice</h2>
+        <div class="highlight">
+            <strong>6502 Consumer Protection Law Notice:</strong> KoruBeni provides basic free functionality and may offer an optional KoruBeni Pro subscription through Google Play. It is <strong>not a professional security service</strong>, not a substitute for law enforcement (112/155), and does not guarantee protection against any threat. Purchases, renewals, cancellations, and restore operations for Pro are managed through Google Play.
+        </div>
+
+        <h2>17. Severability</h2>
+        <p>If any provision of this privacy policy is found to be invalid, illegal, or unenforceable by a court of competent jurisdiction, the remaining provisions shall continue in full force and effect. The invalid provision shall be modified to the minimum extent necessary to make it valid and enforceable while preserving its original intent.</p>
+
+        <h2>18. Policy Changes</h2>
         <p>We may update this privacy policy from time to time. When significant changes are made, users will be
-            notified through in-app notifications.</p>
+            notified through in-app notifications. Continued use of the app after changes constitutes acceptance of the updated policy.</p>
 
-        <h2>10. Contact</h2>
+        <h2>19. Contact</h2>
         <div class="contact-box">
-            <p>For questions about our privacy policy:</p>
+            <p>For questions about our privacy policy or to exercise your KVKK rights:</p>
             <ul style="list-style: none; padding: 0;">
                 <li><strong>Email:</strong> <a href="mailto:korubeni.destek@gmail.com">korubeni.destek@gmail.com</a></li>
-                <li><strong>Developer:</strong> Poyraz Oncel</li>
+                <li><strong>Data Controller:</strong> Poyraz Oncel</li>
                 <li><strong>Location:</strong> Turkey</li>
             </ul>
         </div>
 
         <footer>
-            <p>&copy; 2026 KoruBeni. All rights reserved.</p>
+            <p>&copy; 2026 KoruBeni. All rights reserved. &mdash; Version 3.0.0</p>
         </footer>
     </div>
 </body>
