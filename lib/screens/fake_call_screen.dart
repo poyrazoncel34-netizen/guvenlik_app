@@ -19,7 +19,6 @@ import '../core/security/secure_storage.dart';
 import '../core/security/secure_storage_keys.dart';
 import '../core/services/activity_service.dart';
 import '../core/services/app_settings_service.dart';
-import '../core/services/emergency_platform_service.dart';
 import '../domain/models/activity_event.dart';
 
 class FakeCallScreen extends StatefulWidget {
@@ -38,7 +37,6 @@ class _FakeCallScreenState extends State<FakeCallScreen>
   String _callerNumber = "";
   String? _avatarPath;
   bool _ringtoneError = false;
-  StreamSubscription<Map<String, dynamic>>? _phoneStateSubscription;
   final SecureStorage _secureStorage = serviceLocator<SecureStorage>();
 
   static const String _keyName = SecureStorageKeys.fakeCallName;
@@ -54,9 +52,8 @@ class _FakeCallScreenState extends State<FakeCallScreen>
     )..repeat(reverse: true);
     _loadSavedSettings();
     _startRingtone();
-    _listenForRealCalls();
     WidgetsBinding.instance.addPostFrameCallback(
-      (_) => _checkFirstUseWarning(),
+      (_) => unawaited(_checkFirstUseWarning()),
     );
   }
 
@@ -145,25 +142,9 @@ class _FakeCallScreenState extends State<FakeCallScreen>
   @override
   void dispose() {
     _pulseController.dispose();
-    _phoneStateSubscription?.cancel();
     _audioPlayer.stop();
     _audioPlayer.dispose();
     super.dispose();
-  }
-
-  void _listenForRealCalls() {
-    if (!EmergencyPlatformService.instance.isSupported) {
-      return;
-    }
-    EmergencyPlatformService.instance.initialize();
-    _phoneStateSubscription = EmergencyPlatformService.instance.phoneStates
-        .listen((event) {
-          final state = event['state']?.toString() ?? '';
-          if (state.contains('ringing') && mounted) {
-            _stopRingtone();
-            Navigator.of(context).maybePop();
-          }
-        });
   }
 
   Future<void> _loadSavedSettings() async {

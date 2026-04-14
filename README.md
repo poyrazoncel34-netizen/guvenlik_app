@@ -25,7 +25,7 @@
 - **Flutter** 3.29+ (Dart)
 - **State Management** — Provider + GetIt
 - **Yerel Depolama** — SQLite + Flutter Secure Storage
-- **Güvenlik** — AES şifreleme, Flutter Secure Storage
+- **Güvenlik** — PIN ve ilk müdahale bilgileri için Flutter Secure Storage; acil kişi verileri cihaz içi SQLite
 
 ## 🚀 Kurulum
 
@@ -50,15 +50,6 @@ flutter run
 # 4. Testleri çalıştır
 flutter test
 ```
-
-**Opsiyonel — Sentry crash reporting** (yalnızca production):
-```bash
-flutter run --dart-define=SENTRY_DSN=https://your-dsn@sentry.io/123 \
-            --dart-define=ENV=production
-```
-> DSN tanımlanmazsa Sentry no-op olarak çalışır; hiçbir veri gönderilmez.
-
----
 
 ## 📸 Ekran Görüntüleri
 
@@ -91,7 +82,7 @@ Katkılar memnuniyetle karşılanır! Lütfen aşağıdaki adımları izleyin:
 4. **Pull Request** açın — `main` branch'e karşı.
 
 ### Kural ve Kısıtlamalar
-- Geliştirici sunucusu veya cloud DB eklemeyin; harita, Play Billing ve crash reporting gibi üçüncü taraf entegrasyonlarının gerçek ağ davranışını metinlerde açık yazın.
+- Geliştirici sunucusu, cloud DB, analytics veya crash reporting eklemeyin; harita ve Play Billing gibi üçüncü taraf entegrasyonlarının gerçek ağ davranışını metinlerde açık yazın.
 - Biyometrik kimlik doğrulama **yasaktır** (baskı saldırısı riski).
 - Tüm yeni özellikler için test yazılması zorunludur.
 
@@ -99,8 +90,8 @@ Katkılar memnuniyetle karşılanır! Lütfen aşağıdaki adımları izleyin:
 
 ## 📄 Gizlilik Politikası
 
-🇹🇷 [Türkçe](https://poyrazoncel34-netizen.github.io/guvenlik_app/)
-🇬🇧 [English](https://poyrazoncel34-netizen.github.io/guvenlik_app/#english)
+🇹🇷 [Türkçe](https://poyrazoncel34-netizen.github.io/guvenlik_app/privacy_policy.html)
+🇬🇧 [English](https://poyrazoncel34-netizen.github.io/guvenlik_app/privacy_policy_en.html)
 
 ## 📋 Lisans
 

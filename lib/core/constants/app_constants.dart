@@ -67,13 +67,13 @@ class AppConstants {
 
   // Yasal belgeler URL'leri
   static const String termsOfServiceUrl =
-      'https://poyrazoncel34-netizen.github.io/guvenlik_app/kullanim_sartlari';
+      'https://poyrazoncel34-netizen.github.io/guvenlik_app/kullanim_sartlari.html';
   static const String aydinlatmaMetniUrl =
       'https://poyrazoncel34-netizen.github.io/guvenlik_app/aydinlatma';
   static const String privacyPolicyWebUrl =
-      'https://poyrazoncel34-netizen.github.io/guvenlik_app/';
+      'https://poyrazoncel34-netizen.github.io/guvenlik_app/privacy_policy.html';
   static const String privacyPolicyUrl =
-      'https://poyrazoncel34-netizen.github.io/guvenlik_app/';
+      'https://poyrazoncel34-netizen.github.io/guvenlik_app/privacy_policy.html';
   static const String kvkkMailto =
       'mailto:korubeni.destek@gmail.com?subject=KVKK%20Ba%C5%9Fvurusu';
 }

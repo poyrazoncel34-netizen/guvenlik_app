@@ -23,7 +23,8 @@ Play Console'da doldurulacak formlar ve ilgili rehberler.
 | Konum (approximate, precise) | Collected for emergency/location session, not automatically shared |
 | Personal info (optional profile name/photo) | Device-only |
 | Contacts | Collected, device-stored |
-| Audio | Optional, not shared |
+| Audio / microphone | Not collected in this Android Play release |
+| Purchases / subscriptions | Google Play Billing handles optional KoruBeni Pro |
 | App activity (crash, analytics) | Not collected |
 | Encryption in transit | No developer backend; evaluate map/billing/crash SDK traffic separately |
 | Users can request deletion | Yes |

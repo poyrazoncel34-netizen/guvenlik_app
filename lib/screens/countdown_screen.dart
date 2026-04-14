@@ -25,6 +25,7 @@ import '../core/services/foreground_service.dart';
 import '../core/services/haptic_service.dart';
 import '../core/services/notification_service.dart';
 import '../core/services/emergency_platform_service.dart';
+import '../core/utils/permission_helper.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
 class CountdownScreen extends StatefulWidget {
@@ -159,6 +160,8 @@ class _CountdownScreenState extends State<CountdownScreen>
         ],
       ),
     );
+    if (!mounted) return;
+    await PermissionHelper.requestCallPhonePermission(context);
     if (!mounted) return;
     _startCountdown();
   }

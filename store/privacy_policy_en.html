@@ -138,9 +138,9 @@
         <h1>KoruBeni Privacy Policy</h1>
         <p class="subtitle">Last updated: March 19, 2026 &mdash; Version 3.0.0</p>
 
-        <p>KoruBeni ("App", "we", "our") is a personal safety application designed to protect its users. This privacy
+        <p>KoruBeni ("App", "we", "our") is a personal safety application designed to support its users. This privacy
             policy explains what data we collect, how we use it, and how we protect it.</p>
-        <p><strong>KoruBeni works offline-first.</strong> The primary copy of your data stays on your device and is not sent to a developer-operated cloud backend. Map, Play Billing, and explicitly configured crash reporting providers may have their own technical network behavior under their policies.</p>
+        <p><strong>KoruBeni works offline-first.</strong> The primary copy of your app data stays on your device and is not sent to a developer-operated cloud backend. Online map tiles and Google Play Billing may have their own technical network behavior under their providers' policies.</p>
 
         <h2>1. Age Restriction</h2>
         <p>KoruBeni is intended for users aged <strong>18 and older</strong>. The app performs age verification during onboarding. Users under 18 may only use the app with explicit parental or legal guardian consent, in accordance with <strong>KVKK Article 6</strong> (processing of personal data of minors requires parental consent). If we become aware that a user under 18 is using the app without parental consent, we will take steps to delete their data from the device.</p>
@@ -152,7 +152,6 @@
             <li><strong>Emergency contacts:</strong> Names and phone numbers of contacts selected from your device</li>
             <li><strong>Profile information:</strong> Name and profile photo (optional)</li>
             <li><strong>PIN code:</strong> Stored encrypted on-device only, never sent to any server</li>
-            <li><strong>Audio recordings:</strong> Ambient audio recordings created by the user during emergency situations, stored on-device only</li>
             <li><strong>Fake call data:</strong> Caller name and configuration for the fake call feature, stored on-device only</li>
         </ul>
 
@@ -174,14 +173,11 @@
         </ul>
 
         <div class="highlight">
-            <strong>No Developer Backend:</strong> No data is sent to developer-operated servers or cloud databases. Map, Play Billing, and explicitly configured crash reporting SDK traffic is governed by those providers.
+            <strong>No Developer Backend:</strong> No app data is sent to developer-operated servers or cloud databases. Online map tiles and Google Play Billing are governed by those providers.
         </div>
 
-        <h2>3. Audio Recording</h2>
-        <p>KoruBeni includes an audio recording feature for emergency situations. Audio is recorded locally on the device and is never uploaded to any server.</p>
-        <div class="warning">
-            <strong>Legal Warning (TCK Article 133):</strong> Recording private conversations of others without their consent is a criminal offense under Turkish Penal Code Article 133 and may result in <strong>2 to 5 years of imprisonment</strong>. KoruBeni's audio recording feature is intended solely for the user's personal safety in emergency situations. The user bears full legal responsibility for how they use this feature. Do not record conversations without the knowledge and consent of all parties involved.
-        </div>
+        <h2>3. Optional Pro Subscription</h2>
+        <p>The app may provide basic free functionality and optional KoruBeni Pro subscription features. Pro purchases, renewals, cancellations, and restore operations are handled through Google Play. Payment data is processed by Google Play and is not stored by a developer-operated backend.</p>
 
         <h2>4. How We Use Data</h2>
         <ul>
@@ -189,8 +185,7 @@
             <li>Support Safe Walk and check-in flows</li>
             <li>Show local notifications</li>
             <li>Protect app access with PIN authentication</li>
-            <li>Record audio during emergencies (user-initiated only)</li>
-            <li>Simulate fake incoming calls for discreet exit from dangerous situations</li>
+            <li>Simulate on-device fake incoming calls for discreet exit from uncomfortable situations</li>
         </ul>
 
         <div class="highlight">
@@ -199,7 +194,7 @@
         </div>
 
         <h2>5. Data Sharing</h2>
-        <p>We do <strong>not sell</strong> your data to third parties. No data is sent to a developer-operated backend. Third-party SDK network behavior is limited to map, Play Billing, and explicitly configured crash reporting services.</p>
+        <p>We do <strong>not sell</strong> your data to third parties. No data is sent to a developer-operated backend. Third-party network behavior is limited to online map tiles and Google Play Billing.</p>
         <ul>
             <li><strong>Emergency contacts:</strong> When an emergency is triggered, the Android call flow is started or the dialer is prepared for your selected contact</li>
             <li><strong>Map providers:</strong> OpenStreetMap infrastructure may be contacted when map screens are opened</li>
@@ -217,18 +212,18 @@
 
         <h2>7. Data Security</h2>
         <ul>
-            <li>Sensitive data is protected with AES-256 encryption</li>
-            <li>PIN codes are stored in secure device storage (Keychain/Keystore)</li>
-            <li>The primary copy of sensitive data remains on the device</li>
-            <li>No data is sent to a developer-operated cloud backend; map, Play Billing, and configured crash reporting providers may have their own technical network behavior</li>
+            <li>PIN code and first-responder profile information are stored with secure device storage where supported by the operating system</li>
+            <li>Emergency contact records are stored in the app's local on-device database</li>
+            <li>Fake call settings and optional avatar files are stored locally on the device</li>
+            <li>No app data is sent to a developer-operated cloud backend; online map tiles and Google Play Billing may have their own technical network behavior</li>
         </ul>
 
         <h2>8. Data Retention</h2>
         <ul>
             <li>Profile data: Until the user deletes it on the device</li>
             <li>Emergency contacts: Until the user deletes them on the device</li>
-            <li>Audio recordings: Until the user deletes them on the device</li>
             <li>Location data: Used only during active emergency and sharing flows</li>
+            <li>Fake call settings and avatar files: Until the user deletes app data on the device</li>
             <li>Legal consent log: Retained on-device for the duration of app usage</li>
         </ul>
 
@@ -264,15 +259,9 @@
                 </tr>
                 <tr>
                     <td>Location Data</td>
-                    <td>Sharing location during emergency/Safe Walk</td>
+                    <td>Location status during emergency, map, and location sessions</td>
                     <td>Explicit consent</td>
                     <td>On-device, transient</td>
-                </tr>
-                <tr>
-                    <td>Audio Recordings</td>
-                    <td>Recording ambient audio during emergencies for evidence</td>
-                    <td>Explicit consent</td>
-                    <td>On-device only</td>
                 </tr>
                 <tr>
                     <td>Fake Call Configuration</td>
@@ -288,14 +277,14 @@
                 </tr>
             </tbody>
         </table>
-        <p><strong>Data is NOT transferred outside of Turkey.</strong> All data remains on the user's device. No cross-border data transfer occurs.</p>
+        <p><strong>No data is transferred to developer-operated servers.</strong> The primary copy of app data remains on the user's device. Online map tiles and Google Play Billing may have technical network behavior governed by their providers' policies.</p>
 
         <h2>10. Your Rights (KVKK Article 11)</h2>
         <ul>
             <li><strong>Access:</strong> Request access to your data</li>
             <li><strong>Correction:</strong> Request correction of inaccurate data</li>
             <li><strong>Deletion:</strong> Delete app data by clearing storage or uninstalling the app</li>
-            <li><strong>Permission management:</strong> Change location, contacts, microphone, and notification permissions at any
+            <li><strong>Permission management:</strong> Change location, phone, and notification permissions at any
                 time</li>
             <li><strong>Data portability:</strong> Request a copy of your data</li>
             <li><strong>Right to object:</strong> Object to processing of your data</li>
@@ -308,31 +297,32 @@
         <h2>12. Third-Party Services</h2>
         <ul>
             <li><strong>OpenStreetMap:</strong> Map display (tile data only, no personal data sent)</li>
+            <li><strong>Google Play Billing:</strong> Optional Pro subscription purchase, renewal, cancellation, and restore handling</li>
         </ul>
         <p>Their respective privacy policies apply:</p>
         <ul>
             <li><a href="https://wiki.osmfoundation.org/wiki/Privacy_Policy" target="_blank">OpenStreetMap Privacy
                     Policy</a></li>
         </ul>
-        <p><strong>No other third-party services (analytics, crash reporting, advertising, etc.) are used.</strong></p>
+        <p><strong>No advertising or third-party analytics SDK is used in this release.</strong></p>
 
         <h2>13. Limitation of Liability</h2>
         <p>KoruBeni is provided <strong>"as is"</strong> without any warranty, express or implied. To the maximum extent permitted by applicable law:</p>
         <ul>
             <li>The developer shall not be liable for any direct, indirect, incidental, special, or consequential damages arising from the use or inability to use the app</li>
-            <li>The total aggregate liability of the developer shall not exceed <strong>0 TL</strong> (the app is provided free of charge)</li>
+            <li>The total aggregate liability of the developer shall not exceed the total amount paid by the user through Google Play for KoruBeni Pro during the 12 months before the claim, or <strong>0 TL</strong> for users without a paid subscription</li>
             <li>This limitation does not apply to damages caused by <strong>gross negligence (a&#x11F;&#x131;r ihmal)</strong> or <strong>willful misconduct (kast)</strong> in accordance with <strong>TBK Article 115</strong></li>
         </ul>
 
         <h2>14. Indemnification</h2>
-        <p>You agree to indemnify, defend, and hold harmless the developer from and against any claims, damages, losses, liabilities, costs, and expenses (including reasonable attorneys' fees) arising out of or related to your misuse of the app, violation of this privacy policy, or violation of any applicable law (including but not limited to TCK Article 133 regarding unauthorized audio recording).</p>
+        <p>You agree to indemnify, defend, and hold harmless the developer from and against any claims, damages, losses, liabilities, costs, and expenses (including reasonable attorneys' fees) arising out of or related to your misuse of the app, violation of this privacy policy, or violation of any applicable law.</p>
 
         <h2>15. Force Majeure</h2>
         <p>The developer shall not be liable for any failure or delay in the performance of obligations due to causes beyond reasonable control, including but not limited to: natural disasters, war, terrorism, government actions, power failures, internet or telecommunications failures, device hardware failures, or operating system changes by device manufacturers.</p>
 
         <h2>16. Consumer Protection Notice</h2>
         <div class="highlight">
-            <strong>6502 Consumer Protection Law Notice:</strong> KoruBeni is a <strong>free auxiliary personal safety tool</strong>. It is <strong>not a professional security service</strong>, not a substitute for law enforcement (112/155), and does not guarantee protection against any threat. The app should be used as a supplementary tool alongside official emergency services. No fee is charged for the app and no commercial service relationship is established.
+            <strong>6502 Consumer Protection Law Notice:</strong> KoruBeni provides basic free functionality and may offer an optional KoruBeni Pro subscription through Google Play. It is <strong>not a professional security service</strong>, not a substitute for law enforcement (112/155), and does not guarantee protection against any threat. Purchases, renewals, cancellations, and restore operations for Pro are managed through Google Play.
         </div>
 
         <h2>17. Severability</h2>

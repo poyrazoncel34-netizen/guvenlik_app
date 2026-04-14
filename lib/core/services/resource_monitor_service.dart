@@ -2,7 +2,7 @@
 // RESOURCE MONITOR SERVICE - RAM/CPU Tracking
 // ============================================================================
 // Monitors app resource usage to ensure optimal performance on mid-range devices.
-// Offline-first: No Crashlytics.
+// Offline-first: no remote crash reporting.
 // ============================================================================
 
 import 'dart:async';
@@ -16,14 +16,14 @@ class ResourceSnapshot {
   final int? memoryUsageMB;
   final int batteryLevel;
   final String batteryState;
-  
+
   ResourceSnapshot({
     required this.timestamp,
     this.memoryUsageMB,
     required this.batteryLevel,
     required this.batteryState,
   });
-  
+
   Map<String, dynamic> toMap() {
     return {
       'timestamp': timestamp.toIso8601String(),
@@ -39,42 +39,43 @@ class ResourceMonitorService {
   static final ResourceMonitorService _instance = ResourceMonitorService._();
   static ResourceMonitorService get instance => _instance;
   ResourceMonitorService._();
-  
+
   final Battery _battery = Battery();
   Timer? _monitorTimer;
   bool _isMonitoring = false;
-  final StreamController<bool> _lowBatteryController = StreamController<bool>.broadcast();
+  final StreamController<bool> _lowBatteryController =
+      StreamController<bool>.broadcast();
 
   /// Emits true when battery drops to or below [lowBatteryThreshold].
   Stream<bool> get lowBatteryStream => _lowBatteryController.stream;
-  
+
   // Thresholds
   static const int highMemoryThresholdMb = 200;
   static const int criticalMemoryThresholdMb = 300;
   static const int lowBatteryThreshold = 15;
-  
+
   // Monitoring interval
   static const Duration monitorInterval = Duration(minutes: 5);
-  
+
   /// Start monitoring resources
   void startMonitoring() {
     if (_isMonitoring) {
       debugPrint('⚠️ Resource monitoring already active');
       return;
     }
-    
+
     debugPrint('📊 Starting resource monitoring...');
     _isMonitoring = true;
-    
+
     // Initial snapshot
     _takeSnapshot();
-    
+
     // Periodic monitoring
     _monitorTimer = Timer.periodic(monitorInterval, (_) {
       _takeSnapshot();
     });
   }
-  
+
   /// Stop monitoring
   void stopMonitoring() {
     _monitorTimer?.cancel();
@@ -82,34 +83,34 @@ class ResourceMonitorService {
     _isMonitoring = false;
     debugPrint('📊 Resource monitoring stopped');
   }
-  
+
   /// Take a resource snapshot
   Future<ResourceSnapshot> _takeSnapshot() async {
     try {
       // Battery level
       final batteryLevel = await _battery.batteryLevel;
       final batteryState = (await _battery.batteryState).toString();
-      
+
       // Memory usage (platform-specific)
       final memoryMB = await _getMemoryUsage();
-      
+
       final snapshot = ResourceSnapshot(
         timestamp: DateTime.now(),
         memoryUsageMB: memoryMB,
         batteryLevel: batteryLevel,
         batteryState: batteryState,
       );
-      
+
       // Check thresholds
       await _checkThresholds(snapshot);
-      
-      // Report to Crashlytics
+
+      // Persist/check resource state locally only; no crash reporting backend.
       await _reportSnapshot(snapshot);
-      
+
       return snapshot;
     } catch (e) {
       debugPrint('Failed to take resource snapshot: $e');
-      
+
       // Return minimal snapshot
       return ResourceSnapshot(
         timestamp: DateTime.now(),
@@ -119,7 +120,7 @@ class ResourceMonitorService {
       );
     }
   }
-  
+
   /// Get memory usage in MB
   Future<int?> _getMemoryUsage() async {
     try {
@@ -134,7 +135,7 @@ class ResourceMonitorService {
       return null;
     }
   }
-  
+
   /// Check resource thresholds and alert if exceeded
   Future<void> _checkThresholds(ResourceSnapshot snapshot) async {
     try {
@@ -146,27 +147,26 @@ class ResourceMonitorService {
           debugPrint('⚠️ HIGH: Memory usage ${snapshot.memoryUsageMB}MB');
         }
       }
-      
+
       // Battery threshold check
       if (snapshot.batteryLevel <= lowBatteryThreshold) {
         debugPrint('🔋 LOW BATTERY: ${snapshot.batteryLevel}%');
         _lowBatteryController.add(true);
       }
-      
     } catch (e) {
       debugPrint('Failed to check thresholds: $e');
     }
   }
-  
+
   Future<void> _reportSnapshot(ResourceSnapshot snapshot) async {
-    // Offline-first: No Crashlytics reporting
+    // Offline-first: no remote crash reporting
   }
-  
+
   /// Get current resource status
   Future<ResourceSnapshot> getCurrentStatus() async {
     return await _takeSnapshot();
   }
-  
+
   /// Check if monitoring is active
   bool get isMonitoring => _isMonitoring;
 }

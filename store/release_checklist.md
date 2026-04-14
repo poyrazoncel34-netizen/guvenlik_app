@@ -14,6 +14,7 @@
 - [x] Default PIN kaldirild, ilk giris PIN setup zorunlu
 - [x] key.properties .gitignore'da
 - [x] Firebase bagimliligi kaldirildi; build icin cloud config gerekmiyor
+- [x] Analytics/crash reporting SDK'i public Play build'inde kullanilmiyor; Data Safety buna gore doldurulacak
 
 ### App Identity
 - [x] App name finalized: KoruBeni
@@ -26,6 +27,19 @@
 - [ ] Store listings finalize (store/ klasoru)
 - [ ] Screenshots al (Android)
 - [ ] App icon 1024x1024 onayla
+
+### RevenueCat / Google Play Billing Public Release Gate
+- [ ] Production build `REVENUECAT_ANDROID_API_KEY` ile alindi; dummy/dev key kullanilmadi
+- [ ] RevenueCat entitlement id `KoruBeni Pro` dashboard'da aktif
+- [ ] RevenueCat current offering Play production app ile eslesiyor
+- [ ] Current offering icinde monthly package var
+- [ ] Current offering icinde annual package var
+- [ ] Google Play Console subscription product id'leri RevenueCat packages ile eslesiyor
+- [ ] Play license tester ile monthly purchase basarili ve Pro entitlement aktif oldu
+- [ ] Play license tester ile annual purchase basarili ve Pro entitlement aktif oldu
+- [ ] Restore purchases ayni Google hesabi ile Pro erisimini geri getirdi
+- [ ] Offering kapali/ag hatali senaryoda paywall `plans unavailable` fail-safe gosteriyor ve crash olmuyor
+- [ ] Public production submit oncesi paywall fiyatlari bos gorunmuyor
 
 ### Android
 - [x] Keystore olusturuldu

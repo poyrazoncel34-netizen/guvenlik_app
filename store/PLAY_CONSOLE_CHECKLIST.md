@@ -27,12 +27,13 @@ KoruBeni için güvenli ve güncel beyan yaklaşımı:
 |------------|--------------------|-------------|
 | **Konum** (approximate / precise) | Acil durumda veya kullanıcı konum oturumunu başlatınca işlenir; uygulama otomatik mesajla paylaşmaz | Acil durumda konum durumu |
 | **Kişiler** (rehber) | Cihazda erişilir, seçilen kişi cihazda saklanır | Acil kişi seçimi |
-| **Ses kaydı** (mikrofon) | Opsiyonel, cihazda kalır | Kanıt / delil kaydı |
 | **Profil bilgisi** (ad/fotoğraf) | Opsiyonel, cihazda kalır | Uygulama içi kişiselleştirme |
 | **Uygulama etkileşimi** | Toplanmıyor | Analitik / crash reporting yok |
+| **Purchase history / subscriptions** | Google Play Billing tarafından işlenir | İsteğe bağlı KoruBeni Pro aboneliği |
 
 - Konum ve kişi erişimi kullandığı için Data Safety formunu boş bırakma.
-- Firebase, auth, crash analytics veya push bildirim beyanı verme; mevcut mimari offline-first.
+- Mikrofon veya SMS beyanı verme; bu Play sürümünde audio recording ve SMS yok.
+- Firebase, auth, analytics, crash reporting veya push bildirim beyanı verme; mevcut mimari offline-first ve crash log cihaz içidir.
 - Gizlilik politikasındaki açıklamalarla **tutarlı** ol.
 
 ---
@@ -71,12 +72,30 @@ KoruBeni için güvenli ve güncel beyan yaklaşımı:
 
 ---
 
-## 6. Özet Sıra
+## 6. RevenueCat / Billing Production Gate
+
+Public production release'e göndermeden önce aşağıdaki maddeler tamamlanmadan submit etme:
+
+- [ ] Production AAB dummy/dev RevenueCat key ile alınmadı.
+- [ ] RevenueCat dashboard current offering aktif.
+- [ ] Current offering içinde monthly package aktif.
+- [ ] Current offering içinde annual package aktif.
+- [ ] Entitlement id `KoruBeni Pro` uygulamadaki değerle birebir aynı.
+- [ ] Google Play subscription product id'leri RevenueCat package yapılandırmasıyla eşleşiyor.
+- [ ] Play license tester monthly satın alma yaptı ve Pro açıldı.
+- [ ] Play license tester annual satın alma yaptı ve Pro açıldı.
+- [ ] Restore purchases aynı Google hesabında Pro erişimini geri getirdi.
+- [ ] Planlar yüklenemediğinde paywall fail-safe gösteriyor ve crash olmuyor.
+
+---
+
+## 7. Özet Sıra
 
 1. Privacy Policy’i yayınla; URL’yi Store listing’e ekle.
-2. Data Safety formunu doldur (konum, kişi erişimi, ses kaydı, opsiyonel profil verisi).
+2. Data Safety formunu doldur (konum, kişi erişimi, opsiyonel profil verisi, Play Billing abonelik bilgisi).
 3. Content rating anketini tamamla.
 4. Hedef kitle ve reklam bilgisini gir.
-5. AAB’yi build alıp ilgili track’e yükle.
+5. RevenueCat / Billing production gate’i Play tester ile tamamla.
+6. AAB’yi build alıp ilgili track’e yükle.
 
 Bu adımlar [release_checklist.md](release_checklist.md) ile uyumludur; oradaki “Privacy Policy URL canlı”, “Data Safety form”, “Internal Testing track’e yükle” vb. maddeler bu dokümandaki işlemlerle tamamlanır.

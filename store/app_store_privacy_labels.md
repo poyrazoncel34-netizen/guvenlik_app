@@ -28,7 +28,6 @@ Son güncelleme: 18 Mart 2026
 
 | Kategori | Alt Tür | Kullanım Amaçı |
 |----------|---------|----------------|
-| **Audio** | Other Audio Data | App Functionality |
 | **Identifiers** | Device ID | App Functionality |
 
 ---
@@ -37,7 +36,7 @@ Son güncelleme: 18 Mart 2026
 
 1. **Konum**: Yalnızca acil durum tetiklendiğinde ve kullanıcı açıkça izin verdiğinde toplanır. Sunucuya gönderilmez.
 2. **Biyometrik**: Bu sürümde biyometrik kilit kullanılmaz; uygulama biyometrik veriyi işlemez.
-3. **Ses**: Kullanıcı başlatır, yalnızca cihazda saklanır. İCloud'a veya sunucuya gönderilmez.
+3. **Ses**: Bu Play odaklı sürümde ses kaydı yoktur; mikrofon izni istenmez.
 4. **Kişiler**: Yalnızca kullanıcının seçtiği kişiler saklanır. Rehber taranmaz.
 
 ---
@@ -51,7 +50,7 @@ Son güncelleme: 18 Mart 2026
 ❌ **No**
 
 ### Gizlilik Politikası URL:
-`https://poyrazoncel34-netizen.github.io/korubeni/privacy`
+`https://poyrazoncel34-netizen.github.io/guvenlik_app/privacy_policy.html`
 
 ---
 

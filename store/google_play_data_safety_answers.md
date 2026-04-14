@@ -41,9 +41,9 @@
 
 | Konu | Durum |
 |------|-------|
-| Veri aktarım sırasında şifreleniyor mu? | Geliştirici backend'i yok. Harita, billing ve yapılandırılmış crash reporting trafiği kendi sağlayıcı altyapısına tabidir. |
+| Veri aktarım sırasında şifreleniyor mu? | Geliştirici backend'i yok. Harita ve Google Play Billing trafiği kendi sağlayıcı altyapısına tabidir. |
 | Veri silinebilir mi? | **EVET** — uygulama içinden tam silme mevcut |
-| Veri sunucuya gönderilmiyor | **DOĞRU** — geliştirici backend'i yok; harita/billing/crash reporting sağlayıcıları ayrıca değerlendirilir |
+| Veri sunucuya gönderilmiyor | **DOĞRU** — geliştirici backend'i yok; harita ve Google Play Billing sağlayıcıları ayrıca değerlendirilir |
 | Veri üçüncü tarafla paylaşılmıyor | **DOĞRU** — analytics, crashlytics, reklam servisi yok |
 
 ---
@@ -53,6 +53,7 @@
 | Kütüphane | Amaç | Veri Topluyor mu? |
 |-----------|-------|-------------------|
 | OpenStreetMap (flutter_map) | Harita görüntüleme (tile download) | Hayır (kullanıcı verisi iletilmez) |
+| Google Play Billing / RevenueCat | İsteğe bağlı Pro abonelik doğrulama | Satın alma/abonelik durumu sağlayıcı altyapısında işlenir |
 
 Firebase / Google Analytics / Crashlytics: **KULLANILMIYOR**
 
@@ -62,6 +63,6 @@ Firebase / Google Analytics / Crashlytics: **KULLANILMIYOR**
 
 - **Kullanıcı verileri paylaşılıyor mu?** HAYIR
 - **Kullanıcı verileri toplanıyor mu?** EVET (cihazda)
-- **Veriler şifreli aktarılıyor mu?** UYGULANAMAZ (sunucu bağlantısı yok)
+- **Veriler şifreli aktarılıyor mu?** UYGULANAMAZ / sağlayıcıya göre (geliştirici backend'i yok; harita ve Google Play Billing kendi altyapısını kullanır)
 - **Kullanıcı veri silme talebinde bulunabilir mi?** EVET
-- **Uygulama güvenlik ihlallerini nasıl ele alıyor?** Sunucu yok, yerel veri SQLite'ta şifreli depolanıyor (flutter_secure_storage)
+- **Uygulama güvenlik ihlallerini nasıl ele alıyor?** Geliştirici sunucusu yoktur. PIN ve ilk müdahale bilgileri secure storage kullanır; acil kişiler ve yerel olay verileri cihaz içi SQLite veritabanında tutulur.

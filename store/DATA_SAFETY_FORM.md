@@ -9,7 +9,7 @@ Bu dosya, mevcut offline-first mimariye göre hazırlanmış daha güvenli cevap
 **Does your app collect or share any of the required user data types?**  
 → Yes
 
-Not: KoruBeni geliştirici sunucularına veri göndermez. Konum, kişi ve profil verileri cihazda işlenir. Harita karoları, Play Billing ve üretimde açıkça yapılandırılmış crash reporting gibi üçüncü taraf bileşenler ayrı değerlendirilmelidir.
+Not: KoruBeni geliştirici sunucularına veri göndermez. Konum, kişi, profil, fake call ve yerel olay verileri cihazda işlenir. Harita karoları ve Google Play Billing gibi üçüncü taraf bileşenlerin teknik ağ davranışı kendi sağlayıcılarına aittir.
 
 ---
 
@@ -63,13 +63,13 @@ Contacts are accessed only so the user can pick trusted contacts. Selected conta
 
 | Soru | Yanıt |
 |------|-------|
-| Voice or sound recordings | ✅ Optional |
-| Storage | Device-only |
+| Voice or sound recordings | ❌ Not collected |
+| Microphone permission | ❌ Not requested |
 | Paylaşım | ❌ Not shared |
-| Amaç | App functionality — Evidence recording |
+| Amaç | Not used in this Android Play release |
 
 **Short explanation:**  
-Voice recording is optional and stays on the device unless the user manually exports it outside the app.
+This Android Play release does not record audio and does not request microphone permission.
 
 ---
 
@@ -88,7 +88,7 @@ The app does not use Firebase Analytics, Crashlytics, or another telemetry backe
 
 ## Veri Güvenliği
 
-- **Encryption in transit:** Do not mark blanket `Yes` for all data. The app has no developer backend, but map, billing, and configured crash reporting traffic are handled by their providers.
+- **Encryption in transit:** Do not mark blanket `Yes` for all data. The app has no developer backend; map and Google Play Billing traffic are handled by their providers.
 - **Users can request data deletion:** Yes — deleting the app or clearing app storage removes on-device data.
 - **Data sold:** No
 
@@ -100,8 +100,8 @@ The app does not use Firebase Analytics, Crashlytics, or another telemetry backe
 - Location, only during emergency/location session flows
 - Contacts, only for choosing emergency contacts
 - Optional profile name/photo, device-only
-- Optional audio recordings, device-only
+- Fake call settings/avatar and local event data, device-only
 
 **Shared with:** Not automatically shared by the app. Emergency contacts are used for call flow only.
 
-**Not used:** Firebase auth, cloud database, analytics, crash reporting
+**Not used:** Firebase auth, cloud database, analytics, crash reporting, microphone/audio recording

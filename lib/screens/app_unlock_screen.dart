@@ -14,7 +14,7 @@ import '../core/security/secure_storage.dart';
 import '../core/security/secure_storage_keys.dart';
 import '../core/services/app_reset_service.dart';
 import '../core/services/pin_lockout_service.dart';
-import 'legal_info_screen.dart';
+import 'settings_legal/legal_settings_screen.dart';
 import 'main_navigation.dart';
 
 class AppUnlockScreen extends StatefulWidget {
@@ -166,10 +166,15 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> {
             automaticallyImplyLeading: false,
             actions: [
               IconButton(
-                icon: const Icon(Icons.info_outline, color: AppColors.textSecondary),
+                icon: const Icon(
+                  Icons.info_outline,
+                  color: AppColors.textSecondary,
+                ),
                 onPressed: () => Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => const LegalInfoScreen()),
+                  MaterialPageRoute(
+                    builder: (_) => const LegalSettingsScreen(),
+                  ),
                 ),
                 tooltip: 'Yasal Bilgiler',
               ),
@@ -180,122 +185,131 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> {
               padding: const EdgeInsets.all(24),
               child: ConstrainedBox(
                 constraints: BoxConstraints(
-                  minHeight: MediaQuery.of(context).size.height
-                      - MediaQuery.of(context).padding.top
-                      - MediaQuery.of(context).padding.bottom,
+                  minHeight:
+                      MediaQuery.of(context).size.height -
+                      MediaQuery.of(context).padding.top -
+                      MediaQuery.of(context).padding.bottom,
                 ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                  Container(
-                    width: 80,
-                    height: 80,
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.12),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.lock_rounded,
-                      size: 40,
-                      color: AppColors.primary,
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  Text(
-                    'unlock_title'.tr(),
-                    style: const TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'unlock_subtitle'.tr(),
-                    style: TextStyle(
-                      fontSize: 15,
-                      color: AppColors.textSecondary.withValues(alpha: 0.9),
-                    ),
-                  ),
-                  if (_loading) ...[
-                    const SizedBox(height: 32),
-                    const CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        AppColors.primary,
+                    Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.12),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.lock_rounded,
+                        size: 40,
+                        color: AppColors.primary,
                       ),
                     ),
-                  ] else ...[
-                    const SizedBox(height: 32),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: List.generate(
-                        AppConstants.pinLength,
-                        (i) => Container(
-                          margin: const EdgeInsets.symmetric(horizontal: 8),
-                          width: 16,
-                          height: 16,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: i < _pin.length
-                                ? AppColors.primary
-                                : AppColors.border,
-                          ),
+                    const SizedBox(height: 24),
+                    Text(
+                      'unlock_title'.tr(),
+                      style: const TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'unlock_subtitle'.tr(),
+                      style: TextStyle(
+                        fontSize: 15,
+                        color: AppColors.textSecondary.withValues(alpha: 0.9),
+                      ),
+                    ),
+                    if (_loading) ...[
+                      const SizedBox(height: 32),
+                      const CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          AppColors.primary,
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 32),
-                    if (_isLockedOut)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 16),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 10,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppColors.emergency.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: AppColors.emergency.withValues(alpha: 0.4),
+                    ] else ...[
+                      const SizedBox(height: 32),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: List.generate(
+                          AppConstants.pinLength,
+                          (i) => Container(
+                            margin: const EdgeInsets.symmetric(horizontal: 8),
+                            width: 16,
+                            height: 16,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: i < _pin.length
+                                  ? AppColors.primary
+                                  : AppColors.border,
                             ),
                           ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(
-                                Icons.lock_clock_rounded,
-                                color: AppColors.emergency,
-                                size: 20,
+                        ),
+                      ),
+                      const SizedBox(height: 32),
+                      if (_isLockedOut)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 16),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 10,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.emergency.withValues(
+                                alpha: 0.12,
                               ),
-                              const SizedBox(width: 8),
-                              Text(
-                                'brute_force_locked_short'.tr(
-                                  namedArgs: {'seconds': '$_lockoutRemaining'},
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: AppColors.emergency.withValues(
+                                  alpha: 0.4,
                                 ),
-                                style: const TextStyle(
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.lock_clock_rounded,
                                   color: AppColors.emergency,
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 14,
+                                  size: 20,
                                 ),
-                              ),
-                            ],
+                                const SizedBox(width: 8),
+                                Text(
+                                  'brute_force_locked_short'.tr(
+                                    namedArgs: {
+                                      'seconds': '$_lockoutRemaining',
+                                    },
+                                  ),
+                                  style: const TextStyle(
+                                    color: AppColors.emergency,
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      _buildNumPad(),
+                      const SizedBox(height: 8),
+                      TextButton(
+                        onPressed: _isLockedOut ? null : _showForgotPinDialog,
+                        child: Text(
+                          'Şifremi Unuttum',
+                          style: TextStyle(
+                            color: AppColors.textSecondary.withValues(
+                              alpha: 0.7,
+                            ),
+                            fontSize: 14,
                           ),
                         ),
                       ),
-                    _buildNumPad(),
-                    const SizedBox(height: 8),
-                    TextButton(
-                      onPressed: _isLockedOut ? null : _showForgotPinDialog,
-                      child: Text(
-                        'Şifremi Unuttum',
-                        style: TextStyle(
-                          color: AppColors.textSecondary.withValues(alpha: 0.7),
-                          fontSize: 14,
-                        ),
-                      ),
-                    ),
+                    ],
                   ],
-                ],
                 ),
               ),
             ),
@@ -313,15 +327,24 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> {
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDialogState) => AlertDialog(
           backgroundColor: AppColors.cardBg,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
           title: Row(
             children: [
-              const Icon(Icons.warning_amber_rounded, color: AppColors.emergency, size: 24),
+              const Icon(
+                Icons.warning_amber_rounded,
+                color: AppColors.emergency,
+                size: 24,
+              ),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   'Şifremi Unuttum',
-                  style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w800),
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
               ),
             ],
@@ -335,7 +358,11 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> {
                   'kurtaramayız. Uygulamaya tekrar erişmek için tüm kayıtlı verilerinizi '
                   '(kişiler, ayarlar) silip uygulamayı sıfırlamanız gerekir. '
                   'Onaylıyor musunuz?',
-                  style: TextStyle(color: AppColors.textSecondary, fontSize: 14, height: 1.5),
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 14,
+                    height: 1.5,
+                  ),
                 ),
                 const SizedBox(height: 20),
                 TextField(
@@ -343,7 +370,9 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> {
                   onChanged: (v) => setDialogState(() {}),
                   decoration: InputDecoration(
                     hintText: 'Onaylamak için SIFIRLA yazın',
-                    hintStyle: TextStyle(color: AppColors.textSecondary.withValues(alpha: 0.6)),
+                    hintStyle: TextStyle(
+                      color: AppColors.textSecondary.withValues(alpha: 0.6),
+                    ),
                     filled: true,
                     fillColor: AppColors.surface,
                     border: OutlineInputBorder(
@@ -355,7 +384,10 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> {
                       borderSide: const BorderSide(color: AppColors.border),
                     ),
                   ),
-                  style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w700),
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w700,
+                  ),
                   textCapitalization: TextCapitalization.characters,
                 ),
               ],
@@ -364,7 +396,10 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: const Text('İptal', style: TextStyle(color: AppColors.textSecondary)),
+              child: const Text(
+                'İptal',
+                style: TextStyle(color: AppColors.textSecondary),
+              ),
             ),
             ElevatedButton(
               onPressed: confirmController.text == 'SIFIRLA'
@@ -385,10 +420,15 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> {
                   : null,
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.emergency,
-                disabledBackgroundColor: AppColors.emergency.withValues(alpha: 0.3),
+                disabledBackgroundColor: AppColors.emergency.withValues(
+                  alpha: 0.3,
+                ),
                 foregroundColor: Colors.white,
               ),
-              child: const Text('Sıfırla', style: TextStyle(fontWeight: FontWeight.w700)),
+              child: const Text(
+                'Sıfırla',
+                style: TextStyle(fontWeight: FontWeight.w700),
+              ),
             ),
           ],
         ),

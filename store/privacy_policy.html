@@ -84,8 +84,8 @@
             <span style="color:#742a2a; font-size:14px;">Bu uygulama 112 Acil, 155 Polis, 156 Jandarma ve diger resmi acil servislerin YERINI TUTMAZ. Internet kesintisi, GPS hatasi veya teknik arizalar nedeniyle calismayabilir. Gercek bir acil durumda once resmi acil servisleri arayiniz.</span>
         </div>
 
-        <p>KoruBeni ("Uygulama", "biz", "bizim"), kullanicilarinin guvenligini saglamak amaciyla gelistirilmis bir kisisel guvenlik uygulamasidir. Bu gizlilik politikasi, hangi verilerin islendigini, nasil kullanildigini ve nasil korundugunu aciklar.</p>
-        <p><strong>KoruBeni offline-first calisir.</strong> Verileriniz gelistirici backend'ine veya bulut veritabanina gonderilmez; verilerin ana kopyasi cihazinizda tutulur. Harita, Play Billing ve uretimde acikca yapilandirilmis crash reporting gibi ucuncu taraf servislerin teknik ag davranislari kendi saglayici politikalarina tabidir.</p>
+        <p>KoruBeni ("Uygulama", "biz", "bizim"), kisisel guvenlik farkindaligini desteklemek amaciyla gelistirilmis bir Android uygulamasidir. Bu gizlilik politikasi, hangi verilerin islendigini, nasil kullanildigini ve nasil korundugunu aciklar.</p>
+        <p><strong>KoruBeni offline-first calisir.</strong> Uygulama verilerinizin ana kopyasi cihazinizda tutulur ve gelistirici backend'ine veya bulut veritabanina gonderilmez. Cevrimici harita karolari ve Google Play Billing kendi saglayici politikalarina tabi teknik ag davranislarina sahip olabilir.</p>
 
         <h2>1. Topladigimiz Veriler</h2>
 
@@ -94,7 +94,6 @@
             <li><strong>Acil durum kisileri:</strong> Kullanicinin rehberinden sectigi kisilerin adi ve telefon numarasi</li>
             <li><strong>Profil bilgileri:</strong> Ad ve profil fotografi (istege bagli, cihazda saklanir)</li>
             <li><strong>PIN kodu:</strong> Cihaz uzerinde sifrelenmis olarak saklanir, herhangi bir sunucuya gonderilmez</li>
-            <li><strong>Ses kayitlari:</strong> Kullanicinin kendi inisiyatifiyle baslatilan ortam ses kayitlari (yalnizca cihazda saklanir)</li>
             <li><strong>Sahte cagri verileri:</strong> Kullanicinin olusturdugu sahte cagri senaryolari ve ayarlari (yalnizca cihazda saklanir)</li>
         </ul>
 
@@ -119,6 +118,7 @@
             <li>Guvenli yuruyus ve check-in akislarinda kullaniciya yardimci olma</li>
             <li>Yerel bildirimler gosterme</li>
             <li>PIN dogrulama ile uygulama guvenligini saglama</li>
+            <li>Rahatsiz edici durumlardan uzaklasmaya yardimci olmak icin cihaz ici sahte cagri simule etme</li>
         </ul>
 
         <div class="highlight">
@@ -126,7 +126,7 @@
         </div>
 
         <h2>3. Veri Paylasimi</h2>
-        <p>Verilerinizi ucuncu taraflara <strong>satmiyoruz</strong>. Kisisel veriler gelistirici backend'ine veya bulut veritabanina aktarilmaz. Veriler yalnizca su durumlarda islenebilir:</p>
+        <p>Verilerinizi ucuncu taraflara <strong>satmiyoruz</strong>. Kisisel veriler gelistirici backend'ine veya bulut veritabanina aktarilmaz. Ucuncu taraf ag davranisi cevrimici harita karolari ve Google Play Billing ile sinirlidir.</p>
         <ul>
             <li><strong>Acil durum kisileri:</strong> Acil durum tetiklendiginde, sectiginiz kisi icin Android arama akisi baslatilir veya arama ekrani hazirlanir</li>
             <li><strong>Harita servisleri:</strong> Harita ekrani acildiginda OpenStreetMap altyapisi kullanilabilir</li>
@@ -135,10 +135,10 @@
 
         <h2>4. Veri Guvenligi</h2>
         <ul>
-            <li>Hassas veriler AES-256 sifreleme ile korunur</li>
-            <li>PIN kodlari cihaz uzerinde guvenli depolamada (Keychain/Keystore) saklanir</li>
-            <li>Verilerin ana kopyasi cihazda tutulur</li>
-            <li>Verilerin ana kopyasi cihazda tutulur; harita, Play Billing ve acikca yapilandirilmis crash reporting servisleri kendi teknik ag davranislarina sahip olabilir</li>
+            <li>PIN kodu ve ilk mudahale profil bilgileri, isletim sisteminin destekledigi guvenli cihaz depolamasinda saklanir</li>
+            <li>Acil kisi kayitlari uygulamanin cihaz ici yerel veritabaninda saklanir</li>
+            <li>Sahte cagri ayarlari ve istege bagli avatar dosyalari cihazda yerel olarak saklanir</li>
+            <li>Uygulama verileri gelistirici backend'ine gonderilmez; cevrimici harita karolari ve Google Play Billing kendi teknik ag davranislarina sahip olabilir</li>
         </ul>
 
         <h2>5. Veri Saklama Suresi</h2>
@@ -146,7 +146,6 @@
             <li>Profil bilgileri: Kullanici silene kadar cihazda kalir</li>
             <li>Konum verileri: Paylasim suresi oldugunda uygulama icinde aktif kullanilmaz</li>
             <li>Acil durum kisileri: Kullanici silene kadar cihazda kalir</li>
-            <li>Ses kayitlari: Kullanici silene kadar cihazda kalir</li>
             <li>Sahte cagri verileri: Kullanici silene kadar cihazda kalir</li>
             <li>Yasal riza loglari: Kullanici silene kadar cihazda kalir</li>
         </ul>
@@ -180,29 +179,21 @@
         </ul>
         <p>Kullanici, acil durum kisi listesine ekledigi kisilerin bilgilendirilmesinden ve rizalarinin alinmasindan sorumludur.</p>
 
-        <h2>9. Ses Kaydi Ozelligi</h2>
-        <div style="background:#fde8e8; border:2px solid #e53e3e; border-radius:10px; padding:16px 20px; margin-bottom:16px;">
-            <strong style="color:#c53030; font-size:15px;">&#9888;&#65039; YASAL UYARI — TCK m.133</strong><br>
-            <span style="color:#742a2a; font-size:14px;">Turk Ceza Kanunu'nun 133. maddesi uyarinca, kisisel konusmalarin taraflarinin rizasi olmadan kaydedilmesi <strong>2 ila 5 yil hapis cezasi</strong> ile cezalandirililir. Ses kaydi ozelligi yalnizca kullanicinin kendi guvenligini belgelemesi amaciyla sunulmaktadir. Bu ozelligin yasalara aykiri sekilde kullanilmasindan kullanici sorumludur.</span>
-        </div>
-        <ul>
-            <li>Ses kaydi yalnizca kullanici tarafindan manuel olarak baslatilir</li>
-            <li>Kayitlar yalnizca cihaz uzerinde saklanir, hicbir sunucuya gonderilmez</li>
-            <li>Kullanici kayitlari istendigi zaman silebilir</li>
-        </ul>
+        <h2>9. Istege Bagli Pro Abonelik</h2>
+        <p>Uygulama temel ucretsiz kullanim ve istege bagli KoruBeni Pro abonelik ozellikleri sunabilir. Pro satin alma, yenileme, iptal ve geri yukleme islemleri Google Play uzerinden yonetilir. Odeme verileri Google Play tarafindan islenir ve gelistirici backend'inde saklanmaz.</p>
 
         <h2>10. Ucuncu Taraf Hizmetler</h2>
         <p>Uygulamamiz asagidaki ucuncu taraf hizmetleri kullanabilir (KVKK Md. 10/1-c bildirimi):</p>
         <ul>
             <li><strong>Harita servisleri:</strong> Cevrimici harita goruntuleme icin karo servisine ag istegi yapilabilir. Konum alinamazsa sahte koordinat gosterilmez.</li>
             <li><strong>OpenStreetMap:</strong> Uygulama ici harita goruntuleme.</li>
+            <li><strong>Google Play Billing:</strong> Istege bagli Pro abonelik satin alma, yenileme, iptal ve geri yukleme islemleri.</li>
         </ul>
         <p>Bu hizmetlerin kendi gizlilik politikalari gecerlidir:</p>
         <ul>
-            <li><a href="https://policies.google.com/privacy" target="_blank">Google Gizlilik Politikasi</a></li>
             <li><a href="https://wiki.osmfoundation.org/wiki/Privacy_Policy" target="_blank">OpenStreetMap Gizlilik Politikasi</a></li>
         </ul>
-        <p><strong>Not:</strong> Uygulama hicbir dis cokme raporlama servisi (Sentry, Crashlytics vb.) kullanmaz. Hata kayitlari yalnizca cihaz uzerinde yerel olarak tutulur.</p>
+        <p><strong>Not:</strong> Bu surumde reklam veya ucuncu taraf analitik SDK'si kullanilmaz.</p>
 
         <h2>11. Politika Degisiklikleri</h2>
         <p>Bu gizlilik politikasini zaman zaman guncelleyebiliriz. Onemli degisiklikler oldugunda uygulama ici bildirim ile kullanicilari bilgilendiririz. Politikanin guncel halini bu sayfada bulabilirsiniz.</p>
@@ -242,12 +233,6 @@
                 <td style="border:1px solid #ddd; padding:8px;">Islenmez</td>
             </tr>
             <tr>
-                <td style="border:1px solid #ddd; padding:8px;">Ses</td>
-                <td style="border:1px solid #ddd; padding:8px;">Ortam ses kaydi</td>
-                <td style="border:1px solid #ddd; padding:8px;">Kullanici inisiyatifinde kanit</td>
-                <td style="border:1px solid #ddd; padding:8px;">Acik riza</td>
-            </tr>
-            <tr>
                 <td style="border:1px solid #ddd; padding:8px;">Sahte Cagri</td>
                 <td style="border:1px solid #ddd; padding:8px;">Sahte cagri senaryolari</td>
                 <td style="border:1px solid #ddd; padding:8px;">Caydirici guvenlik ozelligi</td>
@@ -269,7 +254,7 @@
         <p>Uygulama, kullanici hakkinda otomatik karar verme veya profilleme yapmaz. Tum islemler yalnizca kullanicinin acikca baslattigi eylemler sonucunda gerceklesir.</p>
 
         <h2>15. Uluslararasi Veri Aktarimi</h2>
-        <p>Kisisel veriler gelistirici sunucularina aktarilmaz. Ana veriler cihazda saklanir. Harita, Play Billing veya uretimde acikca yapilandirilmis crash reporting gibi ucuncu taraf bilesenlerin teknik ag davranislari kendi saglayici politikalari kapsamindadir.</p>
+        <p>Kisisel veriler gelistirici sunucularina aktarilmaz. Ana veriler cihazda saklanir. Cevrimici harita karolari ve Google Play Billing kendi saglayici politikalarina tabi teknik ag davranislarina sahip olabilir.</p>
 
         <h2>16. Veri Ihlali Bildirimi</h2>
         <p>Olasi bir veri ihlali durumunda KVKK'nin 12. maddesi uyarinca en kisa surede ilgili kisiler ve Kisisel Verileri Koruma Kurulu bilgilendirilecektir.</p>
@@ -278,7 +263,7 @@
         <p>Uygulama "oldugu gibi" (as-is) sunulmaktadir. Gelistirici, uygulamanin kullanimindan dogan dolayli zararlardan sorumlu tutulamaz. Ancak TBK m.115 uyarinca <strong>agir kusur (kasit ve agir ihmal) halinde sorumluluk sinirlamasi gecerli degildir</strong>.</p>
 
         <h2>18. Tazmin (Indemnification)</h2>
-        <p>Kullanici, uygulamayi yasalara aykiri kullanmasindan dogan her turlu zarar, kayip, dava ve masraftan gelistiriciyi muaf tutmayi kabul eder. Ozellikle ses kaydi ozelliginin TCK m.133'e aykiri kullanilmasindan dogan sorumluluk tamamen kullaniciya aittir.</p>
+        <p>Kullanici, uygulamayi yasalara aykiri kullanmasindan dogan her turlu zarar, kayip, dava ve masraftan gelistiriciyi muaf tutmayi kabul eder.</p>
 
         <h2>19. Mucbir Sebep (Force Majeure)</h2>
         <p>Dogal afetler, savaslar, pandemi, internet altyapisi kesintileri, devlet muedahaleleri ve diger mucbir sebepler nedeniyle uygulamanin calismamasi veya gecikme yasamasi halinde gelistirici sorumlu tutulamaz.</p>
@@ -287,7 +272,7 @@
         <p>Bu politikanin herhangi bir hukmunun gecersiz veya uygulanamaz bulunmasi halinde, diger hukumler tam olarak yururlukte kalmaya devam eder. Gecersiz bulunan hukum, amacina en yakin sekilde yorumlanir.</p>
 
         <h2>21. 6502 Sayili Tuketici Koruma Kanunu Bildirimi</h2>
-        <p>KoruBeni <strong>ucretsiz</strong> bir uygulamadir. 6502 Sayili Tuketicinin Korunmasi Hakkinda Kanun kapsaminda bir "tuketici islemi" bulunmamaktadir. Uygulama herhangi bir ucret veya abonelik karsiligi sunulmadigi icin tuketici hakem heyeti basvuru yolu bulunmamaktadir.</p>
+        <p>KoruBeni temel ucretsiz kullanim sunabilir ve istege bagli KoruBeni Pro aboneligi Google Play uzerinden sunulabilir. Pro satin alma, yenileme, iptal ve geri yukleme islemleri Google Play uzerinden yonetilir. Uygulama profesyonel guvenlik hizmeti, acil mudahale servisi veya resmi acil servislerin yerine gecen bir hizmet degildir.</p>
 
         <h2>22. Cerez Politikasi</h2>
         <p>Uygulamamiz web tabanli olmadigindan cerez (cookie) kullanmamaktadir.</p>

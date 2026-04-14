@@ -13,6 +13,8 @@ import 'local_database_service.dart';
 class UserDataExportService {
   UserDataExportService._();
 
+  static const String _offlineQueueKey = 'offline_event_queue';
+
   static Future<Map<String, dynamic>> buildExportData() async {
     final prefs = await SharedPreferences.getInstance();
     final secure = serviceLocator<SecureStorage>();
@@ -45,10 +47,47 @@ class UserDataExportService {
         'volumeTriggerEnabled':
             prefs.getBool(AppConstants.prefVolumeTrigger) ?? false,
       },
+      'fakeCall': await _fakeCallData(secure),
       'activityEvents': activityEvents,
+      'offlineEvents': _offlineEvents(prefs),
       'consentLogs': consentLogs,
       'consentState': await consentManager.exportConsentLog(),
     };
+  }
+
+  static Future<Map<String, dynamic>> _fakeCallData(
+    SecureStorage secure,
+  ) async {
+    final avatarPath = await secure.read(key: SecureStorageKeys.fakeCallAvatar);
+    return {
+      'callerName':
+          await secure.read(key: SecureStorageKeys.fakeCallName) ?? '',
+      'callerNumber':
+          await secure.read(key: SecureStorageKeys.fakeCallNumber) ?? '',
+      'hasAvatarFile': avatarPath != null && avatarPath.isNotEmpty,
+      'avatarFileName': _fileName(avatarPath),
+    };
+  }
+
+  static List<Map<String, dynamic>> _offlineEvents(SharedPreferences prefs) {
+    final raw = prefs.getStringList(_offlineQueueKey) ?? const [];
+    return raw
+        .map((value) {
+          try {
+            final decoded = jsonDecode(value);
+            if (decoded is Map) {
+              return decoded.map((key, data) => MapEntry(key.toString(), data));
+            }
+          } catch (_) {}
+          return <String, dynamic>{};
+        })
+        .where((event) => event.isNotEmpty)
+        .toList(growable: false);
+  }
+
+  static String _fileName(String? path) {
+    if (path == null || path.isEmpty) return '';
+    return path.split('/').last;
   }
 
   static Future<Map<String, dynamic>> _profileData(

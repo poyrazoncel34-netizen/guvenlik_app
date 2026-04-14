@@ -22,9 +22,9 @@ Bu Kullanım Sözleşmesi ("Sözleşme"), Poyraz Öncel ("Geliştirici") ile uyg
 ──────────────────────────────────────
 1. UYGULAMANIN AMACI VE KAPSAMI
 ──────────────────────────────────────
-KoruBeni, kişisel güvenlik farkındalığını desteklemek amacıyla geliştirilmiş ÜCRETSİZ bir Android yardımcı uygulamadır. Uygulama; panik butonu, sahte çağrı, güvenli yürüyüş takibi, acil arama akışı ve konum oturumu gibi özellikler sunmaktadır.
+KoruBeni, kişisel güvenlik farkındalığını desteklemek amacıyla geliştirilmiş bir Android yardımcı uygulamadır. Uygulama temel ücretsiz kullanım sunabilir; panik butonu, acil kişi yönetimi, güvenli yürüyüş/check-in, siren ve güvenlik geçmişi gibi ek araçlar isteğe bağlı KoruBeni Pro aboneliğiyle açılabilir.
 
-6502 Sayılı Tüketicinin Korunması Hakkında Kanun kapsamında bilgilendirme: Bu uygulama ücretsiz bir yardımcı araçtır. Profesyonel güvenlik hizmeti, acil müdahale servisi veya herhangi bir mesleki güvenlik çözümü DEĞİLDİR. Herhangi bir hizmet seviyesi taahhüdü verilmemektedir.
+6502 Sayılı Tüketicinin Korunması Hakkında Kanun kapsamında bilgilendirme: KoruBeni temel ücretsiz kullanım ve Google Play üzerinden yönetilen isteğe bağlı Pro abonelik sunabilir. Profesyonel güvenlik hizmeti, acil müdahale servisi veya herhangi bir mesleki güvenlik çözümü DEĞİLDİR. Herhangi bir hizmet seviyesi taahhüdü verilmemektedir.
 
 ──────────────────────────────────────
 2. YAŞ SINIRI VE EBEVEYN ONAYI
@@ -79,7 +79,7 @@ Uygulama "OLDUĞU GİBİ" (AS IS) sunulmaktadır. Kesintisiz, hatasız veya beli
 ──────────────────────────────────────
 Geliştirici; uygulamanın kullanımından veya kullanılamamasından kaynaklanan doğrudan, dolaylı, arızi, özel veya sonuç olarak ortaya çıkan HİÇBİR ZARARDAN (can kaybı, maddi kayıp, veri kaybı dahil) sorumlu tutulamaz. Bu sınırlama, TBK m.115 uyarınca ağır kusur ve kasıt hallerini kapsamamaktadır.
 
-Geliştiricinin toplam sorumluluğu, kullanıcının uygulamayı kullandığı son 12 (on iki) aylık dönemde ödediği toplam bedeli aşamaz. Uygulama ücretsiz sunulmakta olup, kullanıcı bu hususta herhangi bir bedel ödemediğini kabul ve beyan eder.
+Geliştiricinin toplam sorumluluğu, kullanıcının talep tarihinden önceki son 12 (on iki) ay içinde Google Play üzerinden KoruBeni Pro için ödediği toplam bedeli aşamaz. Ücretli aboneliği olmayan kullanıcılar için bu tutar 0 TL'dir.
 
 ──────────────────────────────────────
 10. TAZMİN (INDEMNIFICATION)
@@ -125,9 +125,9 @@ This Terms of Service Agreement ("Agreement") is entered into between Poyraz Ön
 ──────────────────────────────────────
 1. PURPOSE AND SCOPE
 ──────────────────────────────────────
-KoruBeni is a FREE Android utility application developed to support personal safety awareness. The app offers features such as a panic button, fake call, safe walk tracking, emergency call flow, and location session.
+KoruBeni is an Android utility application developed to support personal safety awareness. The app may offer basic free functionality; additional tools such as panic flow, emergency contact management, safe walk/check-in, siren, and safety history may unlock with the optional KoruBeni Pro subscription.
 
-Notice under Consumer Protection Law No. 6502: This application is a free auxiliary tool. It is NOT a professional security service, emergency response service, or any professional security solution. No service level commitment is provided.
+Notice under Consumer Protection Law No. 6502: KoruBeni may offer basic free functionality and an optional Pro subscription managed through Google Play. It is NOT a professional security service, emergency response service, or any professional security solution. No service level commitment is provided.
 
 ──────────────────────────────────────
 2. AGE RESTRICTION AND PARENTAL CONSENT
@@ -182,7 +182,7 @@ The application is provided "AS IS". NO WARRANTY of any kind is given that it wi
 ──────────────────────────────────────
 The Developer shall not be liable for any direct, indirect, incidental, special, or consequential DAMAGES (including loss of life, financial loss, or data loss) arising from use or inability to use the application. This limitation does NOT cover cases of gross negligence or intentional misconduct in accordance with TBK Article 115.
 
-The Developer's total liability shall not exceed the total amount paid by the User in the 12 (twelve) months preceding the claim. The application is provided free of charge, and the User acknowledges that no payment has been made.
+The Developer's total liability shall not exceed the total amount paid by the User through Google Play for KoruBeni Pro in the 12 (twelve) months preceding the claim. For users without a paid subscription, this amount is 0 TL.
 
 ──────────────────────────────────────
 10. INDEMNIFICATION
@@ -242,7 +242,6 @@ Kategori          | Veri                              | Amaç                   
 Kimlik            | Ad, profil fotoğrafı              | Uygulama profili                      | Açık rıza
 İletişim          | Acil kişi adı, telefon numarası   | Acil durumda arama akışı              | Açık rıza
 Konum             | GPS koordinatları                 | Harita ve konum oturumu               | Açık rıza
-Ses               | Ortam ses kaydı                   | Kullanıcı inisiyatifinde kanıt toplama| Açık rıza
 Güvenlik          | PIN kodu (şifreli)                | Uygulama erişim kontrolü              | Meşru menfaat
 Cihaz             | Cihaz tipi, OS versiyonu          | Teknik uyumluluk & rıza logu          | Meşru menfaat
 Yasal Rıza Logu   | Rıza türü, tarih, versiyon        | KVKK uyum kaydı                       | Hukuki yükümlülük
@@ -258,9 +257,9 @@ Yasal Rıza Logu   | Rıza türü, tarih, versiyon        | KVKK uyum kaydı    
 ──────────────────────────────────────
 4. VERİ AKTARIMI
 ──────────────────────────────────────
-Kişisel verileriniz geliştirici sunucusuna aktarılmaz. Tüm veriler cihazınızda saklanır. Çevrimiçi harita görünümü OpenStreetMap karo servisine ağ isteği yapabilir; acil akış otomatik mesaj göndermez.
+Kişisel verileriniz geliştirici sunucusuna aktarılmaz. Uygulama verilerinin ana kopyası cihazınızda saklanır. Çevrimiçi harita görünümü OpenStreetMap karo servisine ağ isteği yapabilir; isteğe bağlı Pro abonelik Google Play Billing üzerinden yönetilir; acil akış otomatik mesaj göndermez.
 
-Kişisel verileriniz TÜRKİYE DIŞINA aktarılmaz.
+Geliştirici tarafından işletilen yurt dışı veri aktarımı yapılmaz. Harita ve Google Play Billing sağlayıcılarının teknik ağ davranışları kendi politikalarına tabidir.
 
 ──────────────────────────────────────
 5. VERİ SAKLAMA SÜRELERİ
@@ -268,7 +267,6 @@ Kişisel verileriniz TÜRKİYE DIŞINA aktarılmaz.
 • Profil bilgileri     : Uygulama kullanıldığı sürece; siz silene kadar
 • Acil durum kişileri  : Siz silene kadar
 • Konum oturumu geçmişi: 30 gün
-• Ses kayıtları        : Siz silene kadar (otomatik temizleme seçeneği mevcuttur)
 • Rıza logları         : Uygulama kullanıldığı sürece; hesap silinene kadar
 • PIN (şifreli)        : Siz değiştirene veya silene kadar
 
@@ -277,7 +275,7 @@ Kişisel verileriniz TÜRKİYE DIŞINA aktarılmaz.
 ──────────────────────────────────────
 • PIN ve ilk müdahale bilgileri FlutterSecureStorage üzerinde saklanmaktadır.
 • Acil kişi verisi cihaz içi yerel veritabanında saklanır; yedekleme kapalıdır ve gereksiz kopyalar temizlenir.
-• Uygulama, internete herhangi bir kişisel veri göndermemektedir.
+• Uygulama, geliştirici backend'ine kişisel veri göndermemektedir; harita ve Google Play Billing sağlayıcıları kendi teknik ağ davranışlarına sahip olabilir.
 
 ──────────────────────────────────────
 7. ÜÇÜNCÜ KİŞİ VERİ SAHİPLERİNİN HAKLARI
@@ -340,7 +338,6 @@ Category          | Data                              | Purpose                 
 Identity          | Name, profile photo               | Application profile                   | Explicit consent
 Contact           | Emergency contact name, phone     | Emergency call flow                   | Explicit consent
 Location          | GPS coordinates                   | Map and location session              | Explicit consent
-Audio             | Ambient audio recording           | User-initiated evidence collection    | Explicit consent
 Security          | PIN code (encrypted)              | App access control                    | Legitimate interest
 Device            | Device type, OS version           | Technical compatibility & consent log | Legitimate interest
 Legal Consent Log | Consent type, date, version       | KVKK compliance record                | Legal obligation
@@ -356,9 +353,9 @@ Legal Consent Log | Consent type, date, version       | KVKK compliance record  
 ──────────────────────────────────────
 4. DATA TRANSFER
 ──────────────────────────────────────
-Your personal data is not transferred to developer servers. Data is stored on your device. Online map display may request OpenStreetMap tiles; the emergency flow does not send automatic messages.
+Your personal data is not transferred to developer servers. The primary copy of app data is stored on your device. Online map display may request OpenStreetMap tiles; optional Pro subscription handling is managed through Google Play Billing; the emergency flow does not send automatic messages.
 
-Your personal data is NOT TRANSFERRED OUTSIDE OF TURKEY.
+The developer does not operate cross-border data transfer. Map and Google Play Billing providers may have technical network behavior governed by their own policies.
 
 ──────────────────────────────────────
 5. DATA RETENTION PERIODS
@@ -366,7 +363,6 @@ Your personal data is NOT TRANSFERRED OUTSIDE OF TURKEY.
 • Profile information      : While the app is in use; until you delete it
 • Emergency contacts       : Until you delete them
 • Location session history : 30 days
-• Audio recordings         : Until you delete them (auto-cleanup option available)
 • Consent logs             : While the app is in use; until account deletion
 • PIN (encrypted)          : Until you change or delete it
 
@@ -375,7 +371,7 @@ Your personal data is NOT TRANSFERRED OUTSIDE OF TURKEY.
 ──────────────────────────────────────
 • PIN and first-responder information is stored in FlutterSecureStorage.
 • Emergency contact data is stored in the local on-device database; backup is disabled and unnecessary legacy copies are cleaned up.
-• The application does not send any personal data to the internet.
+• The application does not send personal data to a developer backend; map and Google Play Billing providers may have their own technical network behavior.
 
 ──────────────────────────────────────
 7. THIRD-PARTY DATA SUBJECT RIGHTS

@@ -6,6 +6,7 @@
 |------|---------------------|--------------------------|
 | Mesaj gönderim izni | **HAYIR** | **HAYIR** — mesaj gönderimi bu Android Play sürümünde yok |
 | CALL_PHONE | EVET | EVET — aşağıda açıklanmıştır |
+| READ_PHONE_STATE | **HAYIR** | **HAYIR** — fake call cihaz içi simülasyondur; telefon durumu izni istenmez |
 | ACCESS_BACKGROUND_LOCATION | **HAYIR** | **HAYIR** — manifest'ten kaldırıldı |
 | REQUEST_IGNORE_BATTERY_OPTIMIZATIONS | EVET | EVET — aşağıda açıklanmıştır |
 

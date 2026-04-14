@@ -11,33 +11,34 @@ import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Doze Mode bypass service for Android
-/// 
+///
 /// Critical for emergency apps - ensures operation during deep sleep
 class DozeModeService {
   static final DozeModeService _instance = DozeModeService._();
   static DozeModeService get instance => _instance;
   DozeModeService._();
-  
+
   static const String _prefKeyWhitelisted = 'doze_whitelisted';
   static const String _prefKeyAsked = 'doze_asked';
-  
-  static const MethodChannel _channel = 
-      MethodChannel('com.poyrazoncel.korubeni/doze');
-  
+
+  static const MethodChannel _channel = MethodChannel(
+    'com.poyrazoncel.korubeni/doze',
+  );
+
   /// Check if app is whitelisted from Doze Mode
   Future<bool> isWhitelisted() async {
     if (!Platform.isAndroid) return true;
-    
+
     try {
       final result = await _channel.invokeMethod<bool>('isDozeWhitelisted');
       final whitelisted = result ?? false;
-      
+
       debugPrint('🌙 Doze whitelist status: $whitelisted');
-      
+
       // Cache result
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool(_prefKeyWhitelisted, whitelisted);
-      
+
       return whitelisted;
     } on PlatformException catch (e) {
       debugPrint('Doze whitelist check failed: ${e.message}');
@@ -47,34 +48,34 @@ class DozeModeService {
       return false;
     }
   }
-  
+
   /// Request Doze Mode whitelist
   /// Opens system settings for user to approve
   Future<bool> requestWhitelist() async {
     if (!Platform.isAndroid) return true;
-    
+
     try {
       debugPrint('🌙 Requesting Doze whitelist...');
-      
+
       // Mark that we asked
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool(_prefKeyAsked, true);
-      
+
       // Open system settings
       await _channel.invokeMethod('requestDozeWhitelist');
-      
+
       // Wait for user action
       await Future.delayed(Duration(seconds: 2));
-      
+
       // Check if granted
       final whitelistStatus = await isWhitelisted();
-      
+
       if (whitelistStatus) {
         debugPrint('✅ Doze whitelist granted');
       } else {
         debugPrint('❌ Doze whitelist denied');
       }
-      
+
       return whitelistStatus;
     } on PlatformException catch (e) {
       debugPrint('Doze whitelist request failed: ${e.message}');
@@ -84,21 +85,21 @@ class DozeModeService {
       return false;
     }
   }
-  
+
   /// Check if we should show the request
   Future<bool> shouldShowRequest() async {
     if (!Platform.isAndroid) return false;
-    
+
     try {
       final prefs = await SharedPreferences.getInstance();
       final hasAsked = prefs.getBool(_prefKeyAsked) ?? false;
-      
+
       // If already asked, only show again if still not whitelisted
       if (hasAsked) {
         final whitelisted = await isWhitelisted();
         return !whitelisted;
       }
-      
+
       // First time - check current status
       final whitelisted = await isWhitelisted();
       return !whitelisted;
@@ -107,8 +108,8 @@ class DozeModeService {
       return false;
     }
   }
-  
-  /// Get Doze Mode status for Crashlytics
+
+  /// Get Doze Mode status for local diagnostics
   Future<Map<String, dynamic>> getStatus() async {
     return {
       'is_android': Platform.isAndroid,
@@ -116,7 +117,7 @@ class DozeModeService {
       'has_asked_user': await _hasAskedUser(),
     };
   }
-  
+
   Future<bool> _hasAskedUser() async {
     try {
       final prefs = await SharedPreferences.getInstance();

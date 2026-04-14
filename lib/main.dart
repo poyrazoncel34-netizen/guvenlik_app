@@ -26,7 +26,6 @@ import 'core/services/local_logger_service.dart';
 import 'core/widgets/offline_banner.dart';
 import 'core/services/revenue_cat_service.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:sentry_flutter/sentry_flutter.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -109,7 +108,7 @@ void main() async {
     // Non-fatal - app continues
   }
 
-  // Error handling for Flutter errors — yerel SQLite + Sentry (offline buffer)
+  // Error handling for Flutter errors — local device-only crash log.
   FlutterError.onError = (details) {
     CrashLogService.instance.record(
       source: 'flutter_error',
@@ -155,29 +154,13 @@ void main() async {
     DeviceOrientation.portraitDown,
   ]);
 
-  // KVKK uyumu: DSN boş olduğunda Sentry no-op'tur. Production build'de
-  // --dart-define=SENTRY_DSN=https://... ile aktif edilir.
-  await SentryFlutter.init(
-    (options) {
-      options.dsn = const String.fromEnvironment(
-        'SENTRY_DSN',
-        defaultValue: '',
-      );
-      options.tracesSampleRate = 0.3;
-      options.sendDefaultPii = false;
-      options.environment = const String.fromEnvironment(
-        'ENV',
-        defaultValue: 'development',
-      );
-    },
-    appRunner: () => runApp(
-      EasyLocalization(
-        supportedLocales: const [Locale('tr', 'TR'), Locale('en', 'US')],
-        path: 'assets/translations',
-        startLocale: const Locale('tr', 'TR'),
-        fallbackLocale: const Locale('tr', 'TR'),
-        child: const KoruBeniApp(),
-      ),
+  runApp(
+    EasyLocalization(
+      supportedLocales: const [Locale('tr', 'TR'), Locale('en', 'US')],
+      path: 'assets/translations',
+      startLocale: const Locale('tr', 'TR'),
+      fallbackLocale: const Locale('tr', 'TR'),
+      child: const KoruBeniApp(),
     ),
   );
 }

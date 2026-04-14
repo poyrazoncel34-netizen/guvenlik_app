@@ -11,7 +11,7 @@ import '../core/constants/app_constants.dart';
 import '../core/di/service_locator.dart';
 import '../core/security/secure_storage.dart';
 import '../core/security/secure_storage_keys.dart';
-import 'legal_info_screen.dart';
+import 'settings_legal/legal_settings_screen.dart';
 
 class PinSetupScreen extends StatefulWidget {
   final bool requiredSetup;
@@ -131,7 +131,9 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
                 ),
                 onPressed: () => Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => const LegalInfoScreen()),
+                  MaterialPageRoute(
+                    builder: (_) => const LegalSettingsScreen(),
+                  ),
                 ),
                 tooltip: 'settings_legal_info_tooltip'.tr(),
               ),

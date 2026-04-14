@@ -4,25 +4,29 @@
 KoruBeni — Kişisel Güvenlik
 
 ## Kısa Açıklama (80 karakter)
-Tek dokunuşla acil arama akışını başlat. Konum durumunu gör.
+Ücretsiz konum oturumu ve sahte çağrı. Pro ile panik araçları.
 
 ## Uzun Açıklama
 
-KoruBeni, kişisel güvenliğiniz için tasarlanmış bir acil durum uygulamasıdır.
+KoruBeni, konum oturumu ve cihaz içi sahte çağrı sunan; isteğe bağlı Pro abonelikle ek kişisel güvenlik araçları açan bir Android uygulamasıdır.
 
 ⚠️ ÖNEMLİ: Bu uygulama profesyonel güvenlik hizmeti yerine geçmez. Acil durumlarda her zaman 112'yi arayın.
 
-🚨 TEK DOKUNUŞLA ACİL YARDIM
-Panik butonuna basılı tutun, bırakın. Geri sayım PIN ile iptal edilmezse belirlediğiniz kişi için Android arama akışı başlatılır.
+Ücretsiz kullanımda konum oturumu ve sahte çağrı açıktır. Panik akışı, acil kişi yönetimi, güvenli yürüyüş/check-in, siren ve güvenlik geçmişi KoruBeni Pro ile açılır.
 
 📍 KONUM OTURUMU
 Konum alınabilirse haritada gösterilir; alınamazsa açıkça "konum alınamadı" durumu gösterilir.
 
-🚶 GÜVENLİ YÜRÜYÜŞ
-Zamanlayıcı ayarlayın, check-in yapın. Süre dolduğunda yanıt vermezseniz acil arama akışı hazırlanır; arka plan davranışı Android ayarlarına bağlıdır.
-
 📞 SAHTE ÇAĞRI
-Rahatsız edici durumlardan güvenle çıkmanız için özelleştirilebilir sahte arama.
+Cihaz içinde sahte gelen arama ekranı simüle eder. Gerçek arama başlatmaz, üçüncü kişilere iletişim göndermez.
+
+KORUBENI PRO İLE
+
+🚨 PANİK AKIŞI
+Panik butonuna basılı tutun, bırakın. Geri sayım PIN ile iptal edilmezse belirlediğiniz kişi için Android arama akışı başlatılır.
+
+🚶 GÜVENLİ YÜRÜYÜŞ / CHECK-IN
+Zamanlayıcı ayarlayın, check-in yapın. Süre dolduğunda yanıt vermezseniz takip akışı hazırlanır; arka plan davranışı Android ayarlarına bağlıdır.
 
 🔊 SİREN
 Dikkat çekmek için yüksek sesli acil durum sireni.
@@ -39,6 +43,9 @@ Türkçe ve İngilizce desteği.
 📡 OFFLINE ÇALIŞIR
 Geliştirici sunucusu yoktur. Harita ve Play servisleri ağ kullanabilir.
 
+💳 ABONELİK
+KoruBeni Pro isteğe bağlıdır. Satın alma, yenileme, iptal ve geri yükleme işlemleri Google Play üzerinden yönetilir.
+
 🛡️ GİZLİLİK
 • Kişisel verilerin ana kopyası cihazınızda tutulur
 • Geliştirici backend'i yoktur; harita ve Play servisleri kendi ağ davranışlarına sahip olabilir
@@ -46,16 +53,16 @@ Geliştirici sunucusu yoktur. Harita ve Play servisleri ağ kullanabilir.
 • Verilerinizi istediğiniz zaman silebilirsiniz
 
 ⚙️ İZİNLER HAKKINDA
-• Konum: Konumunuzu göstermek ve acil durum akışını desteklemek için
-• Telefon: Acil durum araması yapmak için
-• Pil optimizasyonu: Check-in ve güvenli yürüyüş yardımcı zamanlayıcılarını desteklemek için
-Bu izinler YALNIZCA acil durum amaçlı kullanılır.
+• Konum: Konum oturumu ve Pro acil akışlarında konum durumunu göstermek için
+• Telefon: Pro panik akışında acil kişi için arama akışını başlatmak için
+• Pil optimizasyonu: Pro check-in ve güvenli yürüyüş yardımcı zamanlayıcılarını desteklemek için
+İzinler yalnızca ilgili akışta ve kullanıcı bağlamı içinde istenir.
 
 ---
 
 ## Notlar
 
 - Mesaj gönderimi yoktur; uygulama bu sürümde mesaj uygulaması açmaz.
-- Konum: Yalnızca acil durum veya kullanıcı başlattığı konum oturumu sırasında erişilir.
+- Konum: Yalnızca Pro acil akış veya kullanıcı başlattığı konum oturumu sırasında erişilir.
 - Sunucu: Geliştirici backend'i yoktur; harita ve Play servisleri ağ kullanabilir.
-- Kişiler: READ_CONTACTS izni kullanılmaz; acil kişiler rehber seçici veya manuel girişle eklenir.
+- Kişiler: READ_CONTACTS izni kullanılmaz; Pro acil kişiler rehber seçici veya manuel girişle eklenir.

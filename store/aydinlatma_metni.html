@@ -177,11 +177,6 @@
                     <td>İşlenmez</td>
                 </tr>
                 <tr>
-                    <td><strong>Ses (Ortam ses kaydı)</strong></td>
-                    <td>Kullanıcı inisiyatifinde kanıt toplama</td>
-                    <td>Md. 5/2-a: İlgili kişinin açık rızası</td>
-                </tr>
-                <tr>
                     <td><strong>Cihaz (Cihaz tipi, OS versiyonu)</strong></td>
                     <td>Teknik uyumluluk ve rıza logu</td>
                     <td>Md. 5/2-f: Veri sorumlusunun meşru menfaatleri için zorunlu olması</td>
@@ -195,7 +190,7 @@
         </table>
 
         <div class="highlight">
-            <strong>Önemli:</strong> Kişisel verilerin ana kopyası cihazınızda tutulur. Geliştirici backend'ine veya bulut veritabanına aktarılmaz; harita, Play Billing ve açıkça yapılandırılmış crash reporting sağlayıcıları kendi teknik ağ davranışlarına sahip olabilir.
+            <strong>Önemli:</strong> Kişisel verilerin ana kopyası cihazınızda tutulur. Geliştirici backend'ine veya bulut veritabanına aktarılmaz; harita ve Google Play Billing sağlayıcıları kendi teknik ağ davranışlarına sahip olabilir.
         </div>
 
         <h2>3. Kişisel Verilerin Toplanma Yöntemi</h2>
@@ -204,7 +199,6 @@
             <li><strong>Cihaz sensörleri:</strong> GPS konum verisi (yalnızca konum izni verildiğinde)</li>
             <li><strong>Otomatik olarak:</strong> Acil durum tetiklendiğinde anlık konum bilgisi</li>
             <li><strong>Biyometrik okuyucu:</strong> Bu Android Play sürümünde kullanılmaz</li>
-            <li><strong>Mikrofon:</strong> Ortam ses kaydı (yalnızca kullanıcı tarafından başlatıldığında)</li>
             <li><strong>Otomatik cihaz bilgisi:</strong> Cihaz tipi ve OS versiyonu (teknik uyumluluk amacıyla)</li>
         </ul>
 
@@ -214,19 +208,19 @@
             <li><strong>Acil durum kişileri:</strong> Acil durum tetiklendiğinde belirlediğiniz kişi için Android arama akışı başlatılır veya arama ekranı hazırlanır.</li>
             <li><strong>Harita servisi:</strong> Çevrimiçi harita görünümü harita karo servisine ağ isteği yapabilir; konum alınamazsa sahte koordinat gösterilmez.</li>
             <li><strong>OpenStreetMap:</strong> Harita görüntüleme için kullanılır; kişisel veri aktarımı gerçekleşmez.</li>
+            <li><strong>Google Play Billing:</strong> İsteğe bağlı KoruBeni Pro abonelik satın alma, yenileme, iptal ve geri yükleme işlemleri Google Play üzerinden yönetilir.</li>
             <li><strong>Yetkili makamlar:</strong> Mahkeme kararı veya yasal zorunluluk halinde ilgili kurum ve kuruluşlara aktarılabilir.</li>
         </ul>
         <div class="highlight">
-            <strong>Kişisel verileriniz geliştirici backend'ine aktarılmaz.</strong> Verilerin ana kopyası cihazınızda kalır. Harita, Play Billing ve açıkça yapılandırılmış crash reporting sağlayıcıları kendi teknik ağ davranışlarına sahip olabilir.
+            <strong>Kişisel verileriniz geliştirici backend'ine aktarılmaz.</strong> Verilerin ana kopyası cihazınızda kalır. Harita ve Google Play Billing sağlayıcıları kendi teknik ağ davranışlarına sahip olabilir.
         </div>
 
         <h2>5. Kişisel Verilerin Saklanma Süreleri</h2>
         <ul>
             <li><strong>Konum verisi:</strong> Acil durum paylaşımı sona erdiğinde cihaz belleğinden silinir; kalıcı olarak depolanmaz.</li>
-            <li><strong>Acil durum kişileri (ad + telefon):</strong> Kullanıcı uygulamadan silene kadar yalnızca cihazda şifreli olarak saklanır.</li>
+            <li><strong>Acil durum kişileri (ad + telefon):</strong> Kullanıcı uygulamadan silene kadar cihaz içi yerel veritabanında saklanır.</li>
             <li><strong>PIN kodu:</strong> Kullanıcı değiştirene veya silene kadar cihazın güvenli depolama alanında (Keychain/Keystore) şifreli olarak tutulur.</li>
             <li><strong>Biyometrik veri:</strong> Bu Android Play sürümünde kullanılmaz ve uygulama tarafından işlenmez.</li>
-            <li><strong>Ses kayıtları:</strong> Siz silene kadar cihazda saklanır (otomatik temizleme seçeneği mevcuttur).</li>
             <li><strong>Rıza logları:</strong> Uygulama kullanıldığı sürece cihazda tutulur.</li>
             <li><strong>Hukuki log kayıtları:</strong> Maksimum 2 yıl süre ile yalnızca cihazda tutulur; ispat amacıyla kullanılır.</li>
         </ul>
@@ -236,10 +230,10 @@
 
         <h2>7. Kişisel Veri Güvenliği</h2>
         <ul>
-            <li>Hassas veriler AES-256 şifreleme ile korunur.</li>
-            <li>PIN doğrulama bilgileri Android'in güvenli depolama altyapısı üzerinden yönetilir.</li>
+            <li>PIN doğrulama ve ilk müdahale profil bilgileri Android'in güvenli depolama altyapısı üzerinden yönetilir.</li>
+            <li>Acil kişi kayıtları uygulamanın cihaz içi yerel veritabanında saklanır.</li>
             <li>Uygulama offline-first çalışır; veriler geliştirici backend'ine gönderilmez.</li>
-            <li>Hiçbir kişisel veri harici hata izleme veya analitik servislerine aktarılmaz.</li>
+            <li>Bu sürümde reklam veya üçüncü taraf analitik SDK'si kullanılmaz.</li>
         </ul>
 
         <h2>8. Üçüncü Kişi Veri Sahiplerinin Hakları</h2>

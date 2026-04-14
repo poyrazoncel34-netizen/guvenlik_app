@@ -2,49 +2,57 @@
 
 **App Title:** KoruBeni - Personal Safety
 **Short Description (80 characters):**
-One-tap access to your safety network in emergencies. Panic, location, SOS.
+Free location session and fake call. Pro adds panic and check-ins.
 
 **Full Description (4000 characters):**
-KoruBeni is a personal safety app that helps you start emergency call flows, view location status, and run helper check-ins.
+KoruBeni is an Android personal safety app that helps you view location status, run an on-device fake call simulation, and use additional safety tools with an optional Pro subscription.
 
-When you feel unsafe, press the panic button — KoruBeni starts the emergency calling flow only after the countdown expires and shows location status inside the app.
+Free users can use location sessions and fake calls. Panic flow, emergency contact management, Safe Walk/check-ins, siren, and safety history unlock with KoruBeni Pro.
 
-★ CORE FEATURES ★
-
-◉ Panic Button
-Hold to trigger an emergency. A 10-second countdown prevents accidental activation.
-
-◉ Emergency Contact Calling
-Quickly start a call flow for trusted contacts from your address book.
+★ FREE FEATURES ★
 
 ◉ Location Session
 Show your current location when available; show a clear unavailable state when it cannot be acquired.
 
+◉ Fake Call
+Create an on-device fake incoming call simulation for personal safety in uncomfortable situations. This feature does not place a real phone call and does not contact third parties.
+
+★ UNLOCKED WITH KORUBENI PRO ★
+
+◉ Panic Button
+Hold to start the panic flow. A 10-second countdown helps prevent accidental activation.
+
+◉ Emergency Contact Calling
+Quickly start a call flow for trusted contacts from your address book.
+
 ◉ Safe Walk
 Start a helper check-in session during night or unsafe situations. Background behavior depends on Android settings.
 
-◉ Fake Call
-Create a realistic incoming call to escape uncomfortable situations.
+◉ Check-in
+Use timed check-in sessions that start a follow-up flow when the timer expires.
 
 ◉ Siren
 Draw attention with a loud alarm.
 
-◉ Shake Trigger
-Disabled by default in this Android Play release.
+◉ Safety History
+View local in-app safety events on your device.
+
+KoruBeni Pro is optional. Purchases, renewals, cancellations, and restore operations are managed through Google Play.
 
 ★ SECURITY ★
 
 • 4-digit PIN app protection
-• Secure on-device storage for selected sensitive data
+• Secure on-device storage for PIN and first-responder information
+• Local on-device database for emergency contact records
 • Offline-first architecture without a developer backend
 
 ★ PRIVACY ★
 
 • Location is processed only during emergency or location sessions
 • We don’t sell your data to third parties
-• Selected sensitive data is stored on device; map, Play Billing, and configured crash reporting providers may have their own technical network behavior
+• The primary copy of app data stays on device; map and Play Billing providers may have their own technical network behavior
 
-KoruBeni — Panic flow, location status, and helper check-ins.
+KoruBeni — Free location session and fake call; optional Pro safety tools.
 
 **Category:** Tools / Safety
 **Content Rating:** Everyone

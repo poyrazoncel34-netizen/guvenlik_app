@@ -17,24 +17,17 @@ class EmergencyPlatformService {
   static const EventChannel _eventChannel = EventChannel(
     'com.poyrazoncel.korubeni/emergency_platform/events',
   );
-  static const EventChannel _phoneStateChannel = EventChannel(
-    'com.poyrazoncel.korubeni/emergency_platform/phone_state',
-  );
 
   final StreamController<Map<String, dynamic>> _eventsController =
       StreamController<Map<String, dynamic>>.broadcast();
-  final StreamController<Map<String, dynamic>> _phoneStateController =
-      StreamController<Map<String, dynamic>>.broadcast();
 
   StreamSubscription<dynamic>? _eventsSubscription;
-  StreamSubscription<dynamic>? _phoneStateSubscription;
   bool _initialized = false;
 
   bool get isSupported =>
       !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
 
   Stream<Map<String, dynamic>> get events => _eventsController.stream;
-  Stream<Map<String, dynamic>> get phoneStates => _phoneStateController.stream;
 
   Future<void> initialize() async {
     if (!isSupported || _initialized) {
@@ -49,15 +42,6 @@ class EmergencyPlatformService {
         _eventsController.add(mapped);
       }
     }, onError: _eventsController.addError);
-
-    _phoneStateSubscription = _phoneStateChannel
-        .receiveBroadcastStream()
-        .listen((dynamic event) {
-          final mapped = _toMap(event);
-          if (mapped != null) {
-            _phoneStateController.add(mapped);
-          }
-        }, onError: _phoneStateController.addError);
 
     _initialized = true;
   }
@@ -266,8 +250,6 @@ class EmergencyPlatformService {
 
   Future<void> dispose() async {
     await _eventsSubscription?.cancel();
-    await _phoneStateSubscription?.cancel();
     await _eventsController.close();
-    await _phoneStateController.close();
   }
 }

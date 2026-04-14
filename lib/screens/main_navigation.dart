@@ -70,13 +70,7 @@ class _MainNavigationState extends State<MainNavigation> {
 
   Future<void> _runStartupChecks() async {
     await _ensurePinSetup();
-    await _ensureCallPhonePermission();
     await _ensureNotificationPermission();
-  }
-
-  Future<void> _ensureCallPhonePermission() async {
-    if (!mounted) return;
-    await PermissionHelper.requestCallPhonePermission(context);
   }
 
   Future<bool> _hasConfiguredPin() async {

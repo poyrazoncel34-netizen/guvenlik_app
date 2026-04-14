@@ -19,8 +19,6 @@
     <!-- RECORD_AUDIO removed — audio recording feature disabled -->
     <!-- Vibration for shake feedback -->
     <uses-permission android:name="android.permission.VIBRATE" />
-    <!-- Phone state for detecting real calls during fake call (PhoneStateStreamHandler) -->
-    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <!-- CALL_PHONE: direct emergency call (falls back to dialer if permission denied) -->
     <uses-permission android:name="android.permission.CALL_PHONE" />
     <!-- Foreground Service for keeping app alive in background -->
@@ -99,6 +97,13 @@
         <!-- Geolocator's foreground location service is not used in this Play release. -->
         <service
             android:name="com.baseflow.geolocator.GeolocatorLocationService"
+            tools:node="remove" />
+        <!-- RevenueCat Amazon IAP components are not used in the Google Play flavor. -->
+        <activity
+            android:name="com.revenuecat.purchases.amazon.purchasing.ProxyAmazonBillingActivity"
+            tools:node="remove" />
+        <receiver
+            android:name="com.amazon.device.iap.ResponseReceiver"
             tools:node="remove" />
         <!-- Shake detection is disabled in this release; service kept out of manifest. -->
         <!-- RecordingSessionService removed — audio recording feature disabled -->

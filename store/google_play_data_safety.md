@@ -22,21 +22,22 @@ Son güncelleme: 18 Mart 2026
 | Konum | Yaklaşık konum | Evet (yalnızca kullanım sırasında) | Hayır | Evet | Evet | Uygulama işlevselliği |
 | Konum | Kesin konum | Evet (yalnızca kullanım sırasında) | Hayır | Evet | Evet | Uygulama işlevselliği |
 | Kişiler | Kişiler | Evet (kullanıcı seçer) | Hayır | Evet | Evet | Uygulama işlevselliği |
-| Ses | Ses dosyaları | Evet (kullanıcı başlatır, isteğe bağlı) | Hayır | Evet | Evet | Uygulama işlevselliği |
-| Uygulama etkinliği | Uygulama etkileşimleri | Evet (yerel log) | Hayır | Evet | Evet | Analitik (yerel) |
+| Ses | Ses dosyaları | Hayır | Hayır | Uygulanamaz | Uygulanamaz | Bu Android Play sürümünde yok |
+| Uygulama etkinliği | Yerel olay geçmişi | Evet (cihaz içi) | Hayır | Hayır | Evet | Uygulama işlevselliği |
+| Finansal bilgiler | Satın alma geçmişi / abonelik | Google Play Billing üzerinden işlenir | Hayır | Sağlayıcı altyapısı | Evet | Uygulama işlevselliği |
 
 ---
 
 ## 3. Veri Paylaşımı
 
-**HAYIR** — Uygulama acil durumda kişisel veriyi otomatik mesajla üçüncü kişilere göndermez. Harita, billing ve üretimde açıkça yapılandırılmış crash reporting gibi SDK/servislerin teknik ağ davranışı ayrıca beyan edilmelidir.
+**HAYIR** — Uygulama acil durumda kişisel veriyi otomatik mesajla üçüncü kişilere göndermez. Harita ve Google Play Billing gibi SDK/servislerin teknik ağ davranışı ayrıca beyan edilmelidir.
 
 ---
 
 ## 4. Veri Güvenliği Önlemleri
 
 - [x] **Veriler aktarım sırasında şifreleniyor** — Geliştirici backend'i yok; üçüncü taraf SDK trafiği kendi TLS/Play altyapısına tabidir
-- [x] **Veriler depolanırken şifreleniyor** — Evet (Android Keystore / Flutter Secure Storage; yerel DB için backup kapalı ve veri yüzeyi azaltılmıştır)
+- [x] **Veriler depolanırken şifreleniyor** — Kısmen: PIN ve ilk müdahale bilgileri Android Keystore / Flutter Secure Storage ile korunur; acil kişiler ve yerel olay geçmişi cihaz içi veritabanında tutulur
 - [x] **Kullanıcılar veri silebilir** — Evet (Ayarlar > Yasal Bilgiler > Verilerimi Sil)
 
 ---
@@ -57,7 +58,7 @@ Son güncelleme: 18 Mart 2026
 ## 7. Form Doldurma Kılavuzu
 
 ### "Bu uygulama veri topluyor mu?" sorusu için:
-✅ **Evet**
+Kısmen / veri türüne göre — PIN ve secure-storage alanları için evet; yerel veritabanı kayıtları için blanket "evet" işaretlenmemelidir.
 
 ### "Verilerinizi üçüncü taraflarla paylaşıyor musunuz?" sorusu için:
 ❌ **Hayır**

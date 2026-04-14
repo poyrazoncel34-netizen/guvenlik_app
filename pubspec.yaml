@@ -1,5 +1,5 @@
 name: guvenlik_app
-description: "KoruBeni – Acil durum ve güvenlik uygulaması. Panik butonu, konum paylaşımı, acil kişiler."
+description: "KoruBeni – konum oturumu, sahte çağrı ve isteğe bağlı Pro kişisel güvenlik araçları."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -70,8 +70,6 @@ dependencies:
   # RevenueCat in-app purchases & subscriptions
   purchases_flutter: ^8.10.1
   purchases_ui_flutter: ^8.10.1
-  # Crash reporting (optional — enable via --dart-define=SENTRY_DSN=... at build time)
-  sentry_flutter: ^8.12.0
   # Root/jailbreak detection
   flutter_jailbreak_detection: ^1.10.0
 

@@ -14,7 +14,6 @@ import android.view.WindowManager
 import com.poyrazoncel.korubeni.emergency.EmergencyChannels
 import com.poyrazoncel.korubeni.emergency.EmergencyEventStreamHandler
 import com.poyrazoncel.korubeni.emergency.EmergencyPlatformHandler
-import com.poyrazoncel.korubeni.emergency.PhoneStateStreamHandler
 import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.EventChannel
@@ -30,7 +29,6 @@ class MainActivity : FlutterFragmentActivity() {
     private val volumeDetector = VolumeButtonDetector()
     private lateinit var dozeModeHandler: DozeModeHandler
     private lateinit var emergencyPlatformHandler: EmergencyPlatformHandler
-    private lateinit var phoneStateStreamHandler: PhoneStateStreamHandler
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -46,7 +44,6 @@ class MainActivity : FlutterFragmentActivity() {
         try {
             val messenger = flutterEngine.dartExecutor.binaryMessenger
             emergencyPlatformHandler = EmergencyPlatformHandler(this)
-            phoneStateStreamHandler = PhoneStateStreamHandler(applicationContext)
 
             // Volume button EventChannel — Flutter'a sürekli event akışı
             try {
@@ -140,8 +137,6 @@ class MainActivity : FlutterFragmentActivity() {
                     .setMethodCallHandler(emergencyPlatformHandler)
                 EventChannel(messenger, EmergencyChannels.EVENTS)
                     .setStreamHandler(EmergencyEventStreamHandler())
-                EventChannel(messenger, EmergencyChannels.PHONE_STATE)
-                    .setStreamHandler(phoneStateStreamHandler)
                 android.util.Log.d("MainActivity", "Emergency platform configured")
             } catch (e: Exception) {
                 android.util.Log.e("MainActivity", "Emergency platform failed: ${e.message}", e)

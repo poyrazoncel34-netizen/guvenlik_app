@@ -141,7 +141,7 @@ class OfflineQueueService {
         .toList();
   }
 
-  /// Process a single event - sync to Firebase when back online.
+  /// Process a single event locally. No cloud sync in this Play release.
   Future<bool> _processEvent(OfflineEvent event) async {
     debugPrint('OfflineQueue: Processing ${event.type} - ${event.title}');
 

@@ -114,26 +114,6 @@ class PermissionHelper {
     return result.isGranted;
   }
 
-  /// READ_PHONE_STATE izni — yalnızca gerçek arama durumunu algılayıp sahte
-  /// çağrı ekranını yanlış göstermemek için kullanılır.
-  static Future<bool> requestPhoneStatePermission(BuildContext context) async {
-    if (!Platform.isAndroid) return true;
-
-    final status = await Permission.phone.status;
-    if (status.isGranted) return true;
-
-    if (!context.mounted) return false;
-    final accepted = await _showProminentDisclosure(
-      context,
-      title: 'perm_phone_state_prominent_title'.tr(),
-      message: 'perm_phone_state_prominent_msg'.tr(),
-    );
-    if (accepted != true) return false;
-
-    final result = await Permission.phone.request();
-    return result.isGranted;
-  }
-
   static Future<bool> hasNotificationPermission() async {
     if (kIsWeb) return true;
     if (!Platform.isAndroid && !Platform.isIOS) return true;
