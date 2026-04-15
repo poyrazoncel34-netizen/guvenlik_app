@@ -26,10 +26,19 @@ import 'core/services/local_logger_service.dart';
 import 'core/widgets/offline_banner.dart';
 import 'core/services/revenue_cat_service.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await EasyLocalization.ensureInitialized();
+
+  // Dil seçimi kaldırıldı — eski persisted non-Turkish locale'i temizle
+  // böylece startLocale: tr_TR her zaman geçerli olur.
+  final prefs = await SharedPreferences.getInstance();
+  final storedLocale = prefs.getString('locale');
+  if (storedLocale != null && storedLocale != 'tr_TR') {
+    await prefs.remove('locale');
+  }
 
   // 0) ErrorWidget.builder MUST be set BEFORE runApp so ANY error is caught
   ErrorWidget.builder = (FlutterErrorDetails details) {

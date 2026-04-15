@@ -26,6 +26,10 @@ class SubscriptionGate {
   static const Set<PremiumFeature> freeFeatures = {
     PremiumFeature.location,
     PremiumFeature.fakeCall,
+    PremiumFeature.siren,
+    PremiumFeature.contacts,
+    PremiumFeature.emergencyContactAdd,
+    PremiumFeature.emergencyContactSelect,
   };
 
   static bool isFreeFeature(PremiumFeature feature) =>

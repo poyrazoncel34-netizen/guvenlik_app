@@ -174,54 +174,6 @@ class _SettingsPageState extends State<SettingsPage> {
             ]),
             const SizedBox(height: 28),
 
-            // Language
-            _buildSectionTitle('settings_language_section'.tr()),
-            const SizedBox(height: 14),
-            _buildSettingsCard([
-              _buildNavigationTile(
-                icon: Icons.language_rounded,
-                iconColor: AppColors.info,
-                title: 'settings_language_title'.tr(),
-                subtitle: context.locale.languageCode == 'tr'
-                    ? 'Türkçe'
-                    : 'English',
-                onTap: () {
-                  final currentLocale = context.locale;
-                  final newLocale = currentLocale.languageCode == 'tr'
-                      ? const Locale('en', 'US')
-                      : const Locale('tr', 'TR');
-                  final langName = newLocale.languageCode == 'tr'
-                      ? 'Türkçe'
-                      : 'English';
-                  showDialog(
-                    context: context,
-                    builder: (ctx) => AlertDialog(
-                      title: Text('settings_language_confirm_title'.tr()),
-                      content: Text(
-                        'settings_language_confirm_body'.tr(
-                          namedArgs: {'language': langName},
-                        ),
-                      ),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(ctx),
-                          child: Text('map_cancel'.tr()),
-                        ),
-                        ElevatedButton(
-                          onPressed: () {
-                            Navigator.pop(ctx);
-                            context.setLocale(newLocale);
-                          },
-                          child: Text('confirm'.tr()),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-            ]),
-            const SizedBox(height: 28),
-
             // Legal bilgiler
             _buildSectionTitle("settings_legal_section".tr()),
             const SizedBox(height: 14),
