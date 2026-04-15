@@ -14,7 +14,6 @@ import '../core/services/subscription_gate.dart';
 // Analytics service removed (offline-first)
 import 'package:easy_localization/easy_localization.dart';
 import '../presentation/providers/home_provider.dart';
-import '../presentation/providers/settings_provider.dart';
 import '../presentation/providers/subscription_provider.dart';
 import '../widgets/legal_disclaimer_banner.dart';
 import '../widgets/panic_button.dart';
@@ -218,37 +217,19 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   }
 
   Widget _buildHeader() {
-    final settingsProvider = context.watch<SettingsProvider>();
-    final displayName = settingsProvider.hasProfile
-        ? settingsProvider.profileName
-        : 'user'.tr();
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                "hello".tr(),
-                style: const TextStyle(
-                  fontSize: 15,
-                  color: AppColors.textSecondary,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                displayName,
-                style: const TextStyle(
-                  fontSize: 30,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.textPrimary,
-                  letterSpacing: -0.8,
-                  height: 1.1,
-                ),
-              ),
-            ],
+          child: Text(
+            'welcome_greeting'.tr(),
+            style: const TextStyle(
+              fontSize: 30,
+              fontWeight: FontWeight.w800,
+              color: AppColors.textPrimary,
+              letterSpacing: -0.8,
+              height: 1.1,
+            ),
           ),
         ),
       ],
@@ -262,7 +243,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
     return InkWell(
       borderRadius: BorderRadius.circular(14),
-      onTap: _openContacts,
+      onTap: _navigateToContacts,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
@@ -406,7 +387,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               _buildStatusChip(
                 label: "emergency_contact".tr(),
                 isOk: provider.emergencyContact != null,
-                onTap: _openContacts,
+                onTap: _navigateToContacts,
               ),
             ],
           ),
@@ -678,7 +659,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             index: "1",
             title: "select_emergency_contact".tr(),
             subtitle: "select_trusted_contact_from_phonebook".tr(),
-            onTap: _openContacts,
+            onTap: _navigateToContacts,
           ),
           _buildOnboardingStep(
             index: "2",
@@ -800,13 +781,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     );
   }
 
-  Future<void> _openContacts() async {
-    final allowed = await SubscriptionGate.ensureAccess(
-      context,
-      PremiumFeature.contacts,
-    );
-    if (!allowed || !mounted) return;
-
+  Future<void> _navigateToContacts() async {
     await Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => const ContactsPage()),
@@ -852,7 +827,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         Icons.people_rounded,
         AppColors.info,
         PremiumFeature.contacts,
-        _openContacts,
+        _navigateToContacts,
       ),
       _ActionData(
         "timeline".tr(),

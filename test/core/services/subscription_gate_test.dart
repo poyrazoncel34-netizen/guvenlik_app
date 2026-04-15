@@ -3,10 +3,15 @@ import 'package:guvenlik_app/core/services/subscription_gate.dart';
 
 void main() {
   group('SubscriptionGate policy', () {
-    test('only location and fake call are free', () {
+    test('location, fakeCall, siren and contacts are free', () {
       expect(
         SubscriptionGate.freeFeatures,
-        equals({PremiumFeature.location, PremiumFeature.fakeCall}),
+        equals({
+          PremiumFeature.location,
+          PremiumFeature.fakeCall,
+          PremiumFeature.siren,
+          PremiumFeature.contacts,
+        }),
       );
 
       for (final feature in PremiumFeature.values) {
@@ -27,8 +32,6 @@ void main() {
         proFeatures,
         containsAll([
           PremiumFeature.panic,
-          PremiumFeature.contacts,
-          PremiumFeature.siren,
           PremiumFeature.safeWalk,
           PremiumFeature.timeline,
           PremiumFeature.checkIn,
@@ -39,6 +42,10 @@ void main() {
           PremiumFeature.other,
         ]),
       );
+
+      // siren and contacts are now free — must NOT appear in pro features
+      expect(proFeatures, isNot(contains(PremiumFeature.siren)));
+      expect(proFeatures, isNot(contains(PremiumFeature.contacts)));
 
       for (final feature in proFeatures) {
         expect(SubscriptionGate.isProFeature(feature), isTrue);

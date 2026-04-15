@@ -18,18 +18,13 @@ void main() {
       panicButton = File('lib/widgets/panic_button.dart').readAsStringSync();
     });
 
-    test('Contacts tab gates before changing selected tab', () {
-      final gateIndex = navigation.indexOf('PremiumFeature.contacts');
-      final returnIndex = navigation.indexOf(
-        'if (!allowed || !mounted) return;',
+    test('Contacts tab has no premium gate — contacts is free', () {
+      // contacts is now a free feature; the nav must NOT gate the contacts tab
+      expect(
+        navigation,
+        isNot(contains('PremiumFeature.contacts')),
+        reason: 'contacts is free — no gate should exist in main_navigation',
       );
-      final setStateIndex = navigation.indexOf(
-        'setState(() => _selectedIndex = index)',
-      );
-
-      expect(gateIndex, isNonNegative);
-      expect(returnIndex, greaterThan(gateIndex));
-      expect(setStateIndex, greaterThan(returnIndex));
     });
 
     test('red quick help FAB is not present in main navigation', () {

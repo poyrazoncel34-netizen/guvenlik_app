@@ -19,5 +19,26 @@ void main() {
         );
       });
     });
+
+    group('Header', () {
+      test('uses welcome_greeting key instead of hello+user pattern', () {
+        expect(
+          source.contains('welcome_greeting'),
+          isTrue,
+          reason: 'Ana ekran header welcome_greeting anahtarını kullanmalı',
+        );
+      });
+    });
+
+    group('Contacts gate', () {
+      test('_openContacts does not gate with PremiumFeature.contacts', () {
+        expect(
+          source,
+          isNot(contains('_openContacts')),
+          reason:
+              'contacts free olduğu için _openContacts gate metodu kaldırılmalı',
+        );
+      });
+    });
   });
 }

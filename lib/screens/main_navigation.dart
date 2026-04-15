@@ -12,7 +12,6 @@ import '../core/constants/app_constants.dart';
 import '../core/di/service_locator.dart';
 import '../core/security/secure_storage.dart';
 import '../core/security/secure_storage_keys.dart';
-import '../core/services/subscription_gate.dart';
 import '../core/utils/permission_helper.dart';
 // Firebase and notification services removed (offline-first)
 import '../widgets/connectivity_banner.dart';
@@ -203,15 +202,8 @@ class _MainNavigationState extends State<MainNavigation> {
 
     return Expanded(
       child: GestureDetector(
-        onTap: () async {
+        onTap: () {
           HapticFeedback.lightImpact();
-          if (index == 2) {
-            final allowed = await SubscriptionGate.ensureAccess(
-              context,
-              PremiumFeature.contacts,
-            );
-            if (!allowed || !mounted) return;
-          }
           setState(() => _selectedIndex = index);
         },
         behavior: HitTestBehavior.opaque,
