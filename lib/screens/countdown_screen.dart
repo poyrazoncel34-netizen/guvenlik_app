@@ -251,9 +251,17 @@ class _CountdownScreenState extends State<CountdownScreen>
         return;
       }
     } catch (_) {}
-    await EmergencyPlatformService.instance.cancelCountdownAlarm(
-      dispatchId: _dispatchId,
-    );
+    // Cancel the native backup alarm. Cleanup-only: if it fails, emergency
+    // dispatch MUST still proceed. Never let cleanup block dispatch.
+    try {
+      await EmergencyPlatformService.instance.cancelCountdownAlarm(
+        dispatchId: _dispatchId,
+      );
+    } on Exception catch (e) {
+      debugPrint(
+        'CountdownScreen: cancelCountdownAlarm failed, continuing dispatch: $e',
+      );
+    }
 
     // WakeLock safety net: ensure CPU stays awake during emergency execution
     try {

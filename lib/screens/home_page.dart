@@ -25,6 +25,7 @@ import 'safe_walk_screen.dart';
 import 'safety_timeline_screen.dart';
 import 'check_in_screen.dart';
 import 'battery_optimization_wizard.dart';
+import '../core/services/emergency_readiness_service.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -388,6 +389,16 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 label: "emergency_contact".tr(),
                 isOk: provider.emergencyContact != null,
                 onTap: _navigateToContacts,
+              ),
+              _buildStatusChip(
+                label: "background_readiness".tr(),
+                isOk:
+                    EmergencyReadinessService
+                        .instance
+                        .lastState
+                        ?.exactAlarmPermission ??
+                    true,
+                onTap: () {},
               ),
             ],
           ),

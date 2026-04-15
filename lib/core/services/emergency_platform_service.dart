@@ -189,6 +189,11 @@ class EmergencyPlatformService {
       debugPrint('[EmergencyPlatform] cancelCountdownAlarm timed out');
     } on PlatformException catch (e) {
       debugPrint('[EmergencyPlatform] cancelCountdownAlarm failed: ${e.code}');
+    } on Exception catch (e) {
+      // Catches MissingPluginException and any other unexpected exception types.
+      // cancelCountdownAlarm is cleanup-only; it must NEVER propagate to the
+      // dispatch caller and kill _executeEmergency().
+      debugPrint('[EmergencyPlatform] cancelCountdownAlarm unexpected error: $e');
     }
   }
 

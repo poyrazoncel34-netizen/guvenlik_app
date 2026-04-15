@@ -33,6 +33,7 @@
   "location": "Location",
   "contacts": "Contacts",
   "emergency_contact": "Emergency Contact",
+  "background_readiness": "Background Readiness",
   "get_ready_in_3_steps": "Get ready in 3 steps",
   "select_emergency_contact": "Select emergency contact",
   "select_trusted_contact_from_phonebook": "Select a trusted contact from your phonebook.",

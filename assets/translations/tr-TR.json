@@ -33,6 +33,7 @@
   "location": "Konum",
   "contacts": "Rehber",
   "emergency_contact": "Acil kişi",
+  "background_readiness": "Arka Plan Hazırlığı",
   "get_ready_in_3_steps": "3 adımda hazır olun",
   "select_emergency_contact": "Acil kişi seçin",
   "select_trusted_contact_from_phonebook": "Rehberinizden güvenilir bir kişiyi belirleyin.",
