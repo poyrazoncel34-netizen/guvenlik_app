@@ -3,6 +3,7 @@
 // ============================================================================
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../di/service_locator.dart';
@@ -75,11 +76,17 @@ abstract class PinSettingsHelper {
               keyboardType: TextInputType.number,
               enableSuggestions: false,
               autocorrect: false,
+              maxLength: 4,
+              inputFormatters: [
+                FilteringTextInputFormatter.digitsOnly,
+                LengthLimitingTextInputFormatter(4),
+              ],
               contextMenuBuilder: (context, editableTextState) =>
                   const SizedBox.shrink(),
               decoration: InputDecoration(
                 hintText: "settings_pin_old".tr(),
                 prefixIcon: const Icon(Icons.lock_outline_rounded),
+                counterText: '',
               ),
             ),
             const SizedBox(height: 12),
@@ -89,11 +96,17 @@ abstract class PinSettingsHelper {
               keyboardType: TextInputType.number,
               enableSuggestions: false,
               autocorrect: false,
+              maxLength: 4,
+              inputFormatters: [
+                FilteringTextInputFormatter.digitsOnly,
+                LengthLimitingTextInputFormatter(4),
+              ],
               contextMenuBuilder: (context, editableTextState) =>
                   const SizedBox.shrink(),
               decoration: InputDecoration(
                 hintText: "settings_pin_new".tr(),
                 prefixIcon: const Icon(Icons.lock_rounded),
+                counterText: '',
               ),
             ),
             const SizedBox(height: 24),
