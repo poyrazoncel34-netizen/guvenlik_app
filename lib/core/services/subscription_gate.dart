@@ -28,6 +28,8 @@ class SubscriptionGate {
     PremiumFeature.fakeCall,
     PremiumFeature.siren,
     PremiumFeature.contacts,
+    PremiumFeature.emergencyContactAdd,
+    PremiumFeature.emergencyContactSelect,
   };
 
   static bool isFreeFeature(PremiumFeature feature) =>
