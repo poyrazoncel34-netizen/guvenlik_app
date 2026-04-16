@@ -16,38 +16,19 @@ class EditProfileScreen extends StatefulWidget {
 
 class _EditProfileScreenState extends State<EditProfileScreen> {
   late TextEditingController _nameController;
-  late TextEditingController _emailController;
-  late TextEditingController _allergiesController;
-  late TextEditingController _medicalController;
-  late TextEditingController _emergencyNotesController;
   final _formKey = GlobalKey<FormState>();
-  String _selectedBloodType = '';
-
-  static const List<String> _bloodTypes = [
-    '', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-',
-  ];
 
   @override
   void initState() {
     super.initState();
-    final provider = context.read<SettingsProvider>();
     _nameController = TextEditingController(
       text: widget.name == "settings_default_user".tr() ? '' : widget.name,
     );
-    _emailController = TextEditingController(text: widget.email);
-    _allergiesController = TextEditingController(text: provider.allergies);
-    _medicalController = TextEditingController(text: provider.medicalConditions);
-    _emergencyNotesController = TextEditingController(text: provider.emergencyNotes);
-    _selectedBloodType = provider.bloodType;
   }
 
   @override
   void dispose() {
     _nameController.dispose();
-    _emailController.dispose();
-    _allergiesController.dispose();
-    _medicalController.dispose();
-    _emergencyNotesController.dispose();
     super.dispose();
   }
 
@@ -57,17 +38,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     }
     if (value.trim().length < 2) {
       return "edit_profile_name_min_length".tr();
-    }
-    return null;
-  }
-
-  String? _validateEmail(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return null; // Email optional
-    }
-    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
-    if (!emailRegex.hasMatch(value.trim())) {
-      return "edit_profile_email_invalid".tr();
     }
     return null;
   }
@@ -90,11 +60,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     final provider = context.read<SettingsProvider>();
     await provider.updateProfile(
       name: _nameController.text.trim(),
-      email: _emailController.text.trim(),
-      bloodType: _selectedBloodType,
-      allergies: _allergiesController.text.trim(),
-      medicalConditions: _medicalController.text.trim(),
-      emergencyNotes: _emergencyNotesController.text.trim(),
+      email: '',
     );
 
     if (mounted) {
@@ -147,17 +113,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       labelText: "edit_profile_name_label".tr(),
                     ),
                   ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _emailController,
-                    keyboardType: TextInputType.emailAddress,
-                    validator: _validateEmail,
-                    decoration: InputDecoration(
-                      hintText: "edit_profile_email_hint".tr(),
-                      prefixIcon: const Icon(Icons.email_outlined),
-                      labelText: "edit_profile_email_label".tr(),
-                    ),
-                  ),
                 ],
               ),
             ),
@@ -189,66 +144,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               ),
               child: Column(
                 children: [
-                  // Blood type dropdown
-                  DropdownButtonFormField<String>(
-                    initialValue: _bloodTypes.contains(_selectedBloodType)
-                        ? _selectedBloodType
-                        : '',
-                    items: _bloodTypes.map((type) {
-                      return DropdownMenuItem(
-                        value: type,
-                        child: Text(
-                          type.isEmpty ? "profile_blood_type_select".tr() : type,
-                          style: TextStyle(
-                            color: type.isEmpty
-                                ? AppColors.textSecondary
-                                : AppColors.textPrimary,
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                    onChanged: (value) {
-                      setState(() => _selectedBloodType = value ?? '');
-                    },
-                    decoration: InputDecoration(
-                      prefixIcon: const Icon(Icons.bloodtype_rounded, color: AppColors.emergency),
-                      labelText: "profile_blood_type".tr(),
-                    ),
-                    dropdownColor: AppColors.cardBg,
-                  ),
-                  const SizedBox(height: 12),
-                  // Allergies
-                  TextFormField(
-                    controller: _allergiesController,
-                    maxLines: 2,
-                    decoration: InputDecoration(
-                      hintText: "profile_allergies_hint".tr(),
-                      prefixIcon: const Icon(Icons.warning_amber_rounded, color: AppColors.warning),
-                      labelText: "profile_allergies".tr(),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  // Medical conditions
-                  TextFormField(
-                    controller: _medicalController,
-                    maxLines: 2,
-                    decoration: InputDecoration(
-                      hintText: "profile_medical_hint".tr(),
-                      prefixIcon: const Icon(Icons.medical_information_rounded, color: AppColors.info),
-                      labelText: "profile_medical_conditions".tr(),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  // Emergency notes
-                  TextFormField(
-                    controller: _emergencyNotesController,
-                    maxLines: 3,
-                    decoration: InputDecoration(
-                      hintText: "profile_emergency_notes_hint".tr(),
-                      prefixIcon: const Icon(Icons.note_rounded, color: AppColors.accent),
-                      labelText: "profile_emergency_notes".tr(),
-                    ),
-                  ),
                 ],
               ),
             ),
@@ -261,8 +156,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(14)),
                   ),
                 ),
                 child: Text(
