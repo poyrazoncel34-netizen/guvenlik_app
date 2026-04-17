@@ -87,7 +87,7 @@ class _CountdownScreenState extends State<CountdownScreen>
   /// User MUST acknowledge that this app requires manual confirmation.
   Future<void> _showHonestyWarningThenStart() async {
     if (widget.isTestMode) {
-      _startCountdown();
+      await _startCountdown();
       return;
     }
     // Allow frame to build before showing dialog
@@ -163,7 +163,7 @@ class _CountdownScreenState extends State<CountdownScreen>
     if (!mounted) return;
     await PermissionHelper.requestCallPhonePermission(context);
     if (!mounted) return;
-    _startCountdown();
+    await _startCountdown();
   }
 
   Future<void> _loadPin() async {
@@ -218,9 +218,12 @@ class _CountdownScreenState extends State<CountdownScreen>
     }
   }
 
-  void _startCountdown() {
+  Future<void> _startCountdown() async {
     if (_timer != null) return;
-    unawaited(_scheduleNativeBackupAlarm());
+    // Arm native AlarmManager backup BEFORE the Dart timer starts, so a Doze
+    // transition during this window cannot leave us without a safety net.
+    await _scheduleNativeBackupAlarm();
+    if (!mounted || _timer != null) return;
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (_countdown > 0) {
         setState(() => _countdown--);
