@@ -307,10 +307,14 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   }
 
   Widget _buildReadinessCard(HomeProvider provider) {
+    final exactAlarmOk =
+        EmergencyReadinessService.instance.lastState?.exactAlarmPermission ??
+        true;
     final allReady =
         provider.locationPermissionGranted &&
         provider.contactsPermissionGranted &&
-        provider.emergencyContact != null;
+        provider.emergencyContact != null &&
+        exactAlarmOk;
     final title = allReady ? "ready".tr() : "setup_incomplete".tr();
     final subtitle = allReady
         ? "system_ready_desc".tr()
