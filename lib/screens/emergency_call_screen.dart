@@ -33,6 +33,7 @@ class EmergencyCallScreen extends StatefulWidget {
 class _EmergencyCallScreenState extends State<EmergencyCallScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _pulseController;
+  Timer? _failSafeTimer;
   bool _failSafeShown = false;
 
   @override
@@ -52,7 +53,7 @@ class _EmergencyCallScreenState extends State<EmergencyCallScreen>
     if (widget.callResult.isConfirmed) return;
 
     // Call requires user action or failed — trigger fail-safe after 5s
-    Timer(const Duration(seconds: 5), () {
+    _failSafeTimer = Timer(const Duration(seconds: 5), () {
       if (!mounted || _failSafeShown) return;
       _failSafeShown = true;
       _showFailSafeAlert();
@@ -181,6 +182,7 @@ class _EmergencyCallScreenState extends State<EmergencyCallScreen>
 
   @override
   void dispose() {
+    _failSafeTimer?.cancel();
     _pulseController.dispose();
     super.dispose();
   }

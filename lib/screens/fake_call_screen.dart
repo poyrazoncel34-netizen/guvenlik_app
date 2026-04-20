@@ -197,6 +197,7 @@ class _FakeCallScreenState extends State<FakeCallScreen>
 
   Future<void> _startRingtone() async {
     if (!await AppSettingsService.soundEnabled()) {
+      if (mounted) setState(() => _ringtoneError = true);
       return;
     }
 

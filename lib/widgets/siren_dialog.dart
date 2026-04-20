@@ -72,6 +72,7 @@ class _SirenDialogState extends State<SirenDialog>
 
   Future<void> _startSirenSound() async {
     if (!await AppSettingsService.soundEnabled()) {
+      if (mounted) setState(() => _sirenFailed = true);
       return;
     }
 

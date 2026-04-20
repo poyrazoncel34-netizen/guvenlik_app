@@ -147,6 +147,7 @@
   "emergency_cancelled_no_pin": "PIN bulunmadığı için acil akış manuel olarak iptal edildi.",
   "settings_pin_wrong": "Eski PIN yanlış",
   "settings_pin_length_error": "PIN 4 hane olmalıdır",
+  "settings_pin_same_as_old": "Yeni PIN eskisiyle aynı olamaz. Farklı bir PIN seçin.",
   "settings_pin_updated": "PIN güncellendi",
   "settings_share_text": "KoruBeni - Ücretsiz konum oturumu ve sahte çağrı; Pro ile panik araçları. İndir: https://play.google.com/store/apps/details?id=com.poyrazoncel.korubeni",
   "settings_share_text_ios": "KoruBeni yalnızca Android ve Google Play dağıtımı içindir.",
@@ -780,5 +781,7 @@
   "legal_unified_subtitle": "Uygulamayı kullanmadan önce aşağıdaki yasal gereklilikleri tamamlayın.",
   "legal_unified_cta": "Devam Et ve Kurulumu Tamamla",
   "legal_expand": "Detayı Gör",
-  "legal_collapse": "Gizle"
+  "legal_collapse": "Gizle",
+  "link_open_failed": "Bağlantı açılamadı. Cihazınızda uygun bir uygulama bulunamadı.",
+  "share_failed": "Paylaşım açılamadı."
 }

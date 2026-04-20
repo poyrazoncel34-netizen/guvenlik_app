@@ -59,7 +59,9 @@ class _SettingsPageState extends State<SettingsPage> {
     final shareText = 'settings_share_text'.tr();
     try {
       await SharePlus.instance.share(ShareParams(text: shareText));
-    } catch (_) {}
+    } catch (_) {
+      if (mounted) _showErrorSnack('share_failed'.tr());
+    }
   }
 
   Future<void> _rateApp() async {
@@ -67,10 +69,26 @@ class _SettingsPageState extends State<SettingsPage> {
         'https://play.google.com/store/apps/details?id=com.poyrazoncel.korubeni';
     final uri = Uri.parse(url);
     try {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
+      final launched = await launchUrl(
+        uri,
+        mode: LaunchMode.externalApplication,
+      );
+      if (!launched && mounted) _showErrorSnack('link_open_failed'.tr());
     } catch (e) {
       debugPrint('Could not open store: $e');
+      if (mounted) _showErrorSnack('link_open_failed'.tr());
     }
+  }
+
+  void _showErrorSnack(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: AppColors.warning,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    );
   }
 
   @override

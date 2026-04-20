@@ -85,15 +85,17 @@ class _ProfilePageState extends State<ProfilePage> {
                     letterSpacing: -0.5,
                   ),
                 ),
-                const SizedBox(height: 6),
-                Text(
-                  provider.profileEmail,
-                  style: TextStyle(
-                    fontSize: 15,
-                    color: AppColors.textSecondary,
-                    fontWeight: FontWeight.w500,
+                if (provider.profileEmail.isNotEmpty) ...[
+                  const SizedBox(height: 6),
+                  Text(
+                    provider.profileEmail,
+                    style: TextStyle(
+                      fontSize: 15,
+                      color: AppColors.textSecondary,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
-                ),
+                ],
               ],
             ),
           ),
