@@ -780,5 +780,7 @@
   "legal_unified_subtitle": "Uygulamayı kullanmadan önce aşağıdaki yasal gereklilikleri tamamlayın.",
   "legal_unified_cta": "Devam Et ve Kurulumu Tamamla",
   "legal_expand": "Detayı Gör",
-  "legal_collapse": "Gizle"
+  "legal_collapse": "Gizle",
+  "link_open_failed": "Bağlantı açılamadı. Cihazınızda uygun bir uygulama bulunamadı.",
+  "share_failed": "Paylaşım açılamadı."
 }

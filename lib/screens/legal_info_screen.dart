@@ -3,6 +3,7 @@
 // 7 liste öğesi: belgeler, KVKK başvuru, veri silme, loglar, hakkında
 // ============================================================================
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -15,11 +16,26 @@ import '../core/services/app_reset_service.dart';
 class LegalInfoScreen extends StatelessWidget {
   const LegalInfoScreen({super.key});
 
-  Future<void> _launchUrl(String url) async {
+  Future<void> _launchUrl(String url, [BuildContext? context]) async {
     final uri = Uri.parse(url);
+    var launched = false;
     try {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    } catch (_) {}
+      launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } catch (_) {
+      launched = false;
+    }
+    if (!launched && context != null && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('link_open_failed'.tr()),
+          backgroundColor: AppColors.warning,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      );
+    }
   }
 
   @override
@@ -53,7 +69,7 @@ class LegalInfoScreen extends StatelessWidget {
                 iconColor: const Color(0xFF3182CE),
                 title: 'Kullanım Şartları',
                 subtitle: 'TBK Md. 20-25 uyumlu kullanım koşulları',
-                onTap: () => _launchUrl(AppConstants.termsOfServiceUrl),
+                onTap: () => _launchUrl(AppConstants.termsOfServiceUrl, context),
               ),
               _divider(),
               _navTile(
@@ -61,7 +77,7 @@ class LegalInfoScreen extends StatelessWidget {
                 iconColor: const Color(0xFF38A169),
                 title: 'Gizlilik Politikası',
                 subtitle: 'Veri işleme ve gizlilik bilgileri',
-                onTap: () => _launchUrl(AppConstants.privacyPolicyWebUrl),
+                onTap: () => _launchUrl(AppConstants.privacyPolicyWebUrl, context),
               ),
               _divider(),
               _navTile(
@@ -69,7 +85,7 @@ class LegalInfoScreen extends StatelessWidget {
                 iconColor: const Color(0xFF9F7AEA),
                 title: 'Aydınlatma Metni (KVKK)',
                 subtitle: 'KVKK Md. 10 — Veri sorumlusu bildirimi',
-                onTap: () => _launchUrl(AppConstants.aydinlatmaMetniUrl),
+                onTap: () => _launchUrl(AppConstants.aydinlatmaMetniUrl, context),
               ),
             ]),
             const SizedBox(height: 20),
@@ -83,7 +99,7 @@ class LegalInfoScreen extends StatelessWidget {
                 iconColor: const Color(0xFFDD6B20),
                 title: 'KVKK Başvurusu Yap',
                 subtitle: 'KVKK Md. 11 haklarınız için e-posta gönderin',
-                onTap: () => _launchUrl(AppConstants.kvkkMailto),
+                onTap: () => _launchUrl(AppConstants.kvkkMailto, context),
               ),
             ]),
             const SizedBox(height: 20),

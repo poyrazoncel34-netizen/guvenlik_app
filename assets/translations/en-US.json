@@ -780,5 +780,7 @@
   "legal_unified_subtitle": "Please complete the following legal requirements before using the app.",
   "legal_unified_cta": "Continue and Complete Setup",
   "legal_expand": "View Details",
-  "legal_collapse": "Hide"
+  "legal_collapse": "Hide",
+  "link_open_failed": "Couldn't open the link. No app on your device can handle it.",
+  "share_failed": "Couldn't open share sheet."
 }
