@@ -147,6 +147,7 @@
   "emergency_cancelled_no_pin": "The emergency flow was cancelled manually because no PIN was configured.",
   "settings_pin_wrong": "Old PIN is wrong",
   "settings_pin_length_error": "PIN must be 4 digits",
+  "settings_pin_same_as_old": "New PIN cannot be the same as the old one. Pick a different PIN.",
   "settings_pin_updated": "PIN updated",
   "settings_share_text": "KoruBeni - Free location session and fake call; Pro adds panic tools. Download: https://play.google.com/store/apps/details?id=com.poyrazoncel.korubeni",
   "settings_share_text_ios": "KoruBeni is distributed only for Android on Google Play.",

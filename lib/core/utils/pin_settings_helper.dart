@@ -158,6 +158,15 @@ abstract class PinSettingsHelper {
                     );
                     return;
                   }
+                  if (newController.text == currentPin) {
+                    ScaffoldMessenger.of(ctx).showSnackBar(
+                      SnackBar(
+                        content: Text("settings_pin_same_as_old".tr()),
+                        backgroundColor: AppColors.warning,
+                      ),
+                    );
+                    return;
+                  }
                   await secureStorage.write(
                     key: SecureStorageKeys.userPin,
                     value: newController.text,
