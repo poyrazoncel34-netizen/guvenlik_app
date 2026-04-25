@@ -11,6 +11,7 @@ import '../security/secure_storage.dart';
 import '../security/secure_storage_keys.dart';
 import '../app_colors.dart';
 import '../services/activity_service.dart';
+import 'validators.dart';
 import '../../domain/models/activity_event.dart';
 
 abstract class PinSettingsHelper {
@@ -153,6 +154,15 @@ abstract class PinSettingsHelper {
                     ScaffoldMessenger.of(ctx).showSnackBar(
                       SnackBar(
                         content: Text("settings_pin_length_error".tr()),
+                        backgroundColor: AppColors.warning,
+                      ),
+                    );
+                    return;
+                  }
+                  if (!Validators.isValidPin(newController.text)) {
+                    ScaffoldMessenger.of(ctx).showSnackBar(
+                      SnackBar(
+                        content: Text("pin_weak_error".tr()),
                         backgroundColor: AppColors.warning,
                       ),
                     );

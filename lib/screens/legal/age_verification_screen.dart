@@ -1,5 +1,5 @@
 // ============================================================================
-// YAŞ DOĞRULAMA EKRANI — KVKK m.6 reşit olmayan kullanıcılar
+// YAŞ BEYANI EKRANI — 18+ kullanım onayı
 // Onboarding legal flow'un ilk adımı olarak gösterilir.
 // ============================================================================
 
@@ -22,7 +22,7 @@ class AgeVerificationScreen extends StatefulWidget {
 }
 
 class _AgeVerificationScreenState extends State<AgeVerificationScreen> {
-  int? _selectedOption; // 0 = 18+, 1 = <18 with parental consent
+  int? _selectedOption; // 0 = 18+
 
   Future<void> _confirm() async {
     if (_selectedOption == null) return;
@@ -33,7 +33,7 @@ class _AgeVerificationScreenState extends State<AgeVerificationScreen> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(AppConstants.prefAgeVerified, true);
 
-    // Log age verification in consent manager
+    // Log adult declaration in consent manager
     final cm = serviceLocator<ConsentManager>();
     await cm.grantConsent('age_verification', locale: locale);
 
@@ -84,16 +84,6 @@ class _AgeVerificationScreenState extends State<AgeVerificationScreen> {
                     icon: Icons.person_outline_rounded,
                     label: 'legal_age_adult'.tr(),
                     sublabel: 'legal_age_adult_sub'.tr(),
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  // Option 2: <18 with parental consent
-                  _buildOption(
-                    index: 1,
-                    icon: Icons.family_restroom_outlined,
-                    label: 'legal_age_minor'.tr(),
-                    sublabel: 'legal_age_minor_sub'.tr(),
                   ),
 
                   const SizedBox(height: 16),
@@ -182,7 +172,11 @@ class _AgeVerificationScreenState extends State<AgeVerificationScreen> {
         ),
         child: Row(
           children: [
-            Icon(icon, size: 28, color: isSelected ? AppColors.primary : AppColors.textSecondary),
+            Icon(
+              icon,
+              size: 28,
+              color: isSelected ? AppColors.primary : AppColors.textSecondary,
+            ),
             const SizedBox(width: 14),
             Expanded(
               child: Column(
@@ -193,7 +187,9 @@ class _AgeVerificationScreenState extends State<AgeVerificationScreen> {
                     style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
-                      color: isSelected ? AppColors.primary : AppColors.textPrimary,
+                      color: isSelected
+                          ? AppColors.primary
+                          : AppColors.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 2),

@@ -6,8 +6,11 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/app_colors.dart';
+import '../../core/constants/app_constants.dart';
+import '../../core/constants/feature_access_matrix.dart';
 import '../../presentation/providers/subscription_provider.dart';
 
 class PaywallScreen extends StatefulWidget {
@@ -120,6 +123,10 @@ class _PaywallScreenState extends State<PaywallScreen> {
             ),
           ],
           const SizedBox(height: 18),
+          _buildDisclosureBlock(),
+          const SizedBox(height: 12),
+          _buildLegalLinks(),
+          const SizedBox(height: 12),
           _buildRestoreButton(),
           const SizedBox(height: 12),
           Text(
@@ -230,12 +237,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
   }
 
   Widget _buildFeatureSummary() {
-    final features = [
-      'subscription_value_panic',
-      'subscription_value_contacts',
-      'subscription_value_walk',
-      'subscription_value_history',
-    ];
+    final features = FeatureAccessMatrix.proBenefitKeys;
 
     return Container(
       decoration: BoxDecoration(
@@ -480,6 +482,15 @@ class _PaywallScreenState extends State<PaywallScreen> {
             ),
             const SizedBox(height: 4),
             Text(
+              _periodText(package),
+              style: const TextStyle(
+                color: AppColors.textPrimary,
+                fontSize: 13,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
               subtitle,
               style: const TextStyle(
                 color: AppColors.textSecondary,
@@ -539,5 +550,61 @@ class _PaywallScreenState extends State<PaywallScreen> {
         textStyle: const TextStyle(fontWeight: FontWeight.w700),
       ),
     );
+  }
+
+  Widget _buildDisclosureBlock() {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.info.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.info.withValues(alpha: 0.22)),
+      ),
+      child: Text(
+        'subscription_renewal_disclosure'.tr(),
+        style: const TextStyle(
+          color: AppColors.textSecondary,
+          fontSize: 12,
+          height: 1.45,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLegalLinks() {
+    return Wrap(
+      alignment: WrapAlignment.center,
+      spacing: 8,
+      runSpacing: 4,
+      children: [
+        TextButton(
+          onPressed: () => _openExternal(AppConstants.privacyPolicyUrl),
+          child: Text('legal_link_privacy'.tr()),
+        ),
+        TextButton(
+          onPressed: () => _openExternal(AppConstants.subscriptionTermsUrl),
+          child: Text('legal_link_terms'.tr()),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _openExternal(String url) async {
+    final uri = Uri.parse(url);
+    try {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } catch (_) {}
+  }
+
+  String _periodText(Package package) {
+    switch (package.packageType) {
+      case PackageType.monthly:
+        return 'subscription_period_monthly'.tr();
+      case PackageType.annual:
+        return 'subscription_period_annual'.tr();
+      default:
+        return '';
+    }
   }
 }

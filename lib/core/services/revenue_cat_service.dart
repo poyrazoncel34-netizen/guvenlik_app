@@ -46,6 +46,7 @@ class RevenueCatService {
       await Purchases.configure(config);
     } catch (e, st) {
       LocalLoggerService.instance.error('RevenueCatService.initialize', e, st);
+      if (_isProduction) rethrow;
     }
   }
 

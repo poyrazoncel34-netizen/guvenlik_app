@@ -8,8 +8,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../constants/legal_texts.dart';
 import '../core/app_colors.dart';
 import '../core/constants/app_constants.dart';
+import '../core/di/service_locator.dart';
+import '../core/navigation/app_navigator.dart';
+import '../core/security/secure_storage.dart';
+import '../core/security/secure_storage_keys.dart';
 import '../presentation/providers/subscription_provider.dart';
 import 'legal/unified_consent_screen.dart';
+import 'app_unlock_screen.dart';
 import 'main_navigation.dart';
 import 'onboarding_screen.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -187,11 +192,22 @@ class _SplashScreenState extends State<SplashScreen>
 
     if (!mounted) return;
 
+    final hasConfiguredPin = await _hasConfiguredPin();
+    if (!mounted) return;
+
     final Widget nextScreen;
     if (!legalAccepted || needsReConsent) {
       nextScreen = const UnifiedConsentScreen();
     } else if (!onboardingDone) {
       nextScreen = const OnboardingScreen();
+    } else if (hasConfiguredPin) {
+      nextScreen = AppUnlockScreen(
+        onUnlocked: () {
+          rootNavigatorKey.currentState?.pushReplacement(
+            MaterialPageRoute(builder: (_) => const MainNavigation()),
+          );
+        },
+      );
     } else {
       nextScreen = const MainNavigation();
     }
@@ -205,6 +221,21 @@ class _SplashScreenState extends State<SplashScreen>
         transitionDuration: const Duration(milliseconds: 500),
       ),
     );
+  }
+
+  Future<bool> _hasConfiguredPin() async {
+    final secureStorage = serviceLocator<SecureStorage>();
+    final securePin = await secureStorage.read(key: SecureStorageKeys.userPin);
+    if (securePin != null && securePin.isNotEmpty) return true;
+
+    final prefs = await SharedPreferences.getInstance();
+    final legacyPin = prefs.getString(SecureStorageKeys.userPin);
+    if (legacyPin == null || legacyPin.isEmpty) return false;
+
+    await secureStorage.write(key: SecureStorageKeys.userPin, value: legacyPin);
+    await prefs.remove(SecureStorageKeys.userPin);
+    await prefs.setBool(AppConstants.prefPinSetupDone, true);
+    return true;
   }
 
   @override

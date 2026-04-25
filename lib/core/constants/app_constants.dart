@@ -66,14 +66,17 @@ class AppConstants {
   static const String prefWarningLocation = 'warning_location_shown';
 
   // Yasal belgeler URL'leri
+  static const String legalBaseUrl = 'https://poyrazoncel.github.io/korubeni';
   static const String termsOfServiceUrl =
-      'https://poyrazoncel34-netizen.github.io/guvenlik_app/kullanim_sartlari.html';
+      '$legalBaseUrl/kullanim_sartlari.html';
+  static const String subscriptionTermsUrl = termsOfServiceUrl;
   static const String aydinlatmaMetniUrl =
-      'https://poyrazoncel34-netizen.github.io/guvenlik_app/aydinlatma';
-  static const String privacyPolicyWebUrl =
-      'https://poyrazoncel34-netizen.github.io/guvenlik_app/privacy_policy.html';
-  static const String privacyPolicyUrl =
-      'https://poyrazoncel34-netizen.github.io/guvenlik_app/privacy_policy.html';
+      '$legalBaseUrl/aydinlatma_metni.html';
+  static const String privacyPolicyWebUrl = '$legalBaseUrl/privacy_policy.html';
+  static const String privacyPolicyUrl = '$legalBaseUrl/privacy_policy.html';
+  static const String dataDeletionUrl = '$legalBaseUrl/data_deletion.html';
+  static const String googlePlaySubscriptionsUrl =
+      'https://play.google.com/store/account/subscriptions?package=com.poyrazoncel.korubeni';
   static const String kvkkMailto =
       'mailto:korubeni.destek@gmail.com?subject=KVKK%20Ba%C5%9Fvurusu';
 }

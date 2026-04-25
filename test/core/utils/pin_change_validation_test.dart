@@ -7,8 +7,27 @@ void main() {
       expect(Validators.isValidPin(''), isFalse);
     });
 
-    test('4 digits is valid', () {
-      expect(Validators.isValidPin('1234'), isTrue);
+    test('non-pattern 4 digits is valid', () {
+      expect(Validators.isValidPin('4937'), isTrue);
+    });
+
+    test('weak PINs are invalid', () {
+      for (final pin in [
+        '0000',
+        '1111',
+        '9999',
+        '1234',
+        '4321',
+        '1122',
+        '1212',
+        '7777',
+        '2580',
+        '0852',
+        '2345',
+        '9876',
+      ]) {
+        expect(Validators.isValidPin(pin), isFalse, reason: pin);
+      }
     });
 
     test('3 digits is invalid', () {

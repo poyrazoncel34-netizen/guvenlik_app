@@ -92,11 +92,11 @@ KoruBeni **offline-first** çalışır. Uygulama geliştirici tarafından işlet
 | **Güvenlik önlemi** | SharedPreferences |
 | **Rıza tipi** | `consent_fake_call` — Granüler, geri çekilebilir |
 
-### 2.7 Yaş Doğrulama
+### 2.7 Yaş Beyanı
 
 | Alan | Detay |
 |------|-------|
-| **Veri türü** | Yaş beyanı (18+ / 18 altı ebeveyn onaylı) |
+| **Veri türü** | Yaş beyanı (18+ / 18 altı kullanım desteklenmez) |
 | **Hukuki dayanak** | KVKK m.6 — Reşit olmayanların korunması |
 | **İşleme amacı** | Yasal yükümlülük kontrolü |
 | **Saklama süresi** | Uygulama yüklü olduğu süre |
@@ -140,7 +140,7 @@ KoruBeni **offline-first** çalışır. Uygulama geliştirici tarafından işlet
 - Her ses kaydı öncesi ayrı TCK m.133 onayı
 
 ### İdari Önlemler
-- 4 adımlı onboarding yasal akışı (yaş doğrulama → kullanım sözleşmesi → KVKK aydınlatma → granüler rıza)
+- 4 adımlı onboarding yasal akışı (18+ beyanı → kullanım sözleşmesi → KVKK aydınlatma → granüler rıza)
 - Versiyon bazlı yeniden onay mekanizması — yasal metinler güncellendiğinde otomatik yeniden onay
 - Veri silme ve dışa aktarma hakları (KVKK m.11) — Ayarlar ekranından erişilebilir
 - Audit log kaydı — tüm rıza işlemleri zaman damgalı olarak loglanır

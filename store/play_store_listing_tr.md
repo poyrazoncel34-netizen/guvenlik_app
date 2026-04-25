@@ -2,12 +2,12 @@
 
 **App Title:** KoruBeni - Kişisel Güvenlik
 **Short Description (80 karakter):**
-Ücretsiz konum oturumu ve sahte çağrı. Pro ile panik ve check-in.
+Ücretsiz temel araçlar. Panik/SOS ve gelişmiş araçlar Pro ile.
 
 **Full Description (4000 karakter):**
 KoruBeni, konum durumunuzu görmenize, cihaz içi sahte çağrı simülasyonu çalıştırmanıza ve Pro abonelikle ek kişisel güvenlik araçlarını kullanmanıza yardımcı olan bir Android uygulamasıdır.
 
-Ücretsiz kullanımda konum oturumu ve sahte çağrı açıktır. Panik akışı, acil kişi yönetimi, güvenli yürüyüş/check-in, siren ve güvenlik geçmişi KoruBeni Pro ile açılır.
+KoruBeni ücretsiz temel güvenlik araçları sunar. Panik/SOS, güvenli yürüyüş, check-in ve gelişmiş güvenlik otomasyonları KoruBeni Pro ile kullanılabilir.
 
 ★ ÜCRETSİZ ÖZELLİKLER ★
 
@@ -17,13 +17,16 @@ Konum alınabilirse uygulama içinde gösterin; alınamazsa açık hata durumu g
 ◉ Sahte Arama
 Rahatsız edici durumlardan uzaklaşmak için cihaz içinde çalışan kişisel güvenlik amaçlı sahte gelen arama simülasyonu oluşturun. Bu özellik gerçek telefon araması başlatmaz ve üçüncü kişilere iletişim göndermez.
 
+◉ Siren
+Yüksek sesli alarm ile çevrenizdeki insanların dikkatini çekin.
+
+◉ Acil Kişiler
+Rehberinizden güvenilir kişileri yerel olarak kaydedin ve yönetin.
+
 ★ KORUBENİ PRO İLE AÇILAN ÖZELLİKLER ★
 
-◉ Panik Butonu
-Uzun basarak panik akışını başlatın. 10 saniyelik geri sayım ile yanlışlıkla tetiklemeyi önleyin.
-
-◉ Acil Kişi Arama
-Rehberinizden seçtiğiniz güvenilir kişiye acil arama akışını başlatın.
+◉ Panik/SOS Butonu
+KoruBeni Pro ile uzun basarak panik akışını başlatın. 10 saniyelik geri sayım ile yanlışlıkla tetiklemeyi önleyin. Bu özellik ücretsiz planda çalışmaz.
 
 ◉ Güvenli Yürüyüş
 Gece veya güvensiz ortamlarda yardımcı check-in oturumu başlatın. Arka plan davranışı Android ayarlarına bağlıdır.
@@ -31,11 +34,11 @@ Gece veya güvensiz ortamlarda yardımcı check-in oturumu başlatın. Arka plan
 ◉ Check-in
 Belirlediğiniz süre sonunda kontrol akışı başlatan yardımcı check-in oturumları kullanın.
 
-◉ Siren
-Yüksek sesli alarm ile çevrenizdeki insanların dikkatini çekin.
-
 ◉ Güvenlik Geçmişi
 Uygulama içi güvenlik olaylarınızı cihazda yerel olarak görün.
+
+◉ Ses Tuşu Tetikleyici ve Test Modu
+Pro kullanıcılar için gelişmiş güvenlik otomasyonlarını ve gerçek arama yapmadan test akışını kullanın.
 
 KoruBeni Pro isteğe bağlı bir aboneliktir. Satın alma, yenileme, iptal ve geri yükleme işlemleri Google Play üzerinden yönetilir.
 
@@ -55,8 +58,8 @@ KoruBeni Pro isteğe bağlı bir aboneliktir. Satın alma, yenileme, iptal ve ge
 KoruBeni — Ücretsiz konum oturumu ve sahte çağrı; Pro ile ek güvenlik araçları.
 
 **Category:** Tools / Safety
-**Content Rating:** Everyone
+**Content Rating:** 18+ intended audience / Play Console formuna göre tamamlanacak
 **Contact Email:** korubeni.destek@gmail.com
 **Privacy Policy URL:** https://poyrazoncel34-netizen.github.io/guvenlik_app/privacy_policy.html
 
-**Tags:** güvenlik, acil durum, panik butonu, konum oturumu, kadın güvenliği, SOS, acil yardım, sahte arama, kişisel güvenlik
+**Tags:** güvenlik, acil durum, panik butonu KoruBeni Pro, konum oturumu, kadın güvenliği, SOS Pro, acil yardım, sahte arama, kişisel güvenlik

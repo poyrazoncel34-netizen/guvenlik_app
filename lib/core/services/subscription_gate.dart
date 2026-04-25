@@ -1,41 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../constants/feature_access_matrix.dart';
 import '../../presentation/providers/subscription_provider.dart';
 import '../../screens/subscription/paywall_screen.dart';
 
-enum PremiumFeature {
-  location,
-  fakeCall,
-  panic,
-  contacts,
-  siren,
-  safeWalk,
-  timeline,
-  checkIn,
-  emergencyContactAdd,
-  emergencyContactSelect,
-  volumeTrigger,
-  testMode,
-  other,
-}
+export '../constants/feature_access_matrix.dart';
 
 class SubscriptionGate {
   SubscriptionGate._();
 
-  static const Set<PremiumFeature> freeFeatures = {
-    PremiumFeature.location,
-    PremiumFeature.fakeCall,
-    PremiumFeature.siren,
-    PremiumFeature.contacts,
-    PremiumFeature.emergencyContactAdd,
-    PremiumFeature.emergencyContactSelect,
-  };
+  static Set<PremiumFeature> get freeFeatures =>
+      FeatureAccessMatrix.freeFeatures;
 
   static bool isFreeFeature(PremiumFeature feature) =>
-      freeFeatures.contains(feature);
+      FeatureAccessMatrix.isFreeFeature(feature);
 
-  static bool isProFeature(PremiumFeature feature) => !isFreeFeature(feature);
+  static bool isProFeature(PremiumFeature feature) =>
+      FeatureAccessMatrix.isProFeature(feature);
 
   static bool canUseFeature({
     required PremiumFeature feature,
@@ -86,33 +68,6 @@ class SubscriptionGate {
   }
 
   static String featureTitleKey(PremiumFeature feature) {
-    switch (feature) {
-      case PremiumFeature.location:
-        return 'location';
-      case PremiumFeature.fakeCall:
-        return 'fake_call';
-      case PremiumFeature.panic:
-        return 'premium_feature_panic';
-      case PremiumFeature.contacts:
-        return 'contacts';
-      case PremiumFeature.siren:
-        return 'siren';
-      case PremiumFeature.safeWalk:
-        return 'safe_walk';
-      case PremiumFeature.timeline:
-        return 'timeline';
-      case PremiumFeature.checkIn:
-        return 'check_in';
-      case PremiumFeature.emergencyContactAdd:
-        return 'premium_feature_emergency_contact_add';
-      case PremiumFeature.emergencyContactSelect:
-        return 'premium_feature_emergency_contact_select';
-      case PremiumFeature.volumeTrigger:
-        return 'premium_feature_volume_trigger';
-      case PremiumFeature.testMode:
-        return 'test_mode_no_real_call';
-      case PremiumFeature.other:
-        return 'subscription_section_title';
-    }
+    return FeatureAccessMatrix.titleKey(feature);
   }
 }

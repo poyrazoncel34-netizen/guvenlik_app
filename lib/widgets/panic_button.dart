@@ -7,10 +7,12 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:provider/provider.dart';
 import '../core/app_colors.dart';
 import '../core/constants/app_constants.dart';
 import '../core/services/subscription_gate.dart';
 import '../core/widgets/feature_warning_dialog.dart';
+import '../presentation/providers/subscription_provider.dart';
 import '../screens/countdown_screen.dart';
 
 class PanicButton extends StatefulWidget {
@@ -65,6 +67,10 @@ class _PanicButtonState extends State<PanicButton>
   }
 
   Future<void> _onPressStart(LongPressStartDetails details) async {
+    _hapticTimer?.cancel();
+    _holdTimer?.cancel();
+    if (_isArmed) return;
+
     final allowed = await SubscriptionGate.ensureAccess(
       context,
       PremiumFeature.panic,
@@ -156,6 +162,7 @@ class _PanicButtonState extends State<PanicButton>
 
   @override
   Widget build(BuildContext context) {
+    final isPro = context.watch<SubscriptionProvider>().isPro;
     final size = MediaQuery.sizeOf(context);
     final shortSide = size.shortestSide;
     // Scale button to ~38% of shortest side, clamped
@@ -166,8 +173,12 @@ class _PanicButtonState extends State<PanicButton>
     final subtitleFontSize = (baseSize * 0.048).clamp(10.0, 13.0);
 
     return Semantics(
-      label: "panic_button_semantics_label".tr(),
-      hint: "panic_button_semantics_hint".tr(),
+      label: isPro
+          ? "panic_button_semantics_label".tr()
+          : "panic_button_locked_semantics_label".tr(),
+      hint: isPro
+          ? "panic_button_semantics_hint".tr()
+          : "panic_button_locked_semantics_hint".tr(),
       button: true,
       child: GestureDetector(
         onLongPressStart: _onPressStart,
@@ -179,7 +190,7 @@ class _PanicButtonState extends State<PanicButton>
             alignment: Alignment.center,
             children: [
               // ── Breathing glow rings (idle) ──
-              if (!_isArmed) ..._buildBreathingRings(baseSize),
+              if (!_isArmed && isPro) ..._buildBreathingRings(baseSize),
 
               // Armed pulse rings
               if (_isArmed) ..._buildArmedPulseRings(baseSize),
@@ -216,12 +227,18 @@ class _PanicButtonState extends State<PanicButton>
                     end: Alignment.bottomRight,
                     colors: _isArmed
                         ? [AppColors.emergency, const Color(0xFFB32020)]
-                        : [AppColors.primaryDark, AppColors.primary],
+                        : isPro
+                        ? [AppColors.primaryDark, AppColors.primary]
+                        : [const Color(0xFF3A4656), const Color(0xFF222A35)],
                   ),
                   boxShadow: [
                     BoxShadow(
                       color:
-                          (_isArmed ? AppColors.emergency : AppColors.primary)
+                          (_isArmed
+                                  ? AppColors.emergency
+                                  : isPro
+                                  ? AppColors.primary
+                                  : AppColors.textSecondary)
                               .withValues(alpha: _isArmed ? 0.7 : 0.5),
                       blurRadius: _isArmed ? 50 : 35,
                       spreadRadius: _isArmed ? 5 : 0,
@@ -255,7 +272,11 @@ class _PanicButtonState extends State<PanicButton>
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            _isArmed ? "BIRAK = ACIL" : "BASILI TUT",
+                            _isArmed
+                                ? "BIRAK = ACIL"
+                                : isPro
+                                ? "panic_button_hold_title".tr()
+                                : "panic_button_locked_title".tr(),
                             style: TextStyle(
                               fontSize: _isArmed
                                   ? titleFontSize * 0.75
@@ -269,7 +290,9 @@ class _PanicButtonState extends State<PanicButton>
                           Text(
                             _isArmed
                                 ? "${_holdSeconds}s"
-                                : "GÜVENDE OLANA KADAR",
+                                : isPro
+                                ? "panic_button_hold_subtitle".tr()
+                                : "panic_button_locked_subtitle".tr(),
                             style: TextStyle(
                               fontSize: _isArmed
                                   ? subtitleFontSize * 1.2
@@ -285,6 +308,41 @@ class _PanicButtonState extends State<PanicButton>
                   ],
                 ),
               ),
+              if (!isPro && !_isArmed)
+                Positioned(
+                  top: baseSize * 0.22,
+                  right: baseSize * 0.18,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 9,
+                      vertical: 5,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary,
+                      borderRadius: BorderRadius.circular(999),
+                      border: Border.all(color: Colors.white24),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.lock_rounded,
+                          size: 12,
+                          color: Colors.white,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          'subscription_badge_pro'.tr(),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
             ],
           ),
         ),

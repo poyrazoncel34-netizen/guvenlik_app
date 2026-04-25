@@ -18,6 +18,12 @@ import '../core/utils/permission_helper.dart';
 
 /// Key for battery optimization wizard seen flag
 const String _kBatteryWizardSeenKey = 'battery_optimization_wizard_seen';
+const String _kBatteryWizardDismissCountKey =
+    'battery_optimization_wizard_dismiss_count';
+const String _kBatteryWizardSnoozeUntilKey =
+    'battery_optimization_wizard_snooze_until_ms';
+const String _kBatteryWizardNeverAutoShowKey =
+    'battery_optimization_wizard_never_auto_show';
 
 class BatteryOptimizationWizard extends StatefulWidget {
   /// Eğer true ise, ilk açılış kontrolü yapılır.
@@ -30,13 +36,31 @@ class BatteryOptimizationWizard extends StatefulWidget {
   static Future<bool> shouldShow() async {
     if (!Platform.isAndroid) return false;
     final prefs = await SharedPreferences.getInstance();
-    return !(prefs.getBool(_kBatteryWizardSeenKey) ?? false);
+    if (prefs.getBool(_kBatteryWizardSeenKey) ?? false) return false;
+    if (prefs.getBool(_kBatteryWizardNeverAutoShowKey) ?? false) return false;
+    final snoozeUntil = prefs.getInt(_kBatteryWizardSnoozeUntilKey) ?? 0;
+    if (snoozeUntil > DateTime.now().millisecondsSinceEpoch) return false;
+    return true;
   }
 
   /// Wizard'ı gösterildi olarak işaretle
   static Future<void> markAsSeen() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_kBatteryWizardSeenKey, true);
+  }
+
+  static Future<void> recordDismissal() async {
+    final prefs = await SharedPreferences.getInstance();
+    final count = (prefs.getInt(_kBatteryWizardDismissCountKey) ?? 0) + 1;
+    await prefs.setInt(_kBatteryWizardDismissCountKey, count);
+    if (count >= 3) {
+      await prefs.setBool(_kBatteryWizardNeverAutoShowKey, true);
+      return;
+    }
+    final snoozeUntil = DateTime.now()
+        .add(const Duration(days: 7))
+        .millisecondsSinceEpoch;
+    await prefs.setInt(_kBatteryWizardSnoozeUntilKey, snoozeUntil);
   }
 
   @override
@@ -56,8 +80,7 @@ class _BatteryOptimizationWizardState extends State<BatteryOptimizationWizard> {
   Future<void> _checkStatus() async {
     if (!Platform.isAndroid) return;
     try {
-      final isIgnoring =
-          await OptimizeBattery.isIgnoringBatteryOptimizations();
+      final isIgnoring = await OptimizeBattery.isIgnoringBatteryOptimizations();
       if (mounted) {
         setState(() => _isOptimizationDisabled = isIgnoring);
       }
@@ -68,9 +91,8 @@ class _BatteryOptimizationWizardState extends State<BatteryOptimizationWizard> {
   Future<void> _requestDisableOptimization(BuildContext context) async {
     if (!mounted) return;
     try {
-      final success = await PermissionHelper.requestBatteryOptimizationExemption(
-        context,
-      );
+      final success =
+          await PermissionHelper.requestBatteryOptimizationExemption(context);
       if (success) {
         await Future.delayed(const Duration(milliseconds: 500));
         await _checkStatus();
@@ -126,10 +148,11 @@ class _BatteryOptimizationWizardState extends State<BatteryOptimizationWizard> {
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                              color: (_isOptimizationDisabled
-                                      ? AppColors.success
-                                      : AppColors.warning)
-                                  .withValues(alpha: 0.4),
+                              color:
+                                  (_isOptimizationDisabled
+                                          ? AppColors.success
+                                          : AppColors.warning)
+                                      .withValues(alpha: 0.4),
                               blurRadius: 24,
                               offset: const Offset(0, 8),
                             ),
@@ -258,7 +281,7 @@ class _BatteryOptimizationWizardState extends State<BatteryOptimizationWizard> {
                 // Skip
                 TextButton(
                   onPressed: () async {
-                    await BatteryOptimizationWizard.markAsSeen();
+                    await BatteryOptimizationWizard.recordDismissal();
                     if (!context.mounted) return;
                     Navigator.pop(context);
                   },
@@ -316,9 +339,7 @@ class _BatteryOptimizationWizardState extends State<BatteryOptimizationWizard> {
       decoration: BoxDecoration(
         color: AppColors.warning.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: AppColors.warning.withValues(alpha: 0.3),
-        ),
+        border: Border.all(color: AppColors.warning.withValues(alpha: 0.3)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -371,9 +392,7 @@ class _BatteryOptimizationWizardState extends State<BatteryOptimizationWizard> {
       decoration: BoxDecoration(
         color: AppColors.info.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: AppColors.info.withValues(alpha: 0.3),
-        ),
+        border: Border.all(color: AppColors.info.withValues(alpha: 0.3)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,

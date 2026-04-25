@@ -53,15 +53,25 @@ class _LegalDisclaimerScreenState extends State<LegalDisclaimerScreen> {
 
     await prefs.setBool(AppConstants.prefLegalAcceptedV1, true);
     await prefs.setString(
-        AppConstants.prefLegalTimestamp, DateTime.now().toIso8601String());
+      AppConstants.prefLegalTimestamp,
+      DateTime.now().toIso8601String(),
+    );
     await prefs.setString(
-        AppConstants.prefLegalAppVersion, packageInfo.version);
+      AppConstants.prefLegalAppVersion,
+      packageInfo.version,
+    );
     // Geriye dönük uyumluluk (eski splash_screen kontrolü için)
     await prefs.setBool(AppConstants.prefLegalDisclaimerAccepted, true);
 
     await LegalLogService.instance.logEvent(
       'terms_accepted',
-      checkboxes: ['terms', 'privacy', 'emergency_disclaimer', 'age_confirmation', 'liability_acceptance'],
+      checkboxes: [
+        'terms',
+        'privacy',
+        'emergency_disclaimer',
+        'age_confirmation',
+        'liability_acceptance',
+      ],
     );
 
     if (!mounted) return;
@@ -87,7 +97,8 @@ class _LegalDisclaimerScreenState extends State<LegalDisclaimerScreen> {
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [AppColors.gradientStart, AppColors.background],            ),
+              colors: [AppColors.gradientStart, AppColors.background],
+            ),
           ),
           child: SafeArea(
             child: SingleChildScrollView(
@@ -147,7 +158,8 @@ class _LegalDisclaimerScreenState extends State<LegalDisclaimerScreen> {
                   // ── Checkbox 1: Kullanım Şartları ──
                   _buildCheckboxTile(
                     value: _termsAccepted,
-                    onChanged: (v) => setState(() => _termsAccepted = v ?? false),
+                    onChanged: (v) =>
+                        setState(() => _termsAccepted = v ?? false),
                     child: RichText(
                       text: TextSpan(
                         style: const TextStyle(
@@ -161,7 +173,8 @@ class _LegalDisclaimerScreenState extends State<LegalDisclaimerScreen> {
                             alignment: PlaceholderAlignment.baseline,
                             baseline: TextBaseline.alphabetic,
                             child: GestureDetector(
-                              onTap: () => _launchUrl(AppConstants.termsOfServiceUrl),
+                              onTap: () =>
+                                  _launchUrl(AppConstants.termsOfServiceUrl),
                               child: const Text(
                                 'Kullanım Şartları',
                                 style: TextStyle(
@@ -173,8 +186,7 @@ class _LegalDisclaimerScreenState extends State<LegalDisclaimerScreen> {
                               ),
                             ),
                           ),
-                          const TextSpan(
-                              text: "'nı okudum ve kabul ediyorum."),
+                          const TextSpan(text: "'nı okudum ve kabul ediyorum."),
                         ],
                       ),
                     ),
@@ -256,11 +268,9 @@ class _LegalDisclaimerScreenState extends State<LegalDisclaimerScreen> {
                   // ── Checkbox 4: Yaş onayı ──
                   _buildCheckboxTile(
                     value: _ageAccepted,
-                    onChanged: (v) =>
-                        setState(() => _ageAccepted = v ?? false),
+                    onChanged: (v) => setState(() => _ageAccepted = v ?? false),
                     child: const Text(
-                      '18 yaşından büyüğüm veya velim/vasim bu uygulamayı '
-                      'kullanmam için onay vermiştir.',
+                      '18 yaşından büyük olduğumu beyan ederim.',
                       style: TextStyle(
                         fontSize: 14,
                         color: AppColors.textSecondary,

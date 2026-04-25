@@ -2,12 +2,12 @@
 
 **App Title:** KoruBeni - Personal Safety
 **Short Description (80 characters):**
-Free location session and fake call. Pro adds panic and check-ins.
+Free basic tools. Panic/SOS and advanced tools require Pro.
 
 **Full Description (4000 characters):**
 KoruBeni is an Android personal safety app that helps you view location status, run an on-device fake call simulation, and use additional safety tools with an optional Pro subscription.
 
-Free users can use location sessions and fake calls. Panic flow, emergency contact management, Safe Walk/check-ins, siren, and safety history unlock with KoruBeni Pro.
+KoruBeni offers free basic safety tools. Panic/SOS, Safe Walk, check-in, and advanced safety automations are available with KoruBeni Pro.
 
 ★ FREE FEATURES ★
 
@@ -17,13 +17,16 @@ Show your current location when available; show a clear unavailable state when i
 ◉ Fake Call
 Create an on-device fake incoming call simulation for personal safety in uncomfortable situations. This feature does not place a real phone call and does not contact third parties.
 
+◉ Siren
+Draw attention with a loud alarm.
+
+◉ Emergency Contacts
+Save and manage trusted contacts locally on your device.
+
 ★ UNLOCKED WITH KORUBENI PRO ★
 
-◉ Panic Button
-Hold to start the panic flow. A 10-second countdown helps prevent accidental activation.
-
-◉ Emergency Contact Calling
-Quickly start a call flow for trusted contacts from your address book.
+◉ Panic/SOS Button
+With KoruBeni Pro, hold to start the panic flow. A 10-second countdown helps prevent accidental activation. This feature does not work on the free plan.
 
 ◉ Safe Walk
 Start a helper check-in session during night or unsafe situations. Background behavior depends on Android settings.
@@ -31,11 +34,11 @@ Start a helper check-in session during night or unsafe situations. Background be
 ◉ Check-in
 Use timed check-in sessions that start a follow-up flow when the timer expires.
 
-◉ Siren
-Draw attention with a loud alarm.
-
 ◉ Safety History
 View local in-app safety events on your device.
+
+◉ Volume Trigger and Test Mode
+Use advanced safety automations and test the flow without placing a real call.
 
 KoruBeni Pro is optional. Purchases, renewals, cancellations, and restore operations are managed through Google Play.
 
@@ -55,8 +58,8 @@ KoruBeni Pro is optional. Purchases, renewals, cancellations, and restore operat
 KoruBeni — Free location session and fake call; optional Pro safety tools.
 
 **Category:** Tools / Safety
-**Content Rating:** Everyone
+**Content Rating:** 18+ intended audience / complete according to Play Console form
 **Contact Email:** korubeni.destek@gmail.com
 **Privacy Policy URL:** https://poyrazoncel34-netizen.github.io/guvenlik_app/privacy_policy.html
 
-**Tags:** safety, emergency, panic button, location session, personal security, SOS, fake call
+**Tags:** safety, emergency, KoruBeni Pro panic button, location session, personal security, Pro SOS, fake call

@@ -6,9 +6,8 @@ import android.content.Intent
 
 class BootCompletedReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent?) {
+        if (intent?.action != Intent.ACTION_BOOT_COMPLETED) return
+        if (!CheckInScheduler.hasActiveSession(context)) return
         CheckInScheduler.restoreAfterBoot(context)
-        EmergencyPrefs.prefs(context).edit()
-            .putBoolean(EmergencyPrefs.KEY_SHAKE_ENABLED, false)
-            .apply()
     }
 }

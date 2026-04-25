@@ -25,11 +25,14 @@ import 'core/widgets/app_privacy_shield.dart';
 import 'core/services/local_logger_service.dart';
 import 'core/widgets/offline_banner.dart';
 import 'core/services/revenue_cat_service.dart';
+import 'core/constants/feature_access_matrix.dart';
+import 'core/config/app_environment.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  AppEnvironment.validateReleaseConfiguration(isReleaseMode: kReleaseMode);
   await EasyLocalization.ensureInitialized();
 
   // Dil seçimi kaldırıldı — eski persisted non-Turkish locale'i temizle
@@ -98,6 +101,7 @@ void main() async {
   // Web: Skip NotificationService & ForegroundService (platform plugins don't support web)
   try {
     await setupServiceLocator();
+    FeatureAccessMatrix.debugPrintMatrix();
 
     final services = <Future<void>>[
       DataMigrationService.migrate(),

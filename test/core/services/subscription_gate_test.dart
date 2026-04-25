@@ -3,21 +3,19 @@ import 'package:guvenlik_app/core/services/subscription_gate.dart';
 
 void main() {
   group('SubscriptionGate policy', () {
-    test(
-      'location, fakeCall, siren, contacts, emergencyContactAdd and '
-      'emergencyContactSelect are free',
-      () {
-        expect(
-          SubscriptionGate.freeFeatures,
-          equals({
-            PremiumFeature.location,
-            PremiumFeature.fakeCall,
-            PremiumFeature.siren,
-            PremiumFeature.contacts,
-            PremiumFeature.emergencyContactAdd,
-            PremiumFeature.emergencyContactSelect,
-          }),
-        );
+    test('location, fakeCall, siren, contacts, emergencyContactAdd and '
+        'emergencyContactSelect are free', () {
+      expect(
+        SubscriptionGate.freeFeatures,
+        equals({
+          PremiumFeature.location,
+          PremiumFeature.fakeCall,
+          PremiumFeature.siren,
+          PremiumFeature.contacts,
+          PremiumFeature.emergencyContactAdd,
+          PremiumFeature.emergencyContactSelect,
+        }),
+      );
 
       for (final feature in PremiumFeature.values) {
         expect(
@@ -42,8 +40,14 @@ void main() {
           PremiumFeature.checkIn,
           PremiumFeature.volumeTrigger,
           PremiumFeature.testMode,
-          PremiumFeature.other,
+          PremiumFeature.advancedAutomation,
         ]),
+      );
+
+      expect(
+        SubscriptionGate.freeFeatures,
+        isNot(contains(PremiumFeature.panic)),
+        reason: 'Panic/SOS must remain Pro-only.',
       );
 
       // these are all free now — must NOT appear in pro features

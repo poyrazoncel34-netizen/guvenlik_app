@@ -26,6 +26,8 @@ import 'safety_timeline_screen.dart';
 import 'check_in_screen.dart';
 import 'battery_optimization_wizard.dart';
 import '../core/services/emergency_readiness_service.dart';
+import '../core/services/notification_service.dart';
+import '../core/utils/permission_helper.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -601,7 +603,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         Icons.chevron_right_rounded,
         color: AppColors.textSecondary,
       ),
-      onTap: () {
+      onTap: () async {
         Navigator.pop(context);
         if (delay == Duration.zero) {
           Navigator.push(
@@ -609,31 +611,64 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             MaterialPageRoute(builder: (_) => const FakeCallScreen()),
           );
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'fake_call_delay_scheduled'.tr(
-                  namedArgs: {'seconds': '${delay.inSeconds}'},
-                ),
-              ),
-              backgroundColor: AppColors.primary,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-          );
-          Future.delayed(delay, () {
-            if (mounted) {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const FakeCallScreen()),
-              );
-            }
-          });
+          await _scheduleDelayedFakeCall(delay);
         }
       },
     );
+  }
+
+  Future<void> _scheduleDelayedFakeCall(Duration delay) async {
+    final permissionStatus = await NotificationService.instance
+        .ensureNotificationPermissionForScheduledAction(context);
+    if (!mounted) return;
+
+    if (permissionStatus != NotificationPermissionRequestStatus.granted) {
+      final content =
+          permissionStatus ==
+              NotificationPermissionRequestStatus.permanentlyDenied
+          ? '${'notification_permission_denied'.tr()} ${'delayed_fake_call_notification_permission_required'.tr()}'
+          : 'delayed_fake_call_notification_permission_required'.tr();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(content),
+          backgroundColor: AppColors.warning,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          action:
+              permissionStatus ==
+                  NotificationPermissionRequestStatus.permanentlyDenied
+              ? SnackBarAction(
+                  label: 'open_notification_settings'.tr(),
+                  onPressed: () {
+                    unawaited(PermissionHelper.openNotificationSettings());
+                  },
+                )
+              : null,
+        ),
+      );
+      return;
+    }
+
+    final scheduled = await NotificationService.instance.scheduleFakeCall(
+      delay: delay,
+    );
+    if (!mounted) return;
+
+    final snackbar = SnackBar(
+      content: Text(
+        scheduled
+            ? 'fake_call_delay_scheduled'.tr(
+                namedArgs: {'seconds': '${delay.inSeconds}'},
+              )
+            : 'delayed_fake_call_notification_permission_required'.tr(),
+      ),
+      backgroundColor: scheduled ? AppColors.primary : AppColors.warning,
+      behavior: SnackBarBehavior.floating,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    );
+    ScaffoldMessenger.of(context).showSnackBar(snackbar);
   }
 
   Widget _buildOnboardingCard(HomeProvider provider, bool isPro) {

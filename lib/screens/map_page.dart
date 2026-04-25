@@ -40,6 +40,7 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
   bool _isLoading = true;
   LocationStatus? _locationStatus;
   bool _usingFallbackLocation = false;
+  DateTime? _fallbackCheckedAt;
 
   // Animation
   late AnimationController _pulseController;
@@ -91,8 +92,10 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
       if (result.isSuccess && result.position != null) {
         _currentLocation = result.position;
         _usingFallbackLocation = false;
+        _fallbackCheckedAt = null;
       } else {
-        _usingFallbackLocation = _currentLocation == null;
+        _usingFallbackLocation = true;
+        _fallbackCheckedAt = DateTime.now();
       }
     });
 
@@ -127,6 +130,7 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
       setState(() {
         _currentLocation = result.position;
         _usingFallbackLocation = false;
+        _fallbackCheckedAt = null;
       });
       _animateToLocation(result.position!);
 
@@ -154,7 +158,15 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
       }
     } else {
       if (mounted && _currentLocation == null) {
-        setState(() => _usingFallbackLocation = true);
+        setState(() {
+          _usingFallbackLocation = true;
+          _fallbackCheckedAt = DateTime.now();
+        });
+      } else if (mounted) {
+        setState(() {
+          _usingFallbackLocation = true;
+          _fallbackCheckedAt = DateTime.now();
+        });
       }
       _showPermissionError(result);
     }
@@ -480,13 +492,31 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
                       ),
                       const SizedBox(width: 8),
                       Expanded(
-                        child: Text(
-                          "map_fallback_location".tr(),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                          ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "map_fallback_location".tr(),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            if (_fallbackCheckedAt != null)
+                              Text(
+                                'map_fallback_location_time'.tr(
+                                  namedArgs: {
+                                    'time': _formatClock(_fallbackCheckedAt!),
+                                  },
+                                ),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                          ],
                         ),
                       ),
                     ],
@@ -550,6 +580,12 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
           ),
       ],
     );
+  }
+
+  String _formatClock(DateTime value) {
+    final hour = value.hour.toString().padLeft(2, '0');
+    final minute = value.minute.toString().padLeft(2, '0');
+    return '$hour:$minute';
   }
 
   Widget _buildOfflineMapSurface() {

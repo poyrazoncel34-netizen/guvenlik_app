@@ -69,6 +69,12 @@ object CheckInScheduler {
         restoreSessionAfterBoot(context, SESSION_SAFE_WALK)
     }
 
+    fun hasActiveSession(context: Context): Boolean {
+        val prefs = EmergencyPrefs.prefs(context)
+        return prefs.getBoolean(keyFor(SESSION_CHECK_IN, EmergencyPrefs.KEY_CHECK_IN_ACTIVE), false) ||
+            prefs.getBoolean(keyFor(SESSION_SAFE_WALK, EmergencyPrefs.KEY_CHECK_IN_ACTIVE), false)
+    }
+
     fun sessionFromIntent(intent: Intent?): String {
         return normalizeSession(intent?.getStringExtra("sessionId"))
     }

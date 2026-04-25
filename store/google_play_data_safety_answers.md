@@ -1,7 +1,7 @@
 # Google Play Data Safety Section — Form Yanıtları
 
 ## Veri Toplama
-- Uygulama kullanıcıdan veri topluyor mu? **EVET** (cihazda kalır, sunucuya gönderilmez)
+- Uygulama kullanıcıdan veri topluyor mu? **EVET**. Güvenlik verilerinin ana kopyası cihazda kalır; abonelik doğrulama verileri Google Play Billing ve RevenueCat tarafından işlenebilir.
 
 ---
 
@@ -29,7 +29,7 @@
   - İşleme: Cihazda (SQLite)
 
 ### Fotoğraf ve Video
-- Fotoğraf: **EVET** (profil fotoğrafı — opsiyonel)
+- Fotoğraf: **HAYIR** (bu sürümde profil fotoğrafı seçici yok)
   - Toplama amacı: Uygulama işlevselliği (profil)
   - Zorunlu mu: **HAYIR**
   - Paylaşılıyor mu: **HAYIR**
@@ -43,7 +43,7 @@
 |------|-------|
 | Veri aktarım sırasında şifreleniyor mu? | Geliştirici backend'i yok. Harita ve Google Play Billing trafiği kendi sağlayıcı altyapısına tabidir. |
 | Veri silinebilir mi? | **EVET** — uygulama içinden tam silme mevcut |
-| Veri sunucuya gönderilmiyor | **DOĞRU** — geliştirici backend'i yok; harita ve Google Play Billing sağlayıcıları ayrıca değerlendirilir |
+| Güvenlik verileri geliştirici sunucusuna gönderilmiyor | **DOĞRU** — geliştirici backend'i yok; harita, Google Play Billing ve RevenueCat sağlayıcıları ayrıca değerlendirilir |
 | Veri üçüncü tarafla paylaşılmıyor | **DOĞRU** — analytics, crashlytics, reklam servisi yok |
 
 ---

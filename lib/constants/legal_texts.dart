@@ -6,10 +6,10 @@
 
 class LegalTexts {
   // ── Sürüm Numaraları ──────────────────────────────────────────────────────
-  static const String termsVersion = '3.0.0';
-  static const String kvkkVersion = '3.0.0';
-  static const String lastUpdated = '19 Mart 2026';
-  static const String lastUpdatedEn = 'March 19, 2026';
+  static const String termsVersion = '3.1.0';
+  static const String kvkkVersion = '3.1.0';
+  static const String lastUpdated = '25 Nisan 2026';
+  static const String lastUpdatedEn = 'April 25, 2026';
 
   // ── Kullanım Sözleşmesi — Türkçe ─────────────────────────────────────────
   static const String termsOfServiceTr =
@@ -22,14 +22,14 @@ Bu Kullanım Sözleşmesi ("Sözleşme"), Poyraz Öncel ("Geliştirici") ile uyg
 ──────────────────────────────────────
 1. UYGULAMANIN AMACI VE KAPSAMI
 ──────────────────────────────────────
-KoruBeni, kişisel güvenlik farkındalığını desteklemek amacıyla geliştirilmiş bir Android yardımcı uygulamadır. Uygulama temel ücretsiz kullanım sunabilir; panik butonu, acil kişi yönetimi, güvenli yürüyüş/check-in, siren ve güvenlik geçmişi gibi ek araçlar isteğe bağlı KoruBeni Pro aboneliğiyle açılabilir.
+KoruBeni, kişisel güvenlik farkındalığını desteklemek amacıyla geliştirilmiş bir Android yardımcı uygulamadır. Uygulama temel ücretsiz kullanım sunabilir. Panik/SOS, güvenli yürüyüş/check-in, ses tuşu tetikleyici, test modu ve güvenlik geçmişi gibi ek araçlar isteğe bağlı KoruBeni Pro aboneliğiyle açılabilir. Acil kişi yönetimi ve siren bu sürümde ücretsiz araçlardır.
 
 6502 Sayılı Tüketicinin Korunması Hakkında Kanun kapsamında bilgilendirme: KoruBeni temel ücretsiz kullanım ve Google Play üzerinden yönetilen isteğe bağlı Pro abonelik sunabilir. Profesyonel güvenlik hizmeti, acil müdahale servisi veya herhangi bir mesleki güvenlik çözümü DEĞİLDİR. Herhangi bir hizmet seviyesi taahhüdü verilmemektedir.
 
 ──────────────────────────────────────
-2. YAŞ SINIRI VE EBEVEYN ONAYI
+2. YAŞ SINIRI
 ──────────────────────────────────────
-Bu uygulamayı kullanmak için 18 yaşından büyük olmanız veya ebeveyn/veli onayı ile kullanmanız gerekmektedir. 18 yaşından küçük kullanıcıların kişisel verilerinin işlenmesi, KVKK Madde 6 kapsamında ebeveyn/veli açık rızasına tabidir. Kullanıcı, yaş beyanının doğruluğundan münhasıran kendisi sorumludur.
+Bu uygulamayı kullanmak için 18 yaşından büyük olmanız gerekmektedir. Bu sürümde 18 yaş altı kullanım desteklenmez. Kullanıcı, yaş beyanının doğruluğundan münhasıran kendisi sorumludur.
 
 ──────────────────────────────────────
 3. SORUMLULUK REDDİ (DİSCLAIMER)
@@ -125,14 +125,14 @@ This Terms of Service Agreement ("Agreement") is entered into between Poyraz Ön
 ──────────────────────────────────────
 1. PURPOSE AND SCOPE
 ──────────────────────────────────────
-KoruBeni is an Android utility application developed to support personal safety awareness. The app may offer basic free functionality; additional tools such as panic flow, emergency contact management, safe walk/check-in, siren, and safety history may unlock with the optional KoruBeni Pro subscription.
+KoruBeni is an Android utility application developed to support personal safety awareness. The app may offer basic free functionality. Additional tools such as Panic/SOS, safe walk/check-in, volume trigger, test mode, and safety history may unlock with the optional KoruBeni Pro subscription. Emergency contact management and siren are free tools in this release.
 
 Notice under Consumer Protection Law No. 6502: KoruBeni may offer basic free functionality and an optional Pro subscription managed through Google Play. It is NOT a professional security service, emergency response service, or any professional security solution. No service level commitment is provided.
 
 ──────────────────────────────────────
-2. AGE RESTRICTION AND PARENTAL CONSENT
+2. AGE RESTRICTION
 ──────────────────────────────────────
-You must be at least 18 years old or have parental/guardian consent to use this application. Processing of personal data of users under 18 is subject to explicit parental/guardian consent under KVKK Article 6. The User is solely responsible for the accuracy of their age declaration.
+You must be at least 18 years old to use this application. Under-18 use is not supported in this release. The User is solely responsible for the accuracy of their age declaration.
 
 ──────────────────────────────────────
 3. DISCLAIMER
@@ -335,7 +335,7 @@ E-mail    : korubeni.destek@gmail.com
 ──────────────────────────────────────
 Category          | Data                              | Purpose                               | Legal Basis
 ─────────────────────────────────────────────────────────────────────────────────────────────────────────
-Identity          | Name, profile photo               | Application profile                   | Explicit consent
+Identity          | Name                              | Application profile                   | Explicit consent
 Contact           | Emergency contact name, phone     | Emergency call flow                   | Explicit consent
 Location          | GPS coordinates                   | Map and location session              | Explicit consent
 Security          | PIN code (encrypted)              | App access control                    | Legitimate interest

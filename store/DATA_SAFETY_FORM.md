@@ -99,7 +99,7 @@ The app does not use Firebase Analytics, Crashlytics, or another telemetry backe
 **Data used by the app:**
 - Location, only during emergency/location session flows
 - Contacts, only for choosing emergency contacts
-- Optional profile name/photo, device-only
+- Optional profile name, device-only
 - Fake call settings/avatar and local event data, device-only
 
 **Shared with:** Not automatically shared by the app. Emergency contacts are used for call flow only.

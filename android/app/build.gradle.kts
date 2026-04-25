@@ -7,6 +7,7 @@ plugins {
 
 import java.util.Properties
 import java.io.FileInputStream
+import java.util.Base64
 
 val keystoreProperties = Properties()
 val keystorePropertiesFile = rootProject.file("key.properties")
@@ -26,6 +27,37 @@ fun releaseSigningValue(name: String): String {
         throw GradleException("Release signing property '$name' is missing in android/key.properties.")
     }
     return value.orEmpty()
+}
+
+fun dartDefineValue(name: String): String {
+    val encodedDefines = (project.findProperty("dart-defines") as? String).orEmpty()
+    if (encodedDefines.isBlank()) return ""
+    return encodedDefines.split(",")
+        .mapNotNull {
+            try {
+                String(Base64.getDecoder().decode(it), Charsets.UTF_8)
+            } catch (_: IllegalArgumentException) {
+                null
+            }
+        }
+        .firstOrNull { it.startsWith("$name=") }
+        ?.substringAfter("=")
+        .orEmpty()
+}
+
+if (releaseBuildRequested) {
+    val env = dartDefineValue("ENV")
+    val revenueCatKey = dartDefineValue("REVENUECAT_ANDROID_API_KEY")
+    val encryptionKey = dartDefineValue("ENCRYPTION_KEY")
+    if (env != "production") {
+        throw GradleException("Release build requires --dart-define=ENV=production.")
+    }
+    if (revenueCatKey.isBlank()) {
+        throw GradleException("Release build requires --dart-define=REVENUECAT_ANDROID_API_KEY.")
+    }
+    if (encryptionKey.isBlank()) {
+        throw GradleException("Release build requires --dart-define=ENCRYPTION_KEY.")
+    }
 }
 
 android {

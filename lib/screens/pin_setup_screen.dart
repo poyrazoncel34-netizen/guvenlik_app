@@ -11,6 +11,7 @@ import '../core/constants/app_constants.dart';
 import '../core/di/service_locator.dart';
 import '../core/security/secure_storage.dart';
 import '../core/security/secure_storage_keys.dart';
+import '../core/utils/validators.dart';
 import 'settings_legal/legal_settings_screen.dart';
 
 class PinSetupScreen extends StatefulWidget {
@@ -59,6 +60,14 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
 
     // Check completion
     if (!_isConfirming && _pin.length == AppConstants.pinLength) {
+      if (!Validators.isValidPin(_pin)) {
+        HapticFeedback.vibrate();
+        setState(() {
+          _errorMessage = 'pin_weak_error'.tr();
+          _pin = '';
+        });
+        return;
+      }
       Future.delayed(const Duration(milliseconds: 200), () {
         if (mounted) {
           setState(() {

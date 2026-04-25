@@ -6,7 +6,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:purchases_ui_flutter/purchases_ui_flutter.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../core/app_colors.dart';
+import '../../core/constants/app_constants.dart';
 import '../../core/services/revenue_cat_service.dart';
 import '../../presentation/providers/subscription_provider.dart';
 import 'paywall_screen.dart';
@@ -60,14 +62,30 @@ class _SubscriptionManagementScreenState
         await provider.refresh();
       }
     } catch (e) {
+      final fallbackOpened = await _openPlaySubscriptionsFallback();
       if (mounted) {
         messenger.showSnackBar(
           SnackBar(
-            content: Text('subscription_customer_center_error'.tr()),
+            content: Text(
+              fallbackOpened
+                  ? 'subscription_customer_center_fallback'.tr()
+                  : 'subscription_customer_center_error'.tr(),
+            ),
             behavior: SnackBarBehavior.floating,
           ),
         );
       }
+    }
+  }
+
+  Future<bool> _openPlaySubscriptionsFallback() async {
+    try {
+      return launchUrl(
+        Uri.parse(AppConstants.googlePlaySubscriptionsUrl),
+        mode: LaunchMode.externalApplication,
+      );
+    } catch (_) {
+      return false;
     }
   }
 

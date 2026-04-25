@@ -9,6 +9,8 @@ import 'package:permission_handler/permission_handler.dart';
 import '../app_colors.dart';
 import '../services/app_settings_service.dart';
 
+enum NotificationPermissionRequestStatus { granted, denied, permanentlyDenied }
+
 /// Centralized permission handling with user-friendly dialogs.
 /// Play Store Prominent Disclosure: Tehlikeli izinler (arka plan konum, pil optimizasyonu)
 /// için izin istemeden ÖNCE kullanıcıya açık bilgilendirme gösterilir.
@@ -161,6 +163,42 @@ class PermissionHelper {
 
     return false;
   }
+
+  static Future<NotificationPermissionRequestStatus>
+  requestNotificationPermissionForScheduledAction(BuildContext context) async {
+    if (!await AppSettingsService.notificationsEnabled()) {
+      return NotificationPermissionRequestStatus.denied;
+    }
+
+    if (await hasNotificationPermission()) {
+      return NotificationPermissionRequestStatus.granted;
+    }
+    if (!context.mounted) {
+      return NotificationPermissionRequestStatus.denied;
+    }
+
+    final accepted = await _showProminentDisclosure(
+      context,
+      title: 'perm_notifications_prominent_title'.tr(),
+      message: 'perm_notifications_prominent_msg'.tr(),
+    );
+    if (accepted != true) {
+      final status = await Permission.notification.status;
+      return status.isPermanentlyDenied
+          ? NotificationPermissionRequestStatus.permanentlyDenied
+          : NotificationPermissionRequestStatus.denied;
+    }
+
+    final result = await Permission.notification.request();
+    if (result.isGranted || result.isLimited || result.isProvisional) {
+      return NotificationPermissionRequestStatus.granted;
+    }
+    return result.isPermanentlyDenied
+        ? NotificationPermissionRequestStatus.permanentlyDenied
+        : NotificationPermissionRequestStatus.denied;
+  }
+
+  static Future<bool> openNotificationSettings() => openAppSettings();
 
   /// Play Store Prominent Disclosure: İzin istemeden önce gösterilen bilgilendirme.
   /// Kullanıcı "Kabul Et" demezse native izin adımına geçilmez.

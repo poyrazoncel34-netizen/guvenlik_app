@@ -25,7 +25,7 @@ class UnifiedConsentScreen extends StatefulWidget {
 }
 
 class _UnifiedConsentScreenState extends State<UnifiedConsentScreen> {
-  int? _selectedAgeOption; // 0 = 18+, 1 = veli onayı
+  int? _selectedAgeOption; // 0 = 18+
 
   bool _isEulaAccepted = false;
   bool _isKvkkAccepted = false;
@@ -86,14 +86,16 @@ class _UnifiedConsentScreenState extends State<UnifiedConsentScreen> {
 
       if (!mounted) return;
 
-      unawaited(Navigator.of(context).pushReplacement(
-        PageRouteBuilder(
-          pageBuilder: (context, animation, _) => const OnboardingScreen(),
-          transitionsBuilder: (context, animation, _, child) =>
-              FadeTransition(opacity: animation, child: child),
-          transitionDuration: const Duration(milliseconds: 400),
+      unawaited(
+        Navigator.of(context).pushReplacement(
+          PageRouteBuilder(
+            pageBuilder: (context, animation, _) => const OnboardingScreen(),
+            transitionsBuilder: (context, animation, _, child) =>
+                FadeTransition(opacity: animation, child: child),
+            transitionDuration: const Duration(milliseconds: 400),
+          ),
         ),
-      ));
+      );
     } on Exception catch (_) {
       if (mounted) setState(() => _loading = false);
       rethrow;
@@ -180,13 +182,6 @@ class _UnifiedConsentScreenState extends State<UnifiedConsentScreen> {
           label: 'legal_age_adult'.tr(),
           sublabel: 'legal_age_adult_sub'.tr(),
         ),
-        const SizedBox(height: 8),
-        _buildAgeOption(
-          index: 1,
-          icon: Icons.family_restroom_outlined,
-          label: 'legal_age_minor'.tr(),
-          sublabel: 'legal_age_minor_sub'.tr(),
-        ),
         const SizedBox(height: 10),
         Container(
           padding: const EdgeInsets.all(12),
@@ -237,8 +232,7 @@ class _UnifiedConsentScreenState extends State<UnifiedConsentScreen> {
             Icon(
               icon,
               size: 26,
-              color:
-                  isSelected ? AppColors.primary : AppColors.textSecondary,
+              color: isSelected ? AppColors.primary : AppColors.textSecondary,
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -267,9 +261,7 @@ class _UnifiedConsentScreenState extends State<UnifiedConsentScreen> {
               ),
             ),
             Icon(
-              isSelected
-                  ? Icons.radio_button_checked
-                  : Icons.radio_button_off,
+              isSelected ? Icons.radio_button_checked : Icons.radio_button_off,
               color: isSelected ? AppColors.primary : AppColors.border,
             ),
           ],
@@ -298,8 +290,10 @@ class _UnifiedConsentScreenState extends State<UnifiedConsentScreen> {
             children: [
               Container(
                 width: double.infinity,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.primary.withValues(alpha: 0.08),
                   borderRadius: const BorderRadius.vertical(
@@ -340,8 +334,7 @@ class _UnifiedConsentScreenState extends State<UnifiedConsentScreen> {
                   ),
                 ),
               TextButton.icon(
-                onPressed: () =>
-                    setState(() => _eulaExpanded = !_eulaExpanded),
+                onPressed: () => setState(() => _eulaExpanded = !_eulaExpanded),
                 icon: Icon(
                   _eulaExpanded
                       ? Icons.keyboard_arrow_up_rounded
@@ -395,8 +388,10 @@ class _UnifiedConsentScreenState extends State<UnifiedConsentScreen> {
             children: [
               Container(
                 width: double.infinity,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.accent.withValues(alpha: 0.08),
                   borderRadius: const BorderRadius.vertical(
@@ -466,8 +461,7 @@ class _UnifiedConsentScreenState extends State<UnifiedConsentScreen> {
                   ),
                 ),
               TextButton.icon(
-                onPressed: () =>
-                    setState(() => _kvkkExpanded = !_kvkkExpanded),
+                onPressed: () => setState(() => _kvkkExpanded = !_kvkkExpanded),
                 icon: Icon(
                   _kvkkExpanded
                       ? Icons.keyboard_arrow_up_rounded
@@ -476,9 +470,7 @@ class _UnifiedConsentScreenState extends State<UnifiedConsentScreen> {
                   color: AppColors.accent,
                 ),
                 label: Text(
-                  _kvkkExpanded
-                      ? 'legal_collapse'.tr()
-                      : 'legal_expand'.tr(),
+                  _kvkkExpanded ? 'legal_collapse'.tr() : 'legal_expand'.tr(),
                   style: const TextStyle(
                     fontSize: 13,
                     color: AppColors.accent,
@@ -587,9 +579,7 @@ class _UnifiedConsentScreenState extends State<UnifiedConsentScreen> {
     return Container(
       decoration: const BoxDecoration(
         color: AppColors.surface,
-        border: Border(
-          top: BorderSide(color: AppColors.border),
-        ),
+        border: Border(top: BorderSide(color: AppColors.border)),
       ),
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
       child: SizedBox(
