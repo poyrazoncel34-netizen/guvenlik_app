@@ -13,6 +13,7 @@ cp "$SRC/privacy_policy.html" "$DEST/"
 cp "$SRC/privacy_policy_en.html" "$DEST/"
 cp "$SRC/kullanim_sartlari.html" "$DEST/"
 cp "$SRC/aydinlatma_metni.html" "$DEST/aydinlatma.html"
+cp "$SRC/data_deletion.html" "$DEST/"
 # index.html: ana sayfa olarak TR versiyonuna yönlendir
 if [ -f "$DEST/index.html" ]; then
   # Mevcut index varsa güncelle (linkler için)
