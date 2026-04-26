@@ -22,9 +22,9 @@ class LegalConstants {
   static const String lastUpdated = '2026-03-19';
 
   /// Veri Sorumlusu bilgileri
-  static const String dataControllerName = 'Poyraz Öncel';
-  static const String dataControllerTitle = 'Bireysel Yazılım Geliştirici';
-  static const String dataControllerCity = 'İzmir, Türkiye';
+  static const String dataControllerName = 'KoruBeni';
+  static const String dataControllerTitle = 'KoruBeni';
+  static const String dataControllerCity = '';
   static const String dataControllerEmail = 'korubeni.destek@gmail.com';
 
   /// Yetkili mahkeme

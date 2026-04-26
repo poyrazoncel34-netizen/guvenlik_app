@@ -34,7 +34,8 @@ class UserDataExportService {
       'exportInfo': {
         'exportDate': DateTime.now().toIso8601String(),
         'appName': AppConstants.appName,
-        'dataController': 'Poyraz Öncel — ${AppConstants.supportEmail}',
+        'dataController':
+            '${AppConstants.appName} — ${AppConstants.supportEmail}',
         'kvkkNote':
             'Bu dışa aktarım KVKK Madde 11/ğ kapsamında veri portabilitesi hakkı çerçevesinde oluşturulmuştur.',
       },

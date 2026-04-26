@@ -33,8 +33,10 @@ class LegalSettingsScreen extends StatelessWidget {
           ),
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded,
-              color: AppColors.textSecondary),
+          icon: const Icon(
+            Icons.arrow_back_rounded,
+            color: AppColors.textSecondary,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
         elevation: 0,
@@ -73,8 +75,7 @@ class LegalSettingsScreen extends StatelessWidget {
               onTap: () => Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) =>
-                      const KvkkDisclosureScreen(isReadOnly: true),
+                  builder: (_) => const KvkkDisclosureScreen(isReadOnly: true),
                 ),
               ),
             ),
@@ -122,9 +123,7 @@ class LegalSettingsScreen extends StatelessWidget {
               subtitleKey: 'legal_settings_export_subtitle',
               onTap: () => Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (_) => const DataExportScreen(),
-                ),
+                MaterialPageRoute(builder: (_) => const DataExportScreen()),
               ),
             ),
           ]),
@@ -143,9 +142,7 @@ class LegalSettingsScreen extends StatelessWidget {
               subtitleKey: 'legal_settings_delete_subtitle',
               onTap: () => Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (_) => const DataDeletionScreen(),
-                ),
+                MaterialPageRoute(builder: (_) => const DataDeletionScreen()),
               ),
               isDanger: true,
             ),
@@ -170,7 +167,7 @@ class LegalSettingsScreen extends StatelessWidget {
                   queryParameters: {
                     'subject': 'KVKK Başvurusu',
                     'body':
-                        'Ad-Soyad: \nBaşvuru Konusu: \nTalep Edilen İşlem: ',
+                        'Başvuru Sahibi: \nBaşvuru Konusu: \nTalep Edilen İşlem: ',
                   },
                 );
                 try {

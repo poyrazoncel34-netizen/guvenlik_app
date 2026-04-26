@@ -43,7 +43,10 @@ void main() {
       ).readAsStringSync();
       final dataDeletion = File('store/data_deletion.html').readAsStringSync();
 
-      expect(constants, contains('https://poyrazoncel.github.io/korubeni'));
+      expect(
+        constants,
+        contains('https://poyrazoncel34-netizen.github.io/guvenlik_app'),
+      );
       expect(constants, isNot(contains('TODO_PUBLIC_ACCOUNT_DELETION_URL')));
       expect(dataDeletion, isNot(contains('TODO_PUBLIC_ACCOUNT_DELETION_URL')));
     });

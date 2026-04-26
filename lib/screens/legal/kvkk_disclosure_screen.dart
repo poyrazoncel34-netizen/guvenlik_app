@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../../core/app_colors.dart';
+import '../../core/constants/app_constants.dart';
 import '../../constants/legal_texts.dart';
 import '../../services/consent_manager.dart';
 import '../../models/consent_record.dart';
@@ -68,8 +69,10 @@ class _KvkkDisclosureScreenState extends State<KvkkDisclosureScreen> {
         ),
         leading: widget.isReadOnly
             ? IconButton(
-                icon: const Icon(Icons.close_rounded,
-                    color: AppColors.textSecondary),
+                icon: const Icon(
+                  Icons.close_rounded,
+                  color: AppColors.textSecondary,
+                ),
                 onPressed: () => Navigator.pop(context),
               )
             : null,
@@ -85,13 +88,15 @@ class _KvkkDisclosureScreenState extends State<KvkkDisclosureScreen> {
           // KVKK badge
           Container(
             width: double.infinity,
-            padding:
-                const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
             color: AppColors.accent.withValues(alpha: 0.08),
             child: Row(
               children: [
-                const Icon(Icons.verified_user_rounded,
-                    size: 16, color: AppColors.accent),
+                const Icon(
+                  Icons.verified_user_rounded,
+                  size: 16,
+                  color: AppColors.accent,
+                ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -128,12 +133,8 @@ class _KvkkDisclosureScreenState extends State<KvkkDisclosureScreen> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                _dataRow('legal_dc_name'.tr(), 'Poyraz Öncel'),
-                _dataRow('legal_dc_title'.tr(),
-                    'legal_dc_title_value'.tr()),
-                _dataRow('legal_dc_address'.tr(), 'İzmir, Türkiye'),
-                _dataRow('legal_dc_email'.tr(),
-                    'korubeni.destek@gmail.com'),
+                _dataRow('legal_data_controller'.tr(), AppConstants.appName),
+                _dataRow('legal_dc_contact'.tr(), AppConstants.supportEmail),
               ],
             ),
           ),
@@ -157,11 +158,9 @@ class _KvkkDisclosureScreenState extends State<KvkkDisclosureScreen> {
           // Onay alanı
           if (!widget.isReadOnly)
             Container(
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 color: AppColors.surface,
-                border: Border(
-                  top: BorderSide(color: AppColors.border),
-                ),
+                border: Border(top: BorderSide(color: AppColors.border)),
               ),
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
               child: Column(
@@ -180,8 +179,9 @@ class _KvkkDisclosureScreenState extends State<KvkkDisclosureScreen> {
                             : AppColors.cardBg,
                         borderRadius: BorderRadius.circular(14),
                         border: Border.all(
-                          color:
-                              _accepted ? AppColors.accent : AppColors.border,
+                          color: _accepted
+                              ? AppColors.accent
+                              : AppColors.border,
                         ),
                       ),
                       child: Row(
@@ -225,8 +225,9 @@ class _KvkkDisclosureScreenState extends State<KvkkDisclosureScreen> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.accent,
                         foregroundColor: Colors.white,
-                        disabledBackgroundColor:
-                            AppColors.accent.withValues(alpha: 0.3),
+                        disabledBackgroundColor: AppColors.accent.withValues(
+                          alpha: 0.3,
+                        ),
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(14),

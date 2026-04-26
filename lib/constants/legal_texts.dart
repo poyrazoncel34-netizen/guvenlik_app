@@ -17,7 +17,7 @@ class LegalTexts {
 KULLANIM SÖZLEŞMESİ (SON KULLANICI LİSANS SÖZLEŞMESİ — EULA)
 Sürüm $termsVersion | Son Güncelleme: $lastUpdated
 
-Bu Kullanım Sözleşmesi ("Sözleşme"), Poyraz Öncel ("Geliştirici") ile uygulamayı indiren ve kullanan kişi ("Kullanıcı") arasında akdedilmektedir. Uygulamayı kullanarak bu Sözleşme'nin tüm koşullarını okuduğunuzu, anladığınızı ve kabul ettiğinizi beyan etmiş olursunuz.
+Bu Kullanım Sözleşmesi ("Sözleşme"), KoruBeni ("Geliştirici") ile uygulamayı indiren ve kullanan kişi ("Kullanıcı") arasında akdedilmektedir. Uygulamayı kullanarak bu Sözleşme'nin tüm koşullarını okuduğunuzu, anladığınızı ve kabul ettiğinizi beyan etmiş olursunuz.
 
 ──────────────────────────────────────
 1. UYGULAMANIN AMACI VE KAPSAMI
@@ -94,7 +94,7 @@ Doğal afet, savaş, salgın hastalık, internet/telekomünikasyon altyapısı k
 ──────────────────────────────────────
 12. FİKRİ MÜLKİYET
 ──────────────────────────────────────
-Uygulama ve içerdiği tüm fikri mülkiyet hakları Poyraz Öncel'e aittir. Kullanıcıya yalnızca kişisel, devredilemez, münhasır olmayan bir kullanım lisansı verilmektedir.
+Uygulama ve içerdiği tüm fikri mülkiyet hakları KoruBeni'ye aittir. Kullanıcıya yalnızca kişisel, devredilemez, münhasır olmayan bir kullanım lisansı verilmektedir.
 
 ──────────────────────────────────────
 13. UYGULANACAK HUKUK VE YETKİLİ MAHKEME
@@ -120,7 +120,7 @@ Geliştirici bu Sözleşme'yi dilediği zaman güncelleme hakkını saklı tutar
 TERMS OF SERVICE (END USER LICENSE AGREEMENT — EULA)
 Version $termsVersion | Last Updated: $lastUpdatedEn
 
-This Terms of Service Agreement ("Agreement") is entered into between Poyraz Öncel ("Developer") and the individual downloading and using the application ("User"). By using the application, you declare that you have read, understood, and accepted all terms of this Agreement.
+This Terms of Service Agreement ("Agreement") is entered into between KoruBeni ("Developer") and the individual downloading and using the application ("User"). By using the application, you declare that you have read, understood, and accepted all terms of this Agreement.
 
 ──────────────────────────────────────
 1. PURPOSE AND SCOPE
@@ -197,7 +197,7 @@ The Developer shall not be liable for any failure or delay in the operation of t
 ──────────────────────────────────────
 12. INTELLECTUAL PROPERTY
 ──────────────────────────────────────
-The application and all intellectual property rights contained therein belong to Poyraz Öncel. The User is granted only a personal, non-transferable, non-exclusive license to use the application.
+The application and all intellectual property rights contained therein belong to KoruBeni. The User is granted only a personal, non-transferable, non-exclusive license to use the application.
 
 ──────────────────────────────────────
 13. GOVERNING LAW AND JURISDICTION
@@ -229,10 +229,8 @@ Sürüm $kvkkVersion | Son Güncelleme: $lastUpdated
 ──────────────────────────────────────
 1. VERİ SORUMLUSUNUN KİMLİĞİ
 ──────────────────────────────────────
-Ad-Soyad  : Poyraz Öncel
-Sıfat     : Bireysel Yazılım Geliştirici
-Adres     : İzmir, Türkiye
-E-posta   : korubeni.destek@gmail.com
+Veri Sorumlusu : KoruBeni
+İletişim       : korubeni.destek@gmail.com
 
 ──────────────────────────────────────
 2. İŞLENEN KİŞİSEL VERİLER
@@ -325,10 +323,8 @@ This disclosure notice is provided pursuant to Article 10 of Law No. 6698 on the
 ──────────────────────────────────────
 1. DATA CONTROLLER IDENTITY
 ──────────────────────────────────────
-Name      : Poyraz Öncel
-Title     : Individual Software Developer
-Address   : İzmir, Turkey
-E-mail    : korubeni.destek@gmail.com
+Data Controller : KoruBeni
+Contact         : korubeni.destek@gmail.com
 
 ──────────────────────────────────────
 2. PERSONAL DATA PROCESSED
