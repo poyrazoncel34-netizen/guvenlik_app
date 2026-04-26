@@ -35,6 +35,6 @@ Testing instructions:
 - Return to Home and verify the panic/SOS button shows active Pro copy before long press.
 
 Manual fields still needed:
-- Final public account/data deletion URL: `https://poyrazoncel.github.io/korubeni/data_deletion.html`.
+- Final public account/data deletion URL: `https://poyrazoncel34-netizen.github.io/guvenlik_app/data_deletion.html`.
 - Final Play subscription product IDs and RevenueCat offering identifiers.
 - Any reviewer test account notes required by the active Play test track.

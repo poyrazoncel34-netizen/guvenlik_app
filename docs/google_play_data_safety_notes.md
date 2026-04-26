@@ -19,4 +19,4 @@ User deletion:
 - In app: Settings -> Legal Information -> Delete My Data.
 - Android system: Settings -> Apps -> KoruBeni -> Storage -> Clear data.
 - Subscription cancellation is separate: Google Play -> Subscriptions.
-- Public deletion URL: `https://poyrazoncel.github.io/korubeni/data_deletion.html`.
+- Public deletion URL: `https://poyrazoncel34-netizen.github.io/guvenlik_app/data_deletion.html`.

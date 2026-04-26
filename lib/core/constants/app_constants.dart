@@ -66,7 +66,7 @@ class AppConstants {
   static const String prefWarningLocation = 'warning_location_shown';
 
   // Yasal belgeler URL'leri
-  static const String legalBaseUrl = 'https://poyrazoncel.github.io/korubeni';
+  static const String legalBaseUrl = 'https://poyrazoncel34-netizen.github.io/guvenlik_app';
   static const String termsOfServiceUrl =
       '$legalBaseUrl/kullanim_sartlari.html';
   static const String subscriptionTermsUrl = termsOfServiceUrl;

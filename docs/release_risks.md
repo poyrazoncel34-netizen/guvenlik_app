@@ -13,7 +13,7 @@ Current mitigation:
 
 ## Manual Play Console Items
 
-- Public data deletion URL is `https://poyrazoncel.github.io/korubeni/data_deletion.html`; verify the hosted page stays live before release.
+- Public data deletion URL is `https://poyrazoncel34-netizen.github.io/guvenlik_app/data_deletion.html`; verify the hosted page stays live before release.
 - Confirm RevenueCat products, offering IDs, and Google Play subscription products match.
 - Complete Play Console content rating with 18+ intended audience notes.
 - Copy `docs/play_console_declarations.md` into the corresponding declaration fields.
