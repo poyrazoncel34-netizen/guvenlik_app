@@ -44,7 +44,7 @@ class _SafetyTimelineScreenState extends State<SafetyTimelineScreen> {
   Future<void> _loadEntries() async {
     final prefs = await SharedPreferences.getInstance();
     final raw = prefs.getStringList(_storageKey) ?? [];
-    final entries = raw
+    final notes = raw
         .map((e) {
           try {
             return jsonDecode(e) as Map<String, dynamic>;
@@ -53,7 +53,26 @@ class _SafetyTimelineScreenState extends State<SafetyTimelineScreen> {
           }
         })
         .where((e) => e.isNotEmpty)
+        .map((e) => {...e, '_kind': 'note'})
         .toList();
+
+    // Merge with real safety activity events (panic, fake call, siren,
+    // safe walk, check-in, etc.) so the paid Safety History reflects what
+    // actually happened, not just user notes.
+    final activity = await ActivityService.getEvents();
+    final activityEntries = activity.map(
+      (e) => {
+        'id': e.id,
+        '_kind': 'activity',
+        '_activityType': e.type.name,
+        'destination': e.title,
+        'plan': '',
+        'notes': e.description,
+        'timestamp': e.timestamp.toIso8601String(),
+      },
+    );
+
+    final entries = [...notes, ...activityEntries];
     entries.sort((a, b) {
       final aTime = DateTime.tryParse(a['timestamp'] ?? '') ?? DateTime(2000);
       final bTime = DateTime.tryParse(b['timestamp'] ?? '') ?? DateTime(2000);

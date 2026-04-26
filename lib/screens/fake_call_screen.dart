@@ -19,7 +19,9 @@ import '../core/security/secure_storage.dart';
 import '../core/security/secure_storage_keys.dart';
 import '../core/services/activity_service.dart';
 import '../core/services/app_settings_service.dart';
+import '../core/services/consent_gate_service.dart';
 import '../domain/models/activity_event.dart';
+import '../models/consent_record.dart';
 
 class FakeCallScreen extends StatefulWidget {
   const FakeCallScreen({super.key});
@@ -52,9 +54,20 @@ class _FakeCallScreenState extends State<FakeCallScreen>
     )..repeat(reverse: true);
     _loadSavedSettings();
     _startRingtone();
-    WidgetsBinding.instance.addPostFrameCallback(
-      (_) => unawaited(_checkFirstUseWarning()),
-    );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Defense-in-depth gate: a delayed/scheduled fake call may push this
+      // screen even after consent was withdrawn from settings.
+      if (!mounted) return;
+      if (!ConsentGateService.requireConsent(
+        context,
+        ConsentRecord.typeFakeCall,
+      )) {
+        unawaited(_stopRingtone());
+        Navigator.of(context).maybePop();
+        return;
+      }
+      unawaited(_checkFirstUseWarning());
+    });
   }
 
   Future<void> _checkFirstUseWarning() async {
@@ -503,21 +516,21 @@ class _FakeCallScreenState extends State<FakeCallScreen>
                       nameController,
                       phoneController,
                       'fake_template_boss'.tr(),
-                      '+90 555 000 00 01',
+                      '',
                     ),
                     const SizedBox(width: 8),
                     _buildTemplateChip(
                       nameController,
                       phoneController,
                       'fake_template_spouse'.tr(),
-                      '+90 555 000 00 02',
+                      '',
                     ),
                     const SizedBox(width: 8),
                     _buildTemplateChip(
                       nameController,
                       phoneController,
                       'fake_template_mom'.tr(),
-                      '+90 555 000 00 03',
+                      '',
                     ),
                     const SizedBox(width: 8),
                     _buildTemplateChip(

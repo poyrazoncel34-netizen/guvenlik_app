@@ -17,9 +17,10 @@ class DataDeletionScreen extends StatefulWidget {
 }
 
 class _DataDeletionScreenState extends State<DataDeletionScreen> {
-  final bool _deleting = false;
+  bool _deleting = false;
 
   Future<void> _requestDeletion() async {
+    if (_deleting) return;
     HapticFeedback.heavyImpact();
     // İlk onay dialog'u
     final confirmed = await showDialog<bool>(
@@ -82,8 +83,13 @@ class _DataDeletionScreenState extends State<DataDeletionScreen> {
 
     if (confirmed != true || !mounted) return;
 
-    // PIN doğrulaması — AppResetHelper mevcut PIN onayını içeriyor
-    AppResetHelper.showResetDialog(context);
+    setState(() => _deleting = true);
+    try {
+      // PIN doğrulaması — AppResetHelper mevcut PIN onayını içeriyor
+      AppResetHelper.showResetDialog(context);
+    } finally {
+      if (mounted) setState(() => _deleting = false);
+    }
   }
 
   @override

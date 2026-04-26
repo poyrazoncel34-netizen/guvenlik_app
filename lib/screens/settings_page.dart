@@ -186,6 +186,18 @@ class _SettingsPageState extends State<SettingsPage> {
                     );
                     if (!allowed || !mounted) return;
                     await provider.setVolumeTrigger(value);
+                    if (!mounted) return;
+                    if (value) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            'volume_trigger_foreground_only_info'.tr(),
+                          ),
+                          duration: const Duration(seconds: 5),
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
+                    }
                   },
                 ),
               ],

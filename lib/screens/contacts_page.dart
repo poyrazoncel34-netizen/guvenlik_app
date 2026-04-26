@@ -12,8 +12,10 @@ import 'package:provider/provider.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../core/app_colors.dart';
 import '../core/constants/app_constants.dart';
+import '../core/services/consent_gate_service.dart';
 import '../core/services/contact_service.dart';
 import '../core/services/subscription_gate.dart';
+import '../models/consent_record.dart';
 import '../presentation/providers/contacts_provider.dart';
 import '../presentation/providers/home_provider.dart';
 import '../widgets/emergency_contact_consent_dialog.dart';
@@ -63,6 +65,12 @@ class _ContactsPageState extends State<ContactsPage> {
                   PremiumFeature.emergencyContactAdd,
                 );
                 if (!allowed || !context.mounted) return;
+                if (!ConsentGateService.requireConsent(
+                  context,
+                  ConsentRecord.typeEmergencyContacts,
+                )) {
+                  return;
+                }
                 _showAddContactSheet(context);
               },
             ),
