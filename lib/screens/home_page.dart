@@ -10,7 +10,9 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:provider/provider.dart';
 import '../core/app_colors.dart';
 import '../core/services/connectivity_service.dart';
+import '../core/services/consent_gate_service.dart';
 import '../core/services/subscription_gate.dart';
+import '../models/consent_record.dart';
 // Analytics service removed (offline-first)
 import 'package:easy_localization/easy_localization.dart';
 import '../presentation/providers/home_provider.dart';
@@ -404,7 +406,14 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                         .lastState
                         ?.exactAlarmPermission ??
                     true,
-                onTap: () {},
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const BatteryOptimizationWizard(),
+                    ),
+                  );
+                },
               ),
             ],
           ),
@@ -458,6 +467,15 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   }
 
   Future<void> _requestLocationPermission() async {
+    // Consent gate — withdrawing location consent must stop further
+    // location processing. Emergency / SOS path is intentionally NOT gated.
+    if (!ConsentGateService.requireConsent(
+      context,
+      ConsentRecord.typeLocation,
+    )) {
+      return;
+    }
+    if (!mounted) return;
     // Show rationale dialog before requesting permission
     final proceed = await _showPermissionRationale(
       title: 'perm_rationale_location_title'.tr(),
@@ -543,6 +561,12 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   }
 
   void _showFakeCallDelayOptions() {
+    if (!ConsentGateService.requireConsent(
+      context,
+      ConsentRecord.typeFakeCall,
+    )) {
+      return;
+    }
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,

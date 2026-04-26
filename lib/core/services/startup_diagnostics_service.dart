@@ -69,7 +69,7 @@ class StartupDiagnosticsService {
       }
 
       if (ConnectivityService.instance.isOnline) {
-        await OfflineQueueService.instance.syncPendingEvents();
+        await OfflineQueueService.instance.processPendingEventsLocal();
       }
 
       _hasRun = true;

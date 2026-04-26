@@ -1,12 +1,13 @@
 // ============================================================================
-// RESOURCE MONITOR SERVICE - RAM/CPU Tracking
+// RESOURCE MONITOR SERVICE — Battery monitoring + reserved memory hooks.
 // ============================================================================
-// Monitors app resource usage to ensure optimal performance on mid-range devices.
-// Offline-first: no remote crash reporting.
+// Tracks battery level/state for low-battery responses. Memory metrics are
+// NOT implemented in this release; the field is kept on ResourceSnapshot so
+// future native channels can fill it without API churn. Offline-first: no
+// remote crash reporting.
 // ============================================================================
 
 import 'dart:async';
-import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:battery_plus/battery_plus.dart';
 
@@ -121,19 +122,11 @@ class ResourceMonitorService {
     }
   }
 
-  /// Get memory usage in MB
+  /// Memory usage is not implemented in this release. The method exists so
+  /// callers can opt in once a native channel is wired; until then it
+  /// honestly returns null and any UI must treat memory as unavailable.
   Future<int?> _getMemoryUsage() async {
-    try {
-      if (Platform.isAndroid || Platform.isIOS) {
-        // For now, return null - can be implemented with platform channels
-        // TODO: Implement native memory tracking
-        return null;
-      }
-      return null;
-    } catch (e) {
-      debugPrint('Failed to get memory usage: $e');
-      return null;
-    }
+    return null;
   }
 
   /// Check resource thresholds and alert if exceeded

@@ -7,8 +7,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 // Emergency repository removed (offline-first)
 import 'connectivity_service.dart';
 
-/// Offline event queue - stores events locally when offline,
-/// syncs when connection is restored.
+/// Local event queue. Stores safety events locally and processes them
+/// in-memory; this build has no backend, so nothing is uploaded. The
+/// connectivity listener is kept so that when the device comes back
+/// online the queue is drained locally on the same schedule a future
+/// backend would use.
 class OfflineQueueService {
   static final OfflineQueueService _instance = OfflineQueueService._();
   static OfflineQueueService get instance => _instance;
@@ -20,7 +23,7 @@ class OfflineQueueService {
   bool _initialized = false;
   StreamSubscription<bool>? _connectivitySubscription;
 
-  /// Initialize and listen for connectivity changes to auto-sync.
+  /// Initialize and listen for connectivity changes to drain the queue.
   Future<void> initialize() async {
     if (_initialized) return;
     _initialized = true;
@@ -28,12 +31,12 @@ class OfflineQueueService {
     _connectivitySubscription = ConnectivityService.instance.onStatusChange
         .listen((online) {
           if (online) {
-            syncPendingEvents();
+            processPendingEventsLocal();
           }
         });
 
     if (ConnectivityService.instance.isOnline) {
-      await syncPendingEvents();
+      await processPendingEventsLocal();
     }
   }
 
@@ -59,13 +62,16 @@ class OfflineQueueService {
     debugPrint('OfflineQueue: Event queued (${queue.length} pending)');
   }
 
-  /// Sync all pending events.
-  Future<void> syncPendingEvents() async {
+  /// Drain pending events through local processing only — there is no
+  /// backend in this Play release.
+  Future<void> processPendingEventsLocal() async {
     final prefs = await SharedPreferences.getInstance();
     final queue = _loadQueue(prefs);
     if (queue.isEmpty) return;
 
-    debugPrint('OfflineQueue: Syncing ${queue.length} pending events...');
+    debugPrint(
+      'OfflineQueue: Processing ${queue.length} pending events locally...',
+    );
     final failedEvents = <Map<String, dynamic>>[];
 
     for (final eventMap in queue) {
@@ -117,9 +123,18 @@ class OfflineQueueService {
       failedEvents.map((e) => jsonEncode(e)).toList(),
     );
     debugPrint(
-      'OfflineQueue: Sync complete. ${failedEvents.length} remaining.',
+      'OfflineQueue: Local processing complete. '
+      '${failedEvents.length} remaining.',
     );
   }
+
+  /// Backwards-compatible alias. The implementation is local-only — there is
+  /// no backend in this Play release.
+  @Deprecated(
+    'Use processPendingEventsLocal — this build has no backend; nothing is '
+    'synced over the network.',
+  )
+  Future<void> syncPendingEvents() => processPendingEventsLocal();
 
   /// Get pending event count.
   Future<int> pendingCount() async {
@@ -141,13 +156,14 @@ class OfflineQueueService {
         .toList();
   }
 
-  /// Process a single event locally. No cloud sync in this Play release.
+  /// Process a single event locally. There is no backend; this only logs
+  /// the event for the local-only safety record.
   Future<bool> _processEvent(OfflineEvent event) async {
     debugPrint('OfflineQueue: Processing ${event.type} - ${event.title}');
 
     if (event.type == 'emergency') {
-      // Offline-first: Emergency events are handled locally only
-      debugPrint('OfflineQueue: Emergency event (local only, no cloud sync)');
+      // Offline-first: Emergency events are recorded locally only.
+      debugPrint('OfflineQueue: Emergency event (local only, no backend)');
       try {
         final data = event.data ?? {};
         final message =
@@ -166,7 +182,7 @@ class OfflineQueueService {
 
         return true;
       } catch (e) {
-        debugPrint('OfflineQueue: Emergency sync failed: $e');
+        debugPrint('OfflineQueue: Emergency local processing failed: $e');
         return false;
       }
     }
