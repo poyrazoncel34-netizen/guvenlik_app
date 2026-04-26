@@ -85,14 +85,14 @@
         </div>
 
         <p>KoruBeni ("Uygulama", "biz", "bizim"), kisisel guvenlik farkindaligini desteklemek amaciyla gelistirilmis bir Android uygulamasidir. Bu gizlilik politikasi, hangi verilerin islendigini, nasil kullanildigini ve nasil korundugunu aciklar.</p>
-        <p><strong>KoruBeni offline-first calisir.</strong> Uygulama verilerinizin ana kopyasi cihazinizda tutulur ve gelistirici backend'ine veya bulut veritabanina gonderilmez. Cevrimici harita karolari ve Google Play Billing kendi saglayici politikalarina tabi teknik ag davranislarina sahip olabilir.</p>
+        <p><strong>KoruBeni offline-first calisir.</strong> Guvenlik verilerinizin ana kopyasi cihazinizda tutulur ve gelistirici backend'ine veya bulut veritabanina gonderilmez. Abonelikle ilgili durum, anonim kullanici kimligi, satin alma olaylari, cihaz/uygulama bilgileri ve yetki verileri Google Play Billing ve RevenueCat tarafindan islenebilir. Cevrimici harita karolari kendi saglayici politikalarina tabi teknik ag davranislarina sahip olabilir.</p>
 
         <h2>1. Topladigimiz Veriler</h2>
 
         <h3 style="font-size:16px; margin-top:16px; margin-bottom:8px;">a) Kullanici Tarafindan Saglanan Veriler</h3>
         <ul>
             <li><strong>Acil durum kisileri:</strong> Kullanicinin rehberinden sectigi kisilerin adi ve telefon numarasi</li>
-            <li><strong>Profil bilgileri:</strong> Ad ve profil fotografi (istege bagli, cihazda saklanir)</li>
+            <li><strong>Profil bilgileri:</strong> Ad (istege bagli, cihazda saklanir)</li>
             <li><strong>PIN kodu:</strong> Cihaz uzerinde sifrelenmis olarak saklanir, herhangi bir sunucuya gonderilmez</li>
             <li><strong>Sahte cagri verileri:</strong> Kullanicinin olusturdugu sahte cagri senaryolari ve ayarlari (yalnizca cihazda saklanir)</li>
         </ul>
@@ -109,7 +109,7 @@
             <li>Dis sunuculara gonderilen cokme raporlari</li>
             <li>Arama kayitlari</li>
             <li>Tarama gecmisi</li>
-            <li>Finansal bilgiler</li>
+            <li>Kart veya odeme kimlik bilgileri (Google Play tarafindan islenir; gelistirici saklamaz)</li>
         </ul>
 
         <h2>2. Verilerin Kullanim Amaclari</h2>
@@ -126,10 +126,11 @@
         </div>
 
         <h2>3. Veri Paylasimi</h2>
-        <p>Verilerinizi ucuncu taraflara <strong>satmiyoruz</strong>. Kisisel veriler gelistirici backend'ine veya bulut veritabanina aktarilmaz. Ucuncu taraf ag davranisi cevrimici harita karolari ve Google Play Billing ile sinirlidir.</p>
+        <p>Verilerinizi ucuncu taraflara <strong>satmiyoruz</strong>. Guvenlik verileri gelistirici backend'ine veya bulut veritabanina aktarilmaz. Abonelik dogrulama verileri Google Play Billing ve RevenueCat tarafindan islenebilir. Ucuncu taraf ag davranisi cevrimici harita karolari, Google Play Billing ve RevenueCat ile sinirlidir.</p>
         <ul>
             <li><strong>Acil durum kisileri:</strong> Acil durum tetiklendiginde, sectiginiz kisi icin Android arama akisi baslatilir veya arama ekrani hazirlanir</li>
             <li><strong>Harita servisleri:</strong> Harita ekrani acildiginda OpenStreetMap altyapisi kullanilabilir</li>
+            <li><strong>RevenueCat:</strong> Pro abonelik durumunu dogrulamak icin anonim kullanici kimligi, satin alma olaylari, cihaz/uygulama bilgisi ve yetki durumu islenebilir</li>
             <li><strong>Yasal zorunluluklar:</strong> Mahkeme karari veya yasal zorunluluk halinde</li>
         </ul>
 
@@ -138,7 +139,7 @@
             <li>PIN kodu ve ilk mudahale profil bilgileri, isletim sisteminin destekledigi guvenli cihaz depolamasinda saklanir</li>
             <li>Acil kisi kayitlari uygulamanin cihaz ici yerel veritabaninda saklanir</li>
             <li>Sahte cagri ayarlari ve istege bagli avatar dosyalari cihazda yerel olarak saklanir</li>
-            <li>Uygulama verileri gelistirici backend'ine gonderilmez; cevrimici harita karolari ve Google Play Billing kendi teknik ag davranislarina sahip olabilir</li>
+            <li>Guvenlik verileri gelistirici backend'ine gonderilmez; cevrimici harita karolari, Google Play Billing ve RevenueCat kendi teknik ag davranislarina sahip olabilir</li>
         </ul>
 
         <h2>5. Veri Saklama Suresi</h2>
@@ -167,8 +168,8 @@
 
         <h2>7. Cocuklarin Gizliligi ve Yas Siniri</h2>
         <p>KoruBeni, KVKK Madde 3/1-c kapsaminda <strong>18 yasin altindaki bireylerden</strong> bilerek kisisel veri toplamaz.</p>
-        <p><strong>Yas siniri:</strong> Uygulama 18 yas ve uzeri bireyler icin tasarlanmistir. 18 yas alti kullanicilar icin ebeveyn veya vasi onay vermis olmalidir. Uygulama icinde yas dogrulamasi yapilir ve 18 yas altindaki kullanicilar icin yasal temsilci onayi istenir.</p>
-        <p>13 yas altindaki bireylerin kisisel verilerini bilerek islemiyoruz. Boyle bir durum tespit edildiginde ilgili veriler derhal silinir.</p>
+        <p><strong>Yas siniri:</strong> Uygulama 18 yas ve uzeri bireyler icin tasarlanmistir. 18 yas altindaki bireyler uygulamayi kullanmamalidir. Bu surumde 18 yas altina yonelik ayri bir onboarding veya erisim akisi sunulmaz.</p>
+        <p>18 yas altindaki bir kullanima iliskin makul bir tespit yapilirsa ilgili cihaz ici veriler silinmelidir ve Pro abonelik varsa Google Play uzerinden ayrica iptal edilmelidir.</p>
 
         <h2>8. Ucuncu Taraf Veri Sahibi Haklari</h2>
         <p>Acil durum kisi listesine eklenen ucuncu sahislar da KVKK kapsaminda veri sahibidir. Bu kisiler:</p>
@@ -180,7 +181,7 @@
         <p>Kullanici, acil durum kisi listesine ekledigi kisilerin bilgilendirilmesinden ve rizalarinin alinmasindan sorumludur.</p>
 
         <h2>9. Istege Bagli Pro Abonelik</h2>
-        <p>Uygulama temel ucretsiz kullanim ve istege bagli KoruBeni Pro abonelik ozellikleri sunabilir. Pro satin alma, yenileme, iptal ve geri yukleme islemleri Google Play uzerinden yonetilir. Odeme verileri Google Play tarafindan islenir ve gelistirici backend'inde saklanmaz.</p>
+        <p>Uygulama temel ucretsiz kullanim ve istege bagli KoruBeni Pro abonelik ozellikleri sunabilir. Pro satin alma, yenileme, iptal ve geri yukleme islemleri Google Play uzerinden yonetilir. RevenueCat abonelik durumunu, anonim kullanici kimligini, satin alma olaylarini, cihaz/uygulama bilgilerini ve yetki verilerini isleyerek Pro erisimini dogrulayabilir. Odeme ve kart verileri Google Play tarafindan islenir; gelistirici kart veya odeme kimlik bilgilerini saklamaz.</p>
 
         <h2>10. Ucuncu Taraf Hizmetler</h2>
         <p>Uygulamamiz asagidaki ucuncu taraf hizmetleri kullanabilir (KVKK Md. 10/1-c bildirimi):</p>
@@ -188,6 +189,7 @@
             <li><strong>Harita servisleri:</strong> Cevrimici harita goruntuleme icin karo servisine ag istegi yapilabilir. Konum alinamazsa sahte koordinat gosterilmez.</li>
             <li><strong>OpenStreetMap:</strong> Uygulama ici harita goruntuleme.</li>
             <li><strong>Google Play Billing:</strong> Istege bagli Pro abonelik satin alma, yenileme, iptal ve geri yukleme islemleri.</li>
+            <li><strong>RevenueCat:</strong> Istege bagli Pro abonelik dogrulama ve yetki yonetimi.</li>
         </ul>
         <p>Bu hizmetlerin kendi gizlilik politikalari gecerlidir:</p>
         <ul>
@@ -210,7 +212,7 @@
             </tr>
             <tr>
                 <td style="border:1px solid #ddd; padding:8px;">Kimlik</td>
-                <td style="border:1px solid #ddd; padding:8px;">Ad, profil fotografi</td>
+                <td style="border:1px solid #ddd; padding:8px;">Ad</td>
                 <td style="border:1px solid #ddd; padding:8px;">Uygulama profili</td>
                 <td style="border:1px solid #ddd; padding:8px;">Acik riza</td>
             </tr>

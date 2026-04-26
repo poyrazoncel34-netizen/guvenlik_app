@@ -143,14 +143,14 @@
         <p><strong>KoruBeni works offline-first.</strong> The primary copy of your app data stays on your device and is not sent to a developer-operated cloud backend. Online map tiles and Google Play Billing may have their own technical network behavior under their providers' policies.</p>
 
         <h2>1. Age Restriction</h2>
-        <p>KoruBeni is intended for users aged <strong>18 and older</strong>. The app performs age verification during onboarding. Users under 18 may only use the app with explicit parental or legal guardian consent, in accordance with <strong>KVKK Article 6</strong> (processing of personal data of minors requires parental consent). If we become aware that a user under 18 is using the app without parental consent, we will take steps to delete their data from the device.</p>
+        <p>KoruBeni is intended for users aged <strong>18 and older</strong>. Under-18 use is not supported in this release.</p>
 
         <h2>2. Data We Collect</h2>
 
         <h3 style="font-size:16px; margin-top:16px; margin-bottom:8px;">a) User-Provided Data</h3>
         <ul>
             <li><strong>Emergency contacts:</strong> Names and phone numbers of contacts selected from your device</li>
-            <li><strong>Profile information:</strong> Name and profile photo (optional)</li>
+            <li><strong>Profile information:</strong> Name (optional, stored on device)</li>
             <li><strong>PIN code:</strong> Stored encrypted on-device only, never sent to any server</li>
             <li><strong>Fake call data:</strong> Caller name and configuration for the fake call feature, stored on-device only</li>
         </ul>
@@ -169,15 +169,15 @@
             <li>Message contents</li>
             <li>Call logs</li>
             <li>Browsing history</li>
-            <li>Financial information</li>
+            <li>Card or payment credentials (processed by Google Play; not stored by the developer)</li>
         </ul>
 
         <div class="highlight">
-            <strong>No Developer Backend:</strong> No app data is sent to developer-operated servers or cloud databases. Online map tiles and Google Play Billing are governed by those providers.
+            <strong>No Developer Backend:</strong> Safety data is not sent to developer-operated servers or cloud databases. Subscription status, anonymous user ID, purchase events, device/app information, and entitlement data may be processed by Google Play Billing and RevenueCat. Online map tiles are governed by the map provider.
         </div>
 
         <h2>3. Optional Pro Subscription</h2>
-        <p>The app may provide basic free functionality and optional KoruBeni Pro subscription features. Pro purchases, renewals, cancellations, and restore operations are handled through Google Play. Payment data is processed by Google Play and is not stored by a developer-operated backend.</p>
+        <p>The app may provide basic free functionality and optional KoruBeni Pro subscription features. Pro purchases, renewals, cancellations, and restore operations are handled through Google Play. RevenueCat may process subscription status, anonymous user ID, purchase events, device/app information, and entitlement data to verify Pro access. Payment and card data is processed by Google Play and is not stored by the developer.</p>
 
         <h2>4. How We Use Data</h2>
         <ul>
@@ -194,10 +194,11 @@
         </div>
 
         <h2>5. Data Sharing</h2>
-        <p>We do <strong>not sell</strong> your data to third parties. No data is sent to a developer-operated backend. Third-party network behavior is limited to online map tiles and Google Play Billing.</p>
+        <p>We do <strong>not sell</strong> your data to third parties. Safety data is not sent to a developer-operated backend. Subscription verification data may be processed by Google Play Billing and RevenueCat. Third-party network behavior is limited to online map tiles, Google Play Billing, and RevenueCat.</p>
         <ul>
             <li><strong>Emergency contacts:</strong> When an emergency is triggered, the Android call flow is started or the dialer is prepared for your selected contact</li>
             <li><strong>Map providers:</strong> OpenStreetMap infrastructure may be contacted when map screens are opened</li>
+            <li><strong>RevenueCat:</strong> May process anonymous user ID, purchase events, device/app information, entitlement status, and related subscription verification data</li>
             <li><strong>Legal requirements:</strong> When required by law or court order</li>
         </ul>
 
@@ -292,12 +293,13 @@
         </ul>
 
         <h2>11. Children's Privacy</h2>
-        <p>KoruBeni is intended for users aged 18 and older. The app performs age verification during onboarding. We do not knowingly collect data from children under 18 without parental consent. If a parent or guardian becomes aware that their child has provided personal data without their consent, they should contact us so we can delete such data from the device.</p>
+        <p>KoruBeni is intended for users aged 18 and older. Under-18 use is not supported in this release.</p>
 
         <h2>12. Third-Party Services</h2>
         <ul>
             <li><strong>OpenStreetMap:</strong> Map display (tile data only, no personal data sent)</li>
             <li><strong>Google Play Billing:</strong> Optional Pro subscription purchase, renewal, cancellation, and restore handling</li>
+            <li><strong>RevenueCat:</strong> Optional Pro subscription verification and entitlement management</li>
         </ul>
         <p>Their respective privacy policies apply:</p>
         <ul>
