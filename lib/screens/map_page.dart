@@ -21,7 +21,9 @@ import '../presentation/providers/home_provider.dart';
 import '../domain/repositories/location_repository.dart';
 
 class MapPage extends StatefulWidget {
-  const MapPage({super.key});
+  final bool isActive;
+
+  const MapPage({super.key, this.isActive = true});
 
   @override
   State<MapPage> createState() => _MapPageState();
@@ -41,6 +43,7 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
   LocationStatus? _locationStatus;
   bool _usingFallbackLocation = false;
   DateTime? _fallbackCheckedAt;
+  bool _hasRequestedInitialLocation = false;
 
   // Animation
   late AnimationController _pulseController;
@@ -54,8 +57,21 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
       duration: const Duration(milliseconds: 1500),
     )..repeat(reverse: true);
 
-    // Get location on init
-    _initLocation();
+    if (widget.isActive) {
+      _initLocation();
+    } else {
+      _isLoading = false;
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant MapPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!oldWidget.isActive &&
+        widget.isActive &&
+        !_hasRequestedInitialLocation) {
+      _initLocation();
+    }
   }
 
   @override
@@ -66,6 +82,7 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
 
   Future<void> _initLocation() async {
     if (!mounted) return;
+    _hasRequestedInitialLocation = true;
     setState(() {
       _isLoading = true;
     });

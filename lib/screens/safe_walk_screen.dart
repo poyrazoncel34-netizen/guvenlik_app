@@ -88,10 +88,12 @@ class _SafeWalkScreenState extends State<SafeWalkScreen>
     final remaining = endAt.difference(DateTime.now());
     if (remaining.isNegative || remaining.inSeconds <= 0) {
       await _clearPersistedState();
+      if (!mounted) return;
       _onTimerExpired();
       return;
     }
 
+    if (!mounted) return;
     setState(() {
       _selectedMinutes = duration;
       _isActive = true;
@@ -271,6 +273,7 @@ class _SafeWalkScreenState extends State<SafeWalkScreen>
       sessionId: CheckInExpiryCoordinator.safeWalkSession,
     );
     await _clearPersistedState();
+    if (!mounted) return;
     setState(() {
       _isActive = false;
       _endTime = null;
@@ -281,6 +284,10 @@ class _SafeWalkScreenState extends State<SafeWalkScreen>
   void _startTicker() {
     _timer?.cancel();
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
       if (_endTime == null) {
         timer.cancel();
         return;
@@ -655,9 +662,10 @@ class _SafeWalkScreenState extends State<SafeWalkScreen>
             child: Text("safe_walk_exit_stay".tr()),
           ),
           TextButton(
-            onPressed: () {
-              _cancelWalk();
+            onPressed: () async {
               Navigator.pop(ctx);
+              await _cancelWalk();
+              if (!mounted) return;
               Navigator.pop(context);
             },
             child: Text(

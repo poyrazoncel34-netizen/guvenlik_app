@@ -15,7 +15,7 @@ import '../core/security/secure_storage_keys.dart';
 import '../core/services/app_reset_service.dart';
 import '../core/services/pin_lockout_service.dart';
 import 'settings_legal/legal_settings_screen.dart';
-import 'main_navigation.dart';
+import 'splash_screen.dart';
 
 class AppUnlockScreen extends StatefulWidget {
   final VoidCallback onUnlocked;
@@ -409,7 +409,7 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> {
                       if (!mounted) return;
                       Navigator.of(context).pushAndRemoveUntil(
                         PageRouteBuilder(
-                          pageBuilder: (_, _, _) => const MainNavigation(),
+                          pageBuilder: (_, _, _) => const SplashScreen(),
                           transitionsBuilder: (_, a, _, child) =>
                               FadeTransition(opacity: a, child: child),
                           transitionDuration: const Duration(milliseconds: 400),

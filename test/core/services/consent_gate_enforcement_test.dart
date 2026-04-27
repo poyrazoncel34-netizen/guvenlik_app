@@ -45,6 +45,43 @@ void main() {
     expect(source.contains('ConsentRecord.typeFakeCall'), isTrue);
   });
 
+  test('unified onboarding consent records fake-call consent', () {
+    final source = File(
+      'lib/screens/legal/unified_consent_screen.dart',
+    ).readAsStringSync();
+    expect(source, contains('bool _consentFakeCall'));
+    expect(source, contains('ConsentRecord.typeFakeCall'));
+    expect(source, contains('_consentFakeCall'));
+    expect(source, contains("'legal_consent_fake_call'.tr()"));
+    expect(source, contains("'legal_consent_fake_call_sub'.tr()"));
+  });
+
+  test('withdrawn fake-call consent blocks before opening fake-call sheet', () {
+    final source = File('lib/screens/home_page.dart').readAsStringSync();
+    final methodStart = source.indexOf('void _showFakeCallDelayOptions()');
+    final gateIndex = source.indexOf(
+      'ConsentGateService.requireConsent',
+      methodStart,
+    );
+    final fakeCallConsentIndex = source.indexOf(
+      'ConsentRecord.typeFakeCall',
+      methodStart,
+    );
+    final sheetIndex = source.indexOf('showModalBottomSheet', methodStart);
+
+    expect(methodStart, isNot(-1));
+    expect(gateIndex, isNot(-1));
+    expect(fakeCallConsentIndex, isNot(-1));
+    expect(sheetIndex, isNot(-1));
+    expect(
+      gateIndex < sheetIndex && fakeCallConsentIndex < sheetIndex,
+      isTrue,
+      reason:
+          'Fake Call must remain blocked before any UI/action when fake-call '
+          'consent has been withdrawn.',
+    );
+  });
+
   test('contacts_page.dart gates emergency-contact add on consent', () {
     final source = File('lib/screens/contacts_page.dart').readAsStringSync();
     expect(

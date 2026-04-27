@@ -33,13 +33,6 @@ class _MainNavigationState extends State<MainNavigation> {
   bool _pinPromptVisible = false;
   bool _notificationPromptVisible = false;
 
-  final List<Widget> _pages = const [
-    HomePage(),
-    MapPage(),
-    ContactsPage(),
-    SettingsPage(),
-  ];
-
   @override
   void initState() {
     super.initState();
@@ -129,7 +122,15 @@ class _MainNavigationState extends State<MainNavigation> {
     return Scaffold(
       body: Stack(
         children: [
-          IndexedStack(index: _selectedIndex, children: _pages),
+          IndexedStack(
+            index: _selectedIndex,
+            children: [
+              const HomePage(),
+              MapPage(isActive: _selectedIndex == 1),
+              const ContactsPage(),
+              const SettingsPage(),
+            ],
+          ),
           // Offline mode banner at top
           const Positioned(
             top: 0,

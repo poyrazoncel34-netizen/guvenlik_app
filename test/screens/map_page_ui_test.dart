@@ -4,9 +4,13 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   group('MapPage UI changes', () {
     late String source;
+    late String mainNavigation;
 
     setUpAll(() {
       source = File('lib/screens/map_page.dart').readAsStringSync();
+      mainNavigation = File(
+        'lib/screens/main_navigation.dart',
+      ).readAsStringSync();
     });
 
     test('shows "map_location" key instead of "map_location_received"', () {
@@ -45,6 +49,26 @@ void main() {
         isFalse,
         reason: 'Red SOS "Acil Yardım" action button must be removed',
       );
+    });
+
+    test('startup does not activate MapPage location request', () {
+      expect(
+        mainNavigation,
+        contains('MapPage(isActive: _selectedIndex == 1)'),
+        reason: 'MapPage must stay inactive while Home is selected on startup.',
+      );
+      expect(
+        source,
+        contains('if (widget.isActive)'),
+        reason: 'MapPage init must not request location while inactive.',
+      );
+    });
+
+    test('selecting map tab can trigger initial location load', () {
+      expect(source, contains('void didUpdateWidget'));
+      expect(source, contains('!oldWidget.isActive'));
+      expect(source, contains('widget.isActive'));
+      expect(source, contains('_initLocation();'));
     });
   });
 }

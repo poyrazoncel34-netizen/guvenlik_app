@@ -33,6 +33,7 @@ class _UnifiedConsentScreenState extends State<UnifiedConsentScreen> {
   bool _consentLocation = false;
   bool _consentEmergencyContacts = false;
   bool _consentProfile = false;
+  bool _consentFakeCall = false;
 
   bool _eulaExpanded = false;
   bool _kvkkExpanded = false;
@@ -74,6 +75,7 @@ class _UnifiedConsentScreenState extends State<UnifiedConsentScreen> {
         _consentEmergencyContacts,
       );
       await recordOptional(ConsentRecord.typeProfile, _consentProfile);
+      await recordOptional(ConsentRecord.typeFakeCall, _consentFakeCall);
 
       await prefs.setBool(AppConstants.prefConsentLocation, _consentLocation);
       await prefs.setBool(
@@ -549,6 +551,12 @@ class _UnifiedConsentScreenState extends State<UnifiedConsentScreen> {
           sublabel: 'legal_consent_profile_sub'.tr(),
           value: _consentProfile,
           onChanged: (v) => setState(() => _consentProfile = v ?? false),
+        ),
+        ConsentCheckboxWidget(
+          label: 'legal_consent_fake_call'.tr(),
+          sublabel: 'legal_consent_fake_call_sub'.tr(),
+          value: _consentFakeCall,
+          onChanged: (v) => setState(() => _consentFakeCall = v ?? false),
         ),
       ],
     );

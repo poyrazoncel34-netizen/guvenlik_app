@@ -75,6 +75,11 @@ class _PaywallScreenState extends State<PaywallScreen> {
     }
   }
 
+  String _priceText(Package package) {
+    final price = package.storeProduct.priceString.trim();
+    return price.isEmpty ? 'subscription_price_unavailable'.tr() : price;
+  }
+
   void _showSnack(String message, Color color) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -472,7 +477,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              package.storeProduct.priceString,
+              _priceText(package),
               style: TextStyle(
                 color: color,
                 fontSize: 24,
