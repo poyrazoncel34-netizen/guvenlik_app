@@ -18,7 +18,7 @@ This permission is an optional reliability enhancement for user-started safety t
 
 ## Data Safety Summary
 
-KoruBeni does not operate a developer backend. Most safety data is stored on device: emergency contacts, profile name, PIN, local activity history, fake call settings, and consent records. Subscription status, anonymous user ID, purchase events, app/device information, and entitlement data may be processed by Google Play Billing and RevenueCat. Payment credentials are processed by Google Play and are not stored by the developer. Map screens may contact the configured map tile provider. No advertising or third-party analytics SDK is used in this release.
+KoruBeni does not operate a developer backend. Most safety data is stored on device: emergency contacts, profile name, optional user-selected profile/fake-call avatar images, PIN, local activity history, fake call settings, and consent records. Subscription status, anonymous user ID, purchase events, app/device information, and entitlement data may be processed by Google Play Billing and RevenueCat. Payment credentials are processed by Google Play and are not stored by the developer. Map screens may contact the configured map tile provider, currently OpenStreetMap tile infrastructure for online map display. No advertising, user-generated content, or third-party analytics SDK is used in this release.
 
 ## App Access / Reviewer Notes
 

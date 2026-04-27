@@ -20,6 +20,7 @@ Bu liste, KoruBeni uygulamasını Play Store’a göndermeden önce **Play Conso
 
 - **Nerede:** Play Console → Uygulama → **Policy** → **App content** → **Data safety**
 - **Ne yap:** Toplanan / paylaşılan veri türlerini ve amaçlarını beyan et.
+- **Canonical answer source:** [DATA_SAFETY_FORM.md](DATA_SAFETY_FORM.md)
 
 KoruBeni için güvenli ve güncel beyan yaklaşımı:
 
@@ -28,8 +29,8 @@ KoruBeni için güvenli ve güncel beyan yaklaşımı:
 | **Konum** (approximate / precise) | Acil durumda veya kullanıcı konum oturumunu başlatınca işlenir; uygulama otomatik mesajla paylaşmaz | Acil durumda konum durumu |
 | **Kişiler** (rehber) | Cihazda erişilir, seçilen kişi cihazda saklanır | Acil kişi seçimi |
 | **Profil bilgisi** (ad/fotoğraf) | Opsiyonel, cihazda kalır | Uygulama içi kişiselleştirme |
-| **Uygulama etkileşimi** | Toplanmıyor | Analitik / crash reporting yok |
-| **Purchase history / subscriptions** | Google Play Billing tarafından işlenir | İsteğe bağlı KoruBeni Pro aboneliği |
+| **Uygulama etkileşimi** | Yerel olay geçmişi cihazda kalır; analitik/crash reporting yok | Uygulama işlevselliği |
+| **Purchase history / subscriptions** | Google Play Billing ve RevenueCat tarafından işlenebilir | İsteğe bağlı KoruBeni Pro abonelik/yetki doğrulaması |
 
 - Konum ve kişi erişimi kullandığı için Data Safety formunu boş bırakma.
 - Mikrofon veya SMS beyanı verme; bu Play sürümünde audio recording ve SMS yok.
@@ -92,7 +93,7 @@ Public production release'e göndermeden önce aşağıdaki maddeler tamamlanmad
 ## 7. Özet Sıra
 
 1. Privacy Policy’i yayınla; URL’yi Store listing’e ekle.
-2. Data Safety formunu doldur (konum, kişi erişimi, opsiyonel profil verisi, Play Billing abonelik bilgisi).
+2. Data Safety formunu doldur (konum, kişi erişimi, opsiyonel profil/fotoğraf verisi, Google Play Billing ve RevenueCat abonelik/yetki bilgisi).
 3. Content rating anketini tamamla.
 4. Hedef kitle ve reklam bilgisini gir.
 5. RevenueCat / Billing production gate’i Play tester ile tamamla.

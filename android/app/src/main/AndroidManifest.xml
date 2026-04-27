@@ -106,7 +106,7 @@
             android:name="com.amazon.device.iap.ResponseReceiver"
             tools:node="remove" />
         <!-- Shake detection is disabled in this release; service kept out of manifest. -->
-        <!-- RecordingSessionService removed — audio recording feature disabled -->
+        <!-- Audio recording service is disabled in this release. -->
         <receiver
             android:name=".emergency.CheckInAlarmReceiver"
             android:enabled="true"

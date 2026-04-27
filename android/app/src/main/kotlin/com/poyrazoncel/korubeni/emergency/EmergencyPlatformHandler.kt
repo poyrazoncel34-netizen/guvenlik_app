@@ -25,27 +25,6 @@ class EmergencyPlatformHandler(
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
         try {
             when (call.method) {
-                "armShake" -> {
-                    EmergencyPrefs.prefs(context).edit()
-                        .putBoolean(EmergencyPrefs.KEY_SHAKE_ENABLED, false)
-                        .apply()
-                    ShakeDetectorService.stop(context)
-                    result.success(false)
-                }
-                "disarmShake" -> {
-                    EmergencyPrefs.prefs(context).edit()
-                        .putBoolean(EmergencyPrefs.KEY_SHAKE_ENABLED, false)
-                        .apply()
-                    ShakeDetectorService.stop(context)
-                    result.success(true)
-                }
-                "setShakeSensitivity" -> {
-                    val level = call.argument<Int>("level") ?: 1
-                    EmergencyPrefs.prefs(context).edit()
-                        .putInt(EmergencyPrefs.KEY_SHAKE_SENSITIVITY, level.coerceIn(0, 2))
-                        .apply()
-                    result.success(true)
-                }
                 "scheduleCheckIn" -> {
                     val sessionId = call.argument<String>("sessionId") ?: CheckInScheduler.SESSION_CHECK_IN
                     val phase = call.argument<String>("phase") ?: CheckInScheduler.PHASE_MAIN

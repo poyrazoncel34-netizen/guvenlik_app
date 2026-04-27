@@ -24,7 +24,7 @@ class LegalConstants {
   /// Veri Sorumlusu bilgileri
   static const String dataControllerName = 'KoruBeni';
   static const String dataControllerTitle = 'KoruBeni';
-  static const String dataControllerCity = '';
+  static const String dataControllerCity = 'İzmir';
   static const String dataControllerEmail = 'korubeni.destek@gmail.com';
 
   /// Yetkili mahkeme

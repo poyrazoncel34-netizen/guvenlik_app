@@ -9,6 +9,7 @@
 | READ_PHONE_STATE | **HAYIR** | **HAYIR** — fake call cihaz içi simülasyondur; telefon durumu izni istenmez |
 | ACCESS_BACKGROUND_LOCATION | **HAYIR** | **HAYIR** — manifest'ten kaldırıldı |
 | REQUEST_IGNORE_BATTERY_OPTIMIZATIONS | EVET | EVET — aşağıda açıklanmıştır |
+| SCHEDULE_EXACT_ALARM | EVET | EVET — aşağıda açıklanmıştır |
 
 ---
 
@@ -49,6 +50,27 @@ CALL_PHONE, kullanıcı açıkça tetiklediği panik veya check-in akışında g
 
 **Neden gerekli:**
 Kullanıcı güvenli yürüyüş başlattığında, belirtilen süre içinde check-in yapmazsa yardımcı acil durum akışının tetiklenmesi hedeflenir. Bu akış Android'in doze/standby ve üretici pil kısıtları nedeniyle gecikebilir veya kesilebilir.
+
+---
+
+## SCHEDULE_EXACT_ALARM Beyanı
+
+**Beyan kategorisi:** Safety / Reminders / User-initiated safety timers
+
+**Core functionality açıklaması:**
+"KoruBeni, kullanıcı tarafından başlatılan panik geri sayımı, check-in ve güvenli yürüyüş gibi güvenlik zamanlayıcılarında alarmın beklenen zamanda çalışmasına yardımcı olmak için exact alarm kullanır. Bu zamanlayıcılar kullanıcı tarafından başlatılır, güvenlik/reminder amaçlıdır ve reklam, analitik, gizli takip veya keyfi arka plan işi için kullanılmaz."
+
+**Neden gerekli:**
+Android Doze, standby ve üretici pil kısıtları Dart timer, foreground service veya inexact alarm davranışını geciktirebilir. Güvenlik zamanlayıcılarında geri sayım/check-in süresi dolduğunda kullanıcının beklediği zamanda uyarı veya yardımcı acil akışın tetiklenmesi gerekir. `SCHEDULE_EXACT_ALARM`, bu kullanıcı başlatmalı safety-timer/reminder akışlarının zamanında çalışması için kullanılır.
+
+**Kullanılmadığı amaçlar:**
+- Reklam, pazarlama veya analitik
+- Gizli konum takibi veya kullanıcı izleme
+- Süresiz/keyfi arka plan işi
+- Kullanıcı başlatmamışken arka planda yeni güvenlik oturumu oluşturma
+
+**Fallback / degraded davranış:**
+Exact alarm izni yoksa uygulama mümkün olan yerlerde inexact alarm, foreground service ve yerel timer yollarına düşer. İlgili akışlarda zamanlayıcı güvenilirliğinin azalabileceği kullanıcıya açıklanır veya uyarı gösterilir.
 
 ---
 

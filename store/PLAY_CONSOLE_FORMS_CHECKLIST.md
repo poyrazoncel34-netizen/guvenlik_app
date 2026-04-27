@@ -24,12 +24,14 @@ Play Console'da doldurulacak formlar ve ilgili rehberler.
 | Personal info (optional profile name/photo) | Device-only |
 | Contacts | Collected, device-stored |
 | Audio / microphone | Not collected in this Android Play release |
-| Purchases / subscriptions | Google Play Billing handles optional KoruBeni Pro |
-| App activity (crash, analytics) | Not collected |
-| Encryption in transit | No developer backend; evaluate map/billing/crash SDK traffic separately |
+| Purchases / subscriptions | Google Play Billing and RevenueCat handle optional KoruBeni Pro subscription/entitlement verification |
+| App activity (crash, analytics) | Local event history stays on device; crash/analytics not collected |
+| Encryption in transit | No developer backend; evaluate map/billing/RevenueCat provider traffic separately |
 | Users can request deletion | Yes |
 
 ---
+
+Canonical Data Safety answer source: [DATA_SAFETY_FORM.md](DATA_SAFETY_FORM.md).
 
 ## 2. Content Rating
 

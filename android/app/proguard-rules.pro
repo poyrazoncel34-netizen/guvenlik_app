@@ -34,14 +34,8 @@
 # Audioplayers
 -keep class xyz.luan.audioplayers.** { *; }
 
-# Record (audio recording)
--keep class com.llfbandit.record.** { *; }
-
 # Connectivity Plus
 -keep class dev.fluttercommunity.plus.connectivity.** { *; }
-
-# Sensors Plus
--keep class dev.fluttercommunity.plus.sensors.** { *; }
 
 # Image Picker
 -keep class io.flutter.plugins.imagepicker.** { *; }
@@ -74,15 +68,6 @@
 }
 -keep public class * extends android.content.BroadcastReceiver {
     public void onReceive(android.content.Context, android.content.Intent);
-}
-
-# ── SensorEventListener callbacks (ShakeDetectorService) ────────────────────
-# SensorManager dispatches accelerometer events via the registered listener
-# interface. R8's devirtualization can inline these calls if it thinks only
-# one implementation exists, silently killing shake detection in release builds.
--keepclassmembers class * implements android.hardware.SensorEventListener {
-    public void onSensorChanged(android.hardware.SensorEvent);
-    public void onAccuracyChanged(android.hardware.Sensor, int);
 }
 
 # ── AlarmManager / PendingIntent receiver class names ────────────────────────

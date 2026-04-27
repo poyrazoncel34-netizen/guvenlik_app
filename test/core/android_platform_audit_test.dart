@@ -70,23 +70,25 @@ void main() {
     });
 
     test(
-      'EmergencyPlatformHandler must NOT reference RecordingSessionService',
+      'EmergencyPlatformHandler must NOT reference removed recording service',
       () {
-        // RecordingSessionService was removed from the manifest but
-        // EmergencyPlatformHandler still calls it, causing a crash
-        // (IllegalArgumentException: unable to find explicit activity class).
+        // The native recording service is not declared in the manifest.
+        // EmergencyPlatformHandler must not call it.
         final file = File(
           'android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/EmergencyPlatformHandler.kt',
         );
         expect(file.existsSync(), isTrue);
         final content = file.readAsStringSync();
+        final removedService =
+            'Recording'
+            'SessionService';
 
         expect(
           content,
-          isNot(contains('RecordingSessionService')),
+          isNot(contains(removedService)),
           reason:
-              'RecordingSessionService is not declared in manifest. '
-              'Calling it crashes with IllegalArgumentException.',
+              'The removed recording service is not declared in manifest. '
+              'Calling it would crash with IllegalArgumentException.',
         );
       },
     );

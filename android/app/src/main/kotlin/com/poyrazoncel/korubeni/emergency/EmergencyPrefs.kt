@@ -6,8 +6,6 @@ object EmergencyPrefs {
     private const val FILE_NAME = "korubeni_emergency"
 
     const val KEY_PENDING_TRIGGER = "pending_trigger"
-    const val KEY_SHAKE_ENABLED = "shake_enabled"
-    const val KEY_SHAKE_SENSITIVITY = "shake_sensitivity"
     const val KEY_CHECK_IN_ACTIVE = "check_in_active"
     const val KEY_CHECK_IN_PHASE = "check_in_phase"
     const val KEY_CHECK_IN_DEADLINE = "check_in_deadline"

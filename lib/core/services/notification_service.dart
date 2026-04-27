@@ -57,7 +57,7 @@ class NotificationService {
       const AndroidNotificationChannel(
         kServiceStatusChannelId,
         kServiceStatusChannelName,
-        description: 'Shake, kayit ve arka plan servis durumu',
+        description: 'Arka plan güvenlik servis durumu',
         importance: Importance.low,
       ),
     );

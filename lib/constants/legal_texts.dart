@@ -255,9 +255,9 @@ Yasal Rıza Logu   | Rıza türü, tarih, versiyon        | KVKK uyum kaydı    
 ──────────────────────────────────────
 4. VERİ AKTARIMI
 ──────────────────────────────────────
-Kişisel verileriniz geliştirici sunucusuna aktarılmaz. Uygulama verilerinin ana kopyası cihazınızda saklanır. Çevrimiçi harita görünümü OpenStreetMap karo servisine ağ isteği yapabilir; isteğe bağlı Pro abonelik Google Play Billing üzerinden yönetilir; acil akış otomatik mesaj göndermez.
+Kişisel verileriniz geliştirici sunucusuna aktarılmaz. Uygulama verilerinin ana kopyası cihazınızda saklanır. Çevrimiçi harita görünümü OpenStreetMap karo servisine ağ isteği yapabilir; isteğe bağlı Pro abonelik Google Play Billing üzerinden yönetilir ve RevenueCat abonelik/yetki durumunu doğrulamaya yardımcı olabilir; acil akış otomatik mesaj göndermez.
 
-Geliştirici tarafından işletilen yurt dışı veri aktarımı yapılmaz. Harita ve Google Play Billing sağlayıcılarının teknik ağ davranışları kendi politikalarına tabidir.
+Geliştirici tarafından işletilen yurt dışı veri aktarımı yapılmaz. Harita, Google Play Billing ve RevenueCat sağlayıcılarının teknik ağ davranışları kendi politikalarına tabidir.
 
 ──────────────────────────────────────
 5. VERİ SAKLAMA SÜRELERİ
@@ -273,7 +273,7 @@ Geliştirici tarafından işletilen yurt dışı veri aktarımı yapılmaz. Hari
 ──────────────────────────────────────
 • PIN ve ilk müdahale bilgileri FlutterSecureStorage üzerinde saklanmaktadır.
 • Acil kişi verisi cihaz içi yerel veritabanında saklanır; yedekleme kapalıdır ve gereksiz kopyalar temizlenir.
-• Uygulama, geliştirici backend'ine kişisel veri göndermemektedir; harita ve Google Play Billing sağlayıcıları kendi teknik ağ davranışlarına sahip olabilir.
+• Uygulama, geliştirici backend'ine kişisel veri göndermemektedir; harita, Google Play Billing ve RevenueCat sağlayıcıları kendi teknik ağ davranışlarına sahip olabilir.
 
 ──────────────────────────────────────
 7. ÜÇÜNCÜ KİŞİ VERİ SAHİPLERİNİN HAKLARI
@@ -349,9 +349,9 @@ Legal Consent Log | Consent type, date, version       | KVKK compliance record  
 ──────────────────────────────────────
 4. DATA TRANSFER
 ──────────────────────────────────────
-Your personal data is not transferred to developer servers. The primary copy of app data is stored on your device. Online map display may request OpenStreetMap tiles; optional Pro subscription handling is managed through Google Play Billing; the emergency flow does not send automatic messages.
+Your personal data is not transferred to developer servers. The primary copy of app data is stored on your device. Online map display may request OpenStreetMap tiles; optional Pro subscription handling is managed through Google Play Billing and RevenueCat may help verify subscription/entitlement status; the emergency flow does not send automatic messages.
 
-The developer does not operate cross-border data transfer. Map and Google Play Billing providers may have technical network behavior governed by their own policies.
+The developer does not operate cross-border data transfer. Map, Google Play Billing, and RevenueCat providers may have technical network behavior governed by their own policies.
 
 ──────────────────────────────────────
 5. DATA RETENTION PERIODS
@@ -367,7 +367,7 @@ The developer does not operate cross-border data transfer. Map and Google Play B
 ──────────────────────────────────────
 • PIN and first-responder information is stored in FlutterSecureStorage.
 • Emergency contact data is stored in the local on-device database; backup is disabled and unnecessary legacy copies are cleaned up.
-• The application does not send personal data to a developer backend; map and Google Play Billing providers may have their own technical network behavior.
+• The application does not send personal data to a developer backend; map, Google Play Billing, and RevenueCat providers may have their own technical network behavior.
 
 ──────────────────────────────────────
 7. THIRD-PARTY DATA SUBJECT RIGHTS
