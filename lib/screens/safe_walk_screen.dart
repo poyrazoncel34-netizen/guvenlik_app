@@ -333,8 +333,10 @@ class _SafeWalkScreenState extends State<SafeWalkScreen>
 
   void _updateForegroundStatus() {
     KoruBeniForegroundService.updateNotification(
-      'KoruBeni Aktif',
-      'Güvenli yürüyüş — ${_formatTime(_remainingSeconds)}',
+      'foreground_active_title'.tr(),
+      'foreground_safe_walk_status'.tr(
+        namedArgs: {'time': _formatTime(_remainingSeconds)},
+      ),
     );
   }
 

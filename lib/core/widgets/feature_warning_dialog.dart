@@ -1,8 +1,12 @@
 // ============================================================================
-// ÖZELLİK UYARI DİALOGU — KVKK Md. 5: Veri işleme öncesi bildirim
-// İlk kullanımda bir kez gösterilir; SharedPreferences flag ile kontrol edilir.
+// FEATURE WARNING DIALOG — KVKK Article 5: Notice before processing
+// ----------------------------------------------------------------------------
+// Shown once per feature (gated by a SharedPreferences flag) so the user is
+// informed before the feature processes any data. Title/content are pulled
+// from easy_localization keys so EN/TR users see their own language.
 // ============================================================================
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../app_colors.dart';
@@ -11,15 +15,15 @@ import '../services/legal_log_service.dart';
 class FeatureWarningHelper {
   FeatureWarningHelper._();
 
-  /// Özelliğin ilk kullanımında uyarı dialogu gösterir.
-  /// [prefKey]: SharedPreferences flag key (AppConstants.prefWarning*)
-  /// [featureName]: Log kaydı için teknik isim (örn. 'panic_button')
-  /// [title]: Dialog başlığı
-  /// [content]: Dialog içeriği
+  /// Shows the first-use warning dialog for a feature.
   ///
-  /// Dönüş değeri: Kullanıcı "Anladım" deyip dialog kapatıldıysa `true`,
-  /// dialog gösterilmeden geçildiyse (flag zaten true) `true`,
-  /// dialog açıkken uygulama mount'tan çıktıysa `false`.
+  /// [prefKey] — SharedPreferences flag key (AppConstants.prefWarning*)
+  /// [featureName] — technical name for the audit log (e.g. 'panic_button')
+  /// [title] — already-localized dialog title (typically a getter below)
+  /// [content] — already-localized dialog content (typically a getter below)
+  ///
+  /// Returns `true` if the user accepted (or had already accepted previously),
+  /// `false` if the dialog was suppressed because the host context is gone.
   static Future<bool> showIfNeeded(
     BuildContext context, {
     required String prefKey,
@@ -52,43 +56,22 @@ class FeatureWarningHelper {
     return true;
   }
 
-  // ── Hazır içerikler ──────────────────────────────────────────────────────
+  // ── Localized titles / contents ──────────────────────────────────────────
+  // NOTE: kept as static getters (not const fields) so the active locale is
+  // resolved at call time. Boot-restart disclosure test reads the TR JSON
+  // value of feature_warning_checkin_content for the "yeniden başlat" check.
 
-  static const String panicTitle = '🚨 Panik Butonu — Bilgilendirme';
-  static const String panicContent =
-      'Bu özellik GERÇEK ACİL DURUMLARDA kullanılmak için tasarlanmıştır.\n\n'
-      'Nasıl çalışır:\n'
-      '• Butonu basılı tut → bırak → geri sayım başlar\n'
-      '• PIN girmezsen süre sonunda acil arama akışı başlatılır\n'
-      '• Arama izni yoksa arama ekranı açılır; yeşil tuşa basman gerekir\n'
-      '• Yanlışlıkla tetiklenirse acil kişilerin gereksiz uyarılmasından sen sorumlusun\n\n'
-      '⚠️ Bu uygulama 112\'nin YERİNİ TUTMAZ.\n'
-      'Gerçek tehlikede önce 112\'yi ara.';
+  static String get panicTitle => 'feature_warning_panic_title'.tr();
+  static String get panicContent => 'feature_warning_panic_content'.tr();
 
-  static const String checkinTitle = '🚶 Check-in Zamanlayıcı — Bilgilendirme';
-  static const String checkinContent =
-      'Bu özellik fiziksel koruma SAĞLAMAZ.\n'
-      'Yalnızca zamanlı kontrol ve hatırlatma akışına yardımcı olur.\n\n'
-      '• Arka planda çalışması cihaz, bildirim ve alarm izinlerine bağlıdır\n'
-      '• Uygulama kapatılırsa veya alarm izni reddedilirse davranış güvenilir olmayabilir\n'
-      '• Cihaz yeniden başlatılırsa aktif check-in yeniden başlatılmaya çalışılır; alarm ve bildirim izinleri yine belirleyicidir\n'
-      '• Fiziksel güvenliğin için her zaman resmi acil servisleri kullan';
+  static String get checkinTitle => 'feature_warning_checkin_title'.tr();
+  static String get checkinContent => 'feature_warning_checkin_content'.tr();
 
-  static const String sirenTitle = '🔊 Alarm Sireni — Bilgilendirme';
-  static const String sirenContent =
-      'Yüksek sesli alarm çalmadan önce şunu bil:\n\n'
-      '• Kamuya açık alanlarda kullanımda yerel gürültü yönetmeliği geçerlidir\n'
-      '• Gereksiz kullanım çevre sakinlerini rahatsız edebilir\n'
-      '• Bu özellikten doğacak şikayetler kullanıcının sorumluluğundadır';
+  static String get sirenTitle => 'feature_warning_siren_title'.tr();
+  static String get sirenContent => 'feature_warning_siren_content'.tr();
 
-  static const String locationTitle = '📍 Konum Oturumu — Bilgilendirme';
-  static const String locationContent =
-      'Konum bilginiz harita ve yerel konum oturumu için kullanılır.\n\n'
-      '• GPS doğruluğu cihaz ve çevre koşullarına bağlıdır; geliştirici garanti vermez\n'
-      '• Konum alınamazsa uygulama sahte koordinat göstermez\n'
-      '• Çevrimiçi harita karoları OpenStreetMap bağlantısı gerektirir\n'
-      '• Konum bilgisinin yetersiz, hatalı veya gecikmeli olmasından geliştirici sorumlu tutulamaz\n\n'
-      '⚠️ Gerçek acil durumda mutlaka 112\'yi arayın.';
+  static String get locationTitle => 'feature_warning_location_title'.tr();
+  static String get locationContent => 'feature_warning_location_content'.tr();
 }
 
 class _FeatureWarningDialog extends StatelessWidget {
@@ -142,9 +125,9 @@ class _FeatureWarningDialog extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
               ),
             ),
-            child: const Text(
-              'Anladım, devam et',
-              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+            child: Text(
+              'feature_warning_continue'.tr(),
+              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
             ),
           ),
         ),

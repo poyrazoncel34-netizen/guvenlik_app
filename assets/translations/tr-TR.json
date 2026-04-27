@@ -317,6 +317,7 @@
   "panic_button_hold_subtitle": "GÜVENDE OLANA KADAR",
   "panic_button_locked_title": "PRO SOS",
   "panic_button_locked_subtitle": "Panik/SOS özelliği KoruBeni Pro ile açılır",
+  "panic_button_armed_title": "BIRAK = ACİL",
   "contacts_add_new_subtitle": "Rehberinizden kişi seçerek acil kişilerinize ekleyin.",
   "contacts_empty_subtitle": "Rehberinizden güvendiğiniz kişileri\nacil kişi olarak ekleyin.",
   "contacts_person_label": "Kişi {index}",
@@ -806,5 +807,19 @@
   "link_open_failed": "Bağlantı açılamadı. Cihazınızda uygun bir uygulama bulunamadı.",
   "notification_permission_denied": "Bildirim izni reddedildi.",
   "open_notification_settings": "Bildirim Ayarları",
-  "share_failed": "Paylaşım açılamadı."
+  "share_failed": "Paylaşım açılamadı.",
+  "foreground_channel_name": "KoruBeni Güvenlik Servisi",
+  "foreground_channel_description": "KoruBeni güvenlik akışları için arka plan bildirimi",
+  "foreground_active_title": "KoruBeni aktif",
+  "foreground_active_body": "Güvenlik akışı arka planda izleniyor",
+  "foreground_safe_walk_status": "Güvenli yürüyüş — {time}",
+  "feature_warning_continue": "Anladım, devam et",
+  "feature_warning_panic_title": "🚨 Panik Butonu — Bilgilendirme",
+  "feature_warning_panic_content": "Bu özellik yalnızca gerçek güvenlik durumları için tasarlanmıştır.\n\nNasıl çalışır:\n• Butonu basılı tut → bırak → geri sayım başlar\n• PIN girmezsen süre sonunda acil arama akışı başlatılır\n• Arama izni yoksa arama ekranı açılır; yeşil tuşa basman gerekir\n• Yanlışlıkla tetiklenirse acil kişilerin gereksiz uyarılmasından sen sorumlusun\n\n⚠️ Bu uygulama 112'nin YERİNİ TUTMAZ.\nGerçek tehlikede önce 112'yi ara.",
+  "feature_warning_checkin_title": "🚶 Check-in Zamanlayıcı — Bilgilendirme",
+  "feature_warning_checkin_content": "Bu özellik fiziksel koruma SAĞLAMAZ.\nYalnızca zamanlı kontrol ve hatırlatma akışına yardımcı olur.\n\n• Arka planda çalışması cihaz, bildirim ve alarm izinlerine bağlıdır\n• Uygulama kapatılırsa veya alarm izni reddedilirse davranış güvenilir olmayabilir\n• Cihaz yeniden başlatılırsa aktif check-in yeniden başlatılmaya çalışılır; alarm ve bildirim izinleri yine belirleyicidir\n• Fiziksel güvenliğin için her zaman resmi acil servisleri kullan",
+  "feature_warning_siren_title": "🔊 Alarm Sireni — Bilgilendirme",
+  "feature_warning_siren_content": "Yüksek sesli alarm çalmadan önce şunu bil:\n\n• Kamuya açık alanlarda kullanımda yerel gürültü yönetmeliği geçerlidir\n• Gereksiz kullanım çevre sakinlerini rahatsız edebilir\n• Bu özellikten doğacak şikayetler kullanıcının sorumluluğundadır",
+  "feature_warning_location_title": "📍 Konum Oturumu — Bilgilendirme",
+  "feature_warning_location_content": "Konum bilginiz harita ve yerel konum oturumu için kullanılır.\n\n• GPS doğruluğu cihaz ve çevre koşullarına bağlıdır; geliştirici garanti vermez\n• Konum alınamazsa uygulama sahte koordinat göstermez\n• Çevrimiçi harita karoları OpenStreetMap bağlantısı gerektirir\n• Konum bilgisinin yetersiz, hatalı veya gecikmeli olmasından geliştirici sorumlu tutulamaz\n\n⚠️ Gerçek acil durumda mutlaka 112'yi arayın."
 }

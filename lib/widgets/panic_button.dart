@@ -273,7 +273,7 @@ class _PanicButtonState extends State<PanicButton>
                         children: [
                           Text(
                             _isArmed
-                                ? "BIRAK = ACIL"
+                                ? "panic_button_armed_title".tr()
                                 : isPro
                                 ? "panic_button_hold_title".tr()
                                 : "panic_button_locked_title".tr(),

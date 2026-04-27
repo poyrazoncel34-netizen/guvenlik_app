@@ -317,6 +317,7 @@
   "panic_button_hold_subtitle": "UNTIL SAFE",
   "panic_button_locked_title": "PRO SOS",
   "panic_button_locked_subtitle": "Panic/SOS unlocks with KoruBeni Pro",
+  "panic_button_armed_title": "RELEASE = SOS",
   "contacts_add_new_subtitle": "Add contacts from your phonebook to your emergency contacts.",
   "contacts_empty_subtitle": "Add people you trust from your\nphonebook as emergency contacts.",
   "contacts_person_label": "Contact {index}",
@@ -806,5 +807,19 @@
   "link_open_failed": "Couldn't open the link. No app on your device can handle it.",
   "notification_permission_denied": "Notification permission was denied.",
   "open_notification_settings": "Open Notification Settings",
-  "share_failed": "Couldn't open share sheet."
+  "share_failed": "Couldn't open share sheet.",
+  "foreground_channel_name": "KoruBeni Safety Service",
+  "foreground_channel_description": "Background notification for KoruBeni safety flows",
+  "foreground_active_title": "KoruBeni active",
+  "foreground_active_body": "Safety flow is being monitored in the background",
+  "foreground_safe_walk_status": "Safe walk — {time}",
+  "feature_warning_continue": "I understand, continue",
+  "feature_warning_panic_title": "🚨 Panic Button — Notice",
+  "feature_warning_panic_content": "This feature is intended only for real safety situations.\n\nHow it works:\n• Hold the button → release → the countdown starts\n• If you don't enter your PIN, the emergency call flow starts when time runs out\n• If call permission is missing, the dialer opens; you must press the green call button\n• If triggered by accident, you are responsible for unnecessary alerts to your contacts\n\n⚠️ This app does NOT replace 112.\nIn a real emergency, call 112 first.",
+  "feature_warning_checkin_title": "🚶 Check-in Timer — Notice",
+  "feature_warning_checkin_content": "This feature does NOT provide physical protection.\nIt only helps with timed check-in and reminder flows.\n\n• Background behavior depends on device, notification, and alarm permissions\n• If the app is closed or alarm permission is denied, behavior may be unreliable\n• If the device is restarted, an active check-in is attempted to be re-armed (yeniden başlatılır); alarm and notification permissions still decide\n• Always rely on official emergency services for your physical safety",
+  "feature_warning_siren_title": "🔊 Siren Alarm — Notice",
+  "feature_warning_siren_content": "Before playing a loud alarm, please note:\n\n• Local noise regulations apply in public spaces\n• Unnecessary use may disturb people nearby\n• Any complaints from misuse are the user's responsibility",
+  "feature_warning_location_title": "📍 Location Session — Notice",
+  "feature_warning_location_content": "Your location is used for the map and the local location session.\n\n• GPS accuracy depends on device and environment; the developer makes no guarantee\n• If location cannot be obtained, the app does not show fake coordinates\n• Online map tiles require an OpenStreetMap connection\n• The developer is not liable for missing, inaccurate, or delayed location data\n\n⚠️ In a real emergency, always call 112."
 }

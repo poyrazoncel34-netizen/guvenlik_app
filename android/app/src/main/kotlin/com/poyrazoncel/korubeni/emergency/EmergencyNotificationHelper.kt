@@ -43,7 +43,7 @@ object EmergencyNotificationHelper {
                 "Servis Durumu",
                 NotificationManager.IMPORTANCE_LOW
             ).apply {
-                description = "Shake algilama ve kayit oturumu durumu"
+                description = "Servis durumu bildirimleri"
             },
             NotificationChannel(
                 CHANNEL_GENERAL,

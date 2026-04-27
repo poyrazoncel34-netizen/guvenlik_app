@@ -31,11 +31,8 @@ Zamanlayıcı ayarlayın, check-in yapın. Süre dolduğunda yanıt vermezseniz 
 🔊 SİREN
 Dikkat çekmek için yüksek sesli acil durum sireni.
 
-📳 SALLAMA ALGILAMA
-Bu Android Play sürümünde sallama tetikleyici varsayılan olarak devre dışıdır.
-
 🔐 GÜVENLİK
-Yerel PIN koruması. Biyometrik kilit bu Android Play sürümünde devre dışıdır.
+4 haneli yerel PIN ile uygulama koruması.
 
 🌍 ÇOK DİLLİ
 Türkçe ve İngilizce desteği.

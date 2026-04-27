@@ -71,7 +71,7 @@ class AppConstants {
       '$legalBaseUrl/kullanim_sartlari.html';
   static const String subscriptionTermsUrl = termsOfServiceUrl;
   static const String aydinlatmaMetniUrl =
-      '$legalBaseUrl/aydinlatma_metni.html';
+      '$legalBaseUrl/aydinlatma.html';
   static const String privacyPolicyWebUrl = '$legalBaseUrl/privacy_policy.html';
   static const String privacyPolicyUrl = '$legalBaseUrl/privacy_policy.html';
   static const String dataDeletionUrl = '$legalBaseUrl/data_deletion.html';
