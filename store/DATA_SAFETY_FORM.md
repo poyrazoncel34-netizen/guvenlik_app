@@ -135,6 +135,6 @@ Online map display may request map tiles from the configured provider. These req
 - Fake call settings and local event data, device-only
 - Purchase/subscription events, entitlement status, anonymous user/device/app info through Google Play Billing and RevenueCat for optional Pro access
 
-**Shared with:** Not automatically shared by the app or sent to a developer backend. Emergency contacts are used for call flow only. Online map tiles, Google Play Billing, and RevenueCat have provider-side technical network behavior.
+**Shared with:** Not automatically shared by the app or sent to a developer backend. Emergency contacts are used for call flow only. Online map tiles, Google Play Billing, and RevenueCat have their own technical network behavior.
 
 **Not used:** Firebase auth, cloud database, analytics, crash reporting, ads, UGC, developer backend, microphone/audio recording

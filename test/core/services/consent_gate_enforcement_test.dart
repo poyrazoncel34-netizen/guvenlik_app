@@ -94,6 +94,46 @@ void main() {
     expect(source.contains('ConsentRecord.typeEmergencyContacts'), isTrue);
   });
 
+  test(
+    'every contacts add/import path gates before opening add UI or picker',
+    () {
+      final source = File('lib/screens/contacts_page.dart').readAsStringSync();
+      expect(source, contains('bool _requireEmergencyContactConsent()'));
+      expect(source, contains('ConsentRecord.typeEmergencyContacts'));
+
+      final sheetStart = source.indexOf('void _showAddContactSheet');
+      final sheetGate = source.indexOf(
+        '_requireEmergencyContactConsent()',
+        sheetStart,
+      );
+      final sheetOpen = source.indexOf('showModalBottomSheet', sheetStart);
+      expect(sheetStart, isNot(-1));
+      expect(sheetGate, isNot(-1));
+      expect(sheetOpen, isNot(-1));
+      expect(sheetGate < sheetOpen, isTrue);
+
+      final pickerStart = source.indexOf('Future<void> _pickContactFromDevice');
+      final pickerGate = source.indexOf(
+        '_requireEmergencyContactConsent()',
+        pickerStart,
+      );
+      final pickerOpen = source.indexOf(
+        'FlutterContactPicker.pickPhoneContact',
+        pickerStart,
+      );
+      expect(pickerStart, isNot(-1));
+      expect(pickerGate, isNot(-1));
+      expect(pickerOpen, isNot(-1));
+      expect(
+        pickerGate < pickerOpen,
+        isTrue,
+        reason:
+            'Withdrawn emergency-contact consent must block import before the '
+            'system picker opens.',
+      );
+    },
+  );
+
   test('data_deletion_screen.dart is NOT consent-gated', () {
     // KVKK Article 11: users must always be able to delete their data,
     // even if all consents are revoked.

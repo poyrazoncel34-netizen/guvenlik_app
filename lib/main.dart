@@ -77,7 +77,7 @@ void main() async {
                 const SizedBox(height: 8),
                 Text(
                   kReleaseMode
-                      ? 'Uygulama bu ekrani yukleyemedi. Lutfen tekrar deneyin.'
+                      ? 'app_error_fallback_body'.tr()
                       : (details.exception.toString().length > 200
                             ? details.exception.toString().substring(0, 200)
                             : details.exception.toString()),
@@ -207,8 +207,8 @@ class KoruBeniApp extends StatelessWidget {
               child: OfflineBanner(
                 child: AppPrivacyShield(
                   child: Semantics(
-                    label: 'KoruBeni güvenlik uygulaması',
-                    hint: 'Acil durumlarda yardım çağırın ve konumunuzu görün',
+                    label: 'app_semantics_label'.tr(),
+                    hint: 'app_semantics_hint'.tr(),
                     child: child ?? const SizedBox.shrink(),
                   ),
                 ),

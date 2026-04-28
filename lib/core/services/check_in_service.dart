@@ -42,11 +42,13 @@ class CheckInService extends ChangeNotifier {
   bool _isActive = false;
   bool _isGracePeriod = false;
   bool _emergencyInProgress = false;
+  bool _nativeScheduleDegraded = false;
   int _remainingSeconds = 0;
   int _totalSeconds = 0;
 
   bool get isActive => _isActive;
   bool get isGracePeriod => _isGracePeriod;
+  bool get nativeScheduleDegraded => _nativeScheduleDegraded;
   int get remainingSeconds => _remainingSeconds;
   int get totalSeconds => _totalSeconds;
   DateTime? get endAt => _isGracePeriod ? _graceEndAt : _endAt;
@@ -60,7 +62,7 @@ class CheckInService extends ChangeNotifier {
   }
 
   /// Start a check-in timer with [minutes] duration.
-  Future<void> start(int minutes) async {
+  Future<bool> start(int minutes) async {
     await stop();
     CheckInExpiryCoordinator.instance.arm(
       CheckInExpiryCoordinator.checkInSession,
@@ -74,7 +76,8 @@ class CheckInService extends ChangeNotifier {
     _graceEndAt = null;
 
     await _persistState();
-    await _scheduleNativeMainDeadline();
+    final nativeScheduled = await _scheduleNativeMainDeadline();
+    _nativeScheduleDegraded = !nativeScheduled;
     await _startBackgroundProtection();
     _startMainTicker();
 
@@ -87,6 +90,7 @@ class CheckInService extends ChangeNotifier {
     );
 
     notifyListeners();
+    return nativeScheduled;
   }
 
   /// User confirms they are safe — resets the timer.
@@ -109,7 +113,8 @@ class CheckInService extends ChangeNotifier {
     _remainingSeconds = _totalSeconds;
 
     await _persistState();
-    await _scheduleNativeMainDeadline();
+    final nativeScheduled = await _scheduleNativeMainDeadline();
+    _nativeScheduleDegraded = !nativeScheduled;
     await _startBackgroundProtection();
     _startMainTicker();
 
@@ -132,6 +137,7 @@ class CheckInService extends ChangeNotifier {
     _remainingSeconds = 0;
     _totalSeconds = 0;
     _emergencyInProgress = false;
+    _nativeScheduleDegraded = false;
     CheckInExpiryCoordinator.instance.reset(
       sessionId: CheckInExpiryCoordinator.checkInSession,
     );
@@ -297,7 +303,8 @@ class CheckInService extends ChangeNotifier {
     _remainingSeconds = _gracePeriodSeconds;
 
     await _persistState();
-    await _scheduleNativeGraceDeadline();
+    final nativeScheduled = await _scheduleNativeGraceDeadline();
+    _nativeScheduleDegraded = !nativeScheduled;
     await _startBackgroundProtection();
     await _showGraceNotification();
     _startGraceTicker();
@@ -441,6 +448,7 @@ class CheckInService extends ChangeNotifier {
     _endAt = null;
     _remainingSeconds = 0;
     _totalSeconds = 0;
+    _nativeScheduleDegraded = false;
 
     await _clearPersistedState();
     await EmergencyPlatformService.instance.cancelCheckIn(
@@ -463,7 +471,8 @@ class CheckInService extends ChangeNotifier {
     );
     _remainingSeconds = _gracePeriodSeconds;
     await _persistState();
-    await _scheduleNativeGraceDeadline();
+    final nativeScheduled = await _scheduleNativeGraceDeadline();
+    _nativeScheduleDegraded = !nativeScheduled;
     await _showGraceNotification();
     _startGraceTicker();
     notifyListeners();
@@ -476,11 +485,11 @@ class CheckInService extends ChangeNotifier {
     await _triggerEmergency();
   }
 
-  Future<void> _scheduleNativeMainDeadline() async {
+  Future<bool> _scheduleNativeMainDeadline() async {
     if (_endAt == null) {
-      return;
+      return false;
     }
-    await EmergencyPlatformService.instance.scheduleCheckIn(
+    return EmergencyPlatformService.instance.scheduleCheckIn(
       sessionId: CheckInExpiryCoordinator.checkInSession,
       phase: 'main',
       deadline: _endAt!,
@@ -488,11 +497,11 @@ class CheckInService extends ChangeNotifier {
     );
   }
 
-  Future<void> _scheduleNativeGraceDeadline() async {
+  Future<bool> _scheduleNativeGraceDeadline() async {
     if (_graceEndAt == null) {
-      return;
+      return false;
     }
-    await EmergencyPlatformService.instance.scheduleCheckIn(
+    return EmergencyPlatformService.instance.scheduleCheckIn(
       sessionId: CheckInExpiryCoordinator.checkInSession,
       phase: 'grace',
       deadline: _graceEndAt!,

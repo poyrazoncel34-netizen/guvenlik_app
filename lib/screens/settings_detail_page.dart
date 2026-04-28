@@ -285,7 +285,7 @@ class _DataExportButtonState extends State<_DataExportButton> {
       await SharePlus.instance.share(
         ShareParams(
           files: [XFile(file.path)],
-          text: 'KoruBeni — KVKK Md.11 Veri Dışa Aktarma',
+          text: 'data_export_share_text'.tr(),
         ),
       );
     } catch (e) {
@@ -314,18 +314,18 @@ class _DataExportButtonState extends State<_DataExportButton> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Verilerimi Dışa Aktar',
-            style: TextStyle(
+          Text(
+            'data_export_heading'.tr(),
+            style: const TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w800,
               color: AppColors.textPrimary,
             ),
           ),
           const SizedBox(height: 6),
-          const Text(
-            'KVKK Madde 11/f kapsamında kişisel verilerinizin bir kopyasını JSON formatında alabilirsiniz.',
-            style: TextStyle(
+          Text(
+            'data_export_body'.tr(),
+            style: const TextStyle(
               fontSize: 13,
               color: AppColors.textSecondary,
               height: 1.5,
@@ -346,7 +346,11 @@ class _DataExportButtonState extends State<_DataExportButton> {
                       ),
                     )
                   : const Icon(Icons.download_rounded, size: 18),
-              label: Text(_exporting ? 'Hazırlanıyor...' : 'Verilerimi İndir'),
+              label: Text(
+                _exporting
+                    ? 'data_export_exporting'.tr()
+                    : 'data_export_title'.tr(),
+              ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,

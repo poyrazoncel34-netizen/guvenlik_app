@@ -47,7 +47,6 @@ void main() {
         AppConstants.prefLegalDisclaimerAccepted,
         AppConstants.prefKvkkHealthConsentAccepted,
         AppConstants.prefTermsVersion,
-        AppConstants.prefRecordingWarningSeen,
         AppConstants.prefNotificationPermissionPrompted,
         AppConstants.prefDemoMode,
         AppConstants.prefVolumeTrigger,

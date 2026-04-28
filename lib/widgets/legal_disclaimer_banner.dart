@@ -7,7 +7,6 @@ import '../core/app_colors.dart';
 
 enum LegalBannerContext {
   home,
-  audioRecording,
   fakeCall,
   safeWalk,
   emergencyContact,
@@ -28,8 +27,6 @@ class LegalDisclaimerBanner extends StatelessWidget {
     switch (bannerContext) {
       case LegalBannerContext.home:
         return 'KoruBeni profesyonel bir güvenlik hizmeti DEĞİLDİR. Acil durumlarda her zaman 112\'yi arayın.';
-      case LegalBannerContext.audioRecording:
-        return 'Ses kaydının hukuki geçerliliği ve kaydedilen kişilerin rızası sizin sorumluluğunuzdadır. TCK m.133 uyumluluğu kullanıcıya aittir.';
       case LegalBannerContext.fakeCall:
         return 'Bu özellik yalnızca kişisel güvenlik amaçlıdır. Kötüye kullanımdan doğan tüm sorumluluk kullanıcıya aittir.';
       case LegalBannerContext.safeWalk:
@@ -45,7 +42,6 @@ class LegalDisclaimerBanner extends StatelessWidget {
     switch (bannerContext) {
       case LegalBannerContext.home:
         return Icons.info_outline_rounded;
-      case LegalBannerContext.audioRecording:
       case LegalBannerContext.fakeCall:
       case LegalBannerContext.panicButton:
         return Icons.warning_amber_rounded;
@@ -60,7 +56,6 @@ class LegalDisclaimerBanner extends StatelessWidget {
     switch (bannerContext) {
       case LegalBannerContext.home:
         return AppColors.info;
-      case LegalBannerContext.audioRecording:
       case LegalBannerContext.fakeCall:
         return AppColors.warning;
       case LegalBannerContext.panicButton:

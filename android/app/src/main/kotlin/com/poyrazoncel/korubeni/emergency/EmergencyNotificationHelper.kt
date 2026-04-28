@@ -18,8 +18,6 @@ object EmergencyNotificationHelper {
     const val CHANNEL_ALERTS = "korubeni_alerts_high"
     const val CHANNEL_SERVICE = "korubeni_service_low"
     const val CHANNEL_GENERAL = "korubeni_general_default"
-    const val SHAKE_SERVICE_NOTIFICATION_ID = 7301
-    const val RECORDING_NOTIFICATION_ID = 7302
     const val CHECK_IN_NOTIFICATION_ID = 7303
 
     fun ensureChannels(context: Context) {

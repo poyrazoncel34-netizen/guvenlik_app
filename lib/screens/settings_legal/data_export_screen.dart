@@ -44,8 +44,8 @@ class _DataExportScreenState extends State<DataExportScreen> {
       await SharePlus.instance.share(
         ShareParams(
           files: [XFile(file.path, mimeType: 'application/json')],
-          subject: 'KoruBeni — Kişisel Veri Dışa Aktarımı',
-          text: 'KVKK Madde 11/ğ kapsamında kişisel verileriniz',
+          subject: 'data_export_share_subject'.tr(),
+          text: 'data_export_share_text'.tr(),
         ),
       );
     } catch (e) {

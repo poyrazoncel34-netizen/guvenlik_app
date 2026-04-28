@@ -30,7 +30,6 @@ class AppConstants {
   static const String prefKvkkHealthConsentAccepted =
       'pref_kvkk_health_consent_accepted';
   static const String prefTermsVersion = 'pref_terms_version';
-  static const String prefRecordingWarningSeen = 'pref_recording_warning_shown';
   static const String prefNotificationPermissionPrompted =
       'pref_notification_permission_prompted';
   static const String prefDemoMode = 'pref_demo_mode';
@@ -53,7 +52,6 @@ class AppConstants {
   // Rıza özellik durumu (ConsentManager ile senkronize edilir)
   static const String prefConsentLocation = 'pref_consent_location';
   static const String prefConsentBiometric = 'pref_consent_biometric';
-  static const String prefConsentAudio = 'pref_consent_audio';
   static const String prefConsentEmergencyContacts =
       'pref_consent_emergency_contacts';
   static const String prefConsentProfile = 'pref_consent_profile';
@@ -66,12 +64,12 @@ class AppConstants {
   static const String prefWarningLocation = 'warning_location_shown';
 
   // Yasal belgeler URL'leri
-  static const String legalBaseUrl = 'https://poyrazoncel34-netizen.github.io/guvenlik_app';
+  static const String legalBaseUrl =
+      'https://poyrazoncel34-netizen.github.io/guvenlik_app';
   static const String termsOfServiceUrl =
       '$legalBaseUrl/kullanim_sartlari.html';
   static const String subscriptionTermsUrl = termsOfServiceUrl;
-  static const String aydinlatmaMetniUrl =
-      '$legalBaseUrl/aydinlatma.html';
+  static const String aydinlatmaMetniUrl = '$legalBaseUrl/aydinlatma.html';
   static const String privacyPolicyWebUrl = '$legalBaseUrl/privacy_policy.html';
   static const String privacyPolicyUrl = '$legalBaseUrl/privacy_policy.html';
   static const String dataDeletionUrl = '$legalBaseUrl/data_deletion.html';

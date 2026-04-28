@@ -18,11 +18,15 @@ This permission is an optional reliability enhancement for user-started safety t
 
 ## Data Safety Summary
 
-KoruBeni does not operate a developer backend. Most safety data is stored on device: emergency contacts, profile name, optional user-selected profile/fake-call avatar images, PIN, local activity history, fake call settings, and consent records. Subscription status, anonymous user ID, purchase events, app/device information, and entitlement data may be processed by Google Play Billing and RevenueCat. Payment credentials are processed by Google Play and are not stored by the developer. Map screens may contact the configured map tile provider, currently OpenStreetMap tile infrastructure for online map display. No advertising, user-generated content, or third-party analytics SDK is used in this release.
+KoruBeni does not operate a developer backend. Most safety data is stored on device: emergency contacts, display name, optional user-selected avatar images, PIN, local activity history, fake call settings, and consent records.
+
+Subscription status, anonymous user ID, purchase events, app/device information, and entitlement data may be handled by Google Play Billing and RevenueCat. Payment credentials are handled by Google Play and are not stored by the developer. Map screens may contact the configured map tile service, currently OpenStreetMap tile infrastructure for online map display. No advertising, user-generated content, or third-party analytics SDK is used in this release.
 
 ## App Access / Reviewer Notes
 
-Panic/SOS is a KoruBeni Pro feature. The free plan includes basic app access, immediate fake call, siren, emergency contact management, basic profile name, map/location view where permission is granted, and legal/settings access.
+Panic/SOS is a KoruBeni Pro feature.
+
+The free plan includes basic app access, immediate fake call, siren, emergency contact management, basic display name, map/location view where permission is granted, and legal/settings access.
 
 Reviewer path:
 Home -> locked Pro panic/SOS button -> Paywall/test purchase -> Pro entitlement active -> Home -> panic/SOS button -> long press -> emergency countdown.

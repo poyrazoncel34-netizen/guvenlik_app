@@ -36,6 +36,14 @@ class _ContactsPageState extends State<ContactsPage> {
     });
   }
 
+  bool _requireEmergencyContactConsent() {
+    if (!mounted) return false;
+    return ConsentGateService.requireConsent(
+      context,
+      ConsentRecord.typeEmergencyContacts,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<ContactsProvider>();
@@ -65,12 +73,7 @@ class _ContactsPageState extends State<ContactsPage> {
                   PremiumFeature.emergencyContactAdd,
                 );
                 if (!allowed || !context.mounted) return;
-                if (!ConsentGateService.requireConsent(
-                  context,
-                  ConsentRecord.typeEmergencyContacts,
-                )) {
-                  return;
-                }
+                if (!_requireEmergencyContactConsent()) return;
                 _showAddContactSheet(context);
               },
             ),
@@ -535,6 +538,7 @@ class _ContactsPageState extends State<ContactsPage> {
                 PremiumFeature.emergencyContactAdd,
               );
               if (!allowed || !mounted) return;
+              if (!_requireEmergencyContactConsent()) return;
               await _pickContactFromDevice();
             },
             icon: const Icon(Icons.person_add_rounded, size: 18),
@@ -640,6 +644,7 @@ class _ContactsPageState extends State<ContactsPage> {
   }
 
   void _showAddContactSheet(BuildContext context) {
+    if (!_requireEmergencyContactConsent()) return;
     _showContactKvkkInfoIfNeeded();
     showModalBottomSheet(
       context: context,
@@ -737,6 +742,7 @@ class _ContactsPageState extends State<ContactsPage> {
       PremiumFeature.emergencyContactAdd,
     );
     if (!allowed || !mounted) return;
+    if (!_requireEmergencyContactConsent()) return;
 
     try {
       if (kIsWeb) {

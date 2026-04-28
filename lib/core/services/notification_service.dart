@@ -1,5 +1,6 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:timezone/data/latest.dart' as tz_data;
 import 'package:timezone/timezone.dart' as tz;
 
@@ -9,11 +10,8 @@ import '../utils/permission_helper.dart';
 import '../../screens/fake_call_screen.dart';
 
 const String kEmergencyAlertsChannelId = 'emergency_alerts';
-const String kEmergencyAlertsChannelName = 'Acil Bildirimler';
 const String kServiceStatusChannelId = 'service_status';
-const String kServiceStatusChannelName = 'Servis Durumu';
 const String kGeneralNotificationsChannelId = 'general_notifications';
-const String kGeneralNotificationsChannelName = 'Genel Bildirimler';
 const String kNotificationGroupKey = 'korubeni_alerts';
 
 class NotificationService {
@@ -46,26 +44,26 @@ class NotificationService {
           AndroidFlutterLocalNotificationsPlugin
         >();
     await androidImplementation?.createNotificationChannel(
-      const AndroidNotificationChannel(
+      AndroidNotificationChannel(
         kEmergencyAlertsChannelId,
-        kEmergencyAlertsChannelName,
-        description: 'Kritik güvenlik ve check-in bildirimleri',
+        'notification_channel_emergency_name'.tr(),
+        description: 'notification_channel_emergency_desc'.tr(),
         importance: Importance.max,
       ),
     );
     await androidImplementation?.createNotificationChannel(
-      const AndroidNotificationChannel(
+      AndroidNotificationChannel(
         kServiceStatusChannelId,
-        kServiceStatusChannelName,
-        description: 'Arka plan güvenlik servis durumu',
+        'notification_channel_service_name'.tr(),
+        description: 'notification_channel_service_desc'.tr(),
         importance: Importance.low,
       ),
     );
     await androidImplementation?.createNotificationChannel(
-      const AndroidNotificationChannel(
+      AndroidNotificationChannel(
         kGeneralNotificationsChannelId,
-        kGeneralNotificationsChannelName,
-        description: 'Genel uygulama bildirimleri',
+        'notification_channel_general_name'.tr(),
+        description: 'notification_channel_general_desc'.tr(),
         importance: Importance.defaultImportance,
       ),
     );
@@ -94,17 +92,17 @@ class NotificationService {
       id,
       title,
       body,
-      const NotificationDetails(
+      NotificationDetails(
         android: AndroidNotificationDetails(
           kEmergencyAlertsChannelId,
-          kEmergencyAlertsChannelName,
+          'notification_channel_emergency_name'.tr(),
           importance: Importance.max,
           priority: Priority.max,
           category: AndroidNotificationCategory.alarm,
           visibility: NotificationVisibility.public,
           groupKey: kNotificationGroupKey,
         ),
-        iOS: DarwinNotificationDetails(
+        iOS: const DarwinNotificationDetails(
           presentAlert: true,
           presentBadge: true,
           presentSound: true,
@@ -134,19 +132,19 @@ class NotificationService {
       final scheduledAt = tz.TZDateTime.now(tz.local).add(delay);
       await _plugin.zonedSchedule(
         31001,
-        'Sahte çağrı hazır',
-        'Sahte çağrı ekranını açmak için dokunun.',
+        'fake_call_notification_title'.tr(),
+        'fake_call_notification_body'.tr(),
         scheduledAt,
-        const NotificationDetails(
+        NotificationDetails(
           android: AndroidNotificationDetails(
             kEmergencyAlertsChannelId,
-            kEmergencyAlertsChannelName,
+            'notification_channel_emergency_name'.tr(),
             importance: Importance.max,
             priority: Priority.max,
             category: AndroidNotificationCategory.call,
             visibility: NotificationVisibility.public,
           ),
-          iOS: DarwinNotificationDetails(
+          iOS: const DarwinNotificationDetails(
             presentAlert: true,
             presentBadge: true,
             presentSound: true,
@@ -175,11 +173,13 @@ class NotificationService {
     await _plugin.show(
       0, // Use 0 for summary
       'KoruBeni',
-      '$_activeNotificationCount bildirim',
-      const NotificationDetails(
+      'notification_group_summary'.tr(
+        namedArgs: {'count': '$_activeNotificationCount'},
+      ),
+      NotificationDetails(
         android: AndroidNotificationDetails(
           kEmergencyAlertsChannelId,
-          kEmergencyAlertsChannelName,
+          'notification_channel_emergency_name'.tr(),
           importance: Importance.max,
           priority: Priority.max,
           groupKey: kNotificationGroupKey,

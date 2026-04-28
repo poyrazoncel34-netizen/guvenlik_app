@@ -9,8 +9,10 @@ import 'package:easy_localization/easy_localization.dart';
 import '../core/app_colors.dart';
 import '../core/constants/app_constants.dart';
 import '../core/services/check_in_service.dart';
+import '../core/services/contact_service.dart';
 import '../core/utils/permission_helper.dart';
 import '../core/widgets/feature_warning_dialog.dart';
+import 'contacts_page.dart';
 // Analytics service removed (offline-first)
 
 class CheckInScreen extends StatefulWidget {
@@ -54,7 +56,52 @@ class _CheckInScreenState extends State<CheckInScreen>
     if (mounted) setState(() {});
   }
 
+  Future<bool> _hasEmergencyContact() async {
+    try {
+      final numbers = await ContactService.getAllEmergencyNumbers();
+      return numbers.any((number) => number.trim().isNotEmpty);
+    } catch (_) {
+      return false;
+    }
+  }
+
+  void _showTimerContactRequired() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('timer_emergency_contact_required'.tr()),
+        backgroundColor: AppColors.warning,
+        behavior: SnackBarBehavior.floating,
+        action: SnackBarAction(
+          label: 'timer_add_contact_action'.tr(),
+          textColor: Colors.white,
+          onPressed: () {
+            Navigator.of(
+              context,
+            ).push(MaterialPageRoute(builder: (_) => const ContactsPage()));
+          },
+        ),
+      ),
+    );
+  }
+
+  void _showTimerSchedulingDegraded() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('timer_scheduling_degraded'.tr()),
+        backgroundColor: AppColors.warning,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
   Future<void> _startCheckIn(int minutes) async {
+    if (!await _hasEmergencyContact()) {
+      if (!mounted) return;
+      _showTimerContactRequired();
+      return;
+    }
+    if (!mounted) return;
+
     // İlk kullanımda uyarı dialogu göster
     final shown = await FeatureWarningHelper.showIfNeeded(
       context,
@@ -81,7 +128,11 @@ class _CheckInScreenState extends State<CheckInScreen>
     }
 
     HapticFeedback.mediumImpact();
-    await _service.start(minutes);
+    final fullyScheduled = await _service.start(minutes);
+    if (!mounted) return;
+    if (!fullyScheduled) {
+      _showTimerSchedulingDegraded();
+    }
   }
 
   Future<void> _confirmSafe() async {
@@ -354,6 +405,39 @@ class _CheckInScreenState extends State<CheckInScreen>
                   ),
                 );
               },
+            ),
+            const SizedBox(height: 24),
+          ],
+          if (_service.nativeScheduleDegraded) ...[
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppColors.warning.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: AppColors.warning.withValues(alpha: 0.2),
+                ),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.info_outline_rounded,
+                    color: AppColors.warning,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'timer_scheduling_degraded'.tr(),
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: AppColors.textSecondary,
+                        height: 1.4,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
             const SizedBox(height: 24),
           ],

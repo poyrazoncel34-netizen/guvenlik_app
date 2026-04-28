@@ -299,7 +299,7 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> {
                       TextButton(
                         onPressed: _isLockedOut ? null : _showForgotPinDialog,
                         child: Text(
-                          'Şifremi Unuttum',
+                          'forgot_pin_title'.tr(),
                           style: TextStyle(
                             color: AppColors.textSecondary.withValues(
                               alpha: 0.7,
@@ -321,6 +321,7 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> {
 
   Future<void> _showForgotPinDialog() async {
     final confirmController = TextEditingController();
+    final resetToken = 'forgot_pin_reset_token'.tr();
     await showDialog<void>(
       context: context,
       barrierDismissible: false,
@@ -340,7 +341,7 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'Şifremi Unuttum',
+                  'forgot_pin_title'.tr(),
                   style: const TextStyle(
                     color: AppColors.textPrimary,
                     fontWeight: FontWeight.w800,
@@ -353,12 +354,9 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text(
-                  'KoruBeni tamamen internetsiz çalışır. Güvenliğiniz için şifrenizi '
-                  'kurtaramayız. Uygulamaya tekrar erişmek için tüm kayıtlı verilerinizi '
-                  '(kişiler, ayarlar) silip uygulamayı sıfırlamanız gerekir. '
-                  'Onaylıyor musunuz?',
-                  style: TextStyle(
+                Text(
+                  'forgot_pin_reset_body'.tr(),
+                  style: const TextStyle(
                     color: AppColors.textSecondary,
                     fontSize: 14,
                     height: 1.5,
@@ -369,7 +367,7 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> {
                   controller: confirmController,
                   onChanged: (v) => setDialogState(() {}),
                   decoration: InputDecoration(
-                    hintText: 'Onaylamak için SIFIRLA yazın',
+                    hintText: 'forgot_pin_reset_hint'.tr(),
                     hintStyle: TextStyle(
                       color: AppColors.textSecondary.withValues(alpha: 0.6),
                     ),
@@ -396,13 +394,13 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: const Text(
-                'İptal',
-                style: TextStyle(color: AppColors.textSecondary),
+              child: Text(
+                'cancel'.tr(),
+                style: const TextStyle(color: AppColors.textSecondary),
               ),
             ),
             ElevatedButton(
-              onPressed: confirmController.text == 'SIFIRLA'
+              onPressed: confirmController.text == resetToken
                   ? () async {
                       Navigator.pop(ctx);
                       await AppResetService.clearLocalData();
@@ -425,9 +423,9 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> {
                 ),
                 foregroundColor: Colors.white,
               ),
-              child: const Text(
-                'Sıfırla',
-                style: TextStyle(fontWeight: FontWeight.w700),
+              child: Text(
+                'forgot_pin_reset_button'.tr(),
+                style: const TextStyle(fontWeight: FontWeight.w700),
               ),
             ),
           ],

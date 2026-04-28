@@ -41,22 +41,22 @@ KoruBeni **offline-first** çalışır. Uygulama geliştirici tarafından işlet
 | **Hukuki dayanak** | KVKK m.5/1 — Açık rıza |
 | **İşleme amacı** | Acil durumda arama akışında kullanılacak kişiyi saklama |
 | **Saklama süresi** | Kullanıcı silene kadar |
-| **Güvenlik önlemi** | FlutterSecureStorage (AES-256 şifreleme) |
+| **Güvenlik önlemi** | Cihaz içi yerel veritabanı; Android yedekleme kapalı |
 | **Rıza tipi** | `consent_emergency_contacts` — Granüler, geri çekilebilir |
 | **3. kişi hakları** | Eklenen kişiler KVKK m.11 haklarını korubeni.destek@gmail.com üzerinden kullanabilir |
 
-### 2.3 Ses Kaydı
+### 2.3 Ses / Mikrofon
 
 | Alan | Detay |
 |------|-------|
-| **Veri türü** | Ses dosyası (ortam kaydı) |
-| **Hukuki dayanak** | KVKK m.5/1 — Açık rıza + TCK m.133 uyarısı |
-| **İşleme amacı** | Acil durumda delil niteliğinde kayıt |
-| **Saklama süresi** | Kullanıcı silene kadar |
-| **Güvenlik önlemi** | FlutterSecureStorage (AES-256 şifreleme), dosya sistemi düzeyinde koruma |
-| **Rıza tipi** | `consent_audio` — Granüler, geri çekilebilir + her kayıt öncesi TCK m.133 onayı |
-| **Aktarım** | Yok — yalnızca cihazda kalır |
-| **Ek uyarı** | Her kayıt başlangıcında TCK m.133 onay dialogu gösterilir ve onay loglanır |
+| **Veri türü** | Toplanmaz — bu Android Play sürümünde ses dosyası veya mikrofon verisi işlenmez |
+| **Hukuki dayanak** | Uygulanmaz — mikrofon izni istenmez |
+| **İşleme amacı** | Yok — ses kaydı özelliği bu Play sürümünde devre dışıdır |
+| **Saklama süresi** | Yok |
+| **Güvenlik önlemi** | `RECORD_AUDIO` ve `FOREGROUND_SERVICE_MICROPHONE` manifestten çıkarılmıştır |
+| **Rıza tipi** | Yok — aktif ses/mikrofon işleme yoktur |
+| **Aktarım** | Yok |
+| **Ek uyarı** | Data Safety beyanında ses/mikrofon verisi toplanmadığı belirtilmelidir |
 
 ### 2.4 Profil Bilgileri
 
@@ -137,7 +137,7 @@ KoruBeni **offline-first** çalışır. Uygulama geliştirici tarafından işlet
 - Offline-first mimari — geliştirici sunucusu yoktur; üçüncü taraf SDK ağ davranışları ayrı değerlendirilmelidir
 - Granüler rıza yönetimi — her veri kategorisi için ayrı onay/red
 - Merkezi rıza kapısı (ConsentGateService) — rıza olmadan veri işleme engellenir
-- Her ses kaydı öncesi ayrı TCK m.133 onayı
+- Ses/mikrofon işleme bu Play sürümünde kapalıdır; `RECORD_AUDIO` izni yoktur
 
 ### İdari Önlemler
 - 4 adımlı onboarding yasal akışı (18+ beyanı → kullanım sözleşmesi → KVKK aydınlatma → granüler rıza)
@@ -175,7 +175,7 @@ Kullanıcılar aşağıdaki haklarını uygulama içinden veya korubeni.destek@g
 | KVKK 6698 | m.9 | Yurt dışı aktarım yasağı — aktarım yok |
 | KVKK 6698 | m.10 | Aydınlatma yükümlülüğü — 4 adımlı onboarding |
 | KVKK 6698 | m.11 | Veri sahibi hakları — uygulama içi + e-posta |
-| TCK | m.133 | Ses kaydı onayı — her kayıt öncesi dialog |
+| TCK | m.133 | Ses kaydı özelliği bu Play sürümünde devre dışı; aktif kayıt/onay akışı yok |
 | TBK | m.50 | İspat — audit log kayıtları |
 | TBK | m.115 | Sorumluluk sınırı — ağır kusur istisnası |
 | 6502 | Tüketici Kanunu | Ücretsiz uygulama bilgilendirmesi |

@@ -10,6 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../core/app_colors.dart';
 import '../core/services/activity_service.dart';
 import '../core/services/check_in_expiry_coordinator.dart';
+import '../core/services/contact_service.dart';
 import '../core/services/emergency_platform_service.dart';
 import '../core/services/foreground_service.dart';
 import '../core/services/notification_service.dart';
@@ -18,6 +19,7 @@ import '../core/constants/app_constants.dart';
 import '../core/widgets/feature_warning_dialog.dart';
 import '../domain/models/activity_event.dart';
 import '../widgets/siren_dialog.dart';
+import 'contacts_page.dart';
 import 'countdown_screen.dart';
 
 class SafeWalkScreen extends StatefulWidget {
@@ -39,6 +41,7 @@ class _SafeWalkScreenState extends State<SafeWalkScreen>
   DateTime? _endTime;
   int _remainingSeconds = 0;
   bool _preWarningFired = false;
+  bool _nativeScheduleDegraded = false;
 
   final List<int> _durations = [5, 10, 15, 30, 60];
 
@@ -107,6 +110,13 @@ class _SafeWalkScreenState extends State<SafeWalkScreen>
   }
 
   Future<void> _startSafeWalk() async {
+    if (!await _hasEmergencyContact()) {
+      if (!mounted) return;
+      _showTimerContactRequired();
+      return;
+    }
+    if (!mounted) return;
+
     // İlk kullanımda uyarı dialogu göster
     final shown = await FeatureWarningHelper.showIfNeeded(
       context,
@@ -137,17 +147,62 @@ class _SafeWalkScreenState extends State<SafeWalkScreen>
     );
 
     await KoruBeniForegroundService.start();
-    await EmergencyPlatformService.instance.scheduleCheckIn(
-      sessionId: CheckInExpiryCoordinator.safeWalkSession,
-      phase: 'grace',
-      deadline: endTime,
-      graceDuration: Duration.zero,
-    );
+    final fullyScheduled = await EmergencyPlatformService.instance
+        .scheduleCheckIn(
+          sessionId: CheckInExpiryCoordinator.safeWalkSession,
+          phase: 'grace',
+          deadline: endTime,
+          graceDuration: Duration.zero,
+        );
+    if (mounted) {
+      setState(() => _nativeScheduleDegraded = !fullyScheduled);
+      if (!fullyScheduled) {
+        _showTimerSchedulingDegraded();
+      }
+    }
     await _persistState();
     _updateForegroundStatus();
 
     _preWarningFired = false;
     _startTicker();
+  }
+
+  Future<bool> _hasEmergencyContact() async {
+    try {
+      final numbers = await ContactService.getAllEmergencyNumbers();
+      return numbers.any((number) => number.trim().isNotEmpty);
+    } catch (_) {
+      return false;
+    }
+  }
+
+  void _showTimerContactRequired() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('timer_emergency_contact_required'.tr()),
+        backgroundColor: AppColors.warning,
+        behavior: SnackBarBehavior.floating,
+        action: SnackBarAction(
+          label: 'timer_add_contact_action'.tr(),
+          textColor: Colors.white,
+          onPressed: () {
+            Navigator.of(
+              context,
+            ).push(MaterialPageRoute(builder: (_) => const ContactsPage()));
+          },
+        ),
+      ),
+    );
+  }
+
+  void _showTimerSchedulingDegraded() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('timer_scheduling_degraded'.tr()),
+        backgroundColor: AppColors.warning,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
   }
 
   void _firePreExpiryWarning() {
@@ -173,6 +228,7 @@ class _SafeWalkScreenState extends State<SafeWalkScreen>
           _isActive = false;
           _endTime = null;
           _remainingSeconds = 0;
+          _nativeScheduleDegraded = false;
         });
       }
       return;
@@ -181,6 +237,7 @@ class _SafeWalkScreenState extends State<SafeWalkScreen>
     HapticFeedback.heavyImpact();
     setState(() {
       _isActive = false;
+      _nativeScheduleDegraded = false;
       _timer?.cancel();
     });
     await EmergencyPlatformService.instance.cancelCheckIn(
@@ -236,6 +293,7 @@ class _SafeWalkScreenState extends State<SafeWalkScreen>
       _isActive = false;
       _endTime = null;
       _remainingSeconds = 0;
+      _nativeScheduleDegraded = false;
     });
 
     ScaffoldMessenger.of(context).showSnackBar(
@@ -278,6 +336,7 @@ class _SafeWalkScreenState extends State<SafeWalkScreen>
       _isActive = false;
       _endTime = null;
       _remainingSeconds = 0;
+      _nativeScheduleDegraded = false;
     });
   }
 
@@ -605,6 +664,38 @@ class _SafeWalkScreenState extends State<SafeWalkScreen>
               ],
             ),
           ),
+        if (_nativeScheduleDegraded) ...[
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.warning.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: AppColors.warning.withValues(alpha: 0.2),
+              ),
+            ),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.info_outline_rounded,
+                  color: AppColors.warning,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'timer_scheduling_degraded'.tr(),
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
         const Spacer(),
         SizedBox(
           width: double.infinity,

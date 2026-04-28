@@ -67,7 +67,7 @@ class EmergencyPlatformService {
         'graceDurationMs': graceDuration.inMilliseconds,
       },
     );
-    return response['scheduled'] == true;
+    return response['scheduled'] == true && response['exact'] == true;
   }
 
   Future<void> cancelCheckIn({
@@ -193,7 +193,9 @@ class EmergencyPlatformService {
       // Catches MissingPluginException and any other unexpected exception types.
       // cancelCountdownAlarm is cleanup-only; it must NEVER propagate to the
       // dispatch caller and kill _executeEmergency().
-      debugPrint('[EmergencyPlatform] cancelCountdownAlarm unexpected error: $e');
+      debugPrint(
+        '[EmergencyPlatform] cancelCountdownAlarm unexpected error: $e',
+      );
     }
   }
 
