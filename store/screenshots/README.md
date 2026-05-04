@@ -1,50 +1,38 @@
 # Store Screenshots
 
-Bu klasore Google Play icin Android ekran goruntulerini ekleyin.
+Canonical Google Play upload path: `store/screenshots/android/final/`.
 
-## Klasör Yapısı
+The non-final files under `store/screenshots/android/` are retained as source/reference captures. Do not upload them unless the final folder is intentionally regenerated and this README is updated.
 
-```
-store/screenshots/
-├── android/          ← Android screenshot'lari
-└── README.md         ← Bu dosya
-```
+## Android Upload Set
 
----
+Use exactly these files unless a new reviewed final set replaces them:
 
-## Play Store (Android)
+| Upload order | File |
+| --- | --- |
+| 1 | `store/screenshots/android/final/01_home_locked_panic.png` |
+| 2 | `store/screenshots/android/final/02_contacts.png` |
+| 3 | `store/screenshots/android/final/03_settings_legal.png` |
+| 4 | `store/screenshots/android/final/04_map.png` |
 
-**Dizin:** `store/screenshots/android/`
+Play requirements:
 
-- **Minimum 2, maksimum 8** screenshot gerekli
-- Onerilen boyutlar: **1080×1920** veya **1080×2340**
-- Format: PNG veya JPEG
-- Dosya adi ornegi: `01_home.png`, `02_contacts.png`, `03_map.png`
+- Minimum 2, maximum 8 screenshots.
+- Recommended phone sizes: 1080x1920 or 1080x2340.
+- Format: PNG or JPEG.
+- Feature graphic: prepare or verify the 1024x500 asset in Play Console before release.
+- Store icon: use a 512x512 PNG.
 
----
+## Manual PII Review
 
-## Yakalanacak Ekranlar
+Before upload, operator must review every final screenshot for:
 
-| # | Ekran | Açıklama |
-|---|-------|----------|
-| 1 | Ana sayfa | Panik butonu görünür olmalı |
-| 2 | Acil kişiler | Kişi listesi dolu halde |
-| 3 | Harita / Konum oturumu | Konum durumu ekranı |
-| 4 | Güvenli yürüyüş | Zamanlayıcı aktif |
-| 5 | Sahte arama | Gelen sahte arama ekranı |
-| 6 | Ayarlar | Genel ayarlar sayfası |
+- no real names
+- no real phone numbers
+- no real emails
+- no precise home/work address
+- no sensitive map coordinates
+- no private account data
+- no accidental personal profile info
 
----
-
-## Nasıl Alınır
-
-### Android
-```bash
-# Emülatörde uygulama çalışırken
-adb shell screencap -p /sdcard/screenshot.png
-adb pull /sdcard/screenshot.png store/screenshots/android/01_home.png
-```
-Veya emulatorde dogrudan ekran goruntusu tusunu kullanin.
-
-### Otomatik (opsiyonel)
-- Android: Fastlane `screengrab`
+Status: OPERATOR_ACTION until reviewed and evidenced. Emulator output is not accepted as release evidence.

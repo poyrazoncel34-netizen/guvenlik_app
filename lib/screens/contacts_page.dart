@@ -597,14 +597,18 @@ class _ContactsPageState extends State<ContactsPage> {
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.cardBg,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Row(
+        title: Row(
           children: [
-            Icon(Icons.shield_rounded, color: AppColors.primary, size: 22),
-            SizedBox(width: 8),
+            const Icon(
+              Icons.shield_rounded,
+              color: AppColors.primary,
+              size: 22,
+            ),
+            const SizedBox(width: 8),
             Expanded(
               child: Text(
-                'KVKK Bilgilendirme',
-                style: TextStyle(
+                'kvkk_contact_consent_title'.tr(),
+                style: const TextStyle(
                   color: AppColors.textPrimary,
                   fontWeight: FontWeight.w800,
                   fontSize: 16,
@@ -613,13 +617,9 @@ class _ContactsPageState extends State<ContactsPage> {
             ),
           ],
         ),
-        content: const Text(
-          'Eklediğiniz kişilerin telefon numaraları yalnızca cihazınızda '
-          'saklanır, hiçbir sunucuya gönderilmez.\n\n'
-          'Kişiyi uygulamaya ekleyerek bu kişinin telefon numarasının '
-          'acil iletişim amacıyla kullanılmasına onay verdiğinizi kabul '
-          'edersiniz (KVKK Md. 5).',
-          style: TextStyle(
+        content: Text(
+          'kvkk_contact_consent_body'.tr(),
+          style: const TextStyle(
             color: AppColors.textSecondary,
             fontSize: 14,
             height: 1.5,
@@ -635,7 +635,7 @@ class _ContactsPageState extends State<ContactsPage> {
               ),
             ),
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Anladım'),
+            child: Text('btn_ok'.tr()),
           ),
         ],
       ),

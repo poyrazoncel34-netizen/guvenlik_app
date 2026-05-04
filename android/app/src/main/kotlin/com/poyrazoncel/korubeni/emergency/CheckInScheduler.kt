@@ -128,11 +128,16 @@ object CheckInScheduler {
                 context,
                 mapOf("type" to "checkInGraceStarted", "timestamp" to now, "sessionId" to session)
             )
+            val copy = NativeNotificationText.graceStarted(
+                context,
+                session,
+                restoredAfterBoot = true,
+            )
             EmergencyNotificationHelper.showAlert(
                 context,
                 EmergencyNotificationHelper.CHECK_IN_NOTIFICATION_ID,
-                "Check-in suresi doldu",
-                "Lutfen guvende oldugunuzu onaylayin.",
+                copy.title,
+                copy.body,
                 "checkInGraceStarted"
             )
             return
@@ -143,11 +148,16 @@ object CheckInScheduler {
             context,
             mapOf("type" to "checkInExpired", "timestamp" to now, "sessionId" to session)
         )
+        val copy = NativeNotificationText.expired(
+            context,
+            session,
+            restoredAfterBoot = true,
+        )
         EmergencyNotificationHelper.showAlert(
             context,
             EmergencyNotificationHelper.CHECK_IN_NOTIFICATION_ID,
-            "Check-in acil durumu",
-            "Guvenli yuruyus zamani doldu.",
+            copy.title,
+            copy.body,
             "checkInExpired"
         )
     }
@@ -187,7 +197,7 @@ object CheckInScheduler {
         )
     }
 
-    private fun normalizeSession(sessionId: String?): String {
+    fun normalizeSession(sessionId: String?): String {
         return when (sessionId) {
             SESSION_SAFE_WALK -> SESSION_SAFE_WALK
             else -> SESSION_CHECK_IN

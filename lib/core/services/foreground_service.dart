@@ -16,8 +16,10 @@ import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'notification_service.dart';
+
 /// Foreground service notification channel ID
-const String kForegroundChannelId = 'korubeni_foreground';
+const String kForegroundChannelId = kServiceStatusChannelId;
 const int kForegroundNotificationId = 7777;
 
 /// SharedPreferences keys used to ferry localized strings from the main
@@ -52,9 +54,12 @@ class KoruBeniForegroundService {
 
     try {
       // Resolve localized strings in the main isolate.
-      final channelName = _safeTr('foreground_channel_name', _kFallbackBrand);
+      final channelName = _safeTr(
+        'notification_channel_service_name',
+        _kFallbackBrand,
+      );
       final channelDescription = _safeTr(
-        'foreground_channel_description',
+        'notification_channel_service_desc',
         _kFallbackBrand,
       );
       final activeTitle = _safeTr('foreground_active_title', _kFallbackBrand);

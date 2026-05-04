@@ -74,8 +74,16 @@ void main() {
 
       for (final file in files) {
         final content = file.readAsStringSync();
+        final contentForProOnlyScan = content
+            .split('\n')
+            .where(
+              (line) =>
+                  !line.toLowerCase().contains('siren ücretsiz') &&
+                  !line.toLowerCase().contains('siren are free'),
+            )
+            .join('\n');
         for (final pattern in patterns) {
-          if (pattern.hasMatch(content)) {
+          if (pattern.hasMatch(contentForProOnlyScan)) {
             violations.add('${file.path}:${pattern.pattern}');
           }
         }

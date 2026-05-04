@@ -2,7 +2,7 @@
 
 **App Title:** KoruBeni - Kişisel Güvenlik
 **Short Description (80 karakter):**
-Ücretsiz temel araçlar. Panik/SOS ve gelişmiş araçlar Pro ile.
+Panik/SOS Pro; konum, sahte çağrı ve siren ücretsiz.
 
 **Full Description (4000 karakter):**
 KoruBeni, konum durumunuzu görmenize, cihaz içi sahte çağrı simülasyonu çalıştırmanıza ve Pro abonelikle ek kişisel güvenlik araçlarını kullanmanıza yardımcı olan bir Android uygulamasıdır.

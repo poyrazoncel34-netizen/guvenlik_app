@@ -1,99 +1,74 @@
-# Google Play Permissions Declaration Form — Hazırlık Notları
+# Google Play Permissions Declaration Notes
 
-## Özet: Hangi İzinler Declaration Form Gerektirir?
+Dashboard completion is OPERATOR_ACTION. This file only prepares copy/paste text.
 
-| İzin | Manifest'te Var mı? | Declaration Gerekiyor mu? |
-|------|---------------------|--------------------------|
-| Mesaj gönderim izni | **HAYIR** | **HAYIR** — mesaj gönderimi bu Android Play sürümünde yok |
-| CALL_PHONE | EVET | EVET — aşağıda açıklanmıştır |
-| READ_PHONE_STATE | **HAYIR** | **HAYIR** — fake call cihaz içi simülasyondur; telefon durumu izni istenmez |
-| ACCESS_BACKGROUND_LOCATION | **HAYIR** | **HAYIR** — manifest'ten kaldırıldı |
-| REQUEST_IGNORE_BATTERY_OPTIMIZATIONS | EVET | EVET — aşağıda açıklanmıştır |
-| SCHEDULE_EXACT_ALARM | EVET | EVET — aşağıda açıklanmıştır |
+## Declaration Summary
 
----
+| Permission / App content item | Manifest / app use | Status |
+| --- | --- | --- |
+| Foreground service `specialUse` | Active user-started safety sessions with visible notification | CODE_DONE copy prepared; OPERATOR_ACTION submit |
+| `SCHEDULE_EXACT_ALARM` | User-visible safety deadlines/timers | CODE_DONE copy prepared; OPERATOR_ACTION submit if required |
+| `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` | Optional reliability improvement for active safety sessions | CODE_DONE copy prepared; OPERATOR_ACTION submit if required |
+| `CALL_PHONE` | User-initiated Panic/SOS call flow after confirmation/countdown | CODE_DONE copy prepared; OPERATOR_ACTION submit if required |
+| `POST_NOTIFICATIONS` | User-visible safety notifications/reminders | CODE_DONE copy prepared |
+| Message/SMS permissions | Not present in this Android Play release | CODE_DONE |
+| `READ_PHONE_STATE` | Not present; fake call is an on-device simulation | CODE_DONE |
+| `ACCESS_BACKGROUND_LOCATION` | Not present | CODE_DONE |
 
-## Mesaj Gönderim İzni — Declaration GEREKMEZ
+## Foreground Service `specialUse`
 
-**Neden manifest'te yok?**
-Uygulama bu Android Play sürümünde mesaj göndermez ve mesaj uygulaması açmaz. Manifest'te mesaj gönderim izni veya mesaj intent'i bulunmamalıdır.
+```text
+KoruBeni uses a foreground service only for active, user-started safety sessions such as Safe Walk, check-in, and emergency timer reliability. The session shows a visible persistent notification and is tied to the user's active safety flow. The user can stop or cancel the session. The service is not used for ads, analytics, hidden tracking, silent background surveillance, or indefinite background execution.
+```
 
-**Avantajlar:**
-- Kısıtlı mesaj izni beyanı gerekmez
-- Kullanıcıya otomatik iletim vaadi verilmez
-- Play Store review yüzeyi küçülür
+## `SCHEDULE_EXACT_ALARM`
 
-**Alternatif (uygulanmadı):**
-Direkt mesaj gönderimi veya mesaj composer bu sürümün kapsamı dışındadır.
+```text
+KoruBeni uses exact alarms for user-visible safety deadlines and timers, including Panic/SOS countdown backup, check-in expiry, grace periods, and Safe Walk timers. Delay can affect the expected safety behavior of these user-started flows. The app is not using exact alarms for ads, analytics, marketing, hidden tracking, or arbitrary background work.
+```
 
----
+Fallback:
 
-## CALL_PHONE Beyanı
+```text
+If exact alarm access is denied or unavailable, the app falls back where possible to inexact alarms, foreground-service/session state, and local timer paths. The app presents degraded reliability messaging and does not guarantee that Android/OEM background behavior cannot delay timers.
+```
 
-**Beyan kategorisi:** Safety / Emergency
+## `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS`
 
-**Core functionality açıklaması:**
-"Acil durum geri sayımı tamamlandığında kullanıcının belirlediği acil durum kişisini aramak için kullanılır. Kullanıcı panik butonunu tetikler, geri sayımı PIN ile iptal etmezse Android arama akışı başlatılır. İzin yoksa arama ekranı açılır ve kullanıcı aramayı manuel onaylar."
+```text
+KoruBeni requests battery optimization exemption only as an optional reliability improvement for active user-started safety sessions such as Safe Walk and check-in. Android and OEM battery settings may still affect behavior. The user can decline, and the app explains that timer/background reliability may be degraded.
+```
 
-**Neden gerekli:**
-CALL_PHONE, kullanıcı açıkça tetiklediği panik veya check-in akışında geri sayım tamamlandıktan sonra doğrudan arama denemesi yapmak için kullanılır. Arama bağlantısı garanti edilmez; izin yoksa arama ekranı açılır ve kullanıcı aramayı manuel onaylar.
+## `CALL_PHONE`
 
-**Alternatif:**
-`ACTION_DIAL` intent kullanılabilir (izin gerektirmez, kullanıcı onayı gerekir). Ancak kullanıcı bilincini yitirmişse bu alternatif işe yaramaz. Bu nedenle `CALL_PHONE` kullanılmaktadır.
+Category: Safety / Emergency
 
----
+```text
+CALL_PHONE is used only in the user-initiated Panic/SOS flow. The user explicitly starts the flow and sees a confirmation/countdown before any call attempt. If direct calling is denied, unavailable, or unsafe to use, the app falls back to ACTION_DIAL so the user can manually place the call. KoruBeni does not claim official 112/police integration and does not place hidden background calls.
+```
 
-## REQUEST_IGNORE_BATTERY_OPTIMIZATIONS Beyanı
+## `POST_NOTIFICATIONS`
 
-**Core functionality açıklaması:**
-"KoruBeni'nin güvenli yürüyüş/check-in özelliği, kullanıcı uygulama açıkken başlattığı oturumlarda zamanlayıcı ve bildirim desteği kullanır. Android pil optimizasyonu bu yardımcı akışı kısıtlayabilir; uygulama bunu garanti bir acil servis olarak sunmaz ve kullanıcıya degraded davranışı açıklar."
+```text
+Notifications are used for visible safety timer/session reliability and reminders in user-started flows. They are not used for ads, marketing, analytics, hidden tracking, silent surveillance, or indefinite background execution. The user can deny notification permission and the app must show degraded behavior where relevant.
+```
 
-**Neden gerekli:**
-Kullanıcı güvenli yürüyüş başlattığında, belirtilen süre içinde check-in yapmazsa yardımcı acil durum akışının tetiklenmesi hedeflenir. Bu akış Android'in doze/standby ve üretici pil kısıtları nedeniyle gecikebilir veya kesilebilir.
+## `FLAG_SECURE` Reviewer Note
 
----
+```text
+KoruBeni blocks screenshots in the app with FLAG_SECURE for user safety and privacy. Reviewers can still navigate the app normally. Use the provided store screenshots and reviewer instructions for visual review evidence.
+```
 
-## SCHEDULE_EXACT_ALARM Beyanı
+## Video / Manual Demo Notes
 
-**Beyan kategorisi:** Safety / Reminders / User-initiated safety timers
+No SMS permission demo is needed because SMS sending and SMS composer flows are not in this Play release.
 
-**Core functionality açıklaması:**
-"KoruBeni, kullanıcı tarafından başlatılan panik geri sayımı, check-in ve güvenli yürüyüş gibi güvenlik zamanlayıcılarında alarmın beklenen zamanda çalışmasına yardımcı olmak için exact alarm kullanır. Bu zamanlayıcılar kullanıcı tarafından başlatılır, güvenlik/reminder amaçlıdır ve reklam, analitik, gizli takip veya keyfi arka plan işi için kullanılmaz."
+If Play review requests a demo, record on a physical test device:
 
-**Neden gerekli:**
-Android Doze, standby ve üretici pil kısıtları Dart timer, foreground service veya inexact alarm davranışını geciktirebilir. Güvenlik zamanlayıcılarında geri sayım/check-in süresi dolduğunda kullanıcının beklediği zamanda uyarı veya yardımcı acil akışın tetiklenmesi gerekir. `SCHEDULE_EXACT_ALARM`, bu kullanıcı başlatmalı safety-timer/reminder akışlarının zamanında çalışması için kullanılır.
+1. First launch and legal/PIN setup.
+2. Emergency contact add flow and KVKK contact notice.
+3. Panic/SOS Pro flow with confirmation/countdown and `ACTION_DIAL` fallback if direct call is denied.
+4. Safe Walk/check-in start and degraded reliability messaging.
+5. Settings -> data export and data deletion.
 
-**Kullanılmadığı amaçlar:**
-- Reklam, pazarlama veya analitik
-- Gizli konum takibi veya kullanıcı izleme
-- Süresiz/keyfi arka plan işi
-- Kullanıcı başlatmamışken arka planda yeni güvenlik oturumu oluşturma
-
-**Fallback / degraded davranış:**
-Exact alarm izni yoksa uygulama mümkün olan yerlerde inexact alarm, foreground service ve yerel timer yollarına düşer. İlgili akışlarda zamanlayıcı güvenilirliğinin azalabileceği kullanıcıya açıklanır veya uyarı gösterilir.
-
----
-
-## Background Location — Declaration GEREKMEZ
-
-Background location izni (`ACCESS_BACKGROUND_LOCATION`) manifest'ten kaldırılmıştır.
-Güvenli yürüyüş özelliği, arka planda konum takibi yapmaz; yalnızca acil durum tetiklendiğinde anlık konum alır.
-
----
-
-## Video Demo Gereksinimleri
-
-Mesaj izni beyan edilmediği için mesaj izni demo videosu yoktur. Genel Play Store inceleme sürecinde hazır bulundurulması önerilen demo:
-
-**1-3 dakikalık ekran kaydı içeriği:**
-1. İlk açılış → KVKK/yasal onay akışı
-2. Acil durum kişisi ekleme
-3. Panik butonu tetikleme → geri sayım → arama akışı / dialer fallback
-4. Güvenli yürüyüş başlatma ve check-in
-5. Ayarlar → veri silme
-
----
-
-## Güncelleme Geçmişi
-
-- 2026-04-11: Android Play sürümü mesaj gönderimsiz, call-only panic kontratına hizalandı.
+Do not claim Play Console, RevenueCat, purchase, or real-device PASS status without operator evidence.

@@ -4,7 +4,7 @@
 KoruBeni — Kişisel Güvenlik
 
 ## Kısa Açıklama (80 karakter)
-Ücretsiz konum, sahte çağrı, siren ve acil kişiler.
+Panik/SOS Pro; konum, sahte çağrı ve siren ücretsiz.
 
 ## Uzun Açıklama
 

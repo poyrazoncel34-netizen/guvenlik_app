@@ -2,6 +2,10 @@
 
 Content rating anketinde (IARC) aşağıdaki gibi yanıtlayın. KoruBeni bir güvenlik uygulamasıdır.
 
+Status: CODE_DONE copy prepared; OPERATOR_ACTION to complete and submit in Play Console.
+
+Target audience: adults / 18+. Do not enter Designed for Families unless the product decision changes and the app/legal/store copy is reworked.
+
 ---
 
 ## Önerilen Yanıtlar
@@ -41,3 +45,5 @@ Content rating anketinde (IARC) aşağıdaki gibi yanıtlayın. KoruBeni bir gü
 ## Beklenen Sonuç
 
 Genelde **PEGI 3** / **Everyone** veya **Everyone 10+** benzeri çıkar. Anketi bitirdikten sonra sertifikayı alın ve Play Console’a kaydedin.
+
+Do not mark this as submitted until the Play Console certificate exists.

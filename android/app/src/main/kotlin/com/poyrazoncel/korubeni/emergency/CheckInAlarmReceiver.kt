@@ -18,11 +18,12 @@ class CheckInAlarmReceiver : BroadcastReceiver() {
                 context,
                 mapOf("type" to "checkInGraceStarted", "timestamp" to now, "sessionId" to sessionId)
             )
+            val copy = NativeNotificationText.graceStarted(context, sessionId)
             EmergencyNotificationHelper.showAlert(
                 context,
                 EmergencyNotificationHelper.CHECK_IN_NOTIFICATION_ID,
-                "Check-in suresi doldu",
-                "Lutfen guvende oldugunuzu onaylayin.",
+                copy.title,
+                copy.body,
                 "checkInGraceStarted"
             )
             CheckInScheduler.schedule(
@@ -40,11 +41,12 @@ class CheckInAlarmReceiver : BroadcastReceiver() {
             context,
             mapOf("type" to "checkInExpired", "timestamp" to now, "sessionId" to sessionId)
         )
+        val copy = NativeNotificationText.expired(context, sessionId)
         EmergencyNotificationHelper.showAlert(
             context,
             EmergencyNotificationHelper.CHECK_IN_NOTIFICATION_ID,
-            "Check-in acil durumu",
-            "Guvenli yuruyus zamani doldu.",
+            copy.title,
+            copy.body,
             "checkInExpired"
         )
     }

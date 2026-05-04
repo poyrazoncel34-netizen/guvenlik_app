@@ -1,9 +1,24 @@
 # Android Screenshots
 
-Bu dizine Android ekran görüntülerini koyun.
+Canonical upload folder: `store/screenshots/android/final/`.
 
-**Boyut:** 1080×1920 veya 1080×2340  
-**Format:** PNG veya JPEG  
-**Adet:** Min 2, max 8
+Files directly under `store/screenshots/android/` are non-canonical source/reference captures and currently differ from the final set. Do not upload them unless the final set is regenerated and reviewed.
 
-Dosya adı örneği: `01_home.png`, `02_contacts.png`, `03_map.png`
+Required upload files:
+
+- `final/01_home_locked_panic.png`
+- `final/02_contacts.png`
+- `final/03_settings_legal.png`
+- `final/04_map.png`
+
+Before Play upload, manually verify:
+
+- no real names
+- no real phone numbers
+- no real emails
+- no precise home/work address
+- no sensitive map coordinates
+- no private account data
+- no accidental personal profile info
+
+Format: PNG or JPEG. Count: min 2, max 8. Recommended size: 1080x1920 or 1080x2340.

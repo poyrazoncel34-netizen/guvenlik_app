@@ -4,6 +4,8 @@ Source scope: `store/DATA_SAFETY_FORM.md`, `docs/play_console_declarations.md`, 
 
 Use this pack as Play Console entry text. Keep final URLs, product IDs, RevenueCat offering IDs, screenshots, and signed build status verified before submission.
 
+Status rule: this pack is CODE_DONE copy preparation only. Play Console forms, RevenueCat setup, signed AAB upload, billing tests, and real-device QA are OPERATOR_ACTION / NEEDS_REAL_DEVICE_TEST until external evidence exists.
+
 ---
 
 ## 1. App Identity
@@ -36,6 +38,14 @@ Turkish (Turkey) / tr-TR
 
 Use English as an additional store listing localization.
 
+**Store assets**
+
+```text
+Store icon: 512x512 PNG.
+Feature graphic: prepare or verify 1024x500 in Play Console.
+Screenshots: upload from store/screenshots/android/final/ only after manual PII review.
+```
+
 ---
 
 ## 2. Store Listing TR
@@ -49,7 +59,7 @@ KoruBeni - Kişisel Güvenlik
 **Short description**
 
 ```text
-Ücretsiz temel araçlar. Panik/SOS ve gelişmiş araçlar Pro ile.
+Panik/SOS Pro; konum, sahte çağrı ve siren ücretsiz.
 ```
 
 **Full description**
@@ -121,7 +131,7 @@ KoruBeni - Personal Safety
 **Short description**
 
 ```text
-Free basic tools. Panic/SOS and advanced tools require Pro.
+Panic/SOS requires Pro; location, fake call, and siren are free.
 ```
 
 **Full description**
@@ -227,28 +237,29 @@ Notes:
 
 ```text
 Does your app collect or share any of the required user data types?
-Yes
+Yes, because optional Pro subscription processing uses Google Play Billing / RevenueCat, and online map screens may contact the configured map tile provider. Do not mark local-only data as developer-collected/shared merely because it is stored on device.
 ```
 
 **Data collected / processed**
 
 ```text
 Location:
-- Approximate location: processed when emergency or location session is triggered.
-- Precise location: processed when emergency or location session is triggered.
-- Purpose: app functionality — user-controlled safety features, map display, emergency context, check-in/safe-walk timers.
-- Required/optional: optional; permission and user action are required for related features.
+- Conservative disclosure needed for map/location sessions.
+- Used only when the user opens map/location features or triggers safety flows.
+- No developer backend receives location.
+- Online map tile requests may reveal map viewport/network metadata to the configured tile provider.
 
 Personal info:
-- Optional profile name: device-only, for profile personalization.
-- Optional photos/images: device-only, user-selected profile/fake-call avatar if image picker is used.
+- Optional profile name: local-only, for profile personalization.
+- Optional photos/images: local-only, user-selected profile/fake-call avatar if image picker is used.
 - Email address: not collected.
-- Phone number: not collected by developer. Emergency contact numbers are chosen from the device and stored locally.
+- Phone number: not collected by developer. Emergency contact numbers are chosen from the device and stored locally unless the user invokes Android telephony.
 - User IDs: not collected by developer; no auth backend.
 
 Contacts:
 - Accessed so the user can choose emergency contacts.
-- Stored device-only.
+- Stored local-only.
+- Do not claim developer collection/sharing if no off-device transfer is introduced.
 - Purpose: app functionality — emergency contact selection.
 
 Financial info / purchases:
@@ -335,7 +346,7 @@ Firebase auth, cloud database, analytics, crash reporting, ads, UGC, developer b
 **Core functionality**
 
 ```text
-KoruBeni'nin güvenli yürüyüş/check-in özelliği, kullanıcı uygulama açıkken başlattığı oturumlarda zamanlayıcı ve bildirim desteği kullanır. Android pil optimizasyonu bu yardımcı akışı kısıtlayabilir; uygulama bunu garanti bir acil servis olarak sunmaz ve kullanıcıya degraded davranışı açıklar.
+KoruBeni requests battery optimization exemption only as an optional reliability improvement for active user-started safety sessions such as Safe Walk and check-in. Android and OEM battery settings may still affect behavior. The user can decline, and the app explains that timer/background reliability may be degraded.
 ```
 
 **Reviewer explanation**
@@ -349,13 +360,13 @@ This permission is an optional reliability enhancement for user-started safety t
 **Core functionality**
 
 ```text
-KoruBeni, kullanıcı tarafından başlatılan panik geri sayımı, check-in ve güvenli yürüyüş gibi güvenlik zamanlayıcılarında alarmın beklenen zamanda çalışmasına yardımcı olmak için exact alarm kullanır. Bu zamanlayıcılar kullanıcı tarafından başlatılır, güvenlik/reminder amaçlıdır ve reklam, analitik, gizli takip veya keyfi arka plan işi için kullanılmaz.
+KoruBeni uses exact alarms for user-visible safety deadlines and timers, including Panic/SOS countdown backup, check-in expiry, grace periods, and Safe Walk timers. Delay can affect the expected safety behavior of these user-started flows. The app is not using exact alarms for ads, analytics, marketing, hidden tracking, or arbitrary background work.
 ```
 
 **Why required**
 
 ```text
-Android Doze, standby ve üretici pil kısıtları Dart timer, foreground service veya inexact alarm davranışını geciktirebilir. Güvenlik zamanlayıcılarında geri sayım/check-in süresi dolduğunda kullanıcının beklediği zamanda uyarı veya yardımcı acil akışın tetiklenmesi gerekir. SCHEDULE_EXACT_ALARM, bu kullanıcı başlatmalı safety-timer/reminder akışlarının zamanında çalışması için kullanılır.
+Android Doze, app standby, and OEM battery restrictions can delay Dart timers, foreground services, or inexact alarm behavior. Safety timers need the best available timing path when user-visible deadlines expire. SCHEDULE_EXACT_ALARM is used for those user-started safety timer/reminder flows.
 ```
 
 **Not used for**
@@ -367,7 +378,7 @@ Advertising, marketing, analytics, hidden location tracking, user monitoring, in
 **Fallback / degraded behavior**
 
 ```text
-Exact alarm permission yoksa uygulama mümkün olan yerlerde inexact alarm, foreground service ve yerel timer yollarına düşer. İlgili akışlarda zamanlayıcı güvenilirliğinin azalabileceği kullanıcıya açıklanır veya uyarı gösterilir.
+If exact alarm access is denied or unavailable, the app falls back where possible to inexact alarms, foreground-service/session state, and local timer paths. The app presents degraded reliability messaging and does not guarantee that Android/OEM background behavior cannot delay timers.
 ```
 
 ### FOREGROUND_SERVICE_SPECIAL_USE
@@ -375,7 +386,7 @@ Exact alarm permission yoksa uygulama mümkün olan yerlerde inexact alarm, fore
 **Declaration text**
 
 ```text
-KoruBeni uses foreground/background reliability only for user-started safety sessions such as Safe Walk, check-in, and emergency countdown reliability. The work is tied to an active user session and stops after the session ends or is cancelled. It is not used for ads, analytics, hidden tracking, or indefinite background execution.
+KoruBeni uses a foreground service only for active, user-started safety sessions such as Safe Walk, check-in, and emergency timer reliability. The session shows a visible persistent notification and is tied to the user's active safety flow. The user can stop or cancel the session. The service is not used for ads, analytics, hidden tracking, silent background surveillance, or indefinite background execution.
 ```
 
 **If specialUse remains declared**
@@ -401,7 +412,13 @@ Acil durum geri sayımı tamamlandığında kullanıcının belirlediği acil du
 **Reviewer explanation**
 
 ```text
-CALL_PHONE is used only after the user explicitly starts the Pro panic/SOS flow and the countdown expires. The app attempts to call the user-selected emergency contact. If the permission is denied, unavailable, or unsafe to use, the app falls back to the Android dialer so the user can place the call manually. The app does not place hidden background calls.
+CALL_PHONE is used only in the user-initiated Panic/SOS flow. The user explicitly starts the flow and sees a confirmation/countdown before any call attempt. If direct calling is denied, unavailable, or unsafe to use, the app falls back to ACTION_DIAL so the user can manually place the call. KoruBeni does not claim official 112/police integration and does not place hidden background calls.
+```
+
+### FLAG_SECURE reviewer note
+
+```text
+KoruBeni blocks screenshots in the app with FLAG_SECURE for user safety and privacy. Reviewers can still navigate the app normally. Use the provided store screenshots and reviewer instructions for visual review evidence.
 ```
 
 ### POST_NOTIFICATIONS reviewer note
@@ -449,6 +466,9 @@ Other:
 
 Expected result:
 Usually PEGI 3 / Everyone or Everyone 10+ equivalent. Complete the questionnaire, obtain the certificate, and save it in Play Console.
+
+Target audience:
+Intended for adults / 18+. Do not enter Designed for Families unless the product decision changes and the app/legal/store copy is reworked.
 ```
 
 ---
@@ -506,10 +526,16 @@ Deleting the app or clearing app storage removes on-device data. It does not can
 ## 9. Manual Checklist Still Not Complete
 
 ```text
-[ ] Screenshots final check
-[ ] Play icon upload
-[ ] RevenueCat products/offering
-[ ] License tester purchase/restore/cancel
-[ ] Signed AAB upload
-[ ] Real-device QA
+[ ] Screenshots from store/screenshots/android/final/ manually reviewed for PII
+[ ] Play icon 512x512 PNG uploaded/verified
+[ ] Feature graphic 1024x500 prepared/verified
+[ ] Data Safety submitted
+[ ] Content Rating submitted
+[ ] Target Audience submitted
+[ ] FGS / exact alarm / battery optimization declarations submitted if required
+[ ] RevenueCat products/offering configured
+[ ] License tester monthly/annual purchase, restore, cancel/manage tested
+[ ] Signed AAB produced and uploaded
+[ ] Real-device QA matrix passed on Android 13 and Android 14 physical devices
+[ ] Closed testing 12 testers / 14 days completed if account requires it
 ```

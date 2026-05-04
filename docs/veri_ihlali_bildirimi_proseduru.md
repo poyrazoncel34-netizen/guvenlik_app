@@ -138,4 +138,4 @@ Güvenlik açığı bildirimi veya veri ihlali şüphesi için:
 
 ## 8. Önemli Not
 
-KoruBeni tamamen çevrimdışı çalıştığı ve hiçbir sunucuya veri aktarmadığı için, geleneksel anlamda bir "veri ihlali" (sunucu sızıntısı, veritabanı hack'i vb.) **teknik olarak mümkün değildir**. Bu prosedür, olası uygulama düzeyindeki güvenlik açıkları için hazırlanmıştır ve KVKK m.12 yükümlülüklerini karşılamak amacıyla oluşturulmuştur.
+KoruBeni geliştirici tarafından işletilen bir backend kullanmaz; ancak harita karo sağlayıcısı, Google Play Billing ve RevenueCat gibi üçüncü taraf akışların kendi teknik ağ davranışları olabilir. Bu prosedür; cihaz içi veri, uygulama düzeyi güvenlik açıkları, üçüncü taraf sağlayıcı bildirimleri ve KVKK m.12 yükümlülükleri için hazırlanmıştır. Hiçbir güvenlik veya erişilebilirlik garantisi verilmez.

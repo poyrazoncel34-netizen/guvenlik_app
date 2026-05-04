@@ -1,140 +1,54 @@
-# Play Console — Data Safety Form Answers
+# Play Console Data Safety Form Answers
 
-Canonical policy/declaration source: `docs/play_console_declarations.md`.
-This file is the Play Console answer source and mirrors that policy wording for form entry.
+Dashboard completion is OPERATOR_ACTION. This file prepares conservative copy and must be reconciled with the final Play Console form before submission.
 
----
-
-## Genel Sorular
+## General Answer
 
 **Does your app collect or share any of the required user data types?**  
-→ Yes
+Answer: Yes, because optional Pro subscription processing uses Google Play Billing / RevenueCat, and online map screens may contact the configured map tile provider.
 
-Not: KoruBeni geliştirici sunucularına veya geliştirici tarafından işletilen bir backend'e veri göndermez. Konum, acil kişi, profil, fake call, isteğe bağlı avatar/fotoğraf ve yerel olay verileri cihazda işlenir. Google Play Billing ve RevenueCat isteğe bağlı Pro abonelik/satın alma doğrulaması için kendi sağlayıcı altyapılarında veri işleyebilir. Çevrimiçi harita ekranları OpenStreetMap karo altyapısına teknik ağ istekleri yapabilir.
+Do not mark local-only data as developer-collected/shared merely because it is stored on the device.
 
----
+## Data Types
 
-## Veri Türleri ve Yanıtlar
+| Data type | Play Console stance | Notes |
+| --- | --- | --- |
+| Location | Conservative disclosure needed for map/location sessions | Location is used only when the user opens map/location features or triggers safety flows. No developer backend receives it. Online map tile requests may reveal map viewport/network metadata to the tile provider. |
+| Contacts | Local-only unless the user invokes Android call/contact flows | Emergency contacts are selected/stored on device for app functionality. Do not claim developer collection/sharing if no off-device transfer is introduced. |
+| Optional profile name | Local-only | Device-only personalization. |
+| Optional photos/images | Local-only | User-selected profile/fake-call avatar images stay on device; no cloud upload. |
+| Phone number | Not collected by developer | Emergency contact numbers are stored locally and may be used by Android telephony when the user starts a call flow. |
+| Purchase history / subscription status | Processed by Google Play Billing and RevenueCat | Required for optional KoruBeni Pro entitlement verification and restore. |
+| Anonymous app/device/subscription identifiers | Processed by RevenueCat / Google Play Billing where applicable | Used for purchase verification, entitlement status, fraud prevention, and restore. |
+| Payment card credentials | Not collected by developer | Handled by Google Play. |
+| Crash logs / analytics / ads data | Not collected in this release based on repo verification | No Firebase Analytics, Crashlytics, Sentry, ads SDK, UGC, auth backend, or cloud database in current Play build. |
+| Audio / microphone | Not collected | Android Play release does not request microphone permission or record audio. |
 
-### 1. Konum (Location)
+## Copy-Paste Summary
 
-| Soru | Yanıt |
-|------|-------|
-| Approximate location | ✅ Processed when emergency or location session is triggered |
-| Precise location | ✅ Processed when emergency or location session is triggered |
-| Sharing | ❌ Not sent to developer backend and not automatically shared by the app |
-| Purpose | App functionality — user-controlled safety features, map display, emergency context, check-in/safe-walk timers |
-| Required / optional | Optional — permission and user action required for related features |
+```text
+KoruBeni does not operate a developer backend. Emergency contacts, profile data, PIN, fake-call settings, local activity history, and consent records are stored on device. Optional Pro subscription processing is handled by Google Play Billing and RevenueCat. Online map screens may request map tiles from the configured map tile provider, currently OpenStreetMap tile infrastructure. The app does not use ads, analytics, crash reporting SDKs, auth backend, cloud database, SMS sending, microphone, audio recording, or user-generated content in this Play release.
+```
 
-**Short explanation:**  
-Location is user-controlled and safety-feature related. It is used when the user opens map/location features or triggers safety flows. The app does not automatically send location messages to emergency contacts or a developer backend.
+## Sharing
 
----
+```text
+The app does not automatically share emergency contacts, location, profile data, or safety history with a developer backend. Emergency calls use Android telephony when explicitly started by the user. Google Play Billing, RevenueCat, and the configured map tile provider have their own technical network behavior.
+```
 
-### 2. Kişisel Bilgiler (Personal info)
+## Security Practices
 
-| Veri | Yanıt | Not |
-|------|-------|-----|
-| Name | ✅ Optional, device-only | Profile personalization |
-| Photos/images | ✅ Optional, device-only | User-selected profile/fake-call avatar if `image_picker` is used |
-| Email address | ❌ Not collected | No account system |
-| Phone number | ❌ Not collected by developer | Emergency contact numbers are chosen from the device and stored locally |
-| User IDs | ❌ Not collected | No auth backend |
+- Data sold: No.
+- Developer backend: No developer-operated backend in this release.
+- Encryption in transit: do not mark blanket "Yes" for all data. Local-only data is not transmitted to a developer backend; map, Google Play Billing, and RevenueCat traffic are provider-controlled.
+- Users can request data deletion: Yes. Deleting app data removes on-device data; subscription cancellation remains managed through Google Play.
 
-**Short explanation:**  
-Optional profile data and user-selected images stay on the device. Images may be picked by the user for profile/fake-call avatar personalization; there is no cloud upload and no developer backend.
+## Not Used
 
----
+```text
+Firebase auth, cloud database, analytics, crash reporting SDK, ads, UGC, developer backend, SMS sending, microphone/audio recording.
+```
 
-### 3. Kişiler (Contacts)
+## Manual Gate
 
-| Soru | Yanıt |
-|------|-------|
-| Contacts | ✅ Accessed so the user can choose emergency contacts |
-| Storage | Device-only |
-| Sharing | ❌ Not shared with developer or cloud services |
-| Amaç | App functionality — Emergency contact selection |
-
-**Short explanation:**  
-Contacts are accessed only so the user can pick trusted emergency contacts. Selected contact data is stored locally on the device unless the user starts a call flow through Android.
-
-### 4. Financial info / Purchases
-
-| Data | Answer |
-|------|--------|
-| Purchase history / subscription status | ✅ Processed by Google Play Billing and RevenueCat for optional Pro purchases |
-| Entitlement status | ✅ Processed by RevenueCat to verify and restore Pro access |
-| Anonymous user/device/app info | ✅ Processed by RevenueCat / Google Play Billing for subscription verification and fraud prevention |
-| Payment card credentials | ❌ Not collected or stored by the developer |
-| Purpose | App functionality — optional Pro purchase, subscription verification, entitlement restore |
-
-**Short explanation:**  
-Google Play handles payment processing. RevenueCat helps verify subscription and entitlement status. The developer does not store card or payment credentials and does not operate a billing backend.
-
----
-
-### 5. Ses / Mikrofon (Audio)
-
-| Soru | Yanıt |
-|------|-------|
-| Voice or sound recordings | ❌ Not collected |
-| Microphone permission | ❌ Not requested |
-| Paylaşım | ❌ Not shared |
-| Amaç | Not used in this Android Play release |
-
-**Short explanation:**  
-This Android Play release does not record audio and does not request microphone permission.
-
----
-
-### 6. App activity
-
-| Veri | Yanıt |
-|------|-------|
-| Crash logs | ❌ Not collected |
-| Diagnostics | ❌ Not collected |
-| Analytics | ❌ Not collected |
-| User-generated content | ❌ Not supported |
-| Ads data | ❌ Not collected |
-
-**Short explanation:**  
-The app does not use Firebase Analytics, Crashlytics, ads, UGC features, or another telemetry backend.
-
-### 7. Map tile provider / OpenStreetMap
-
-| Data | Answer |
-|------|--------|
-| Map tile requests | ✅ Technical network requests when online map screens are opened |
-| Provider | OpenStreetMap tile infrastructure / configured map tile provider |
-| Developer backend | ❌ No developer backend receives map data |
-| Purpose | App functionality — online map display |
-
-**Short explanation:**  
-Online map display may request map tiles from the configured provider. These requests are governed by the provider's own technical network behavior and policies.
-
----
-
-## Veri Güvenliği
-
-- **Encryption in transit:** Do not mark blanket `Yes` for all data. The app has no developer backend; map, Google Play Billing, and RevenueCat traffic are handled by their providers.
-- **Users can request data deletion:** Yes — deleting the app or clearing app storage removes on-device data.
-- **Data sold:** No
-- **Ads:** No ads.
-- **UGC:** No user-generated content feature.
-- **Developer backend:** No developer-operated backend in this release.
-
----
-
-## Özet (Copy-Paste için)
-
-**Data used by the app:**
-- Location, only during emergency/location session flows
-- Contacts, only for choosing emergency contacts
-- Optional profile name, device-only
-- Optional photos/images selected by the user for profile/fake-call avatar, device-only
-- Fake call settings and local event data, device-only
-- Purchase/subscription events, entitlement status, anonymous user/device/app info through Google Play Billing and RevenueCat for optional Pro access
-
-**Shared with:** Not automatically shared by the app or sent to a developer backend. Emergency contacts are used for call flow only. Online map tiles, Google Play Billing, and RevenueCat have their own technical network behavior.
-
-**Not used:** Firebase auth, cloud database, analytics, crash reporting, ads, UGC, developer backend, microphone/audio recording
+Status remains OPERATOR_ACTION until the operator submits the Data Safety form in Play Console and verifies it matches the final build, SDK list, map provider behavior, RevenueCat setup, and store/legal copy.

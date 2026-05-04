@@ -2,14 +2,17 @@
 
 Plan Madde 6-7: AAB build, Internal Testing yükleme, inceleme gönderimi.
 
+Status: OPERATOR_ACTION. This guide describes manual steps only; this repo audit did not create keystores/secrets, build a signed AAB, upload to Play Console, or run device/billing flows.
+
 ---
 
 ## Ön Koşullar
 
-- [ ] `android/key.properties` dolduruldu (storePassword, keyPassword, storeFile, keyAlias)
-- [ ] `assets/icon/app_icon.png` mevcut
-- [ ] ENCRYPTION_KEY hazır (`openssl rand -base64 32`)
-- [ ] REVENUECAT_ANDROID_API_KEY hazır
+- [ ] `android/key.properties` operator tarafından dolduruldu (storePassword, keyPassword, storeFile, keyAlias)
+- [ ] Store icon 512x512 PNG operator tarafından Play Console'da doğrulandı
+- [ ] ENCRYPTION_KEY operator secret store / local secure process ile hazırlandı
+- [ ] REVENUECAT_ANDROID_API_KEY operator tarafından RevenueCat'ten alındı
+- [ ] RevenueCat / Google Play Billing setup `store/BILLING_RELEASE_CHECKLIST.md` ile test için hazır
 
 ---
 
@@ -47,6 +50,9 @@ ENCRYPTION_KEY='base64_key_buraya' REVENUECAT_ANDROID_API_KEY='goog_...' ./scrip
 - [ ] **Store listing** tamam (başlık, açıklama, Privacy Policy URL, screenshots)
 - [ ] **Data Safety** formu dolduruldu
 - [ ] **Content Rating** sertifikası alındı
+- [ ] Target Audience adult / 18+ olarak gönderildi
+- [ ] FGS / exact alarm / battery optimization / CALL_PHONE declarations gerekiyorsa gönderildi
+- [ ] Screenshots `store/screenshots/android/final/` yolundan yüklendi ve PII review tamamlandı
 
 ---
 
@@ -62,5 +68,6 @@ ENCRYPTION_KEY='base64_key_buraya' REVENUECAT_ANDROID_API_KEY='goog_...' ./scrip
 
 | Hata | Çözüm |
 |------|-------|
-| key.properties bulunamadı | `cp android/key.properties.example android/key.properties` → değerleri düzenle |
-| Keystore bulunamadı | `cd android && keytool -genkey -v -keystore korubeni-release-key.jks ...` |
+| key.properties bulunamadı | Operator secure release-signing prosedürünü kullanmalı; repo audit keystore/secret oluşturmaz |
+| RevenueCat ürünleri görünmüyor | Play track, license tester, current offering, monthly/annual packages ve entitlement `KoruBeni Pro` kontrol edilir |
+| Internal testing upload hazır değil | Signed AAB, Play forms, RevenueCat/Play setup ve app content hazırlığı tamamlanmadan hazır sayılmaz |

@@ -1,102 +1,65 @@
-# Google Play Console – Yayın Öncesi Kontrol Listesi
+# Google Play Console Checklist
 
-Bu liste, KoruBeni uygulamasını Play Store’a göndermeden önce **Play Console**’da tamamlaman gereken adımları özetler.
+This checklist prepares operator actions only. No dashboard item is marked done by repo work.
 
----
+## Required Operator Actions
 
-## 1. Privacy Policy URL
+| Area | Action | Status |
+| --- | --- | --- |
+| Privacy policy | Verify live URL and paste into Play Console | OPERATOR_ACTION |
+| Data deletion URL | Verify live URL and paste if applicable | OPERATOR_ACTION |
+| Data Safety | Submit answers from `store/DATA_SAFETY_FORM.md` | OPERATOR_ACTION |
+| Content Rating | Complete questionnaire from `store/CONTENT_RATING_ANSWERS.md` | OPERATOR_ACTION |
+| Target Audience | Select adult / 18+ intended audience; do not choose Designed for Families | OPERATOR_ACTION |
+| Foreground service | Submit `specialUse` declaration for Android 14+ target requirements | OPERATOR_ACTION |
+| Exact alarm | Submit declaration if Play Console requires it | OPERATOR_ACTION |
+| Battery optimization | Submit declaration if Play Console requires it | OPERATOR_ACTION |
+| CALL_PHONE | Submit declaration/reviewer note if requested | OPERATOR_ACTION |
+| Store listing | Paste TR/EN copy from `store/PLAY_CONSOLE_COPY_PASTE_PACK.md` | OPERATOR_ACTION |
+| Store icon | Upload/verify 512x512 PNG | OPERATOR_ACTION |
+| Feature graphic | Prepare/verify 1024x500 feature graphic | OPERATOR_ACTION |
+| Screenshots | Upload from `store/screenshots/android/final/` after PII review | OPERATOR_ACTION |
+| Signed AAB | Operator builds signed Play release AAB and uploads to internal/closed track | OPERATOR_ACTION |
+| Billing | Configure Play subscriptions and RevenueCat; see `store/BILLING_RELEASE_CHECKLIST.md` | OPERATOR_ACTION |
+| Real-device QA | Execute `store/REAL_DEVICE_QA_MATRIX.md` on physical devices | NEEDS_REAL_DEVICE_TEST |
 
-- **Nerede:** Play Console → Uygulama → **Store ayarları** (veya Store presence) → **Store listing** → **Privacy policy**
-- **Ne yap:** Gizlilik politikasının yayında olduğu **canlı URL**’yi gir.
-- **KoruBeni için:**
-  - Gizlilik metni: `store/privacy_policy.html` (TR), `store/privacy_policy_en.html` (EN)
-  - GitHub Pages URL: `https://poyrazoncel34-netizen.github.io/guvenlik_app/privacy_policy.html`
-  - Bu URL’yi Play Console’daki **Privacy policy** alanına yapıştır.
-- **Detay:** [store/privacy_policy_template.md](privacy_policy_template.md)
+## Build Artifact Reference
 
----
+Production build command must use Play flavor, production env, and operator-supplied secrets:
 
-## 2. Data Safety (Veri Güvenliği) Formu
+```text
+flutter build appbundle --release --flavor play --dart-define=ENV=production --dart-define=REVENUECAT_ANDROID_API_KEY=... --dart-define=ENCRYPTION_KEY=...
+```
 
-- **Nerede:** Play Console → Uygulama → **Policy** → **App content** → **Data safety**
-- **Ne yap:** Toplanan / paylaşılan veri türlerini ve amaçlarını beyan et.
-- **Canonical answer source:** [DATA_SAFETY_FORM.md](DATA_SAFETY_FORM.md)
+Expected AAB path:
 
-KoruBeni için güvenli ve güncel beyan yaklaşımı:
+```text
+build/app/outputs/bundle/playRelease/app-play-release.aab
+```
 
-| Veri türü | Toplama / paylaşma | Amaç (kısa) |
-|------------|--------------------|-------------|
-| **Konum** (approximate / precise) | Acil durumda veya kullanıcı konum oturumunu başlatınca işlenir; uygulama otomatik mesajla paylaşmaz | Acil durumda konum durumu |
-| **Kişiler** (rehber) | Cihazda erişilir, seçilen kişi cihazda saklanır | Acil kişi seçimi |
-| **Profil bilgisi** (ad/fotoğraf) | Opsiyonel, cihazda kalır | Uygulama içi kişiselleştirme |
-| **Uygulama etkileşimi** | Yerel olay geçmişi cihazda kalır; analitik/crash reporting yok | Uygulama işlevselliği |
-| **Purchase history / subscriptions** | Google Play Billing ve RevenueCat tarafından işlenebilir | İsteğe bağlı KoruBeni Pro abonelik/yetki doğrulaması |
+## Data Safety Notes
 
-- Konum ve kişi erişimi kullandığı için Data Safety formunu boş bırakma.
-- Mikrofon veya SMS beyanı verme; bu Play sürümünde audio recording ve SMS yok.
-- Firebase, auth, analytics, crash reporting veya push bildirim beyanı verme; mevcut mimari offline-first ve crash log cihaz içidir.
-- Gizlilik politikasındaki açıklamalarla **tutarlı** ol.
+- Do not claim local-only data is collected/shared merely because it is stored on device.
+- Disclose Google Play Billing and RevenueCat for optional Pro subscription processing.
+- Disclose map tile provider behavior for online maps.
+- No analytics, ads, crash SDK, auth backend, cloud database, SMS sending, microphone, or audio recording should be claimed unless the final build changes.
 
----
+## Reviewer Notes To Prepare
 
-## 3. İçerik Derecelendirmesi (Content Rating)
+- Panic/SOS is Pro-only.
+- Basic access has no login.
+- `FLAG_SECURE` blocks screenshots for safety/privacy; reviewers can still navigate the app.
+- CALL_PHONE is user-initiated through Panic/SOS with confirmation/countdown and `ACTION_DIAL` fallback.
+- Foreground service is only for active user-started safety sessions with visible persistent notification and no hidden tracking.
+- Exact alarm denial has fallback/degraded behavior; no guarantee language.
 
-- **Nerede:** Play Console → **Policy** → **App content** → **Content rating**
-- **Ne yap:** “Start questionnaire” / “Anketi başlat” de; soruları yanıtla.
-- **KoruBeni için genel rehber:**
-  - Şiddet: Yok veya çok düşük (güvenlik uygulaması).
-  - Cinsellik / korku: Yok.
-  - Tehlikeli faaliyet: Acil arama / panik özelliği var; “acil durum / güvenlik” bağlamında işaretle.
-  - Sonuç genelde **PEGI 3 / Everyone** benzeri çıkar; anketi bitirip sertifikayı al.
+## AAB Upload Gate
 
----
+Internal testing upload is NOT READY until:
 
-## 4. Hedef Kitle ve Reklam
+- Signed AAB is produced by operator.
+- Play internal/closed testing track exists.
+- Required app content forms are prepared.
+- RevenueCat/Play subscription setup is ready for testing.
 
-- **Nerede:** **Policy** → **App content** → **Target audience and content** (veya **Ads**)
-- **Ne yap:**
-  - **Hedef kitle:** Yetişkin (örn. 18+ veya “not for children”) veya “all ages” – uygulama amacına göre seç.
-  - **Reklam:** KoruBeni reklam içermiyorsa “No, my app does not contain ads” işaretle.
-
----
-
-## 5. AAB Yükleme (Internal / Closed / Production)
-
-- **Nerede:** Play Console → **Release** → **Testing** (Internal / Closed) veya **Production**
-- **Ne yap:**
-  1. Yerelde: `ENCRYPTION_KEY='...' REVENUECAT_ANDROID_API_KEY='goog_...' ./scripts/build_production.sh` veya
-     `flutter build appbundle --release --flavor play --dart-define=ENV=production --dart-define=REVENUECAT_ANDROID_API_KEY=goog_... --dart-define=ENCRYPTION_KEY=...`
-  2. Oluşan dosya: `build/app/outputs/bundle/playRelease/app-play-release.aab`
-  3. Play Console’da ilgili track’i seç → **Create new release** → AAB dosyasını yükle.
-  4. Release notları yaz (opsiyonel ama önerilir).
-  5. İncelemeye gönder.
-
----
-
-## 6. RevenueCat / Billing Production Gate
-
-Public production release'e göndermeden önce aşağıdaki maddeler tamamlanmadan submit etme:
-
-- [ ] Production AAB dummy/dev RevenueCat key ile alınmadı.
-- [ ] RevenueCat dashboard current offering aktif.
-- [ ] Current offering içinde monthly package aktif.
-- [ ] Current offering içinde annual package aktif.
-- [ ] Entitlement id `KoruBeni Pro` uygulamadaki değerle birebir aynı.
-- [ ] Google Play subscription product id'leri RevenueCat package yapılandırmasıyla eşleşiyor.
-- [ ] Play license tester monthly satın alma yaptı ve Pro açıldı.
-- [ ] Play license tester annual satın alma yaptı ve Pro açıldı.
-- [ ] Restore purchases aynı Google hesabında Pro erişimini geri getirdi.
-- [ ] Planlar yüklenemediğinde paywall fail-safe gösteriyor ve crash olmuyor.
-
----
-
-## 7. Özet Sıra
-
-1. Privacy Policy’i yayınla; URL’yi Store listing’e ekle.
-2. Data Safety formunu doldur (konum, kişi erişimi, opsiyonel profil/fotoğraf verisi, Google Play Billing ve RevenueCat abonelik/yetki bilgisi).
-3. Content rating anketini tamamla.
-4. Hedef kitle ve reklam bilgisini gir.
-5. RevenueCat / Billing production gate’i Play tester ile tamamla.
-6. AAB’yi build alıp ilgili track’e yükle.
-
-Bu adımlar [release_checklist.md](release_checklist.md) ile uyumludur; oradaki “Privacy Policy URL canlı”, “Data Safety form”, “Internal Testing track’e yükle” vb. maddeler bu dokümandaki işlemlerle tamamlanır.
+Production submission is NOT READY until all production gates in `store/release_checklist.md` are evidenced.

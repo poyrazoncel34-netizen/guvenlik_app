@@ -15,9 +15,9 @@ import com.poyrazoncel.korubeni.MainActivity
 import com.poyrazoncel.korubeni.R
 
 object EmergencyNotificationHelper {
-    const val CHANNEL_ALERTS = "korubeni_alerts_high"
-    const val CHANNEL_SERVICE = "korubeni_service_low"
-    const val CHANNEL_GENERAL = "korubeni_general_default"
+    const val CHANNEL_ALERTS = "emergency_alerts"
+    const val CHANNEL_SERVICE = "service_status"
+    const val CHANNEL_GENERAL = "general_notifications"
     const val CHECK_IN_NOTIFICATION_ID = 7303
 
     fun ensureChannels(context: Context) {
@@ -29,26 +29,26 @@ object EmergencyNotificationHelper {
         val channels = listOf(
             NotificationChannel(
                 CHANNEL_ALERTS,
-                "Acil Durum Bildirimleri",
+                NativeNotificationText.channelName(context, CHANNEL_ALERTS),
                 NotificationManager.IMPORTANCE_HIGH
             ).apply {
-                description = "Check-in ve acil durum uyarilari"
+                description = NativeNotificationText.channelDescription(context, CHANNEL_ALERTS)
                 setBypassDnd(true)
                 enableVibration(true)
             },
             NotificationChannel(
                 CHANNEL_SERVICE,
-                "Servis Durumu",
+                NativeNotificationText.channelName(context, CHANNEL_SERVICE),
                 NotificationManager.IMPORTANCE_LOW
             ).apply {
-                description = "Servis durumu bildirimleri"
+                description = NativeNotificationText.channelDescription(context, CHANNEL_SERVICE)
             },
             NotificationChannel(
                 CHANNEL_GENERAL,
-                "Genel Bildirimler",
+                NativeNotificationText.channelName(context, CHANNEL_GENERAL),
                 NotificationManager.IMPORTANCE_DEFAULT
             ).apply {
-                description = "Genel uygulama bilgilendirmeleri"
+                description = NativeNotificationText.channelDescription(context, CHANNEL_GENERAL)
             },
         )
 
@@ -78,16 +78,18 @@ object EmergencyNotificationHelper {
         title: String,
         body: String,
         triggerType: String? = null,
-    ) = NotificationCompat.Builder(context, CHANNEL_SERVICE)
-        .setSmallIcon(R.drawable.ic_bg_service_small)
-        .setContentTitle(title)
-        .setContentText(body)
-        .setPriority(NotificationCompat.PRIORITY_LOW)
-        .setCategory(NotificationCompat.CATEGORY_SERVICE)
-        .setOngoing(true)
-        .setAutoCancel(false)
-        .setContentIntent(buildLaunchPendingIntent(context, triggerType))
-        .build()
+    ) = NativeNotificationText.serviceActive(context).let { fallback ->
+        NotificationCompat.Builder(context, CHANNEL_SERVICE)
+            .setSmallIcon(R.drawable.ic_bg_service_small)
+            .setContentTitle(title.ifBlank { fallback.title })
+            .setContentText(body.ifBlank { fallback.body })
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setCategory(NotificationCompat.CATEGORY_SERVICE)
+            .setOngoing(true)
+            .setAutoCancel(false)
+            .setContentIntent(buildLaunchPendingIntent(context, triggerType))
+            .build()
+    }
 
     fun showAlert(
         context: Context,

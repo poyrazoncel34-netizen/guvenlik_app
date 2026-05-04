@@ -13,7 +13,17 @@ Current mitigation:
 
 ## Manual Play Console Items
 
-- Public data deletion URL is `https://poyrazoncel34-netizen.github.io/guvenlik_app/data_deletion.html`; verify the hosted page stays live before release.
+- Public privacy and data deletion URLs are prepared; operator must verify hosted pages stay live before release.
 - Confirm RevenueCat products, offering IDs, and Google Play subscription products match.
-- Complete Play Console content rating with 18+ intended audience notes.
+- Complete Play Console content rating and target audience with adult / 18+ intended audience notes.
+- Submit Data Safety accurately; do not mark local-only data as developer-collected/shared unless the final build transmits it.
 - Copy `docs/play_console_declarations.md` into the corresponding declaration fields.
+- Submit foreground service type declaration for Android 14+ targets, and exact alarm / battery optimization declarations if Play Console requires them.
+- Use screenshot upload path `store/screenshots/android/final/` and complete manual PII review.
+- Verify Play icon is 512x512 PNG and feature graphic is 1024x500.
+
+## Runtime And Production Gates
+
+- Real-device QA is not complete. Emulator evidence is not accepted for production readiness.
+- Billing is not complete. Monthly purchase, annual purchase, restore, cancel/manage, no-offering, and network-failure fallback must be tested through Play test tracks and license testers.
+- Production is DO_NOT_CLAIM_READY until Play Console forms, billing tests, Android 13/14 physical-device QA, screenshot PII review, and closed testing if required are complete with evidence.

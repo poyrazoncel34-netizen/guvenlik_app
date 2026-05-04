@@ -1,61 +1,46 @@
-# Play Console Formları - Birleşik Kontrol Listesi
+# Play Console Forms Checklist
 
-Play Console'da doldurulacak formlar ve ilgili rehberler.
+No Play Console dashboard action is completed by this repo audit. Every submission item below is OPERATOR_ACTION until the operator records external evidence.
 
----
+## Form Sources
 
-## Öncelik Sırası
+| Form / App content item | Prepared source | Status |
+| --- | --- | --- |
+| Data Safety | `store/DATA_SAFETY_FORM.md` | CODE_DONE copy prepared; OPERATOR_ACTION submit |
+| Content Rating | `store/CONTENT_RATING_ANSWERS.md` | CODE_DONE copy prepared; OPERATOR_ACTION submit |
+| Target Audience | `store/CONTENT_RATING_ANSWERS.md` and `docs/play_console_declarations.md` | CODE_DONE recommendation; OPERATOR_ACTION submit |
+| Foreground service specialUse | `docs/play_console_declarations.md` | CODE_DONE copy prepared; OPERATOR_ACTION submit |
+| SCHEDULE_EXACT_ALARM | `docs/play_console_declarations.md` | CODE_DONE copy prepared; OPERATOR_ACTION submit if required |
+| REQUEST_IGNORE_BATTERY_OPTIMIZATIONS | `docs/play_console_declarations.md` | CODE_DONE copy prepared; OPERATOR_ACTION submit if required |
+| CALL_PHONE | `store/permissions_declaration_notes.md` | CODE_DONE copy prepared; OPERATOR_ACTION submit if required |
+| Privacy policy URL | `store/release_checklist.md` | CODE_DONE URL prepared; OPERATOR_ACTION verify live URL and submit |
+| Data deletion URL | `store/release_checklist.md` | CODE_DONE URL prepared; OPERATOR_ACTION verify live URL and submit |
 
-1. **Data Safety** — Zorunlu
-2. **Content Rating** — Zorunlu  
+## Data Safety Guardrails
 
----
+- Be accurate and conservative.
+- Do not claim local-only data is collected/shared merely because it is stored on device.
+- Mention Google Play Billing and RevenueCat subscription processing for optional Pro.
+- Mention OSM/configured map tile requests when maps are disclosed.
+- Mention no analytics, ads, crash SDK, auth backend, cloud DB, SMS sending, microphone, or audio recording only if final build verification still matches current repo.
+- Do not mark blanket encryption-in-transit for local-only data or provider-controlled flows.
 
-## 1. Data Safety
+## Content Rating / Target Audience
 
-**Yol:** Policy → App content → Data safety
+- Intended audience: adults / 18+.
+- Do not enter Designed for Families unless the product decision changes and the app/legal/store copy is reworked.
+- Complete the IARC questionnaire according to the final build behavior.
 
-**Rehber:** [DATA_SAFETY_FORM.md](DATA_SAFETY_FORM.md)
+## Completion Checklist
 
-| Adım | Durum |
-|------|-------|
-| Does your app collect or share data? | Yes |
-| Konum (approximate, precise) | Collected for emergency/location session, not automatically shared |
-| Personal info (optional profile name/photo) | Device-only |
-| Contacts | Collected, device-stored |
-| Audio / microphone | Not collected in this Android Play release |
-| Purchases / subscriptions | Google Play Billing and RevenueCat handle optional KoruBeni Pro subscription/entitlement verification |
-| App activity (crash, analytics) | Local event history stays on device; crash/analytics not collected |
-| Encryption in transit | No developer backend; evaluate map/billing/RevenueCat provider traffic separately |
-| Users can request deletion | Yes |
-
----
-
-Canonical Data Safety answer source: [DATA_SAFETY_FORM.md](DATA_SAFETY_FORM.md).
-
-## 2. Content Rating
-
-**Yol:** Policy → App content → Content rating
-
-**Rehber:** [CONTENT_RATING_ANSWERS.md](CONTENT_RATING_ANSWERS.md)
-
-| Kategori | Yanıt |
-|----------|-------|
-| Violence | None |
-| Sexual content | None |
-| Language | None |
-| Controlled substances | None |
-| Fear/Horror | None |
-| Shares location | Yes — only when user triggers |
-| Social interaction | Yes — emergency contacts |
-
-**Beklenen sonuç:** PEGI 3 / Everyone
-
----
-
----
-
-## Tüm Formlar Tamamlandığında
-
-- [ ] Data Safety gönderildi
-- [ ] Content Rating sertifikası alındı
+| Item | Status | Evidence |
+| --- | --- | --- |
+| Data Safety submitted | OPERATOR_ACTION | Not supplied |
+| Content Rating certificate obtained | OPERATOR_ACTION | Not supplied |
+| Target Audience submitted | OPERATOR_ACTION | Not supplied |
+| FGS declaration submitted | OPERATOR_ACTION | Not supplied |
+| Exact alarm declaration submitted if required | OPERATOR_ACTION | Not supplied |
+| Battery optimization declaration submitted if required | OPERATOR_ACTION | Not supplied |
+| CALL_PHONE declaration submitted if required | OPERATOR_ACTION | Not supplied |
+| Privacy URL submitted and live | OPERATOR_ACTION | Not supplied |
+| Data deletion URL submitted and live if applicable | OPERATOR_ACTION | Not supplied |

@@ -2,7 +2,7 @@
 
 **App Title:** KoruBeni - Personal Safety
 **Short Description (80 characters):**
-Free basic tools. Panic/SOS and advanced tools require Pro.
+Panic/SOS requires Pro; location, fake call, and siren are free.
 
 **Full Description (4000 characters):**
 KoruBeni is an Android personal safety app that helps you view location status, run an on-device fake call simulation, and use additional safety tools with an optional Pro subscription.

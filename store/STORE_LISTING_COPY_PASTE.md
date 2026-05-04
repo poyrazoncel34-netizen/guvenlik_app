@@ -21,8 +21,7 @@ KoruBeni - Kişisel Güvenlik
 
 **Short description (80 karakter):**
 ```
-Panik/SOS ve gelişmiş akışlar Pro ile.
-Konum, sahte çağrı ve siren ücretsiz.
+Panik/SOS Pro; konum, sahte çağrı ve siren ücretsiz.
 ```
 
 **Full description:** [play_store_listing_tr.md](play_store_listing_tr.md) içindeki "Full Description" bölümünü kopyalayın.
@@ -38,8 +37,7 @@ KoruBeni - Personal Safety
 
 **Short description (80 characters):**
 ```
-Panic/SOS and advanced flows with Pro.
-Free location, fake call, and siren.
+Panic/SOS requires Pro; location, fake call, and siren are free.
 ```
 
 **Full description:** [play_store_listing_en.md](play_store_listing_en.md) içindeki "Full Description" bölümünü kopyalayın.

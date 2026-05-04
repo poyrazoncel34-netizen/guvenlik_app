@@ -31,6 +31,7 @@ void main() {
       final sources = [
         File('lib/core/services/notification_service.dart'),
         File('lib/screens/app_unlock_screen.dart'),
+        File('lib/screens/contacts_page.dart'),
         File('lib/screens/settings_legal/data_export_screen.dart'),
         File('lib/screens/settings_detail_page.dart'),
         File('lib/main.dart'),
@@ -42,6 +43,9 @@ void main() {
         'Onaylamak için SIFIRLA yazın',
         'Verilerimi Dışa Aktar',
         'Kişisel Veri Dışa Aktarımı',
+        'KVKK Bilgilendirme',
+        'Eklediğiniz kişilerin telefon numaraları yalnızca cihazınızda',
+        'Anladım',
         'Uygulama bu ekrani yukleyemedi',
         'KoruBeni güvenlik uygulaması',
         'Acil durumlarda yardım çağırın',
