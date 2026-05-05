@@ -108,5 +108,54 @@ void main() {
         stopwatch.stop();
       },
     );
+
+    test(
+      'map invocations fail closed on unexpected native exceptions',
+      () async {
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(channel, (MethodCall call) async {
+              throw MissingPluginException('${call.method} not implemented');
+            });
+
+        final missingPluginResult = await EmergencyPlatformService.instance
+            .executeEmergencyNative(primaryNumber: '5551234567');
+        expect(missingPluginResult.isFailed, isTrue);
+
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(channel, (MethodCall call) async {
+              throw Exception('${call.method} failed');
+            });
+
+        final genericResult = await EmergencyPlatformService.instance
+            .scheduleCheckIn(
+              phase: 'main',
+              deadline: DateTime.now().add(const Duration(minutes: 10)),
+            );
+        expect(genericResult, isFalse);
+      },
+    );
+
+    test(
+      'bool invocations fail closed on unexpected native exceptions',
+      () async {
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(channel, (MethodCall call) async {
+              throw MissingPluginException('${call.method} not implemented');
+            });
+
+        final missingPluginResult = await EmergencyPlatformService.instance
+            .canScheduleExactAlarms();
+        expect(missingPluginResult, isFalse);
+
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(channel, (MethodCall call) async {
+              throw Exception('${call.method} failed');
+            });
+
+        final genericResult = await EmergencyPlatformService.instance
+            .didCountdownAlarmFire(dispatchId: 'test-dispatch');
+        expect(genericResult, isFalse);
+      },
+    );
   });
 }

@@ -119,9 +119,9 @@ class HomeProvider extends ChangeNotifier {
     return null;
   }
 
-  Future<void> startLocationSharing(int minutes) async {
+  Future<bool> startLocationSharing(int minutes) async {
     final result = await _locationService.getCurrentLocation();
-    if (!result.isSuccess || result.position == null) return;
+    if (!result.isSuccess || result.position == null) return false;
 
     _locationShareEndAt = DateTime.now().add(Duration(minutes: minutes));
     _isLocationSharing = true;
@@ -157,6 +157,7 @@ class HomeProvider extends ChangeNotifier {
         namedArgs: {'minutes': '$minutes'},
       ),
     );
+    return true;
   }
 
   void stopLocationSharing({bool manual = false}) {

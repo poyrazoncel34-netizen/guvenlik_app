@@ -105,7 +105,23 @@ class _EmergencyMapScreenState extends State<EmergencyMapScreen> {
                     onPressed: () async {
                       HapticFeedback.lightImpact();
                       final provider = context.read<HomeProvider>();
-                      await provider.startLocationSharing(10);
+                      final started = await provider.startLocationSharing(10);
+                      if (!context.mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            started
+                                ? "home_location_shared_desc".tr(
+                                    namedArgs: const {'minutes': '10'},
+                                  )
+                                : "location_sharing_start_failed".tr(),
+                          ),
+                          backgroundColor: started
+                              ? AppColors.success
+                              : AppColors.warning,
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
                     },
                     icon: const Icon(Icons.share_location, color: Colors.white),
                     label: Text(

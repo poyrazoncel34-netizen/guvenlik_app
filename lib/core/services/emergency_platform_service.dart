@@ -86,6 +86,8 @@ class EmergencyPlatformService {
       debugPrint('[EmergencyPlatform] cancelCheckIn timed out');
     } on PlatformException catch (e) {
       debugPrint('[EmergencyPlatform] cancelCheckIn failed: ${e.code}');
+    } on Exception catch (e) {
+      debugPrint('[EmergencyPlatform] cancelCheckIn unexpected error: $e');
     }
   }
 
@@ -123,6 +125,10 @@ class EmergencyPlatformService {
     } on PlatformException catch (e) {
       debugPrint(
         '[EmergencyPlatform] requestExactAlarmPermission failed: ${e.code}',
+      );
+    } on Exception catch (e) {
+      debugPrint(
+        '[EmergencyPlatform] requestExactAlarmPermission unexpected error: $e',
       );
     }
   }
@@ -225,6 +231,9 @@ class EmergencyPlatformService {
     } on PlatformException catch (e) {
       debugPrint('[EmergencyPlatform] $method failed: ${e.code}');
       return const <String, dynamic>{};
+    } on Exception catch (e) {
+      debugPrint('[EmergencyPlatform] $method unexpected error: $e');
+      return const <String, dynamic>{};
     }
   }
 
@@ -242,6 +251,9 @@ class EmergencyPlatformService {
       return false;
     } on PlatformException catch (e) {
       debugPrint('[EmergencyPlatform] $method failed: ${e.code}');
+      return false;
+    } on Exception catch (e) {
+      debugPrint('[EmergencyPlatform] $method unexpected error: $e');
       return false;
     }
   }

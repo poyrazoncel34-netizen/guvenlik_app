@@ -598,8 +598,18 @@ class _PaywallScreenState extends State<PaywallScreen> {
   Future<void> _openExternal(String url) async {
     final uri = Uri.parse(url);
     try {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    } catch (_) {}
+      final launched = await launchUrl(
+        uri,
+        mode: LaunchMode.externalApplication,
+      );
+      if (!launched && mounted) {
+        _showSnack('link_open_failed'.tr(), AppColors.warning);
+      }
+    } catch (_) {
+      if (mounted) {
+        _showSnack('link_open_failed'.tr(), AppColors.warning);
+      }
+    }
   }
 
   String _periodText(Package package) {

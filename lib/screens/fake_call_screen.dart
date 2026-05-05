@@ -647,7 +647,12 @@ class _FakeCallScreenState extends State<FakeCallScreen>
   }
 
   Future<void> _pickProfileImage() async {
-    if (kIsWeb) return; // File picking not supported on web
+    if (kIsWeb) {
+      if (mounted) {
+        _showWarningSnack('fake_call_photo_pick_failed'.tr());
+      }
+      return;
+    }
     try {
       final picked = await _imagePicker.pickImage(
         source: ImageSource.gallery,
@@ -662,7 +667,22 @@ class _FakeCallScreenState extends State<FakeCallScreen>
       if (mounted) {
         setState(() => _avatarPath = saved.path);
       }
-    } catch (_) {}
+    } catch (_) {
+      if (mounted) {
+        _showWarningSnack('fake_call_photo_pick_failed'.tr());
+      }
+    }
+  }
+
+  void _showWarningSnack(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: AppColors.warning,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    );
   }
 
   Widget _buildTemplateChip(

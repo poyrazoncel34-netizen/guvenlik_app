@@ -413,7 +413,23 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
       }
       return;
     }
-    await provider.startLocationSharing(minutes);
+    final started = await provider.startLocationSharing(minutes);
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          started
+              ? "home_location_shared_desc".tr(
+                  namedArgs: {'minutes': '$minutes'},
+                )
+              : "location_sharing_start_failed".tr(),
+        ),
+        backgroundColor: started ? AppColors.success : AppColors.warning,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    );
   }
 
   bool get _shouldUseOfflineMapFallback {

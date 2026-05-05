@@ -14,6 +14,7 @@ import '../core/services/contact_service.dart';
 import '../core/services/emergency_platform_service.dart';
 import '../core/services/foreground_service.dart';
 import '../core/services/notification_service.dart';
+import '../core/utils/permission_helper.dart';
 // Analytics service removed (offline-first)
 import '../core/constants/app_constants.dart';
 import '../core/widgets/feature_warning_dialog.dart';
@@ -110,22 +111,41 @@ class _SafeWalkScreenState extends State<SafeWalkScreen>
   }
 
   Future<void> _startSafeWalk() async {
+    final currentContext = context;
     if (!await _hasEmergencyContact()) {
-      if (!mounted) return;
-      _showTimerContactRequired();
+      if (!currentContext.mounted) return;
+      _showTimerContactRequired(currentContext);
       return;
     }
-    if (!mounted) return;
+    if (!currentContext.mounted) return;
 
     // İlk kullanımda uyarı dialogu göster
     final shown = await FeatureWarningHelper.showIfNeeded(
-      context,
+      currentContext,
       prefKey: AppConstants.prefWarningWalk,
       featureName: 'safe_walk',
       title: FeatureWarningHelper.checkinTitle,
       content: FeatureWarningHelper.checkinContent,
     );
-    if (!shown || !mounted) return;
+    if (!shown || !currentContext.mounted) return;
+
+    final notificationsAllowed =
+        await PermissionHelper.requestNotificationPermission(currentContext);
+    if (!currentContext.mounted) return;
+    if (!notificationsAllowed) {
+      ScaffoldMessenger.of(currentContext).showSnackBar(
+        SnackBar(
+          content: Text("notification_session_permission_required".tr()),
+          backgroundColor: AppColors.warning,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      );
+      return;
+    }
+
     HapticFeedback.mediumImpact();
     final endTime = DateTime.now().add(Duration(minutes: _selectedMinutes));
     setState(() {
@@ -176,7 +196,7 @@ class _SafeWalkScreenState extends State<SafeWalkScreen>
     }
   }
 
-  void _showTimerContactRequired() {
+  void _showTimerContactRequired(BuildContext context) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('timer_emergency_contact_required'.tr()),

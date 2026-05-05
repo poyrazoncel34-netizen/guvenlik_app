@@ -455,7 +455,9 @@ class _ContactsPageState extends State<ContactsPage> {
               width: double.infinity,
               child: TextButton.icon(
                 onPressed: () async {
-                  Navigator.pop(context);
+                  Navigator.pop(sheetContext);
+                  final confirmed = await _confirmRemoveContact(contact);
+                  if (!confirmed || !mounted) return;
                   final removed = await provider.removeContact(contact.phone);
                   await _refreshHomeProvider();
                   if (!mounted) return;
@@ -486,6 +488,43 @@ class _ContactsPageState extends State<ContactsPage> {
         ),
       ),
     );
+  }
+
+  Future<bool> _confirmRemoveContact(ContactItem contact) async {
+    if (!mounted) return false;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: AppColors.cardBg,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
+          "contacts_remove_confirm_title".tr(),
+          style: const TextStyle(
+            color: AppColors.textPrimary,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        content: Text(
+          "contacts_remove_confirm_desc".tr(namedArgs: {"name": contact.name}),
+          style: const TextStyle(color: AppColors.textSecondary, height: 1.45),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text("cancel".tr()),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.emergency,
+              foregroundColor: Colors.white,
+            ),
+            child: Text("btn_delete".tr()),
+          ),
+        ],
+      ),
+    );
+    return confirmed == true;
   }
 
   Widget _buildEmptyContactsState() {

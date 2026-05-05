@@ -270,8 +270,16 @@ class _SettingsPageState extends State<SettingsPage> {
                 onTap: () async {
                   final uri = Uri.parse(AppConstants.privacyPolicyWebUrl);
                   try {
-                    await launchUrl(uri, mode: LaunchMode.externalApplication);
-                  } catch (_) {}
+                    final launched = await launchUrl(
+                      uri,
+                      mode: LaunchMode.externalApplication,
+                    );
+                    if (!launched && mounted) {
+                      _showErrorSnack('link_open_failed'.tr());
+                    }
+                  } catch (_) {
+                    if (mounted) _showErrorSnack('link_open_failed'.tr());
+                  }
                 },
               ),
               _buildDivider(),

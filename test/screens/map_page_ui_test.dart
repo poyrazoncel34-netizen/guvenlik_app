@@ -5,11 +5,19 @@ void main() {
   group('MapPage UI changes', () {
     late String source;
     late String mainNavigation;
+    late String homeProvider;
+    late String emergencyMap;
 
     setUpAll(() {
       source = File('lib/screens/map_page.dart').readAsStringSync();
       mainNavigation = File(
         'lib/screens/main_navigation.dart',
+      ).readAsStringSync();
+      homeProvider = File(
+        'lib/presentation/providers/home_provider.dart',
+      ).readAsStringSync();
+      emergencyMap = File(
+        'lib/screens/emergency_map_screen.dart',
       ).readAsStringSync();
     });
 
@@ -69,6 +77,25 @@ void main() {
       expect(source, contains('!oldWidget.isActive'));
       expect(source, contains('widget.isActive'));
       expect(source, contains('_initLocation();'));
+    });
+
+    test('location sharing start surfaces success and failure to the user', () {
+      expect(homeProvider, contains('Future<bool> startLocationSharing'));
+      expect(homeProvider, contains('return false;'));
+      expect(homeProvider, contains('return true;'));
+      expect(
+        source,
+        contains(
+          'final started = await provider.startLocationSharing(minutes)',
+        ),
+      );
+      expect(source, contains('location_sharing_start_failed'));
+      expect(source, contains('home_location_shared_desc'));
+      expect(
+        emergencyMap,
+        contains('final started = await provider.startLocationSharing(10)'),
+      );
+      expect(emergencyMap, contains('location_sharing_start_failed'));
     });
   });
 }

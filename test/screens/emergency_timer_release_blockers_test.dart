@@ -26,6 +26,30 @@ void main() {
       expect(source, contains('ContactsPage'));
     });
 
+    test('safe walk requires notification permission before timer starts', () {
+      final source = File(
+        'lib/screens/safe_walk_screen.dart',
+      ).readAsStringSync();
+      final start = source.indexOf('Future<void> _startSafeWalk()');
+      final warning = source.indexOf(
+        'FeatureWarningHelper.showIfNeeded',
+        start,
+      );
+      final notificationGuard = source.indexOf(
+        'PermissionHelper.requestNotificationPermission',
+        start,
+      );
+      final activeState = source.indexOf('_isActive = true', start);
+
+      expect(start, isNot(-1));
+      expect(warning, isNot(-1));
+      expect(notificationGuard, isNot(-1));
+      expect(activeState, isNot(-1));
+      expect(warning < notificationGuard, isTrue);
+      expect(notificationGuard < activeState, isTrue);
+      expect(source, contains('notification_session_permission_required'));
+    });
+
     test('check-in checks emergency contacts before warning and start', () {
       final source = File(
         'lib/screens/check_in_screen.dart',

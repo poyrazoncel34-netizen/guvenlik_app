@@ -89,8 +89,16 @@ class LegalSettingsScreen extends StatelessWidget {
               onTap: () async {
                 final uri = Uri.parse(AppConstants.privacyPolicyUrl);
                 try {
-                  await launchUrl(uri, mode: LaunchMode.externalApplication);
-                } catch (_) {}
+                  final launched = await launchUrl(
+                    uri,
+                    mode: LaunchMode.externalApplication,
+                  );
+                  if (!launched && context.mounted) {
+                    _showLinkError(context);
+                  }
+                } catch (_) {
+                  if (context.mounted) _showLinkError(context);
+                }
               },
             ),
           ]),
@@ -171,8 +179,16 @@ class LegalSettingsScreen extends StatelessWidget {
                   },
                 );
                 try {
-                  await launchUrl(uri, mode: LaunchMode.externalApplication);
-                } catch (_) {}
+                  final launched = await launchUrl(
+                    uri,
+                    mode: LaunchMode.externalApplication,
+                  );
+                  if (!launched && context.mounted) {
+                    _showLinkError(context);
+                  }
+                } catch (_) {
+                  if (context.mounted) _showLinkError(context);
+                }
               },
             ),
           ]),
@@ -202,6 +218,17 @@ class LegalSettingsScreen extends StatelessWidget {
         fontSize: 16,
         fontWeight: FontWeight.w800,
         color: AppColors.textPrimary,
+      ),
+    );
+  }
+
+  void _showLinkError(BuildContext context) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('link_open_failed'.tr()),
+        backgroundColor: AppColors.warning,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
   }
