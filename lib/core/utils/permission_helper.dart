@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:optimize_battery/optimize_battery.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -157,7 +158,7 @@ class PermissionHelper {
         actionText: 'perm_go_settings'.tr(),
       );
       if (shouldOpen == true) {
-        await openAppSettings();
+        await openNotificationSettings();
       }
     }
 
@@ -198,7 +199,26 @@ class PermissionHelper {
         : NotificationPermissionRequestStatus.denied;
   }
 
-  static Future<bool> openNotificationSettings() => openAppSettings();
+  /// Open the system notification settings page for KoruBeni.
+  ///
+  /// On Android 8.0+ this deep-links directly into the app's
+  /// notification settings (ACTION_APP_NOTIFICATION_SETTINGS via
+  /// the native settings channel). On older Android versions and on
+  /// iOS we fall back to the generic app settings page provided by
+  /// `permission_handler`.
+  static Future<bool> openNotificationSettings() async {
+    if (Platform.isAndroid) {
+      try {
+        const channel = MethodChannel('com.poyrazoncel.korubeni/settings');
+        final ok = await channel.invokeMethod<bool>('openNotificationSettings');
+        if (ok == true) return true;
+      } on PlatformException {
+        // Native handler missing or settings screen unavailable —
+        // fall through to the generic settings deep link below.
+      }
+    }
+    return openAppSettings();
+  }
 
   /// Play Store Prominent Disclosure: İzin istemeden önce gösterilen bilgilendirme.
   /// Kullanıcı "Kabul Et" demezse native izin adımına geçilmez.

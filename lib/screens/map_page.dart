@@ -9,6 +9,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../core/app_colors.dart';
 import '../core/constants/app_constants.dart';
 import '../core/di/service_locator.dart';
@@ -454,18 +455,25 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
               Positioned(
                 left: 12,
                 bottom: 130,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.6),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: const Text(
-                    "© OpenStreetMap contributors",
-                    style: TextStyle(fontSize: 10, color: Colors.white70),
+                child: Semantics(
+                  label: 'OpenStreetMap copyright link',
+                  button: true,
+                  child: GestureDetector(
+                    onTap: _openOsmCopyrightPage,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.6),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Text(
+                        "© OpenStreetMap contributors",
+                        style: TextStyle(fontSize: 10, color: Colors.white70),
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -993,5 +1001,15 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
         ),
       ],
     );
+  }
+
+  Future<void> _openOsmCopyrightPage() async {
+    final uri = Uri.parse('https://www.openstreetmap.org/copyright');
+    try {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } on Exception {
+      // Silent fallback — attribution remains visible as static text even
+      // if no browser is available to open the copyright page.
+    }
   }
 }

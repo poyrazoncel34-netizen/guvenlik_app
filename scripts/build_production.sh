@@ -66,11 +66,21 @@ echo ""
 # Android AAB Build
 echo "🤖 Android AAB build başlıyor..."
 AAB_PATH="build/app/outputs/bundle/playRelease/app-play-release.aab"
+SYMBOLS_DIR="build/app/debug-symbols"
 BUILD_LOG="$(mktemp /tmp/korubeni_android_build.XXXXXX.log)"
+
+# Obfuscation + split debug info: Dart code is obfuscated for release,
+# and the symbol files needed to deobfuscate crash stacks are written to
+# $SYMBOLS_DIR. After upload, Play Console can be given these symbols
+# (App bundle explorer → Native debug symbols) to symbolicate the
+# Pre-launch and Production crash reports.
+mkdir -p "$SYMBOLS_DIR"
 
 set +e
 flutter build appbundle --release \
   --flavor play \
+  --obfuscate \
+  --split-debug-info="$SYMBOLS_DIR" \
   --dart-define=ENV=production \
   --dart-define=REVENUECAT_ANDROID_API_KEY="$REVENUECAT_ANDROID_API_KEY" \
   --dart-define=ENCRYPTION_KEY="$ENCRYPTION_KEY" 2>&1 | tee "$BUILD_LOG"
@@ -93,7 +103,8 @@ fi
 
 echo ""
 echo "✅ Android AAB build başarılı!"
-echo "📦 Dosya: $AAB_PATH"
+echo "📦 AAB: $AAB_PATH"
+echo "🗂️  Debug symbols: $SYMBOLS_DIR (zip'leyip Play Console'a yükleyin)"
 echo ""
 rm -f "$BUILD_LOG"
 
@@ -106,4 +117,6 @@ echo "📋 Sonraki adımlar:"
 echo "1. Android screenshot'larını al (store/screenshots/android/)"
 echo "2. Privacy Policy'i canlıya al"
 echo "3. Play Store Console'a git ve AAB'yi yükle"
+echo "4. Symbol klasörünü zip'leyip Play Console → App bundle explorer →"
+echo "   Native debug symbols altına yükleyin (crash deobfuscation için)"
 echo ""
