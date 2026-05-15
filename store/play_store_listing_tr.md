@@ -9,6 +9,8 @@ KoruBeni, konum durumunuzu görmenize, cihaz içi sahte çağrı simülasyonu ç
 
 KoruBeni ücretsiz temel güvenlik araçları sunar. Panik/SOS, güvenli yürüyüş, check-in ve gelişmiş güvenlik otomasyonları KoruBeni Pro ile kullanılabilir.
 
+⚠️ ÖNEMLİ: KoruBeni resmi bir acil servis değildir ve 112'nin yerine geçmez. Gerçek bir acil durumda lütfen önce 112'yi arayın. KoruBeni yalnızca tamamlayıcı bir araçtır ve fiziksel koruma sağlamaz.
+
 ★ ÜCRETSİZ ÖZELLİKLER ★
 
 ◉ Konum Oturumu

@@ -69,6 +69,8 @@ KoruBeni, konum durumunuzu görmenize, cihaz içi sahte çağrı simülasyonu ç
 
 KoruBeni ücretsiz temel güvenlik araçları sunar. Panik/SOS, güvenli yürüyüş, check-in ve gelişmiş güvenlik otomasyonları KoruBeni Pro ile kullanılabilir.
 
+⚠️ ÖNEMLİ: KoruBeni resmi bir acil servis değildir ve 112'nin yerine geçmez. Gerçek bir acil durumda lütfen önce 112'yi arayın. KoruBeni yalnızca tamamlayıcı bir araçtır ve fiziksel koruma sağlamaz.
+
 ★ ÜCRETSİZ ÖZELLİKLER ★
 
 ◉ Konum Oturumu
@@ -140,6 +142,8 @@ Panic/SOS requires Pro; location, fake call, and siren are free.
 KoruBeni is an Android personal safety app that helps you view location status, run an on-device fake call simulation, and use additional safety tools with an optional Pro subscription.
 
 KoruBeni offers free basic safety tools. Panic/SOS, Safe Walk, check-in, and advanced safety automations are available with KoruBeni Pro.
+
+⚠️ IMPORTANT: KoruBeni is not an official emergency service and does not replace 112 (or your local emergency number). In a real emergency, please call your local emergency number first. KoruBeni is only a complementary tool and does not provide physical protection.
 
 ★ FREE FEATURES ★
 
