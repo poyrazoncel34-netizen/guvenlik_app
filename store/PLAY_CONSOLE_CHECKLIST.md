@@ -6,21 +6,21 @@ This checklist prepares operator actions only. No dashboard item is marked done 
 
 | Area | Action | Status |
 | --- | --- | --- |
-| Privacy policy | Verify live URL and paste into Play Console | OPERATOR_ACTION |
-| Data deletion URL | Verify live URL and paste if applicable | OPERATOR_ACTION |
-| Data Safety | Submit answers from `store/DATA_SAFETY_FORM.md` | OPERATOR_ACTION |
-| Content Rating | Complete questionnaire from `store/CONTENT_RATING_ANSWERS.md` | OPERATOR_ACTION |
-| Target Audience | Select adult / 18+ intended audience; do not choose Designed for Families | OPERATOR_ACTION |
-| Foreground service | Submit `specialUse` declaration for Android 14+ target requirements | OPERATOR_ACTION |
-| Exact alarm | Submit declaration if Play Console requires it | OPERATOR_ACTION |
-| Battery optimization | Submit declaration if Play Console requires it | OPERATOR_ACTION |
-| CALL_PHONE | Submit declaration/reviewer note if requested | OPERATOR_ACTION |
-| Store listing | Paste TR/EN copy from `store/PLAY_CONSOLE_COPY_PASTE_PACK.md` | OPERATOR_ACTION |
-| Store icon | Upload/verify 512x512 PNG | OPERATOR_ACTION |
-| Feature graphic | Prepare/verify 1024x500 feature graphic | OPERATOR_ACTION |
-| Screenshots | Upload from `store/screenshots/android/final/` after PII review | OPERATOR_ACTION |
-| Signed AAB | Operator builds signed Play release AAB and uploads to internal/closed track | OPERATOR_ACTION |
-| Billing | Configure Play subscriptions and RevenueCat; see `store/BILLING_RELEASE_CHECKLIST.md` | OPERATOR_ACTION |
+| Privacy policy | Verify live URL and paste into Play Console | NEEDS_OPERATOR_ACTION |
+| Data deletion URL | Verify live URL and paste if applicable | NEEDS_OPERATOR_ACTION |
+| Data Safety | Verify Play Console track requirements; internal testing may be exempt, closed/open/production require submission from `store/DATA_SAFETY_FORM.md` | PLAY_CONSOLE |
+| Content Rating | Complete questionnaire from `store/CONTENT_RATING_ANSWERS.md` | PLAY_CONSOLE |
+| Target Audience | Select adult / 18+ intended audience; do not choose Designed for Families | PLAY_CONSOLE |
+| Foreground service | Submit `specialUse` declaration for Android 14+ target requirements | PLAY_CONSOLE |
+| Exact alarm | Submit declaration if Play Console requires it | PLAY_CONSOLE |
+| Battery optimization | Submit declaration if Play Console requires it | PLAY_CONSOLE |
+| CALL_PHONE | Submit declaration/reviewer note if requested | PLAY_CONSOLE |
+| Store listing | Paste Turkish-only first-release copy from `store/PLAY_CONSOLE_COPY_PASTE_PACK.md`; do not add an English Play listing for this release | PLAY_CONSOLE |
+| Store icon | Upload/verify 512x512 PNG | NEEDS_OPERATOR_ACTION |
+| Feature graphic | Prepare/verify 1024x500 feature graphic | NEEDS_OPERATOR_ACTION |
+| Screenshots | Upload from `store/screenshots/android/final/` after PII review | NEEDS_OPERATOR_ACTION |
+| Signed AAB | Operator builds signed Play release AAB and uploads to internal/closed track | SIGNING |
+| Billing | Configure Play subscriptions and RevenueCat; see `store/BILLING_RELEASE_CHECKLIST.md` | REVENUECAT |
 | Real-device QA | Execute `store/REAL_DEVICE_QA_MATRIX.md` on physical devices | NEEDS_REAL_DEVICE_TEST |
 
 ## Build Artifact Reference
@@ -39,6 +39,8 @@ build/app/outputs/bundle/playRelease/app-play-release.aab
 
 ## Data Safety Notes
 
+- Internal testing may be exempt from the Data Safety section depending on Play Console state, but closed/open/production testing and production require the form when presented by Play.
+- Legal/privacy docs must still be consistent before internal testing.
 - Do not claim local-only data is collected/shared merely because it is stored on device.
 - Disclose Google Play Billing and RevenueCat for optional Pro subscription processing.
 - Disclose map tile provider behavior for online maps.
@@ -59,7 +61,7 @@ Internal testing upload is NOT READY until:
 
 - Signed AAB is produced by operator.
 - Play internal/closed testing track exists.
-- Required app content forms are prepared.
+- Required app content forms are prepared; Data Safety may remain submit-pending for internal testing only if Play Console does not require it for that track.
 - RevenueCat/Play subscription setup is ready for testing.
 
 Production submission is NOT READY until all production gates in `store/release_checklist.md` are evidenced.

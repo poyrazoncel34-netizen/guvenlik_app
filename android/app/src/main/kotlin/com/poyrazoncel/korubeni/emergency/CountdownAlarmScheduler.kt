@@ -44,21 +44,29 @@ object CountdownAlarmScheduler {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (CheckInScheduler.canScheduleExactAlarms(context)) {
-                alarmManager.setExactAndAllowWhileIdle(
-                    AlarmManager.RTC_WAKEUP,
-                    deadlineMs,
-                    pendingIntent
-                )
-            } else {
-                Log.w(TAG, "Exact alarm permission denied — using inexact fallback")
-                alarmManager.setAndAllowWhileIdle(
-                    AlarmManager.RTC_WAKEUP,
-                    deadlineMs,
-                    pendingIntent
-                )
+                try {
+                    alarmManager.setExactAndAllowWhileIdle(
+                        AlarmManager.RTC_WAKEUP,
+                        deadlineMs,
+                        pendingIntent
+                    )
+                    Log.i(TAG, "Countdown alarm scheduled for $deadlineMs")
+                    return
+                } catch (e: SecurityException) {
+                    Log.w(TAG, "Exact alarm access revoked during schedule — using inexact fallback")
+                } catch (e: RuntimeException) {
+                    Log.w(TAG, "Exact countdown alarm failed — using inexact fallback")
+                }
             }
+            Log.w(TAG, "Exact alarm permission denied — using inexact fallback")
+            scheduleInexactAlarm(alarmManager, deadlineMs, pendingIntent)
         } else {
-            alarmManager.setExact(AlarmManager.RTC_WAKEUP, deadlineMs, pendingIntent)
+            try {
+                alarmManager.setExact(AlarmManager.RTC_WAKEUP, deadlineMs, pendingIntent)
+            } catch (e: RuntimeException) {
+                Log.w(TAG, "Legacy exact countdown alarm failed — using inexact fallback")
+                alarmManager.set(AlarmManager.RTC_WAKEUP, deadlineMs, pendingIntent)
+            }
         }
 
         Log.i(TAG, "Countdown alarm scheduled for $deadlineMs")
@@ -103,5 +111,26 @@ object CountdownAlarmScheduler {
             intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
+    }
+
+    private fun scheduleInexactAlarm(
+        alarmManager: AlarmManager,
+        deadlineMs: Long,
+        pendingIntent: PendingIntent,
+    ) {
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                alarmManager.setAndAllowWhileIdle(
+                    AlarmManager.RTC_WAKEUP,
+                    deadlineMs,
+                    pendingIntent
+                )
+            } else {
+                alarmManager.set(AlarmManager.RTC_WAKEUP, deadlineMs, pendingIntent)
+            }
+        } catch (e: RuntimeException) {
+            Log.w(TAG, "Inexact countdown alarm failed — using standard alarm fallback")
+            alarmManager.set(AlarmManager.RTC_WAKEUP, deadlineMs, pendingIntent)
+        }
     }
 }

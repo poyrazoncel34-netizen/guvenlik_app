@@ -15,6 +15,7 @@ import '../core/constants/app_constants.dart';
 import '../core/services/consent_gate_service.dart';
 import '../core/services/contact_service.dart';
 import '../core/services/subscription_gate.dart';
+import '../core/utils/emergency_number_validator.dart';
 import '../models/consent_record.dart';
 import '../presentation/providers/contacts_provider.dart';
 import '../presentation/providers/home_provider.dart';
@@ -270,12 +271,16 @@ class _ContactsPageState extends State<ContactsPage> {
                     children: [
                       Row(
                         children: [
-                          Text(
-                            contact.name,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.textPrimary,
+                          Flexible(
+                            child: Text(
+                              contact.name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.textPrimary,
+                              ),
                             ),
                           ),
                           if (isEmergency) ...[
@@ -293,6 +298,7 @@ class _ContactsPageState extends State<ContactsPage> {
                               ),
                               child: Text(
                                 "contacts_emergency_badge".tr(),
+                                maxLines: 1,
                                 style: const TextStyle(
                                   fontSize: 9,
                                   fontWeight: FontWeight.w800,
@@ -685,6 +691,9 @@ class _ContactsPageState extends State<ContactsPage> {
   void _showAddContactSheet(BuildContext context) {
     if (!_requireEmergencyContactConsent()) return;
     _showContactKvkkInfoIfNeeded();
+    final nameController = TextEditingController();
+    final phoneController = TextEditingController();
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -743,6 +752,25 @@ class _ContactsPageState extends State<ContactsPage> {
                 ),
               ),
               const SizedBox(height: 24),
+              Row(
+                children: [
+                  const Expanded(child: Divider(color: AppColors.border)),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: Text(
+                      "contacts_picker_user_selected_only".tr(),
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: AppColors.textSecondary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  const Expanded(child: Divider(color: AppColors.border)),
+                ],
+              ),
+              const SizedBox(height: 16),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
@@ -767,12 +795,103 @@ class _ContactsPageState extends State<ContactsPage> {
                   ),
                 ),
               ),
+              const SizedBox(height: 20),
+              TextField(
+                controller: nameController,
+                textInputAction: TextInputAction.next,
+                textCapitalization: TextCapitalization.words,
+                decoration: InputDecoration(
+                  labelText: "contacts_manual_name_label".tr(),
+                  prefixIcon: const Icon(Icons.person_rounded),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: phoneController,
+                keyboardType: TextInputType.phone,
+                textInputAction: TextInputAction.done,
+                decoration: InputDecoration(
+                  labelText: "contacts_manual_phone_label".tr(),
+                  prefixIcon: const Icon(Icons.phone_rounded),
+                ),
+                onSubmitted: (_) {
+                  Navigator.pop(sheetContext);
+                  _addManualContact(nameController.text, phoneController.text);
+                },
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    Navigator.pop(sheetContext);
+                    _addManualContact(
+                      nameController.text,
+                      phoneController.text,
+                    );
+                  },
+                  icon: const Icon(Icons.save_rounded),
+                  label: Text("contacts_manual_save".tr()),
+                ),
+              ),
               const SizedBox(height: 24),
             ],
           ),
         ),
       ),
+    ).whenComplete(() {
+      nameController.dispose();
+      phoneController.dispose();
+    });
+  }
+
+  Future<void> _addManualContact(String rawName, String rawPhone) async {
+    final allowed = await SubscriptionGate.ensureAccess(
+      context,
+      PremiumFeature.emergencyContactAdd,
     );
+    if (!allowed || !mounted) return;
+    if (!_requireEmergencyContactConsent()) return;
+
+    final name = rawName.trim();
+    if (name.isEmpty) {
+      _showSnack(
+        "contacts_manual_name_required".tr(),
+        backgroundColor: AppColors.warning,
+      );
+      return;
+    }
+
+    final phone = normalizePhoneNumber(rawPhone);
+    if (!EmergencyNumberValidator.isCallableEmergencyTarget(phone)) {
+      _showSnack(
+        "contacts_manual_invalid_phone".tr(),
+        backgroundColor: AppColors.warning,
+      );
+      return;
+    }
+
+    final consentGiven = await EmergencyContactConsentDialog.show(
+      context: context,
+      contactName: name,
+    );
+    if (!consentGiven || !mounted) return;
+
+    final provider = context.read<ContactsProvider>();
+    final added = await provider.addContact(name: name, phone: phone);
+    if (!added) {
+      _showSnack(
+        provider.isAtLimit
+            ? "contacts_max_reached".tr()
+            : "contacts_already_in_list".tr(),
+        backgroundColor: AppColors.warning,
+      );
+      return;
+    }
+
+    await _refreshHomeProvider();
+    _showSnack("contacts_added".tr(namedArgs: {"name": name}));
+    HapticFeedback.mediumImpact();
   }
 
   Future<void> _pickContactFromDevice() async {
@@ -792,7 +911,7 @@ class _ContactsPageState extends State<ContactsPage> {
         return;
       }
       final contact = await FlutterContactPicker.pickPhoneContact(
-        askForPermission: true,
+        askForPermission: false,
       );
       if (!mounted) return;
       final name = (contact.fullName?.trim().isNotEmpty ?? false)
@@ -833,12 +952,14 @@ class _ContactsPageState extends State<ContactsPage> {
       _showSnack("contacts_added".tr(namedArgs: {"name": name}));
       HapticFeedback.mediumImpact();
     } on UserCancelledPickingException {
-      // kullanıcı vazgeçti
+      // User cancelled the system picker; no error state is needed.
     } on PlatformException catch (e) {
       debugPrint('PlatformException picking contact: ${e.code}');
       _showSnack(
-        "contacts_picker_failed".tr(),
-        backgroundColor: AppColors.emergency,
+        e.code == 'INSUFFICIENT_PERMISSIONS' || e.code == 'PERMISSION_ERROR'
+            ? "contacts_picker_unavailable_manual".tr()
+            : "contacts_picker_failed".tr(),
+        backgroundColor: AppColors.warning,
       );
     } catch (_) {
       _showSnack(

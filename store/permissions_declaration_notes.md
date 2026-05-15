@@ -1,15 +1,15 @@
 # Google Play Permissions Declaration Notes
 
-Dashboard completion is OPERATOR_ACTION. This file only prepares copy/paste text.
+Dashboard completion is PLAY_CONSOLE / NEEDS_OPERATOR_ACTION. This file only prepares copy/paste text.
 
 ## Declaration Summary
 
 | Permission / App content item | Manifest / app use | Status |
 | --- | --- | --- |
-| Foreground service `specialUse` | Active user-started safety sessions with visible notification | CODE_DONE copy prepared; OPERATOR_ACTION submit |
-| `SCHEDULE_EXACT_ALARM` | User-visible safety deadlines/timers | CODE_DONE copy prepared; OPERATOR_ACTION submit if required |
-| `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` | Optional reliability improvement for active safety sessions | CODE_DONE copy prepared; OPERATOR_ACTION submit if required |
-| `CALL_PHONE` | User-initiated Panic/SOS call flow after confirmation/countdown | CODE_DONE copy prepared; OPERATOR_ACTION submit if required |
+| Foreground service `specialUse` | Active user-started safety sessions with visible notification | CODE_DONE copy prepared; PLAY_CONSOLE submit |
+| `SCHEDULE_EXACT_ALARM` | User-visible safety deadlines/timers | CODE_DONE copy prepared; PLAY_CONSOLE submit if required |
+| `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` | Optional reliability improvement for active safety sessions | CODE_DONE copy prepared; PLAY_CONSOLE submit if required |
+| `CALL_PHONE` | User-initiated Panic/SOS call flow after confirmation/countdown | CODE_DONE copy prepared; PLAY_CONSOLE submit if required |
 | `POST_NOTIFICATIONS` | User-visible safety notifications/reminders | CODE_DONE copy prepared |
 | Message/SMS permissions | Not present in this Android Play release | CODE_DONE |
 | `READ_PHONE_STATE` | Not present; fake call is an on-device simulation | CODE_DONE |

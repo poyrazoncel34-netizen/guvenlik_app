@@ -19,7 +19,7 @@ Commands run:
 | `flutter analyze --no-fatal-infos` | PASS | Exit 0. Existing info-only lints; no errors or warnings. |
 | `flutter test --reporter=compact` | PASS | 288 tests passed. |
 | `rg -n "[...Turkish/string scan...]" lib android/app/src/main/kotlin` | PASS_WITH_FINDINGS | Found expected Turkish legal/localized content plus release-visible hardcoded strings in contacts/native notification areas. |
-| `rg -n "emergency_alerts|service_status|general_notifications|korubeni_alerts_high|korubeni_service_low|korubeni_general_default" lib android/app/src/main/kotlin` | PASS_WITH_FINDINGS | Dart uses canonical IDs; Kotlin still defines old `korubeni_*` channel IDs. |
+| `rg -n "emergency_alerts|service_status|general_notifications|korubeni_alerts_high|korubeni_service_low|korubeni_general_default" lib android/app/src/main/kotlin` | FIXED_BY_2d7e48a | Active source now uses canonical IDs only: `emergency_alerts`, `service_status`, and `general_notifications`. Old `korubeni_*` IDs are historical findings only. |
 | `rg -n "TODO|FIXME|HACK" lib/core/services lib/screens android/app/src/main/kotlin store scripts .github/workflows` | PASS | No matches in scanned release-critical paths. |
 | `rg -n "API_KEY|SECRET|TOKEN|PASSWORD|KEYSTORE|PRIVATE_KEY|REVENUECAT|GOOGLE_SERVICE" .` | PASS_WITH_REVIEW | Matches were placeholders, env var names, release script checks, tests, and `key.properties.example`; no committed production secret identified in baseline scan. |
 
@@ -38,13 +38,13 @@ Files and areas inspected:
 
 Baseline issues found:
 
-- CODE_DONE: Native Kotlin notification strings and channel metadata need locale-aware routing with English fallback.
-- CODE_DONE: Kotlin notification channels must use only `emergency_alerts`, `service_status`, and `general_notifications`.
+- CODE_DONE: Native Kotlin notification strings and channel metadata were routed through locale-aware text with safe fallback in commit `2d7e48a647a22b41e025089836ae1d76a5876654`.
+- CODE_DONE: Kotlin notification channels now use only `emergency_alerts`, `service_status`, and `general_notifications`; old `korubeni_*` channel IDs are fixed historical findings.
 - CODE_DONE: `lib/screens/contacts_page.dart` contains hardcoded Turkish KVKK dialog text.
 - CODE_DONE: Static regression coverage should prevent old channel IDs and known hardcoded Turkish notification/contact strings from returning.
 - CODE_DONE: Store docs need icon-size, short-description, overclaim, screenshot source-of-truth, Play declaration, billing checklist, QA matrix, and final gate hardening.
-- OPERATOR_ACTION: Play Console forms, app content declarations, target audience, content rating, data safety, privacy/data deletion URLs, signed AAB upload, tester setup, and closed testing evidence remain external.
-- OPERATOR_ACTION: RevenueCat/Google Play subscription dashboard setup and license tester billing validation remain external.
+- PLAY_CONSOLE / SIGNING / NEEDS_OPERATOR_ACTION: Play Console forms, app content declarations, target audience, content rating, data safety, privacy/data deletion URLs, signed AAB upload, tester setup, and closed testing evidence remain external.
+- REVENUECAT / PLAY_CONSOLE: RevenueCat/Google Play subscription dashboard setup and license tester billing validation remain external.
 - NEEDS_REAL_DEVICE_TEST: Android 13/14 physical-device safety, permissions, boot, killed-app, notification channel, siren, call, map, and billing QA remain not run.
 - NOT_TESTED_RUNTIME: Android runtime behavior, device install, emulator behavior, Play Billing purchase/restore flows, and Play Console dashboard state were not tested because runtime/device/dashboard execution is forbidden.
 

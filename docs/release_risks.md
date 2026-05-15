@@ -9,6 +9,8 @@ Before a larger production launch, switch to a production-suitable provider such
 Current mitigation:
 - OSM attribution is shown in the map UI.
 - `userAgentPackageName` is configured.
+- The app only requests tiles for the map viewport the user actively opens.
+- The app must not bulk download, scrape, pre-seed, cache as an offline archive, or package OpenStreetMap public tiles.
 - Store/legal copy does not claim enterprise-grade map reliability.
 
 ## Manual Play Console Items

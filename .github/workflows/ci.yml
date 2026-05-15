@@ -32,31 +32,40 @@ jobs:
       - name: Test
         run: flutter test --no-pub
 
-      - name: Create CI release signing key
+      - name: Create NON_RELEASE_SMOKE signing key
         run: |
+          echo "::notice title=NON_RELEASE_SMOKE::Creating temporary CI signing material for PR/smoke validation only. This key must never be used for Play upload or release provenance."
+          CI_STORE_PASSWORD="$(openssl rand -base64 24)"
+          CI_KEY_PASSWORD="$(openssl rand -base64 24)"
           keytool -genkeypair \
             -v \
             -storetype JKS \
             -keystore android/app/ci-release.jks \
-            -storepass ci_store_password \
-            -keypass ci_key_password \
+            -storepass "$CI_STORE_PASSWORD" \
+            -keypass "$CI_KEY_PASSWORD" \
             -alias ci_upload \
             -keyalg RSA \
             -keysize 2048 \
             -validity 1 \
             -dname "CN=CI,O=KoruBeni,C=TR"
           cat > android/key.properties << EOF
-          storePassword=ci_store_password
-          keyPassword=ci_key_password
+          storePassword=$CI_STORE_PASSWORD
+          keyPassword=$CI_KEY_PASSWORD
           keyAlias=ci_upload
           storeFile=app/ci-release.jks
           EOF
 
-      - name: Build AAB (release smoke, play flavor)
+      - name: Build AAB (NON_RELEASE_SMOKE only, play flavor)
+        env:
+          CI_ENCRYPTION_KEY: ${{ secrets.CI_ENCRYPTION_KEY }}
+          REVENUECAT_ANDROID_API_KEY: ${{ secrets.REVENUECAT_ANDROID_API_KEY }}
         run: |
+          echo "::notice title=NON_RELEASE_SMOKE::This app bundle validates buildability only. Dummy fallback keys may be used, so the artifact is not release-ready and must not be uploaded."
+          CI_SMOKE_ENCRYPTION_KEY="${CI_ENCRYPTION_KEY:-$(openssl rand -base64 32)}"
+          CI_SMOKE_REVENUECAT_KEY="${REVENUECAT_ANDROID_API_KEY:-NON_RELEASE_SMOKE_REVENUECAT_KEY}"
           flutter build appbundle \
             --release \
             --flavor play \
             --dart-define=ENV=production \
-            --dart-define=ENCRYPTION_KEY="${{ secrets.CI_ENCRYPTION_KEY || 'MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=' }}" \
-            --dart-define=REVENUECAT_ANDROID_API_KEY="${{ secrets.REVENUECAT_ANDROID_API_KEY || 'ci_smoke_key' }}"
+            --dart-define=ENCRYPTION_KEY="$CI_SMOKE_ENCRYPTION_KEY" \
+            --dart-define=REVENUECAT_ANDROID_API_KEY="$CI_SMOKE_REVENUECAT_KEY"

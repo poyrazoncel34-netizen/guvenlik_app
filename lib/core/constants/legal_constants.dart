@@ -7,19 +7,19 @@ class LegalConstants {
   LegalConstants._();
 
   /// Kullanım Sözleşmesi (EULA) versiyonu
-  static const String termsVersion = '3.0.0';
+  static const String termsVersion = '3.1.0';
 
   /// KVKK Aydınlatma Metni versiyonu
-  static const String kvkkDisclosureVersion = '3.0.0';
+  static const String kvkkDisclosureVersion = '3.1.0';
 
   /// Rıza Formu versiyonu
-  static const String consentFormVersion = '3.0.0';
+  static const String consentFormVersion = '3.1.0';
 
   /// Gizlilik Politikası versiyonu
-  static const String privacyPolicyVersion = '3.0.0';
+  static const String privacyPolicyVersion = '3.1.0';
 
   /// Son güncelleme tarihi
-  static const String lastUpdated = '2026-03-19';
+  static const String lastUpdated = '2026-04-25';
 
   /// Veri Sorumlusu bilgileri
   static const String dataControllerName = 'KoruBeni';

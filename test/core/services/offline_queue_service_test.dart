@@ -49,8 +49,14 @@ void main() {
       final event = OfflineEvent(type: 'test', title: 'Test');
       final after = DateTime.now();
 
-      expect(event.createdAt.isAfter(before.subtract(const Duration(seconds: 1))), isTrue);
-      expect(event.createdAt.isBefore(after.add(const Duration(seconds: 1))), isTrue);
+      expect(
+        event.createdAt.isAfter(before.subtract(const Duration(seconds: 1))),
+        isTrue,
+      );
+      expect(
+        event.createdAt.isBefore(after.add(const Duration(seconds: 1))),
+        isTrue,
+      );
     });
 
     test('toJson includes all fields', () {

@@ -207,6 +207,8 @@ Future<void> _onStart(ServiceInstance service) async {
       prefs.getString(_kPrefForegroundActiveTitle) ?? _kFallbackBrand;
   final activeBody =
       prefs.getString(_kPrefForegroundActiveBody) ?? _kFallbackBrand;
+  var currentTitle = activeTitle;
+  var currentBody = activeBody;
 
   final FlutterLocalNotificationsPlugin notificationsPlugin =
       FlutterLocalNotificationsPlugin();
@@ -233,10 +235,12 @@ Future<void> _onStart(ServiceInstance service) async {
   // Notification update command from the main isolate.
   service.on('updateNotification').listen((event) {
     if (event != null && service is AndroidServiceInstance) {
+      currentTitle = event['title'] as String? ?? currentTitle;
+      currentBody = event['content'] as String? ?? currentBody;
       notificationsPlugin.show(
         kForegroundNotificationId,
-        event['title'] as String? ?? activeTitle,
-        event['content'] as String? ?? activeBody,
+        currentTitle,
+        currentBody,
         NotificationDetails(
           android: AndroidNotificationDetails(
             kForegroundChannelId,
@@ -258,8 +262,8 @@ Future<void> _onStart(ServiceInstance service) async {
         if (await service.isForegroundService()) {
           notificationsPlugin.show(
             kForegroundNotificationId,
-            activeTitle,
-            activeBody,
+            currentTitle,
+            currentBody,
             NotificationDetails(
               android: AndroidNotificationDetails(
                 kForegroundChannelId,

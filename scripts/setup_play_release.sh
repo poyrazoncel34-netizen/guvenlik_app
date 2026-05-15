@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # KoruBeni - Play Store Release Hazırlık Script
-# Plan: İkon ve key.properties hazırlığı
+# Plan: Operator checklist only; do not create signing files.
 # Kullanım: ./scripts/setup_play_release.sh
 
 set -e
@@ -21,7 +21,8 @@ if [ -f "$ICON_PATH" ]; then
     echo "   ✅ assets/icon/app_icon.png mevcut"
 else
     echo "   ❌ $ICON_PATH bulunamadı!"
-    echo "   → 1024x1024 PNG tasarım oluşturup assets/icon/app_icon.png olarak kaydet"
+    echo "   → Launcher kaynak PNG'sini assets/icon/app_icon.png olarak kaydet"
+    echo "   → Play listing için 512x512 PNG: store/assets/play_icon_512.png"
     echo "   → Sonra: dart run flutter_launcher_icons"
     exit 1
 fi
@@ -32,11 +33,9 @@ echo "2. key.properties..."
 if [ -f "$KEY_PROPS" ]; then
     echo "   ✅ android/key.properties mevcut"
 else
-    echo "   ⚠️  key.properties yok. Örnekten oluşturuluyor..."
-    cp "$KEY_EXAMPLE" "$KEY_PROPS"
-    echo "   ✅ $KEY_PROPS oluşturuldu"
+    echo "   ⚠️  key.properties yok. Bu script dosya oluşturmaz veya signing materyali üretmez."
     echo ""
-    echo "   ⚠️  DÜZENLEMEN GEREKİYOR: nano $KEY_PROPS"
+    echo "   Operator güvenli release-signing prosedürüyle oluşturmalı: $KEY_PROPS"
     echo "   - storePassword, keyPassword gerçek değerlerini gir"
     echo "   - storeFile=korubeni-release-key.jks (keystore android/ içinde olmalı)"
     echo ""
@@ -44,16 +43,16 @@ else
     echo "   cd android && keytool -genkey -v -keystore korubeni-release-key.jks -keyalg RSA -keysize 2048 -validity 10000 -alias korubeni"
 fi
 
-# 3. Launcher icons üret
+# 3. Launcher icons
 echo ""
-echo "3. Launcher icons üretiliyor..."
-dart run flutter_launcher_icons
-echo "   ✅ Android ikonları oluşturuldu"
+echo "3. Launcher icons..."
+echo "   Bu script repo-tracked icon dosyalarını yeniden üretmez."
+echo "   Gerekirse ayrı operator adımı olarak çalıştır: dart run flutter_launcher_icons"
 
 echo ""
 echo "═══════════════════════════════════════════════════════════"
 echo "  ✅ Hazırlık tamamlandı!"
 echo "═══════════════════════════════════════════════════════════"
 echo ""
-echo "Sonraki: ENCRYPTION_KEY='...' REVENUECAT_ANDROID_API_KEY='goog_...' ./scripts/build_production.sh"
+printf '%s\n' "Sonraki: ENCRYPTION_KEY=<redacted> REVENUECAT_ANDROID_API_KEY=<redacted> ./scripts/build_production.sh"
 echo ""

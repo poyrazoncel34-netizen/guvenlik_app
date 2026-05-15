@@ -92,7 +92,9 @@ class LegalLogService {
 
   // ── Dahili: Eski / fazla kayıtları temizle ───────────────────────────────
   void _pruneEntries(List<Map<String, dynamic>> logs) {
-    final cutoff = DateTime.now().subtract(Duration(days: _retentionYears * 365));
+    final cutoff = DateTime.now().subtract(
+      Duration(days: _retentionYears * 365),
+    );
     logs.removeWhere((entry) {
       try {
         final ts = DateTime.parse(entry['timestamp'] as String);

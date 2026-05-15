@@ -90,7 +90,10 @@ class _TermsOfServiceScreenState extends State<TermsOfServiceScreen> {
         ),
         leading: widget.isReadOnly
             ? IconButton(
-                icon: const Icon(Icons.close_rounded, color: AppColors.textSecondary),
+                icon: const Icon(
+                  Icons.close_rounded,
+                  color: AppColors.textSecondary,
+                ),
                 onPressed: () => Navigator.pop(context),
               )
             : null,
@@ -110,8 +113,11 @@ class _TermsOfServiceScreenState extends State<TermsOfServiceScreen> {
             color: AppColors.primary.withValues(alpha: 0.08),
             child: Row(
               children: [
-                const Icon(Icons.info_outline_rounded,
-                    size: 16, color: AppColors.primary),
+                const Icon(
+                  Icons.info_outline_rounded,
+                  size: 16,
+                  color: AppColors.primary,
+                ),
                 const SizedBox(width: 8),
                 Text(
                   '${'legal_version_prefix'.tr()} ${LegalTexts.termsVersion} — ${LegalTexts.lastUpdated}',
@@ -146,9 +152,7 @@ class _TermsOfServiceScreenState extends State<TermsOfServiceScreen> {
             Container(
               decoration: BoxDecoration(
                 color: AppColors.surface,
-                border: Border(
-                  top: BorderSide(color: AppColors.border),
-                ),
+                border: Border(top: BorderSide(color: AppColors.border)),
               ),
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
               child: Column(
@@ -160,8 +164,11 @@ class _TermsOfServiceScreenState extends State<TermsOfServiceScreen> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.keyboard_arrow_down_rounded,
-                              size: 16, color: AppColors.textSecondary),
+                          const Icon(
+                            Icons.keyboard_arrow_down_rounded,
+                            size: 16,
+                            color: AppColors.textSecondary,
+                          ),
                           const SizedBox(width: 4),
                           Text(
                             'legal_scroll_to_bottom'.tr(),
@@ -232,8 +239,9 @@ class _TermsOfServiceScreenState extends State<TermsOfServiceScreen> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primary,
                         foregroundColor: Colors.white,
-                        disabledBackgroundColor:
-                            AppColors.primary.withValues(alpha: 0.3),
+                        disabledBackgroundColor: AppColors.primary.withValues(
+                          alpha: 0.3,
+                        ),
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(14),

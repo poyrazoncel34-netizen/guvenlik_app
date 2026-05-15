@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # KoruBeni - Production Build Script (Play Store AAB)
-# Kullanım: ENCRYPTION_KEY='base64key' REVENUECAT_ANDROID_API_KEY='goog_...' ./scripts/build_production.sh
+# Kullanım: ENCRYPTION_KEY=<redacted> REVENUECAT_ANDROID_API_KEY=<redacted> ./scripts/build_production.sh
 # Key üretmek: openssl rand -base64 32
 
 set -euo pipefail
@@ -26,13 +26,13 @@ fi
 
 # Encryption key kontrolü
 if [ -z "${ENCRYPTION_KEY:-}" ]; then
-    echo "⚠️  ENCRYPTION_KEY bulunamadı!"
+    printf '%s\n' "⚠️  ENCRYPTION_KEY bulunamadı!"
     echo ""
     echo "Lütfen encryption key'i belirle:"
-    echo "export ENCRYPTION_KEY='senin-key-buraya'"
+    printf '%s\n' "export ENCRYPTION_KEY=<redacted>"
     echo ""
     echo "Veya script'e parametre olarak ver:"
-    echo "REVENUECAT_ANDROID_API_KEY='goog_...' ./scripts/build_production.sh 'senin-key-buraya'"
+    printf '%s\n' "REVENUECAT_ANDROID_API_KEY=<redacted> ./scripts/build_production.sh <redacted>"
     echo ""
     exit 1
 fi
@@ -42,10 +42,10 @@ echo ""
 
 # RevenueCat Android API key kontrolü
 if [ -z "${REVENUECAT_ANDROID_API_KEY:-}" ]; then
-    echo "❌ REVENUECAT_ANDROID_API_KEY bulunamadı!"
+    printf '%s\n' "❌ REVENUECAT_ANDROID_API_KEY bulunamadı!"
     echo ""
     echo "Production abonelik akışı için RevenueCat Android API key gerekli:"
-    echo "export REVENUECAT_ANDROID_API_KEY='goog_...'"
+    printf '%s\n' "export REVENUECAT_ANDROID_API_KEY=<redacted>"
     echo ""
     exit 1
 fi
@@ -65,6 +65,7 @@ echo ""
 
 # Android AAB Build
 echo "🤖 Android AAB build başlıyor..."
+echo "   Sensitive dart defines are set; values are redacted."
 AAB_PATH="build/app/outputs/bundle/playRelease/app-play-release.aab"
 BUILD_LOG="$(mktemp /tmp/korubeni_android_build.XXXXXX.log)"
 

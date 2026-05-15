@@ -1,30 +1,26 @@
-// contacts_page.dart kart layout overflow testı.
-// Bug: contact.name Text widget'ı Flexible ile sarılmamış.
-// "Canim Annecigim" gibi uzun isimler + EMERGENCY badge → overflow.
-
+import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('Contacts kart — isim overflow', () {
-    test('Uzun isim + badge için Flexible gerekli', () {
-      // Row içinde Text widget Flexible olmadan uzun isimde overflow yapar.
-      // Flexible(child: Text(..., overflow: TextOverflow.ellipsis)) ile düzelir.
-      // Bu test, Flexible kullanıldığında overflow'un önlendiğini belgeliyor.
-
-      const longName = 'Canim Annecigim'; // 15 karakter
-      const hasFlexible = true; // düzeltme sonrası beklenen durum
-
-      // Flexible varsa overflow kısaltılır, yoksa patlıyor
-      final overflowHandled = hasFlexible;
-
-      expect(
-        overflowHandled,
-        true,
-        reason:
-            'contact.name Text widget Flexible ile sarılmalı ve '
-            'overflow: TextOverflow.ellipsis eklenmeli.',
+    test('contact name is constrained before emergency badge', () {
+      final source = File('lib/screens/contacts_page.dart').readAsStringSync();
+      final badgeIndex = source.indexOf('contacts_emergency_badge');
+      final flexibleIndex = source.lastIndexOf('Flexible(', badgeIndex);
+      final nameIndex = source.lastIndexOf('contact.name', badgeIndex);
+      final ellipsisIndex = source.lastIndexOf(
+        'TextOverflow.ellipsis',
+        badgeIndex,
       );
-      expect(longName.length, greaterThan(10));
+
+      expect(badgeIndex, isNot(-1));
+      expect(flexibleIndex, isNot(-1));
+      expect(nameIndex, isNot(-1));
+      expect(ellipsisIndex, isNot(-1));
+
+      expect(flexibleIndex < nameIndex, isTrue);
+      expect(nameIndex < badgeIndex, isTrue);
+      expect(ellipsisIndex < badgeIndex, isTrue);
     });
   });
 }

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guvenlik_app/core/services/call_service.dart';
 
@@ -5,11 +7,72 @@ import 'package:guvenlik_app/core/services/call_service.dart';
 /// H4: Consent gate should not block emergency calls.
 /// CallService.callTimeout must exist for plugin safety.
 void main() {
-  test('startEmergencyCall rejects phone numbers shorter than 7 digits', () async {
-    // '123' has only 3 digits — should fail validation
-    final result = await CallService.startEmergencyCall('123');
-    expect(result.isSuccess, isFalse);
-    expect(result.status, EmergencyCallStatus.failed);
+  test(
+    'startEmergencyCall rejects phone numbers shorter than 7 digits',
+    () async {
+      final result = await CallService.startEmergencyCall('123');
+      expect(result.isSuccess, isFalse);
+      expect(result.status, EmergencyCallStatus.failed);
+      expect(result.number, '123');
+    },
+  );
+
+  test(
+    'startEmergencyCall falls back to 112 when no number is configured',
+    () async {
+      final result = await CallService.startEmergencyCall('');
+      expect(result.number, '112');
+    },
+  );
+
+  test(
+    'CALL_PHONE direct path is permission-gated and falls back to dialer',
+    () {
+      final source = File(
+        'lib/core/services/call_service.dart',
+      ).readAsStringSync();
+      final permissionCheck = source.indexOf('Permission.phone.status');
+      final directCall = source.indexOf('FlutterDirectCallerPlugin.callNumber');
+      final dialerFallback = source.indexOf('AndroidIntentService.openDialer');
+
+      expect(permissionCheck, isNot(-1));
+      expect(directCall, isNot(-1));
+      expect(dialerFallback, isNot(-1));
+      expect(permissionCheck < directCall, isTrue);
+      expect(directCall < dialerFallback, isTrue);
+      expect(source, isNot(contains('Permission.phone.request()')));
+    },
+  );
+
+  test('permanently denied phone permission shows manual/settings copy', () {
+    final helper = File(
+      'lib/core/utils/permission_helper.dart',
+    ).readAsStringSync();
+    final en = File('assets/translations/en-US.json').readAsStringSync();
+    final tr = File('assets/translations/tr-TR.json').readAsStringSync();
+
+    expect(helper, contains('status.isPermanentlyDenied'));
+    expect(helper, contains('perm_call_denied_title'));
+    expect(helper, contains('perm_call_denied_msg'));
+    expect(helper, contains('openAppSettings'));
+    expect(en, contains('Direct emergency calling is disabled'));
+    expect(tr, contains('Doğrudan acil arama Android ayarlarında kapalı'));
+  });
+
+  test('countdown and check-in empty emergency targets fall back to 112', () {
+    final countdown = File(
+      'lib/screens/countdown_screen.dart',
+    ).readAsStringSync();
+    final checkIn = File(
+      'lib/core/services/check_in_service.dart',
+    ).readAsStringSync();
+    final receiver = File(
+      'android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/CountdownAlarmReceiver.kt',
+    ).readAsStringSync();
+
+    expect(countdown, contains('AppConstants.turkeyEmergencyNumber'));
+    expect(checkIn, contains('AppConstants.turkeyEmergencyNumber'));
+    expect(receiver, contains('?: "112"'));
   });
 
   test('CallService has a call timeout constant for plugin safety', () {

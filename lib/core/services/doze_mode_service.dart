@@ -1,8 +1,8 @@
 // ============================================================================
-// DOZE MODE BYPASS SERVICE - Android Deep Sleep Protection
+// DOZE MODE RELIABILITY GUIDANCE SERVICE
 // ============================================================================
-// Ensures emergency signals can be sent even when phone is in Doze Mode.
-// Uses Android's whitelist mechanism for critical apps.
+// Requests an optional Android battery optimization exemption for active
+// safety-session reliability. Denial is expected and must degrade gracefully.
 // ============================================================================
 
 import 'dart:io';
@@ -10,9 +10,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// Doze Mode bypass service for Android
+/// Doze Mode reliability guidance service for Android.
 ///
-/// Critical for emergency apps - ensures operation during deep sleep
+/// A whitelist/exemption can improve timer reliability but does not guarantee
+/// operation during deep sleep or OEM battery restrictions.
 class DozeModeService {
   static final DozeModeService _instance = DozeModeService._();
   static DozeModeService get instance => _instance;
@@ -49,13 +50,13 @@ class DozeModeService {
     }
   }
 
-  /// Request Doze Mode whitelist
-  /// Opens system settings for user to approve
+  /// Request optional Doze Mode whitelist.
+  /// Opens system settings for the user to approve or decline.
   Future<bool> requestWhitelist() async {
     if (!Platform.isAndroid) return true;
 
     try {
-      debugPrint('🌙 Requesting Doze whitelist...');
+      debugPrint('🌙 Requesting optional Doze whitelist...');
 
       // Mark that we asked
       final prefs = await SharedPreferences.getInstance();
@@ -73,7 +74,7 @@ class DozeModeService {
       if (whitelistStatus) {
         debugPrint('✅ Doze whitelist granted');
       } else {
-        debugPrint('❌ Doze whitelist denied');
+        debugPrint('❌ Doze whitelist not granted');
       }
 
       return whitelistStatus;

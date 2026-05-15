@@ -1,10 +1,24 @@
 # Play Console Copy-Paste Pack — KoruBeni
 
-Source scope: `store/DATA_SAFETY_FORM.md`, `docs/play_console_declarations.md`, `store/permissions_declaration_notes.md`, `store/CONTENT_RATING_ANSWERS.md`, `store/play_store_listing_tr.md`, `store/play_store_listing_en.md`, `store/STORE_LISTING_COPY_PASTE.md`, `lib/core/constants/app_constants.dart`.
+Source scope: `store/DATA_SAFETY_FORM.md`, `docs/play_console_declarations.md`, `store/permissions_declaration_notes.md`, `store/CONTENT_RATING_ANSWERS.md`, `store/play_store_listing_tr.md`, `store/STORE_LISTING_COPY_PASTE.md`, `lib/core/constants/app_constants.dart`.
 
 Use this pack as Play Console entry text. Keep final URLs, product IDs, RevenueCat offering IDs, screenshots, and signed build status verified before submission.
 
-Status rule: this pack is CODE_DONE copy preparation only. Play Console forms, RevenueCat setup, signed AAB upload, billing tests, and real-device QA are OPERATOR_ACTION / NEEDS_REAL_DEVICE_TEST until external evidence exists.
+Status rule: this pack is CODE_DONE copy preparation only. Play Console forms are `PLAY_CONSOLE`; RevenueCat setup is `REVENUECAT`; signed AAB work is `SIGNING`; live URL/store operations are `NEEDS_OPERATOR_ACTION`; real-device QA is `NEEDS_REAL_DEVICE_TEST`; uncertain legal/policy claims are `NEEDS_OWNER_REVIEW` or `UNKNOWN` until resolved.
+
+Data Safety track nuance: internal testing may be exempt from the Data Safety section depending on Play Console state. Closed testing, open testing, and production require Data Safety where Play presents it. Legal/privacy docs must still be consistent before internal testing.
+
+External gates to record in the release tracker:
+
+```text
+PLAY_CONSOLE: Data Safety, Content Rating, Target Audience, FGS declaration, exact alarm declaration if requested, CALL_PHONE/sensitive permission declaration, pre-launch report.
+REVENUECAT: dashboard app, entitlement, current offering, monthly/annual packages, purchase/restore/cancel/expired/no-offering/network evidence.
+SIGNING: real signing config, production secrets, signed AAB build, signed AAB upload.
+NEEDS_REAL_DEVICE_TEST: Android 13/14/15 device evidence, notification denied, exact alarm denied, no SIM, billing sandbox.
+NEEDS_OPERATOR_ACTION: live privacy/terms/aydinlatma/data deletion URL verification, screenshot PII review, CI log secret review.
+NEEDS_OWNER_REVIEW: legal wording or policy claims not verified by repo evidence.
+UNKNOWN: any item where Play Console account state or external dashboard state is unavailable.
+```
 
 ---
 
@@ -36,7 +50,7 @@ If Play Console requires a single category, use `Tools`. Keep safety positioning
 Turkish (Turkey) / tr-TR
 ```
 
-Use English as an additional store listing localization.
+First Google Play release is Turkish-only. Do not create an English localization entry until the English runtime path is re-enabled and tested.
 
 **Store assets**
 
@@ -120,74 +134,11 @@ KoruBeni — Ücretsiz konum oturumu ve sahte çağrı; Pro ile ek güvenlik ara
 
 ---
 
-## 3. Store Listing EN
-
-**Title**
+## 3. Additional Store Listing Localizations
 
 ```text
-KoruBeni - Personal Safety
-```
-
-**Short description**
-
-```text
-Panic/SOS requires Pro; location, fake call, and siren are free.
-```
-
-**Full description**
-
-```text
-KoruBeni is an Android personal safety app that helps you view location status, run an on-device fake call simulation, and use additional safety tools with an optional Pro subscription.
-
-KoruBeni offers free basic safety tools. Panic/SOS, Safe Walk, check-in, and advanced safety automations are available with KoruBeni Pro.
-
-★ FREE FEATURES ★
-
-◉ Location Session
-Show your current location when available; show a clear unavailable state when it cannot be acquired.
-
-◉ Fake Call
-Create an on-device fake incoming call simulation for personal safety in uncomfortable situations. This feature does not place a real phone call and does not contact third parties.
-
-◉ Siren
-Draw attention with a loud alarm.
-
-◉ Emergency Contacts
-Save and manage trusted contacts locally on your device.
-
-★ UNLOCKED WITH KORUBENI PRO ★
-
-◉ Panic/SOS Button
-With KoruBeni Pro, hold to start the panic flow. A 10-second countdown helps prevent accidental activation. This feature does not work on the free plan.
-
-◉ Safe Walk
-Start a helper check-in session during night or unsafe situations. Background behavior depends on Android settings.
-
-◉ Check-in
-Use timed check-in sessions that start a follow-up flow when the timer expires.
-
-◉ Safety History
-View local in-app safety events on your device.
-
-◉ Volume Trigger and Test Mode
-Use advanced safety automations and test the flow without placing a real call.
-
-KoruBeni Pro is optional. Purchases, renewals, cancellations, and restore operations are managed through Google Play.
-
-★ SECURITY ★
-
-• 4-digit PIN app protection
-• Secure on-device storage for PIN and first-responder information
-• Local on-device database for emergency contact records
-• Offline-first architecture without a developer backend
-
-★ PRIVACY ★
-
-• Location is processed only during emergency or location sessions
-• We don’t sell your data to third parties
-• The primary copy of app data stays on device; map and Play Billing providers may have their own technical network behavior
-
-KoruBeni — Free location session and fake call; optional Pro safety tools.
+Do not add an English Play listing for the first Google Play release.
+The app currently launches publicly in Turkish. English listing/reference files may remain in the repository only as internal preparation material and must not be pasted into Play Console until full English runtime support is re-enabled and tested.
 ```
 
 ---
@@ -200,11 +151,13 @@ KoruBeni — Free location session and fake call; optional Pro safety tools.
 https://poyrazoncel34-netizen.github.io/guvenlik_app/privacy_policy.html
 ```
 
-**English privacy policy**
+**Internal English privacy policy reference**
 
 ```text
 https://poyrazoncel34-netizen.github.io/guvenlik_app/privacy_policy_en.html
 ```
+
+Do not use the English URL as evidence of English runtime support for the first Play release.
 
 **Terms**
 
@@ -251,7 +204,7 @@ Location:
 
 Personal info:
 - Optional profile name: local-only, for profile personalization.
-- Optional photos/images: local-only, user-selected profile/fake-call avatar if image picker is used.
+- Optional photos/images: local-only, user-selected fake-call avatar if image picker is used.
 - Email address: not collected.
 - Phone number: not collected by developer. Emergency contact numbers are chosen from the device and stored locally unless the user invokes Android telephony.
 - User IDs: not collected by developer; no auth backend.
@@ -283,7 +236,7 @@ Not automatically shared by the app or sent to a developer backend. Emergency co
 **Security practices**
 
 ```text
-The app does not operate a developer backend. Most safety data is stored on device: emergency contacts, display name, optional user-selected avatar images, PIN, local activity history, fake call settings, and consent records.
+The app does not operate a developer backend. Most safety data is stored on device: emergency contacts, display name, optional user-selected fake-call avatar images, PIN, local activity history, fake call settings, and consent records.
 
 Encryption in transit: do not mark blanket "Yes" for all data. The app has no developer backend; map, Google Play Billing, and RevenueCat traffic are handled by their providers.
 
@@ -311,6 +264,12 @@ No ads. Ads data is not collected.
 No user-generated content feature.
 ```
 
+**No account**
+
+```text
+KoruBeni does not create developer-operated user accounts and has no auth backend in this release. Data deletion refers to deleting local on-device app data. Google Play subscription cancellation and purchase history are managed separately through Google Play.
+```
+
 **RevenueCat / Google Play Billing disclosure**
 
 ```text
@@ -328,7 +287,7 @@ Map screens may contact the configured map tile service, currently OpenStreetMap
 **Photos/images disclosure**
 
 ```text
-Optional profile data and user-selected images stay on the device. Images may be picked by the user for profile/fake-call avatar personalization; there is no cloud upload and no developer backend.
+Optional display-name data and user-selected fake-call avatar images stay on the device. Images may be picked by the user for fake-call personalization; there is no cloud upload and no developer backend.
 ```
 
 **Not used**
@@ -529,7 +488,7 @@ Deleting the app or clearing app storage removes on-device data. It does not can
 [ ] Screenshots from store/screenshots/android/final/ manually reviewed for PII
 [ ] Play icon 512x512 PNG uploaded/verified
 [ ] Feature graphic 1024x500 prepared/verified
-[ ] Data Safety submitted
+[ ] Data Safety submitted for closed/open/production, or Play Console internal-testing exemption evidence saved
 [ ] Content Rating submitted
 [ ] Target Audience submitted
 [ ] FGS / exact alarm / battery optimization declarations submitted if required
@@ -537,5 +496,5 @@ Deleting the app or clearing app storage removes on-device data. It does not can
 [ ] License tester monthly/annual purchase, restore, cancel/manage tested
 [ ] Signed AAB produced and uploaded
 [ ] Real-device QA matrix passed on Android 13 and Android 14 physical devices
-[ ] Closed testing 12 testers / 14 days completed if account requires it
+[ ] Play Console production access screen checked; if the personal-account policy applies, 12 opted-in testers / 14 continuous days completed
 ```

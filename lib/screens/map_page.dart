@@ -588,7 +588,9 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
         ),
       ),
       children: [
-        // OpenStreetMap tile layer — only shown when online
+        // OpenStreetMap tile layer — only shown when online for the viewport
+        // the user actively views. Do not bulk download, pre-seed, scrape,
+        // archive, or package public OSM tiles from this endpoint.
         TileLayer(
           urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
           userAgentPackageName: kOsmUserAgentPackageName,

@@ -58,10 +58,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     }
 
     final provider = context.read<SettingsProvider>();
-    await provider.updateProfile(
-      name: _nameController.text.trim(),
-      email: '',
-    );
+    await provider.updateProfile(name: _nameController.text.trim(), email: '');
 
     if (mounted) {
       Navigator.pop(context, true);
@@ -69,7 +66,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         SnackBar(
           content: Row(
             children: [
-              const Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
+              const Icon(
+                Icons.check_circle_rounded,
+                color: Colors.white,
+                size: 20,
+              ),
               const SizedBox(width: 10),
               Text("edit_profile_success".tr()),
             ],

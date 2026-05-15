@@ -44,5 +44,28 @@ void main() {
         );
       },
     );
+
+    test('source manifest avoids stale Amazon IAP class references', () {
+      final source = File(
+        'android/app/src/main/AndroidManifest.xml',
+      ).readAsStringSync();
+
+      expect(source, isNot(contains('com.amazon.device.iap')));
+      expect(
+        source,
+        isNot(contains('ProxyAmazonBillingActivity')),
+        reason: 'Play flavor must not reference absent Amazon IAP classes.',
+      );
+    });
+
+    test('CALL_PHONE does not require telephony-only devices', () {
+      final source = File(
+        'android/app/src/main/AndroidManifest.xml',
+      ).readAsStringSync();
+
+      expect(source, contains('android.permission.CALL_PHONE'));
+      expect(source, contains('android.hardware.telephony'));
+      expect(source, contains('android:required="false"'));
+    });
   });
 }

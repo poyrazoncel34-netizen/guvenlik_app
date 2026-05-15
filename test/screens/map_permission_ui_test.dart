@@ -16,7 +16,8 @@ void main() {
       ];
 
       for (final status in deniedStatuses) {
-        final shouldShowSettingsButton = status == LocationStatus.permissionDenied ||
+        final shouldShowSettingsButton =
+            status == LocationStatus.permissionDenied ||
             status == LocationStatus.permissionDeniedForever;
 
         expect(

@@ -3,11 +3,14 @@ package com.poyrazoncel.korubeni.emergency
 import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
+import android.content.SharedPreferences
 import android.content.Intent
 import android.os.Build
 import android.provider.Settings
+import android.util.Log
 
 object CheckInScheduler {
+    private const val TAG = "CheckInScheduler"
     private const val CHECK_IN_REQUEST_CODE = 42031
     private const val SAFE_WALK_REQUEST_CODE = 42032
     const val SESSION_CHECK_IN = "check_in"
@@ -71,8 +74,8 @@ object CheckInScheduler {
 
     fun hasActiveSession(context: Context): Boolean {
         val prefs = EmergencyPrefs.prefs(context)
-        return prefs.getBoolean(keyFor(SESSION_CHECK_IN, EmergencyPrefs.KEY_CHECK_IN_ACTIVE), false) ||
-            prefs.getBoolean(keyFor(SESSION_SAFE_WALK, EmergencyPrefs.KEY_CHECK_IN_ACTIVE), false)
+        return safeGetBoolean(prefs, keyFor(SESSION_CHECK_IN, EmergencyPrefs.KEY_CHECK_IN_ACTIVE), false) ||
+            safeGetBoolean(prefs, keyFor(SESSION_SAFE_WALK, EmergencyPrefs.KEY_CHECK_IN_ACTIVE), false)
     }
 
     fun sessionFromIntent(intent: Intent?): String {
@@ -81,7 +84,9 @@ object CheckInScheduler {
 
     fun phase(context: Context, sessionId: String): String {
         val session = normalizeSession(sessionId)
-        return EmergencyPrefs.prefs(context).getString(
+        val prefs = EmergencyPrefs.prefs(context)
+        return safeGetString(
+            prefs,
             keyFor(session, EmergencyPrefs.KEY_CHECK_IN_PHASE),
             PHASE_MAIN
         ) ?: PHASE_MAIN
@@ -89,7 +94,9 @@ object CheckInScheduler {
 
     fun graceDurationMs(context: Context, sessionId: String): Long {
         val session = normalizeSession(sessionId)
-        return EmergencyPrefs.prefs(context).getLong(
+        val prefs = EmergencyPrefs.prefs(context)
+        return safeGetLong(
+            prefs,
             keyFor(session, EmergencyPrefs.KEY_CHECK_IN_GRACE_MS),
             0L
         )
@@ -98,13 +105,13 @@ object CheckInScheduler {
     private fun restoreSessionAfterBoot(context: Context, sessionId: String) {
         val session = normalizeSession(sessionId)
         val prefs = EmergencyPrefs.prefs(context)
-        if (!prefs.getBoolean(keyFor(session, EmergencyPrefs.KEY_CHECK_IN_ACTIVE), false)) {
+        if (!safeGetBoolean(prefs, keyFor(session, EmergencyPrefs.KEY_CHECK_IN_ACTIVE), false)) {
             return
         }
 
-        val phase = prefs.getString(keyFor(session, EmergencyPrefs.KEY_CHECK_IN_PHASE), PHASE_MAIN) ?: PHASE_MAIN
-        val deadlineMs = prefs.getLong(keyFor(session, EmergencyPrefs.KEY_CHECK_IN_DEADLINE), 0L)
-        val graceDurationMs = prefs.getLong(keyFor(session, EmergencyPrefs.KEY_CHECK_IN_GRACE_MS), 0L)
+        val phase = safeGetString(prefs, keyFor(session, EmergencyPrefs.KEY_CHECK_IN_PHASE), PHASE_MAIN) ?: PHASE_MAIN
+        val deadlineMs = safeGetLong(prefs, keyFor(session, EmergencyPrefs.KEY_CHECK_IN_DEADLINE), 0L)
+        val graceDurationMs = safeGetLong(prefs, keyFor(session, EmergencyPrefs.KEY_CHECK_IN_GRACE_MS), 0L)
         val now = System.currentTimeMillis()
 
         if (deadlineMs <= 0L) {
@@ -167,20 +174,48 @@ object CheckInScheduler {
         val pendingIntent = buildPendingIntent(context, sessionId)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (canScheduleExactAlarms(context)) {
-                alarmManager.setExactAndAllowWhileIdle(
-                    AlarmManager.RTC_WAKEUP,
-                    deadlineMs,
-                    pendingIntent
-                )
-            } else {
+                try {
+                    alarmManager.setExactAndAllowWhileIdle(
+                        AlarmManager.RTC_WAKEUP,
+                        deadlineMs,
+                        pendingIntent
+                    )
+                    return
+                } catch (e: SecurityException) {
+                    Log.w(TAG, "Exact alarm access revoked during schedule; using inexact fallback")
+                } catch (e: RuntimeException) {
+                    Log.w(TAG, "Exact alarm schedule failed; using inexact fallback")
+                }
+            }
+            scheduleInexactAlarm(alarmManager, deadlineMs, pendingIntent)
+        } else {
+            try {
+                alarmManager.setExact(AlarmManager.RTC_WAKEUP, deadlineMs, pendingIntent)
+            } catch (e: RuntimeException) {
+                Log.w(TAG, "Legacy exact alarm schedule failed; using inexact fallback")
+                alarmManager.set(AlarmManager.RTC_WAKEUP, deadlineMs, pendingIntent)
+            }
+        }
+    }
+
+    private fun scheduleInexactAlarm(
+        alarmManager: AlarmManager,
+        deadlineMs: Long,
+        pendingIntent: PendingIntent,
+    ) {
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 alarmManager.setAndAllowWhileIdle(
                     AlarmManager.RTC_WAKEUP,
                     deadlineMs,
                     pendingIntent
                 )
+            } else {
+                alarmManager.set(AlarmManager.RTC_WAKEUP, deadlineMs, pendingIntent)
             }
-        } else {
-            alarmManager.setExact(AlarmManager.RTC_WAKEUP, deadlineMs, pendingIntent)
+        } catch (e: RuntimeException) {
+            Log.w(TAG, "Inexact idle alarm schedule failed; using standard alarm fallback")
+            alarmManager.set(AlarmManager.RTC_WAKEUP, deadlineMs, pendingIntent)
         }
     }
 
@@ -210,5 +245,41 @@ object CheckInScheduler {
 
     private fun keyFor(sessionId: String, baseKey: String): String {
         return if (sessionId == SESSION_CHECK_IN) baseKey else "${baseKey}_${sessionId}"
+    }
+
+    private fun safeGetBoolean(
+        prefs: SharedPreferences,
+        key: String,
+        defaultValue: Boolean,
+    ): Boolean {
+        return try {
+            prefs.getBoolean(key, defaultValue)
+        } catch (_: ClassCastException) {
+            defaultValue
+        }
+    }
+
+    private fun safeGetLong(
+        prefs: SharedPreferences,
+        key: String,
+        defaultValue: Long,
+    ): Long {
+        return try {
+            prefs.getLong(key, defaultValue)
+        } catch (_: ClassCastException) {
+            defaultValue
+        }
+    }
+
+    private fun safeGetString(
+        prefs: SharedPreferences,
+        key: String,
+        defaultValue: String?,
+    ): String? {
+        return try {
+            prefs.getString(key, defaultValue)
+        } catch (_: ClassCastException) {
+            defaultValue
+        }
     }
 }

@@ -14,7 +14,10 @@ void main() {
     'cancelCountdownAlarm is wrapped in try-catch so dispatch is never blocked',
     () {
       final makeCallIdx = source.indexOf('Future<void> _makeEmergencyCall()');
-      final executeIdx = source.indexOf('await _executeEmergency()', makeCallIdx);
+      final executeIdx = source.indexOf(
+        'await _executeEmergency()',
+        makeCallIdx,
+      );
 
       final body = source.substring(makeCallIdx, executeIdx);
 

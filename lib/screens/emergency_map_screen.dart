@@ -47,11 +47,13 @@ class _EmergencyMapScreenState extends State<EmergencyMapScreen> {
   Future<void> _initLocation() async {
     setState(() => _isLoading = true);
     final lastKnown = await _locationRepository.getLastKnownLocation();
+    if (!mounted) return;
     if (lastKnown.isSuccess && lastKnown.position != null) {
       setState(() => _currentLocation = lastKnown.position);
     }
 
     final result = await _locationRepository.getCurrentLocation();
+    if (!mounted) return;
     setState(() {
       _isLoading = false;
       if (result.isSuccess && result.position != null) {
@@ -180,6 +182,8 @@ class _EmergencyMapScreenState extends State<EmergencyMapScreen> {
       ),
       children: [
         TileLayer(
+          // User-viewed online tiles only. Do not bulk download, pre-seed,
+          // scrape, archive, or package public OSM tiles from this endpoint.
           urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
           userAgentPackageName: kOsmUserAgentPackageName,
           maxZoom: 19,

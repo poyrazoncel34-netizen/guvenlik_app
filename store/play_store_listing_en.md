@@ -1,4 +1,6 @@
-# Play Store Listing (EN)
+# Internal English Copy Reference — Not For First Play Release
+
+First Google Play release is Turkish-only. Do not paste this file into Play Console and do not create an English localization entry until the English runtime path is re-enabled and passes real-device QA.
 
 **App Title:** KoruBeni - Personal Safety
 **Short Description (80 characters):**

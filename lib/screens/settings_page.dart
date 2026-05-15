@@ -184,9 +184,9 @@ class _SettingsPageState extends State<SettingsPage> {
                       context,
                       PremiumFeature.volumeTrigger,
                     );
-                    if (!allowed || !mounted) return;
+                    if (!allowed || !context.mounted) return;
                     await provider.setVolumeTrigger(value);
-                    if (!mounted) return;
+                    if (!context.mounted) return;
                     if (value) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(

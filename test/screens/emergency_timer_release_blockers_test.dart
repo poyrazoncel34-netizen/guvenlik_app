@@ -39,13 +39,19 @@ void main() {
         'PermissionHelper.requestNotificationPermission',
         start,
       );
+      final exactAlarmGuard = source.indexOf(
+        'confirmExactAlarmPermissionOrDegraded',
+        start,
+      );
       final activeState = source.indexOf('_isActive = true', start);
 
       expect(start, isNot(-1));
       expect(warning, isNot(-1));
       expect(notificationGuard, isNot(-1));
+      expect(exactAlarmGuard, isNot(-1));
       expect(activeState, isNot(-1));
       expect(warning < notificationGuard, isTrue);
+      expect(notificationGuard < exactAlarmGuard, isTrue);
       expect(notificationGuard < activeState, isTrue);
       expect(source, contains('notification_session_permission_required'));
     });
@@ -98,6 +104,115 @@ void main() {
       ).readAsStringSync();
       expect(safeWalk, contains('final fullyScheduled = await'));
       expect(safeWalk, contains('timer_scheduling_degraded'));
+    });
+
+    test('exact alarm degraded mode requires explicit acknowledgment', () {
+      final guard = File(
+        'lib/core/widgets/exact_alarm_permission_guard.dart',
+      ).readAsStringSync();
+      final enTranslations = File(
+        'assets/translations/en-US.json',
+      ).readAsStringSync();
+      expect(guard, contains('canScheduleExactAlarms'));
+      expect(guard, contains('requestExactAlarmPermission'));
+      expect(guard, contains('barrierDismissible: false'));
+      expect(guard, contains('exact_alarm_degraded_continue'));
+      expect(
+        enTranslations,
+        contains(
+          'Exact alarm access improves safety timer reliability. Without it, timers may be delayed.',
+        ),
+      );
+
+      final checkIn = File(
+        'lib/screens/check_in_screen.dart',
+      ).readAsStringSync();
+      final checkInStart = checkIn.indexOf('Future<void> _startCheckIn');
+      final checkInGuard = checkIn.indexOf(
+        'confirmExactAlarmPermissionOrDegraded',
+        checkInStart,
+      );
+      final serviceStart = checkIn.indexOf(
+        '_service.start(minutes)',
+        checkInStart,
+      );
+      expect(checkInGuard, isNot(-1));
+      expect(serviceStart, isNot(-1));
+      expect(checkInGuard < serviceStart, isTrue);
+
+      final safeWalk = File(
+        'lib/screens/safe_walk_screen.dart',
+      ).readAsStringSync();
+      final safeWalkStart = safeWalk.indexOf('Future<void> _startSafeWalk');
+      final safeWalkGuard = safeWalk.indexOf(
+        'confirmExactAlarmPermissionOrDegraded',
+        safeWalkStart,
+      );
+      final activeState = safeWalk.indexOf('_isActive = true', safeWalkStart);
+      expect(safeWalkGuard, isNot(-1));
+      expect(activeState, isNot(-1));
+      expect(safeWalkGuard < activeState, isTrue);
+    });
+
+    test('countdown backup alarm has denied/degraded native fallback', () {
+      final countdown = File(
+        'lib/screens/countdown_screen.dart',
+      ).readAsStringSync();
+      expect(countdown, contains('_scheduleNativeBackupAlarm'));
+      expect(countdown, contains('degraded safety net'));
+
+      final scheduler = File(
+        'android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/CountdownAlarmScheduler.kt',
+      ).readAsStringSync();
+      expect(scheduler, contains('CheckInScheduler.canScheduleExactAlarms'));
+      expect(scheduler, contains('setExactAndAllowWhileIdle'));
+      expect(scheduler, contains('setAndAllowWhileIdle'));
+      expect(scheduler, contains('Exact alarm permission denied'));
+    });
+
+    test('emergency map guards async location updates after dispose', () {
+      final source = File(
+        'lib/screens/emergency_map_screen.dart',
+      ).readAsStringSync();
+      final lastKnownAwait = source.indexOf(
+        'await _locationRepository.getLastKnownLocation()',
+      );
+      final currentAwait = source.indexOf(
+        'await _locationRepository.getCurrentLocation()',
+      );
+      expect(lastKnownAwait, isNot(-1));
+      expect(currentAwait, isNot(-1));
+      expect(
+        source.indexOf('if (!mounted) return;', lastKnownAwait),
+        lessThan(currentAwait),
+      );
+      expect(
+        source.indexOf('if (!mounted) return;', currentAwait),
+        lessThan(source.indexOf('setState(() {', currentAwait)),
+      );
+    });
+
+    test('safe walk does not start UI ticker after async dispose', () {
+      final source = File(
+        'lib/screens/safe_walk_screen.dart',
+      ).readAsStringSync();
+      final persistAwait = source.indexOf('await _persistState();');
+      final mountedGuard = source.indexOf(
+        'if (!mounted) return;',
+        persistAwait,
+      );
+      final foregroundUpdate = source.indexOf(
+        '_updateForegroundStatus();',
+        persistAwait,
+      );
+      final tickerStart = source.indexOf('_startTicker();', persistAwait);
+
+      expect(persistAwait, isNot(-1));
+      expect(mountedGuard, isNot(-1));
+      expect(foregroundUpdate, isNot(-1));
+      expect(tickerStart, isNot(-1));
+      expect(mountedGuard < foregroundUpdate, isTrue);
+      expect(mountedGuard < tickerStart, isTrue);
     });
   });
 }
