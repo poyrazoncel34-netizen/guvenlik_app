@@ -54,6 +54,7 @@ No Play Console dashboard task, RevenueCat dashboard task, billing purchase test
 | Battery optimization declaration prepared | CODE_DONE | Reliability enhancement; user can decline; OEM/Android settings may still affect behavior. |
 | CALL_PHONE reviewer note prepared | CODE_DONE | User-initiated Panic/SOS flow with countdown/confirmation and `ACTION_DIAL` fallback. |
 | FLAG_SECURE reviewer note prepared | CODE_DONE | Screenshots are blocked for safety/privacy; reviewer can still navigate app. |
+| App Access / reviewer instructions prepared | CODE_DONE | No login required for basic access. Pro features unlock via subscription; for review without payment, use Play Console license tester account (https://support.google.com/googleplay/android-developer/answer/6062777). Reviewer path + paywall test steps documented in `docs/play_console_declarations.md` (App Access / Reviewer Notes section). Operator must supply the actual license tester credentials in Play Console App Access form. |
 
 ## RevenueCat / Google Play Billing
 

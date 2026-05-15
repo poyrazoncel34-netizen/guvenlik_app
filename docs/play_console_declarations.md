@@ -20,6 +20,37 @@ The app combines user-visible safety timers, check-in deadlines, Safe Walk sessi
 
 Android 14+ note: apps targeting Android 14+ must declare foreground service types in Play Console App content.
 
+### Type selection rationale
+
+The service is declared as `foregroundServiceType="specialUse"` because the work it performs does not fit any of the named Android 14 foreground service types cleanly:
+
+- `location` would imply continuous location streaming. The keepalive does not stream location; location is only read on demand by the user-initiated map/SOS flows in the regular activity context.
+- `dataSync` is subject to a 6-hour quota on Android 15+ (developer.android.com/about/versions/15/behavior-changes-15) and is not intended for safety-timer reliability.
+- `shortService` is capped at ~3 minutes — too short for check-in/Safe Walk sessions that can run for tens of minutes.
+- `mediaPlayback`, `mediaProjection`, `camera`, `microphone`, `connectedDevice`, `phoneCall`, `health`, `remoteMessaging` — none describe the actual work (a user-perceptible safety-session timer/keepalive that allows alarm and notification paths to fire reliably).
+
+Per Android docs, `specialUse` is the documented fallback when a foreground service does real, user-perceptible work that does not match the other named types. The service is started only by user action, displays a persistent notification, and ends when the user cancels or the session timer expires.
+
+### Subtype declaration
+
+The manifest declares the special-use subtype as a `<property>` on the service entry, per Android requirements:
+
+```xml
+<property
+    android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+    android:value="emergency_checkin_keepalive" />
+```
+
+The subtype value (`emergency_checkin_keepalive`) describes the use case in human-readable form for Play review.
+
+### Android 15 BOOT_COMPLETED context
+
+Android 15 restricts foreground service start from `BOOT_COMPLETED` for the following types: `dataSync`, `mediaPlayback`, `mediaProjection`, `phoneCall`, `microphone`, and `camera` (developer.android.com/about/versions/15/behavior-changes-15). `specialUse` and `location` are not in that restricted list, so KoruBeni's boot-restore path (re-arming an active check-in/Safe Walk after device reboot) remains supported on Android 15+.
+
+### Reviewer demo
+
+A 30–60 second physical-device recording showing: (1) user starts Safe Walk or check-in from the in-app button, (2) persistent notification with Stop action appears, (3) user taps Stop or session expires, (4) notification clears. Recording must avoid real PII (use test contacts and never dial real 112 — only verify dialer pre-fill).
+
 ## `SCHEDULE_EXACT_ALARM`
 
 Status: CODE_DONE copy prepared; OPERATOR_ACTION to submit if Play Console requires it.

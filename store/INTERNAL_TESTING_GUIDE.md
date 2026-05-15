@@ -4,6 +4,10 @@ Plan Madde 6-7: AAB build, Internal Testing yükleme, inceleme gönderimi.
 
 Status: OPERATOR_ACTION. This guide describes manual steps only; this repo audit did not create keystores/secrets, build a signed AAB, upload to Play Console, or run device/billing flows.
 
+**Related guides:**
+
+- For tester-facing onboarding (the invitation message you send to the 12 closed-test testers, with install steps, 14-day commitment, test scenarios, "do not call real 112" warning, and feedback form structure), see [`CLOSED_TEST_TESTER_GUIDE.md`](CLOSED_TEST_TESTER_GUIDE.md). The current file (operator-facing) covers signed-AAB build and Play Console upload only.
+
 ---
 
 ## Ön Koşullar

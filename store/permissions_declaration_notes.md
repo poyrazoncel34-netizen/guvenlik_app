@@ -21,6 +21,10 @@ Dashboard completion is OPERATOR_ACTION. This file only prepares copy/paste text
 KoruBeni uses a foreground service only for active, user-started safety sessions such as Safe Walk, check-in, and emergency timer reliability. The session shows a visible persistent notification and is tied to the user's active safety flow. The user can stop or cancel the session. The service is not used for ads, analytics, hidden tracking, silent background surveillance, or indefinite background execution.
 ```
 
+Subtype is declared in `AndroidManifest.xml` as `emergency_checkin_keepalive` via the `PROPERTY_SPECIAL_USE_FGS_SUBTYPE` property on the service entry.
+
+For the full type-selection rationale (why `specialUse` over `location`, `dataSync`, `shortService`, etc.) and the Android 15 boot-restriction context, see [docs/play_console_declarations.md](../docs/play_console_declarations.md).
+
 ## `SCHEDULE_EXACT_ALARM`
 
 ```text

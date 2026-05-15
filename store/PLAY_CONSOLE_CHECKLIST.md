@@ -15,6 +15,7 @@ This checklist prepares operator actions only. No dashboard item is marked done 
 | Exact alarm | Submit declaration if Play Console requires it | OPERATOR_ACTION |
 | Battery optimization | Submit declaration if Play Console requires it | OPERATOR_ACTION |
 | CALL_PHONE | Submit declaration/reviewer note if requested | OPERATOR_ACTION |
+| App Access | Submit reviewer-access instructions: no login required for basic features; Pro features need a Play Console license tester account. Use copy from `docs/play_console_declarations.md` (App Access / Reviewer Notes). Operator supplies actual license tester email(s). | OPERATOR_ACTION |
 | Store listing | Paste TR/EN copy from `store/PLAY_CONSOLE_COPY_PASTE_PACK.md` | OPERATOR_ACTION |
 | Store icon | Upload/verify 512x512 PNG | OPERATOR_ACTION |
 | Feature graphic | Prepare/verify 1024x500 feature graphic | OPERATOR_ACTION |
