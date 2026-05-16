@@ -41,8 +41,7 @@ class ConsentManager {
       for (final item in list) {
         final record = ConsentRecord.fromJson(item as Map<String, dynamic>);
         final existing = latest[record.consentType];
-        if (existing == null ||
-            record.timestamp.isAfter(existing.timestamp)) {
+        if (existing == null || record.timestamp.isAfter(existing.timestamp)) {
           latest[record.consentType] = record;
         }
       }
@@ -160,8 +159,9 @@ class ConsentManager {
 
       // Mevcut logu oku
       final raw = await _storage.read(key: SecureStorageKeys.consentLog);
-      final List<dynamic> list =
-          raw != null && raw.isNotEmpty ? jsonDecode(raw) as List<dynamic> : [];
+      final List<dynamic> list = raw != null && raw.isNotEmpty
+          ? jsonDecode(raw) as List<dynamic>
+          : [];
       list.add(record.toJson());
 
       await _storage.write(
@@ -185,7 +185,8 @@ class ConsentManager {
   String _getOsVersion() {
     try {
       if (kIsWeb) return 'web';
-      if (Platform.isAndroid) return 'android-${Platform.operatingSystemVersion}';
+      if (Platform.isAndroid)
+        return 'android-${Platform.operatingSystemVersion}';
       if (Platform.isIOS) return 'ios-${Platform.operatingSystemVersion}';
       return Platform.operatingSystemVersion;
     } catch (_) {

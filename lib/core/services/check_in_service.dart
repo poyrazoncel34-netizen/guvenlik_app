@@ -13,6 +13,7 @@ import '../../domain/models/activity_event.dart';
 import '../../domain/repositories/contacts_repository.dart';
 import '../../screens/emergency_call_screen.dart';
 import '../di/service_locator.dart';
+import '../constants/app_constants.dart';
 import '../navigation/app_navigator.dart';
 import '../services/activity_service.dart';
 import '../services/call_service.dart';
@@ -21,6 +22,7 @@ import '../services/emergency_platform_service.dart';
 import '../services/foreground_service.dart';
 import '../services/haptic_service.dart';
 import '../services/notification_service.dart';
+import '../utils/emergency_number_validator.dart';
 
 /// Manages check-in timer logic — if user doesn't confirm safety within the
 /// set duration + grace period, an emergency is automatically triggered.
@@ -350,11 +352,21 @@ class CheckInService extends ChangeNotifier {
       );
 
       final contactsRepo = serviceLocator<ContactsRepository>();
-      final numbers = await contactsRepo.getAllEmergencyNumbers();
+      final configuredNumbers = (await contactsRepo.getAllEmergencyNumbers())
+          .where(EmergencyNumberValidator.isCallableEmergencyTarget)
+          .toList(growable: false);
+      final numbers = configuredNumbers.isNotEmpty
+          ? configuredNumbers
+          : const [AppConstants.turkeyEmergencyNumber];
       final primaryContact = await contactsRepo.getPrimaryEmergencyContact();
 
       final primaryNumber =
-          primaryContact?.phone ?? (numbers.isNotEmpty ? numbers.first : '');
+          primaryContact != null &&
+              EmergencyNumberValidator.isCallableEmergencyTarget(
+                primaryContact.phone,
+              )
+          ? primaryContact.phone
+          : numbers.first;
       var calledNumber = primaryNumber;
       var callResult = EmergencyCallResult.failed(primaryNumber);
 

@@ -36,24 +36,24 @@ class ConsentRecord {
   });
 
   Map<String, dynamic> toJson() => {
-        'consentType': consentType,
-        'granted': granted,
-        'timestamp': timestamp.toIso8601String(),
-        'appVersion': appVersion,
-        'osVersion': osVersion,
-        'deviceModel': deviceModel,
-        'consentTextVersion': consentTextVersion,
-        'locale': locale,
-      };
+    'consentType': consentType,
+    'granted': granted,
+    'timestamp': timestamp.toIso8601String(),
+    'appVersion': appVersion,
+    'osVersion': osVersion,
+    'deviceModel': deviceModel,
+    'consentTextVersion': consentTextVersion,
+    'locale': locale,
+  };
 
   factory ConsentRecord.fromJson(Map<String, dynamic> json) => ConsentRecord(
-        consentType: json['consentType'] as String,
-        granted: json['granted'] as bool,
-        timestamp: DateTime.parse(json['timestamp'] as String),
-        appVersion: json['appVersion'] as String? ?? '',
-        osVersion: json['osVersion'] as String? ?? '',
-        deviceModel: json['deviceModel'] as String? ?? '',
-        consentTextVersion: json['consentTextVersion'] as String? ?? '',
-        locale: json['locale'] as String? ?? 'tr',
-      );
+    consentType: json['consentType'] as String,
+    granted: json['granted'] as bool,
+    timestamp: DateTime.parse(json['timestamp'] as String),
+    appVersion: json['appVersion'] as String? ?? '',
+    osVersion: json['osVersion'] as String? ?? '',
+    deviceModel: json['deviceModel'] as String? ?? '',
+    consentTextVersion: json['consentTextVersion'] as String? ?? '',
+    locale: json['locale'] as String? ?? 'tr',
+  );
 }

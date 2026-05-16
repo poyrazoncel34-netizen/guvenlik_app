@@ -40,7 +40,9 @@ class DataMigrationService {
         // Existing secure storage data is unreadable after this change.
         // Reset PIN setup flag so the user re-enters their PIN once.
         await prefs.setBool('pref_pin_setup_done', false);
-        debugPrint('DataMigration: v2 — secure storage reset, PIN re-setup required');
+        debugPrint(
+          'DataMigration: v2 — secure storage reset, PIN re-setup required',
+        );
         break;
 
       default:

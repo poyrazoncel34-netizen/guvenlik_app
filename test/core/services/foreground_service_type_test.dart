@@ -11,39 +11,42 @@ void main() {
     late String dartContent;
 
     setUpAll(() {
-      manifestContent = File('android/app/src/main/AndroidManifest.xml')
-          .readAsStringSync();
-      dartContent =
-          File('lib/core/services/foreground_service.dart').readAsStringSync();
+      manifestContent = File(
+        'android/app/src/main/AndroidManifest.xml',
+      ).readAsStringSync();
+      dartContent = File(
+        'lib/core/services/foreground_service.dart',
+      ).readAsStringSync();
     });
 
     test(
-        'Dart foregroundServiceTypes must use specialUse to match manifest declaration',
-        () {
-      // Manifest declares foregroundServiceType="specialUse" for BackgroundService
-      expect(
-        manifestContent,
-        contains('android:foregroundServiceType="specialUse"'),
-        reason: 'Manifest must declare specialUse foreground service type',
-      );
+      'Dart foregroundServiceTypes must use specialUse to match manifest declaration',
+      () {
+        // Manifest declares foregroundServiceType="specialUse" for BackgroundService
+        expect(
+          manifestContent,
+          contains('android:foregroundServiceType="specialUse"'),
+          reason: 'Manifest must declare specialUse foreground service type',
+        );
 
-      // Dart code must request the same type at runtime
-      expect(
-        dartContent,
-        contains('AndroidForegroundType.specialUse'),
-        reason:
-            'Dart code must use AndroidForegroundType.specialUse to match manifest. '
-            'Using dataSync will crash on Android 14+ with '
-            'MissingForegroundServiceTypeException',
-      );
+        // Dart code must request the same type at runtime
+        expect(
+          dartContent,
+          contains('AndroidForegroundType.specialUse'),
+          reason:
+              'Dart code must use AndroidForegroundType.specialUse to match manifest. '
+              'Using dataSync will crash on Android 14+ with '
+              'MissingForegroundServiceTypeException',
+        );
 
-      // Dart code must NOT use dataSync (mismatched with manifest)
-      expect(
-        dartContent,
-        isNot(contains('AndroidForegroundType.dataSync')),
-        reason:
-            'dataSync is not declared in manifest — using it crashes on Android 14+',
-      );
-    });
+        // Dart code must NOT use dataSync (mismatched with manifest)
+        expect(
+          dartContent,
+          isNot(contains('AndroidForegroundType.dataSync')),
+          reason:
+              'dataSync is not declared in manifest — using it crashes on Android 14+',
+        );
+      },
+    );
   });
 }

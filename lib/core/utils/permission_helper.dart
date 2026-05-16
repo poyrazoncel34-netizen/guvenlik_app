@@ -104,6 +104,20 @@ class PermissionHelper {
 
     final status = await Permission.phone.status;
     if (status.isGranted) return true;
+    if (status.isPermanentlyDenied || status.isRestricted) {
+      if (!context.mounted) return false;
+      final shouldOpen = await _showDialog(
+        context,
+        icon: Icons.phone_disabled_rounded,
+        title: 'perm_call_denied_title'.tr(),
+        message: 'perm_call_denied_msg'.tr(),
+        actionText: 'perm_go_settings'.tr(),
+      );
+      if (shouldOpen == true) {
+        await openAppSettings();
+      }
+      return false;
+    }
 
     if (!context.mounted) return false;
     final accepted = await _showProminentDisclosure(
@@ -114,6 +128,19 @@ class PermissionHelper {
     if (accepted != true) return false;
 
     final result = await Permission.phone.request();
+    if (result.isPermanentlyDenied || result.isRestricted) {
+      if (!context.mounted) return false;
+      final shouldOpen = await _showDialog(
+        context,
+        icon: Icons.phone_disabled_rounded,
+        title: 'perm_call_denied_title'.tr(),
+        message: 'perm_call_denied_msg'.tr(),
+        actionText: 'perm_go_settings'.tr(),
+      );
+      if (shouldOpen == true) {
+        await openAppSettings();
+      }
+    }
     return result.isGranted;
   }
 

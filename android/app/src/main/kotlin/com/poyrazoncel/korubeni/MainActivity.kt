@@ -122,7 +122,7 @@ class MainActivity : FlutterFragmentActivity() {
                 android.util.Log.e("MainActivity", "Audio control channel failed: ${e.message}", e)
             }
 
-            // Doze Mode handler — battery optimization bypass
+            // Doze Mode handler — optional battery optimization reliability flow
             try {
                 dozeModeHandler = DozeModeHandler(this)
                 MethodChannel(messenger, DozeModeHandler.CHANNEL)
@@ -236,15 +236,18 @@ class MainActivity : FlutterFragmentActivity() {
         }
     }
 
-    /**
-     * Tüm key event'lerini yakalar. Eğer volume tuşuysa ve
-     * VolumeButtonDetector aktifse, event consume edilir (ses değişmez).
-     */
-    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+    override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
         if (volumeDetector.onKeyEvent(event)) {
             return true // Event consume edildi
         }
-        return super.dispatchKeyEvent(event)
+        return super.onKeyDown(keyCode, event)
+    }
+
+    override fun onKeyUp(keyCode: Int, event: KeyEvent): Boolean {
+        if (volumeDetector.onKeyEvent(event)) {
+            return true // Event consume edildi
+        }
+        return super.onKeyUp(keyCode, event)
     }
     
     /**

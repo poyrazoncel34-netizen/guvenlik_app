@@ -28,19 +28,9 @@ Panik/SOS Pro; konum, sahte çağrı ve siren ücretsiz.
 
 ---
 
-## EN (English)
+## EN (Internal reference only)
 
-**App title:**
-```
-KoruBeni - Personal Safety
-```
-
-**Short description (80 characters):**
-```
-Panic/SOS requires Pro; location, fake call, and siren are free.
-```
-
-**Full description:** [play_store_listing_en.md](play_store_listing_en.md) içindeki "Full Description" bölümünü kopyalayın.
+First Google Play release is Turkish-only. Do not create or paste an English Play listing for this release. `store/play_store_listing_en.md` is retained only as an internal translation/reference file until full English runtime support is re-enabled and tested.
 
 ---
 

@@ -17,6 +17,7 @@ import '../core/services/notification_service.dart';
 import '../core/utils/permission_helper.dart';
 // Analytics service removed (offline-first)
 import '../core/constants/app_constants.dart';
+import '../core/widgets/exact_alarm_permission_guard.dart';
 import '../core/widgets/feature_warning_dialog.dart';
 import '../domain/models/activity_event.dart';
 import '../widgets/siren_dialog.dart';
@@ -146,6 +147,11 @@ class _SafeWalkScreenState extends State<SafeWalkScreen>
       return;
     }
 
+    final exactAlarmAcknowledged = await confirmExactAlarmPermissionOrDegraded(
+      currentContext,
+    );
+    if (!exactAlarmAcknowledged || !currentContext.mounted) return;
+
     HapticFeedback.mediumImpact();
     final endTime = DateTime.now().add(Duration(minutes: _selectedMinutes));
     setState(() {
@@ -181,6 +187,7 @@ class _SafeWalkScreenState extends State<SafeWalkScreen>
       }
     }
     await _persistState();
+    if (!mounted) return;
     _updateForegroundStatus();
 
     _preWarningFired = false;
@@ -457,7 +464,7 @@ class _SafeWalkScreenState extends State<SafeWalkScreen>
   }
 
   Widget _buildSetupView() {
-    return Column(
+    return _buildScrollableContent(
       children: [
         Container(
           padding: const EdgeInsets.all(24),
@@ -596,7 +603,7 @@ class _SafeWalkScreenState extends State<SafeWalkScreen>
     final progress = _remainingSeconds / (_selectedMinutes * 60);
     final isUrgent = _remainingSeconds <= 30;
 
-    return Column(
+    return _buildScrollableContent(
       children: [
         const SizedBox(height: 40),
         Stack(
@@ -750,6 +757,19 @@ class _SafeWalkScreenState extends State<SafeWalkScreen>
         ),
         const SizedBox(height: 16),
       ],
+    );
+  }
+
+  Widget _buildScrollableContent({required List<Widget> children}) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight),
+            child: IntrinsicHeight(child: Column(children: children)),
+          ),
+        );
+      },
     );
   }
 

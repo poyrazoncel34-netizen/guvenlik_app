@@ -12,15 +12,12 @@ void main() {
       SharedPreferences.setMockInitialValues({});
       hapticLog.clear();
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockMethodCallHandler(
-        SystemChannels.platform,
-        (call) async {
-          if (call.method == 'HapticFeedback.vibrate') {
-            hapticLog.add(call.arguments as String);
-          }
-          return null;
-        },
-      );
+          .setMockMethodCallHandler(SystemChannels.platform, (call) async {
+            if (call.method == 'HapticFeedback.vibrate') {
+              hapticLog.add(call.arguments as String);
+            }
+            return null;
+          });
     });
 
     tearDown(() {
@@ -28,7 +25,9 @@ void main() {
           .setMockMethodCallHandler(SystemChannels.platform, null);
     });
 
-    testWidgets('decline button triggers HapticFeedback.heavyImpact', (tester) async {
+    testWidgets('decline button triggers HapticFeedback.heavyImpact', (
+      tester,
+    ) async {
       await EasyLocalization.ensureInitialized();
       // Pump a minimal stub of the decline button callback directly
       bool tapped = false;

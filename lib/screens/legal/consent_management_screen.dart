@@ -122,18 +122,25 @@ class _ConsentManagementScreenState extends State<ConsentManagementScreen> {
         title: Text(
           'consent_revoke_title'.tr(),
           style: const TextStyle(
-              color: AppColors.textPrimary, fontWeight: FontWeight.w800),
+            color: AppColors.textPrimary,
+            fontWeight: FontWeight.w800,
+          ),
         ),
         content: Text(
           'consent_revoke_desc'.tr(),
           style: const TextStyle(
-              color: AppColors.textSecondary, fontSize: 14, height: 1.5),
+            color: AppColors.textSecondary,
+            fontSize: 14,
+            height: 1.5,
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text('cancel'.tr(),
-                style: const TextStyle(color: AppColors.textSecondary)),
+            child: Text(
+              'cancel'.tr(),
+              style: const TextStyle(color: AppColors.textSecondary),
+            ),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
@@ -141,7 +148,8 @@ class _ConsentManagementScreenState extends State<ConsentManagementScreen> {
               backgroundColor: AppColors.emergency,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10)),
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
             child: Text('consent_revoke_confirm'.tr()),
           ),
@@ -166,8 +174,10 @@ class _ConsentManagementScreenState extends State<ConsentManagementScreen> {
           ),
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded,
-              color: AppColors.textSecondary),
+          icon: const Icon(
+            Icons.arrow_back_rounded,
+            color: AppColors.textSecondary,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
         elevation: 0,
@@ -186,8 +196,7 @@ class _ConsentManagementScreenState extends State<ConsentManagementScreen> {
             decoration: BoxDecoration(
               color: AppColors.info.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(14),
-              border:
-                  Border.all(color: AppColors.info.withValues(alpha: 0.4)),
+              border: Border.all(color: AppColors.info.withValues(alpha: 0.4)),
             ),
             child: Text(
               'consent_mgmt_info'.tr(),
@@ -292,9 +301,7 @@ class _ConsentManagementScreenState extends State<ConsentManagementScreen> {
             scale: 0.85,
             child: Switch(
               value: granted,
-              onChanged: _loading
-                  ? null
-                  : (v) => _toggle(item.type, v),
+              onChanged: _loading ? null : (v) => _toggle(item.type, v),
               activeThumbColor: item.color,
             ),
           ),

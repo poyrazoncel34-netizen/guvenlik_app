@@ -83,8 +83,7 @@ void main() {
           'assets/translations/en-US.json',
         ]) {
           final json =
-              jsonDecode(File(path).readAsStringSync())
-                  as Map<String, dynamic>;
+              jsonDecode(File(path).readAsStringSync()) as Map<String, dynamic>;
           for (final key in keys) {
             final value = (json[key] as String? ?? '').toLowerCase();
             for (final word in forbidden) {

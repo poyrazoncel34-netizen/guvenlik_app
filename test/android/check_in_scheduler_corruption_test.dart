@@ -17,11 +17,23 @@ void main() {
     // After this check, before cancel, should emit a corruption event
     final afterCheck = source.substring(deadlineCheck, deadlineCheck + 200);
     expect(
-      afterCheck.contains('checkInCorrupted') || afterCheck.contains('Corrupted'),
+      afterCheck.contains('checkInCorrupted') ||
+          afterCheck.contains('Corrupted'),
       isTrue,
       reason:
           'restoreAfterBoot must emit a corruption event when deadlineMs <= 0 '
           'so the Dart side knows the check-in was lost due to data corruption',
     );
+  });
+
+  test('boot restore uses type-safe SharedPreferences reads', () {
+    final source = File(
+      'android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/CheckInScheduler.kt',
+    ).readAsStringSync();
+
+    expect(source, contains('safeGetBoolean'));
+    expect(source, contains('safeGetLong'));
+    expect(source, contains('safeGetString'));
+    expect(source, contains('ClassCastException'));
   });
 }

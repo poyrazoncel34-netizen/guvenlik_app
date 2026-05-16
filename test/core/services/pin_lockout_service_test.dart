@@ -129,13 +129,11 @@ void main() {
     });
 
     test('getState clears expired lock', () async {
-      await _fakeStorage.write(
-        key: 'pin_lockout_failed_attempts',
-        value: '5',
-      );
+      await _fakeStorage.write(key: 'pin_lockout_failed_attempts', value: '5');
       await _fakeStorage.write(
         key: 'pin_lockout_until_ms',
-        value: '${DateTime.now().subtract(const Duration(seconds: 10)).millisecondsSinceEpoch}',
+        value:
+            '${DateTime.now().subtract(const Duration(seconds: 10)).millisecondsSinceEpoch}',
       );
       final state = await service.getState();
       expect(state.failedAttempts, 5);

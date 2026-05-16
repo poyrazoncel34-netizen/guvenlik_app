@@ -35,11 +35,7 @@ class NetworkErrorRetry extends StatelessWidget {
                 color: AppColors.warning.withValues(alpha: 0.12),
                 shape: BoxShape.circle,
               ),
-              child: Icon(
-                icon,
-                size: 36,
-                color: AppColors.warning,
-              ),
+              child: Icon(icon, size: 36, color: AppColors.warning),
             ),
             const SizedBox(height: 20),
             Text(
@@ -59,7 +55,10 @@ class NetworkErrorRetry extends StatelessWidget {
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 14,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),

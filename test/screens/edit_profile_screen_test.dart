@@ -20,7 +20,8 @@ void main() {
 
     test('does not contain blood type field', () {
       expect(
-        source.contains('bloodtype') || source.contains('bloodType') ||
+        source.contains('bloodtype') ||
+            source.contains('bloodType') ||
             source.contains('_bloodTypes'),
         isFalse,
         reason: 'Kan grubu alanı kaldırılmış olmalı',

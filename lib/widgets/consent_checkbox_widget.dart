@@ -36,8 +36,8 @@ class ConsentCheckboxWidget extends StatelessWidget {
           border: Border.all(
             color: isSpecialCategory
                 ? (value
-                    ? AppColors.emergency
-                    : AppColors.emergency.withValues(alpha: 0.4))
+                      ? AppColors.emergency
+                      : AppColors.emergency.withValues(alpha: 0.4))
                 : (value ? AppColors.primary : AppColors.border),
             width: isSpecialCategory ? 1.5 : 1,
           ),
@@ -51,8 +51,9 @@ class ConsentCheckboxWidget extends StatelessWidget {
               child: Checkbox(
                 value: value,
                 onChanged: onChanged,
-                activeColor:
-                    isSpecialCategory ? AppColors.emergency : AppColors.primary,
+                activeColor: isSpecialCategory
+                    ? AppColors.emergency
+                    : AppColors.primary,
                 side: BorderSide(
                   color: isSpecialCategory
                       ? AppColors.emergency.withValues(alpha: 0.6)
@@ -72,7 +73,9 @@ class ConsentCheckboxWidget extends StatelessWidget {
                   if (isSpecialCategory) ...[
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 2),
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
                       margin: const EdgeInsets.only(bottom: 6),
                       decoration: BoxDecoration(
                         color: AppColors.emergency.withValues(alpha: 0.15),

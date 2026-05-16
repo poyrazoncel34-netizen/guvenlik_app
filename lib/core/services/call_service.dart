@@ -4,6 +4,8 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_direct_caller_plugin/flutter_direct_caller_plugin.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+import '../constants/app_constants.dart';
+import '../utils/emergency_number_validator.dart';
 import 'android_intent_service.dart';
 
 enum EmergencyCallStatus { directCallStarted, dialerOpened, failed }
@@ -69,8 +71,10 @@ class CallService {
   static const Duration callTimeout = Duration(seconds: 5);
 
   static Future<EmergencyCallResult> startEmergencyCall(String number) async {
-    final normalized = AndroidIntentService.normalizePhoneNumber(number);
-    if (normalized.isEmpty) {
+    final normalized = AndroidIntentService.normalizePhoneNumber(
+      number.trim().isEmpty ? AppConstants.turkeyEmergencyNumber : number,
+    );
+    if (!EmergencyNumberValidator.isCallableEmergencyTarget(normalized)) {
       return EmergencyCallResult.failed(normalized);
     }
 

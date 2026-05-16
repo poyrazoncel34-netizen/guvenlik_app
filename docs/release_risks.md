@@ -8,7 +8,9 @@ Before a larger production launch, switch to a production-suitable provider such
 
 Current mitigation:
 - OSM attribution is shown in the map UI.
-- `userAgentPackageName` is configured. Contact-info enrichment per OSMF "highly recommended" guidance is pending; tracked as a follow-up code change.
+- `userAgentPackageName` includes a contact channel (`com.poyrazoncel.korubeni; +korubeni.destek@gmail.com`) per OSMF "highly recommended" guidance.
+- The app only requests tiles for the map viewport the user actively opens.
+- The app must not bulk download, scrape, pre-seed, cache as an offline archive, or package OpenStreetMap public tiles.
 - Store/legal copy does not claim enterprise-grade map reliability.
 
 ## Manual Play Console Items

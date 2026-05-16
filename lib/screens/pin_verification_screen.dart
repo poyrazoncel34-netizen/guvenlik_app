@@ -124,8 +124,7 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
         MaterialPageRoute(
           builder: (context) => EmergencyCallScreen(
             name:
-                _emergencyContact?.name ??
-                "pin_verify_emergency_contact".tr(),
+                _emergencyContact?.name ?? "pin_verify_emergency_contact".tr(),
             phone: emergencyNumber,
             callResult: callResult,
           ),
@@ -148,7 +147,9 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
         canPop: false,
         child: AlertDialog(
           backgroundColor: const Color(0xFF1C1C1E),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -159,19 +160,51 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
                   color: AppColors.emergency.withValues(alpha: 0.2),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.error_rounded, color: AppColors.emergency, size: 42),
+                child: const Icon(
+                  Icons.error_rounded,
+                  color: AppColors.emergency,
+                  size: 42,
+                ),
               ),
               const SizedBox(height: 16),
-              Text(title, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: Colors.white), textAlign: TextAlign.center),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w900,
+                  color: Colors.white,
+                ),
+                textAlign: TextAlign.center,
+              ),
               const SizedBox(height: 12),
-              Text(body, style: const TextStyle(fontSize: 14, color: Colors.white70, height: 1.5), textAlign: TextAlign.center),
+              Text(
+                body,
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: Colors.white70,
+                  height: 1.5,
+                ),
+                textAlign: TextAlign.center,
+              ),
               if (phoneNumber.isNotEmpty) ...[
                 const SizedBox(height: 18),
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(12)),
-                  child: Text(phoneNumber, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: Colors.white, letterSpacing: 1.5), textAlign: TextAlign.center),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    phoneNumber,
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                      letterSpacing: 1.5,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
                 ),
               ],
             ],
@@ -181,10 +214,21 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
-                  onPressed: () async => await AndroidIntentService.openDialer(phoneNumber),
+                  onPressed: () async =>
+                      await AndroidIntentService.openDialer(phoneNumber),
                   icon: const Icon(Icons.call, size: 20),
-                  label: Text('emergency_manual_call_now'.tr(), style: const TextStyle(fontWeight: FontWeight.w700)),
-                  style: ElevatedButton.styleFrom(backgroundColor: AppColors.emergency, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                  label: Text(
+                    'emergency_manual_call_now'.tr(),
+                    style: const TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.emergency,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
                 ),
               ),
             if (emergencyMessage != null)
@@ -193,19 +237,37 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
                 child: OutlinedButton.icon(
                   onPressed: () {
                     Clipboard.setData(ClipboardData(text: emergencyMessage));
-                    ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text('emergency_message_copied'.tr()), backgroundColor: AppColors.success));
+                    ScaffoldMessenger.of(ctx).showSnackBar(
+                      SnackBar(
+                        content: Text('emergency_message_copied'.tr()),
+                        backgroundColor: AppColors.success,
+                      ),
+                    );
                   },
                   icon: const Icon(Icons.copy, size: 18),
                   label: Text('emergency_copy_message'.tr()),
-                  style: OutlinedButton.styleFrom(foregroundColor: Colors.white70, side: const BorderSide(color: Colors.white24), padding: const EdgeInsets.symmetric(vertical: 12), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.white70,
+                    side: const BorderSide(color: Colors.white24),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
                 ),
               ),
             const SizedBox(height: 4),
             SizedBox(
               width: double.infinity,
               child: TextButton(
-                onPressed: () { Navigator.pop(ctx); Navigator.pop(context); },
-                child: Text('emergency_dismiss'.tr(), style: const TextStyle(color: Colors.white38, fontSize: 13)),
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  Navigator.pop(context);
+                },
+                child: Text(
+                  'emergency_dismiss'.tr(),
+                  style: const TextStyle(color: Colors.white38, fontSize: 13),
+                ),
               ),
             ),
           ],

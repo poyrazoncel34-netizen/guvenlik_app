@@ -41,14 +41,16 @@ Kişisel Verileri Koruma Kurulu'nun **2018/32 sayılı kararı** ve ilgili düze
 - Tüm veri yalnızca kullanıcının kendi cihazında kalır
 - Geliştirici olarak kişisel verilere **erişim imkânı bulunmamaktadır**
 
-### 3.2 Üçüncü Taraf Aktarımı
-- Hiçbir üçüncü tarafa (yerli veya yabancı) veri aktarımı yapılmaz
-- Analitik, crash raporlama veya reklam servisi kullanılmaz
+### 3.2 Üçüncü Taraf / Sağlayıcı Davranışı
+- Geliştirici tarafından işletilen bir backend'e kişisel veri aktarımı yapılmaz
+- Çevrimiçi harita ekranı OpenStreetMap veya yapılandırılmış harita karo sağlayıcısına teknik ağ isteği yapabilir
+- İsteğe bağlı Pro abonelik için Google Play Billing ve RevenueCat abonelik/yetki durumunu işleyebilir
+- Ödeme kartı bilgileri geliştirici tarafından saklanmaz
+- Analitik, üçüncü taraf crash raporlama veya reklam servisi kullanılmaz
 
 ### 3.3 Özel Nitelikli Veri İşleme
-- Biyometrik veri yalnızca cihaz OS API'si aracılığıyla doğrulama amacıyla kullanılır
-- Uygulama biyometrik veriyi saklamaz veya işlemez
-- Biyometrik veri işleme kullanıcının açık rızasına bağlıdır ve granüler olarak reddedilebilir
+- Bu Android Play sürümünde biyometrik kilit devre dışıdır
+- Uygulama biyometrik veriyi toplamaz, saklamaz veya işlemez
 
 ---
 
@@ -59,7 +61,7 @@ Poyraz Öncel, KoruBeni uygulamasının veri sorumlusu olarak aşağıdaki gerek
 1. **Bireysel geliştirici** — Yıllık çalışan sayısı 0, mali bilanço 25M TL altında
 2. **Serbest meslek erbabı** statüsü
 3. **Tamamen çevrimdışı mimari** — Geliştirici kişisel verilere erişim imkânına sahip değildir
-4. **Sıfır veri aktarımı** — Üçüncü tarafa veri akışı yoktur
+4. **Backend aktarımı yok** — Geliştirici sunucusuna kişisel veri gönderilmez; harita, Google Play Billing ve RevenueCat sağlayıcılarının teknik ağ davranışları ayrı değerlendirilir
 
 ---
 

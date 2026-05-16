@@ -72,7 +72,8 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     if (!mounted) return;
     Navigator.of(context).pushAndRemoveUntil(
       PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) => const MainNavigation(),
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            const MainNavigation(),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return FadeTransition(opacity: animation, child: child);
         },
@@ -108,8 +109,9 @@ class _OnboardingScreenState extends State<OnboardingScreen>
             child: Column(
               children: [
                 Semantics(
-                  label: 'semantics_onboarding_page'
-                      .tr(args: ['${_currentPage + 1}', '${_pages.length}']),
+                  label: 'semantics_onboarding_page'.tr(
+                    args: ['${_currentPage + 1}', '${_pages.length}'],
+                  ),
                   child: Align(
                     alignment: Alignment.centerRight,
                     child: TextButton(
@@ -121,7 +123,9 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                             ? ''
                             : 'btn_skip'.tr(),
                         style: const TextStyle(
-                            color: AppColors.textSecondary, fontSize: 16),
+                          color: AppColors.textSecondary,
+                          fontSize: 16,
+                        ),
                       ),
                     ),
                   ),
@@ -145,15 +149,16 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                             pageOffset = (_pageController.page ?? 0.0) - i;
                           }
                           return Padding(
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 32),
+                            padding: const EdgeInsets.symmetric(horizontal: 32),
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 // Icon with parallax & glow
                                 Transform.translate(
-                                  offset:
-                                      Offset(pageOffset * -60, 0), // Parallax
+                                  offset: Offset(
+                                    pageOffset * -60,
+                                    0,
+                                  ), // Parallax
                                   child: AnimatedBuilder(
                                     animation: _iconPulseController,
                                     builder: (context, child) {
@@ -163,22 +168,25 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                                         width: 110,
                                         height: 110,
                                         decoration: BoxDecoration(
-                                          color:
-                                              p.color.withValues(alpha: 0.12),
+                                          color: p.color.withValues(
+                                            alpha: 0.12,
+                                          ),
                                           shape: BoxShape.circle,
                                           boxShadow: [
                                             BoxShadow(
                                               color: p.color.withValues(
-                                                  alpha:
-                                                      0.1 + pulseVal * 0.15),
-                                              blurRadius:
-                                                  20 + (pulseVal * 20),
+                                                alpha: 0.1 + pulseVal * 0.15,
+                                              ),
+                                              blurRadius: 20 + (pulseVal * 20),
                                               spreadRadius: pulseVal * 5,
                                             ),
                                           ],
                                         ),
-                                        child: Icon(p.icon,
-                                            size: 52, color: p.color),
+                                        child: Icon(
+                                          p.icon,
+                                          size: 52,
+                                          color: p.color,
+                                        ),
                                       );
                                     },
                                   ),
@@ -236,14 +244,12 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                         decoration: BoxDecoration(
                           color: _currentPage == i
                               ? _pages[_currentPage].color
-                              : AppColors.textSecondary
-                                  .withValues(alpha: 0.3),
+                              : AppColors.textSecondary.withValues(alpha: 0.3),
                           borderRadius: BorderRadius.circular(4),
                           boxShadow: _currentPage == i
                               ? [
                                   BoxShadow(
-                                    color: _pages[_currentPage]
-                                        .color
+                                    color: _pages[_currentPage].color
                                         .withValues(alpha: 0.4),
                                     blurRadius: 8,
                                   ),
@@ -278,21 +284,23 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                         style: ElevatedButton.styleFrom(
                           backgroundColor: _pages[_currentPage].color,
                           foregroundColor: Colors.white,
-                          padding:
-                              const EdgeInsets.symmetric(vertical: 18),
+                          padding: const EdgeInsets.symmetric(vertical: 18),
                           shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14)),
+                            borderRadius: BorderRadius.circular(14),
+                          ),
                           elevation: 4,
-                          shadowColor: _pages[_currentPage]
-                              .color
-                              .withValues(alpha: 0.4),
+                          shadowColor: _pages[_currentPage].color.withValues(
+                            alpha: 0.4,
+                          ),
                         ),
                         child: Text(
                           _currentPage < _pages.length - 1
                               ? 'btn_next'.tr()
                               : 'btn_start'.tr(),
                           style: const TextStyle(
-                              fontSize: 17, fontWeight: FontWeight.w700),
+                            fontSize: 17,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                       ),
                     ),

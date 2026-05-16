@@ -16,14 +16,11 @@ import '../../widgets/consent_checkbox_widget.dart';
 
 class ConsentScreen extends StatefulWidget {
   final VoidCallback? onCompleted;
+
   /// Re-consent modunda önceki rızalar gösterilir
   final bool isReConsent;
 
-  const ConsentScreen({
-    super.key,
-    this.onCompleted,
-    this.isReConsent = false,
-  });
+  const ConsentScreen({super.key, this.onCompleted, this.isReConsent = false});
 
   @override
   State<ConsentScreen> createState() => _ConsentScreenState();
@@ -52,8 +49,9 @@ class _ConsentScreenState extends State<ConsentScreen> {
     setState(() {
       _consentAge = prefs.getBool(AppConstants.prefAgeVerified) ?? false;
       _consentLocation = cm.isGranted(ConsentRecord.typeLocation);
-      _consentEmergencyContacts =
-          cm.isGranted(ConsentRecord.typeEmergencyContacts);
+      _consentEmergencyContacts = cm.isGranted(
+        ConsentRecord.typeEmergencyContacts,
+      );
       _consentProfile = cm.isGranted(ConsentRecord.typeProfile);
     });
   }
@@ -79,13 +77,18 @@ class _ConsentScreenState extends State<ConsentScreen> {
 
       await prefs.setBool(AppConstants.prefAgeVerified, _consentAge);
       await record(ConsentRecord.typeLocation, _consentLocation);
-      await record(ConsentRecord.typeEmergencyContacts, _consentEmergencyContacts);
+      await record(
+        ConsentRecord.typeEmergencyContacts,
+        _consentEmergencyContacts,
+      );
       await record(ConsentRecord.typeProfile, _consentProfile);
 
       // SharedPrefs önbelleği güncelle (özellik durumu için)
       await prefs.setBool(AppConstants.prefConsentLocation, _consentLocation);
-      await prefs.setBool(AppConstants.prefConsentEmergencyContacts,
-          _consentEmergencyContacts);
+      await prefs.setBool(
+        AppConstants.prefConsentEmergencyContacts,
+        _consentEmergencyContacts,
+      );
       await prefs.setBool(AppConstants.prefConsentProfile, _consentProfile);
 
       if (mounted) widget.onCompleted?.call();
@@ -124,8 +127,11 @@ class _ConsentScreenState extends State<ConsentScreen> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.info_outline_rounded,
-                    size: 16, color: AppColors.info),
+                const Icon(
+                  Icons.info_outline_rounded,
+                  size: 16,
+                  color: AppColors.info,
+                ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
@@ -162,8 +168,7 @@ class _ConsentScreenState extends State<ConsentScreen> {
                     label: 'legal_consent_age'.tr(),
                     sublabel: 'legal_consent_age_sub'.tr(),
                     value: _consentAge,
-                    onChanged: (v) =>
-                        setState(() => _consentAge = v ?? false),
+                    onChanged: (v) => setState(() => _consentAge = v ?? false),
                   ),
 
                   // Konum
@@ -178,8 +183,7 @@ class _ConsentScreenState extends State<ConsentScreen> {
                   // Acil durum kişileri
                   ConsentCheckboxWidget(
                     label: 'legal_consent_emergency_contacts'.tr(),
-                    sublabel:
-                        'legal_consent_emergency_contacts_sub'.tr(),
+                    sublabel: 'legal_consent_emergency_contacts_sub'.tr(),
                     value: _consentEmergencyContacts,
                     onChanged: (v) =>
                         setState(() => _consentEmergencyContacts = v ?? false),

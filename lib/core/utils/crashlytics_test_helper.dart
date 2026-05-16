@@ -1,5 +1,6 @@
 // ============================================================================
-// Crashlytics removed - offline-first app. Stub for backward compatibility.
+// Crash-reporting SDK removed - offline-first app.
+// Compatibility shim for older debug/test call sites; no remote logging occurs.
 // ============================================================================
 
 import 'package:flutter/foundation.dart';
@@ -9,16 +10,16 @@ class CrashlyticsTestHelper {
 
   static Future<void> recordTestError() async {
     if (kReleaseMode) return;
-    debugPrint('Crashlytics removed - offline app');
+    debugPrint('Crash reporting removed - offline-first app');
   }
 
   static void forceTestCrash() {
     if (kReleaseMode) return;
-    debugPrint('Crashlytics removed - no crash');
+    debugPrint('Crash reporting removed - no forced crash');
   }
 
   static Future<void> logTestEvent() async {
     if (kReleaseMode) return;
-    debugPrint('Crashlytics removed - no log');
+    debugPrint('Crash reporting removed - no remote log');
   }
 }

@@ -237,7 +237,8 @@ Veri Sorumlusu : KoruBeni
 ──────────────────────────────────────
 Kategori          | Veri                              | Amaç                                  | Hukuki Sebep
 ────────────────────────────────────────────────────────────────────────────────────────────────────────
-Kimlik            | Ad, profil fotoğrafı              | Uygulama profili                      | Açık rıza
+Kimlik            | Ad                                | Uygulama profili                      | Açık rıza
+Görsel            | İsteğe bağlı sahte çağrı avatarı  | Sahte çağrı kişiselleştirme           | Açık rıza
 İletişim          | Acil kişi adı, telefon numarası   | Acil durumda arama akışı              | Açık rıza
 Konum             | GPS koordinatları                 | Harita ve konum oturumu               | Açık rıza
 Güvenlik          | PIN kodu (şifreli)                | Uygulama erişim kontrolü              | Meşru menfaat
@@ -259,13 +260,16 @@ Kişisel verileriniz geliştirici sunucusuna aktarılmaz. Uygulama verilerinin a
 
 Geliştirici tarafından işletilen yurt dışı veri aktarımı yapılmaz. Harita, Google Play Billing ve RevenueCat sağlayıcılarının teknik ağ davranışları kendi politikalarına tabidir.
 
+Uygulama tüm rehber listesini okumaz. Yalnızca kullanıcının seçtiği veya girdiği acil kişiler cihazda yerel olarak saklanır.
+
 ──────────────────────────────────────
 5. VERİ SAKLAMA SÜRELERİ
 ──────────────────────────────────────
 • Profil bilgileri     : Uygulama kullanıldığı sürece; siz silene kadar
-• Acil durum kişileri  : Siz silene kadar
+• Sahte çağrı avatarı  : Siz silene veya uygulama verisini temizleyene kadar
+• Acil durum kişileri  : Yalnızca seçtiğiniz veya girdiğiniz kişiler; siz silene kadar
 • Konum oturumu geçmişi: 30 gün
-• Rıza logları         : Uygulama kullanıldığı sürece; hesap silinene kadar
+• Rıza logları         : Uygulama kullanıldığı sürece; cihaz verisini silene kadar
 • PIN (şifreli)        : Siz değiştirene veya silene kadar
 
 ──────────────────────────────────────
@@ -353,13 +357,15 @@ Your personal data is not transferred to developer servers. The primary copy of 
 
 The developer does not operate cross-border data transfer. Map, Google Play Billing, and RevenueCat providers may have technical network behavior governed by their own policies.
 
+The app does not read the full contacts list. It stores only emergency contacts selected or entered by the user, locally on the device.
+
 ──────────────────────────────────────
 5. DATA RETENTION PERIODS
 ──────────────────────────────────────
 • Profile information      : While the app is in use; until you delete it
-• Emergency contacts       : Until you delete them
+• Emergency contacts       : Only contacts you select or enter; until you delete them
 • Location session history : 30 days
-• Consent logs             : While the app is in use; until account deletion
+• Consent logs             : While the app is in use; until device data deletion
 • PIN (encrypted)          : Until you change or delete it
 
 ──────────────────────────────────────

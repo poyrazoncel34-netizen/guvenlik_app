@@ -25,7 +25,9 @@ import '../core/services/foreground_service.dart';
 import '../core/services/haptic_service.dart';
 import '../core/services/notification_service.dart';
 import '../core/services/emergency_platform_service.dart';
+import '../core/constants/app_constants.dart';
 import '../core/utils/permission_helper.dart';
+import '../core/utils/emergency_number_validator.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
 class CountdownScreen extends StatefulWidget {
@@ -197,14 +199,18 @@ class _CountdownScreenState extends State<CountdownScreen>
     try {
       final numbers = await _contactsRepository.getAllEmergencyNumbers();
       final validNumbers = numbers
-          .where(_isValidEmergencyNumber)
+          .where(EmergencyNumberValidator.isCallableEmergencyTarget)
           .toList(growable: false);
       final primaryCandidate = _emergencyContact?.phone;
       final primaryNumber =
-          primaryCandidate != null && _isValidEmergencyNumber(primaryCandidate)
+          primaryCandidate != null &&
+              EmergencyNumberValidator.isCallableEmergencyTarget(
+                primaryCandidate,
+              )
           ? primaryCandidate
-          : (validNumbers.isNotEmpty ? validNumbers.first : '');
-      if (primaryNumber.isEmpty) return;
+          : (validNumbers.isNotEmpty
+                ? validNumbers.first
+                : AppConstants.turkeyEmergencyNumber);
 
       // Schedule alarm for 12 seconds from now (10s countdown + 2s grace)
       final deadline = DateTime.now().add(const Duration(seconds: 12));
@@ -303,24 +309,18 @@ class _CountdownScreenState extends State<CountdownScreen>
   }
 
   Future<void> _executeEmergency() async {
-    final numbers = (await _contactsRepository.getAllEmergencyNumbers())
-        .where(_isValidEmergencyNumber)
-        .toList(growable: false);
-    if (numbers.isEmpty) {
-      await KoruBeniForegroundService.stop();
-      if (mounted) {
-        await _showBlockingFailure(
-          title: 'countdown_no_contact_title'.tr(),
-          body: 'countdown_no_contact_body'.tr(),
-          phoneNumber: '',
-        );
-      }
-      return;
-    }
+    final configuredNumbers =
+        (await _contactsRepository.getAllEmergencyNumbers())
+            .where(EmergencyNumberValidator.isCallableEmergencyTarget)
+            .toList(growable: false);
+    final numbers = configuredNumbers.isNotEmpty
+        ? configuredNumbers
+        : const [AppConstants.turkeyEmergencyNumber];
 
     final primaryCandidate = _emergencyContact?.phone;
     final primaryNumber =
-        primaryCandidate != null && _isValidEmergencyNumber(primaryCandidate)
+        primaryCandidate != null &&
+            EmergencyNumberValidator.isCallableEmergencyTarget(primaryCandidate)
         ? primaryCandidate
         : (numbers.isNotEmpty ? numbers.first : null);
 
@@ -353,6 +353,9 @@ class _CountdownScreenState extends State<CountdownScreen>
     if (primaryNumber != null && primaryNumber.isNotEmpty) {
       callResult = await EmergencyPlatformService.instance
           .executeEmergencyNative(primaryNumber: primaryNumber);
+      if (callResult.isSuccess) {
+        calledNumber = callResult.number;
+      }
       if (!callResult.isSuccess && numbers.length > 1) {
         for (final fallbackNumber in numbers) {
           if (fallbackNumber == primaryNumber) continue;
@@ -405,13 +408,6 @@ class _CountdownScreenState extends State<CountdownScreen>
         }
       }
     }
-  }
-
-  bool _isValidEmergencyNumber(String number) {
-    final digits = AndroidIntentService.normalizePhoneNumber(
-      number,
-    ).replaceAll(RegExp(r'\D'), '');
-    return digits.length >= 7;
   }
 
   /// Shows a FULLSCREEN BLOCKING failure dialog. User MUST interact.

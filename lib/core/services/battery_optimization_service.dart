@@ -1,8 +1,9 @@
 // ============================================================================
-// BATTERY OPTIMIZATION BYPASS SERVICE - Android Zero-Fault
+// BATTERY OPTIMIZATION GUIDANCE SERVICE
 // ============================================================================
-// Ensures the app can run in background even during Doze Mode.
-// Requests user to disable battery optimization for critical emergency app.
+// Offers an optional reliability improvement for active safety sessions.
+// If the user declines or Android/OEM policy still restricts background work,
+// the app must continue in degraded mode without guarantee language.
 // ============================================================================
 
 import 'dart:io';
@@ -11,9 +12,10 @@ import 'package:flutter/services.dart';
 import 'package:optimize_battery/optimize_battery.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// Battery optimization bypass service for Android
+/// Battery optimization guidance service for Android.
 ///
-/// Critical for emergency apps - ensures background operation during Doze Mode
+/// This improves reliability on some devices, but it does not guarantee
+/// background operation during Doze or OEM battery restrictions.
 class BatteryOptimizationService {
   static final BatteryOptimizationService _instance =
       BatteryOptimizationService._();
@@ -23,7 +25,7 @@ class BatteryOptimizationService {
   static const String _prefKeyAsked = 'battery_opt_asked';
   static const String _prefKeyDisabled = 'battery_opt_disabled';
 
-  /// Check if battery optimization is disabled
+  /// Check if battery optimization is disabled.
   Future<bool> isOptimizationDisabled() async {
     if (!Platform.isAndroid) return true; // iOS doesn't need this
 
@@ -42,13 +44,14 @@ class BatteryOptimizationService {
     }
   }
 
-  /// Request to disable battery optimization
-  /// Shows system dialog to user
+  /// Request optional battery optimization exemption.
+  /// Shows a system dialog/settings screen and returns false if the user
+  /// declines or the platform refuses the request.
   Future<bool> requestDisableOptimization() async {
     if (!Platform.isAndroid) return true;
 
     try {
-      debugPrint('🔋 Requesting battery optimization disable...');
+      debugPrint('🔋 Requesting optional battery optimization exemption...');
 
       // Mark that we asked
       final prefs = await SharedPreferences.getInstance();
@@ -62,9 +65,9 @@ class BatteryOptimizationService {
       final isDisabled = await isOptimizationDisabled();
 
       if (isDisabled) {
-        debugPrint('✅ Battery optimization disabled successfully');
+        debugPrint('✅ Battery optimization exemption granted');
       } else {
-        debugPrint('❌ User denied battery optimization disable');
+        debugPrint('❌ Battery optimization exemption not granted');
       }
 
       return isDisabled;
@@ -74,8 +77,8 @@ class BatteryOptimizationService {
     }
   }
 
-  /// Check if we should show the request dialog
-  /// Only ask once per install, or if user hasn't disabled it
+  /// Check if we should show the optional request dialog.
+  /// A refusal must leave the app in degraded mode rather than blocking use.
   Future<bool> shouldShowRequest() async {
     if (!Platform.isAndroid) return false;
 

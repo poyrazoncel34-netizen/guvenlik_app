@@ -12,6 +12,7 @@ import '../core/app_colors.dart';
 import '../core/services/android_intent_service.dart';
 import '../core/services/call_service.dart';
 import '../core/services/foreground_service.dart';
+
 class EmergencyCallScreen extends StatefulWidget {
   final String name;
   final String phone;
@@ -68,7 +69,9 @@ class _EmergencyCallScreenState extends State<EmergencyCallScreen>
         canPop: false,
         child: AlertDialog(
           backgroundColor: const Color(0xFF2C0000),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -79,18 +82,30 @@ class _EmergencyCallScreenState extends State<EmergencyCallScreen>
                   color: AppColors.emergency.withValues(alpha: 0.3),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.warning_rounded, color: AppColors.emergency, size: 42),
+                child: const Icon(
+                  Icons.warning_rounded,
+                  color: AppColors.emergency,
+                  size: 42,
+                ),
               ),
               const SizedBox(height: 16),
               Text(
                 'failsafe_title'.tr(),
-                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: Colors.white),
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w900,
+                  color: Colors.white,
+                ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 12),
               Text(
                 'failsafe_body'.tr(),
-                style: const TextStyle(fontSize: 14, color: Colors.white70, height: 1.5),
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: Colors.white70,
+                  height: 1.5,
+                ),
                 textAlign: TextAlign.center,
               ),
               if (widget.phone.isNotEmpty) ...[
@@ -104,7 +119,12 @@ class _EmergencyCallScreenState extends State<EmergencyCallScreen>
                   ),
                   child: Text(
                     widget.phone,
-                    style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: 2),
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.white,
+                      letterSpacing: 2,
+                    ),
                     textAlign: TextAlign.center,
                   ),
                 ),
@@ -120,7 +140,11 @@ class _EmergencyCallScreenState extends State<EmergencyCallScreen>
                   ),
                   child: SelectableText(
                     widget.emergencyMessage!,
-                    style: const TextStyle(fontSize: 11, color: Colors.white54, height: 1.4),
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: Colors.white54,
+                      height: 1.4,
+                    ),
                   ),
                 ),
               ],
@@ -135,13 +159,20 @@ class _EmergencyCallScreenState extends State<EmergencyCallScreen>
                     await AndroidIntentService.openDialer(widget.phone);
                   },
                   icon: const Icon(Icons.call, size: 20),
-                  label: Text('emergency_manual_call_now'.tr(),
-                      style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+                  label: Text(
+                    'emergency_manual_call_now'.tr(),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 16,
+                    ),
+                  ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.emergency,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                 ),
               ),
@@ -150,9 +181,14 @@ class _EmergencyCallScreenState extends State<EmergencyCallScreen>
                 width: double.infinity,
                 child: OutlinedButton.icon(
                   onPressed: () {
-                    Clipboard.setData(ClipboardData(text: widget.emergencyMessage!));
+                    Clipboard.setData(
+                      ClipboardData(text: widget.emergencyMessage!),
+                    );
                     ScaffoldMessenger.of(ctx).showSnackBar(
-                      SnackBar(content: Text('emergency_message_copied'.tr()), backgroundColor: AppColors.success),
+                      SnackBar(
+                        content: Text('emergency_message_copied'.tr()),
+                        backgroundColor: AppColors.success,
+                      ),
                     );
                   },
                   icon: const Icon(Icons.copy, size: 18),
@@ -161,7 +197,9 @@ class _EmergencyCallScreenState extends State<EmergencyCallScreen>
                     foregroundColor: Colors.white70,
                     side: const BorderSide(color: Colors.white24),
                     padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                 ),
               ),
@@ -170,8 +208,10 @@ class _EmergencyCallScreenState extends State<EmergencyCallScreen>
               width: double.infinity,
               child: TextButton(
                 onPressed: () => Navigator.pop(ctx),
-                child: Text('emergency_dismiss'.tr(),
-                    style: const TextStyle(color: Colors.white38, fontSize: 13)),
+                child: Text(
+                  'emergency_dismiss'.tr(),
+                  style: const TextStyle(color: Colors.white38, fontSize: 13),
+                ),
               ),
             ),
           ],
@@ -530,7 +570,6 @@ class _EmergencyCallScreenState extends State<EmergencyCallScreen>
         );
     }
   }
-
 }
 
 class _StatusPresentation {

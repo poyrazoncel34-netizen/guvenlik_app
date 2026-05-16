@@ -6,9 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 /// If _startTime is null when the callback fires, the app crashes.
 void main() {
   test('countdown timer should not force-unwrap _startTime', () {
-    final source = File(
-      'lib/screens/countdown_screen.dart',
-    ).readAsStringSync();
+    final source = File('lib/screens/countdown_screen.dart').readAsStringSync();
 
     // _startTime! is a dangerous force unwrap in the timer callback
     expect(
