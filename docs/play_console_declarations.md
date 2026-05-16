@@ -37,6 +37,17 @@ The service is declared as `foregroundServiceType="specialUse"` because the work
 
 Per Android docs, `specialUse` is the documented fallback when a foreground service does real, user-perceptible work that does not match the other named types. The service is started only by user action, displays a persistent notification, and ends when the user cancels or the session timer expires.
 
+### Reviewer note — why this is NOT a `location` service
+
+KoruBeni's keepalive service intentionally does **not** read or stream location while running. Specifically:
+
+- The bundled service entry that uses `foregroundServiceType="specialUse"` is `id.flutter.flutter_background_service.BackgroundService` (see `android/app/src/main/AndroidManifest.xml`); the service body performs **timer accounting, alarm scheduling, and persistent notification upkeep only**.
+- Geolocator's bundled foreground location service (`com.baseflow.geolocator.GeolocatorLocationService`) is explicitly removed from the merged manifest via `tools:node="remove"`. Location is never accessed in a background/service context.
+- Location is read **on demand only**, in the regular foreground Activity context, when the user opens the map screen or starts an in-app SOS flow. There is no continuous streaming, no geofencing, no background location.
+- `ACCESS_BACKGROUND_LOCATION` is not declared. Only `ACCESS_FINE_LOCATION` / `ACCESS_COARSE_LOCATION`, requested as foreground permissions.
+
+If `foregroundServiceType="location"` were declared instead, it would (a) misrepresent the service's actual behavior to Play review, (b) imply continuous location access that the user did not consent to, and (c) require ACCESS_BACKGROUND_LOCATION review treatment that does not apply here. `specialUse` is the accurate type.
+
 ### Subtype declaration
 
 The manifest declares the special-use subtype as a `<property>` on the service entry, per Android requirements:

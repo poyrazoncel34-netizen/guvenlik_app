@@ -154,6 +154,12 @@ void main() async {
     return false;
   };
 
+  // Android 15 (API 35) enforces edge-to-edge for any app targeting SDK 35
+  // or higher. Opt in explicitly so the engine never falls back to the
+  // legacy inset behavior, and so transparent status/nav bars are applied
+  // before the first frame paints. Per-Scaffold SafeArea remains required.
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,

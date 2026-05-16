@@ -40,8 +40,13 @@ dependencies:
   encrypt: ^5.0.3
   sqflite: ^2.4.1
   # workmanager: ^0.5.2  # Geçici olarak devre dışı - uyumluluk sorunu
-  flutter_local_notifications: ^17.2.1
-  timezone: ^0.9.4
+  # Pinned to >=19.1.0 to skip the v19.0.x release-mode bug
+  # (notifications didn't fire in release builds; fixed in v19.1.0).
+  # Lower bound bumped from v17.2.1 for Android 14+ exact alarm API
+  # support. Re-test on every minor bump.
+  flutter_local_notifications: ^19.1.0
+  # Bumped to ^0.10.0 because flutter_local_notifications ^19.1.0 requires it.
+  timezone: ^0.10.0
   flutter:
     sdk: flutter
   audioplayers: ^6.5.1
@@ -93,6 +98,12 @@ flutter_launcher_icons:
   image_path: "assets/icon/app_icon.png"
   adaptive_icon_background: "#0A1B2A"
   adaptive_icon_foreground: "assets/icon/app_icon.png"
+  # Android 13+ themed icons + Android 16 QPR2 auto-themed icons. Reuses
+  # the same app_icon source until a dedicated single-color silhouette
+  # asset is produced. To improve themed-icon rendering, replace this
+  # with a white-on-transparent PNG sized 432x432, then run:
+  #   dart run flutter_launcher_icons
+  adaptive_icon_monochrome: "assets/icon/app_icon.png"
   min_sdk_android: 21
   web:
     generate: false

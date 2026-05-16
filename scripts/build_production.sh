@@ -109,6 +109,21 @@ echo "🗂️  Debug symbols: $SYMBOLS_DIR (zip'leyip Play Console'a yükleyin)"
 echo ""
 rm -f "$BUILD_LOG"
 
+# 16 KB page-size compatibility check (Play Store zorunluluğu Nov 1, 2025+)
+if [ -x "./scripts/verify_16kb_alignment.sh" ]; then
+    echo ""
+    echo "═══════════════════════════════════════════════════════════"
+    echo "🔍 16 KB page-size compatibility verification"
+    echo "═══════════════════════════════════════════════════════════"
+    if ./scripts/verify_16kb_alignment.sh "$AAB_PATH"; then
+        :
+    else
+        echo ""
+        echo "⚠️  16 KB alignment kontrolü uyarı verdi. Yukarıdaki çıktıyı"
+        echo "    inceleyin. Play Store'a yüklemeden önce düzeltilmelidir."
+    fi
+fi
+
 echo ""
 echo "═══════════════════════════════════════════════════════════"
 echo "✅ Build tamamlandı!"
