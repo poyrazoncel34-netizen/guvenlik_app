@@ -117,17 +117,27 @@ class _CheckInScreenState extends State<CheckInScreen>
         await PermissionHelper.requestNotificationPermission(currentContext);
     if (!currentContext.mounted) return;
     if (!notificationsAllowed) {
-      ScaffoldMessenger.of(currentContext).showSnackBar(
-        SnackBar(
-          content: Text("notification_session_permission_required".tr()),
-          backgroundColor: AppColors.warning,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+      // Rapor M.3 step 4: surface a "start anyway?" dialog instead of
+      // silently blocking. Lets the user choose between opening settings,
+      // cancelling, or starting the session in degraded mode.
+      final startAnyway =
+          await PermissionHelper.confirmStartSessionWithoutNotifications(
+            currentContext,
+          );
+      if (!currentContext.mounted) return;
+      if (!startAnyway) {
+        ScaffoldMessenger.of(currentContext).showSnackBar(
+          SnackBar(
+            content: Text("notification_session_permission_required".tr()),
+            backgroundColor: AppColors.warning,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
-        ),
-      );
-      return;
+        );
+        return;
+      }
     }
 
     final exactAlarmAcknowledged = await confirmExactAlarmPermissionOrDegraded(

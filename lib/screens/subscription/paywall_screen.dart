@@ -591,6 +591,10 @@ class _PaywallScreenState extends State<PaywallScreen> {
           onPressed: () => _openExternal(AppConstants.subscriptionTermsUrl),
           child: Text('legal_link_terms'.tr()),
         ),
+        TextButton(
+          onPressed: () => _openExternal(AppConstants.aydinlatmaMetniUrl),
+          child: Text('legal_link_aydinlatma'.tr()),
+        ),
       ],
     );
   }
