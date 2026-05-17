@@ -61,8 +61,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     await provider.updateProfile(name: _nameController.text.trim(), email: '');
 
     if (mounted) {
+      final messenger = ScaffoldMessenger.of(context);
       Navigator.pop(context, true);
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger.showSnackBar(
         SnackBar(
           content: Row(
             children: [
