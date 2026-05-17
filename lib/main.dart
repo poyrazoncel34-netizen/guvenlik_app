@@ -137,6 +137,13 @@ void main() async {
       debugPrint('FlutterError: ${details.exception}');
       return true;
     }());
+    // Forward to the framework's default presenter so the error is
+    // also written to Logcat / stderr in release builds. This is
+    // required for Google Play Pre-launch Report to surface Flutter
+    // framework errors (build/widget exceptions); without it, only
+    // native crashes appear in the report and Dart-side bugs stay
+    // invisible to automated QA crawlers.
+    FlutterError.presentError(details);
   };
 
   // Zero-fault: Fatal hataları yutma - return false ile standart hata yönetimine bırak
