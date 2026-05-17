@@ -31,6 +31,23 @@ void main() {
       );
     });
 
+    test('rejects overlong emergency contact phone numbers', () {
+      expect(
+        EmergencyNumberValidator.isUserContactPhoneNumber('123456789012345'),
+        isTrue,
+      );
+      expect(
+        EmergencyNumberValidator.isUserContactPhoneNumber('1234567890123456'),
+        isFalse,
+      );
+      expect(
+        EmergencyNumberValidator.isCallableEmergencyTarget(
+          '6565665655665656565656565656',
+        ),
+        isFalse,
+      );
+    });
+
     test('rejects empty and invalid numbers', () {
       expect(EmergencyNumberValidator.isCallableEmergencyTarget(''), isFalse);
       expect(

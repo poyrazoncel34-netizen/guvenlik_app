@@ -21,6 +21,8 @@ import '../presentation/providers/contacts_provider.dart';
 import '../presentation/providers/home_provider.dart';
 import '../widgets/emergency_contact_consent_dialog.dart';
 
+const int _manualContactPhoneInputLimit = 32;
+
 class ContactsPage extends StatefulWidget {
   const ContactsPage({super.key});
 
@@ -831,6 +833,11 @@ class _ContactsPageState extends State<ContactsPage> {
                   controller: phoneController,
                   keyboardType: TextInputType.phone,
                   textInputAction: TextInputAction.done,
+                  inputFormatters: [
+                    LengthLimitingTextInputFormatter(
+                      _manualContactPhoneInputLimit,
+                    ),
+                  ],
                   decoration: InputDecoration(
                     labelText: "contacts_manual_phone_label".tr(),
                     prefixIcon: const Icon(Icons.phone_rounded),

@@ -44,6 +44,11 @@ void main() {
         contains('EmergencyNumberValidator.isCallableEmergencyTarget'),
         reason: 'Manual entries must reject invalid short/random numbers.',
       );
+      expect(
+        source,
+        contains('LengthLimitingTextInputFormatter'),
+        reason: 'Manual phone input must be bounded before validation.',
+      );
     });
   });
 
