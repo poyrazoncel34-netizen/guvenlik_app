@@ -260,6 +260,7 @@ class _SafetyTimelineScreenState extends State<SafetyTimelineScreen> {
                   icon: Icons.location_on_rounded,
                   hint: "timeline_destination_hint".tr(),
                   label: "timeline_destination".tr(),
+                  maxLength: 120,
                 ),
                 const SizedBox(height: 14),
                 _buildTextField(
@@ -268,6 +269,7 @@ class _SafetyTimelineScreenState extends State<SafetyTimelineScreen> {
                   hint: "timeline_plan_hint".tr(),
                   label: "timeline_plan".tr(),
                   maxLines: 2,
+                  maxLength: 500,
                 ),
                 const SizedBox(height: 14),
                 _buildTextField(
@@ -276,6 +278,7 @@ class _SafetyTimelineScreenState extends State<SafetyTimelineScreen> {
                   hint: "timeline_notes_hint".tr(),
                   label: "timeline_notes".tr(),
                   maxLines: 3,
+                  maxLength: 1000,
                 ),
                 const SizedBox(height: 24),
                 SizedBox(
@@ -312,10 +315,13 @@ class _SafetyTimelineScreenState extends State<SafetyTimelineScreen> {
     required String hint,
     required String label,
     int maxLines = 1,
+    required int maxLength,
   }) {
     return TextField(
       controller: controller,
       maxLines: maxLines,
+      maxLength: maxLength,
+      inputFormatters: [LengthLimitingTextInputFormatter(maxLength)],
       style: const TextStyle(color: AppColors.textPrimary),
       decoration: InputDecoration(
         hintText: hint,
