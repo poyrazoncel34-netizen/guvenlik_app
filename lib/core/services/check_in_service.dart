@@ -538,4 +538,17 @@ class CheckInService extends ChangeNotifier {
     _tickTimer?.cancel();
     _tickTimer = null;
   }
+  bool _disposed = false;
+
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
+  }
+
+  @override
+  void notifyListeners() {
+    if (_disposed) return;
+    super.notifyListeners();
+  }
 }
