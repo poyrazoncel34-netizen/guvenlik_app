@@ -709,6 +709,8 @@ class _CountdownScreenState extends State<CountdownScreen>
                 ),
               );
             }
+          }).catchError((Object error, StackTrace stack) {
+            debugPrint('PinLockoutService.registerFailure failed: $error');
           });
           Future.delayed(const Duration(milliseconds: 300), () {
             if (mounted) {

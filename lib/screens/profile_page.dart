@@ -210,6 +210,8 @@ class _ProfilePageState extends State<ProfilePage> {
               if (value == true) {
                 provider.loadProfile();
               }
+            }).catchError((Object error, StackTrace stack) {
+              debugPrint('Navigator.push EditProfile failed: $error');
             });
           } else if (itemKey == "profile_security_pin") {
             PinSettingsHelper.showPinChangeSheet(context);
