@@ -643,7 +643,10 @@ class _FakeCallScreenState extends State<FakeCallScreen>
           ),
         ),
       ),
-    );
+    ).whenComplete(() {
+      nameController.dispose();
+      phoneController.dispose();
+    });
   }
 
   Future<void> _pickProfileImage() async {
