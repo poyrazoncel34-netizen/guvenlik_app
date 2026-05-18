@@ -545,6 +545,8 @@ class _FakeCallScreenState extends State<FakeCallScreen>
               const SizedBox(height: 14),
               TextField(
                 controller: nameController,
+                maxLength: 40,
+                inputFormatters: [LengthLimitingTextInputFormatter(40)],
                 style: const TextStyle(color: Colors.white),
                 decoration: InputDecoration(
                   hintText: "fake_call_caller_name".tr(),
@@ -580,6 +582,9 @@ class _FakeCallScreenState extends State<FakeCallScreen>
               const SizedBox(height: 12),
               TextField(
                 controller: phoneController,
+                keyboardType: TextInputType.phone,
+                maxLength: 20,
+                inputFormatters: [LengthLimitingTextInputFormatter(20)],
                 style: const TextStyle(color: Colors.white),
                 decoration: InputDecoration(
                   hintText: "fake_call_phone_number".tr(),
