@@ -314,11 +314,14 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     final exactAlarmOk =
         EmergencyReadinessService.instance.lastState?.exactAlarmPermission ??
         true;
+    final callPermissionOk =
+        EmergencyReadinessService.instance.lastState?.callPermission ?? false;
     final allReady =
         provider.locationPermissionGranted &&
         provider.contactsPermissionGranted &&
         provider.emergencyContact != null &&
-        exactAlarmOk;
+        exactAlarmOk &&
+        callPermissionOk;
     final title = allReady ? "ready".tr() : "setup_incomplete".tr();
     final subtitle = allReady
         ? "system_ready_desc".tr()
@@ -415,8 +418,24 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                   );
                 },
               ),
+              _buildStatusChip(
+                label: "phone_call_permission".tr(),
+                isOk: callPermissionOk,
+                onTap: _requestCallPhonePermission,
+              ),
             ],
           ),
+          if (!callPermissionOk) ...[
+            const SizedBox(height: 8),
+            Text(
+              "call_permission_fallback_note".tr(),
+              style: const TextStyle(
+                fontSize: 11,
+                height: 1.35,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -513,6 +532,12 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     if (message != null && context.mounted) {
       _showSnack(message);
     }
+  }
+
+  Future<void> _requestCallPhonePermission() async {
+    await PermissionHelper.requestCallPhonePermission(context);
+    await EmergencyReadinessService.instance.checkReadiness();
+    if (mounted) setState(() {});
   }
 
   Future<bool> _showPermissionRationale({
