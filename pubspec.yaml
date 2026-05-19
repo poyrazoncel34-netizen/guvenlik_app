@@ -91,6 +91,7 @@ dev_dependencies:
   flutter_lints: ^6.0.0
   mocktail: ^0.3.0
   flutter_launcher_icons: ^0.13.1
+  flutter_native_splash: ^2.4.7
 
 flutter_launcher_icons:
   android: true
@@ -113,7 +114,7 @@ flutter_native_splash:
   color: "#0A1B2A"
   
   # App icon to display in the center of the splash screen
-  image: assets/icon/app_icon.png
+  image: assets/icon/splash_shield.png
   
   # Branding image (optional - can be used for a logo at bottom)
   # branding: assets/icon/branding.png
@@ -128,7 +129,7 @@ flutter_native_splash:
     # Background color for Android 12+
     color: "#0A1B2A"
     # App icon for Android 12+
-    image: assets/icon/app_icon.png
+    image: assets/icon/splash_shield.png
     # Icon background color (should match main background)
     icon_background_color: "#0A1B2A"
   
