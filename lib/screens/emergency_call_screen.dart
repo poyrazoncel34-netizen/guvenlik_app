@@ -33,8 +33,11 @@ class EmergencyCallScreen extends StatefulWidget {
 
 class _EmergencyCallScreenState extends State<EmergencyCallScreen>
     with SingleTickerProviderStateMixin {
+  static const _confirmedCallAutoDismissDelay = Duration(seconds: 12);
+
   late AnimationController _pulseController;
   Timer? _failSafeTimer;
+  Timer? _autoDismissTimer;
   bool _failSafeShown = false;
 
   @override
@@ -48,6 +51,7 @@ class _EmergencyCallScreenState extends State<EmergencyCallScreen>
     // FAIL-SAFE TRUTH MODE: If nothing is confirmed after 5 seconds,
     // show fullscreen red alert.
     _scheduleFailSafe();
+    _scheduleAutoDismiss();
   }
 
   void _scheduleFailSafe() {
@@ -59,6 +63,19 @@ class _EmergencyCallScreenState extends State<EmergencyCallScreen>
       _failSafeShown = true;
       _showFailSafeAlert();
     });
+  }
+
+  void _scheduleAutoDismiss() {
+    if (!widget.callResult.isConfirmed) return;
+
+    _autoDismissTimer = Timer(_confirmedCallAutoDismissDelay, _returnHome);
+  }
+
+  Future<void> _returnHome() async {
+    _autoDismissTimer?.cancel();
+    await KoruBeniForegroundService.stop();
+    if (!mounted) return;
+    Navigator.of(context).popUntil((route) => route.isFirst);
   }
 
   Future<void> _showFailSafeAlert() async {
@@ -223,6 +240,7 @@ class _EmergencyCallScreenState extends State<EmergencyCallScreen>
   @override
   void dispose() {
     _failSafeTimer?.cancel();
+    _autoDismissTimer?.cancel();
     _pulseController.dispose();
     super.dispose();
   }
@@ -341,23 +359,17 @@ class _EmergencyCallScreenState extends State<EmergencyCallScreen>
                     Material(
                       color: Colors.transparent,
                       child: InkWell(
-                        onTap: () async {
-                          await KoruBeniForegroundService.stop();
-                          if (!context.mounted) return;
-                          Navigator.of(
-                            context,
-                          ).popUntil((route) => route.isFirst);
-                        },
+                        onTap: _returnHome,
                         customBorder: const CircleBorder(),
                         child: Container(
                           width: 76,
                           height: 76,
-                          decoration: const BoxDecoration(
-                            color: AppColors.emergency,
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withValues(alpha: 0.92),
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(
-                            Icons.call_end_rounded,
+                            Icons.home_rounded,
                             color: Colors.white,
                             size: 34,
                           ),

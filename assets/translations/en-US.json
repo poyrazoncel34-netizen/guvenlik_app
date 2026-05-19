@@ -322,7 +322,7 @@
   "emergency_map_shared": "Location session prepared",
   "emergency_map_share_btn": "Location Session",
   "emergency_map_help": "Emergency Help",
-  "emergency_call_end": "End Call",
+  "emergency_call_end": "Return Home",
   "panic_button_semantics_label": "Pro Panic Button",
   "panic_button_semantics_hint": "Hold to start the emergency countdown.",
   "panic_button_locked_semantics_label": "Locked Pro Panic SOS Button",
