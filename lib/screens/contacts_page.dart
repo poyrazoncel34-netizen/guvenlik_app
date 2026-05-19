@@ -722,7 +722,7 @@ class _ContactsPageState extends State<ContactsPage> {
         context: context,
         isScrollControlled: true,
         backgroundColor: Colors.transparent,
-        builder: (sheetContext) => Padding(
+        builder: (sheetContext) => SingleChildScrollView(
           padding: EdgeInsets.only(
             bottom: MediaQuery.of(sheetContext).viewInsets.bottom,
           ),
