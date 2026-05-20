@@ -81,87 +81,21 @@ class _CountdownScreenState extends State<CountdownScreen>
     _loadPin();
     _loadEmergencyContact();
     _syncLockoutState();
-    _showHonestyWarningThenStart();
+    _startCountdownAfterPermission();
     KoruBeniForegroundService.start();
   }
 
-  /// Shows a mandatory honesty warning before countdown begins.
-  /// User MUST acknowledge that this app requires manual confirmation.
-  Future<void> _showHonestyWarningThenStart() async {
+  /// Release-of-panic-button kicks off the countdown immediately.
+  /// CALL_PHONE permission is requested on first use so emergency dispatch
+  /// can place the call; user-facing copy lives in the system permission
+  /// sheet rather than an in-app dialog.
+  Future<void> _startCountdownAfterPermission() async {
     if (widget.isTestMode) {
       await _startCountdown();
       return;
     }
-    // Allow frame to build before showing dialog
+    // Allow the first frame to build before any platform request.
     await Future.delayed(const Duration(milliseconds: 300));
-    if (!mounted) return;
-
-    await showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1C1C1E),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 64,
-              height: 64,
-              decoration: BoxDecoration(
-                color: AppColors.warning.withValues(alpha: 0.15),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.warning_amber_rounded,
-                color: AppColors.warning,
-                size: 36,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'countdown_honesty_title'.tr(),
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w800,
-                color: Colors.white,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'countdown_honesty_body'.tr(),
-              style: const TextStyle(
-                fontSize: 14,
-                color: Colors.white70,
-                height: 1.5,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-        actions: [
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () => Navigator.pop(ctx),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.warning,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: Text(
-                'countdown_honesty_accept'.tr(),
-                style: const TextStyle(fontWeight: FontWeight.w700),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
     if (!mounted) return;
     await PermissionHelper.requestCallPhonePermission(context);
     if (!mounted) return;
