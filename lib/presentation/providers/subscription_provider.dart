@@ -20,7 +20,10 @@ class SubscriptionProvider extends ChangeNotifier {
   // ---------------------------------------------------------------------------
   // Getters
   // ---------------------------------------------------------------------------
-  bool get isPro => _isPro;
+  bool get isPro {
+    if (kDebugMode) return true; // GEÇICI: emülatör ekran görüntüsü - yayindan once kaldirilacak
+    return _isPro;
+  }
   bool get isLoading => _isLoading;
   Offerings? get offerings => _offerings;
   CustomerInfo? get customerInfo => _customerInfo;
