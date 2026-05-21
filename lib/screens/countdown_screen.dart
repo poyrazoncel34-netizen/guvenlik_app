@@ -25,7 +25,8 @@ import '../core/services/foreground_service.dart';
 import '../core/services/haptic_service.dart';
 import '../core/services/notification_service.dart';
 import '../core/services/emergency_platform_service.dart';
-import '../core/utils/permission_helper.dart';
+import '../core/constants/app_constants.dart';
+import '../core/utils/emergency_number_validator.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
 class CountdownScreen extends StatefulWidget {
@@ -79,89 +80,22 @@ class _CountdownScreenState extends State<CountdownScreen>
     _loadPin();
     _loadEmergencyContact();
     _syncLockoutState();
-    _showHonestyWarningThenStart();
+    _startCountdownAfterPermission();
     KoruBeniForegroundService.start();
   }
 
-  /// Shows a mandatory honesty warning before countdown begins.
-  /// User MUST acknowledge that this app requires manual confirmation.
-  Future<void> _showHonestyWarningThenStart() async {
+  /// Release-of-panic-button kicks off the countdown immediately.
+  /// CALL_PHONE permission is requested from the readiness card (see
+  /// [HomePage._requestCallPhonePermission]) so the emergency flow is not
+  /// interrupted; the pre-countdown honesty dialog was dropped to keep
+  /// the panic-button release responsive.
+  Future<void> _startCountdownAfterPermission() async {
     if (widget.isTestMode) {
       await _startCountdown();
       return;
     }
-    // Allow frame to build before showing dialog
+    // Allow the first frame to build before any platform request.
     await Future.delayed(const Duration(milliseconds: 300));
-    if (!mounted) return;
-
-    await showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1C1C1E),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 64,
-              height: 64,
-              decoration: BoxDecoration(
-                color: AppColors.warning.withValues(alpha: 0.15),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.warning_amber_rounded,
-                color: AppColors.warning,
-                size: 36,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'countdown_honesty_title'.tr(),
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w800,
-                color: Colors.white,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'countdown_honesty_body'.tr(),
-              style: const TextStyle(
-                fontSize: 14,
-                color: Colors.white70,
-                height: 1.5,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-        actions: [
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () => Navigator.pop(ctx),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.warning,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: Text(
-                'countdown_honesty_accept'.tr(),
-                style: const TextStyle(fontWeight: FontWeight.w700),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-    if (!mounted) return;
-    await PermissionHelper.requestCallPhonePermission(context);
     if (!mounted) return;
     await _startCountdown();
   }
@@ -197,14 +131,18 @@ class _CountdownScreenState extends State<CountdownScreen>
     try {
       final numbers = await _contactsRepository.getAllEmergencyNumbers();
       final validNumbers = numbers
-          .where(_isValidEmergencyNumber)
+          .where(EmergencyNumberValidator.isCallableEmergencyTarget)
           .toList(growable: false);
       final primaryCandidate = _emergencyContact?.phone;
       final primaryNumber =
-          primaryCandidate != null && _isValidEmergencyNumber(primaryCandidate)
+          primaryCandidate != null &&
+              EmergencyNumberValidator.isCallableEmergencyTarget(
+                primaryCandidate,
+              )
           ? primaryCandidate
-          : (validNumbers.isNotEmpty ? validNumbers.first : '');
-      if (primaryNumber.isEmpty) return;
+          : (validNumbers.isNotEmpty
+                ? validNumbers.first
+                : AppConstants.turkeyEmergencyNumber);
 
       // Schedule alarm for 12 seconds from now (10s countdown + 2s grace)
       final deadline = DateTime.now().add(const Duration(seconds: 12));
@@ -303,24 +241,18 @@ class _CountdownScreenState extends State<CountdownScreen>
   }
 
   Future<void> _executeEmergency() async {
-    final numbers = (await _contactsRepository.getAllEmergencyNumbers())
-        .where(_isValidEmergencyNumber)
-        .toList(growable: false);
-    if (numbers.isEmpty) {
-      await KoruBeniForegroundService.stop();
-      if (mounted) {
-        await _showBlockingFailure(
-          title: 'countdown_no_contact_title'.tr(),
-          body: 'countdown_no_contact_body'.tr(),
-          phoneNumber: '',
-        );
-      }
-      return;
-    }
+    final configuredNumbers =
+        (await _contactsRepository.getAllEmergencyNumbers())
+            .where(EmergencyNumberValidator.isCallableEmergencyTarget)
+            .toList(growable: false);
+    final numbers = configuredNumbers.isNotEmpty
+        ? configuredNumbers
+        : const [AppConstants.turkeyEmergencyNumber];
 
     final primaryCandidate = _emergencyContact?.phone;
     final primaryNumber =
-        primaryCandidate != null && _isValidEmergencyNumber(primaryCandidate)
+        primaryCandidate != null &&
+            EmergencyNumberValidator.isCallableEmergencyTarget(primaryCandidate)
         ? primaryCandidate
         : (numbers.isNotEmpty ? numbers.first : null);
 
@@ -353,6 +285,9 @@ class _CountdownScreenState extends State<CountdownScreen>
     if (primaryNumber != null && primaryNumber.isNotEmpty) {
       callResult = await EmergencyPlatformService.instance
           .executeEmergencyNative(primaryNumber: primaryNumber);
+      if (callResult.isSuccess) {
+        calledNumber = callResult.number;
+      }
       if (!callResult.isSuccess && numbers.length > 1) {
         for (final fallbackNumber in numbers) {
           if (fallbackNumber == primaryNumber) continue;
@@ -405,13 +340,6 @@ class _CountdownScreenState extends State<CountdownScreen>
         }
       }
     }
-  }
-
-  bool _isValidEmergencyNumber(String number) {
-    final digits = AndroidIntentService.normalizePhoneNumber(
-      number,
-    ).replaceAll(RegExp(r'\D'), '');
-    return digits.length >= 7;
   }
 
   /// Shows a FULLSCREEN BLOCKING failure dialog. User MUST interact.
@@ -685,35 +613,40 @@ class _CountdownScreenState extends State<CountdownScreen>
         } else {
           _shakeController.forward(from: 0);
           HapticFeedback.vibrate();
-          PinLockoutService.instance.registerFailure().then((state) {
-            if (!mounted) return;
-            setState(() {
-              _lockoutEndTime = state.lockedUntil;
-              _lockoutRemaining = state.remainingSeconds;
-            });
-            if (state.isLocked) {
-              _startPinLockout(state);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    'brute_force_locked'.tr(
-                      namedArgs: {'seconds': '${state.remainingSeconds}'},
+          PinLockoutService.instance
+              .registerFailure()
+              .then((state) {
+                if (!mounted) return;
+                setState(() {
+                  _lockoutEndTime = state.lockedUntil;
+                  _lockoutRemaining = state.remainingSeconds;
+                });
+                if (state.isLocked) {
+                  _startPinLockout(state);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'brute_force_locked'.tr(
+                          namedArgs: {'seconds': '${state.remainingSeconds}'},
+                        ),
+                      ),
+                      backgroundColor: AppColors.emergency,
+                      behavior: SnackBarBehavior.floating,
+                      duration: const Duration(seconds: 3),
                     ),
-                  ),
-                  backgroundColor: AppColors.emergency,
-                  behavior: SnackBarBehavior.floating,
-                  duration: const Duration(seconds: 3),
-                ),
-              );
-            } else {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text("pin_mismatch".tr()),
-                  backgroundColor: AppColors.emergency,
-                ),
-              );
-            }
-          });
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text("pin_mismatch".tr()),
+                      backgroundColor: AppColors.emergency,
+                    ),
+                  );
+                }
+              })
+              .catchError((Object error, StackTrace stack) {
+                debugPrint('PinLockoutService.registerFailure failed: $error');
+              });
           Future.delayed(const Duration(milliseconds: 300), () {
             if (mounted) {
               setState(() => _pin = "");
@@ -756,265 +689,302 @@ class _CountdownScreenState extends State<CountdownScreen>
             );
           },
           child: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                children: [
-                  const SizedBox(height: 24),
-                  // Warning banner
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: AppColors.emergency.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(18),
-                      border: Border.all(
-                        color: AppColors.emergency.withValues(alpha: 0.3),
-                        width: 2,
-                      ),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final compact = constraints.maxHeight < 720;
+                final pagePadding = compact ? 16.0 : 24.0;
+                final topGap = compact ? 8.0 : 12.0;
+                final sectionGap = 24.0;
+                final pinGap = compact ? 28.0 : 24.0;
+                final bottomGap = 16.0;
+                final circleSize = compact ? 152.0 : 144.0;
+                final countdownFontSize = compact ? 58.0 : 56.0;
+                final bannerPadding = compact ? 16.0 : 20.0;
+                return SingleChildScrollView(
+                  padding: EdgeInsets.all(pagePadding),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minHeight: constraints.maxHeight - (pagePadding * 2),
                     ),
-                    child: Row(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(
-                          Icons.warning_rounded,
-                          color: AppColors.emergency,
-                          size: 26,
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Text(
-                            "countdown_warning_title".tr(),
+                          SizedBox(height: topGap),
+                          // Warning banner
+                          Container(
+                            padding: EdgeInsets.all(bannerPadding),
+                            decoration: BoxDecoration(
+                              color: AppColors.emergency.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(18),
+                              border: Border.all(
+                                color: AppColors.emergency.withValues(
+                                  alpha: 0.3,
+                                ),
+                                width: 2,
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Icons.warning_rounded,
+                                  color: AppColors.emergency,
+                                  size: 26,
+                                ),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: Text(
+                                    "countdown_warning_title".tr(),
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w800,
+                                      color: AppColors.textPrimary,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          if (widget.isTestMode) ...[
+                            const SizedBox(height: 10),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 8,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.success.withValues(
+                                  alpha: 0.15,
+                                ),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: AppColors.success.withValues(
+                                    alpha: 0.3,
+                                  ),
+                                ),
+                              ),
+                              child: Text(
+                                "countdown_test_mode".tr(),
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.success,
+                                ),
+                              ),
+                            ),
+                          ],
+                          SizedBox(height: sectionGap),
+                          // ── Countdown circle with gradient arc + tick bounce ──
+                          Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              // Gradient arc
+                              SizedBox(
+                                width: circleSize,
+                                height: circleSize,
+                                child: CustomPaint(
+                                  painter: _GradientArcPainter(
+                                    progress: _countdown / 10,
+                                    startColor: urgentColor,
+                                    endColor: isUrgent
+                                        ? const Color(0xFFFF8A65)
+                                        : AppColors.primary,
+                                    bgColor: AppColors.border.withValues(
+                                      alpha: 0.5,
+                                    ),
+                                    strokeWidth: 14,
+                                  ),
+                                ),
+                              ),
+                              // Bouncing countdown number
+                              AnimatedBuilder(
+                                animation: _tickBounceController,
+                                builder: (context, child) {
+                                  final bounceScale =
+                                      1.0 +
+                                      (sin(_tickBounceController.value * pi) *
+                                          0.12);
+                                  return Transform.scale(
+                                    scale: bounceScale,
+                                    child: child,
+                                  );
+                                },
+                                child: Column(
+                                  children: [
+                                    Text(
+                                      "$_countdown",
+                                      style: TextStyle(
+                                        fontSize: countdownFontSize,
+                                        fontWeight: FontWeight.w900,
+                                        color: urgentColor,
+                                        height: 1,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      "countdown_seconds".tr(),
+                                      style: const TextStyle(
+                                        fontSize: 15,
+                                        color: AppColors.textSecondary,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: sectionGap),
+                          if (_isPinLockedOut) ...[
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 10,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.emergency.withValues(
+                                  alpha: 0.12,
+                                ),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: AppColors.emergency.withValues(
+                                    alpha: 0.4,
+                                  ),
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(
+                                    Icons.lock_clock_rounded,
+                                    color: AppColors.emergency,
+                                    size: 20,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'brute_force_locked_short'.tr(
+                                      namedArgs: {
+                                        'seconds': '$_lockoutRemaining',
+                                      },
+                                    ),
+                                    style: const TextStyle(
+                                      color: AppColors.emergency,
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                          ],
+                          Text(
+                            _correctPin == null
+                                ? "settings_pin_not_found".tr()
+                                : "countdown_enter_pin".tr(),
                             style: const TextStyle(
-                              fontSize: 16,
+                              fontSize: 19,
                               fontWeight: FontWeight.w800,
                               color: AppColors.textPrimary,
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  if (widget.isTestMode) ...[
-                    const SizedBox(height: 10),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.success.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: AppColors.success.withValues(alpha: 0.3),
-                        ),
-                      ),
-                      child: Text(
-                        "countdown_test_mode".tr(),
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.success,
-                        ),
-                      ),
-                    ),
-                  ],
-                  const SizedBox(height: 50),
-                  // ── Countdown circle with gradient arc + tick bounce ──
-                  Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      // Gradient arc
-                      SizedBox(
-                        width: 180,
-                        height: 180,
-                        child: CustomPaint(
-                          painter: _GradientArcPainter(
-                            progress: _countdown / 10,
-                            startColor: urgentColor,
-                            endColor: isUrgent
-                                ? const Color(0xFFFF8A65)
-                                : AppColors.primary,
-                            bgColor: AppColors.border.withValues(alpha: 0.5),
-                            strokeWidth: 14,
-                          ),
-                        ),
-                      ),
-                      // Bouncing countdown number
-                      AnimatedBuilder(
-                        animation: _tickBounceController,
-                        builder: (context, child) {
-                          final bounceScale =
-                              1.0 +
-                              (sin(_tickBounceController.value * pi) * 0.12);
-                          return Transform.scale(
-                            scale: bounceScale,
-                            child: child,
-                          );
-                        },
-                        child: Column(
-                          children: [
+                          if (_emergencyContact != null) ...[
+                            const SizedBox(height: 6),
                             Text(
-                              "$_countdown",
-                              style: TextStyle(
-                                fontSize: 70,
-                                fontWeight: FontWeight.w900,
-                                color: urgentColor,
-                                height: 1,
+                              "countdown_emergency_contact".tr(
+                                namedArgs: {"name": _emergencyContact!.name},
                               ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              "countdown_seconds".tr(),
                               style: const TextStyle(
-                                fontSize: 15,
+                                fontSize: 13,
                                 color: AppColors.textSecondary,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
                           ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 50),
-                  if (_isPinLockedOut) ...[
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 10,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.emergency.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: AppColors.emergency.withValues(alpha: 0.4),
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            Icons.lock_clock_rounded,
-                            color: AppColors.emergency,
-                            size: 20,
-                          ),
-                          const SizedBox(width: 8),
+                          const SizedBox(height: 10),
                           Text(
-                            'brute_force_locked_short'.tr(
-                              namedArgs: {'seconds': '$_lockoutRemaining'},
-                            ),
+                            _correctPin == null
+                                ? "emergency_no_pin_warning".tr()
+                                : "countdown_disclaimer".tr(),
                             style: const TextStyle(
-                              color: AppColors.emergency,
-                              fontWeight: FontWeight.w700,
-                              fontSize: 14,
+                              fontSize: 12,
+                              color: AppColors.textSecondary,
                             ),
+                            textAlign: TextAlign.center,
                           ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                  ],
-                  Text(
-                    _correctPin == null
-                        ? "settings_pin_not_found".tr()
-                        : "countdown_enter_pin".tr(),
-                    style: const TextStyle(
-                      fontSize: 19,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  if (_emergencyContact != null) ...[
-                    const SizedBox(height: 6),
-                    Text(
-                      "countdown_emergency_contact".tr(
-                        namedArgs: {"name": _emergencyContact!.name},
-                      ),
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: AppColors.textSecondary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                  const SizedBox(height: 10),
-                  Text(
-                    _correctPin == null
-                        ? "emergency_no_pin_warning".tr()
-                        : "countdown_disclaimer".tr(),
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: AppColors.textSecondary,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  if (_correctPin == null) ...[
-                    const SizedBox(height: 16),
-                    OutlinedButton.icon(
-                      onPressed: _cancelWithoutPin,
-                      icon: const Icon(Icons.close_rounded, size: 20),
-                      label: Text("emergency_cancel_without_pin".tr()),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: AppColors.warning,
-                        side: const BorderSide(color: AppColors.warning),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 24,
-                          vertical: 14,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                      ),
-                    ),
-                  ],
-                  const Spacer(),
-                  if (_correctPin != null) ...[
-                    // ── PIN dots with shake ──
-                    AnimatedBuilder(
-                      animation: _shakeController,
-                      builder: (context, child) {
-                        final offset =
-                            sin(_shakeController.value * pi * 4) * 12;
-                        return Transform.translate(
-                          offset: Offset(offset, 0),
-                          child: child,
-                        );
-                      },
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: List.generate(4, (index) {
-                          final isFilled = index < _pin.length;
-                          return AnimatedContainer(
-                            duration: const Duration(milliseconds: 150),
-                            curve: Curves.easeOutBack,
-                            margin: const EdgeInsets.symmetric(horizontal: 10),
-                            width: isFilled ? 20 : 18,
-                            height: isFilled ? 20 : 18,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: isFilled
-                                  ? AppColors.primary
-                                  : AppColors.border,
-                              boxShadow: isFilled
-                                  ? [
-                                      BoxShadow(
-                                        color: AppColors.primary.withValues(
-                                          alpha: 0.4,
-                                        ),
-                                        blurRadius: 8,
-                                      ),
-                                    ]
-                                  : null,
+                          if (_correctPin == null) ...[
+                            const SizedBox(height: 16),
+                            OutlinedButton.icon(
+                              onPressed: _cancelWithoutPin,
+                              icon: const Icon(Icons.close_rounded, size: 20),
+                              label: Text("emergency_cancel_without_pin".tr()),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: AppColors.warning,
+                                side: const BorderSide(
+                                  color: AppColors.warning,
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 24,
+                                  vertical: 14,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
+                              ),
                             ),
-                          );
-                        }),
-                      ),
+                          ],
+                          SizedBox(height: sectionGap),
+                          if (_correctPin != null) ...[
+                            // ── PIN dots with shake ──
+                            AnimatedBuilder(
+                              animation: _shakeController,
+                              builder: (context, child) {
+                                final offset =
+                                    sin(_shakeController.value * pi * 4) * 12;
+                                return Transform.translate(
+                                  offset: Offset(offset, 0),
+                                  child: child,
+                                );
+                              },
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: List.generate(4, (index) {
+                                  final isFilled = index < _pin.length;
+                                  return AnimatedContainer(
+                                    duration: const Duration(milliseconds: 150),
+                                    curve: Curves.easeOutBack,
+                                    margin: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                    ),
+                                    width: isFilled ? 20 : 18,
+                                    height: isFilled ? 20 : 18,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: isFilled
+                                          ? AppColors.primary
+                                          : AppColors.border,
+                                      boxShadow: isFilled
+                                          ? [
+                                              BoxShadow(
+                                                color: AppColors.primary
+                                                    .withValues(alpha: 0.4),
+                                                blurRadius: 8,
+                                              ),
+                                            ]
+                                          : null,
+                                    ),
+                                  );
+                                }),
+                              ),
+                            ),
+                            SizedBox(height: pinGap),
+                            _buildNumberPad(),
+                          ],
+                          SizedBox(height: bottomGap),
+                        ],
                     ),
-                    const SizedBox(height: 50),
-                    _buildNumberPad(),
-                  ],
-                  const SizedBox(height: 24),
-                ],
-              ),
+                  ),
+                );
+              },
             ),
           ),
         ),
@@ -1029,8 +999,8 @@ class _CountdownScreenState extends State<CountdownScreen>
       padding: const EdgeInsets.symmetric(horizontal: 30),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 3,
-        childAspectRatio: 1.15,
-        mainAxisSpacing: 18,
+        childAspectRatio: 1.5,
+        mainAxisSpacing: 12,
         crossAxisSpacing: 18,
       ),
       itemCount: 12,

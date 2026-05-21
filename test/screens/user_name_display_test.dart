@@ -17,23 +17,23 @@ void main() {
     });
 
     test('ProfilePage displays name via provider.profileName', () {
-      final source =
-          File('lib/screens/profile_page.dart').readAsStringSync();
+      final source = File('lib/screens/profile_page.dart').readAsStringSync();
       expect(
         source.contains('provider.profileName'),
         isTrue,
-        reason: 'ProfilePage kullanıcı adını provider.profileName üzerinden '
+        reason:
+            'ProfilePage kullanıcı adını provider.profileName üzerinden '
             'göstermeli',
       );
     });
 
     test('SettingsPage displays name via provider.profileName', () {
-      final source =
-          File('lib/screens/settings_page.dart').readAsStringSync();
+      final source = File('lib/screens/settings_page.dart').readAsStringSync();
       expect(
         source.contains('provider.profileName'),
         isTrue,
-        reason: 'SettingsPage kullanıcı adını provider.profileName üzerinden '
+        reason:
+            'SettingsPage kullanıcı adını provider.profileName üzerinden '
             'göstermeli',
       );
     });

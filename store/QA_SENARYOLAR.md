@@ -16,7 +16,7 @@ This file is a summary only. Production readiness must be based on the matrix ro
 | --- | --- |
 | Android 13 physical device | NEEDS_REAL_DEVICE_TEST |
 | Android 14 physical device | NEEDS_REAL_DEVICE_TEST |
-| Android 15 physical device | Optional but recommended |
+| Android 15 physical device | NEEDS_REAL_DEVICE_TEST if available to release team; otherwise document unavailability |
 | Aggressive OEM battery device such as Samsung/Xiaomi/Oppo | Optional but recommended |
 
 ## Required Flow Groups
@@ -35,7 +35,7 @@ This file is a summary only. Production readiness must be based on the matrix ro
 - Data export and data deletion.
 - Android notification settings showing only canonical safety channels.
 - Paywall no-offering fallback, monthly purchase, annual purchase, restore, and cancel/manage subscription.
-- Closed testing tester opt-in when applicable.
+- Play Console tester opt-in for billing/runtime QA. Closed testing production access is account-dependent and must be checked on the Play Console production access screen; if the personal-account rule applies, track 12 opted-in testers for 14 continuous days.
 
 ## Screenshot / Store QA
 

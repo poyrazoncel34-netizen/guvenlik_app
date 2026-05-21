@@ -21,6 +21,9 @@
     <uses-permission android:name="android.permission.VIBRATE" />
     <!-- CALL_PHONE: direct emergency call (falls back to dialer if permission denied) -->
     <uses-permission android:name="android.permission.CALL_PHONE" />
+    <uses-feature
+        android:name="android.hardware.telephony"
+        android:required="false" />
     <!-- Foreground Service for keeping app alive in background -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <!-- FOREGROUND_SERVICE_MICROPHONE removed — audio recording feature disabled -->
@@ -31,15 +34,10 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <!-- 
-    ⚠️ GOOGLE PLAY POLICY WARNING ⚠️
-    REQUEST_IGNORE_BATTERY_OPTIMIZATIONS is a RESTRICTED permission.
-    Google Play often REJECTS apps using this unless:
-    1. The app's core functionality requires background operation (emergency app ✓)
-    2. You provide clear justification in the Play Console declaration form
-    3. The app prompts users to whitelist it (not automatically)
-    
-    For KoruBeni: this is only a user-controlled reliability prompt for active
-    check-in/safe-walk support. The app must still degrade honestly when denied.
+    REQUEST_IGNORE_BATTERY_OPTIMIZATIONS is restricted and must stay tied to
+    user-controlled active safety-session reliability. The app must present it
+    as optional, must continue in degraded mode if denied, and must keep any
+    Play Console declaration/operator evidence outside the repo audit.
     -->
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
     <!-- Screen size compatibility -->
@@ -58,7 +56,8 @@
         android:networkSecurityConfig="@xml/network_security_config"
         android:allowBackup="false"
         android:fullBackupContent="false"
-        android:usesCleartextTraffic="false">
+        android:usesCleartextTraffic="false"
+        android:enableOnBackInvokedCallback="true">
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -81,7 +80,9 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
-        <!-- Flutter Background Service — timer/check-in keepalive (specialUse to avoid Android 15 dataSync 6h limit) -->
+        <!-- Flutter Background Service — user-started safety timer/session keepalive.
+             specialUse is declared because Safe Walk, Check-In, and emergency countdown
+             reliability do not fit a single standard foregroundServiceType. -->
         <service
             android:name="id.flutter.flutter_background_service.BackgroundService"
             tools:replace="android:exported,android:foregroundServiceType"
@@ -97,13 +98,6 @@
         <!-- Geolocator's foreground location service is not used in this Play release. -->
         <service
             android:name="com.baseflow.geolocator.GeolocatorLocationService"
-            tools:node="remove" />
-        <!-- RevenueCat Amazon IAP components are not used in the Google Play flavor. -->
-        <activity
-            android:name="com.revenuecat.purchases.amazon.purchasing.ProxyAmazonBillingActivity"
-            tools:node="remove" />
-        <receiver
-            android:name="com.amazon.device.iap.ResponseReceiver"
             tools:node="remove" />
         <!-- Shake detection is disabled in this release; service kept out of manifest. -->
         <!-- Audio recording service is disabled in this release. -->

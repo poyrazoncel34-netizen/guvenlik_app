@@ -97,5 +97,26 @@ void main() {
       );
       expect(emergencyMap, contains('location_sharing_start_failed'));
     });
+
+    test('OpenStreetMap use stays user-viewed and attributed', () {
+      final docs = [
+        File('docs/play_console_declarations.md'),
+        File('docs/release_risks.md'),
+        File('store/DATA_SAFETY_FORM.md'),
+        File('store/PLAY_CONSOLE_COPY_PASTE_PACK.md'),
+      ].map((file) => file.readAsStringSync()).join('\n');
+
+      expect(source, contains('© OpenStreetMap contributors'));
+      expect(emergencyMap, contains('© OpenStreetMap contributors'));
+      expect(source, contains('user actively views'));
+      expect(source, contains('Do not bulk download'));
+      expect(emergencyMap, contains('User-viewed online tiles only'));
+      expect(source, isNot(contains('.mbtiles')));
+      expect(emergencyMap, isNot(contains('.mbtiles')));
+      expect(docs, contains('must not bulk download'));
+      expect(docs, contains('pre-seed'));
+      expect(docs, contains('archive'));
+      expect(docs, contains('production-scale'));
+    });
   });
 }

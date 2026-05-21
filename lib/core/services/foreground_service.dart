@@ -207,6 +207,8 @@ Future<void> _onStart(ServiceInstance service) async {
       prefs.getString(_kPrefForegroundActiveTitle) ?? _kFallbackBrand;
   final activeBody =
       prefs.getString(_kPrefForegroundActiveBody) ?? _kFallbackBrand;
+  var currentTitle = activeTitle;
+  var currentBody = activeBody;
 
   final FlutterLocalNotificationsPlugin notificationsPlugin =
       FlutterLocalNotificationsPlugin();
@@ -231,22 +233,28 @@ Future<void> _onStart(ServiceInstance service) async {
   });
 
   // Notification update command from the main isolate.
-  service.on('updateNotification').listen((event) {
-    if (event != null && service is AndroidServiceInstance) {
-      notificationsPlugin.show(
-        kForegroundNotificationId,
-        event['title'] as String? ?? activeTitle,
-        event['content'] as String? ?? activeBody,
-        NotificationDetails(
-          android: AndroidNotificationDetails(
-            kForegroundChannelId,
-            channelName,
-            icon: 'ic_bg_service_small',
-            ongoing: true,
-            autoCancel: false,
+  service.on('updateNotification').listen((event) async {
+    try {
+      if (event != null && service is AndroidServiceInstance) {
+        currentTitle = event['title'] as String? ?? currentTitle;
+        currentBody = event['content'] as String? ?? currentBody;
+        await notificationsPlugin.show(
+          kForegroundNotificationId,
+          currentTitle,
+          currentBody,
+          NotificationDetails(
+            android: AndroidNotificationDetails(
+              kForegroundChannelId,
+              channelName,
+              icon: 'ic_bg_service_small',
+              ongoing: true,
+              autoCancel: false,
+            ),
           ),
-        ),
-      );
+        );
+      }
+    } catch (e) {
+      debugPrint('ForegroundService: notification update failed: $e');
     }
   });
 
@@ -258,8 +266,8 @@ Future<void> _onStart(ServiceInstance service) async {
         if (await service.isForegroundService()) {
           notificationsPlugin.show(
             kForegroundNotificationId,
-            activeTitle,
-            activeBody,
+            currentTitle,
+            currentBody,
             NotificationDetails(
               android: AndroidNotificationDetails(
                 kForegroundChannelId,

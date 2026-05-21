@@ -188,8 +188,9 @@ abstract class PinSettingsHelper {
                     description: "activity_pin_changed_desc".tr(),
                   );
                   if (ctx.mounted) {
+                    final messenger = ScaffoldMessenger.of(ctx);
                     Navigator.pop(ctx);
-                    ScaffoldMessenger.of(ctx).showSnackBar(
+                    messenger.showSnackBar(
                       SnackBar(
                         content: Text("settings_pin_updated".tr()),
                         backgroundColor: AppColors.success,
@@ -218,6 +219,9 @@ abstract class PinSettingsHelper {
           ],
         ),
       ),
-    );
+    ).whenComplete(() {
+      oldController.dispose();
+      newController.dispose();
+    });
   }
 }

@@ -12,7 +12,8 @@ void main() {
     expect(
       source.contains('executeEmergencyNative'),
       isTrue,
-      reason: 'EmergencyPlatformHandler must route executeEmergencyNative to EmergencyExecutor',
+      reason:
+          'EmergencyPlatformHandler must route executeEmergencyNative to EmergencyExecutor',
     );
 
     expect(

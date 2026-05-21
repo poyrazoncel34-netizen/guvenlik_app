@@ -176,4 +176,17 @@ class SettingsProvider extends ChangeNotifier {
     await prefs.setBool(AppConstants.prefVolumeTrigger, value);
     await VolumeTriggerService.instance.setEnabled(value);
   }
+  bool _disposed = false;
+
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
+  }
+
+  @override
+  void notifyListeners() {
+    if (_disposed) return;
+    super.notifyListeners();
+  }
 }

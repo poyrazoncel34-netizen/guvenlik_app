@@ -1,8 +1,8 @@
 // ============================================================================
 // PİL OPTİMİZASYONU KURULUM SİHİRBAZI
 // ============================================================================
-// Xiaomi, Samsung, Huawei, Oppo gibi üreticilerin agresif pil yönetimini
-// devre dışı bırakması için kullanıcıyı yönlendirir.
+// Xiaomi, Samsung, Huawei, Oppo gibi üreticilerde aktif güvenlik oturumları
+// için opsiyonel pil/güvenilirlik ayarlarına yönlendirir.
 // ============================================================================
 
 import 'dart:io';
@@ -87,7 +87,8 @@ class _BatteryOptimizationWizardState extends State<BatteryOptimizationWizard> {
     } catch (_) {}
   }
 
-  /// Pil kısıtlamasını kaldır - PermissionHelper ile Prominent Disclosure önce gösterilir.
+  /// Opsiyonel pil optimizasyonu muafiyeti ister.
+  /// PermissionHelper ile Prominent Disclosure önce gösterilir.
   Future<void> _requestDisableOptimization(BuildContext context) async {
     if (!mounted) return;
     try {
@@ -225,7 +226,7 @@ class _BatteryOptimizationWizardState extends State<BatteryOptimizationWizard> {
 
               // Action buttons
               if (!_isOptimizationDisabled) ...[
-                // Primary: Disable battery optimization
+                // Primary: request optional battery optimization exemption
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(

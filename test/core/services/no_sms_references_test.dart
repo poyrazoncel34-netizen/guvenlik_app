@@ -7,9 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   group('No SMS references in production code', () {
     test('health check must NOT contain sms_permission key', () {
-      final file = File(
-        'lib/core/services/emergency_core_service.dart',
-      );
+      final file = File('lib/core/services/emergency_core_service.dart');
       expect(file.existsSync(), isTrue);
       final content = file.readAsStringSync();
       expect(
@@ -56,8 +54,11 @@ void main() {
       final file = File('lib/constants/legal_texts.dart');
       expect(file.existsSync(), isTrue);
       final content = file.readAsStringSync();
-      expect(content.contains('SMS'), isFalse,
-          reason: 'legal_texts must not mention SMS');
+      expect(
+        content.contains('SMS'),
+        isFalse,
+        reason: 'legal_texts must not mention SMS',
+      );
     });
 
     test('translation files must NOT mention SMS', () {
@@ -68,8 +69,11 @@ void main() {
         final file = File(path);
         expect(file.existsSync(), isTrue, reason: '$path must exist');
         final content = file.readAsStringSync();
-        expect(content.contains('SMS'), isFalse,
-            reason: '$path must not mention SMS');
+        expect(
+          content.contains('SMS'),
+          isFalse,
+          reason: '$path must not mention SMS',
+        );
       }
     });
   });

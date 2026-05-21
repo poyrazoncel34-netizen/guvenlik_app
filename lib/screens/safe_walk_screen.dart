@@ -17,6 +17,7 @@ import '../core/services/notification_service.dart';
 import '../core/utils/permission_helper.dart';
 // Analytics service removed (offline-first)
 import '../core/constants/app_constants.dart';
+import '../core/widgets/exact_alarm_permission_guard.dart';
 import '../core/widgets/feature_warning_dialog.dart';
 import '../domain/models/activity_event.dart';
 import '../widgets/siren_dialog.dart';
@@ -133,18 +134,34 @@ class _SafeWalkScreenState extends State<SafeWalkScreen>
         await PermissionHelper.requestNotificationPermission(currentContext);
     if (!currentContext.mounted) return;
     if (!notificationsAllowed) {
-      ScaffoldMessenger.of(currentContext).showSnackBar(
-        SnackBar(
-          content: Text("notification_session_permission_required".tr()),
-          backgroundColor: AppColors.warning,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+      // Rapor M.3 step 4: surface a "start anyway?" dialog instead of
+      // silently blocking. Lets the user choose between opening settings,
+      // cancelling, or starting the session in degraded mode (FGS still
+      // runs even without POST_NOTIFICATIONS granted).
+      final startAnyway =
+          await PermissionHelper.confirmStartSessionWithoutNotifications(
+            currentContext,
+          );
+      if (!currentContext.mounted) return;
+      if (!startAnyway) {
+        ScaffoldMessenger.of(currentContext).showSnackBar(
+          SnackBar(
+            content: Text("notification_session_permission_required".tr()),
+            backgroundColor: AppColors.warning,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
-        ),
-      );
-      return;
+        );
+        return;
+      }
     }
+
+    final exactAlarmAcknowledged = await confirmExactAlarmPermissionOrDegraded(
+      currentContext,
+    );
+    if (!exactAlarmAcknowledged || !currentContext.mounted) return;
 
     HapticFeedback.mediumImpact();
     final endTime = DateTime.now().add(Duration(minutes: _selectedMinutes));
@@ -181,6 +198,7 @@ class _SafeWalkScreenState extends State<SafeWalkScreen>
       }
     }
     await _persistState();
+    if (!mounted) return;
     _updateForegroundStatus();
 
     _preWarningFired = false;
@@ -457,7 +475,7 @@ class _SafeWalkScreenState extends State<SafeWalkScreen>
   }
 
   Widget _buildSetupView() {
-    return Column(
+    return _buildScrollableContent(
       children: [
         Container(
           padding: const EdgeInsets.all(24),
@@ -596,7 +614,7 @@ class _SafeWalkScreenState extends State<SafeWalkScreen>
     final progress = _remainingSeconds / (_selectedMinutes * 60);
     final isUrgent = _remainingSeconds <= 30;
 
-    return Column(
+    return _buildScrollableContent(
       children: [
         const SizedBox(height: 40),
         Stack(
@@ -750,6 +768,19 @@ class _SafeWalkScreenState extends State<SafeWalkScreen>
         ),
         const SizedBox(height: 16),
       ],
+    );
+  }
+
+  Widget _buildScrollableContent({required List<Widget> children}) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight),
+            child: IntrinsicHeight(child: Column(children: children)),
+          ),
+        );
+      },
     );
   }
 

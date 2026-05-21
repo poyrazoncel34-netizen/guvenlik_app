@@ -11,9 +11,10 @@ import io.flutter.plugin.common.MethodChannel
 
 /**
  * Doze Mode whitelist handler for Android.
- * 
- * Allows the app to bypass Doze Mode restrictions, critical for emergency apps
- * that need to send alerts even when the device is in deep sleep.
+ *
+ * Opens the optional battery optimization exemption flow for active
+ * safety-session reliability. Denial is expected; Dart code must keep a
+ * degraded path and avoid guarantee language.
  */
 class DozeModeHandler(private val context: Context) : MethodChannel.MethodCallHandler {
     
@@ -37,7 +38,7 @@ class DozeModeHandler(private val context: Context) : MethodChannel.MethodCallHa
     }
     
     /**
-     * Check if app is whitelisted from Doze Mode restrictions.
+     * Check if app is currently exempted from Doze Mode restrictions.
      */
     private fun isWhitelisted(): Boolean {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
@@ -61,7 +62,7 @@ class DozeModeHandler(private val context: Context) : MethodChannel.MethodCallHa
     }
     
     /**
-     * Request Doze Mode whitelist by opening system settings.
+     * Request optional Doze Mode whitelist by opening system settings.
      */
     private fun requestWhitelist() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {

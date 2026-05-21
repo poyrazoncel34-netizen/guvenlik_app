@@ -122,7 +122,7 @@ class MainActivity : FlutterFragmentActivity() {
                 android.util.Log.e("MainActivity", "Audio control channel failed: ${e.message}", e)
             }
 
-            // Doze Mode handler — battery optimization bypass
+            // Doze Mode handler — optional battery optimization reliability flow
             try {
                 dozeModeHandler = DozeModeHandler(this)
                 MethodChannel(messenger, DozeModeHandler.CHANNEL)
@@ -198,6 +198,24 @@ class MainActivity : FlutterFragmentActivity() {
                                     startActivity(intent)
                                     result.success(true)
                                 }
+                                "openNotificationSettings" -> {
+                                    // Android 8.0+ supports the dedicated app-notification
+                                    // settings screen; older versions fall back to the
+                                    // generic app details page.
+                                    val intent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                        Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+                                            putExtra(Settings.EXTRA_APP_PACKAGE, packageName)
+                                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                        }
+                                    } else {
+                                        Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                                            data = Uri.fromParts("package", packageName, null)
+                                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                        }
+                                    }
+                                    startActivity(intent)
+                                    result.success(true)
+                                }
                                 else -> result.notImplemented()
                             }
                         } catch (e: ActivityNotFoundException) {
@@ -218,15 +236,18 @@ class MainActivity : FlutterFragmentActivity() {
         }
     }
 
-    /**
-     * Tüm key event'lerini yakalar. Eğer volume tuşuysa ve
-     * VolumeButtonDetector aktifse, event consume edilir (ses değişmez).
-     */
-    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+    override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
         if (volumeDetector.onKeyEvent(event)) {
             return true // Event consume edildi
         }
-        return super.dispatchKeyEvent(event)
+        return super.onKeyDown(keyCode, event)
+    }
+
+    override fun onKeyUp(keyCode: Int, event: KeyEvent): Boolean {
+        if (volumeDetector.onKeyEvent(event)) {
+            return true // Event consume edildi
+        }
+        return super.onKeyUp(keyCode, event)
     }
     
     /**

@@ -23,8 +23,7 @@ class HealthStatus {
     required this.sensorsHealthy,
   });
 
-  bool get isHealthy =>
-      gpsHealthy && permissionsHealthy && batteryHealthy;
+  bool get isHealthy => gpsHealthy && permissionsHealthy && batteryHealthy;
 
   List<String> get issues {
     final problems = <String>[];

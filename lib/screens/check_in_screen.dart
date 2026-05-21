@@ -11,6 +11,7 @@ import '../core/constants/app_constants.dart';
 import '../core/services/check_in_service.dart';
 import '../core/services/contact_service.dart';
 import '../core/utils/permission_helper.dart';
+import '../core/widgets/exact_alarm_permission_guard.dart';
 import '../core/widgets/feature_warning_dialog.dart';
 import 'contacts_page.dart';
 // Analytics service removed (offline-first)
@@ -65,7 +66,7 @@ class _CheckInScreenState extends State<CheckInScreen>
     }
   }
 
-  void _showTimerContactRequired() {
+  void _showTimerContactRequired(BuildContext context) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('timer_emergency_contact_required'.tr()),
@@ -95,37 +96,54 @@ class _CheckInScreenState extends State<CheckInScreen>
   }
 
   Future<void> _startCheckIn(int minutes) async {
+    final currentContext = context;
     if (!await _hasEmergencyContact()) {
-      if (!mounted) return;
-      _showTimerContactRequired();
+      if (!currentContext.mounted) return;
+      _showTimerContactRequired(currentContext);
       return;
     }
-    if (!mounted) return;
+    if (!currentContext.mounted) return;
 
     // İlk kullanımda uyarı dialogu göster
     final shown = await FeatureWarningHelper.showIfNeeded(
-      context,
+      currentContext,
       prefKey: AppConstants.prefWarningCheckin,
       featureName: 'check_in',
       title: FeatureWarningHelper.checkinTitle,
       content: FeatureWarningHelper.checkinContent,
     );
-    if (!shown || !mounted) return;
+    if (!shown || !currentContext.mounted) return;
     final notificationsAllowed =
-        await PermissionHelper.requestNotificationPermission(context);
-    if (!notificationsAllowed && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("notification_session_permission_required".tr()),
-          backgroundColor: AppColors.warning,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+        await PermissionHelper.requestNotificationPermission(currentContext);
+    if (!currentContext.mounted) return;
+    if (!notificationsAllowed) {
+      // Rapor M.3 step 4: surface a "start anyway?" dialog instead of
+      // silently blocking. Lets the user choose between opening settings,
+      // cancelling, or starting the session in degraded mode.
+      final startAnyway =
+          await PermissionHelper.confirmStartSessionWithoutNotifications(
+            currentContext,
+          );
+      if (!currentContext.mounted) return;
+      if (!startAnyway) {
+        ScaffoldMessenger.of(currentContext).showSnackBar(
+          SnackBar(
+            content: Text("notification_session_permission_required".tr()),
+            backgroundColor: AppColors.warning,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
-        ),
-      );
-      return;
+        );
+        return;
+      }
     }
+
+    final exactAlarmAcknowledged = await confirmExactAlarmPermissionOrDegraded(
+      currentContext,
+    );
+    if (!exactAlarmAcknowledged || !currentContext.mounted) return;
 
     HapticFeedback.mediumImpact();
     final fullyScheduled = await _service.start(minutes);

@@ -14,7 +14,9 @@ void main() {
   });
 
   test('DeviceSecurityService has isCompromised method with try/catch', () {
-    final source = File('lib/services/device_security_service.dart').readAsStringSync();
+    final source = File(
+      'lib/services/device_security_service.dart',
+    ).readAsStringSync();
     expect(
       source.contains('isCompromised'),
       isTrue,
@@ -27,21 +29,26 @@ void main() {
     );
   });
 
-  test('DeviceSecurityService delegates to FlutterJailbreakDetection', () {
-    final source = File('lib/services/device_security_service.dart').readAsStringSync();
+  test('DeviceSecurityService delegates to SafeDevice', () {
+    final source = File(
+      'lib/services/device_security_service.dart',
+    ).readAsStringSync();
     expect(
-      source.contains('FlutterJailbreakDetection'),
+      source.contains('SafeDevice'),
       isTrue,
-      reason: 'DeviceSecurityService must call FlutterJailbreakDetection.jailbroken',
+      reason:
+          'DeviceSecurityService must call SafeDevice.isJailBroken',
     );
   });
 
   test('splash_screen._goNext checks device security before navigating', () {
     final source = File('lib/screens/splash_screen.dart').readAsStringSync();
     expect(
-      source.contains('DeviceSecurityService') || source.contains('isCompromised'),
+      source.contains('DeviceSecurityService') ||
+          source.contains('isCompromised'),
       isTrue,
-      reason: 'splash_screen._goNext must call DeviceSecurityService.isCompromised()',
+      reason:
+          'splash_screen._goNext must call DeviceSecurityService.isCompromised()',
     );
   });
 }

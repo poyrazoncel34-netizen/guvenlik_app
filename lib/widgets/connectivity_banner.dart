@@ -29,21 +29,19 @@ class _ConnectivityBannerState extends State<ConnectivityBanner>
       vsync: this,
       duration: const Duration(milliseconds: 350),
     );
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, -1),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _slideController,
-      curve: Curves.easeOutCubic,
-    ));
+    _slideAnimation =
+        Tween<Offset>(begin: const Offset(0, -1), end: Offset.zero).animate(
+          CurvedAnimation(parent: _slideController, curve: Curves.easeOutCubic),
+        );
 
     _isOffline = !ConnectivityService.instance.isOnline;
     if (_isOffline) {
       _slideController.forward();
     }
 
-    _subscription =
-        ConnectivityService.instance.onStatusChange.listen((isOnline) {
+    _subscription = ConnectivityService.instance.onStatusChange.listen((
+      isOnline,
+    ) {
       if (!mounted) return;
       setState(() => _isOffline = !isOnline);
       if (_isOffline) {
@@ -112,7 +110,11 @@ class _ConnectivityBannerState extends State<ConnectivityBanner>
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Row(
           children: [
-            const Icon(Icons.wifi_off_rounded, color: AppColors.warning, size: 22),
+            const Icon(
+              Icons.wifi_off_rounded,
+              color: AppColors.warning,
+              size: 22,
+            ),
             const SizedBox(width: 10),
             Text(
               'offline_info_title'.tr(),
@@ -128,20 +130,49 @@ class _ConnectivityBannerState extends State<ConnectivityBanner>
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _offlineFeatureRow(Icons.check_circle_rounded, AppColors.success, 'offline_feature_alarm'.tr()),
-            _offlineFeatureRow(Icons.check_circle_rounded, AppColors.success, 'offline_feature_siren'.tr()),
-            _offlineFeatureRow(Icons.check_circle_rounded, AppColors.success, 'offline_feature_fakecall'.tr()),
-            _offlineFeatureRow(Icons.check_circle_rounded, AppColors.success, 'offline_feature_safewalk'.tr()),
+            _offlineFeatureRow(
+              Icons.check_circle_rounded,
+              AppColors.success,
+              'offline_feature_alarm'.tr(),
+            ),
+            _offlineFeatureRow(
+              Icons.check_circle_rounded,
+              AppColors.success,
+              'offline_feature_siren'.tr(),
+            ),
+            _offlineFeatureRow(
+              Icons.check_circle_rounded,
+              AppColors.success,
+              'offline_feature_fakecall'.tr(),
+            ),
+            _offlineFeatureRow(
+              Icons.check_circle_rounded,
+              AppColors.success,
+              'offline_feature_safewalk'.tr(),
+            ),
             const SizedBox(height: 10),
-            _offlineFeatureRow(Icons.warning_rounded, AppColors.warning, 'offline_feature_location'.tr()),
-            _offlineFeatureRow(Icons.warning_rounded, AppColors.warning, 'offline_feature_sync'.tr()),
+            _offlineFeatureRow(
+              Icons.warning_rounded,
+              AppColors.warning,
+              'offline_feature_location'.tr(),
+            ),
+            _offlineFeatureRow(
+              Icons.warning_rounded,
+              AppColors.warning,
+              'offline_feature_sync'.tr(),
+            ),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text('btn_ok'.tr(),
-                style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.w700)),
+            child: Text(
+              'btn_ok'.tr(),
+              style: const TextStyle(
+                color: AppColors.primary,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
           ),
         ],
       ),
@@ -156,7 +187,13 @@ class _ConnectivityBannerState extends State<ConnectivityBanner>
           Icon(icon, color: color, size: 16),
           const SizedBox(width: 8),
           Expanded(
-            child: Text(text, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+            child: Text(
+              text,
+              style: const TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 13,
+              ),
+            ),
           ),
         ],
       ),

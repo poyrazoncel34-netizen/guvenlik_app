@@ -5,7 +5,7 @@ class AppConstants {
   static const String supportEmail = 'korubeni.destek@gmail.com';
 
   /// Encryption key is loaded from dart-define at build time.
-  /// Build with: --dart-define=ENCRYPTION_KEY=your_base64_key
+  /// Build with a redacted ENCRYPTION_KEY dart-define in release.
   /// Falls back to empty string — EncryptionService must handle gracefully.
   static String get encryptionKeyBase64 =>
       const String.fromEnvironment('ENCRYPTION_KEY', defaultValue: '');
@@ -17,6 +17,15 @@ class AppConstants {
   // Limits
   static const int maxEmergencyContacts = 5;
   static const String turkeyEmergencyNumber = '112';
+  static const Set<String> officialEmergencyShortCodes = {
+    turkeyEmergencyNumber,
+    '911',
+    '999',
+    '110',
+    '155',
+    '156',
+    '122',
+  };
 
   // SharedPreferences keys (non-sensitive)
   static const String prefProfileName = 'profile_name';

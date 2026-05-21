@@ -1,11 +1,11 @@
 /// KoruBeni kullanıcı profil modeli.
-/// Firestore `users` koleksiyonundaki doküman yapısını temsil eder.
+/// Offline-first yerel profil alanlarını temsil eder.
+/// Eski JSON yedeklerinden gelen bilinmeyen cloud/FCM alanları yok sayılır.
 class UserProfile {
   final String uid;
   final String? phone;
   final String? displayName;
   final String? email;
-  final String? fcmToken;
   final DateTime? lastActiveAt;
   final DateTime? createdAt;
 
@@ -14,7 +14,6 @@ class UserProfile {
     this.phone,
     this.displayName,
     this.email,
-    this.fcmToken,
     this.lastActiveAt,
     this.createdAt,
   });
@@ -25,29 +24,25 @@ class UserProfile {
       phone: json['phone'] as String?,
       displayName: json['displayName'] as String?,
       email: json['email'] as String?,
-      fcmToken: json['fcmToken'] as String?,
       lastActiveAt: _parseTimestamp(json['lastActiveAt']),
       createdAt: _parseTimestamp(json['createdAt']),
     );
   }
 
   Map<String, dynamic> toJson() => {
-        'uid': uid,
-        'phone': phone,
-        'displayName': displayName,
-        'email': email,
-        'fcmToken': fcmToken,
-        if (lastActiveAt != null)
-          'lastActiveAt': lastActiveAt!.toIso8601String(),
-        if (createdAt != null) 'createdAt': createdAt!.toIso8601String(),
-      };
+    'uid': uid,
+    'phone': phone,
+    'displayName': displayName,
+    'email': email,
+    if (lastActiveAt != null) 'lastActiveAt': lastActiveAt!.toIso8601String(),
+    if (createdAt != null) 'createdAt': createdAt!.toIso8601String(),
+  };
 
   UserProfile copyWith({
     String? uid,
     String? phone,
     String? displayName,
     String? email,
-    String? fcmToken,
     DateTime? lastActiveAt,
     DateTime? createdAt,
   }) {
@@ -56,7 +51,6 @@ class UserProfile {
       phone: phone ?? this.phone,
       displayName: displayName ?? this.displayName,
       email: email ?? this.email,
-      fcmToken: fcmToken ?? this.fcmToken,
       lastActiveAt: lastActiveAt ?? this.lastActiveAt,
       createdAt: createdAt ?? this.createdAt,
     );
@@ -66,7 +60,7 @@ class UserProfile {
     if (value == null) return null;
     if (value is DateTime) return value;
     if (value is String) return DateTime.tryParse(value);
-    // Firestore Timestamp has a toDate() method
+    // Some legacy backups may contain a Timestamp-like object with toDate().
     try {
       return (value as dynamic).toDate() as DateTime;
     } catch (_) {

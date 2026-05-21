@@ -52,7 +52,9 @@ class _OfflineBannerState extends State<OfflineBanner>
       _controller.value = 1.0;
     }
 
-    _subscription = ConnectivityService.instance.onStatusChange.listen((online) {
+    _subscription = ConnectivityService.instance.onStatusChange.listen((
+      online,
+    ) {
       if (!mounted) return;
       if (!online) {
         _onWentOffline();
@@ -101,6 +103,8 @@ class _OfflineBannerState extends State<OfflineBanner>
               _showReconnected = false;
             });
           }
+        }).catchError((Object error, StackTrace stack) {
+          debugPrint('AnimationController.reverse failed: $error');
         });
       }
     });
@@ -158,7 +162,9 @@ class _OfflineBannerContent extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      color: const Color(0xFFCC3333), // koyu kırmızı — AppTheme.emergency'den biraz koyu
+      color: const Color(
+        0xFFCC3333,
+      ), // koyu kırmızı — AppTheme.emergency'den biraz koyu
       child: Row(
         children: [
           const Icon(Icons.wifi_off_rounded, color: Colors.white, size: 18),
@@ -202,7 +208,9 @@ class _OnlineBannerContent extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      color: const Color(0xFF1A9B7B), // koyu yeşil — AppTheme.success'ten biraz koyu
+      color: const Color(
+        0xFF1A9B7B,
+      ), // koyu yeşil — AppTheme.success'ten biraz koyu
       child: Row(
         children: [
           const Icon(Icons.wifi_rounded, color: Colors.white, size: 18),

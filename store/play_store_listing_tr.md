@@ -9,6 +9,8 @@ KoruBeni, konum durumunuzu görmenize, cihaz içi sahte çağrı simülasyonu ç
 
 KoruBeni ücretsiz temel güvenlik araçları sunar. Panik/SOS, güvenli yürüyüş, check-in ve gelişmiş güvenlik otomasyonları KoruBeni Pro ile kullanılabilir.
 
+⚠️ ÖNEMLİ: KoruBeni resmi bir acil servis değildir ve 112'nin yerine geçmez. Gerçek bir acil durumda lütfen önce 112'yi arayın. KoruBeni yalnızca tamamlayıcı bir araçtır ve fiziksel koruma sağlamaz.
+
 ★ ÜCRETSİZ ÖZELLİKLER ★
 
 ◉ Konum Oturumu
@@ -51,9 +53,11 @@ KoruBeni Pro isteğe bağlı bir aboneliktir. Satın alma, yenileme, iptal ve ge
 
 ★ GİZLİLİK ★
 
-• Konum verileriniz yalnızca acil durum veya konum oturumu sırasında işlenir
-• Verilerinizi üçüncü taraflara satmıyoruz
-• Verilerin ana kopyası cihazda saklanır; harita ve Play Billing sağlayıcılarının kendi teknik ağ davranışları olabilir
+• KoruBeni'nin bulut hesabı yoktur. Tüm verileriniz cihazınızda kalır.
+• Arka planda konum izlemiyoruz. Konum yalnızca siz bir oturum başlattığınızda kullanılır.
+• Verilerinizi hiçbir reklam ağıyla veya veri komisyoncusuyla paylaşmıyoruz; satmıyoruz.
+• Pro abonelik için Google Play Billing aracılığıyla yalnızca satın alma geçmişi tutulur.
+• Harita ve Play Billing sağlayıcılarının kendi teknik ağ davranışları olabilir.
 
 KoruBeni — Ücretsiz konum oturumu ve sahte çağrı; Pro ile ek güvenlik araçları.
 

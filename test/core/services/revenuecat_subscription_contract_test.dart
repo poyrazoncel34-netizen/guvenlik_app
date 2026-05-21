@@ -43,6 +43,8 @@ void main() {
       () {
         expect(provider, contains('Offering? get currentOffering'));
         expect(provider, contains('_offerings?.current'));
+        expect(provider, contains('bool get hasCurrentOffering'));
+        expect(provider, contains('bool get hasAnyPackages'));
         expect(provider, contains('Package? get monthlyPackage'));
         expect(provider, contains('currentOffering?.monthly'));
         expect(provider, contains('PackageType.monthly'));
@@ -74,9 +76,44 @@ void main() {
       expect(provider, contains("'subscription_error_purchase'"));
       expect(provider, contains("'subscription_error_restore'"));
       expect(provider, contains("'subscription_error_offline'"));
+      expect(provider, contains("'subscription_error_no_offering'"));
+      expect(provider, contains("'subscription_error_no_packages'"));
+      expect(provider, contains("'subscription_error_packages_unavailable'"));
       expect(provider, isNot(contains('e.message')));
       expect(paywall, isNot(contains('PlatformException')));
       expect(paywall, isNot(contains('RevenueCatPurchaseException')));
+    });
+
+    test('billing docs keep every external purchase flow as not run', () {
+      final billing = File(
+        'store/BILLING_RELEASE_CHECKLIST.md',
+      ).readAsStringSync();
+
+      for (final item in [
+        'Google Play app created',
+        'Signed AAB uploaded',
+        'License tester account added',
+        'Test device uses the intended Google account',
+        'RevenueCat Android app configured',
+        'RevenueCat service credentials configured',
+        'Current offering active',
+        'Monthly package mapped',
+        'Annual package mapped',
+        'Monthly purchase tested with license tester',
+        'Annual purchase tested with license tester',
+        'Restore active purchase tested',
+        'Restore with no active purchase tested',
+        'Cancel/manage subscription tested',
+        'Expired/lapsed entitlement tested',
+        'Renewal/lapse behavior tested in sandbox',
+        'Account hold/paused tested if available',
+        'No-offering fallback tested',
+        'Network failure fallback tested',
+      ]) {
+        expect(billing, contains(item), reason: item);
+      }
+      expect(billing, contains('REVENUECAT'));
+      expect(billing, isNot(contains('| PASS |')));
     });
   });
 }

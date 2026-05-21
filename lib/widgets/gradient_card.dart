@@ -22,7 +22,8 @@ class GradientCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = gradientColors ??
+    final colors =
+        gradientColors ??
         [
           Colors.white.withValues(alpha: 0.08),
           Colors.white.withValues(alpha: 0.03),
@@ -47,10 +48,7 @@ class GradientCard extends StatelessWidget {
     );
 
     if (onTap != null) {
-      return GestureDetector(
-        onTap: onTap,
-        child: card,
-      );
+      return GestureDetector(onTap: onTap, child: card);
     }
 
     return card;

@@ -1,4 +1,6 @@
-# Play Store Listing (EN)
+# Internal English Copy Reference — Not For First Play Release
+
+First Google Play release is Turkish-only. Do not paste this file into Play Console and do not create an English localization entry until the English runtime path is re-enabled and passes real-device QA.
 
 **App Title:** KoruBeni - Personal Safety
 **Short Description (80 characters):**
@@ -8,6 +10,8 @@ Panic/SOS requires Pro; location, fake call, and siren are free.
 KoruBeni is an Android personal safety app that helps you view location status, run an on-device fake call simulation, and use additional safety tools with an optional Pro subscription.
 
 KoruBeni offers free basic safety tools. Panic/SOS, Safe Walk, check-in, and advanced safety automations are available with KoruBeni Pro.
+
+⚠️ IMPORTANT: KoruBeni is not an official emergency service and does not replace 112 (or your local emergency number). In a real emergency, please call your local emergency number first. KoruBeni is only a complementary tool and does not provide physical protection.
 
 ★ FREE FEATURES ★
 

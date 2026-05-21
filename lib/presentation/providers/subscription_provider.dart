@@ -20,12 +20,18 @@ class SubscriptionProvider extends ChangeNotifier {
   // ---------------------------------------------------------------------------
   // Getters
   // ---------------------------------------------------------------------------
-  bool get isPro => _isPro;
+  bool get isPro {
+    if (kDebugMode) return true; // GEÇICI: emülatör ekran görüntüsü - yayindan once kaldirilacak
+    return _isPro;
+  }
   bool get isLoading => _isLoading;
   Offerings? get offerings => _offerings;
   CustomerInfo? get customerInfo => _customerInfo;
   String? get errorMessage => _errorMessage;
   Offering? get currentOffering => _offerings?.current;
+  bool get hasCurrentOffering => currentOffering != null;
+  bool get hasAnyPackages =>
+      currentOffering?.availablePackages.isNotEmpty ?? false;
   Package? get monthlyPackage =>
       currentOffering?.monthly ?? _packageByType(PackageType.monthly);
   Package? get annualPackage =>
@@ -57,7 +63,7 @@ class SubscriptionProvider extends ChangeNotifier {
         _isPro = _rcService.isPro(info);
       }
       _offerings = offs;
-      _errorMessage = null;
+      _errorMessage = _offeringErrorKey();
     } catch (e) {
       _errorMessage = 'subscription_error_plans_unavailable';
     } finally {
@@ -151,9 +157,7 @@ class SubscriptionProvider extends ChangeNotifier {
     _setLoading(true);
     try {
       _offerings = await _rcService.getOfferings();
-      _errorMessage = _offerings == null
-          ? 'subscription_error_plans_unavailable'
-          : null;
+      _errorMessage = _offeringErrorKey();
     } catch (_) {
       _errorMessage = 'subscription_error_plans_unavailable';
     } finally {
@@ -177,5 +181,34 @@ class SubscriptionProvider extends ChangeNotifier {
       if (package.packageType == type) return package;
     }
     return null;
+  }
+
+  String? _offeringErrorKey() {
+    if (_offerings == null) {
+      return 'subscription_error_plans_unavailable';
+    }
+    if (!hasCurrentOffering) {
+      return 'subscription_error_no_offering';
+    }
+    if (!hasAnyPackages) {
+      return 'subscription_error_no_packages';
+    }
+    if (!hasRequiredPackages) {
+      return 'subscription_error_packages_unavailable';
+    }
+    return null;
+  }
+  bool _disposed = false;
+
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
+  }
+
+  @override
+  void notifyListeners() {
+    if (_disposed) return;
+    super.notifyListeners();
   }
 }

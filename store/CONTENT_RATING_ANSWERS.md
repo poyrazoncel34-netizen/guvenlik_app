@@ -2,7 +2,7 @@
 
 Content rating anketinde (IARC) aşağıdaki gibi yanıtlayın. KoruBeni bir güvenlik uygulamasıdır.
 
-Status: CODE_DONE copy prepared; OPERATOR_ACTION to complete and submit in Play Console.
+Status: CODE_DONE copy prepared; PLAY_CONSOLE to complete and submit in Play Console.
 
 Target audience: adults / 18+. Do not enter Designed for Families unless the product decision changes and the app/legal/store copy is reworked.
 

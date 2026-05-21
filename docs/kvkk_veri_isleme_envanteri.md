@@ -10,12 +10,12 @@
 
 ## 1. Genel Mimari
 
-KoruBeni **offline-first** çalışır. Uygulama geliştirici tarafından işletilen bir backend veya bulut veritabanına kişisel veri göndermez. Harita karoları, Play Billing veya üretimde açıkça yapılandırılmış crash reporting gibi üçüncü taraf SDK/servisleri kendi teknik ağ davranışlarına sahip olabilir.
+KoruBeni **offline-first** çalışır. Uygulama geliştirici tarafından işletilen bir backend veya bulut veritabanına kişisel veri göndermez. Cihaz içi verilerin ana kopyası yerelde kalır; çevrimiçi harita görünümü OpenStreetMap karo isteği yapabilir, isteğe bağlı Pro abonelik ise Google Play Billing ve RevenueCat üzerinden doğrulanabilir.
 
 - **Yerel veritabanı:** SQLite (sqflite)
-- **Hassas veri depolama:** FlutterSecureStorage (AES-256 şifreleme)
-- **Crash raporlama:** Yerel log (`crash_log_service.dart`); üretimde DSN verilirse PII kapalı Sentry entegrasyonu
-- **Ağ bağlantısı:** Acil arama için Android sistem arama akışı kullanılır; harita karoları ve Play Billing ağ kullanabilir
+- **Hassas veri depolama:** FlutterSecureStorage / Android platform güvenli depolama
+- **Crash raporlama:** Üçüncü taraf crash SDK'si yoktur; hata kayıtları cihaz içi yerel log olarak tutulur
+- **Ağ bağlantısı:** Acil arama için Android sistem arama akışı kullanılır; harita karoları, Google Play Billing ve RevenueCat sağlayıcıları kendi teknik ağ davranışlarına sahip olabilir
 
 ---
 
@@ -69,17 +69,17 @@ KoruBeni **offline-first** çalışır. Uygulama geliştirici tarafından işlet
 | **Güvenlik önlemi** | SharedPreferences (hassas olmayan), FlutterSecureStorage (hassas) |
 | **Rıza tipi** | `consent_profile` — Granüler, geri çekilebilir |
 
-### 2.5 Biyometrik Veri (Özel Nitelikli)
+### 2.5 Biyometrik Veri
 
 | Alan | Detay |
 |------|-------|
-| **Veri türü** | Parmak izi / yüz tanıma verisi |
-| **Hukuki dayanak** | KVKK m.6/2 — Açık rıza (özel nitelikli kişisel veri) |
-| **İşleme amacı** | Uygulama kilidi — yalnızca cihaz düzeyinde doğrulama |
-| **Saklama süresi** | İşletim sistemi tarafından yönetilir, uygulama saklamaz |
-| **Güvenlik önlemi** | Biyometrik veri uygulamaya iletilmez; yalnızca OS düzeyinde doğrulama sonucu (başarılı/başarısız) alınır |
-| **Rıza tipi** | `consent_biometric` — Granüler, geri çekilebilir, özel kategori işaretli |
-| **Not** | Uygulama biyometrik veriyi hiçbir şekilde saklamaz veya işlemez; yalnızca OS API sonucunu kullanır |
+| **Veri türü** | Toplanmaz — bu Android Play sürümünde biyometrik kilit devre dışıdır |
+| **Hukuki dayanak** | Uygulanmaz |
+| **İşleme amacı** | Yok |
+| **Saklama süresi** | Yok |
+| **Güvenlik önlemi** | Uygulama biyometrik veriye erişmez, biyometrik veri saklamaz ve biyometrik doğrulama sonucu işlemez |
+| **Rıza tipi** | Yok — aktif biyometrik işleme yoktur |
+| **Ek uyarı** | Data Safety ve KVKK metinlerinde biyometrik veri toplanmadığı belirtilmelidir |
 
 ### 2.6 Sahte Çağrı Verileri
 
@@ -120,8 +120,9 @@ KoruBeni **offline-first** çalışır. Uygulama geliştirici tarafından işlet
 
 | Aktarım Türü | Durum |
 |---------------|-------|
-| Yurt içi üçüncü taraf | **YOK** — Hiçbir üçüncü tarafa veri aktarılmaz |
-| Yurt dışı aktarım | **YOK** — KVKK m.9 kapsamında yurt dışına veri aktarımı yapılmaz |
+| Cihaz içi yerel veriler | Acil kişiler, PIN, profil, sahte çağrı ayarları, güvenlik geçmişi ve rıza kayıtlarının ana kopyası cihazda kalır; geliştirici backend'ine gönderilmez |
+| Harita / ağ davranışı | Çevrimiçi harita ekranı OpenStreetMap veya yapılandırılmış harita karo sağlayıcısına teknik ağ isteği yapabilir |
+| Abonelik / ödeme | İsteğe bağlı Pro abonelik durumu Google Play Billing ve RevenueCat tarafından işlenebilir; ödeme kartı bilgileri geliştirici tarafından saklanmaz |
 | Crash raporlama servisi | **YOK** — Tüm hata logları yalnızca yerel cihazda saklanır |
 | Analitik servisi | **YOK** |
 | Reklam ağı | **YOK** |
@@ -131,9 +132,9 @@ KoruBeni **offline-first** çalışır. Uygulama geliştirici tarafından işlet
 ## 4. Teknik ve İdari Güvenlik Önlemleri
 
 ### Teknik Önlemler
-- AES-256 şifreleme (FlutterSecureStorage) — hassas veriler için
+- FlutterSecureStorage / Android platform güvenli depolama — hassas veriler için
 - Yerel PIN kilidi — uygulama erişim kontrolü
-- Biyometrik kilit desteği (opsiyonel, kullanıcı rızasına bağlı)
+- Biyometrik kilit bu Android Play sürümünde devre dışıdır; biyometrik veri işlenmez
 - Offline-first mimari — geliştirici sunucusu yoktur; üçüncü taraf SDK ağ davranışları ayrı değerlendirilmelidir
 - Granüler rıza yönetimi — her veri kategorisi için ayrı onay/red
 - Merkezi rıza kapısı (ConsentGateService) — rıza olmadan veri işleme engellenir
@@ -155,7 +156,7 @@ Kullanıcılar aşağıdaki haklarını uygulama içinden veya korubeni.destek@g
 1. Kişisel verisinin işlenip işlenmediğini öğrenme
 2. İşlenmişse buna ilişkin bilgi talep etme
 3. İşlenme amacını ve amacına uygun kullanılıp kullanılmadığını öğrenme
-4. Yurt içinde veya yurt dışında aktarıldığı üçüncü kişileri bilme (aktarım yok)
+4. Yurt içinde veya yurt dışında aktarıldığı üçüncü kişileri bilme; bu sürümde geliştirici backend aktarımı yoktur, ancak harita karo sağlayıcısı, Google Play Billing ve RevenueCat sağlayıcılarının kendi teknik ağ davranışları olabilir
 5. Eksik veya yanlış işlenmişse düzeltilmesini isteme
 6. KVKK m.7 kapsamında silinmesini veya yok edilmesini isteme
 7. Düzeltme/silme işlemlerinin aktarıldığı üçüncü kişilere bildirilmesini isteme
@@ -171,8 +172,8 @@ Kullanıcılar aşağıdaki haklarını uygulama içinden veya korubeni.destek@g
 | Kanun | İlgili Madde | Uygulama |
 |-------|-------------|----------|
 | KVKK 6698 | m.5/1 | Açık rıza — tüm veri işleme faaliyetleri |
-| KVKK 6698 | m.6/2 | Özel nitelikli veri (biyometrik) — açık rıza |
-| KVKK 6698 | m.9 | Yurt dışı aktarım yasağı — aktarım yok |
+| KVKK 6698 | m.6 | Bu Play sürümünde biyometrik veri işlenmez |
+| KVKK 6698 | m.9 | Geliştirici backend aktarımı yoktur; harita, Google Play Billing ve RevenueCat sağlayıcı davranışları ayrıca değerlendirilir |
 | KVKK 6698 | m.10 | Aydınlatma yükümlülüğü — 4 adımlı onboarding |
 | KVKK 6698 | m.11 | Veri sahibi hakları — uygulama içi + e-posta |
 | TCK | m.133 | Ses kaydı özelliği bu Play sürümünde devre dışı; aktif kayıt/onay akışı yok |

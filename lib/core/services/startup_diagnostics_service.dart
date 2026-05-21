@@ -62,7 +62,8 @@ class StartupDiagnosticsService {
 
       final health = await HealthCheckService.instance.performHealthCheck();
       debugPrint(
-          'Health: ${health.isHealthy ? "OK" : "issues: ${health.issuesString}"}');
+        'Health: ${health.isHealthy ? "OK" : "issues: ${health.issuesString}"}',
+      );
 
       if (Platform.isAndroid) {
         await _checkAndroidOptimizations();
@@ -84,7 +85,11 @@ class StartupDiagnosticsService {
     try {
       final packageInfo = await PackageInfo.fromPlatform();
       return DeviceInfo(
-        platform: Platform.isAndroid ? 'Android' : Platform.isIOS ? 'iOS' : 'Unknown',
+        platform: Platform.isAndroid
+            ? 'Android'
+            : Platform.isIOS
+            ? 'iOS'
+            : 'Unknown',
         appVersion: packageInfo.version,
         buildNumber: packageInfo.buildNumber,
         isPhysicalDevice: !kIsWeb,
@@ -102,8 +107,8 @@ class StartupDiagnosticsService {
 
   Future<void> _checkAndroidOptimizations() async {
     try {
-      final batteryOptDisabled =
-          await BatteryOptimizationService.instance.isOptimizationDisabled();
+      final batteryOptDisabled = await BatteryOptimizationService.instance
+          .isOptimizationDisabled();
       if (!batteryOptDisabled) {
         debugPrint('⚠️ Battery optimization is enabled');
       }
@@ -118,9 +123,6 @@ class StartupDiagnosticsService {
   }
 
   Map<String, dynamic> getStatus() {
-    return {
-      'has_run': _hasRun,
-      'timestamp': DateTime.now().toIso8601String(),
-    };
+    return {'has_run': _hasRun, 'timestamp': DateTime.now().toIso8601String()};
   }
 }

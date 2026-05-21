@@ -75,7 +75,8 @@ class HomeProvider extends ChangeNotifier {
         serviceEnabled &&
         (permission == LocationPermission.always ||
             permission == LocationPermission.whileInUse);
-    // Contact Picker uses Intent.ACTION_PICK — no READ_CONTACTS permission needed.
+    // Contacts use a user-selected picker path plus manual entry fallback. The
+    // app does not request READ_CONTACTS or bulk-read the address book.
     const contactsGranted = !kIsWeb;
 
     _locationPermissionGranted = locationGranted;

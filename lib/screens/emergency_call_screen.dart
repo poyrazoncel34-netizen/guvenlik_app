@@ -12,6 +12,7 @@ import '../core/app_colors.dart';
 import '../core/services/android_intent_service.dart';
 import '../core/services/call_service.dart';
 import '../core/services/foreground_service.dart';
+
 class EmergencyCallScreen extends StatefulWidget {
   final String name;
   final String phone;
@@ -32,8 +33,11 @@ class EmergencyCallScreen extends StatefulWidget {
 
 class _EmergencyCallScreenState extends State<EmergencyCallScreen>
     with SingleTickerProviderStateMixin {
+  static const _confirmedCallAutoDismissDelay = Duration(seconds: 12);
+
   late AnimationController _pulseController;
   Timer? _failSafeTimer;
+  Timer? _autoDismissTimer;
   bool _failSafeShown = false;
 
   @override
@@ -47,6 +51,7 @@ class _EmergencyCallScreenState extends State<EmergencyCallScreen>
     // FAIL-SAFE TRUTH MODE: If nothing is confirmed after 5 seconds,
     // show fullscreen red alert.
     _scheduleFailSafe();
+    _scheduleAutoDismiss();
   }
 
   void _scheduleFailSafe() {
@@ -60,6 +65,19 @@ class _EmergencyCallScreenState extends State<EmergencyCallScreen>
     });
   }
 
+  void _scheduleAutoDismiss() {
+    if (!widget.callResult.isConfirmed) return;
+
+    _autoDismissTimer = Timer(_confirmedCallAutoDismissDelay, _returnHome);
+  }
+
+  Future<void> _returnHome() async {
+    _autoDismissTimer?.cancel();
+    await KoruBeniForegroundService.stop();
+    if (!mounted) return;
+    Navigator.of(context).popUntil((route) => route.isFirst);
+  }
+
   Future<void> _showFailSafeAlert() async {
     await showDialog<void>(
       context: context,
@@ -68,7 +86,9 @@ class _EmergencyCallScreenState extends State<EmergencyCallScreen>
         canPop: false,
         child: AlertDialog(
           backgroundColor: const Color(0xFF2C0000),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -79,18 +99,30 @@ class _EmergencyCallScreenState extends State<EmergencyCallScreen>
                   color: AppColors.emergency.withValues(alpha: 0.3),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.warning_rounded, color: AppColors.emergency, size: 42),
+                child: const Icon(
+                  Icons.warning_rounded,
+                  color: AppColors.emergency,
+                  size: 42,
+                ),
               ),
               const SizedBox(height: 16),
               Text(
                 'failsafe_title'.tr(),
-                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: Colors.white),
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w900,
+                  color: Colors.white,
+                ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 12),
               Text(
                 'failsafe_body'.tr(),
-                style: const TextStyle(fontSize: 14, color: Colors.white70, height: 1.5),
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: Colors.white70,
+                  height: 1.5,
+                ),
                 textAlign: TextAlign.center,
               ),
               if (widget.phone.isNotEmpty) ...[
@@ -104,7 +136,12 @@ class _EmergencyCallScreenState extends State<EmergencyCallScreen>
                   ),
                   child: Text(
                     widget.phone,
-                    style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: 2),
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.white,
+                      letterSpacing: 2,
+                    ),
                     textAlign: TextAlign.center,
                   ),
                 ),
@@ -120,7 +157,11 @@ class _EmergencyCallScreenState extends State<EmergencyCallScreen>
                   ),
                   child: SelectableText(
                     widget.emergencyMessage!,
-                    style: const TextStyle(fontSize: 11, color: Colors.white54, height: 1.4),
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: Colors.white54,
+                      height: 1.4,
+                    ),
                   ),
                 ),
               ],
@@ -135,13 +176,20 @@ class _EmergencyCallScreenState extends State<EmergencyCallScreen>
                     await AndroidIntentService.openDialer(widget.phone);
                   },
                   icon: const Icon(Icons.call, size: 20),
-                  label: Text('emergency_manual_call_now'.tr(),
-                      style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+                  label: Text(
+                    'emergency_manual_call_now'.tr(),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 16,
+                    ),
+                  ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.emergency,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                 ),
               ),
@@ -150,9 +198,14 @@ class _EmergencyCallScreenState extends State<EmergencyCallScreen>
                 width: double.infinity,
                 child: OutlinedButton.icon(
                   onPressed: () {
-                    Clipboard.setData(ClipboardData(text: widget.emergencyMessage!));
+                    Clipboard.setData(
+                      ClipboardData(text: widget.emergencyMessage!),
+                    );
                     ScaffoldMessenger.of(ctx).showSnackBar(
-                      SnackBar(content: Text('emergency_message_copied'.tr()), backgroundColor: AppColors.success),
+                      SnackBar(
+                        content: Text('emergency_message_copied'.tr()),
+                        backgroundColor: AppColors.success,
+                      ),
                     );
                   },
                   icon: const Icon(Icons.copy, size: 18),
@@ -161,7 +214,9 @@ class _EmergencyCallScreenState extends State<EmergencyCallScreen>
                     foregroundColor: Colors.white70,
                     side: const BorderSide(color: Colors.white24),
                     padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                 ),
               ),
@@ -170,8 +225,10 @@ class _EmergencyCallScreenState extends State<EmergencyCallScreen>
               width: double.infinity,
               child: TextButton(
                 onPressed: () => Navigator.pop(ctx),
-                child: Text('emergency_dismiss'.tr(),
-                    style: const TextStyle(color: Colors.white38, fontSize: 13)),
+                child: Text(
+                  'emergency_dismiss'.tr(),
+                  style: const TextStyle(color: Colors.white38, fontSize: 13),
+                ),
               ),
             ),
           ],
@@ -183,6 +240,7 @@ class _EmergencyCallScreenState extends State<EmergencyCallScreen>
   @override
   void dispose() {
     _failSafeTimer?.cancel();
+    _autoDismissTimer?.cancel();
     _pulseController.dispose();
     super.dispose();
   }
@@ -301,23 +359,17 @@ class _EmergencyCallScreenState extends State<EmergencyCallScreen>
                     Material(
                       color: Colors.transparent,
                       child: InkWell(
-                        onTap: () async {
-                          await KoruBeniForegroundService.stop();
-                          if (!context.mounted) return;
-                          Navigator.of(
-                            context,
-                          ).popUntil((route) => route.isFirst);
-                        },
+                        onTap: _returnHome,
                         customBorder: const CircleBorder(),
                         child: Container(
                           width: 76,
                           height: 76,
-                          decoration: const BoxDecoration(
-                            color: AppColors.emergency,
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withValues(alpha: 0.92),
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(
-                            Icons.call_end_rounded,
+                            Icons.home_rounded,
                             color: Colors.white,
                             size: 34,
                           ),
@@ -530,7 +582,6 @@ class _EmergencyCallScreenState extends State<EmergencyCallScreen>
         );
     }
   }
-
 }
 
 class _StatusPresentation {

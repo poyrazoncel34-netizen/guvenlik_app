@@ -184,9 +184,9 @@ class _SettingsPageState extends State<SettingsPage> {
                       context,
                       PremiumFeature.volumeTrigger,
                     );
-                    if (!allowed || !mounted) return;
+                    if (!allowed || !context.mounted) return;
                     await provider.setVolumeTrigger(value);
-                    if (!mounted) return;
+                    if (!context.mounted) return;
                     if (value) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
@@ -394,6 +394,8 @@ class _SettingsPageState extends State<SettingsPage> {
         ).then((_) {
           if (!mounted) return;
           context.read<SubscriptionProvider>().refresh();
+        }).catchError((Object error, StackTrace stack) {
+          debugPrint('Navigator.push Subscription failed: $error');
         });
       },
       borderRadius: BorderRadius.circular(16),
@@ -490,6 +492,8 @@ class _SettingsPageState extends State<SettingsPage> {
           ).then((_) {
             if (!mounted) return;
             settingsProvider.loadProfile();
+          }).catchError((Object error, StackTrace stack) {
+            debugPrint('Navigator.push Profile failed: $error');
           });
         },
         child: Container(

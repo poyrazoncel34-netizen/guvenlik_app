@@ -26,7 +26,7 @@ Cihaz içinde sahte gelen arama ekranı simüle eder. Gerçek arama başlatmaz, 
 Dikkat çekmek için yüksek sesli acil durum sireni.
 
 👥 ACİL KİŞİLER
-Rehber seçiciyle acil kişiler ekleyebilir ve birincil kişiyi seçebilirsiniz. READ_CONTACTS izni kullanılmaz.
+Sistem seçicisiyle veya manuel girişle acil kişiler ekleyebilir ve birincil kişiyi seçebilirsiniz. READ_CONTACTS izni kullanılmaz. Uygulama tüm rehber listesini okumaz; yalnızca kullanıcının seçtiği veya girdiği acil kişi verisini cihazda yerel olarak saklar.
 
 KORUBENI PRO İLE
 
@@ -39,8 +39,8 @@ Zamanlayıcı ayarlayın, check-in yapın. Süre dolduğunda yanıt vermezseniz 
 🔐 GÜVENLİK
 4 haneli yerel PIN ile uygulama koruması.
 
-🌍 ÇOK DİLLİ
-Türkçe ve İngilizce desteği.
+🌍 DİL
+Bu ilk Google Play sürümü Türkçe yayınlanır. İngilizce mağaza kaydı, İngilizce arayüz tam olarak yeniden etkinleştirilip test edilmeden kullanılmamalıdır.
 
 📡 OFFLINE ÇALIŞIR
 Geliştirici sunucusu yoktur. Harita ve Play servisleri ağ kullanabilir.
@@ -67,4 +67,4 @@ KoruBeni Pro isteğe bağlıdır. Satın alma, yenileme, iptal ve geri yükleme 
 - Mesaj gönderimi yoktur; uygulama bu sürümde mesaj uygulaması açmaz.
 - Konum: Yalnızca Pro acil akış veya kullanıcı başlattığı konum oturumu sırasında erişilir.
 - Sunucu: Geliştirici backend'i yoktur; harita ve Play servisleri ağ kullanabilir.
-- Kişiler: READ_CONTACTS izni kullanılmaz; ücretsiz acil kişiler rehber seçiciyle eklenir.
+- Kişiler: READ_CONTACTS izni kullanılmaz; ücretsiz acil kişiler sistem seçicisi veya manuel girişle eklenir. Uygulama tüm rehber listesini okumaz.

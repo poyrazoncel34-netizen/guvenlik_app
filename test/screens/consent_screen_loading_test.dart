@@ -6,9 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('ConsentScreen — yükleme guard', () {
-    test(
-        'Yükleme tamamlanmadan buton devre dışı olmalı',
-        () {
+    test('Yükleme tamamlanmadan buton devre dışı olmalı', () {
       // Senaryo: yükleme bitmedi ama _consentAge daha önce true idi
       const consentsLoaded = false;
       const consentAge = true;

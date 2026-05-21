@@ -35,4 +35,4 @@ Before upload, operator must review every final screenshot for:
 - no private account data
 - no accidental personal profile info
 
-Status: OPERATOR_ACTION until reviewed and evidenced. Emulator output is not accepted as release evidence.
+Status: NEEDS_OPERATOR_ACTION until reviewed and evidenced. Emulator output is not accepted as release evidence.

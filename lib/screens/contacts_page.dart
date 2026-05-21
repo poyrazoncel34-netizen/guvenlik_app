@@ -15,16 +15,34 @@ import '../core/constants/app_constants.dart';
 import '../core/services/consent_gate_service.dart';
 import '../core/services/contact_service.dart';
 import '../core/services/subscription_gate.dart';
+import '../core/utils/emergency_number_validator.dart';
 import '../models/consent_record.dart';
 import '../presentation/providers/contacts_provider.dart';
 import '../presentation/providers/home_provider.dart';
 import '../widgets/emergency_contact_consent_dialog.dart';
+
+const int _manualContactPhoneInputLimit = 32;
+const int _manualContactNameInputLimit = 60;
 
 class ContactsPage extends StatefulWidget {
   const ContactsPage({super.key});
 
   @override
   State<ContactsPage> createState() => _ContactsPageState();
+}
+
+class _AddContactSheetResult {
+  const _AddContactSheetResult.pickFromDevice()
+    : pickFromDevice = true,
+      name = '',
+      phone = '';
+
+  const _AddContactSheetResult.manual(this.name, this.phone)
+    : pickFromDevice = false;
+
+  final bool pickFromDevice;
+  final String name;
+  final String phone;
 }
 
 class _ContactsPageState extends State<ContactsPage> {
@@ -74,7 +92,7 @@ class _ContactsPageState extends State<ContactsPage> {
                 );
                 if (!allowed || !context.mounted) return;
                 if (!_requireEmergencyContactConsent()) return;
-                _showAddContactSheet(context);
+                _showAddContactSheet();
               },
             ),
           ],
@@ -270,12 +288,16 @@ class _ContactsPageState extends State<ContactsPage> {
                     children: [
                       Row(
                         children: [
-                          Text(
-                            contact.name,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.textPrimary,
+                          Flexible(
+                            child: Text(
+                              contact.name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.textPrimary,
+                              ),
                             ),
                           ),
                           if (isEmergency) ...[
@@ -293,6 +315,7 @@ class _ContactsPageState extends State<ContactsPage> {
                               ),
                               child: Text(
                                 "contacts_emergency_badge".tr(),
+                                maxLines: 1,
                                 style: const TextStyle(
                                   fontSize: 9,
                                   fontWeight: FontWeight.w800,
@@ -682,97 +705,238 @@ class _ContactsPageState extends State<ContactsPage> {
     await prefs.setBool(AppConstants.prefContactConsentShown, true);
   }
 
-  void _showAddContactSheet(BuildContext context) {
+  void _showAddContactSheet() {
     if (!_requireEmergencyContactConsent()) return;
-    _showContactKvkkInfoIfNeeded();
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (sheetContext) => Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(sheetContext).viewInsets.bottom,
-        ),
-        child: Container(
-          decoration: const BoxDecoration(
-            color: AppColors.cardBg,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+    _showAddContactSheetFlow();
+  }
+
+  Future<void> _showAddContactSheetFlow() async {
+    await _showContactKvkkInfoIfNeeded();
+    if (!mounted) return;
+
+    final nameController = TextEditingController();
+    final phoneController = TextEditingController();
+
+    try {
+      final result = await showModalBottomSheet<_AddContactSheetResult>(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (sheetContext) => SingleChildScrollView(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(sheetContext).viewInsets.bottom,
           ),
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: AppColors.border,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const SizedBox(height: 24),
-              Container(
-                width: 70,
-                height: 70,
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.12),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.person_add_rounded,
-                  size: 36,
-                  color: AppColors.primary,
-                ),
-              ),
-              const SizedBox(height: 20),
-              Text(
-                "contacts_add_new".tr(),
-                style: const TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                "contacts_add_new_subtitle".tr(),
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(sheetContext);
-                    _pickContactFromDevice();
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
-                  child: Text(
-                    "contacts_pick_from_contacts".tr(),
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 16,
-                    ),
+          child: Container(
+            decoration: const BoxDecoration(
+              color: AppColors.cardBg,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+            ),
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: AppColors.border,
+                    borderRadius: BorderRadius.circular(2),
                   ),
                 ),
-              ),
-              const SizedBox(height: 24),
-            ],
+                const SizedBox(height: 24),
+                Container(
+                  width: 70,
+                  height: 70,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.12),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.person_add_rounded,
+                    size: 36,
+                    color: AppColors.primary,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  "contacts_add_new".tr(),
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  "contacts_add_new_subtitle".tr(),
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    const Expanded(child: Divider(color: AppColors.border)),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: Text(
+                        "contacts_picker_user_selected_only".tr(),
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AppColors.textSecondary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    const Expanded(child: Divider(color: AppColors.border)),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.pop(
+                      sheetContext,
+                      const _AddContactSheetResult.pickFromDevice(),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                    child: Text(
+                      "contacts_pick_from_contacts".tr(),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                TextField(
+                  controller: nameController,
+                  textInputAction: TextInputAction.next,
+                  textCapitalization: TextCapitalization.words,
+                  maxLength: _manualContactNameInputLimit,
+                  inputFormatters: [
+                    LengthLimitingTextInputFormatter(
+                      _manualContactNameInputLimit,
+                    ),
+                  ],
+                  decoration: InputDecoration(
+                    labelText: "contacts_manual_name_label".tr(),
+                    prefixIcon: const Icon(Icons.person_rounded),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: phoneController,
+                  keyboardType: TextInputType.phone,
+                  textInputAction: TextInputAction.done,
+                  inputFormatters: [
+                    LengthLimitingTextInputFormatter(
+                      _manualContactPhoneInputLimit,
+                    ),
+                  ],
+                  decoration: InputDecoration(
+                    labelText: "contacts_manual_phone_label".tr(),
+                    prefixIcon: const Icon(Icons.phone_rounded),
+                  ),
+                  onSubmitted: (_) => Navigator.pop(
+                    sheetContext,
+                    _AddContactSheetResult.manual(
+                      nameController.text,
+                      phoneController.text,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () => Navigator.pop(
+                      sheetContext,
+                      _AddContactSheetResult.manual(
+                        nameController.text,
+                        phoneController.text,
+                      ),
+                    ),
+                    icon: const Icon(Icons.save_rounded),
+                    label: Text("contacts_manual_save".tr()),
+                  ),
+                ),
+                const SizedBox(height: 24),
+              ],
+            ),
           ),
         ),
-      ),
+      );
+      if (!mounted || result == null) return;
+      if (result.pickFromDevice) {
+        await _pickContactFromDevice();
+      } else {
+        await _addManualContact(result.name, result.phone);
+      }
+    } finally {
+      nameController.dispose();
+      phoneController.dispose();
+    }
+  }
+
+  Future<void> _addManualContact(String rawName, String rawPhone) async {
+    final allowed = await SubscriptionGate.ensureAccess(
+      context,
+      PremiumFeature.emergencyContactAdd,
     );
+    if (!allowed || !mounted) return;
+    if (!_requireEmergencyContactConsent()) return;
+
+    final name = rawName.trim();
+    if (name.isEmpty) {
+      _showSnack(
+        "contacts_manual_name_required".tr(),
+        backgroundColor: AppColors.warning,
+      );
+      return;
+    }
+
+    final phone = normalizePhoneNumber(rawPhone);
+    if (!EmergencyNumberValidator.isCallableEmergencyTarget(phone)) {
+      _showSnack(
+        "contacts_manual_invalid_phone".tr(),
+        backgroundColor: AppColors.warning,
+      );
+      return;
+    }
+
+    final consentGiven = await EmergencyContactConsentDialog.show(
+      context: context,
+      contactName: name,
+    );
+    if (!consentGiven || !mounted) return;
+
+    final provider = context.read<ContactsProvider>();
+    final added = await provider.addContact(name: name, phone: phone);
+    if (!added) {
+      _showSnack(
+        provider.isAtLimit
+            ? "contacts_max_reached".tr()
+            : "contacts_already_in_list".tr(),
+        backgroundColor: AppColors.warning,
+      );
+      return;
+    }
+
+    await _refreshHomeProvider();
+    _showSnack("contacts_added".tr(namedArgs: {"name": name}));
+    HapticFeedback.mediumImpact();
   }
 
   Future<void> _pickContactFromDevice() async {
@@ -792,7 +956,7 @@ class _ContactsPageState extends State<ContactsPage> {
         return;
       }
       final contact = await FlutterContactPicker.pickPhoneContact(
-        askForPermission: true,
+        askForPermission: false,
       );
       if (!mounted) return;
       final name = (contact.fullName?.trim().isNotEmpty ?? false)
@@ -833,12 +997,14 @@ class _ContactsPageState extends State<ContactsPage> {
       _showSnack("contacts_added".tr(namedArgs: {"name": name}));
       HapticFeedback.mediumImpact();
     } on UserCancelledPickingException {
-      // kullanıcı vazgeçti
+      // User cancelled the system picker; no error state is needed.
     } on PlatformException catch (e) {
       debugPrint('PlatformException picking contact: ${e.code}');
       _showSnack(
-        "contacts_picker_failed".tr(),
-        backgroundColor: AppColors.emergency,
+        e.code == 'INSUFFICIENT_PERMISSIONS' || e.code == 'PERMISSION_ERROR'
+            ? "contacts_picker_unavailable_manual".tr()
+            : "contacts_picker_failed".tr(),
+        backgroundColor: AppColors.warning,
       );
     } catch (_) {
       _showSnack(

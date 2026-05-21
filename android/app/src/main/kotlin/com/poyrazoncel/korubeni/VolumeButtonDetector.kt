@@ -56,7 +56,7 @@ class VolumeButtonDetector : EventChannel.StreamHandler {
     }
 
     /**
-     * MainActivity.dispatchKeyEvent'ten çağrılır.
+     * MainActivity onKeyDown/onKeyUp callback'lerinden çağrılır.
      * true dönerse event consume edilmiştir (ses değişikliği engellenir).
      * false dönerse event normal şekilde işlenir.
      */

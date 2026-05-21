@@ -1,7 +1,9 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:guvenlik_app/constants/legal_texts.dart';
 import 'package:guvenlik_app/core/constants/feature_access_matrix.dart';
+import 'package:guvenlik_app/core/constants/legal_constants.dart';
 
 void main() {
   group('release readiness policy files', () {
@@ -23,11 +25,39 @@ void main() {
     });
 
     test(
-      'privacy policy discloses RevenueCat and avoids profile photo claim',
+      'privacy policy discloses RevenueCat and avoids stale profile photo claim',
       () {
         final privacy = File('store/privacy_policy.html').readAsStringSync();
+        final disclosure = File(
+          'store/aydinlatma_metni.html',
+        ).readAsStringSync().toLowerCase();
+        final publishedDisclosure = File(
+          '.gh-pages-publish/aydinlatma.html',
+        ).readAsStringSync().toLowerCase();
+        final playForms = [
+          File('store/DATA_SAFETY_FORM.md'),
+          File('store/PLAY_CONSOLE_COPY_PASTE_PACK.md'),
+          File('docs/play_console_declarations.md'),
+        ].map((file) => file.readAsStringSync().toLowerCase()).join('\n');
+        final englishPrivacy = File(
+          'store/privacy_policy_en.html',
+        ).readAsStringSync().toLowerCase();
+        final legalTexts = File(
+          'lib/constants/legal_texts.dart',
+        ).readAsStringSync().toLowerCase();
+
         expect(privacy, contains('RevenueCat'));
         expect(privacy.toLowerCase(), isNot(contains('profil fotografi')));
+        expect(disclosure, isNot(contains('profil fotoğrafı')));
+        expect(publishedDisclosure, isNot(contains('profil fotoğrafı')));
+        expect(publishedDisclosure, contains('sahte çağrı avatarı'));
+        expect(publishedDisclosure, contains('teknik ağ isteği'));
+        expect(playForms, isNot(contains('profile/fake-call avatar')));
+        expect(playForms, contains('fake-call avatar'));
+        expect(englishPrivacy, isNot(contains('profile photo')));
+        expect(englishPrivacy, contains('optional fake call avatar'));
+        expect(legalTexts, isNot(contains('profil fotoğrafı')));
+        expect(legalTexts, contains('sahte çağrı avatarı'));
       },
     );
 
@@ -113,6 +143,49 @@ void main() {
       },
     );
 
+    test('KVKK inventory avoids stale crash biometric and transfer claims', () {
+      final inventory = File(
+        'docs/kvkk_veri_isleme_envanteri.md',
+      ).readAsStringSync().toLowerCase();
+      final verbis = File(
+        'docs/verbis_muafiyet_notu.md',
+      ).readAsStringSync().toLowerCase();
+      final combined = '$inventory\n$verbis';
+
+      expect(combined, isNot(contains('sentry')));
+      expect(combined, isNot(contains('dsn')));
+      expect(combined, contains('biyometrik kilit devre dış'));
+      expect(combined, contains('google play billing'));
+      expect(combined, contains('revenuecat'));
+      expect(combined, contains('openstreetmap'));
+      expect(
+        combined,
+        isNot(contains('hiçbir üçüncü tarafa veri aktarımı yapılmaz')),
+      );
+      expect(combined, isNot(contains('sıfır veri aktarımı')));
+    });
+
+    test('privacy docs disclose provider network behavior conservatively', () {
+      final disclosure = File(
+        'store/aydinlatma_metni.html',
+      ).readAsStringSync().toLowerCase();
+      final appStoreReference = File(
+        'store/app_store_privacy_labels.md',
+      ).readAsStringSync().toLowerCase();
+
+      expect(disclosure, contains('openstreetmap'));
+      expect(disclosure, contains('teknik ağ isteği'));
+      expect(disclosure, isNot(contains('kişisel veri aktarımı gerçekleşmez')));
+      expect(appStoreReference, contains('eski planlama referansıdır'));
+      expect(appStoreReference, contains('not_applicable / future_scope'));
+      expect(appStoreReference, contains('google play billing / revenuecat'));
+      expect(appStoreReference, contains('openstreetmap'));
+      expect(
+        appStoreReference,
+        isNot(contains('üçüncü taraflarla paylaşılmaz')),
+      );
+    });
+
     test('production-facing legal URLs do not use placeholders', () {
       final constants = File(
         'lib/core/constants/app_constants.dart',
@@ -141,5 +214,42 @@ void main() {
         expect(disclosure, isNot(contains('yaş doğrulaması yapılmaktadır')));
       },
     );
+
+    test('runtime legal constants match canonical legal text versions', () {
+      expect(LegalConstants.termsVersion, LegalTexts.termsVersion);
+      expect(LegalConstants.kvkkDisclosureVersion, LegalTexts.kvkkVersion);
+      expect(LegalConstants.consentFormVersion, LegalTexts.kvkkVersion);
+      expect(LegalConstants.privacyPolicyVersion, LegalTexts.kvkkVersion);
+      expect(LegalConstants.lastUpdated, '2026-04-25');
+
+      final disclosure = File('store/aydinlatma_metni.html').readAsStringSync();
+      final publishedDisclosure = File(
+        '.gh-pages-publish/aydinlatma.html',
+      ).readAsStringSync();
+      expect(disclosure, contains('Sürüm 3.1.0'));
+      expect(disclosure, contains('25 Nisan 2026'));
+      expect(publishedDisclosure, contains('Sürüm 3.1.0'));
+      expect(publishedDisclosure, contains('25 Nisan 2026'));
+    });
+
+    test('stale Firebase FCM and resource monitor claims are cleaned', () {
+      final userProfile = File(
+        'lib/domain/models/user_profile.dart',
+      ).readAsStringSync();
+      final crashShim = File(
+        'lib/core/utils/crashlytics_test_helper.dart',
+      ).readAsStringSync();
+      final resourceMonitor = File(
+        'lib/core/services/resource_monitor_service.dart',
+      ).readAsStringSync();
+
+      expect(userProfile, isNot(contains('Firestore')));
+      expect(userProfile, isNot(contains('fcmToken')));
+      expect(userProfile, contains('Offline-first'));
+      expect(crashShim, contains('Compatibility shim'));
+      expect(crashShim, contains('no remote logging'));
+      expect(resourceMonitor, isNot(contains('NOT implemented')));
+      expect(resourceMonitor, contains('Memory usage is unavailable'));
+    });
   });
 }

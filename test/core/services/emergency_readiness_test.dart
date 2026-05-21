@@ -6,13 +6,22 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   test('EmergencyReadinessService should have checkReadiness method', () {
     final file = File('lib/core/services/emergency_readiness_service.dart');
-    expect(file.existsSync(), isTrue,
-        reason: 'emergency_readiness_service.dart must exist');
+    expect(
+      file.existsSync(),
+      isTrue,
+      reason: 'emergency_readiness_service.dart must exist',
+    );
 
     final source = file.readAsStringSync();
-    expect(source.contains('checkReadiness'), isTrue,
-        reason: 'Must have checkReadiness method');
-    expect(source.contains('getDeviceState'), isTrue,
-        reason: 'Must use getDeviceState for battery optimization check');
+    expect(
+      source.contains('checkReadiness'),
+      isTrue,
+      reason: 'Must have checkReadiness method',
+    );
+    expect(
+      source.contains('getDeviceState'),
+      isTrue,
+      reason: 'Must use getDeviceState for battery optimization check',
+    );
   });
 }

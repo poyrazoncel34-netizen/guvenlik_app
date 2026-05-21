@@ -8,13 +8,29 @@ void main() {
       expect(File('lib/screens/safe_walk_screen.dart').existsSync(), isTrue);
     });
 
-    test('SafeWalkScreen uses a countdown timer (Timer or AnimationController)', () {
-      final source = File('lib/screens/safe_walk_screen.dart').readAsStringSync();
-      expect(
-        source.contains('Timer') || source.contains('AnimationController'),
-        isTrue,
-        reason: 'SafeWalkScreen must use a timer for the countdown',
-      );
+    test(
+      'SafeWalkScreen uses a countdown timer (Timer or AnimationController)',
+      () {
+        final source = File(
+          'lib/screens/safe_walk_screen.dart',
+        ).readAsStringSync();
+        expect(
+          source.contains('Timer') || source.contains('AnimationController'),
+          isTrue,
+          reason: 'SafeWalkScreen must use a timer for the countdown',
+        );
+      },
+    );
+
+    test('setup and active views are scrollable on small screens', () {
+      final source = File(
+        'lib/screens/safe_walk_screen.dart',
+      ).readAsStringSync();
+
+      expect(source, contains('SingleChildScrollView'));
+      expect(source, contains('ConstrainedBox'));
+      expect(source, contains('IntrinsicHeight'));
+      expect(source, contains('_buildScrollableContent'));
     });
   });
 }

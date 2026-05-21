@@ -6,10 +6,14 @@ platform :android do
     repo_root = File.expand_path("../..", __dir__)
     aab_path = File.join(repo_root, "build/app/outputs/bundle/playRelease/app-play-release.aab")
 
-    # Build the AAB
-    # We use sh to run flutter build from the root directory
+    # Build the AAB. Keep Fastlane from printing the full command because it
+    # contains dart-define values supplied by the operator environment.
     Dir.chdir(repo_root) do
-      sh "flutter build appbundle --release --flavor play --dart-define=ENV=production --dart-define=REVENUECAT_ANDROID_API_KEY=#{ENV.fetch('REVENUECAT_ANDROID_API_KEY')} --dart-define=ENCRYPTION_KEY=#{ENV.fetch('ENCRYPTION_KEY')}"
+      UI.message("Building Play AAB with dart defines redacted.")
+      sh(
+        "flutter build appbundle --release --flavor play --dart-define=ENV=production --dart-define=REVENUECAT_ANDROID_API_KEY=#{ENV.fetch('REVENUECAT_ANDROID_API_KEY')} --dart-define=ENCRYPTION_KEY=#{ENV.fetch('ENCRYPTION_KEY')}",
+        log: false
+      )
     end
 
     # Upload to Play Store

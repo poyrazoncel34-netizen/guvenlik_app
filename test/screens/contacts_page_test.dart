@@ -3,13 +3,18 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('ContactsPage._pickContactFromDevice', () {
-    test('asks for permission when picking contact', () {
+    test('does not request READ_CONTACTS when picking a contact', () {
       final source = File('lib/screens/contacts_page.dart').readAsStringSync();
       expect(
-        source.contains('askForPermission: false'),
-        isFalse,
+        source,
+        contains('askForPermission: false'),
         reason:
-            'Must use askForPermission: true so READ_CONTACTS is requested before reading the selected contact',
+            'Release contract: use user-selected picker/manual entry only; do not request READ_CONTACTS.',
+      );
+      expect(
+        source,
+        isNot(contains('askForPermission: true')),
+        reason: 'The app must not trigger the plugin READ_CONTACTS request.',
       );
     });
 
@@ -24,19 +29,25 @@ void main() {
     });
   });
 
-  group('ContactsPage manual entry removed', () {
-    test('does not contain manual entry UI', () {
+  group('ContactsPage manual entry', () {
+    test('contains manual entry UI and validation path', () {
       final source = File('lib/screens/contacts_page.dart').readAsStringSync();
       expect(
-        source.contains('Manuel numara ekle'),
-        isFalse,
+        source,
+        contains('Future<void> _addManualContact'),
         reason:
-            'Manual entry was removed — contacts can only be added from device contacts',
+            'Manual entry is the release-safe fallback when READ_CONTACTS is not requested.',
+      );
+      expect(source, contains('contacts_manual_phone_label'));
+      expect(
+        source,
+        contains('EmergencyNumberValidator.isCallableEmergencyTarget'),
+        reason: 'Manual entries must reject invalid short/random numbers.',
       );
       expect(
-        source.contains('veya manuel gir'),
-        isFalse,
-        reason: 'Manual entry divider must be removed',
+        source,
+        contains('LengthLimitingTextInputFormatter'),
+        reason: 'Manual phone input must be bounded before validation.',
       );
     });
   });
@@ -49,6 +60,21 @@ void main() {
         isTrue,
         reason:
             '_pickContactFromDevice must catch PlatformException to distinguish permission errors from generic errors',
+      );
+      expect(
+        source,
+        contains('contacts_picker_unavailable_manual'),
+        reason:
+            'If the no-READ_CONTACTS picker is unavailable, UI must point users to manual entry.',
+      );
+    });
+
+    test('handles picker cancel separately', () {
+      final source = File('lib/screens/contacts_page.dart').readAsStringSync();
+      expect(
+        source,
+        contains('on UserCancelledPickingException'),
+        reason: 'Picker cancel must be a handled no-op, not a failure.',
       );
     });
   });

@@ -124,8 +124,7 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
         MaterialPageRoute(
           builder: (context) => EmergencyCallScreen(
             name:
-                _emergencyContact?.name ??
-                "pin_verify_emergency_contact".tr(),
+                _emergencyContact?.name ?? "pin_verify_emergency_contact".tr(),
             phone: emergencyNumber,
             callResult: callResult,
           ),
@@ -148,7 +147,9 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
         canPop: false,
         child: AlertDialog(
           backgroundColor: const Color(0xFF1C1C1E),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -159,19 +160,51 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
                   color: AppColors.emergency.withValues(alpha: 0.2),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.error_rounded, color: AppColors.emergency, size: 42),
+                child: const Icon(
+                  Icons.error_rounded,
+                  color: AppColors.emergency,
+                  size: 42,
+                ),
               ),
               const SizedBox(height: 16),
-              Text(title, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: Colors.white), textAlign: TextAlign.center),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w900,
+                  color: Colors.white,
+                ),
+                textAlign: TextAlign.center,
+              ),
               const SizedBox(height: 12),
-              Text(body, style: const TextStyle(fontSize: 14, color: Colors.white70, height: 1.5), textAlign: TextAlign.center),
+              Text(
+                body,
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: Colors.white70,
+                  height: 1.5,
+                ),
+                textAlign: TextAlign.center,
+              ),
               if (phoneNumber.isNotEmpty) ...[
                 const SizedBox(height: 18),
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(12)),
-                  child: Text(phoneNumber, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: Colors.white, letterSpacing: 1.5), textAlign: TextAlign.center),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    phoneNumber,
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                      letterSpacing: 1.5,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
                 ),
               ],
             ],
@@ -181,10 +214,21 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
-                  onPressed: () async => await AndroidIntentService.openDialer(phoneNumber),
+                  onPressed: () async =>
+                      await AndroidIntentService.openDialer(phoneNumber),
                   icon: const Icon(Icons.call, size: 20),
-                  label: Text('emergency_manual_call_now'.tr(), style: const TextStyle(fontWeight: FontWeight.w700)),
-                  style: ElevatedButton.styleFrom(backgroundColor: AppColors.emergency, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                  label: Text(
+                    'emergency_manual_call_now'.tr(),
+                    style: const TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.emergency,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
                 ),
               ),
             if (emergencyMessage != null)
@@ -193,19 +237,37 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
                 child: OutlinedButton.icon(
                   onPressed: () {
                     Clipboard.setData(ClipboardData(text: emergencyMessage));
-                    ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text('emergency_message_copied'.tr()), backgroundColor: AppColors.success));
+                    ScaffoldMessenger.of(ctx).showSnackBar(
+                      SnackBar(
+                        content: Text('emergency_message_copied'.tr()),
+                        backgroundColor: AppColors.success,
+                      ),
+                    );
                   },
                   icon: const Icon(Icons.copy, size: 18),
                   label: Text('emergency_copy_message'.tr()),
-                  style: OutlinedButton.styleFrom(foregroundColor: Colors.white70, side: const BorderSide(color: Colors.white24), padding: const EdgeInsets.symmetric(vertical: 12), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.white70,
+                    side: const BorderSide(color: Colors.white24),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
                 ),
               ),
             const SizedBox(height: 4),
             SizedBox(
               width: double.infinity,
               child: TextButton(
-                onPressed: () { Navigator.pop(ctx); Navigator.pop(context); },
-                child: Text('emergency_dismiss'.tr(), style: const TextStyle(color: Colors.white38, fontSize: 13)),
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  Navigator.pop(context);
+                },
+                child: Text(
+                  'emergency_dismiss'.tr(),
+                  style: const TextStyle(color: Colors.white38, fontSize: 13),
+                ),
               ),
             ),
           ],
@@ -273,123 +335,121 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
       child: Scaffold(
         backgroundColor: AppColors.background,
         body: SafeArea(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 18,
-                  vertical: 10,
-                ),
-                decoration: BoxDecoration(
-                  color: AppColors.emergency.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(30),
-                  border: Border.all(
-                    color: AppColors.emergency.withValues(alpha: 0.4),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(vertical: 24),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 18,
+                    vertical: 10,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.emergency.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(30),
+                    border: Border.all(
+                      color: AppColors.emergency.withValues(alpha: 0.4),
+                    ),
+                  ),
+                  child: Text(
+                    "pin_verify_title".tr(),
+                    style: TextStyle(
+                      color: AppColors.emergency,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 1.2,
+                    ),
                   ),
                 ),
-                child: Text(
-                  "pin_verify_title".tr(),
-                  style: TextStyle(
-                    color: AppColors.emergency,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 1.2,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 28),
-              Text(
-                "$_timeLeft",
-                style: const TextStyle(
-                  color: AppColors.textPrimary,
-                  fontSize: 80,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-              Text(
-                "pin_verify_countdown_warning".tr(),
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: AppColors.textSecondary),
-              ),
-              const SizedBox(height: 16),
-              if (_emergencyContact != null)
+                const SizedBox(height: 20),
                 Text(
-                  "pin_verify_emergency_name".tr(
-                    namedArgs: {"name": _emergencyContact!.name},
+                  "$_timeLeft",
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 80,
+                    fontWeight: FontWeight.w800,
                   ),
+                ),
+                Text(
+                  "pin_verify_countdown_warning".tr(),
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: AppColors.textSecondary),
+                ),
+                const SizedBox(height: 12),
+                if (_emergencyContact != null)
+                  Text(
+                    "pin_verify_emergency_name".tr(
+                      namedArgs: {"name": _emergencyContact!.name},
+                    ),
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                const SizedBox(height: 8),
+                Text(
+                  _correctPin == null
+                      ? "emergency_no_pin_warning".tr()
+                      : "pin_verify_cancel_hint".tr(),
                   style: const TextStyle(
                     color: AppColors.textSecondary,
-                    fontWeight: FontWeight.w600,
+                    fontSize: 12,
                   ),
+                  textAlign: TextAlign.center,
                 ),
-              const SizedBox(height: 10),
-              Text(
-                _correctPin == null
-                    ? "emergency_no_pin_warning".tr()
-                    : "pin_verify_cancel_hint".tr(),
-                style: const TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: 12,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              if (_correctPin == null) ...[
-                const SizedBox(height: 16),
-                OutlinedButton.icon(
-                  onPressed: _cancelWithoutPin,
-                  icon: const Icon(Icons.close_rounded, size: 20),
-                  label: Text("emergency_cancel_without_pin".tr()),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.warning,
-                    side: const BorderSide(color: AppColors.warning),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 14,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
-                ),
-              ] else ...[
-                const SizedBox(height: 40),
-                // Şifre Noktaları
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: List.generate(4, (index) {
-                    return Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 8),
-                      width: 15,
-                      height: 15,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: index < _enteredPin.length
-                            ? AppColors.emergency
-                            : AppColors.border,
+                if (_correctPin == null) ...[
+                  const SizedBox(height: 16),
+                  OutlinedButton.icon(
+                    onPressed: _cancelWithoutPin,
+                    icon: const Icon(Icons.close_rounded, size: 20),
+                    label: Text("emergency_cancel_without_pin".tr()),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.warning,
+                      side: const BorderSide(color: AppColors.warning),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 14,
                       ),
-                    );
-                  }),
-                ),
-              ],
-              const SizedBox(height: 40),
-              if (_correctPin != null)
-                // Numara Tuşları
-                Expanded(
-                  child: GridView.builder(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                  ),
+                ] else ...[
+                  const SizedBox(height: 24),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(4, (index) {
+                      return Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 8),
+                        width: 15,
+                        height: 15,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: index < _enteredPin.length
+                              ? AppColors.emergency
+                              : AppColors.border,
+                        ),
+                      );
+                    }),
+                  ),
+                  const SizedBox(height: 24),
+                  GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
                     padding: const EdgeInsets.symmetric(horizontal: 40),
                     gridDelegate:
                         const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 3,
                           childAspectRatio: 1.5,
-                          mainAxisSpacing: 20,
+                          mainAxisSpacing: 16,
                           crossAxisSpacing: 20,
                         ),
                     itemCount: 12,
                     itemBuilder: (context, index) {
                       if (index == 9) return const SizedBox();
                       if (index == 11) {
-                        // Silme Tuşu
                         return IconButton(
                           icon: const Icon(
                             Icons.backspace,
@@ -424,8 +484,9 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
                       );
                     },
                   ),
-                ),
-            ],
+                ],
+              ],
+            ),
           ),
         ),
       ),

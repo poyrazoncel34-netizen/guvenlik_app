@@ -18,6 +18,7 @@ import androidx.core.content.ContextCompat
  */
 object EmergencyExecutor {
     private const val TAG = "EmergencyExecutor"
+    private val OFFICIAL_EMERGENCY_SHORT_CODES = setOf("112", "911", "999", "110", "155", "156", "122")
 
     fun executeEmergency(
         context: Context,
@@ -36,7 +37,7 @@ object EmergencyExecutor {
             result
         } catch (e: Exception) {
             Log.e(TAG, "Call dispatch failed")
-            mapOf("status" to "failed", "number" to primaryNumber.trim().ifEmpty { "112" })
+            mapOf("status" to "failed", "number" to normalizeEmergencyTarget(primaryNumber))
         } finally {
             try {
                 wakeLock?.release()
@@ -45,37 +46,50 @@ object EmergencyExecutor {
     }
 
     private fun openCall(context: Context, number: String): Map<String, Any?> {
-        val cleaned = number.trim().ifEmpty { "112" }
+        val cleaned = normalizeEmergencyTarget(number)
 
         val canDirect = ContextCompat.checkSelfPermission(
             context, Manifest.permission.CALL_PHONE
         ) == PackageManager.PERMISSION_GRANTED
         Log.i(TAG, "EMERGENCY_CALL_TRIGGERED path=${if (canDirect) "ACTION_CALL" else "ACTION_DIAL"}")
 
-        val intent = if (canDirect) {
-            Intent(Intent.ACTION_CALL).apply {
-                data = Uri.parse("tel:${Uri.encode(cleaned)}")
-            }
-        } else {
-            Intent(Intent.ACTION_DIAL).apply {
-                data = Uri.parse("tel:${Uri.encode(cleaned)}")
+        if (canDirect) {
+            try {
+                startTelIntent(context, Intent.ACTION_CALL, cleaned)
+                return mapOf("status" to "directCallStarted", "number" to cleaned)
+            } catch (e: Exception) {
+                Log.e(TAG, "ACTION_CALL failed; falling back to ACTION_DIAL")
             }
         }
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+
         try {
-            context.startActivity(intent)
+            startTelIntent(context, Intent.ACTION_DIAL, cleaned)
+            return mapOf("status" to "dialerOpened", "number" to cleaned)
         } catch (e: Exception) {
-            Log.e(TAG, "FALLBACK_112 primary call intent failed")
-            val fallback = Intent(Intent.ACTION_DIAL).apply {
-                data = Uri.parse("tel:112")
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            }
-            context.startActivity(fallback)
+            Log.e(TAG, "ACTION_DIAL primary fallback failed")
+        }
+
+        if (cleaned != "112") {
+            Log.e(TAG, "FALLBACK_112 primary dial intent failed")
+            startTelIntent(context, Intent.ACTION_DIAL, "112")
             return mapOf("status" to "dialerOpened", "number" to "112")
         }
-        return mapOf(
-            "status" to if (canDirect) "directCallStarted" else "dialerOpened",
-            "number" to cleaned,
-        )
+
+        throw IllegalStateException("No emergency call or dial intent could be opened")
+    }
+
+    private fun startTelIntent(context: Context, action: String, number: String) {
+        val intent = Intent(action).apply {
+            data = Uri.parse("tel:${Uri.encode(number)}")
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        context.startActivity(intent)
+    }
+
+    private fun normalizeEmergencyTarget(number: String): String {
+        val cleaned = number.trim().ifEmpty { "112" }
+        val digits = cleaned.filter { it.isDigit() }
+        val valid = OFFICIAL_EMERGENCY_SHORT_CODES.contains(digits) || digits.length >= 7
+        return if (valid) cleaned else "112"
     }
 }

@@ -41,7 +41,10 @@ void main() {
     final source = File(
       'lib/core/services/offline_queue_service.dart',
     ).readAsStringSync();
-    final classDoc = source.substring(0, source.indexOf('class OfflineQueueService'));
+    final classDoc = source.substring(
+      0,
+      source.indexOf('class OfflineQueueService'),
+    );
     expect(
       classDoc.toLowerCase().contains('sync when connection is restored'),
       isFalse,

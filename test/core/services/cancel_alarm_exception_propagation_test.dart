@@ -24,11 +24,13 @@ void main() {
     () async {
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(channel, (MethodCall call) async {
-        if (call.method == 'cancelCountdownAlarm') {
-          throw MissingPluginException('cancelCountdownAlarm not implemented');
-        }
-        return null;
-      });
+            if (call.method == 'cancelCountdownAlarm') {
+              throw MissingPluginException(
+                'cancelCountdownAlarm not implemented',
+              );
+            }
+            return null;
+          });
 
       // Must complete without throwing — any exception here kills dispatch
       await expectLater(

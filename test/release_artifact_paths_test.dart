@@ -75,5 +75,39 @@ void main() {
         );
       }
     });
+
+    test(
+      'release workflow and setup script do not echo or create secrets locally',
+      () {
+        final releaseWorkflow = File(
+          '.github/workflows/release.yml',
+        ).readAsStringSync();
+        final setupScript = File(
+          'scripts/setup_play_release.sh',
+        ).readAsStringSync();
+
+        expect(releaseWorkflow, contains('ENCRYPTION_KEY: \${{ secrets.'));
+        expect(
+          releaseWorkflow,
+          contains('REVENUECAT_ANDROID_API_KEY: \${{ secrets.'),
+        );
+        expect(
+          releaseWorkflow,
+          isNot(contains('--dart-define=ENCRYPTION_KEY=\${{ secrets.')),
+        );
+        expect(
+          releaseWorkflow,
+          isNot(
+            contains('--dart-define=REVENUECAT_ANDROID_API_KEY=\${{ secrets.'),
+          ),
+        );
+        expect(releaseWorkflow, contains('RELEASE_SECRETS_REDACTED'));
+
+        expect(setupScript, contains('Bu script dosya oluşturmaz'));
+        expect(setupScript, isNot(contains(r'cp "$KEY_EXAMPLE" "$KEY_PROPS"')));
+        expect(setupScript, isNot(contains(r'cat > "$KEY_PROPS"')));
+        expect(setupScript, contains('ayrı operator adımı'));
+      },
+    );
   });
 }

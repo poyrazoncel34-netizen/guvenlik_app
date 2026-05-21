@@ -80,7 +80,7 @@ class _SubscriptionManagementScreenState
 
   Future<bool> _openPlaySubscriptionsFallback() async {
     try {
-      return launchUrl(
+      return await launchUrl(
         Uri.parse(AppConstants.googlePlaySubscriptionsUrl),
         mode: LaunchMode.externalApplication,
       );

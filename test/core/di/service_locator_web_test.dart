@@ -16,8 +16,7 @@ void main() {
       // The guard must appear as a condition on the LocalDatabaseService block,
       // not just as an import.  We look for the pattern used at runtime.
       expect(
-        source.contains('!kIsWeb') &&
-            source.contains('LocalDatabaseService'),
+        source.contains('!kIsWeb') && source.contains('LocalDatabaseService'),
         isTrue,
         reason:
             'setupServiceLocator must guard LocalDatabaseService init with '

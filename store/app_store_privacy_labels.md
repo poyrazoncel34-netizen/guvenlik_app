@@ -1,6 +1,6 @@
 # App Store — Privacy Nutrition Labels
 
-Bu belge, App Store Connect'te "Uygulama Gizliliği" bölümü için hazır yanıtları içermektedir.
+Bu belge App Store Connect için eski planlama referansıdır; ilk Google Play yayını için kaynak belge değildir. Android release açısından durum `NOT_APPLICABLE / FUTURE_SCOPE` olup bu dosya Google Play yayınını durduran repo-içi blocker olarak kullanılmamalıdır. Google Play için `store/DATA_SAFETY_FORM.md`, `docs/kvkk_veri_isleme_envanteri.md` ve `store/PLAY_CONSOLE_COPY_PASTE_PACK.md` esas alınmalıdır. App Store yayını düşünülürse ayrı iOS epic kapsamında final iOS derlemesi ve provider davranışlarıyla yeniden doğrulanmalıdır.
 
 Son güncelleme: 18 Mart 2026
 
@@ -38,6 +38,7 @@ Son güncelleme: 18 Mart 2026
 2. **Biyometrik**: Bu sürümde biyometrik kilit kullanılmaz; uygulama biyometrik veriyi işlemez.
 3. **Ses**: Bu Play odaklı sürümde ses kaydı yoktur; mikrofon izni istenmez.
 4. **Kişiler**: Yalnızca kullanıcının seçtiği kişiler saklanır. Rehber taranmaz.
+5. **Sağlayıcı davranışları**: Google Play Billing / RevenueCat abonelik doğrulaması ve OpenStreetMap harita karo istekleri Google Play sürümü için ayrıca açıklanmıştır; iOS/App Store formu için birebir tamamlandı kabul edilmemelidir.
 
 ---
 
@@ -59,7 +60,7 @@ Son güncelleme: 18 Mart 2026
 ```
 KoruBeni veri gizliliği uygulamaları:
 - Verileriniz yalnızca cihazınızda saklanır
-- Üçüncü taraflarla paylaşılmaz
+- Geliştirici backend'ine gönderilmez; harita ve abonelik sağlayıcılarının teknik ağ davranışları ayrıca değerlendirilir
 - Reklam amacıyla kullanılmaz
 - İstediğiniz zaman tüm verilerinizi silebilirsiniz
 ```

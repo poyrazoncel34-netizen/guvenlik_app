@@ -1,10 +1,10 @@
 // ============================================================================
 // RESOURCE MONITOR SERVICE — Battery monitoring + reserved memory hooks.
 // ============================================================================
-// Tracks battery level/state for low-battery responses. Memory metrics are
-// NOT implemented in this release; the field is kept on ResourceSnapshot so
-// future native channels can fill it without API churn. Offline-first: no
-// remote crash reporting.
+// Tracks battery level/state for low-battery responses. Memory metrics are not
+// available in this release; the nullable field stays on ResourceSnapshot so a
+// future native channel can fill it without API churn. Offline-first: no remote
+// crash reporting.
 // ============================================================================
 
 import 'dart:async';
@@ -122,7 +122,7 @@ class ResourceMonitorService {
     }
   }
 
-  /// Memory usage is not implemented in this release. The method exists so
+  /// Memory usage is unavailable in this release. The method exists so
   /// callers can opt in once a native channel is wired; until then it
   /// honestly returns null and any UI must treat memory as unavailable.
   Future<int?> _getMemoryUsage() async {

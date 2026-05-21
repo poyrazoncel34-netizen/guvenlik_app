@@ -144,7 +144,8 @@ class _EmergencyContactConsentDialogState
                 color: AppColors.warning.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                    color: AppColors.warning.withValues(alpha: 0.4)),
+                  color: AppColors.warning.withValues(alpha: 0.4),
+                ),
               ),
               child: Text(
                 'contact_consent_kvkk_warning'.tr(),
@@ -164,7 +165,8 @@ class _EmergencyContactConsentDialogState
                 color: AppColors.info.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                    color: AppColors.info.withValues(alpha: 0.4)),
+                  color: AppColors.info.withValues(alpha: 0.4),
+                ),
               ),
               child: Text(
                 'contact_consent_third_party_rights'.tr(),
@@ -205,7 +207,8 @@ class _EmergencyContactConsentDialogState
                             setState(() => _confirmed = v ?? false),
                         activeColor: AppColors.success,
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(4)),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
                       ),
                     ),
                     const SizedBox(width: 10),
@@ -237,7 +240,8 @@ class _EmergencyContactConsentDialogState
                       side: BorderSide(color: AppColors.border),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
                     child: Text('cancel'.tr()),
                   ),
@@ -249,11 +253,13 @@ class _EmergencyContactConsentDialogState
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
                       foregroundColor: Colors.white,
-                      disabledBackgroundColor:
-                          AppColors.primary.withValues(alpha: 0.3),
+                      disabledBackgroundColor: AppColors.primary.withValues(
+                        alpha: 0.3,
+                      ),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                       elevation: 0,
                     ),
                     child: _loading
@@ -261,7 +267,9 @@ class _EmergencyContactConsentDialogState
                             width: 18,
                             height: 18,
                             child: CircularProgressIndicator(
-                                strokeWidth: 2, color: Colors.white),
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
                           )
                         : Text(
                             'contact_consent_confirm'.tr(),

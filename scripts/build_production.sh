@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # KoruBeni - Production Build Script (Play Store AAB)
-# Kullanım: ENCRYPTION_KEY='base64key' REVENUECAT_ANDROID_API_KEY='goog_...' ./scripts/build_production.sh
+# Kullanım: ENCRYPTION_KEY=<redacted> REVENUECAT_ANDROID_API_KEY=<redacted> ./scripts/build_production.sh
 # Key üretmek: openssl rand -base64 32
 
 set -euo pipefail
@@ -26,13 +26,13 @@ fi
 
 # Encryption key kontrolü
 if [ -z "${ENCRYPTION_KEY:-}" ]; then
-    echo "⚠️  ENCRYPTION_KEY bulunamadı!"
+    printf '%s\n' "⚠️  ENCRYPTION_KEY bulunamadı!"
     echo ""
     echo "Lütfen encryption key'i belirle:"
-    echo "export ENCRYPTION_KEY='senin-key-buraya'"
+    printf '%s\n' "export ENCRYPTION_KEY=<redacted>"
     echo ""
     echo "Veya script'e parametre olarak ver:"
-    echo "REVENUECAT_ANDROID_API_KEY='goog_...' ./scripts/build_production.sh 'senin-key-buraya'"
+    printf '%s\n' "REVENUECAT_ANDROID_API_KEY=<redacted> ./scripts/build_production.sh <redacted>"
     echo ""
     exit 1
 fi
@@ -42,10 +42,10 @@ echo ""
 
 # RevenueCat Android API key kontrolü
 if [ -z "${REVENUECAT_ANDROID_API_KEY:-}" ]; then
-    echo "❌ REVENUECAT_ANDROID_API_KEY bulunamadı!"
+    printf '%s\n' "❌ REVENUECAT_ANDROID_API_KEY bulunamadı!"
     echo ""
     echo "Production abonelik akışı için RevenueCat Android API key gerekli:"
-    echo "export REVENUECAT_ANDROID_API_KEY='goog_...'"
+    printf '%s\n' "export REVENUECAT_ANDROID_API_KEY=<redacted>"
     echo ""
     exit 1
 fi
@@ -65,12 +65,23 @@ echo ""
 
 # Android AAB Build
 echo "🤖 Android AAB build başlıyor..."
+echo "   Sensitive dart defines are set; values are redacted."
 AAB_PATH="build/app/outputs/bundle/playRelease/app-play-release.aab"
+SYMBOLS_DIR="build/app/debug-symbols"
 BUILD_LOG="$(mktemp /tmp/korubeni_android_build.XXXXXX.log)"
+
+# Obfuscation + split debug info: Dart code is obfuscated for release,
+# and the symbol files needed to deobfuscate crash stacks are written to
+# $SYMBOLS_DIR. After upload, Play Console can be given these symbols
+# (App bundle explorer → Native debug symbols) to symbolicate the
+# Pre-launch and Production crash reports.
+mkdir -p "$SYMBOLS_DIR"
 
 set +e
 flutter build appbundle --release \
   --flavor play \
+  --obfuscate \
+  --split-debug-info="$SYMBOLS_DIR" \
   --dart-define=ENV=production \
   --dart-define=REVENUECAT_ANDROID_API_KEY="$REVENUECAT_ANDROID_API_KEY" \
   --dart-define=ENCRYPTION_KEY="$ENCRYPTION_KEY" 2>&1 | tee "$BUILD_LOG"
@@ -93,9 +104,25 @@ fi
 
 echo ""
 echo "✅ Android AAB build başarılı!"
-echo "📦 Dosya: $AAB_PATH"
+echo "📦 AAB: $AAB_PATH"
+echo "🗂️  Debug symbols: $SYMBOLS_DIR (zip'leyip Play Console'a yükleyin)"
 echo ""
 rm -f "$BUILD_LOG"
+
+# 16 KB page-size compatibility check (Play Store zorunluluğu Nov 1, 2025+)
+if [ -x "./scripts/verify_16kb_alignment.sh" ]; then
+    echo ""
+    echo "═══════════════════════════════════════════════════════════"
+    echo "🔍 16 KB page-size compatibility verification"
+    echo "═══════════════════════════════════════════════════════════"
+    if ./scripts/verify_16kb_alignment.sh "$AAB_PATH"; then
+        :
+    else
+        echo ""
+        echo "⚠️  16 KB alignment kontrolü uyarı verdi. Yukarıdaki çıktıyı"
+        echo "    inceleyin. Play Store'a yüklemeden önce düzeltilmelidir."
+    fi
+fi
 
 echo ""
 echo "═══════════════════════════════════════════════════════════"
@@ -106,4 +133,6 @@ echo "📋 Sonraki adımlar:"
 echo "1. Android screenshot'larını al (store/screenshots/android/)"
 echo "2. Privacy Policy'i canlıya al"
 echo "3. Play Store Console'a git ve AAB'yi yükle"
+echo "4. Symbol klasörünü zip'leyip Play Console → App bundle explorer →"
+echo "   Native debug symbols altına yükleyin (crash deobfuscation için)"
 echo ""

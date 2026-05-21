@@ -37,8 +37,11 @@ class _DataDeletionScreenState extends State<DataDeletionScreen> {
                 color: AppColors.emergency.withValues(alpha: 0.12),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.delete_forever_rounded,
-                  color: AppColors.emergency, size: 22),
+              child: const Icon(
+                Icons.delete_forever_rounded,
+                color: AppColors.emergency,
+                size: 22,
+              ),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -64,8 +67,10 @@ class _DataDeletionScreenState extends State<DataDeletionScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text('cancel'.tr(),
-                style: const TextStyle(color: AppColors.textSecondary)),
+            child: Text(
+              'cancel'.tr(),
+              style: const TextStyle(color: AppColors.textSecondary),
+            ),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
@@ -73,7 +78,8 @@ class _DataDeletionScreenState extends State<DataDeletionScreen> {
               backgroundColor: AppColors.emergency,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10)),
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
             child: Text('data_delete_confirm_button'.tr()),
           ),
@@ -107,8 +113,10 @@ class _DataDeletionScreenState extends State<DataDeletionScreen> {
           ),
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded,
-              color: AppColors.textSecondary),
+          icon: const Icon(
+            Icons.arrow_back_rounded,
+            color: AppColors.textSecondary,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
         elevation: 0,
@@ -128,15 +136,19 @@ class _DataDeletionScreenState extends State<DataDeletionScreen> {
               color: AppColors.emergency.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                  color: AppColors.emergency.withValues(alpha: 0.4)),
+                color: AppColors.emergency.withValues(alpha: 0.4),
+              ),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.warning_amber_rounded,
-                        color: AppColors.emergency, size: 20),
+                    const Icon(
+                      Icons.warning_amber_rounded,
+                      color: AppColors.emergency,
+                      size: 20,
+                    ),
                     const SizedBox(width: 10),
                     Text(
                       'data_delete_warning_title'.tr(),
@@ -187,7 +199,8 @@ class _DataDeletionScreenState extends State<DataDeletionScreen> {
               color: AppColors.success.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                  color: AppColors.success.withValues(alpha: 0.4)),
+                color: AppColors.success.withValues(alpha: 0.4),
+              ),
             ),
             child: Text(
               'data_delete_kvkk_note'.tr(),
@@ -210,20 +223,25 @@ class _DataDeletionScreenState extends State<DataDeletionScreen> {
                       width: 18,
                       height: 18,
                       child: CircularProgressIndicator(
-                          strokeWidth: 2, color: Colors.white),
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
                     )
                   : const Icon(Icons.delete_forever_rounded),
               label: Text(
                 'data_delete_button'.tr(),
                 style: const TextStyle(
-                    fontSize: 16, fontWeight: FontWeight.w700),
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.emergency,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14)),
+                  borderRadius: BorderRadius.circular(14),
+                ),
                 elevation: 0,
               ),
             ),
@@ -238,8 +256,11 @@ class _DataDeletionScreenState extends State<DataDeletionScreen> {
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         children: [
-          const Icon(Icons.remove_circle_rounded,
-              size: 16, color: AppColors.emergency),
+          const Icon(
+            Icons.remove_circle_rounded,
+            size: 16,
+            color: AppColors.emergency,
+          ),
           const SizedBox(width: 10),
           Text(
             labelKey.tr(),

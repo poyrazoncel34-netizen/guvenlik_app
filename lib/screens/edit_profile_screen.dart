@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../core/app_colors.dart';
@@ -58,18 +59,20 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     }
 
     final provider = context.read<SettingsProvider>();
-    await provider.updateProfile(
-      name: _nameController.text.trim(),
-      email: '',
-    );
+    await provider.updateProfile(name: _nameController.text.trim(), email: '');
 
     if (mounted) {
+      final messenger = ScaffoldMessenger.of(context);
       Navigator.pop(context, true);
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger.showSnackBar(
         SnackBar(
           content: Row(
             children: [
-              const Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
+              const Icon(
+                Icons.check_circle_rounded,
+                color: Colors.white,
+                size: 20,
+              ),
               const SizedBox(width: 10),
               Text("edit_profile_success".tr()),
             ],
@@ -107,6 +110,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     controller: _nameController,
                     validator: _validateName,
                     textCapitalization: TextCapitalization.words,
+                    maxLength: 60,
+                    inputFormatters: [LengthLimitingTextInputFormatter(60)],
                     decoration: InputDecoration(
                       hintText: "edit_profile_name_hint".tr(),
                       prefixIcon: const Icon(Icons.person_outline_rounded),
