@@ -693,12 +693,12 @@ class _CountdownScreenState extends State<CountdownScreen>
               builder: (context, constraints) {
                 final compact = constraints.maxHeight < 720;
                 final pagePadding = compact ? 16.0 : 24.0;
-                final topGap = compact ? 8.0 : 24.0;
-                final sectionGap = compact ? 24.0 : 50.0;
-                final pinGap = compact ? 28.0 : 50.0;
-                final bottomGap = compact ? 16.0 : 24.0;
-                final circleSize = compact ? 152.0 : 180.0;
-                final countdownFontSize = compact ? 58.0 : 70.0;
+                final topGap = compact ? 8.0 : 12.0;
+                final sectionGap = 24.0;
+                final pinGap = compact ? 28.0 : 24.0;
+                final bottomGap = 16.0;
+                final circleSize = compact ? 152.0 : 144.0;
+                final countdownFontSize = compact ? 58.0 : 56.0;
                 final bannerPadding = compact ? 16.0 : 20.0;
                 return SingleChildScrollView(
                   padding: EdgeInsets.all(pagePadding),
@@ -999,8 +999,8 @@ class _CountdownScreenState extends State<CountdownScreen>
       padding: const EdgeInsets.symmetric(horizontal: 30),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 3,
-        childAspectRatio: 1.15,
-        mainAxisSpacing: 18,
+        childAspectRatio: 1.5,
+        mainAxisSpacing: 12,
         crossAxisSpacing: 18,
       ),
       itemCount: 12,
