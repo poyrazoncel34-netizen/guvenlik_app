@@ -706,9 +706,9 @@ class _CountdownScreenState extends State<CountdownScreen>
                     constraints: BoxConstraints(
                       minHeight: constraints.maxHeight - (pagePadding * 2),
                     ),
-                    child: IntrinsicHeight(
-                      child: Column(
-                        children: [
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
                           SizedBox(height: topGap),
                           // Warning banner
                           Container(
@@ -932,7 +932,7 @@ class _CountdownScreenState extends State<CountdownScreen>
                               ),
                             ),
                           ],
-                          const Spacer(),
+                          SizedBox(height: sectionGap),
                           if (_correctPin != null) ...[
                             // ── PIN dots with shake ──
                             AnimatedBuilder(
@@ -981,7 +981,6 @@ class _CountdownScreenState extends State<CountdownScreen>
                           ],
                           SizedBox(height: bottomGap),
                         ],
-                      ),
                     ),
                   ),
                 );
