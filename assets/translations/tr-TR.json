@@ -667,7 +667,7 @@
   "legal_consent_save": "Kaydet",
   "legal_consent_complete": "Tamamla",
   "legal_consent_location": "Konum verilerimin acil durum ve konum oturumlarında işlenmesine rıza veriyorum",
-  "legal_consent_location_sub": "GPS koordinatları acil durum veya konum oturumu sırasında cihazda işlenir. Uygulama bunları otomatik olarak kişilere iletmez. Konum geçmişi 90 gün saklanır. Rızanızı Ayarlar > Yasal Bilgiler'den geri çekebilirsiniz.",
+  "legal_consent_location_sub": "GPS koordinatları acil durum veya konum oturumu sırasında cihazda işlenir. Uygulama bunları otomatik olarak kişilere iletmez. Konum bilgisi yalnızca aktif oturum süresince cihaz belleğinde geçici olarak tutulur; oturum bittiğinde silinir ve kalıcı olarak saklanmaz. Rızanızı Ayarlar > Yasal Bilgiler'den geri çekebilirsiniz.",
   "legal_consent_biometric": "Biyometrik kilit bu sürümde devre dışıdır",
   "legal_consent_biometric_sub": "Uygulamaya erişim yalnızca yerel PIN ile korunur",
   "legal_consent_audio": "Ses kaydı bu Android Play sürümünde devre dışıdır",

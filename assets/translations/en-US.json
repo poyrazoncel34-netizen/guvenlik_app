@@ -667,7 +667,7 @@
   "legal_consent_save": "Save",
   "legal_consent_complete": "Complete",
   "legal_consent_location": "I consent to my location data being processed during emergency and location sessions",
-  "legal_consent_location_sub": "GPS coordinates are processed on-device during an emergency or location session. The app does not automatically send them to your contacts. Location history is retained for 90 days. You can withdraw consent from Settings > Legal.",
+  "legal_consent_location_sub": "GPS coordinates are processed on-device during an emergency or location session. The app does not automatically send them to your contacts. Location data is held only in device memory while a session is active; it is cleared when the session ends and is not persisted. You can withdraw consent from Settings > Legal.",
   "legal_consent_biometric": "Biometric unlock is disabled in this release",
   "legal_consent_biometric_sub": "App access uses local PIN only",
   "legal_consent_audio": "Audio recording is disabled in this Android Play release",

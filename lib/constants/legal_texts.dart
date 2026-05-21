@@ -7,9 +7,9 @@
 class LegalTexts {
   // ── Sürüm Numaraları ──────────────────────────────────────────────────────
   static const String termsVersion = '3.1.0';
-  static const String kvkkVersion = '3.1.0';
-  static const String lastUpdated = '25 Nisan 2026';
-  static const String lastUpdatedEn = 'April 25, 2026';
+  static const String kvkkVersion = '3.1.1';
+  static const String lastUpdated = '21 Mayıs 2026';
+  static const String lastUpdatedEn = 'May 21, 2026';
 
   // ── Kullanım Sözleşmesi — Türkçe ─────────────────────────────────────────
   static const String termsOfServiceTr =
@@ -268,7 +268,7 @@ Uygulama tüm rehber listesini okumaz. Yalnızca kullanıcının seçtiği veya 
 • Profil bilgileri     : Uygulama kullanıldığı sürece; siz silene kadar
 • Sahte çağrı avatarı  : Siz silene veya uygulama verisini temizleyene kadar
 • Acil durum kişileri  : Yalnızca seçtiğiniz veya girdiğiniz kişiler; siz silene kadar
-• Konum oturumu geçmişi: 30 gün
+• Konum bilgisi        : Yalnızca aktif konum oturumu sırasında cihaz belleğinde geçici olarak tutulur; oturum bittiğinde silinir ve kalıcı olarak saklanmaz
 • Rıza logları         : Uygulama kullanıldığı sürece; cihaz verisini silene kadar
 • PIN (şifreli)        : Siz değiştirene veya silene kadar
 
@@ -364,7 +364,7 @@ The app does not read the full contacts list. It stores only emergency contacts 
 ──────────────────────────────────────
 • Profile information      : While the app is in use; until you delete it
 • Emergency contacts       : Only contacts you select or enter; until you delete them
-• Location session history : 30 days
+• Location data            : Held only in device memory while a location session is active; cleared when the session ends and never persisted
 • Consent logs             : While the app is in use; until device data deletion
 • PIN (encrypted)          : Until you change or delete it
 
