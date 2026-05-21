@@ -57,8 +57,6 @@ class RevenueCatService {
   /// Returns true if the given [customerInfo] contains an active KoruBeni Pro
   /// entitlement. RevenueCat caches this locally, so it works offline.
   bool isPro(CustomerInfo customerInfo) {
-    // GEÇICI: emülatör ekran görüntüsü için — yayından önce kaldırılacak
-    if (kDebugMode) return true;
     return customerInfo.entitlements.active.containsKey(entitlementId);
   }
 
