@@ -220,16 +220,16 @@ void main() {
       expect(LegalConstants.kvkkDisclosureVersion, LegalTexts.kvkkVersion);
       expect(LegalConstants.consentFormVersion, LegalTexts.kvkkVersion);
       expect(LegalConstants.privacyPolicyVersion, LegalTexts.kvkkVersion);
-      expect(LegalConstants.lastUpdated, '2026-04-25');
+      expect(LegalConstants.lastUpdated, '2026-05-21');
 
       final disclosure = File('store/aydinlatma_metni.html').readAsStringSync();
       final publishedDisclosure = File(
         '.gh-pages-publish/aydinlatma.html',
       ).readAsStringSync();
-      expect(disclosure, contains('Sürüm 3.1.0'));
-      expect(disclosure, contains('25 Nisan 2026'));
-      expect(publishedDisclosure, contains('Sürüm 3.1.0'));
-      expect(publishedDisclosure, contains('25 Nisan 2026'));
+      expect(disclosure, contains('Sürüm 3.1.1'));
+      expect(disclosure, contains('21 Mayıs 2026'));
+      expect(publishedDisclosure, contains('Sürüm 3.1.1'));
+      expect(publishedDisclosure, contains('21 Mayıs 2026'));
     });
 
     test('stale Firebase FCM and resource monitor claims are cleaned', () {

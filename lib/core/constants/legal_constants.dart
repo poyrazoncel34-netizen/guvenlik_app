@@ -10,16 +10,16 @@ class LegalConstants {
   static const String termsVersion = '3.1.0';
 
   /// KVKK Aydınlatma Metni versiyonu
-  static const String kvkkDisclosureVersion = '3.1.0';
+  static const String kvkkDisclosureVersion = '3.1.1';
 
   /// Rıza Formu versiyonu
-  static const String consentFormVersion = '3.1.0';
+  static const String consentFormVersion = '3.1.1';
 
   /// Gizlilik Politikası versiyonu
-  static const String privacyPolicyVersion = '3.1.0';
+  static const String privacyPolicyVersion = '3.1.1';
 
   /// Son güncelleme tarihi
-  static const String lastUpdated = '2026-04-25';
+  static const String lastUpdated = '2026-05-21';
 
   /// Veri Sorumlusu bilgileri
   static const String dataControllerName = 'KoruBeni';
