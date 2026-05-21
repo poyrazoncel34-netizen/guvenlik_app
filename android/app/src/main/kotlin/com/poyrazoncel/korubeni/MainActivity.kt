@@ -198,6 +198,24 @@ class MainActivity : FlutterFragmentActivity() {
                                     startActivity(intent)
                                     result.success(true)
                                 }
+                                "openNotificationSettings" -> {
+                                    // Android 8.0+ supports the dedicated app-notification
+                                    // settings screen; older versions fall back to the
+                                    // generic app details page.
+                                    val intent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                        Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+                                            putExtra(Settings.EXTRA_APP_PACKAGE, packageName)
+                                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                        }
+                                    } else {
+                                        Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                                            data = Uri.fromParts("package", packageName, null)
+                                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                        }
+                                    }
+                                    startActivity(intent)
+                                    result.success(true)
+                                }
                                 else -> result.notImplemented()
                             }
                         } catch (e: ActivityNotFoundException) {

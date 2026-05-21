@@ -29,15 +29,15 @@ void main() {
     );
   });
 
-  test('DeviceSecurityService delegates to FlutterJailbreakDetection', () {
+  test('DeviceSecurityService delegates to SafeDevice', () {
     final source = File(
       'lib/services/device_security_service.dart',
     ).readAsStringSync();
     expect(
-      source.contains('FlutterJailbreakDetection'),
+      source.contains('SafeDevice'),
       isTrue,
       reason:
-          'DeviceSecurityService must call FlutterJailbreakDetection.jailbroken',
+          'DeviceSecurityService must call SafeDevice.isJailBroken',
     );
   });
 

@@ -4,6 +4,9 @@ import '../services/android_intent_service.dart';
 class EmergencyNumberValidator {
   EmergencyNumberValidator._();
 
+  static const int minUserContactDigits = 7;
+  static const int maxUserContactDigits = 15;
+
   static bool isOfficialEmergencyShortCode(String number) {
     return AppConstants.officialEmergencyShortCodes.contains(
       _digitsOnly(number),
@@ -11,7 +14,9 @@ class EmergencyNumberValidator {
   }
 
   static bool isUserContactPhoneNumber(String number) {
-    return _digitsOnly(number).length >= 7;
+    final digitCount = _digitsOnly(number).length;
+    return digitCount >= minUserContactDigits &&
+        digitCount <= maxUserContactDigits;
   }
 
   static bool isCallableEmergencyTarget(String number) {

@@ -15,6 +15,7 @@ This checklist prepares operator actions only. No dashboard item is marked done 
 | Exact alarm | Submit declaration if Play Console requires it | PLAY_CONSOLE |
 | Battery optimization | Submit declaration if Play Console requires it | PLAY_CONSOLE |
 | CALL_PHONE | Submit declaration/reviewer note if requested | PLAY_CONSOLE |
+| App Access | Submit reviewer-access instructions: no login required for basic features; Pro features need a Play Console license tester account. Use copy from `docs/play_console_declarations.md` (App Access / Reviewer Notes). Operator supplies actual license tester email(s). | PLAY_CONSOLE |
 | Store listing | Paste Turkish-only first-release copy from `store/PLAY_CONSOLE_COPY_PASTE_PACK.md`; do not add an English Play listing for this release | PLAY_CONSOLE |
 | Store icon | Upload/verify 512x512 PNG | NEEDS_OPERATOR_ACTION |
 | Feature graphic | Prepare/verify 1024x500 feature graphic | NEEDS_OPERATOR_ACTION |

@@ -5,6 +5,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:provider/provider.dart';
@@ -328,16 +329,33 @@ class _EmergencyMapScreenState extends State<EmergencyMapScreen> {
   }
 
   Widget _buildOsmAttribution() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.6),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: const Text(
-        "© OpenStreetMap contributors",
-        style: TextStyle(fontSize: 10, color: Colors.white70),
+    return Semantics(
+      label: 'OpenStreetMap copyright link',
+      button: true,
+      child: GestureDetector(
+        onTap: _openOsmCopyrightPage,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          decoration: BoxDecoration(
+            color: Colors.black.withValues(alpha: 0.6),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: const Text(
+            "© OpenStreetMap contributors",
+            style: TextStyle(fontSize: 10, color: Colors.white70),
+          ),
+        ),
       ),
     );
+  }
+
+  Future<void> _openOsmCopyrightPage() async {
+    final uri = Uri.parse('https://www.openstreetmap.org/copyright');
+    try {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } on Exception {
+      // Silent fallback — attribution remains visible as static text even
+      // if no browser is available to open the copyright page.
+    }
   }
 }

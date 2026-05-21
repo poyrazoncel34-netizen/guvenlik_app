@@ -103,6 +103,8 @@ class _OfflineBannerState extends State<OfflineBanner>
               _showReconnected = false;
             });
           }
+        }).catchError((Object error, StackTrace stack) {
+          debugPrint('AnimationController.reverse failed: $error');
         });
       }
     });

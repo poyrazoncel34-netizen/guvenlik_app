@@ -26,7 +26,6 @@ import '../core/services/haptic_service.dart';
 import '../core/services/notification_service.dart';
 import '../core/services/emergency_platform_service.dart';
 import '../core/constants/app_constants.dart';
-import '../core/utils/permission_helper.dart';
 import '../core/utils/emergency_number_validator.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
@@ -86,9 +85,10 @@ class _CountdownScreenState extends State<CountdownScreen>
   }
 
   /// Release-of-panic-button kicks off the countdown immediately.
-  /// CALL_PHONE permission is requested on first use so emergency dispatch
-  /// can place the call; user-facing copy lives in the system permission
-  /// sheet rather than an in-app dialog.
+  /// CALL_PHONE permission is requested from the readiness card (see
+  /// [HomePage._requestCallPhonePermission]) so the emergency flow is not
+  /// interrupted; the pre-countdown honesty dialog was dropped to keep
+  /// the panic-button release responsive.
   Future<void> _startCountdownAfterPermission() async {
     if (widget.isTestMode) {
       await _startCountdown();
@@ -96,8 +96,6 @@ class _CountdownScreenState extends State<CountdownScreen>
     }
     // Allow the first frame to build before any platform request.
     await Future.delayed(const Duration(milliseconds: 300));
-    if (!mounted) return;
-    await PermissionHelper.requestCallPhonePermission(context);
     if (!mounted) return;
     await _startCountdown();
   }
@@ -615,35 +613,40 @@ class _CountdownScreenState extends State<CountdownScreen>
         } else {
           _shakeController.forward(from: 0);
           HapticFeedback.vibrate();
-          PinLockoutService.instance.registerFailure().then((state) {
-            if (!mounted) return;
-            setState(() {
-              _lockoutEndTime = state.lockedUntil;
-              _lockoutRemaining = state.remainingSeconds;
-            });
-            if (state.isLocked) {
-              _startPinLockout(state);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    'brute_force_locked'.tr(
-                      namedArgs: {'seconds': '${state.remainingSeconds}'},
+          PinLockoutService.instance
+              .registerFailure()
+              .then((state) {
+                if (!mounted) return;
+                setState(() {
+                  _lockoutEndTime = state.lockedUntil;
+                  _lockoutRemaining = state.remainingSeconds;
+                });
+                if (state.isLocked) {
+                  _startPinLockout(state);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'brute_force_locked'.tr(
+                          namedArgs: {'seconds': '${state.remainingSeconds}'},
+                        ),
+                      ),
+                      backgroundColor: AppColors.emergency,
+                      behavior: SnackBarBehavior.floating,
+                      duration: const Duration(seconds: 3),
                     ),
-                  ),
-                  backgroundColor: AppColors.emergency,
-                  behavior: SnackBarBehavior.floating,
-                  duration: const Duration(seconds: 3),
-                ),
-              );
-            } else {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text("pin_mismatch".tr()),
-                  backgroundColor: AppColors.emergency,
-                ),
-              );
-            }
-          });
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text("pin_mismatch".tr()),
+                      backgroundColor: AppColors.emergency,
+                    ),
+                  );
+                }
+              })
+              .catchError((Object error, StackTrace stack) {
+                debugPrint('PinLockoutService.registerFailure failed: $error');
+              });
           Future.delayed(const Duration(milliseconds: 300), () {
             if (mounted) {
               setState(() => _pin = "");

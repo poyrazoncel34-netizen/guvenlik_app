@@ -147,6 +147,8 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> {
               behavior: SnackBarBehavior.floating,
             ),
           );
+        }).catchError((Object error, StackTrace stack) {
+          debugPrint('PinLockoutService.registerFailure failed: $error');
         });
       }
     }

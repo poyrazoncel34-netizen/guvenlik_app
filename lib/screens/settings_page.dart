@@ -394,6 +394,8 @@ class _SettingsPageState extends State<SettingsPage> {
         ).then((_) {
           if (!mounted) return;
           context.read<SubscriptionProvider>().refresh();
+        }).catchError((Object error, StackTrace stack) {
+          debugPrint('Navigator.push Subscription failed: $error');
         });
       },
       borderRadius: BorderRadius.circular(16),
@@ -490,6 +492,8 @@ class _SettingsPageState extends State<SettingsPage> {
           ).then((_) {
             if (!mounted) return;
             settingsProvider.loadProfile();
+          }).catchError((Object error, StackTrace stack) {
+            debugPrint('Navigator.push Profile failed: $error');
           });
         },
         child: Container(

@@ -6,6 +6,10 @@ Status: NEEDS_OPERATOR_ACTION / PLAY_CONSOLE / SIGNING / REVENUECAT / NEEDS_REAL
 
 Data Safety nuance: Play Console internal testing may be exempt from the Data Safety section depending on account/app state. Closed testing, open testing, and production require Data Safety where Play Console presents it. Legal/privacy docs must still match the build before internal testing.
 
+**Related guides:**
+
+- For tester-facing onboarding (the invitation message you send to the 12 closed-test testers, with install steps, 14-day commitment, test scenarios, "do not call real 112" warning, and feedback form structure), see [`CLOSED_TEST_TESTER_GUIDE.md`](CLOSED_TEST_TESTER_GUIDE.md). The current file (operator-facing) covers signed-AAB build and Play Console upload only.
+
 ---
 
 ## Ön Koşullar

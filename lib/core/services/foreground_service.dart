@@ -233,24 +233,28 @@ Future<void> _onStart(ServiceInstance service) async {
   });
 
   // Notification update command from the main isolate.
-  service.on('updateNotification').listen((event) {
-    if (event != null && service is AndroidServiceInstance) {
-      currentTitle = event['title'] as String? ?? currentTitle;
-      currentBody = event['content'] as String? ?? currentBody;
-      notificationsPlugin.show(
-        kForegroundNotificationId,
-        currentTitle,
-        currentBody,
-        NotificationDetails(
-          android: AndroidNotificationDetails(
-            kForegroundChannelId,
-            channelName,
-            icon: 'ic_bg_service_small',
-            ongoing: true,
-            autoCancel: false,
+  service.on('updateNotification').listen((event) async {
+    try {
+      if (event != null && service is AndroidServiceInstance) {
+        currentTitle = event['title'] as String? ?? currentTitle;
+        currentBody = event['content'] as String? ?? currentBody;
+        await notificationsPlugin.show(
+          kForegroundNotificationId,
+          currentTitle,
+          currentBody,
+          NotificationDetails(
+            android: AndroidNotificationDetails(
+              kForegroundChannelId,
+              channelName,
+              icon: 'ic_bg_service_small',
+              ongoing: true,
+              autoCancel: false,
+            ),
           ),
-        ),
-      );
+        );
+      }
+    } catch (e) {
+      debugPrint('ForegroundService: notification update failed: $e');
     }
   });
 

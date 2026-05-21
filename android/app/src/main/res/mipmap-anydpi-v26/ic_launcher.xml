@@ -2,4 +2,12 @@
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
   <background android:drawable="@color/ic_launcher_background"/>
   <foreground android:drawable="@drawable/ic_launcher_foreground"/>
+  <!-- Android 13+ themed icons + Android 16 QPR2 auto-themed icons.
+       We reuse the foreground drawable as the monochrome layer; Android
+       tints it to the system theme color so the brand silhouette stays
+       recognizable in themed-icon mode. For a designer-tuned monochrome
+       (true single-color silhouette on transparent background), replace
+       this reference with a dedicated @drawable/ic_launcher_monochrome
+       asset later. -->
+  <monochrome android:drawable="@drawable/ic_launcher_foreground"/>
 </adaptive-icon>

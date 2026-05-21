@@ -11,6 +11,8 @@ KoruBeni is an Android personal safety app that helps you view location status, 
 
 KoruBeni offers free basic safety tools. Panic/SOS, Safe Walk, check-in, and advanced safety automations are available with KoruBeni Pro.
 
+⚠️ IMPORTANT: KoruBeni is not an official emergency service and does not replace 112 (or your local emergency number). In a real emergency, please call your local emergency number first. KoruBeni is only a complementary tool and does not provide physical protection.
+
 ★ FREE FEATURES ★
 
 ◉ Location Session

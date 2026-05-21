@@ -86,6 +86,18 @@ android {
         targetSdk = 35
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+
+        // Ship only 64-bit native libraries. Almost all Android 7.0+ devices
+        // use a 64-bit ARM SoC; dropping 32-bit shrinks the AAB and avoids
+        // 16 KB page-size compatibility regressions on the 32-bit ELF path.
+        ndk {
+            abiFilters += listOf("arm64-v8a", "x86_64")
+        }
+
+        // Ship only Turkish and English resource flavors. The app is
+        // bilingual (TR primary, EN secondary) and bundling every Android
+        // locale's strings adds size with zero user benefit.
+        resourceConfigurations += listOf("en", "tr")
     }
 
     buildFeatures {
@@ -141,7 +153,7 @@ android {
 }
 
 dependencies {
-    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
 
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.robolectric:robolectric:4.12.1")

@@ -20,14 +20,23 @@ class ActivityService {
         'activity_events',
         orderBy: 'timestamp DESC',
       );
-      return migrated
-          .map((row) => ActivityEvent.fromMap(Map<String, dynamic>.from(row)))
-          .toList(growable: false);
+      return _eventsFromRows(migrated);
     }
 
-    return rows
-        .map((row) => ActivityEvent.fromMap(Map<String, dynamic>.from(row)))
-        .toList(growable: false);
+    return _eventsFromRows(rows);
+  }
+
+  static List<ActivityEvent> _eventsFromRows(List<Map<String, Object?>> rows) {
+    final events = <ActivityEvent>[];
+    for (final row in rows) {
+      try {
+        events.add(ActivityEvent.fromMap(Map<String, dynamic>.from(row)));
+      } catch (_) {
+        // Ignore malformed current database rows so one bad entry does not
+        // crash the whole activity timeline.
+      }
+    }
+    return List.unmodifiable(events);
   }
 
   static Future<void> logEvent({

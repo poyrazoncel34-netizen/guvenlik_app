@@ -83,6 +83,8 @@ KoruBeni, konum durumunuzu görmenize, cihaz içi sahte çağrı simülasyonu ç
 
 KoruBeni ücretsiz temel güvenlik araçları sunar. Panik/SOS, güvenli yürüyüş, check-in ve gelişmiş güvenlik otomasyonları KoruBeni Pro ile kullanılabilir.
 
+⚠️ ÖNEMLİ: KoruBeni resmi bir acil servis değildir ve 112'nin yerine geçmez. Gerçek bir acil durumda lütfen önce 112'yi arayın. KoruBeni yalnızca tamamlayıcı bir araçtır ve fiziksel koruma sağlamaz.
+
 ★ ÜCRETSİZ ÖZELLİKLER ★
 
 ◉ Konum Oturumu
@@ -125,9 +127,11 @@ KoruBeni Pro isteğe bağlı bir aboneliktir. Satın alma, yenileme, iptal ve ge
 
 ★ GİZLİLİK ★
 
-• Konum verileriniz yalnızca acil durum veya konum oturumu sırasında işlenir
-• Verilerinizi üçüncü taraflara satmıyoruz
-• Verilerin ana kopyası cihazda saklanır; harita ve Play Billing sağlayıcılarının kendi teknik ağ davranışları olabilir
+• KoruBeni'nin bulut hesabı yoktur. Tüm verileriniz cihazınızda kalır.
+• Arka planda konum izlemiyoruz. Konum yalnızca siz bir oturum başlattığınızda kullanılır.
+• Verilerinizi hiçbir reklam ağıyla veya veri komisyoncusuyla paylaşmıyoruz; satmıyoruz.
+• Pro abonelik için Google Play Billing aracılığıyla yalnızca satın alma geçmişi tutulur.
+• Harita ve Play Billing sağlayıcılarının kendi teknik ağ davranışları olabilir.
 
 KoruBeni — Ücretsiz konum oturumu ve sahte çağrı; Pro ile ek güvenlik araçları.
 ```
@@ -138,7 +142,73 @@ KoruBeni — Ücretsiz konum oturumu ve sahte çağrı; Pro ile ek güvenlik ara
 
 ```text
 Do not add an English Play listing for the first Google Play release.
-The app currently launches publicly in Turkish. English listing/reference files may remain in the repository only as internal preparation material and must not be pasted into Play Console until full English runtime support is re-enabled and tested.
+The app currently launches publicly in Turkish. English listing/reference files (see store/play_store_listing_en.md) may remain in the repository only as internal preparation material and must not be pasted into Play Console until full English runtime support is re-enabled and tested.
+```
+
+### Internal English reference — DO NOT paste into Play Console for the first release
+
+Kept here only so the English copy stays in sync with TR when the English Play listing is eventually enabled. Includes the same 112 disclaimer placement as the live Turkish listing.
+
+```text
+KoruBeni - Personal Safety
+
+Short description:
+Panic/SOS requires Pro; location, fake call, and siren are free.
+
+Full description:
+KoruBeni is an Android personal safety app that helps you view location status, run an on-device fake call simulation, and use additional safety tools with an optional Pro subscription.
+
+KoruBeni offers free basic safety tools. Panic/SOS, Safe Walk, check-in, and advanced safety automations are available with KoruBeni Pro.
+
+⚠️ IMPORTANT: KoruBeni is not an official emergency service and does not replace 112 (or your local emergency number). In a real emergency, please call your local emergency number first. KoruBeni is only a complementary tool and does not provide physical protection.
+
+★ FREE FEATURES ★
+
+◉ Location Session
+Show your current location when available; show a clear unavailable state when it cannot be acquired.
+
+◉ Fake Call
+Create an on-device fake incoming call simulation for personal safety in uncomfortable situations. This feature does not place a real phone call and does not contact third parties.
+
+◉ Siren
+Draw attention with a loud alarm.
+
+◉ Emergency Contacts
+Save and manage trusted contacts locally on your device.
+
+★ UNLOCKED WITH KORUBENI PRO ★
+
+◉ Panic/SOS Button
+With KoruBeni Pro, hold to start the panic flow. A 10-second countdown helps prevent accidental activation. This feature does not work on the free plan.
+
+◉ Safe Walk
+Start a helper check-in session during night or unsafe situations. Background behavior depends on Android settings.
+
+◉ Check-in
+Use timed check-in sessions that start a follow-up flow when the timer expires.
+
+◉ Safety History
+View local in-app safety events on your device.
+
+◉ Volume Trigger and Test Mode
+Use advanced safety automations and test the flow without placing a real call.
+
+KoruBeni Pro is optional. Purchases, renewals, cancellations, and restore operations are managed through Google Play.
+
+★ SECURITY ★
+
+• 4-digit PIN app protection
+• Secure on-device storage for PIN and first-responder information
+• Local on-device database for emergency contact records
+• Offline-first architecture without a developer backend
+
+★ PRIVACY ★
+
+• Location is processed only during emergency or location sessions
+• We don’t sell your data to third parties
+• The primary copy of app data stays on device; map and Play Billing providers may have their own technical network behavior
+
+KoruBeni — Free location session and fake call; optional Pro safety tools.
 ```
 
 ---

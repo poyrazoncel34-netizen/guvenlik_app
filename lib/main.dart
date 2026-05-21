@@ -137,6 +137,13 @@ void main() async {
       debugPrint('FlutterError: ${details.exception}');
       return true;
     }());
+    // Forward to the framework's default presenter so the error is
+    // also written to Logcat / stderr in release builds. This is
+    // required for Google Play Pre-launch Report to surface Flutter
+    // framework errors (build/widget exceptions); without it, only
+    // native crashes appear in the report and Dart-side bugs stay
+    // invisible to automated QA crawlers.
+    FlutterError.presentError(details);
   };
 
   // Zero-fault: Fatal hataları yutma - return false ile standart hata yönetimine bırak
@@ -153,6 +160,12 @@ void main() async {
     }());
     return false;
   };
+
+  // Android 15 (API 35) enforces edge-to-edge for any app targeting SDK 35
+  // or higher. Opt in explicitly so the engine never falls back to the
+  // legacy inset behavior, and so transparent status/nav bars are applied
+  // before the first frame paints. Per-Scaffold SafeArea remains required.
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
 
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
