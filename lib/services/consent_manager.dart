@@ -36,19 +36,38 @@ class ConsentManager {
       final raw = await _storage.read(key: SecureStorageKeys.consentLog);
       if (raw == null || raw.isEmpty) return;
       final List<dynamic> list = jsonDecode(raw) as List<dynamic>;
-      // Son durumu bul (her tür için en son kaydı al)
+      // Son durumu bul (her tür için en son kaydı al).
+      // Tek bir bozuk kayıt, geçerli onayları SİLMEMELİ — KVKK kayıtları
+      // kullanıcının açık iradesini yansıtır; yarım yazma veya şema
+      // değişikliği sonrası tek bir kayıt bozulduğunda diğerleri korunur.
       final Map<String, ConsentRecord> latest = {};
+      var skipped = 0;
       for (final item in list) {
-        final record = ConsentRecord.fromJson(item as Map<String, dynamic>);
-        final existing = latest[record.consentType];
-        if (existing == null || record.timestamp.isAfter(existing.timestamp)) {
-          latest[record.consentType] = record;
+        try {
+          final record = ConsentRecord.fromJson(item as Map<String, dynamic>);
+          final existing = latest[record.consentType];
+          if (existing == null ||
+              record.timestamp.isAfter(existing.timestamp)) {
+            latest[record.consentType] = record;
+          }
+        } catch (e) {
+          skipped++;
+          debugPrint(
+            '[ConsentManager] _loadConsentCache: skipping malformed entry: $e',
+          );
         }
+      }
+      if (skipped > 0) {
+        debugPrint(
+          '[ConsentManager] _loadConsentCache: $skipped malformed entries '
+          'skipped, ${latest.length} valid consents loaded',
+        );
       }
       for (final entry in latest.entries) {
         _consentCache[entry.key] = entry.value.granted;
       }
     } catch (e) {
+      // Outer catch handles unreadable storage / non-list JSON / decode errors.
       debugPrint('[ConsentManager] _loadConsentCache hata: $e');
     }
   }
@@ -89,9 +108,27 @@ class ConsentManager {
       final raw = await _storage.read(key: SecureStorageKeys.consentLog);
       if (raw == null || raw.isEmpty) return [];
       final List<dynamic> list = jsonDecode(raw) as List<dynamic>;
-      return list
-          .map((e) => ConsentRecord.fromJson(e as Map<String, dynamic>))
-          .toList();
+      // Tek bir bozuk kayıt tüm KVKK audit log'unu silmesin — geçerli olan
+      // kayıtlar export/management ekranlarında görünmeye devam etmeli.
+      final records = <ConsentRecord>[];
+      var skipped = 0;
+      for (final item in list) {
+        try {
+          records.add(ConsentRecord.fromJson(item as Map<String, dynamic>));
+        } catch (e) {
+          skipped++;
+          debugPrint(
+            '[ConsentManager] getAllLogs: skipping malformed entry: $e',
+          );
+        }
+      }
+      if (skipped > 0) {
+        debugPrint(
+          '[ConsentManager] getAllLogs: $skipped malformed entries skipped, '
+          '${records.length} valid logs returned',
+        );
+      }
+      return records;
     } catch (e) {
       debugPrint('[ConsentManager] getAllLogs hata: $e');
       return [];
