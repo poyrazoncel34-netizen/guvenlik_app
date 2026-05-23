@@ -7,6 +7,7 @@ import 'dart:async';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
 import '../core/app_colors.dart';
 import '../core/services/android_intent_service.dart';
@@ -47,6 +48,15 @@ class _EmergencyCallScreenState extends State<EmergencyCallScreen>
       vsync: this,
       duration: const Duration(milliseconds: 1300),
     )..repeat(reverse: true);
+
+    // Keep the CPU/screen awake while the user resolves the emergency call.
+    // Idempotent with any wakelock acquired by CountdownScreen; the matching
+    // disable lives in dispose() so every entry path releases the lock.
+    unawaited(
+      WakelockPlus.enable().catchError((Object e) {
+        debugPrint('EmergencyCallScreen: WakelockPlus.enable failed: $e');
+      }),
+    );
 
     // FAIL-SAFE TRUTH MODE: If nothing is confirmed after 5 seconds,
     // show fullscreen red alert.
@@ -242,6 +252,13 @@ class _EmergencyCallScreenState extends State<EmergencyCallScreen>
     _failSafeTimer?.cancel();
     _autoDismissTimer?.cancel();
     _pulseController.dispose();
+    // Release the wakelock acquired here (and any inherited from the
+    // CountdownScreen handoff). Idempotent: a no-op if already disabled.
+    unawaited(
+      WakelockPlus.disable().catchError((Object e) {
+        debugPrint('EmergencyCallScreen: WakelockPlus.disable failed: $e');
+      }),
+    );
     super.dispose();
   }
 

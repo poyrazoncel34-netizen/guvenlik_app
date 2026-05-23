@@ -522,6 +522,17 @@ class _CountdownScreenState extends State<CountdownScreen>
       );
       KoruBeniForegroundService.stop();
     }
+    // Release the wakelock unless EmergencyCallScreen is taking over. If
+    // wakelock was never enabled (cancelled before dispatch), disable() is
+    // a no-op. When handing off, EmergencyCallScreen owns the lock and
+    // releases it in its own dispose.
+    if (!_handoffToEmergencyScreen) {
+      unawaited(
+        WakelockPlus.disable().catchError((Object e) {
+          debugPrint('CountdownScreen: WakelockPlus.disable failed: $e');
+        }),
+      );
+    }
     super.dispose();
   }
 
