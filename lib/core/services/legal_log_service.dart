@@ -76,11 +76,54 @@ class LegalLogService {
     if (!await file.exists()) return [];
     final content = await file.readAsString();
     if (content.trim().isEmpty) return [];
-    final decoded = jsonDecode(content);
-    if (decoded is Map && decoded.containsKey('legal_logs')) {
-      return List<Map<String, dynamic>>.from(decoded['legal_logs'] as List);
+    try {
+      final decoded = jsonDecode(content);
+      if (decoded is Map && decoded['legal_logs'] is List) {
+        final raw = decoded['legal_logs'] as List;
+        // Per-item filter so a single garbled entry can't poison the
+        // whole audit log. Non-map rows are silently dropped.
+        return raw
+            .whereType<Map>()
+            .map((row) => Map<String, dynamic>.from(row))
+            .toList();
+      }
+      // Decoded successfully but the shape is wrong (missing key or wrong
+      // type). Fall through to recovery — preserve nothing rather than
+      // crashing every subsequent logEvent() call.
+      throw const FormatException(
+        'legal_logs file is valid JSON but the shape is unexpected',
+      );
+    } on FormatException catch (e) {
+      // Corrupted file (half-write, manual edit, schema drift). Rewrite it
+      // with the empty container so the next logEvent() can append again.
+      debugPrint(
+        '[LegalLogService] _loadLogs: recovering from malformed file: $e',
+      );
+      await _recoverEmptyFile(file);
+      return [];
+    } on TypeError catch (e) {
+      debugPrint(
+        '[LegalLogService] _loadLogs: recovering from type error: $e',
+      );
+      await _recoverEmptyFile(file);
+      return [];
     }
-    return [];
+  }
+
+  // Best-effort recovery: replace the corrupted file with a valid empty
+  // container so logging resumes on the next write. Failures here are
+  // intentionally swallowed — write attempts will still fail loudly via
+  // their own try/catch in logEvent.
+  Future<void> _recoverEmptyFile(File file) async {
+    try {
+      await file.writeAsString(
+        jsonEncode({'legal_logs': <Map<String, dynamic>>[]}),
+        flush: true,
+      );
+      debugPrint('[LegalLogService] _loadLogs: recovery wrote empty container');
+    } catch (e) {
+      debugPrint('[LegalLogService] _loadLogs: recovery write failed: $e');
+    }
   }
 
   // ── Dahili: JSON dosyasını yaz ───────────────────────────────────────────
@@ -93,7 +136,7 @@ class LegalLogService {
   // ── Dahili: Eski / fazla kayıtları temizle ───────────────────────────────
   void _pruneEntries(List<Map<String, dynamic>> logs) {
     final cutoff = DateTime.now().subtract(
-      Duration(days: _retentionYears * 365),
+      const Duration(days: _retentionYears * 365),
     );
     logs.removeWhere((entry) {
       try {
