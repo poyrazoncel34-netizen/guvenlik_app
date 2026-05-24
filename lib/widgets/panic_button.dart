@@ -160,6 +160,76 @@ class _PanicButtonState extends State<PanicButton>
     ).whenComplete(() => _countdownOpening = false);
   }
 
+  /// Screen-reader / AT activation path. Triggered by Semantics.onTap when
+  /// MediaQuery.accessibleNavigation is true (TalkBack/VoiceOver enabled).
+  /// Replaces the 3-second hold with a single tap + explicit confirmation
+  /// dialog — the confirmation is what guards against accidental activation,
+  /// not the hold duration. Subscription gate and feature-warning gate run
+  /// before the dialog so the user is not prompted to confirm something the
+  /// app will then refuse to start.
+  Future<void> _onAccessibleTap() async {
+    if (_isArmed || _countdownOpening) return;
+
+    final allowed = await SubscriptionGate.ensureAccess(
+      context,
+      PremiumFeature.panic,
+    );
+    if (!allowed || !mounted) return;
+
+    final shown = await FeatureWarningHelper.showIfNeeded(
+      context,
+      prefKey: AppConstants.prefWarningPanic,
+      featureName: 'panic_button',
+      title: FeatureWarningHelper.panicTitle,
+      content: FeatureWarningHelper.panicContent,
+    );
+    if (!shown || !mounted) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.cardBg,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
+          'panic_button_a11y_confirm_title'.tr(),
+          style: const TextStyle(
+            color: AppColors.textPrimary,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        content: Text(
+          'panic_button_a11y_confirm_body'.tr(),
+          style: const TextStyle(color: AppColors.textSecondary, height: 1.45),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(
+              'cancel'.tr(),
+              style: const TextStyle(color: AppColors.textSecondary),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.emergency,
+              foregroundColor: Colors.white,
+            ),
+            child: Text(
+              'panic_button_a11y_confirm_start'.tr(),
+              style: const TextStyle(fontWeight: FontWeight.w800),
+            ),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    HapticFeedback.heavyImpact();
+    _openCountdownScreen();
+  }
+
   @override
   Widget build(BuildContext context) {
     final isPro = context.watch<SubscriptionProvider>().isPro;
@@ -172,17 +242,32 @@ class _PanicButtonState extends State<PanicButton>
     final titleFontSize = (baseSize * 0.092).clamp(14.0, 24.0);
     final subtitleFontSize = (baseSize * 0.048).clamp(10.0, 13.0);
 
+    // When TalkBack/VoiceOver is active, the standard double-tap activation
+    // fires Semantics.onTap — it does NOT reliably reach a raw
+    // GestureDetector's onLongPressStart. Without an alternative path, the
+    // single SOS entry point would be inaccessible. We expose onTap →
+    // confirmation dialog → countdown, and silence the long-press handlers
+    // so a stray gesture during AT mode cannot start the timer twice.
+    // Sighted users (accessibleNavigation == false) keep the existing
+    // 3-second hold behaviour untouched.
+    final accessibleNavigation = MediaQuery.of(context).accessibleNavigation;
+
     return Semantics(
       label: isPro
           ? "panic_button_semantics_label".tr()
           : "panic_button_locked_semantics_label".tr(),
-      hint: isPro
-          ? "panic_button_semantics_hint".tr()
-          : "panic_button_locked_semantics_hint".tr(),
+      hint: accessibleNavigation
+          ? (isPro
+                ? "panic_button_a11y_hint".tr()
+                : "panic_button_a11y_locked_hint".tr())
+          : (isPro
+                ? "panic_button_semantics_hint".tr()
+                : "panic_button_locked_semantics_hint".tr()),
       button: true,
+      onTap: accessibleNavigation ? _onAccessibleTap : null,
       child: GestureDetector(
-        onLongPressStart: _onPressStart,
-        onLongPressEnd: _onPressEnd,
+        onLongPressStart: accessibleNavigation ? null : _onPressStart,
+        onLongPressEnd: accessibleNavigation ? null : _onPressEnd,
         child: SizedBox(
           width: baseSize * 1.4,
           height: baseSize * 1.4,
