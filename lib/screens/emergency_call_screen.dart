@@ -373,22 +373,26 @@ class _EmergencyCallScreenState extends State<EmergencyCallScreen>
                       ),
                     ),
                     const SizedBox(height: 22),
-                    Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: _returnHome,
-                        customBorder: const CircleBorder(),
-                        child: Container(
-                          width: 76,
-                          height: 76,
-                          decoration: BoxDecoration(
-                            color: AppColors.primary.withValues(alpha: 0.92),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.home_rounded,
-                            color: Colors.white,
-                            size: 34,
+                    Semantics(
+                      button: true,
+                      label: "emergency_call_end".tr(),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: _returnHome,
+                          customBorder: const CircleBorder(),
+                          child: Container(
+                            width: 76,
+                            height: 76,
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withValues(alpha: 0.92),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.home_rounded,
+                              color: Colors.white,
+                              size: 34,
+                            ),
                           ),
                         ),
                       ),
