@@ -202,72 +202,84 @@ class _MainNavigationState extends State<MainNavigation> {
     final isSelected = _selectedIndex == index;
 
     return Expanded(
-      child: GestureDetector(
-        onTap: () {
-          HapticFeedback.lightImpact();
-          setState(() => _selectedIndex = index);
-        },
-        behavior: HitTestBehavior.opaque,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 250),
-          curve: Curves.easeOutCubic,
-          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-          decoration: BoxDecoration(
-            color: isSelected
-                ? AppColors.primary.withValues(alpha: 0.15)
-                : Colors.transparent,
-            borderRadius: BorderRadius.circular(14),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // ── Animated icon with scale ──
-              AnimatedScale(
-                scale: isSelected ? 1.15 : 1.0,
-                duration: const Duration(milliseconds: 200),
-                curve: Curves.easeOutBack,
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 200),
-                  transitionBuilder: (child, animation) {
-                    return ScaleTransition(scale: animation, child: child);
-                  },
-                  child: Icon(
-                    isSelected ? iconOn : iconOff,
-                    key: ValueKey('${index}_$isSelected'),
-                    color: isSelected
-                        ? AppColors.primary
-                        : AppColors.textSecondary,
-                    size: 26,
+      child: Semantics(
+        button: true,
+        label: label,
+        selected: isSelected,
+        container: true,
+        child: GestureDetector(
+          onTap: () {
+            HapticFeedback.lightImpact();
+            setState(() => _selectedIndex = index);
+          },
+          behavior: HitTestBehavior.opaque,
+          child: ExcludeSemantics(
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 250),
+              curve: Curves.easeOutCubic,
+              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? AppColors.primary.withValues(alpha: 0.15)
+                    : Colors.transparent,
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // ── Animated icon with scale ──
+                  AnimatedScale(
+                    scale: isSelected ? 1.15 : 1.0,
+                    duration: const Duration(milliseconds: 200),
+                    curve: Curves.easeOutBack,
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 200),
+                      transitionBuilder: (child, animation) {
+                        return ScaleTransition(scale: animation, child: child);
+                      },
+                      child: Icon(
+                        isSelected ? iconOn : iconOff,
+                        key: ValueKey('${index}_$isSelected'),
+                        color: isSelected
+                            ? AppColors.primary
+                            : AppColors.textSecondary,
+                        size: 26,
+                      ),
+                    ),
                   ),
-                ),
+                  const SizedBox(height: 4),
+                  // ── Animated text ──
+                  AnimatedDefaultTextStyle(
+                    duration: const Duration(milliseconds: 200),
+                    style: TextStyle(
+                      fontSize: isSelected ? 12.5 : 12,
+                      fontWeight: isSelected
+                          ? FontWeight.w700
+                          : FontWeight.w500,
+                      color: isSelected
+                          ? AppColors.primary
+                          : AppColors.textSecondary,
+                      letterSpacing: -0.2,
+                    ),
+                    child: Text(label),
+                  ),
+                  const SizedBox(height: 3),
+                  // ── Animated pill indicator ──
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeOutCubic,
+                    width: isSelected ? 20 : 0,
+                    height: 3,
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? AppColors.primary
+                          : Colors.transparent,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 4),
-              // ── Animated text ──
-              AnimatedDefaultTextStyle(
-                duration: const Duration(milliseconds: 200),
-                style: TextStyle(
-                  fontSize: isSelected ? 12.5 : 12,
-                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                  color: isSelected
-                      ? AppColors.primary
-                      : AppColors.textSecondary,
-                  letterSpacing: -0.2,
-                ),
-                child: Text(label),
-              ),
-              const SizedBox(height: 3),
-              // ── Animated pill indicator ──
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeOutCubic,
-                width: isSelected ? 20 : 0,
-                height: 3,
-                decoration: BoxDecoration(
-                  color: isSelected ? AppColors.primary : Colors.transparent,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ],
+            ),
           ),
         ),
       ),
