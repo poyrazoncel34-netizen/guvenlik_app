@@ -496,7 +496,7 @@ class _CountdownScreenState extends State<CountdownScreen>
                 },
                 child: Text(
                   'emergency_dismiss'.tr(),
-                  style: const TextStyle(color: Colors.white38, fontSize: 13),
+                  style: const TextStyle(color: Colors.white70, fontSize: 13),
                 ),
               ),
             ),

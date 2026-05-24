@@ -237,7 +237,7 @@ class _EmergencyCallScreenState extends State<EmergencyCallScreen>
                 onPressed: () => Navigator.pop(ctx),
                 child: Text(
                   'emergency_dismiss'.tr(),
-                  style: const TextStyle(color: Colors.white38, fontSize: 13),
+                  style: const TextStyle(color: Colors.white70, fontSize: 13),
                 ),
               ),
             ),
