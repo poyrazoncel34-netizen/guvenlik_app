@@ -185,6 +185,7 @@
   "safe_walk_minutes": "{min} dk",
   "countdown_warning_title": "Acil uyarı devreye giriyor",
   "countdown_seconds": "saniye",
+  "countdown_seconds_remaining": "{seconds} saniye kaldı",
   "countdown_enter_pin": "İptal için PIN kodunuzu girin",
   "countdown_test_mode": "TEST MODU: Gerçek arama yapılmaz",
   "countdown_test_complete": "Test tamamlandı. Gerçek arama yapılmadı.",

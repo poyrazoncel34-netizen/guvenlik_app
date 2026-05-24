@@ -185,6 +185,7 @@
   "safe_walk_minutes": "{min} min",
   "countdown_warning_title": "Emergency alert activating",
   "countdown_seconds": "seconds",
+  "countdown_seconds_remaining": "{seconds} seconds remaining",
   "countdown_enter_pin": "Enter your PIN to cancel",
   "countdown_test_mode": "TEST MODE: No real call will be made",
   "countdown_test_complete": "Test completed. No real call was made.",
