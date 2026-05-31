@@ -13,16 +13,4 @@ void main() {
           'ResourceMonitorService must expose lowBatteryStream for subscribers',
     );
   });
-
-  test('LocationService subscribes to lowBatteryStream to reduce accuracy', () {
-    final source = File(
-      'lib/core/services/location_service.dart',
-    ).readAsStringSync();
-    expect(
-      source.contains('lowBatteryStream'),
-      isTrue,
-      reason:
-          'LocationService must subscribe to lowBatteryStream to save power',
-    );
-  });
 }

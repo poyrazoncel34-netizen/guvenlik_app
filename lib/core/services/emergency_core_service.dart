@@ -6,8 +6,8 @@
 // - Pil seviyesi kontrolü
 // - Sistem sağlık kontrolü
 //
-// NOT: Asıl acil durum tetikleme mantığı CountdownScreen ve
-// PinVerificationScreen ve CountdownScreen'de bulunur (call flow only).
+// NOT: Asıl acil durum tetikleme mantığı CountdownScreen'de bulunur
+// (call flow only).
 // ============================================================================
 
 import 'dart:async';

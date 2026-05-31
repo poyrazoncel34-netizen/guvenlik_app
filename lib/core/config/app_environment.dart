@@ -8,16 +8,14 @@
 // NOTE: KoruBeni is offline-first. No third-party crash reporting (KVKK compliance).
 // ============================================================================
 
+import '../constants/app_constants.dart';
+
 class AppEnvironment {
   AppEnvironment._();
 
   static const String _env = String.fromEnvironment('ENV', defaultValue: 'dev');
   static const String _revenueCatAndroidApiKey = String.fromEnvironment(
     'REVENUECAT_ANDROID_API_KEY',
-    defaultValue: '',
-  );
-  static const String _encryptionKey = String.fromEnvironment(
-    'ENCRYPTION_KEY',
     defaultValue: '',
   );
 
@@ -35,7 +33,7 @@ class AppEnvironment {
         'Release build requires --dart-define=REVENUECAT_ANDROID_API_KEY',
       );
     }
-    if (_encryptionKey.trim().isEmpty) {
+    if (AppConstants.encryptionKeyBase64.trim().isEmpty) {
       throw StateError('Release build requires --dart-define=ENCRYPTION_KEY');
     }
   }

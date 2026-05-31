@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guvenlik_app/constants/legal_texts.dart';
 import 'package:guvenlik_app/core/constants/feature_access_matrix.dart';
-import 'package:guvenlik_app/core/constants/legal_constants.dart';
 
 void main() {
   group('release readiness policy files', () {
@@ -215,12 +214,10 @@ void main() {
       },
     );
 
-    test('runtime legal constants match canonical legal text versions', () {
-      expect(LegalConstants.termsVersion, LegalTexts.termsVersion);
-      expect(LegalConstants.kvkkDisclosureVersion, LegalTexts.kvkkVersion);
-      expect(LegalConstants.consentFormVersion, LegalTexts.kvkkVersion);
-      expect(LegalConstants.privacyPolicyVersion, LegalTexts.kvkkVersion);
-      expect(LegalConstants.lastUpdated, '2026-05-21');
+    test('canonical legal text versions stay pinned', () {
+      expect(LegalTexts.termsVersion, '3.1.0');
+      expect(LegalTexts.kvkkVersion, '3.1.1');
+      expect(LegalTexts.lastUpdated, '21 Mayıs 2026');
 
       final disclosure = File('store/aydinlatma_metni.html').readAsStringSync();
       final publishedDisclosure = File(

@@ -33,7 +33,7 @@ class EmergencyCallScreen extends StatefulWidget {
 }
 
 class _EmergencyCallScreenState extends State<EmergencyCallScreen>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   static const _confirmedCallAutoDismissDelay = Duration(seconds: 12);
 
   late AnimationController _pulseController;
@@ -44,6 +44,7 @@ class _EmergencyCallScreenState extends State<EmergencyCallScreen>
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1300),
@@ -62,6 +63,22 @@ class _EmergencyCallScreenState extends State<EmergencyCallScreen>
     // show fullscreen red alert.
     _scheduleFailSafe();
     _scheduleAutoDismiss();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Backgrounded (e.g. the user was sent into the system dialer on the
+    // dialerOpened path): release the wakelock and stop the emergency
+    // foreground service. That path has no auto-dismiss, so otherwise the
+    // CPU/screen lock and the persistent "running" notification would linger
+    // until the user manually returns home.
+    if (state != AppLifecycleState.paused) return;
+    unawaited(
+      WakelockPlus.disable().catchError((Object e) {
+        debugPrint('EmergencyCallScreen: lifecycle wakelock disable: $e');
+      }),
+    );
+    unawaited(KoruBeniForegroundService.stop());
   }
 
   void _scheduleFailSafe() {
@@ -249,6 +266,7 @@ class _EmergencyCallScreenState extends State<EmergencyCallScreen>
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _failSafeTimer?.cancel();
     _autoDismissTimer?.cancel();
     _pulseController.dispose();
