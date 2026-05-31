@@ -8,7 +8,6 @@ class ConsentRecord {
   static const String typeTerms = 'terms';
   static const String typeKvkk = 'kvkk';
   static const String typeLocation = 'location';
-  static const String typeBiometric = 'biometric';
   static const String typeAudio = 'audio';
   static const String typeEmergencyContacts = 'emergency_contacts';
   static const String typeProfile = 'profile';

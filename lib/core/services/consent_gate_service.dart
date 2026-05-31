@@ -63,11 +63,6 @@ class ConsentGateService {
     return _isGranted(ConsentRecord.typeProfile);
   }
 
-  /// Biyometrik veri işleme için rıza kontrolü
-  static bool isBiometricAllowed() {
-    return _isGranted(ConsentRecord.typeBiometric);
-  }
-
   static bool _isGranted(String consentType) {
     try {
       final cm = serviceLocator<ConsentManager>();

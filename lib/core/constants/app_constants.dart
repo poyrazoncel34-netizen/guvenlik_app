@@ -60,7 +60,6 @@ class AppConstants {
 
   // Rıza özellik durumu (ConsentManager ile senkronize edilir)
   static const String prefConsentLocation = 'pref_consent_location';
-  static const String prefConsentBiometric = 'pref_consent_biometric';
   static const String prefConsentEmergencyContacts =
       'pref_consent_emergency_contacts';
   static const String prefConsentProfile = 'pref_consent_profile';
