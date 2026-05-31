@@ -28,8 +28,6 @@ class UserDataExportService {
       orderBy: 'timestamp DESC',
       limit: 200,
     );
-    final consentLogs = await db.getConsentLogs();
-
     return {
       'exportInfo': {
         'exportDate': DateTime.now().toIso8601String(),
@@ -51,7 +49,6 @@ class UserDataExportService {
       'fakeCall': await _fakeCallData(secure),
       'activityEvents': activityEvents,
       'offlineEvents': _offlineEvents(prefs),
-      'consentLogs': consentLogs,
       'consentState': await consentManager.exportConsentLog(),
     };
   }

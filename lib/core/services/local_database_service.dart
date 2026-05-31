@@ -61,27 +61,9 @@ class LocalDatabaseService {
       )
     ''');
     await db.execute('''
-      CREATE TABLE recordings(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        encrypted_path TEXT NOT NULL UNIQUE,
-        file_name TEXT NOT NULL,
-        created_at TEXT NOT NULL,
-        size_bytes INTEGER NOT NULL
-      )
-    ''');
-    await db.execute('''
       CREATE TABLE app_settings(
         key TEXT PRIMARY KEY,
         value TEXT
-      )
-    ''');
-    await db.execute('''
-      CREATE TABLE consent_logs(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        consent_type TEXT NOT NULL,
-        version TEXT NOT NULL,
-        accepted_at TEXT NOT NULL,
-        device_info TEXT
       )
     ''');
   }
@@ -90,36 +72,6 @@ class LocalDatabaseService {
     if (oldVersion < 1) {
       await _onCreate(db, newVersion);
     }
-    if (oldVersion < 2) {
-      await db.execute('''
-        CREATE TABLE IF NOT EXISTS consent_logs(
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          consent_type TEXT NOT NULL,
-          version TEXT NOT NULL,
-          accepted_at TEXT NOT NULL,
-          device_info TEXT
-        )
-      ''');
-    }
-  }
-
-  Future<void> insertConsentLog(
-    String consentType,
-    String version, {
-    String? deviceInfo,
-  }) async {
-    final db = await database;
-    await db.insert('consent_logs', {
-      'consent_type': consentType,
-      'version': version,
-      'accepted_at': DateTime.now().toIso8601String(),
-      if (deviceInfo != null) 'device_info': deviceInfo,
-    });
-  }
-
-  Future<List<Map<String, dynamic>>> getConsentLogs() async {
-    final db = await database;
-    return db.query('consent_logs', orderBy: 'accepted_at ASC');
   }
 
   Future<void> clearAll() async {
@@ -128,9 +80,7 @@ class LocalDatabaseService {
       await txn.delete('contacts');
       await txn.delete('activity_events');
       await txn.delete('crash_logs');
-      await txn.delete('recordings');
       await txn.delete('app_settings');
-      await txn.delete('consent_logs');
     });
   }
 
