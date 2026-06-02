@@ -1,5 +1,5 @@
 // ============================================================================
-// CHECK-IN SERVİSİ (KONTROL NOKTASI)
+// CHECK-IN / SAFE-WALK SERVİSİ (paylaşılan grace + dead-man's-switch)
 // ============================================================================
 
 import 'dart:async';
@@ -23,15 +23,40 @@ import '../services/haptic_service.dart';
 import '../services/notification_service.dart';
 import '../utils/emergency_number_validator.dart';
 
-/// Manages check-in timer logic — if user doesn't confirm safety within the
-/// set duration + grace period, an emergency is automatically triggered.
+/// Shared session controller for the check-in / safe-walk dead-man's-switch.
+///
+/// One controller per [sessionId] (SPEC §3.1 / §6): both sessions run the SAME
+/// phase machine (ACTIVE → 60s GRACE → ESCALATE) and the SAME grace UI. If the
+/// user does not confirm safety within the set duration + grace period, ONLY the
+/// primary emergency contact is called (no 112, no failover — SPEC §0 K1/K2).
 class CheckInService extends ChangeNotifier {
-  CheckInService._();
-  static final CheckInService instance = CheckInService._();
+  CheckInService._(this._sessionId);
+
+  /// Check-in session controller (default).
+  static final CheckInService instance = CheckInService._(
+    CheckInExpiryCoordinator.checkInSession,
+  );
+
+  /// Safe-walk session controller — same machine, 60s grace (SPEC §6).
+  static final CheckInService safeWalk = CheckInService._(
+    CheckInExpiryCoordinator.safeWalkSession,
+  );
+
+  final String _sessionId;
+
+  String get sessionId => _sessionId;
+  bool get _isSafeWalk => _sessionId == CheckInExpiryCoordinator.safeWalkSession;
 
   static const int _gracePeriodSeconds = 60;
-  static const String _stateKey = 'check_in_state_v2';
-  // Legacy keys for migration
+
+  // Per-session persistence key (safe-walk gets its own blob).
+  String get _stateKey =>
+      _isSafeWalk ? 'safe_walk_state_v2' : 'check_in_state_v2';
+
+  // Per-session alert notification id (grace + emergency reuse the same id).
+  int get _alertNotificationId => _isSafeWalk ? 9998 : 9999;
+
+  // Legacy check-in keys for one-time migration (check-in session only).
   static const String _activeKey = 'check_in_active';
   static const String _totalSecondsKey = 'check_in_total_seconds';
   static const String _endAtKey = 'check_in_end_at';
@@ -62,12 +87,10 @@ class CheckInService extends ChangeNotifier {
     await _restoreFromStorage();
   }
 
-  /// Start a check-in timer with [minutes] duration.
+  /// Start a session timer with [minutes] duration.
   Future<bool> start(int minutes) async {
     await stop();
-    CheckInExpiryCoordinator.instance.arm(
-      CheckInExpiryCoordinator.checkInSession,
-    );
+    CheckInExpiryCoordinator.instance.arm(_sessionId);
 
     _totalSeconds = minutes * 60;
     _remainingSeconds = _totalSeconds;
@@ -83,9 +106,11 @@ class CheckInService extends ChangeNotifier {
     _startMainTicker();
 
     await ActivityService.logEvent(
-      type: ActivityType.checkIn,
-      title: "check_in_started_title".tr(),
-      description: "check_in_started_desc".tr(
+      type: _isSafeWalk ? ActivityType.locationShared : ActivityType.checkIn,
+      title: (_isSafeWalk ? "safe_walk_started_activity" : "check_in_started_title")
+          .tr(),
+      description:
+          (_isSafeWalk ? "safe_walk_started_desc" : "check_in_started_desc").tr(
         namedArgs: {'minutes': '$minutes'},
       ),
     );
@@ -94,19 +119,15 @@ class CheckInService extends ChangeNotifier {
     return nativeScheduled;
   }
 
-  /// User confirms they are safe — resets the timer.
+  /// User confirms they are safe — resets the timer (check-in semantics).
   Future<void> confirmSafe() async {
     if (!_isActive ||
         _totalSeconds <= 0 ||
         _emergencyInProgress ||
-        CheckInExpiryCoordinator.instance.isClaimedFor(
-          CheckInExpiryCoordinator.checkInSession,
-        )) {
+        CheckInExpiryCoordinator.instance.isClaimedFor(_sessionId)) {
       return;
     }
-    CheckInExpiryCoordinator.instance.arm(
-      CheckInExpiryCoordinator.checkInSession,
-    );
+    CheckInExpiryCoordinator.instance.arm(_sessionId);
 
     _isGracePeriod = false;
     _graceEndAt = null;
@@ -128,7 +149,7 @@ class CheckInService extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Stop the check-in completely.
+  /// Stop the session completely.
   Future<void> stop() async {
     _cancelTicker();
     _isActive = false;
@@ -139,13 +160,11 @@ class CheckInService extends ChangeNotifier {
     _totalSeconds = 0;
     _emergencyInProgress = false;
     _nativeScheduleDegraded = false;
-    CheckInExpiryCoordinator.instance.reset(
-      sessionId: CheckInExpiryCoordinator.checkInSession,
-    );
+    CheckInExpiryCoordinator.instance.reset(sessionId: _sessionId);
 
     await _clearPersistedState();
     await EmergencyPlatformService.instance.cancelCheckIn(
-      sessionId: CheckInExpiryCoordinator.checkInSession,
+      sessionId: _sessionId,
     );
     await KoruBeniForegroundService.stop();
     notifyListeners();
@@ -181,7 +200,9 @@ class CheckInService extends ChangeNotifier {
       }
     }
 
-    // Legacy key migration
+    // Legacy key migration — check-in session only (safe-walk had no v1 blob).
+    if (_isSafeWalk) return;
+
     final storedActive = prefs.getBool(_activeKey) ?? false;
     if (!storedActive) return;
 
@@ -314,8 +335,11 @@ class CheckInService extends ChangeNotifier {
 
   Future<void> _showGraceNotification() async {
     try {
+      // NOTE (SPEC §0 K8 / §3.7): wording is the deferred text step. Both
+      // sessions reuse the existing 60s-grace copy here; the lock-screen native
+      // notification already carries session-correct wording.
       await NotificationService.instance.showEmergencyAlert(
-        id: 9999,
+        id: _alertNotificationId,
         title: "check_in_notification_title".tr(),
         body: "check_in_notification_body".tr(),
       );
@@ -330,7 +354,7 @@ class CheckInService extends ChangeNotifier {
     }
     if (!CheckInExpiryCoordinator.instance.tryClaim(
       'check_in_service',
-      sessionId: CheckInExpiryCoordinator.checkInSession,
+      sessionId: _sessionId,
     )) {
       return;
     }
@@ -340,11 +364,9 @@ class CheckInService extends ChangeNotifier {
     try {
       // Native-fired dedup: if the AlarmManager backup already called the
       // primary number (Dart frozen under Doze/app-kill), skip a second call.
-      // Mirrors the countdown didCountdownAlarmFire guard (SPEC 3.2 / 5).
+      // Mirrors the countdown didCountdownAlarmFire guard (SPEC §3.2 / §5).
       final nativeAlreadyFired = await EmergencyPlatformService.instance
-          .didCheckInAlarmFire(
-            sessionId: CheckInExpiryCoordinator.checkInSession,
-          );
+          .didCheckInAlarmFire(sessionId: _sessionId);
       if (nativeAlreadyFired) {
         await _clearMonitoringState(stopForeground: true);
         return;
@@ -357,7 +379,7 @@ class CheckInService extends ChangeNotifier {
       );
       await HapticService.emergencyTriggered();
       await NotificationService.instance.showEmergencyAlert(
-        id: 9999,
+        id: _alertNotificationId,
         title: "check_in_emergency_title".tr(),
         body: "alarm_notification_body".tr(),
       );
@@ -366,7 +388,7 @@ class CheckInService extends ChangeNotifier {
       final primaryContact = await contactsRepo.getPrimaryEmergencyContact();
       final configuredNumbers = await contactsRepo.getAllEmergencyNumbers();
 
-      // YALNIZ BIRINCIL KISI — tek hedef, failover yok, 112 yok (SPEC 0 K1/K2).
+      // YALNIZ BIRINCIL KISI — tek hedef, failover yok, 112 yok (SPEC §0 K1/K2).
       final primaryNumber = resolvePrimaryNumber(
         primaryContactPhone: primaryContact?.phone,
         configuredNumbers: configuredNumbers,
@@ -400,7 +422,7 @@ class CheckInService extends ChangeNotifier {
     }
   }
 
-  /// Resolve the SINGLE primary escalation target (SPEC 0 Karar 1/2).
+  /// Resolve the SINGLE primary escalation target (SPEC §0 Karar 1/2).
   /// Never synthesizes 112; returns empty when nothing callable is configured
   /// so the caller places NO call (requirement (b)).
   static String resolvePrimaryNumber({
@@ -434,11 +456,20 @@ class CheckInService extends ChangeNotifier {
   Future<void> _startBackgroundProtection() async {
     await KoruBeniForegroundService.start();
 
-    final label = _isGracePeriod
-        ? "check_in_grace_label".tr()
-        : "check_in_title".tr();
-    final body =
-        '${"check_in_remaining".tr()}: ${_formatDuration(_remainingSeconds)}';
+    final String label;
+    final String body;
+    if (_isSafeWalk) {
+      label = "foreground_active_title".tr();
+      body = "foreground_safe_walk_status".tr(
+        namedArgs: {'time': _formatDuration(_remainingSeconds)},
+      );
+    } else {
+      label = _isGracePeriod
+          ? "check_in_grace_label".tr()
+          : "check_in_title".tr();
+      body =
+          '${"check_in_remaining".tr()}: ${_formatDuration(_remainingSeconds)}';
+    }
     KoruBeniForegroundService.updateNotification(label, body);
   }
 
@@ -466,6 +497,7 @@ class CheckInService extends ChangeNotifier {
   }
 
   Future<void> _clearLegacyKeys(SharedPreferences prefs) async {
+    if (_isSafeWalk) return;
     await prefs.remove(_activeKey);
     await prefs.remove(_totalSecondsKey);
     await prefs.remove(_endAtKey);
@@ -484,7 +516,7 @@ class CheckInService extends ChangeNotifier {
 
     await _clearPersistedState();
     await EmergencyPlatformService.instance.cancelCheckIn(
-      sessionId: CheckInExpiryCoordinator.checkInSession,
+      sessionId: _sessionId,
     );
     if (stopForeground) {
       await KoruBeniForegroundService.stop();
@@ -523,7 +555,7 @@ class CheckInService extends ChangeNotifier {
     }
     final primaryNumber = await _resolvePrimaryNumber();
     return EmergencyPlatformService.instance.scheduleCheckIn(
-      sessionId: CheckInExpiryCoordinator.checkInSession,
+      sessionId: _sessionId,
       phase: 'main',
       deadline: _endAt!,
       graceDuration: const Duration(seconds: _gracePeriodSeconds),
@@ -537,7 +569,7 @@ class CheckInService extends ChangeNotifier {
     }
     final primaryNumber = await _resolvePrimaryNumber();
     return EmergencyPlatformService.instance.scheduleCheckIn(
-      sessionId: CheckInExpiryCoordinator.checkInSession,
+      sessionId: _sessionId,
       phase: 'grace',
       deadline: _graceEndAt!,
       graceDuration: Duration.zero,
@@ -562,6 +594,7 @@ class CheckInService extends ChangeNotifier {
     _tickTimer?.cancel();
     _tickTimer = null;
   }
+
   bool _disposed = false;
 
   @override

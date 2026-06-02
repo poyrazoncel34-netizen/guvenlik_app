@@ -59,20 +59,32 @@ void main() {
     expect(tr, contains('Doğrudan acil arama Android ayarlarında kapalı'));
   });
 
-  test('countdown and check-in empty emergency targets fall back to 112', () {
+  test('countdown keeps the 112 fallback (panic path unchanged)', () {
     final countdown = File(
       'lib/screens/countdown_screen.dart',
-    ).readAsStringSync();
-    final checkIn = File(
-      'lib/core/services/check_in_service.dart',
     ).readAsStringSync();
     final receiver = File(
       'android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/CountdownAlarmReceiver.kt',
     ).readAsStringSync();
 
+    // SPEC §0.1: the countdown / panic flow retains full escalation + 112.
     expect(countdown, contains('AppConstants.turkeyEmergencyNumber'));
-    expect(checkIn, contains('AppConstants.turkeyEmergencyNumber'));
     expect(receiver, contains('?: "112"'));
+  });
+
+  test('check-in escalation never falls back to 112 (SPEC §0 K1/K2)', () {
+    final checkIn = File(
+      'lib/core/services/check_in_service.dart',
+    ).readAsStringSync();
+
+    // Check-in / safe-walk expiry calls ONLY the primary contact — no 112
+    // default. Empty primary -> no call (handled by resolvePrimaryNumber).
+    expect(
+      checkIn.contains('AppConstants.turkeyEmergencyNumber'),
+      isFalse,
+      reason: 'Check-in must not synthesize 112 as an escalation target.',
+    );
+    expect(checkIn, contains('resolvePrimaryNumber('));
   });
 
   test('CallService has a call timeout constant for plugin safety', () {
