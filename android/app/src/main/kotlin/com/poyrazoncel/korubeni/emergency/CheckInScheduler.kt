@@ -198,7 +198,8 @@ object CheckInScheduler {
                 EmergencyNotificationHelper.CHECK_IN_NOTIFICATION_ID,
                 copy.title,
                 copy.body,
-                "checkInGraceStarted"
+                "checkInGraceStarted",
+                fullScreen = true,
             )
             return
         }

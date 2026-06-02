@@ -97,12 +97,13 @@ object EmergencyNotificationHelper {
         title: String,
         body: String,
         triggerType: String,
+        fullScreen: Boolean = false,
     ) {
         if (!canPostNotifications(context)) {
             return
         }
         ensureChannels(context)
-        val notification = NotificationCompat.Builder(context, CHANNEL_ALERTS)
+        val builder = NotificationCompat.Builder(context, CHANNEL_ALERTS)
             .setSmallIcon(R.drawable.ic_bg_service_small)
             .setContentTitle(title)
             .setContentText(body)
@@ -111,9 +112,34 @@ object EmergencyNotificationHelper {
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setAutoCancel(true)
             .setContentIntent(buildLaunchPendingIntent(context, triggerType))
-            .build()
 
-        NotificationManagerCompat.from(context).notify(id, notification)
+        // SPEC 3.1/3.3/3.6b: use a full-screen intent for the grace prompt WHEN the
+        // platform/user permits it; otherwise degrade gracefully to a high-priority
+        // heads-up notification. Must never crash on denial (Android 14+ runtime
+        // restriction). The USE_FULL_SCREEN_INTENT manifest/Console declaration is a
+        // separate deferred step (SPEC 3.6a) — until then this stays heads-up.
+        if (fullScreen && canUseFullScreenIntent(context)) {
+            builder.setFullScreenIntent(
+                buildLaunchPendingIntent(context, triggerType),
+                true,
+            )
+        }
+
+        NotificationManagerCompat.from(context).notify(id, builder.build())
+    }
+
+    private fun canUseFullScreenIntent(context: Context): Boolean {
+        return try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                val manager = context.getSystemService(Context.NOTIFICATION_SERVICE)
+                    as NotificationManager
+                manager.canUseFullScreenIntent()
+            } else {
+                true
+            }
+        } catch (_: Exception) {
+            false
+        }
     }
 
     private fun canPostNotifications(context: Context): Boolean {
