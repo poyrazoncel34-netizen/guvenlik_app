@@ -24,15 +24,23 @@ object CheckInScheduler {
         phase: String,
         deadlineMs: Long,
         graceDurationMs: Long,
+        primaryNumber: String? = null,
     ) {
         val session = normalizeSession(sessionId)
         val prefs = EmergencyPrefs.prefs(context)
-        prefs.edit()
+        val editor = prefs.edit()
             .putBoolean(keyFor(session, EmergencyPrefs.KEY_CHECK_IN_ACTIVE), true)
             .putString(keyFor(session, EmergencyPrefs.KEY_CHECK_IN_PHASE), phase)
             .putLong(keyFor(session, EmergencyPrefs.KEY_CHECK_IN_DEADLINE), deadlineMs)
             .putLong(keyFor(session, EmergencyPrefs.KEY_CHECK_IN_GRACE_MS), graceDurationMs)
-            .apply()
+        if (primaryNumber != null) {
+            // Fresh arm: persist the single primary target (yalniz birincil kisi —
+            // no failover list) and reset the native-fired dedup flag.
+            editor
+                .putString(keyFor(session, EmergencyPrefs.KEY_CHECK_IN_PRIMARY_NUMBER), primaryNumber)
+                .putBoolean(keyFor(session, EmergencyPrefs.KEY_CHECK_IN_ALARM_FIRED), false)
+        }
+        editor.apply()
 
         scheduleAlarm(context, session, deadlineMs)
     }
@@ -46,6 +54,51 @@ object CheckInScheduler {
             .remove(keyFor(session, EmergencyPrefs.KEY_CHECK_IN_PHASE))
             .remove(keyFor(session, EmergencyPrefs.KEY_CHECK_IN_DEADLINE))
             .remove(keyFor(session, EmergencyPrefs.KEY_CHECK_IN_GRACE_MS))
+            .remove(keyFor(session, EmergencyPrefs.KEY_CHECK_IN_PRIMARY_NUMBER))
+            .remove(keyFor(session, EmergencyPrefs.KEY_CHECK_IN_ALARM_FIRED))
+            .apply()
+    }
+
+    fun isActive(context: Context, sessionId: String): Boolean {
+        val session = normalizeSession(sessionId)
+        return safeGetBoolean(
+            EmergencyPrefs.prefs(context),
+            keyFor(session, EmergencyPrefs.KEY_CHECK_IN_ACTIVE),
+            false,
+        )
+    }
+
+    fun primaryNumber(context: Context, sessionId: String): String {
+        val session = normalizeSession(sessionId)
+        return safeGetString(
+            EmergencyPrefs.prefs(context),
+            keyFor(session, EmergencyPrefs.KEY_CHECK_IN_PRIMARY_NUMBER),
+            "",
+        ) ?: ""
+    }
+
+    fun didAlarmFire(context: Context, sessionId: String): Boolean {
+        val session = normalizeSession(sessionId)
+        return safeGetBoolean(
+            EmergencyPrefs.prefs(context),
+            keyFor(session, EmergencyPrefs.KEY_CHECK_IN_ALARM_FIRED),
+            false,
+        )
+    }
+
+    /**
+     * Native escalation dedup: mark that the backup call was dispatched and
+     * deactivate the session so a late/duplicate alarm is rejected. Keeps the
+     * primary number + fired flag so the Dart side can detect the native fire
+     * on resume and skip a duplicate call (mirrors countdown KEY_COUNTDOWN_ALARM_FIRED).
+     */
+    fun markAlarmFiredAndDeactivate(context: Context, sessionId: String) {
+        val session = normalizeSession(sessionId)
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        alarmManager.cancel(buildPendingIntent(context, session))
+        EmergencyPrefs.prefs(context).edit()
+            .putBoolean(keyFor(session, EmergencyPrefs.KEY_CHECK_IN_ALARM_FIRED), true)
+            .putBoolean(keyFor(session, EmergencyPrefs.KEY_CHECK_IN_ACTIVE), false)
             .apply()
     }
 
@@ -150,7 +203,15 @@ object CheckInScheduler {
             return
         }
 
-        cancel(context, session)
+        // Grace already elapsed while the device was off — escalate natively
+        // (SPEC 3.5: no longer notification-only). Yalniz birincil kisi, 112 yok.
+        val primary = safeGetString(prefs, keyFor(session, EmergencyPrefs.KEY_CHECK_IN_PRIMARY_NUMBER), "") ?: ""
+        if (primary.isNotBlank()) {
+            markAlarmFiredAndDeactivate(context, session)
+            EmergencyExecutor.executeEmergency(context, primary)
+        } else {
+            cancel(context, session)
+        }
         EmergencyEventBus.persist(
             context,
             mapOf("type" to "checkInExpired", "timestamp" to now, "sessionId" to session)
