@@ -13,7 +13,6 @@ import '../../domain/models/activity_event.dart';
 import '../../domain/repositories/contacts_repository.dart';
 import '../../screens/emergency_call_screen.dart';
 import '../di/service_locator.dart';
-import '../constants/app_constants.dart';
 import '../navigation/app_navigator.dart';
 import '../services/activity_service.dart';
 import '../services/call_service.dart';
@@ -339,6 +338,18 @@ class CheckInService extends ChangeNotifier {
     _cancelTicker();
 
     try {
+      // Native-fired dedup: if the AlarmManager backup already called the
+      // primary number (Dart frozen under Doze/app-kill), skip a second call.
+      // Mirrors the countdown didCountdownAlarmFire guard (SPEC 3.2 / 5).
+      final nativeAlreadyFired = await EmergencyPlatformService.instance
+          .didCheckInAlarmFire(
+            sessionId: CheckInExpiryCoordinator.checkInSession,
+          );
+      if (nativeAlreadyFired) {
+        await _clearMonitoringState(stopForeground: true);
+        return;
+      }
+
       await ActivityService.logEvent(
         type: ActivityType.emergencyTriggered,
         title: "check_in_emergency_title".tr(),
@@ -352,39 +363,17 @@ class CheckInService extends ChangeNotifier {
       );
 
       final contactsRepo = serviceLocator<ContactsRepository>();
-      final configuredNumbers = (await contactsRepo.getAllEmergencyNumbers())
-          .where(EmergencyNumberValidator.isCallableEmergencyTarget)
-          .toList(growable: false);
-      final numbers = configuredNumbers.isNotEmpty
-          ? configuredNumbers
-          : const [AppConstants.turkeyEmergencyNumber];
       final primaryContact = await contactsRepo.getPrimaryEmergencyContact();
+      final configuredNumbers = await contactsRepo.getAllEmergencyNumbers();
 
-      final primaryNumber =
-          primaryContact != null &&
-              EmergencyNumberValidator.isCallableEmergencyTarget(
-                primaryContact.phone,
-              )
-          ? primaryContact.phone
-          : numbers.first;
-      var calledNumber = primaryNumber;
+      // YALNIZ BIRINCIL KISI — tek hedef, failover yok, 112 yok (SPEC 0 K1/K2).
+      final primaryNumber = resolvePrimaryNumber(
+        primaryContactPhone: primaryContact?.phone,
+        configuredNumbers: configuredNumbers,
+      );
       var callResult = EmergencyCallResult.failed(primaryNumber);
-
       if (primaryNumber.isNotEmpty) {
         callResult = await CallService.startEmergencyCall(primaryNumber);
-        if (!callResult.isSuccess && numbers.length > 1) {
-          for (final fallbackNumber in numbers) {
-            if (fallbackNumber == primaryNumber) continue;
-            final fallbackResult = await CallService.startEmergencyCall(
-              fallbackNumber,
-            );
-            if (fallbackResult.isSuccess) {
-              callResult = fallbackResult;
-              calledNumber = fallbackNumber;
-              break;
-            }
-          }
-        }
       }
 
       await _clearMonitoringState(stopForeground: !callResult.isSuccess);
@@ -395,7 +384,7 @@ class CheckInService extends ChangeNotifier {
           MaterialPageRoute(
             builder: (_) => EmergencyCallScreen(
               name: primaryContact?.name ?? "pin_verify_emergency_contact".tr(),
-              phone: calledNumber,
+              phone: primaryNumber,
               callResult: callResult,
             ),
           ),
@@ -409,6 +398,37 @@ class CheckInService extends ChangeNotifier {
     } finally {
       _emergencyInProgress = false;
     }
+  }
+
+  /// Resolve the SINGLE primary escalation target (SPEC 0 Karar 1/2).
+  /// Never synthesizes 112; returns empty when nothing callable is configured
+  /// so the caller places NO call (requirement (b)).
+  static String resolvePrimaryNumber({
+    required String? primaryContactPhone,
+    required List<String> configuredNumbers,
+  }) {
+    if (primaryContactPhone != null &&
+        EmergencyNumberValidator.isCallableEmergencyTarget(
+          primaryContactPhone,
+        )) {
+      return primaryContactPhone;
+    }
+    for (final number in configuredNumbers) {
+      if (EmergencyNumberValidator.isCallableEmergencyTarget(number)) {
+        return number;
+      }
+    }
+    return '';
+  }
+
+  Future<String> _resolvePrimaryNumber() async {
+    final contactsRepo = serviceLocator<ContactsRepository>();
+    final primaryContact = await contactsRepo.getPrimaryEmergencyContact();
+    final configuredNumbers = await contactsRepo.getAllEmergencyNumbers();
+    return resolvePrimaryNumber(
+      primaryContactPhone: primaryContact?.phone,
+      configuredNumbers: configuredNumbers,
+    );
   }
 
   Future<void> _startBackgroundProtection() async {
@@ -501,11 +521,13 @@ class CheckInService extends ChangeNotifier {
     if (_endAt == null) {
       return false;
     }
+    final primaryNumber = await _resolvePrimaryNumber();
     return EmergencyPlatformService.instance.scheduleCheckIn(
       sessionId: CheckInExpiryCoordinator.checkInSession,
       phase: 'main',
       deadline: _endAt!,
       graceDuration: const Duration(seconds: _gracePeriodSeconds),
+      primaryNumber: primaryNumber,
     );
   }
 
@@ -513,11 +535,13 @@ class CheckInService extends ChangeNotifier {
     if (_graceEndAt == null) {
       return false;
     }
+    final primaryNumber = await _resolvePrimaryNumber();
     return EmergencyPlatformService.instance.scheduleCheckIn(
       sessionId: CheckInExpiryCoordinator.checkInSession,
       phase: 'grace',
       deadline: _graceEndAt!,
       graceDuration: Duration.zero,
+      primaryNumber: primaryNumber,
     );
   }
 
