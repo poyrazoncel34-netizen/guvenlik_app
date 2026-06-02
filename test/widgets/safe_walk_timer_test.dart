@@ -9,15 +9,23 @@ void main() {
     });
 
     test(
-      'SafeWalkScreen uses a countdown timer (Timer or AnimationController)',
+      'SafeWalkScreen drives the countdown via the shared session controller',
       () {
+        // SPEC §6: the countdown/grace is owned by CheckInService.safeWalk, not
+        // a screen-local Timer.
         final source = File(
           'lib/screens/safe_walk_screen.dart',
         ).readAsStringSync();
         expect(
-          source.contains('Timer') || source.contains('AnimationController'),
+          source.contains('CheckInService.safeWalk'),
           isTrue,
-          reason: 'SafeWalkScreen must use a timer for the countdown',
+          reason: 'SafeWalkScreen must use the shared safe-walk controller',
+        );
+        expect(
+          source.contains('_controller.remainingSeconds') ||
+              source.contains('_remainingSeconds'),
+          isTrue,
+          reason: 'SafeWalkScreen renders the controller countdown',
         );
       },
     );

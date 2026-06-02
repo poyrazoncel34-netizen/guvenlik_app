@@ -9,6 +9,14 @@ class CheckInAlarmReceiver : BroadcastReceiver() {
         EmergencyNotificationHelper.ensureChannels(context)
 
         val sessionId = CheckInScheduler.sessionFromIntent(intent)
+
+        // Iptal sonrasi alarm reddi (SPEC 3.3 / 5): if the session was cancelled
+        // (confirmSafe/stop) before this alarm fired, reject it silently — mirrors
+        // the countdown KEY_COUNTDOWN_ACTIVE guard.
+        if (!CheckInScheduler.isActive(context, sessionId)) {
+            return
+        }
+
         val phase = CheckInScheduler.phase(context, sessionId)
         val graceDurationMs = CheckInScheduler.graceDurationMs(context, sessionId)
         val now = System.currentTimeMillis()
@@ -24,7 +32,8 @@ class CheckInAlarmReceiver : BroadcastReceiver() {
                 EmergencyNotificationHelper.CHECK_IN_NOTIFICATION_ID,
                 copy.title,
                 copy.body,
-                "checkInGraceStarted"
+                "checkInGraceStarted",
+                fullScreen = true,
             )
             CheckInScheduler.schedule(
                 context,
@@ -36,7 +45,18 @@ class CheckInAlarmReceiver : BroadcastReceiver() {
             return
         }
 
-        CheckInScheduler.cancel(context, sessionId)
+        // ESCALATE (grace deadline reached). Native-backup call: works even if the
+        // Dart isolate is dead (Doze/app-kill). YALNIZ BIRINCIL KISI — no failover
+        // list, no 112 fallback (SPEC 0 Karar 1/2 + 3.2).
+        val primary = CheckInScheduler.primaryNumber(context, sessionId)
+        if (primary.isNotBlank()) {
+            CheckInScheduler.markAlarmFiredAndDeactivate(context, sessionId)
+            EmergencyExecutor.executeEmergency(context, primary)
+        } else {
+            // No callable primary target — never synthesize 112 for check-in/safe-walk.
+            CheckInScheduler.cancel(context, sessionId)
+        }
+
         EmergencyEventBus.emitOrPersist(
             context,
             mapOf("type" to "checkInExpired", "timestamp" to now, "sessionId" to sessionId)

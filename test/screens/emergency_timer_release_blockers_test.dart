@@ -14,14 +14,14 @@ void main() {
         'FeatureWarningHelper.showIfNeeded',
         start,
       );
-      final activeState = source.indexOf('_isActive = true', start);
+      final sessionStart = source.indexOf('_controller.start(', start);
 
       expect(start, isNot(-1));
       expect(contactCheck, isNot(-1));
       expect(firstWarning, isNot(-1));
-      expect(activeState, isNot(-1));
+      expect(sessionStart, isNot(-1));
       expect(contactCheck < firstWarning, isTrue);
-      expect(contactCheck < activeState, isTrue);
+      expect(contactCheck < sessionStart, isTrue);
       expect(source, contains('timer_emergency_contact_required'));
       expect(source, contains('ContactsPage'));
     });
@@ -43,16 +43,16 @@ void main() {
         'confirmExactAlarmPermissionOrDegraded',
         start,
       );
-      final activeState = source.indexOf('_isActive = true', start);
+      final sessionStart = source.indexOf('_controller.start(', start);
 
       expect(start, isNot(-1));
       expect(warning, isNot(-1));
       expect(notificationGuard, isNot(-1));
       expect(exactAlarmGuard, isNot(-1));
-      expect(activeState, isNot(-1));
+      expect(sessionStart, isNot(-1));
       expect(warning < notificationGuard, isTrue);
       expect(notificationGuard < exactAlarmGuard, isTrue);
-      expect(notificationGuard < activeState, isTrue);
+      expect(notificationGuard < sessionStart, isTrue);
       expect(source, contains('notification_session_permission_required'));
     });
 
@@ -148,10 +148,10 @@ void main() {
         'confirmExactAlarmPermissionOrDegraded',
         safeWalkStart,
       );
-      final activeState = safeWalk.indexOf('_isActive = true', safeWalkStart);
+      final sessionStart = safeWalk.indexOf('_controller.start(', safeWalkStart);
       expect(safeWalkGuard, isNot(-1));
-      expect(activeState, isNot(-1));
-      expect(safeWalkGuard < activeState, isTrue);
+      expect(sessionStart, isNot(-1));
+      expect(safeWalkGuard < sessionStart, isTrue);
     });
 
     test('countdown backup alarm has denied/degraded native fallback', () {
@@ -192,27 +192,27 @@ void main() {
       );
     });
 
-    test('safe walk does not start UI ticker after async dispose', () {
+    test('safe walk guards mounted after the async controller start', () {
       final source = File(
         'lib/screens/safe_walk_screen.dart',
       ).readAsStringSync();
-      final persistAwait = source.indexOf('await _persistState();');
-      final mountedGuard = source.indexOf(
-        'if (!mounted) return;',
-        persistAwait,
+      final startAwait = source.indexOf(
+        'final fullyScheduled = await _controller.start(',
       );
-      final foregroundUpdate = source.indexOf(
-        '_updateForegroundStatus();',
-        persistAwait,
+      final mountedGuard = source.indexOf('if (!mounted) return;', startAwait);
+      final degradedSnack = source.indexOf(
+        '_showTimerSchedulingDegraded();',
+        startAwait,
       );
-      final tickerStart = source.indexOf('_startTicker();', persistAwait);
 
-      expect(persistAwait, isNot(-1));
+      expect(startAwait, isNot(-1));
       expect(mountedGuard, isNot(-1));
-      expect(foregroundUpdate, isNot(-1));
-      expect(tickerStart, isNot(-1));
-      expect(mountedGuard < foregroundUpdate, isTrue);
-      expect(mountedGuard < tickerStart, isTrue);
+      expect(degradedSnack, isNot(-1));
+      expect(
+        mountedGuard < degradedSnack,
+        isTrue,
+        reason: 'mounted must be checked before touching UI after start().',
+      );
     });
   });
 }

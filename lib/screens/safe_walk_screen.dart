@@ -2,17 +2,14 @@
 // GÜVENLİ YÜRÜYÜŞ EKRANI
 // ============================================================================
 
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../core/app_colors.dart';
 import '../core/services/activity_service.dart';
 import '../core/services/check_in_expiry_coordinator.dart';
+import '../core/services/check_in_service.dart';
 import '../core/services/contact_service.dart';
-import '../core/services/emergency_platform_service.dart';
-import '../core/services/foreground_service.dart';
 import '../core/services/notification_service.dart';
 import '../core/utils/permission_helper.dart';
 // Analytics service removed (offline-first)
@@ -20,9 +17,7 @@ import '../core/constants/app_constants.dart';
 import '../core/widgets/exact_alarm_permission_guard.dart';
 import '../core/widgets/feature_warning_dialog.dart';
 import '../domain/models/activity_event.dart';
-import '../widgets/siren_dialog.dart';
 import 'contacts_page.dart';
-import 'countdown_screen.dart';
 
 class SafeWalkScreen extends StatefulWidget {
   const SafeWalkScreen({super.key});
@@ -31,84 +26,56 @@ class SafeWalkScreen extends StatefulWidget {
   State<SafeWalkScreen> createState() => _SafeWalkScreenState();
 }
 
-class _SafeWalkScreenState extends State<SafeWalkScreen>
-    with WidgetsBindingObserver {
-  static const String _activeKey = 'safe_walk_active';
-  static const String _endAtKey = 'safe_walk_end_at';
-  static const String _durationMinutesKey = 'safe_walk_duration_minutes';
+class _SafeWalkScreenState extends State<SafeWalkScreen> {
+  // Safe-walk shares the check-in session controller (SPEC §6): same 60s grace
+  // machine + same native primary-only backup. No screen-local timer and no
+  // separate panic screen on expiry (escalation is primary-only).
+  final CheckInService _controller = CheckInService.safeWalk;
 
   int _selectedMinutes = 15;
-  bool _isActive = false;
-  Timer? _timer;
-  DateTime? _endTime;
-  int _remainingSeconds = 0;
   bool _preWarningFired = false;
-  bool _nativeScheduleDegraded = false;
 
   final List<int> _durations = [5, 10, 15, 30, 60];
+
+  bool get _isActive => _controller.isActive;
+  bool get _isGrace => _controller.isGracePeriod;
+  int get _remainingSeconds => _controller.remainingSeconds;
+  bool get _nativeScheduleDegraded => _controller.nativeScheduleDegraded;
+  int get _totalSeconds =>
+      _controller.totalSeconds > 0 ? _controller.totalSeconds : _selectedMinutes * 60;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this);
-    _restoreState();
+    _controller.addListener(_onControllerChanged);
   }
 
   @override
   void dispose() {
-    _timer?.cancel();
-    WidgetsBinding.instance.removeObserver(this);
+    _controller.removeListener(_onControllerChanged);
     super.dispose();
   }
 
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    // When app resumes from background, recalculate remaining time from _endTime
-    if (state == AppLifecycleState.resumed && _isActive && _endTime != null) {
-      final remaining = _endTime!.difference(DateTime.now());
-      if (remaining.isNegative || remaining.inSeconds <= 0) {
-        _timer?.cancel();
-        unawaited(_onTimerExpired());
-      } else {
-        setState(() {
-          _remainingSeconds = remaining.inSeconds;
-        });
-      }
-    } else if (state == AppLifecycleState.resumed) {
-      _restoreState();
-    }
+  void _onControllerChanged() {
+    if (!mounted) return;
+    _maybeFirePreWarning();
+    setState(() {});
   }
 
-  Future<void> _restoreState() async {
-    final prefs = await SharedPreferences.getInstance();
-    final active = prefs.getBool(_activeKey) ?? false;
-    final endAtRaw = prefs.getString(_endAtKey);
-    final duration = prefs.getInt(_durationMinutesKey) ?? _selectedMinutes;
-    final endAt = endAtRaw == null ? null : DateTime.tryParse(endAtRaw);
-
-    if (!active || endAt == null) {
+  void _maybeFirePreWarning() {
+    if (!_controller.isActive || _controller.isGracePeriod) {
       return;
     }
-
-    final remaining = endAt.difference(DateTime.now());
-    if (remaining.isNegative || remaining.inSeconds <= 0) {
-      await _clearPersistedState();
-      if (!mounted) return;
-      _onTimerExpired();
-      return;
+    final remaining = _controller.remainingSeconds;
+    final warningThreshold = _selectedMinutes >= 4
+        ? 120
+        : (_selectedMinutes * 60 * 0.1).round();
+    if (!_preWarningFired &&
+        remaining <= warningThreshold &&
+        remaining > 0) {
+      _preWarningFired = true;
+      _firePreExpiryWarning();
     }
-
-    if (!mounted) return;
-    setState(() {
-      _selectedMinutes = duration;
-      _isActive = true;
-      _endTime = endAt;
-      _remainingSeconds = remaining.inSeconds;
-    });
-    CheckInExpiryCoordinator.instance.arm(
-      CheckInExpiryCoordinator.safeWalkSession,
-    );
-    _startTicker();
   }
 
   Future<void> _startSafeWalk() async {
@@ -164,45 +131,14 @@ class _SafeWalkScreenState extends State<SafeWalkScreen>
     if (!exactAlarmAcknowledged || !currentContext.mounted) return;
 
     HapticFeedback.mediumImpact();
-    final endTime = DateTime.now().add(Duration(minutes: _selectedMinutes));
-    setState(() {
-      _isActive = true;
-      _endTime = endTime;
-      _remainingSeconds = _selectedMinutes * 60;
-    });
-    CheckInExpiryCoordinator.instance.arm(
-      CheckInExpiryCoordinator.safeWalkSession,
-    );
-
-    // Analytics removed (offline-first)
-    ActivityService.logEvent(
-      type: ActivityType.locationShared,
-      title: "safe_walk_started_activity".tr(),
-      description: "safe_walk_started_desc".tr(
-        namedArgs: {"minutes": "$_selectedMinutes"},
-      ),
-    );
-
-    await KoruBeniForegroundService.start();
-    final fullyScheduled = await EmergencyPlatformService.instance
-        .scheduleCheckIn(
-          sessionId: CheckInExpiryCoordinator.safeWalkSession,
-          phase: 'grace',
-          deadline: endTime,
-          graceDuration: Duration.zero,
-        );
-    if (mounted) {
-      setState(() => _nativeScheduleDegraded = !fullyScheduled);
-      if (!fullyScheduled) {
-        _showTimerSchedulingDegraded();
-      }
-    }
-    await _persistState();
-    if (!mounted) return;
-    _updateForegroundStatus();
-
     _preWarningFired = false;
-    _startTicker();
+    // Delegate to the shared session controller (60s grace + native primary
+    // backup). Returns false when native scheduling is degraded (inexact alarm).
+    final fullyScheduled = await _controller.start(_selectedMinutes);
+    if (!mounted) return;
+    if (!fullyScheduled) {
+      _showTimerSchedulingDegraded();
+    }
   }
 
   Future<bool> _hasEmergencyContact() async {
@@ -254,85 +190,21 @@ class _SafeWalkScreenState extends State<SafeWalkScreen>
     );
   }
 
-  Future<void> _onTimerExpired() async {
-    if (!CheckInExpiryCoordinator.instance.tryClaim(
-      'safe_walk_timer',
-      sessionId: CheckInExpiryCoordinator.safeWalkSession,
-    )) {
-      _timer?.cancel();
-      await _clearPersistedState();
-      if (mounted) {
-        setState(() {
-          _isActive = false;
-          _endTime = null;
-          _remainingSeconds = 0;
-          _nativeScheduleDegraded = false;
-        });
-      }
-      return;
-    }
-    // Timer expired without user checking in - trigger emergency
-    HapticFeedback.heavyImpact();
-    setState(() {
-      _isActive = false;
-      _nativeScheduleDegraded = false;
-      _timer?.cancel();
-    });
-    await EmergencyPlatformService.instance.cancelCheckIn(
-      sessionId: CheckInExpiryCoordinator.safeWalkSession,
-    );
-    await _clearPersistedState();
-    if (!mounted) return;
-
-    // Auto-play siren before navigating to countdown
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => const SirenDialog(),
-    );
-
-    // Navigate to countdown after short delay to let siren start
-    Future.delayed(const Duration(milliseconds: 500), () {
-      if (mounted) {
-        Navigator.of(context).pop(); // Close siren dialog
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const CountdownScreen()),
-        );
-      }
-    });
-  }
-
-  Future<void> _checkIn() async {
+  Future<void> _markSafe() async {
     if (CheckInExpiryCoordinator.instance.isClaimedFor(
       CheckInExpiryCoordinator.safeWalkSession,
     )) {
       return;
     }
     HapticFeedback.lightImpact();
-    _timer?.cancel();
-    CheckInExpiryCoordinator.instance.reset(
-      sessionId: CheckInExpiryCoordinator.safeWalkSession,
-    );
-    await KoruBeniForegroundService.stop();
-    await EmergencyPlatformService.instance.cancelCheckIn(
-      sessionId: CheckInExpiryCoordinator.safeWalkSession,
-    );
-    await _clearPersistedState();
-    if (!mounted) return;
+    await _controller.stop();
     // Analytics removed (offline-first)
     ActivityService.logEvent(
       type: ActivityType.safetyCheck,
       title: "safe_walk_completed_activity".tr(),
       description: "safe_walk_completed_desc".tr(),
     );
-
-    setState(() {
-      _isActive = false;
-      _endTime = null;
-      _remainingSeconds = 0;
-      _nativeScheduleDegraded = false;
-    });
+    if (!mounted) return;
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -360,88 +232,14 @@ class _SafeWalkScreenState extends State<SafeWalkScreen>
       return;
     }
     HapticFeedback.lightImpact();
-    _timer?.cancel();
-    CheckInExpiryCoordinator.instance.reset(
-      sessionId: CheckInExpiryCoordinator.safeWalkSession,
-    );
-    await KoruBeniForegroundService.stop();
-    await EmergencyPlatformService.instance.cancelCheckIn(
-      sessionId: CheckInExpiryCoordinator.safeWalkSession,
-    );
-    await _clearPersistedState();
+    await _controller.stop();
     if (!mounted) return;
-    setState(() {
-      _isActive = false;
-      _endTime = null;
-      _remainingSeconds = 0;
-      _nativeScheduleDegraded = false;
-    });
-  }
-
-  void _startTicker() {
-    _timer?.cancel();
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (!mounted) {
-        timer.cancel();
-        return;
-      }
-      if (_endTime == null) {
-        timer.cancel();
-        return;
-      }
-      final remaining = _endTime!.difference(DateTime.now());
-      if (remaining.isNegative || remaining.inSeconds <= 0) {
-        timer.cancel();
-        unawaited(_onTimerExpired());
-      } else {
-        setState(() {
-          _remainingSeconds = remaining.inSeconds;
-        });
-        if (_remainingSeconds % 30 == 0 || _remainingSeconds <= 60) {
-          _updateForegroundStatus();
-        }
-        final warningThreshold = _selectedMinutes >= 4
-            ? 120
-            : (_selectedMinutes * 60 * 0.1).round();
-        if (!_preWarningFired &&
-            _remainingSeconds <= warningThreshold &&
-            _remainingSeconds > 0) {
-          _preWarningFired = true;
-          _firePreExpiryWarning();
-        }
-      }
-    });
-  }
-
-  Future<void> _persistState() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_activeKey, _isActive);
-    await prefs.setInt(_durationMinutesKey, _selectedMinutes);
-    if (_endTime != null) {
-      await prefs.setString(_endAtKey, _endTime!.toIso8601String());
-    }
-  }
-
-  Future<void> _clearPersistedState() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_activeKey);
-    await prefs.remove(_endAtKey);
-    await prefs.remove(_durationMinutesKey);
   }
 
   String _formatTime(int totalSeconds) {
     final min = totalSeconds ~/ 60;
     final sec = totalSeconds % 60;
     return '${min.toString().padLeft(2, '0')}:${sec.toString().padLeft(2, '0')}';
-  }
-
-  void _updateForegroundStatus() {
-    KoruBeniForegroundService.updateNotification(
-      'foreground_active_title'.tr(),
-      'foreground_safe_walk_status'.tr(
-        namedArgs: {'time': _formatTime(_remainingSeconds)},
-      ),
-    );
   }
 
   @override
@@ -611,8 +409,8 @@ class _SafeWalkScreenState extends State<SafeWalkScreen>
   }
 
   Widget _buildActiveView() {
-    final progress = _remainingSeconds / (_selectedMinutes * 60);
-    final isUrgent = _remainingSeconds <= 30;
+    final progress = _remainingSeconds / _totalSeconds;
+    final isUrgent = _isGrace || _remainingSeconds <= 30;
 
     return _buildScrollableContent(
       children: [
@@ -738,7 +536,7 @@ class _SafeWalkScreenState extends State<SafeWalkScreen>
         SizedBox(
           width: double.infinity,
           child: ElevatedButton.icon(
-            onPressed: _checkIn,
+            onPressed: _markSafe,
             icon: const Icon(Icons.check_circle_rounded, size: 24),
             label: Text(
               "safe_walk_safe".tr(),

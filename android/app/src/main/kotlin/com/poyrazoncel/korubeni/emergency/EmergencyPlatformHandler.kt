@@ -30,11 +30,16 @@ class EmergencyPlatformHandler(
                     val phase = call.argument<String>("phase") ?: CheckInScheduler.PHASE_MAIN
                     val deadlineMs = call.argument<Number>("deadlineMs")?.toLong() ?: 0L
                     val graceDurationMs = call.argument<Number>("graceDurationMs")?.toLong() ?: 0L
-                    CheckInScheduler.schedule(context, sessionId, phase, deadlineMs, graceDurationMs)
+                    val primaryNumber = call.argument<String>("primaryNumber")
+                    CheckInScheduler.schedule(context, sessionId, phase, deadlineMs, graceDurationMs, primaryNumber)
                     result.success(mapOf(
                         "scheduled" to true,
                         "exact" to CheckInScheduler.canScheduleExactAlarms(context)
                     ))
+                }
+                "didCheckInAlarmFire" -> {
+                    val sessionId = call.argument<String>("sessionId") ?: CheckInScheduler.SESSION_CHECK_IN
+                    result.success(CheckInScheduler.didAlarmFire(context, sessionId))
                 }
                 "cancelCheckIn" -> {
                     val sessionId = call.argument<String>("sessionId") ?: CheckInScheduler.SESSION_CHECK_IN

@@ -29,11 +29,19 @@ class _EmergencyTriggerHostState extends State<EmergencyTriggerHost>
   bool _countdownOpen = false;
   StreamSubscription<Map<String, dynamic>>? _platformEventsSubscription;
 
+  /// Resolve the session controller for a native event (SPEC §6 — safe-walk
+  /// shares the same controller as check-in, no separate CountdownScreen).
+  CheckInService _controllerFor(String? sessionId) =>
+      sessionId == CheckInExpiryCoordinator.safeWalkSession
+          ? CheckInService.safeWalk
+          : CheckInService.instance;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     CheckInService.instance.initialize();
+    CheckInService.safeWalk.initialize();
     unawaited(EmergencyReadinessService.instance.checkReadiness());
     _bindPlatformEvents();
     _startForegroundTriggers();
@@ -45,6 +53,7 @@ class _EmergencyTriggerHostState extends State<EmergencyTriggerHost>
       unawaited(EmergencyReadinessService.instance.checkReadiness());
       _startForegroundTriggers();
       CheckInService.instance.handleAppResumed();
+      CheckInService.safeWalk.handleAppResumed();
       _consumePendingTrigger();
       // Re-auth after prolonged background
       AppLifecycleHandler.instance.onResumed();
@@ -103,10 +112,7 @@ class _EmergencyTriggerHostState extends State<EmergencyTriggerHost>
             final type = event['type']?.toString();
             final sessionId = event['sessionId']?.toString();
             if (type == 'checkInGraceStarted') {
-              if (sessionId == null ||
-                  sessionId == CheckInExpiryCoordinator.checkInSession) {
-                await CheckInService.instance.handleNativeGraceStarted();
-              }
+              await _controllerFor(sessionId).handleNativeGraceStarted();
               return;
             }
             if (type == 'checkInExpired') {
@@ -130,10 +136,7 @@ class _EmergencyTriggerHostState extends State<EmergencyTriggerHost>
     final type = pending['type']?.toString();
     final sessionId = pending['sessionId']?.toString();
     if (type == 'checkInGraceStarted') {
-      if (sessionId == null ||
-          sessionId == CheckInExpiryCoordinator.checkInSession) {
-        await CheckInService.instance.handleNativeGraceStarted();
-      }
+      await _controllerFor(sessionId).handleNativeGraceStarted();
       return;
     }
     if (type == 'checkInExpired') {
@@ -142,24 +145,10 @@ class _EmergencyTriggerHostState extends State<EmergencyTriggerHost>
   }
 
   Future<void> _handleCheckInExpired({String? sessionId}) async {
-    final isCheckIn =
-        sessionId == null ||
-        sessionId == CheckInExpiryCoordinator.checkInSession;
-    if (isCheckIn &&
-        (CheckInService.instance.isActive ||
-            CheckInService.instance.isGracePeriod)) {
-      await CheckInService.instance.handleNativeExpired();
-      return;
-    }
-    final resolvedSessionId =
-        sessionId ?? CheckInExpiryCoordinator.safeWalkSession;
-    if (!CheckInExpiryCoordinator.instance.tryClaim(
-      'native_check_in_expired',
-      sessionId: resolvedSessionId,
-    )) {
-      return;
-    }
-    await _openCountdown();
+    // Both check-in and safe-walk delegate to their shared session controller.
+    // The controller dedups against the native-fired flag and calls ONLY the
+    // primary contact (SPEC §3.2). Safe-walk no longer opens CountdownScreen.
+    await _controllerFor(sessionId).handleNativeExpired();
   }
 
   Future<void> _openCountdown() async {

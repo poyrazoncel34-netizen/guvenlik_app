@@ -11,6 +11,11 @@ object EmergencyPrefs {
     const val KEY_CHECK_IN_DEADLINE = "check_in_deadline"
     const val KEY_CHECK_IN_GRACE_MS = "check_in_grace_ms"
 
+    // M2 native-backup escalation (yalniz birincil kisi — no failover list).
+    // Per-session suffixing is handled by CheckInScheduler.keyFor().
+    const val KEY_CHECK_IN_PRIMARY_NUMBER = "check_in_primary_number"
+    const val KEY_CHECK_IN_ALARM_FIRED = "check_in_alarm_fired"
+
     // Countdown backup alarm keys (C4 Doze-mode safety net)
     const val KEY_COUNTDOWN_ACTIVE = "countdown_active"
     const val KEY_COUNTDOWN_DEADLINE_MS = "countdown_deadline_ms"

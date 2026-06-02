@@ -54,6 +54,7 @@ class EmergencyPlatformService {
     required String phase,
     required DateTime deadline,
     Duration graceDuration = const Duration(seconds: 60),
+    String? primaryNumber,
   }) async {
     if (!isSupported) {
       return false;
@@ -65,9 +66,25 @@ class EmergencyPlatformService {
         'phase': phase,
         'deadlineMs': deadline.millisecondsSinceEpoch,
         'graceDurationMs': graceDuration.inMilliseconds,
+        'primaryNumber': primaryNumber,
       },
     );
     return response['scheduled'] == true && response['exact'] == true;
+  }
+
+  /// Whether the native AlarmManager backup already dispatched the check-in /
+  /// safe-walk escalation call (Dart isolate was frozen). Used to skip a
+  /// duplicate Dart call on resume — mirrors [didCountdownAlarmFire].
+  Future<bool> didCheckInAlarmFire({
+    String sessionId = CheckInExpiryCoordinator.checkInSession,
+  }) async {
+    if (!isSupported) {
+      return false;
+    }
+    return _invokeBool(
+      'didCheckInAlarmFire',
+      arguments: <String, Object?>{'sessionId': sessionId},
+    );
   }
 
   Future<void> cancelCheckIn({
