@@ -3,6 +3,7 @@ package com.poyrazoncel.korubeni.emergency
 import android.content.Intent
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -27,17 +28,17 @@ class EmergencyExecutorTest {
     }
 
     @Test
-    fun `empty number must call 112`() {
-        EmergencyExecutor.executeEmergency(context, "")
+    fun `empty number must NOT start any call (no synthetic 112)`() {
+        val result = EmergencyExecutor.executeEmergency(context, "")
         Thread.sleep(500)
 
+        assertEquals("Empty target must report failure, not call 112", "failed", result["status"])
         val intent = shadowApp.nextStartedActivity
-        assertNotNull("An activity intent must be started even with empty number", intent)
-        assertEquals("tel:112", intent!!.dataString)
+        assertNull("No call/dial intent may be started for an empty target", intent)
     }
 
     @Test
-    fun `when startActivity throws, fallback 112 dialer is attempted`() {
+    fun `when dispatch fails, NO 112 fallback intent is attempted`() {
         var callCount = 0
         val throwingContext = object : android.content.ContextWrapper(context) {
             override fun startActivity(intent: Intent) {
@@ -47,17 +48,18 @@ class EmergencyExecutorTest {
             }
         }
 
-        EmergencyExecutor.executeEmergency(throwingContext, "+905001234567")
+        val result = EmergencyExecutor.executeEmergency(throwingContext, "+905001234567")
         Thread.sleep(500)
 
-        val intent = shadowApp.nextStartedActivity
-        assertNotNull("Fallback 112 intent must be started when primary startActivity throws", intent)
-        assertEquals(Intent.ACTION_DIAL, intent!!.action)
-        assertEquals("tel:112", intent.dataString)
+        assertEquals("Total dispatch failure must report failed, not call 112", "failed", result["status"])
+        assertNull(
+            "No 112 fallback intent may be started when primary startActivity throws",
+            shadowApp.nextStartedActivity,
+        )
     }
 
     @Test
-    fun `FALLBACK_112 is logged when startActivity throws`() {
+    fun `FALLBACK_112 is never logged when startActivity throws`() {
         var callCount = 0
         val throwingContext = object : android.content.ContextWrapper(context) {
             override fun startActivity(intent: Intent) {
@@ -71,7 +73,7 @@ class EmergencyExecutorTest {
         Thread.sleep(500)
 
         val logged = ShadowLog.getLogs().any { it.msg.contains("FALLBACK_112") }
-        assertTrue("FALLBACK_112 must be logged when primary startActivity fails", logged)
+        assertEquals("Executor must not log a 112 fallback any more", false, logged)
     }
 
     @Test

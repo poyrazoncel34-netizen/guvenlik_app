@@ -83,24 +83,20 @@ void main() {
       );
     });
 
-    test(
-      'EmergencyExecutor falls back to ACTION_DIAL 112 if dispatch fails',
-      () {
-        final file = File('$ktBase/emergency/EmergencyExecutor.kt');
-        expect(file.existsSync(), isTrue);
-        final content = file.readAsStringSync();
-        expect(content, contains('ifEmpty { "112" }'));
-        expect(content, contains('Intent.ACTION_DIAL'));
-        expect(
-          content,
-          contains('startTelIntent(context, Intent.ACTION_DIAL, "112")'),
-        );
-        expect(content, contains('"status" to "dialerOpened"'));
-        expect(content, contains('normalizeEmergencyTarget'));
-        expect(content, contains('OFFICIAL_EMERGENCY_SHORT_CODES'));
-        expect(content, contains('digits.length >= 7'));
-      },
-    );
+    test('EmergencyExecutor never falls back to / synthesizes 112', () {
+      final file = File('$ktBase/emergency/EmergencyExecutor.kt');
+      expect(file.existsSync(), isTrue);
+      final content = file.readAsStringSync();
+      // No 112 literal in any callable form, no coercion helper, no
+      // short-code allow-list. On total dispatch failure it reports failure.
+      expect(content, isNot(contains('"112"')));
+      expect(content, isNot(contains('ifEmpty { "112" }')));
+      expect(content, isNot(contains('normalizeEmergencyTarget')));
+      expect(content, isNot(contains('OFFICIAL_EMERGENCY_SHORT_CODES')));
+      expect(content, contains('Intent.ACTION_CALL'));
+      expect(content, contains('Intent.ACTION_DIAL'));
+      expect(content, contains('"status" to "failed"'));
+    });
 
     test(
       'EmergencyExecutor uses ACTION_CALL only when CALL_PHONE is granted',

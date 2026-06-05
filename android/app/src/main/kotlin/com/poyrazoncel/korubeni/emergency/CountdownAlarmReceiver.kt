@@ -45,12 +45,17 @@ class CountdownAlarmReceiver : BroadcastReceiver() {
             .putBoolean(EmergencyPrefs.KEY_COUNTDOWN_ACTIVE, false)
             .commit()
 
-        // Read persisted emergency data
+        // Read persisted emergency target. Never synthesize 112: only dispatch
+        // when a real number was persisted; otherwise place no call.
         val primaryNumber =
-            prefs.getString(EmergencyPrefs.KEY_COUNTDOWN_PRIMARY_NUMBER, "")?.takeIf {
-                it.isNotBlank()
-            } ?: "112"
+            prefs.getString(EmergencyPrefs.KEY_COUNTDOWN_PRIMARY_NUMBER, "")
+                ?.trim()
+                .orEmpty()
 
-        EmergencyExecutor.executeEmergency(context, primaryNumber)
+        if (primaryNumber.isNotEmpty()) {
+            EmergencyExecutor.executeEmergency(context, primaryNumber)
+        } else {
+            Log.w(TAG, "Countdown alarm fired but no primary number persisted; no call placed")
+        }
     }
 }

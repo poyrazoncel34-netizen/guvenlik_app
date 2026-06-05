@@ -16,16 +16,6 @@ class AppConstants {
 
   // Limits
   static const int maxEmergencyContacts = 5;
-  static const String turkeyEmergencyNumber = '112';
-  static const Set<String> officialEmergencyShortCodes = {
-    turkeyEmergencyNumber,
-    '911',
-    '999',
-    '110',
-    '155',
-    '156',
-    '122',
-  };
 
   // SharedPreferences keys (non-sensitive)
   static const String prefProfileName = 'profile_name';

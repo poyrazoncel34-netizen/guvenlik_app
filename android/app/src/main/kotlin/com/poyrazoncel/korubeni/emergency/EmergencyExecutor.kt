@@ -15,10 +15,14 @@ import androidx.core.content.ContextCompat
  * dispatch on the Android side.
  *
  * Acquires a partial wake lock to prevent CPU sleep during dispatch.
+ *
+ * Calls ONLY the explicitly configured emergency target. It never synthesizes,
+ * coerces, or falls back to 112 (or any other official short code): if the
+ * target cannot be opened with ACTION_CALL or ACTION_DIAL, it returns
+ * status=failed so the caller can run its own fail-safe (manual-dial dialog).
  */
 object EmergencyExecutor {
     private const val TAG = "EmergencyExecutor"
-    private val OFFICIAL_EMERGENCY_SHORT_CODES = setOf("112", "911", "999", "110", "155", "156", "122")
 
     fun executeEmergency(
         context: Context,
@@ -37,7 +41,7 @@ object EmergencyExecutor {
             result
         } catch (e: Exception) {
             Log.e(TAG, "Call dispatch failed")
-            mapOf("status" to "failed", "number" to normalizeEmergencyTarget(primaryNumber))
+            mapOf("status" to "failed", "number" to primaryNumber.trim())
         } finally {
             try {
                 wakeLock?.release()
@@ -46,7 +50,14 @@ object EmergencyExecutor {
     }
 
     private fun openCall(context: Context, number: String): Map<String, Any?> {
-        val cleaned = normalizeEmergencyTarget(number)
+        val cleaned = number.trim()
+
+        // No configured target — never synthesize 112. Report failure so the
+        // caller surfaces the manual-dial fail-safe instead of calling anyone.
+        if (cleaned.isEmpty()) {
+            Log.e(TAG, "No emergency target configured; nothing to dial")
+            return mapOf("status" to "failed", "number" to cleaned)
+        }
 
         val canDirect = ContextCompat.checkSelfPermission(
             context, Manifest.permission.CALL_PHONE
@@ -66,16 +77,12 @@ object EmergencyExecutor {
             startTelIntent(context, Intent.ACTION_DIAL, cleaned)
             return mapOf("status" to "dialerOpened", "number" to cleaned)
         } catch (e: Exception) {
-            Log.e(TAG, "ACTION_DIAL primary fallback failed")
+            Log.e(TAG, "ACTION_DIAL failed; no emergency intent could be opened")
         }
 
-        if (cleaned != "112") {
-            Log.e(TAG, "FALLBACK_112 primary dial intent failed")
-            startTelIntent(context, Intent.ACTION_DIAL, "112")
-            return mapOf("status" to "dialerOpened", "number" to "112")
-        }
-
-        throw IllegalStateException("No emergency call or dial intent could be opened")
+        // Both ACTION_CALL and ACTION_DIAL failed. Do NOT fall back to 112 —
+        // report failure and let the caller run its fail-safe flow.
+        return mapOf("status" to "failed", "number" to cleaned)
     }
 
     private fun startTelIntent(context: Context, action: String, number: String) {
@@ -84,12 +91,5 @@ object EmergencyExecutor {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
         context.startActivity(intent)
-    }
-
-    private fun normalizeEmergencyTarget(number: String): String {
-        val cleaned = number.trim().ifEmpty { "112" }
-        val digits = cleaned.filter { it.isDigit() }
-        val valid = OFFICIAL_EMERGENCY_SHORT_CODES.contains(digits) || digits.length >= 7
-        return if (valid) cleaned else "112"
     }
 }

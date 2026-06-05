@@ -19,17 +19,6 @@ void main() {
       expect(AppConstants.maxEmergencyContacts, 5);
     });
 
-    test('turkeyEmergencyNumber is 112', () {
-      expect(AppConstants.turkeyEmergencyNumber, '112');
-    });
-
-    test('officialEmergencyShortCodes include expected emergency numbers', () {
-      expect(
-        AppConstants.officialEmergencyShortCodes,
-        containsAll(['112', '911', '999', '110', '155', '156', '122']),
-      );
-    });
-
     test('encryptionKeyBase64 returns empty when not set via dart-define', () {
       expect(AppConstants.encryptionKeyBase64, '');
     });

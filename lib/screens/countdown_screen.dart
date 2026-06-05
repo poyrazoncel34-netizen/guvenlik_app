@@ -25,7 +25,6 @@ import '../core/services/foreground_service.dart';
 import '../core/services/haptic_service.dart';
 import '../core/services/notification_service.dart';
 import '../core/services/emergency_platform_service.dart';
-import '../core/constants/app_constants.dart';
 import '../core/utils/emergency_number_validator.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
@@ -140,9 +139,13 @@ class _CountdownScreenState extends State<CountdownScreen>
                 primaryCandidate,
               )
           ? primaryCandidate
-          : (validNumbers.isNotEmpty
-                ? validNumbers.first
-                : AppConstants.turkeyEmergencyNumber);
+          : (validNumbers.isNotEmpty ? validNumbers.first : null);
+
+      // No callable target configured — never synthesize 112. Skip the native
+      // backup; the Dart path surfaces the manual-dial fail-safe instead.
+      if (primaryNumber == null) {
+        return;
+      }
 
       // Schedule alarm for 12 seconds from now (10s countdown + 2s grace)
       final deadline = DateTime.now().add(const Duration(seconds: 12));
@@ -241,13 +244,11 @@ class _CountdownScreenState extends State<CountdownScreen>
   }
 
   Future<void> _executeEmergency() async {
-    final configuredNumbers =
-        (await _contactsRepository.getAllEmergencyNumbers())
-            .where(EmergencyNumberValidator.isCallableEmergencyTarget)
-            .toList(growable: false);
-    final numbers = configuredNumbers.isNotEmpty
-        ? configuredNumbers
-        : const [AppConstants.turkeyEmergencyNumber];
+    // All configured, callable numbers — the panic flow still fails over across
+    // every one of them. Never synthesize 112 when the list is empty.
+    final numbers = (await _contactsRepository.getAllEmergencyNumbers())
+        .where(EmergencyNumberValidator.isCallableEmergencyTarget)
+        .toList(growable: false);
 
     final primaryCandidate = _emergencyContact?.phone;
     final primaryNumber =

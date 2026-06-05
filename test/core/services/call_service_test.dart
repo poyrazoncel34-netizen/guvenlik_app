@@ -18,10 +18,16 @@ void main() {
   );
 
   test(
-    'startEmergencyCall falls back to 112 when no number is configured',
+    'startEmergencyCall returns failed (never 112) when no number is configured',
     () async {
       final result = await CallService.startEmergencyCall('');
-      expect(result.number, '112');
+      expect(result.status, EmergencyCallStatus.failed);
+      expect(result.isFailed, isTrue);
+      expect(
+        result.number,
+        isNot('112'),
+        reason: 'Empty target must NOT be coerced to 112.',
+      );
     },
   );
 
@@ -59,7 +65,7 @@ void main() {
     expect(tr, contains('Doğrudan acil arama Android ayarlarında kapalı'));
   });
 
-  test('countdown keeps the 112 fallback (panic path unchanged)', () {
+  test('countdown / panic flow no longer synthesizes 112', () {
     final countdown = File(
       'lib/screens/countdown_screen.dart',
     ).readAsStringSync();
@@ -67,9 +73,18 @@ void main() {
       'android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/CountdownAlarmReceiver.kt',
     ).readAsStringSync();
 
-    // SPEC §0.1: the countdown / panic flow retains full escalation + 112.
-    expect(countdown, contains('AppConstants.turkeyEmergencyNumber'));
-    expect(receiver, contains('?: "112"'));
+    // 112 removed from ALL flows: neither the Dart panic path nor its native
+    // backup may fall back to / coerce to 112.
+    expect(
+      countdown.contains('AppConstants.turkeyEmergencyNumber'),
+      isFalse,
+      reason: 'Countdown/panic must not synthesize 112 as a target.',
+    );
+    expect(
+      receiver.contains('?: "112"'),
+      isFalse,
+      reason: 'Countdown native backup must not fall back to 112.',
+    );
   });
 
   test('check-in escalation never falls back to 112 (SPEC §0 K1/K2)', () {
