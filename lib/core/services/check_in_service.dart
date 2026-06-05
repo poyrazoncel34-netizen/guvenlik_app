@@ -372,6 +372,23 @@ class CheckInService extends ChangeNotifier {
         return;
       }
 
+      // Cancel the native AlarmManager backup BEFORE any log / notification /
+      // call, mirroring the proven countdown pattern (countdown_screen.dart
+      // _makeEmergencyCall: "cancel native first, THEN dispatch"). This shrinks
+      // the native-fired dedup window from the whole escalation body down to a
+      // single cancel round-trip (SPEC §3.2 / §5). Cleanup-only: a failure here
+      // must NEVER block the actual call (fail-safe) — cancelCheckIn already
+      // swallows its own errors, and this guard mirrors countdown defensively.
+      try {
+        await EmergencyPlatformService.instance.cancelCheckIn(
+          sessionId: _sessionId,
+        );
+      } on Exception catch (e) {
+        debugPrint(
+          'CheckInService: cancelCheckIn failed, continuing escalation: $e',
+        );
+      }
+
       await ActivityService.logEvent(
         type: ActivityType.emergencyTriggered,
         title: "check_in_emergency_title".tr(),
