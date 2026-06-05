@@ -10,6 +10,7 @@ import '../core/app_colors.dart';
 import '../core/constants/app_constants.dart';
 import '../core/services/check_in_service.dart';
 import '../core/services/contact_service.dart';
+import '../core/utils/emergency_number_validator.dart';
 import '../core/utils/permission_helper.dart';
 import '../core/widgets/exact_alarm_permission_guard.dart';
 import '../core/widgets/feature_warning_dialog.dart';
@@ -60,7 +61,7 @@ class _CheckInScreenState extends State<CheckInScreen>
   Future<bool> _hasEmergencyContact() async {
     try {
       final numbers = await ContactService.getAllEmergencyNumbers();
-      return numbers.any((number) => number.trim().isNotEmpty);
+      return numbers.any(EmergencyNumberValidator.isCallableEmergencyTarget);
     } catch (_) {
       return false;
     }

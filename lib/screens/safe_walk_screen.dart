@@ -10,6 +10,7 @@ import '../core/services/activity_service.dart';
 import '../core/services/check_in_expiry_coordinator.dart';
 import '../core/services/check_in_service.dart';
 import '../core/services/contact_service.dart';
+import '../core/utils/emergency_number_validator.dart';
 import '../core/services/notification_service.dart';
 import '../core/utils/permission_helper.dart';
 // Analytics service removed (offline-first)
@@ -144,7 +145,7 @@ class _SafeWalkScreenState extends State<SafeWalkScreen> {
   Future<bool> _hasEmergencyContact() async {
     try {
       final numbers = await ContactService.getAllEmergencyNumbers();
-      return numbers.any((number) => number.trim().isNotEmpty);
+      return numbers.any(EmergencyNumberValidator.isCallableEmergencyTarget);
     } catch (_) {
       return false;
     }

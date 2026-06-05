@@ -19,7 +19,7 @@ void main() {
 
     test('free long press uses SubscriptionGate and cannot open countdown', () {
       final startIndex = source.indexOf('Future<void> _onPressStart');
-      final openIndex = source.indexOf('void _openCountdownScreen');
+      final openIndex = source.indexOf('Future<void> _openCountdownScreen');
       final pressStart = source.substring(startIndex, openIndex);
 
       expect(pressStart, contains('PremiumFeature.panic'));

@@ -13,6 +13,9 @@ import '../core/constants/app_constants.dart';
 import '../core/services/subscription_gate.dart';
 import '../core/widgets/feature_warning_dialog.dart';
 import '../presentation/providers/subscription_provider.dart';
+import '../core/services/contact_service.dart';
+import '../core/utils/emergency_number_validator.dart';
+import '../screens/contacts_page.dart';
 import '../screens/countdown_screen.dart';
 
 class PanicButton extends StatefulWidget {
@@ -126,11 +129,22 @@ class _PanicButtonState extends State<PanicButton>
     HapticFeedback.vibrate();
 
     if (!wasArmed) return;
-    _openCountdownScreen();
+    unawaited(_openCountdownScreen());
   }
 
-  void _openCountdownScreen() {
+  Future<void> _openCountdownScreen() async {
     if (_countdownOpening || !mounted) return;
+
+    // Personless-trigger guard: with 112 removed, the countdown has nothing to
+    // call unless a callable emergency contact is configured. Redirect the user
+    // to add one instead of arming a flow that would dial nobody.
+    if (!await _hasCallableContact()) {
+      if (!mounted) return;
+      _showContactRequired();
+      return;
+    }
+    if (!mounted) return;
+
     _countdownOpening = true;
     Navigator.push(
       context,
@@ -158,6 +172,34 @@ class _PanicButtonState extends State<PanicButton>
         transitionDuration: const Duration(milliseconds: 300),
       ),
     ).whenComplete(() => _countdownOpening = false);
+  }
+
+  Future<bool> _hasCallableContact() async {
+    try {
+      final numbers = await ContactService.getAllEmergencyNumbers();
+      return numbers.any(EmergencyNumberValidator.isCallableEmergencyTarget);
+    } on Exception {
+      return false;
+    }
+  }
+
+  void _showContactRequired() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('timer_emergency_contact_required'.tr()),
+        backgroundColor: AppColors.warning,
+        behavior: SnackBarBehavior.floating,
+        action: SnackBarAction(
+          label: 'timer_add_contact_action'.tr(),
+          textColor: Colors.white,
+          onPressed: () {
+            Navigator.of(
+              context,
+            ).push(MaterialPageRoute(builder: (_) => const ContactsPage()));
+          },
+        ),
+      ),
+    );
   }
 
   /// Screen-reader / AT activation path. Triggered by Semantics.onTap when
@@ -227,7 +269,7 @@ class _PanicButtonState extends State<PanicButton>
     if (confirmed != true || !mounted) return;
 
     HapticFeedback.heavyImpact();
-    _openCountdownScreen();
+    unawaited(_openCountdownScreen());
   }
 
   @override
