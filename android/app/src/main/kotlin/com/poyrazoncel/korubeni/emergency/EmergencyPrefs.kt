@@ -25,4 +25,14 @@ object EmergencyPrefs {
 
     fun prefs(context: Context) =
         context.getSharedPreferences(FILE_NAME, Context.MODE_PRIVATE)
+
+    /**
+     * KVKK Md.7 (silme): wipe the entire native emergency store. Called only
+     * from the "Verilerimi Sil" reset path (AppResetService) so the persisted
+     * primary contact number does not survive a data deletion. Reset-only --
+     * the live emergency flow's own writes/reads are unchanged.
+     */
+    fun clear(context: Context) {
+        prefs(context).edit().clear().apply()
+    }
 }

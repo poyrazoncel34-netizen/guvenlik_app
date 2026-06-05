@@ -108,6 +108,29 @@ class EmergencyPlatformService {
     }
   }
 
+  /// KVKK Md.7 (silme): wipe the native korubeni_emergency SharedPreferences
+  /// (holds the persisted primary contact number). Called only from the
+  /// "Verilerimi Sil" reset path (AppResetService) — exception-safe so a
+  /// reset is never blocked if the native side is unavailable.
+  Future<void> clearEmergencyPrefs() async {
+    if (!isSupported) {
+      return;
+    }
+    try {
+      await _methodChannel
+          .invokeMethod<void>('clearEmergencyPrefs')
+          .timeout(_defaultTimeout);
+    } on TimeoutException {
+      debugPrint('[EmergencyPlatform] clearEmergencyPrefs timed out');
+    } on PlatformException catch (e) {
+      debugPrint('[EmergencyPlatform] clearEmergencyPrefs failed: ${e.code}');
+    } on Exception catch (e) {
+      debugPrint(
+        '[EmergencyPlatform] clearEmergencyPrefs unexpected error: $e',
+      );
+    }
+  }
+
   Future<Map<String, dynamic>?> consumePendingTrigger() async {
     if (!isSupported) {
       return null;

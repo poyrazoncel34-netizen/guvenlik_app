@@ -91,6 +91,12 @@ class EmergencyPlatformHandler(
                     val dispatchId = call.argument<String>("dispatchId").orEmpty()
                     result.success(CountdownAlarmScheduler.didAlarmFire(context, dispatchId))
                 }
+                "clearEmergencyPrefs" -> {
+                    // KVKK Md.7 (silme): reset path wipes the native emergency store
+                    // (primary contact number) so it does not survive data deletion.
+                    EmergencyPrefs.clear(context)
+                    result.success(true)
+                }
                 else -> result.notImplemented()
             }
         } catch (e: Exception) {
