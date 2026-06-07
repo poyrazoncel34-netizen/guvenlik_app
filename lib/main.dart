@@ -32,6 +32,17 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Release log hygiene: silence app-level debugPrint so logs never reach
+  // logcat (PII safety). On-device error logging via CrashLogService /
+  // LocalLoggerService is unaffected. Capture the real console sink FIRST so
+  // Flutter framework errors can still be forwarded to logcat for the Google
+  // Play Pre-launch Report (see FlutterError.onError below).
+  final consoleSink = debugPrint;
+  if (kReleaseMode) {
+    debugPrint = (String? message, {int? wrapWidth}) {};
+  }
+
   AppEnvironment.validateReleaseConfiguration(isReleaseMode: kReleaseMode);
   await EasyLocalization.ensureInitialized();
 
@@ -143,7 +154,18 @@ void main() async {
     // framework errors (build/widget exceptions); without it, only
     // native crashes appear in the report and Dart-side bugs stay
     // invisible to automated QA crawlers.
-    FlutterError.presentError(details);
+    // In release, debugPrint is globally silenced (see main()), which would
+    // also mute presentError's logcat output. Temporarily restore the real
+    // console sink around presentError so framework errors still reach the
+    // Pre-launch Report, then re-silence app-level logging.
+    if (kReleaseMode) {
+      final silenced = debugPrint;
+      debugPrint = consoleSink;
+      FlutterError.presentError(details);
+      debugPrint = silenced;
+    } else {
+      FlutterError.presentError(details);
+    }
   };
 
   // Zero-fault: Fatal hataları yutma - return false ile standart hata yönetimine bırak
