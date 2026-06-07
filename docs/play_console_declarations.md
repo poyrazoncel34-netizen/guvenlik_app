@@ -101,7 +101,7 @@ Status: CODE_DONE copy prepared; PLAY_CONSOLE to submit if Play Console requires
 Reviewer note:
 
 ```text
-KoruBeni is a personal safety app. CALL_PHONE is used only when the user explicitly starts an emergency SOS flow and grants phone permission. The app attempts to call the configured emergency number or 112. If CALL_PHONE is denied, unavailable, or direct calling fails, the app falls back to ACTION_DIAL so the user can manually confirm the call. The app does not read call logs and does not place background calls without user action.
+KoruBeni is a personal safety app. CALL_PHONE is used only when the user explicitly starts an emergency SOS flow and grants phone permission. The app attempts to call the user's pre-configured primary emergency contact (a real contact phone number); it does not call 112 or any official emergency short code. If CALL_PHONE is denied, unavailable, or direct calling fails, the app falls back to ACTION_DIAL so the user can manually confirm the call. The app does not read call logs and does not place background calls without user action.
 ```
 
 ## `FLAG_SECURE`
