@@ -84,6 +84,8 @@ jobs:
           flutter build appbundle \
             --release \
             --flavor play \
+            --obfuscate \
+            --split-debug-info=build/debug-info \
             --build-name="${{ steps.version.outputs.version_name }}" \
             --build-number="${{ steps.version.outputs.version_code }}" \
             --dart-define=ENV=production \
@@ -95,4 +97,14 @@ jobs:
         with:
           name: korubeni-play-${{ steps.version.outputs.version_name }}.aab
           path: build/app/outputs/bundle/playRelease/app-play-release.aab
+          if-no-files-found: error
+
+      # Retain Dart obfuscation symbols for crash de-obfuscation. Without these
+      # split-debug-info symbols, release crash stack traces cannot be
+      # symbolicated (flutter symbolize). Do NOT commit them to the repo.
+      - name: Upload Dart obfuscation symbols
+        uses: actions/upload-artifact@v4
+        with:
+          name: korubeni-debug-symbols-${{ steps.version.outputs.version_name }}
+          path: build/debug-info
           if-no-files-found: error
