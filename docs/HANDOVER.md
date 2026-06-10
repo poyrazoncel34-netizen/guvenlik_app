@@ -412,18 +412,30 @@ CI (PR/main) kendi tek-kullanımlık NON_RELEASE_SMOKE anahtarını üretir ([ci
 5. **workmanager** uyumluluk sorunu nedeniyle devre dışı ([pubspec.yaml:42](../pubspec.yaml)) —
    AlarmManager+FGS deseni yerine geçti, geri eklenmesi planlanmıyor.
 6. **800+ satır dosyaların bölünmesi** — UI dokunmadan yapılamayacağı için bilinçli ertelendi (§7).
+7. **Direct Boot sınırı (FRESH_AUDIT F4):** Boot-restore zinciri `BOOT_COMPLETED` +
+   credential-encrypted prefs'e bağlıdır; cihaz reboot olur ve **ilk kilit açılışına dek**
+   restore/eskalasyon çalışmaz. Bilinçli BİLİNEN SINIR olarak kabul edildi; `directBootAware`
+   + device-protected storage mühendisliği backlog'dadır
+   ([FRESH_AUDIT_2026-06-10.md](FRESH_AUDIT_2026-06-10.md) F4).
 
 ---
 
 ## 10. GIT DURUMU
 
-- **main HEAD:** `f4f9f00` — origin/main ile senkron. Yayın dalı yok; release tag'le CI'dan.
-- **⚠️ ÇALIŞMA AĞACINDA 21 COMMIT'LENMEMİŞ DOSYA VAR** (bu rapor yazılırken): niteliği —
-  tr-TR.json Türkçe diakritik düzeltmeleri; rıza checkbox'larına a11y `semanticLabel`'ları;
-  `const` hijyeni; RevenueCat `_isConfigured`/`_canUsePurchases` guard'ı + buna kontrat testi
-  (`revenuecat_subscription_contract_test.dart`); MANUAL_SMOKE_TEST_SCRIPT 1 satır. Testler bu
-  ağaç üstünde yeşil. Commit kararı kullanıcının.
-- **Son ~10 commit'in anlamı (yeniden eskiye):**
+- **main HEAD:** `231e7a7` (F1: failed native dispatch asla sessiz yutulmaz) + bu seri
+  (i18n diakritik · a11y etiketleri · billing guard · hijyen · bu doküman commit'i) —
+  **origin/main'in ÖNÜNDE, push bekliyor** (operatör kararı). Yayın dalı yok; release
+  tag'le CI'dan.
+- **Çalışma ağacı TEMİZ** (11 Haziran 2026): önceki raporda duran 21 commit'lenmemiş dosya
+  bu seride mantıksal parçalara bölünerek commit'lendi — `fix(i18n)` tr-TR diakritik ·
+  `feat(a11y)` lokalize rıza-checkbox `semanticLabel`'ları (legal_disclaimer'ın 5 hardcoded
+  etiketi `.tr()` anahtarına çevrildi, TR metinler karakteri karakterine korundu) ·
+  `fix(billing)` RevenueCat `_isConfigured`/`_canUsePurchases` guard'ı + kontrat testi ·
+  `chore` const/stil hijyeni + smoke-script'teki bayat "112'ye düşer" beklentisinin
+  düzeltilmesi. Tüm kapılar (analyze + flutter test + `:app:` native) seri boyunca yeşil.
+- **Son commit'lerin anlamı (yeniden eskiye):**
+  *(bu seri)* docs(audit) triyaj+git tazeleme · chore hijyen+smoke · fix(billing) RC guard ·
+  feat(a11y) etiketler · fix(i18n) diakritik · `231e7a7` **F1 düzeltmesi** (FRESH_AUDIT) ·
   `f4f9f00` release AAB obfuscation+semboller · `2ac1fcb` release debugPrint susturma ·
   `9c99c06` Console checklist + CALL_PHONE notundan bayat 112 temizliği · `90e08c4` feature
   graphic · `1977661`+`816cbbf` yasal sürüm/sayfa eşitleme · `684ba5d` **panik callable-contact
