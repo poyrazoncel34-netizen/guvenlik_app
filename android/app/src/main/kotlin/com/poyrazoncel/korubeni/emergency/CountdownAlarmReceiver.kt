@@ -39,9 +39,11 @@ class CountdownAlarmReceiver : BroadcastReceiver() {
 
         Log.w(TAG, "Countdown alarm fired! Dart timer likely frozen. Executing emergency natively.")
 
-        // Mark that the alarm fired (Dart side checks this to avoid double-execution)
+        // Deactivate first so a stale/duplicate alarm is rejected. The fired
+        // dedup flag is written only after a SUCCESSFUL dispatch below, so a
+        // failed native call never suppresses the Dart-side retry with
+        // failover + blocking fail-safe (FRESH_AUDIT F1).
         prefs.edit()
-            .putBoolean(EmergencyPrefs.KEY_COUNTDOWN_ALARM_FIRED, true)
             .putBoolean(EmergencyPrefs.KEY_COUNTDOWN_ACTIVE, false)
             .commit()
 
@@ -52,10 +54,38 @@ class CountdownAlarmReceiver : BroadcastReceiver() {
                 ?.trim()
                 .orEmpty()
 
-        if (primaryNumber.isNotEmpty()) {
-            EmergencyExecutor.executeEmergency(context, primaryNumber)
-        } else {
+        if (primaryNumber.isEmpty()) {
             Log.w(TAG, "Countdown alarm fired but no primary number persisted; no call placed")
+            return
         }
+
+        val result = EmergencyExecutor.executeEmergency(context, primaryNumber)
+        if (result["status"] == "failed") {
+            // Total dispatch failure with no Dart isolate to fall back on:
+            // surface a manual-call notification carrying the number so the
+            // failure is never silent.
+            Log.e(TAG, "Native countdown dispatch failed; posting manual-call notification")
+            val copy = NativeNotificationText.dispatchFailed(context, primaryNumber)
+            // Tap opens the dialer pre-filled (no app launch: countdown has no
+            // Dart restore path, and the in-app PIN gate must not delay the
+            // manual fail-safe dial).
+            EmergencyNotificationHelper.showAlert(
+                context,
+                EmergencyNotificationHelper.COUNTDOWN_DISPATCH_FAILED_NOTIFICATION_ID,
+                copy.title,
+                copy.body,
+                "emergencyDispatchFailed",
+                contentIntent = EmergencyNotificationHelper.buildDialPendingIntent(
+                    context,
+                    primaryNumber,
+                ),
+            )
+            return
+        }
+
+        // Mark that the alarm fired (Dart side checks this to avoid double-execution)
+        prefs.edit()
+            .putBoolean(EmergencyPrefs.KEY_COUNTDOWN_ALARM_FIRED, true)
+            .commit()
     }
 }

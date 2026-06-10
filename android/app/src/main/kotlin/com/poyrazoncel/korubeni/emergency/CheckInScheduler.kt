@@ -40,7 +40,10 @@ object CheckInScheduler {
                 .putString(keyFor(session, EmergencyPrefs.KEY_CHECK_IN_PRIMARY_NUMBER), primaryNumber)
                 .putBoolean(keyFor(session, EmergencyPrefs.KEY_CHECK_IN_ALARM_FIRED), false)
         }
-        editor.apply()
+        // commit(): schedule() also runs in receiver context (grace re-arm in
+        // CheckInAlarmReceiver / boot-restore); the armed state must hit disk
+        // synchronously so abnormal process death cannot lose it (audit FAZ1-1a).
+        editor.commit()
 
         scheduleAlarm(context, session, deadlineMs)
     }
@@ -56,7 +59,7 @@ object CheckInScheduler {
             .remove(keyFor(session, EmergencyPrefs.KEY_CHECK_IN_GRACE_MS))
             .remove(keyFor(session, EmergencyPrefs.KEY_CHECK_IN_PRIMARY_NUMBER))
             .remove(keyFor(session, EmergencyPrefs.KEY_CHECK_IN_ALARM_FIRED))
-            .apply()
+            .commit()
     }
 
     fun isActive(context: Context, sessionId: String): Boolean {
@@ -87,19 +90,46 @@ object CheckInScheduler {
     }
 
     /**
-     * Native escalation dedup: mark that the backup call was dispatched and
-     * deactivate the session so a late/duplicate alarm is rejected. Keeps the
-     * primary number + fired flag so the Dart side can detect the native fire
-     * on resume and skip a duplicate call (mirrors countdown KEY_COUNTDOWN_ALARM_FIRED).
+     * Escalation step 1: cancel the alarm and deactivate the session so a
+     * late/duplicate alarm is rejected. The fired dedup flag is NOT written
+     * here — it is set via [markAlarmFired] only after a successful dispatch,
+     * so a failed native call never suppresses the Dart-side retry +
+     * fail-safe (FRESH_AUDIT F1).
      */
-    fun markAlarmFiredAndDeactivate(context: Context, sessionId: String) {
+    fun deactivateForEscalation(context: Context, sessionId: String) {
         val session = normalizeSession(sessionId)
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         alarmManager.cancel(buildPendingIntent(context, session))
         EmergencyPrefs.prefs(context).edit()
-            .putBoolean(keyFor(session, EmergencyPrefs.KEY_CHECK_IN_ALARM_FIRED), true)
             .putBoolean(keyFor(session, EmergencyPrefs.KEY_CHECK_IN_ACTIVE), false)
-            .apply()
+            .commit()
+    }
+
+    /**
+     * Escalation step 2 (success only): mark that the backup call was
+     * dispatched. Keeps the primary number + fired flag so the Dart side can
+     * detect the native fire on resume and skip a duplicate call (mirrors
+     * countdown KEY_COUNTDOWN_ALARM_FIRED).
+     */
+    fun markAlarmFired(context: Context, sessionId: String) {
+        val session = normalizeSession(sessionId)
+        EmergencyPrefs.prefs(context).edit()
+            .putBoolean(keyFor(session, EmergencyPrefs.KEY_CHECK_IN_ALARM_FIRED), true)
+            .commit()
+    }
+
+    /**
+     * Session-scoped alert id: check-in and safe-walk can be active at the
+     * same time, so their grace/expired/failure notifications must never
+     * share an id (the second notify() would clobber the first — audit
+     * FAZ1-4). Countdown keeps its own id (7304).
+     */
+    fun notificationIdFor(sessionId: String): Int {
+        return if (normalizeSession(sessionId) == SESSION_SAFE_WALK) {
+            EmergencyNotificationHelper.SAFE_WALK_NOTIFICATION_ID
+        } else {
+            EmergencyNotificationHelper.CHECK_IN_NOTIFICATION_ID
+        }
     }
 
     fun canScheduleExactAlarms(context: Context): Boolean {
@@ -195,7 +225,7 @@ object CheckInScheduler {
             )
             EmergencyNotificationHelper.showAlert(
                 context,
-                EmergencyNotificationHelper.CHECK_IN_NOTIFICATION_ID,
+                notificationIdFor(session),
                 copy.title,
                 copy.body,
                 "checkInGraceStarted",
@@ -207,9 +237,14 @@ object CheckInScheduler {
         // Grace already elapsed while the device was off — escalate natively
         // (SPEC 3.5: no longer notification-only). Yalniz birincil kisi, 112 yok.
         val primary = safeGetString(prefs, keyFor(session, EmergencyPrefs.KEY_CHECK_IN_PRIMARY_NUMBER), "") ?: ""
+        var dispatchFailed = false
         if (primary.isNotBlank()) {
-            markAlarmFiredAndDeactivate(context, session)
-            EmergencyExecutor.executeEmergency(context, primary)
+            deactivateForEscalation(context, session)
+            val result = EmergencyExecutor.executeEmergency(context, primary)
+            dispatchFailed = result["status"] == "failed"
+            if (!dispatchFailed) {
+                markAlarmFired(context, session)
+            }
         } else {
             cancel(context, session)
         }
@@ -217,14 +252,18 @@ object CheckInScheduler {
             context,
             mapOf("type" to "checkInExpired", "timestamp" to now, "sessionId" to session)
         )
-        val copy = NativeNotificationText.expired(
-            context,
-            session,
-            restoredAfterBoot = true,
-        )
+        val copy = if (dispatchFailed) {
+            NativeNotificationText.dispatchFailed(context, primary)
+        } else {
+            NativeNotificationText.expired(
+                context,
+                session,
+                restoredAfterBoot = true,
+            )
+        }
         EmergencyNotificationHelper.showAlert(
             context,
-            EmergencyNotificationHelper.CHECK_IN_NOTIFICATION_ID,
+            notificationIdFor(session),
             copy.title,
             copy.body,
             "checkInExpired"

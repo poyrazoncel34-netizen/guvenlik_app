@@ -33,6 +33,9 @@ object EmergencyPrefs {
      * the live emergency flow's own writes/reads are unchanged.
      */
     fun clear(context: Context) {
-        prefs(context).edit().clear().apply()
+        // commit(): the KVKK wipe must hit disk synchronously — a process
+        // death right after "Verilerimi Sil" must not silently resurrect the
+        // plaintext primary number (audit FAZ1-1c). One-shot, user-triggered.
+        prefs(context).edit().clear().commit()
     }
 }

@@ -88,7 +88,7 @@ class EmergencyExecutorTest {
     @Test
     fun `no CALL_PHONE permission uses ACTION_DIAL not ACTION_CALL`() {
         // Robolectric grants no permissions by default — CALL_PHONE is denied
-        EmergencyExecutor.executeEmergency(context, "+905001234567")
+        val result = EmergencyExecutor.executeEmergency(context, "+905001234567")
         Thread.sleep(500)
 
         val intent = shadowApp.nextStartedActivity
@@ -97,6 +97,12 @@ class EmergencyExecutorTest {
             "Must fall back to ACTION_DIAL when CALL_PHONE not granted",
             Intent.ACTION_DIAL,
             intent!!.action,
+        )
+        assertEquals(
+            "Dialer fallback must report dialerOpened — it counts as a " +
+                "successful dispatch (sets the dedup flag), unlike failed",
+            "dialerOpened",
+            result["status"],
         )
     }
 

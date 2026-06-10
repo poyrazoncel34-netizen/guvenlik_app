@@ -7,6 +7,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import androidx.core.content.ContextCompat
 import androidx.core.app.NotificationCompat
@@ -19,6 +20,13 @@ object EmergencyNotificationHelper {
     const val CHANNEL_SERVICE = "service_status"
     const val CHANNEL_GENERAL = "general_notifications"
     const val CHECK_IN_NOTIFICATION_ID = 7303
+    const val COUNTDOWN_DISPATCH_FAILED_NOTIFICATION_ID = 7304
+    const val SAFE_WALK_NOTIFICATION_ID = 7305
+
+    // Distinct from the launch PendingIntent request codes (triggerType hash)
+    // so the dial intent never overwrites / gets overwritten by an app-launch
+    // PendingIntent for the same notification flow.
+    private const val DIAL_REQUEST_CODE = 42101
 
     fun ensureChannels(context: Context) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
@@ -53,6 +61,27 @@ object EmergencyNotificationHelper {
         )
 
         manager.createNotificationChannels(channels)
+    }
+
+    /**
+     * Direct-dial PendingIntent for dispatch-failure alerts: opens the system
+     * dialer pre-filled with the persisted number. Deliberately NOT an
+     * app-launch intent — the in-app PIN gate must never stand between a
+     * failed automatic call and the manual fail-safe dial. Uri.fromParts
+     * keeps '+' intact without manual encoding. No trampoline: the activity
+     * is started directly from the notification's PendingIntent.
+     */
+    fun buildDialPendingIntent(context: Context, number: String): PendingIntent {
+        val intent = Intent(Intent.ACTION_DIAL).apply {
+            data = Uri.fromParts("tel", number.trim(), null)
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        return PendingIntent.getActivity(
+            context,
+            DIAL_REQUEST_CODE,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
     }
 
     fun buildLaunchPendingIntent(
@@ -98,6 +127,7 @@ object EmergencyNotificationHelper {
         body: String,
         triggerType: String,
         fullScreen: Boolean = false,
+        contentIntent: PendingIntent? = null,
     ) {
         if (!canPostNotifications(context)) {
             return
@@ -111,7 +141,7 @@ object EmergencyNotificationHelper {
             .setCategory(NotificationCompat.CATEGORY_ALARM)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setAutoCancel(true)
-            .setContentIntent(buildLaunchPendingIntent(context, triggerType))
+            .setContentIntent(contentIntent ?: buildLaunchPendingIntent(context, triggerType))
 
         // SPEC 3.1/3.3/3.6b: use a full-screen intent for the grace prompt WHEN the
         // platform/user permits it; otherwise degrade gracefully to a high-priority

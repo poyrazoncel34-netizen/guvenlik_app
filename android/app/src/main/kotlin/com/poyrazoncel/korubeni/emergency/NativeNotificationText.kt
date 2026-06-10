@@ -69,6 +69,19 @@ object NativeNotificationText {
 
     fun emergencyTriggered(context: Context): NotificationCopy = strings(context).emergencyTriggered
 
+    /**
+     * F1 fail-safe copy: the native backup call could not be dispatched
+     * (ACTION_CALL and ACTION_DIAL both failed). The body embeds the primary
+     * number so the user can dial manually straight from the lock screen.
+     */
+    fun dispatchFailed(context: Context, number: String): NotificationCopy {
+        val template = strings(context).dispatchFailed
+        return NotificationCopy(
+            title = template.title,
+            body = template.body.replace("{number}", number.trim()),
+        )
+    }
+
     fun serviceActive(context: Context): NotificationCopy = strings(context).serviceActive
 
     private fun strings(context: Context): Strings {
@@ -149,6 +162,7 @@ object NativeNotificationText {
         val safeWalkBootExpired: NotificationCopy,
         val emergencyTriggered: NotificationCopy,
         val serviceActive: NotificationCopy,
+        val dispatchFailed: NotificationCopy,
     )
 
     private val enStrings = Strings(
@@ -198,6 +212,10 @@ object NativeNotificationText {
             title = "KoruBeni active",
             body = "Safety flow is being monitored in the background.",
         ),
+        dispatchFailed = NotificationCopy(
+            title = "Emergency call could not be started",
+            body = "Automatic dialing failed. Please call manually: {number}",
+        ),
     )
 
     private val trStrings = Strings(
@@ -246,6 +264,10 @@ object NativeNotificationText {
         serviceActive = NotificationCopy(
             title = "KoruBeni aktif",
             body = "Güvenlik akışı arka planda izleniyor.",
+        ),
+        dispatchFailed = NotificationCopy(
+            title = "Acil arama başlatılamadı",
+            body = "Otomatik arama yapılamadı. Lütfen elle arayın: {number}",
         ),
     )
 }

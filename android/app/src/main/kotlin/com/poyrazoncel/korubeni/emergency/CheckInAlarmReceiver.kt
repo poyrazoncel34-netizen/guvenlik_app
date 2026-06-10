@@ -29,7 +29,7 @@ class CheckInAlarmReceiver : BroadcastReceiver() {
             val copy = NativeNotificationText.graceStarted(context, sessionId)
             EmergencyNotificationHelper.showAlert(
                 context,
-                EmergencyNotificationHelper.CHECK_IN_NOTIFICATION_ID,
+                CheckInScheduler.notificationIdFor(sessionId),
                 copy.title,
                 copy.body,
                 "checkInGraceStarted",
@@ -49,9 +49,17 @@ class CheckInAlarmReceiver : BroadcastReceiver() {
         // Dart isolate is dead (Doze/app-kill). YALNIZ BIRINCIL KISI — no failover
         // list, no 112 fallback (SPEC 0 Karar 1/2 + 3.2).
         val primary = CheckInScheduler.primaryNumber(context, sessionId)
+        var dispatchFailed = false
         if (primary.isNotBlank()) {
-            CheckInScheduler.markAlarmFiredAndDeactivate(context, sessionId)
-            EmergencyExecutor.executeEmergency(context, primary)
+            // Deactivate first (stale-alarm rejection); the fired dedup flag is
+            // written only after a SUCCESSFUL dispatch so a failed native call
+            // never suppresses the Dart-side retry + fail-safe (FRESH_AUDIT F1).
+            CheckInScheduler.deactivateForEscalation(context, sessionId)
+            val result = EmergencyExecutor.executeEmergency(context, primary)
+            dispatchFailed = result["status"] == "failed"
+            if (!dispatchFailed) {
+                CheckInScheduler.markAlarmFired(context, sessionId)
+            }
         } else {
             // No callable primary target — never synthesize 112 for check-in/safe-walk.
             CheckInScheduler.cancel(context, sessionId)
@@ -61,10 +69,16 @@ class CheckInAlarmReceiver : BroadcastReceiver() {
             context,
             mapOf("type" to "checkInExpired", "timestamp" to now, "sessionId" to sessionId)
         )
-        val copy = NativeNotificationText.expired(context, sessionId)
+        val copy = if (dispatchFailed) {
+            // Manual-call fail-safe copy (with the number) instead of the
+            // misleading "timer ended" success copy.
+            NativeNotificationText.dispatchFailed(context, primary)
+        } else {
+            NativeNotificationText.expired(context, sessionId)
+        }
         EmergencyNotificationHelper.showAlert(
             context,
-            EmergencyNotificationHelper.CHECK_IN_NOTIFICATION_ID,
+            CheckInScheduler.notificationIdFor(sessionId),
             copy.title,
             copy.body,
             "checkInExpired"
