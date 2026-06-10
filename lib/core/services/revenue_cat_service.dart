@@ -21,6 +21,8 @@ class RevenueCatService {
   /// The entitlement identifier configured in the RevenueCat dashboard.
   static const String entitlementId = 'KoruBeni Pro';
 
+  bool _isConfigured = false;
+
   // ---------------------------------------------------------------------------
   // Initialization
   // ---------------------------------------------------------------------------
@@ -28,9 +30,13 @@ class RevenueCatService {
   /// Configure the RevenueCat SDK. Call once at app startup.
   /// Android-only Google Play billing setup.
   Future<void> initialize() async {
-    if (kIsWeb || !Platform.isAndroid) return;
+    if (kIsWeb || !Platform.isAndroid) {
+      _isConfigured = false;
+      return;
+    }
     try {
       if (_androidApiKey.isEmpty) {
+        _isConfigured = false;
         if (_isProduction) {
           throw StateError('RevenueCat Android API key is not configured');
         }
@@ -44,7 +50,9 @@ class RevenueCatService {
 
       final config = PurchasesConfiguration(_androidApiKey);
       await Purchases.configure(config);
+      _isConfigured = true;
     } catch (e, st) {
+      _isConfigured = false;
       LocalLoggerService.instance.error('RevenueCatService.initialize', e, st);
       if (_isProduction) rethrow;
     }
@@ -67,7 +75,7 @@ class RevenueCatService {
   /// Fetches the latest [CustomerInfo] from RevenueCat (or local cache when
   /// offline). Returns null on failure.
   Future<CustomerInfo?> getCustomerInfo() async {
-    if (kIsWeb || !Platform.isAndroid) return null;
+    if (!_canUsePurchases) return null;
     try {
       return await Purchases.getCustomerInfo();
     } on PlatformException catch (e) {
@@ -85,7 +93,7 @@ class RevenueCatService {
 
   /// Returns the current [Offerings] from RevenueCat, or null on failure.
   Future<Offerings?> getOfferings() async {
-    if (kIsWeb || !Platform.isAndroid) return null;
+    if (!_canUsePurchases) return null;
     try {
       return await Purchases.getOfferings();
     } on PlatformException catch (e) {
@@ -104,6 +112,9 @@ class RevenueCatService {
   /// Initiates a purchase for [package]. Throws a [RevenueCatPurchaseException]
   /// on recoverable errors so the UI can display a meaningful message.
   Future<CustomerInfo> purchasePackage(Package package) async {
+    if (!_canUsePurchases) {
+      throw RevenueCatPurchaseException.generic();
+    }
     try {
       final result = await Purchases.purchasePackage(package);
       return result;
@@ -130,6 +141,9 @@ class RevenueCatService {
   /// Restores previous purchases. Returns updated [CustomerInfo] or throws
   /// [RevenueCatPurchaseException] on failure.
   Future<CustomerInfo> restorePurchases() async {
+    if (!_canUsePurchases) {
+      throw RevenueCatPurchaseException.generic();
+    }
     try {
       return await Purchases.restorePurchases();
     } on PlatformException catch (e) {
@@ -150,6 +164,8 @@ class RevenueCatService {
       throw RevenueCatPurchaseException.generic();
     }
   }
+
+  bool get _canUsePurchases => !kIsWeb && Platform.isAndroid && _isConfigured;
 }
 
 // ---------------------------------------------------------------------------

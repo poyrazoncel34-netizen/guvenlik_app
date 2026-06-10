@@ -38,6 +38,13 @@ void main() {
       },
     );
 
+    test('RevenueCat SDK calls are guarded until the SDK is configured', () {
+      expect(service, contains('bool _isConfigured = false'));
+      expect(service, contains('bool get _canUsePurchases'));
+      expect(service, contains('if (!_canUsePurchases) return null'));
+      expect(service, contains('if (!_canUsePurchases) {'));
+    });
+
     test(
       'provider resolves current offering and monthly/annual packages centrally',
       () {
