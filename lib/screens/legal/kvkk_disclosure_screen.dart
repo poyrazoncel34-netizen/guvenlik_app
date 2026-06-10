@@ -191,6 +191,7 @@ class _KvkkDisclosureScreenState extends State<KvkkDisclosureScreen> {
                             height: 24,
                             child: Checkbox(
                               value: _accepted,
+                              semanticLabel: 'legal_kvkk_accept_label'.tr(),
                               onChanged: (v) =>
                                   setState(() => _accepted = v ?? false),
                               activeColor: AppColors.accent,

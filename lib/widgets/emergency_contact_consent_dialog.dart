@@ -203,6 +203,7 @@ class _EmergencyContactConsentDialogState
                       height: 22,
                       child: Checkbox(
                         value: _confirmed,
+                        semanticLabel: 'contact_consent_checkbox_label'.tr(),
                         onChanged: (v) =>
                             setState(() => _confirmed = v ?? false),
                         activeColor: AppColors.success,
@@ -237,7 +238,7 @@ class _EmergencyContactConsentDialogState
                     onPressed: widget.onCancelled,
                     style: OutlinedButton.styleFrom(
                       foregroundColor: AppColors.textSecondary,
-                      side: BorderSide(color: AppColors.border),
+                      side: const BorderSide(color: AppColors.border),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),

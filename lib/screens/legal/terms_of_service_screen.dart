@@ -150,7 +150,7 @@ class _TermsOfServiceScreenState extends State<TermsOfServiceScreen> {
           // Onay alanı (sadece readOnly değilse)
           if (!widget.isReadOnly)
             Container(
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 color: AppColors.surface,
                 border: Border(top: BorderSide(color: AppColors.border)),
               ),
@@ -205,6 +205,7 @@ class _TermsOfServiceScreenState extends State<TermsOfServiceScreen> {
                             height: 24,
                             child: Checkbox(
                               value: _accepted,
+                              semanticLabel: 'legal_tos_accept_label'.tr(),
                               onChanged: (v) =>
                                   setState(() => _accepted = v ?? false),
                               activeColor: AppColors.primary,

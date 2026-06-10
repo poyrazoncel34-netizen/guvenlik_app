@@ -50,6 +50,7 @@ class ConsentCheckboxWidget extends StatelessWidget {
               height: 24,
               child: Checkbox(
                 value: value,
+                semanticLabel: label,
                 onChanged: onChanged,
                 activeColor: isSpecialCategory
                     ? AppColors.emergency
@@ -97,7 +98,7 @@ class ConsentCheckboxWidget extends StatelessWidget {
                   ],
                   Text(
                     label,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
                       color: AppColors.textPrimary,

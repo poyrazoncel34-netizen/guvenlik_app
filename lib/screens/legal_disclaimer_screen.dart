@@ -4,6 +4,7 @@
 // TBK Md. 20 — Genel işlem koşulları karşı tarafın onayı olmadan geçerli olmaz.
 // ============================================================================
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -160,6 +161,8 @@ class _LegalDisclaimerScreenState extends State<LegalDisclaimerScreen> {
                     value: _termsAccepted,
                     onChanged: (v) =>
                         setState(() => _termsAccepted = v ?? false),
+                    semanticLabel:
+                        'legal_disclaimer_terms_accept_label'.tr(),
                     child: RichText(
                       text: TextSpan(
                         style: const TextStyle(
@@ -198,6 +201,8 @@ class _LegalDisclaimerScreenState extends State<LegalDisclaimerScreen> {
                     value: _privacyAccepted,
                     onChanged: (v) =>
                         setState(() => _privacyAccepted = v ?? false),
+                    semanticLabel:
+                        'legal_disclaimer_privacy_accept_label'.tr(),
                     child: RichText(
                       text: TextSpan(
                         style: const TextStyle(
@@ -253,6 +258,8 @@ class _LegalDisclaimerScreenState extends State<LegalDisclaimerScreen> {
                     value: _emergencyAccepted,
                     onChanged: (v) =>
                         setState(() => _emergencyAccepted = v ?? false),
+                    semanticLabel:
+                        'legal_disclaimer_emergency_accept_label'.tr(),
                     child: const Text(
                       'Bu uygulamanın teknik sınırlarını anlıyorum. '
                       'Gerçek acil durumda önce 112\'yi arayacağımı kabul ediyorum.',
@@ -269,6 +276,8 @@ class _LegalDisclaimerScreenState extends State<LegalDisclaimerScreen> {
                   _buildCheckboxTile(
                     value: _ageAccepted,
                     onChanged: (v) => setState(() => _ageAccepted = v ?? false),
+                    semanticLabel:
+                        'legal_disclaimer_age_accept_label'.tr(),
                     child: const Text(
                       '18 yaşından büyük olduğumu beyan ederim.',
                       style: TextStyle(
@@ -285,6 +294,8 @@ class _LegalDisclaimerScreenState extends State<LegalDisclaimerScreen> {
                     value: _liabilityAccepted,
                     onChanged: (v) =>
                         setState(() => _liabilityAccepted = v ?? false),
+                    semanticLabel:
+                        'legal_disclaimer_liability_accept_label'.tr(),
                     child: const Text(
                       'Uygulama özelliklerinin kötüye kullanımından doğan '
                       'tüm hukuki, cezai ve mali sorumluluğun bana ait '
@@ -347,6 +358,7 @@ class _LegalDisclaimerScreenState extends State<LegalDisclaimerScreen> {
   Widget _buildCheckboxTile({
     required bool value,
     required ValueChanged<bool?> onChanged,
+    required String semanticLabel,
     required Widget child,
   }) {
     return GestureDetector(
@@ -367,6 +379,7 @@ class _LegalDisclaimerScreenState extends State<LegalDisclaimerScreen> {
           children: [
             Checkbox(
               value: value,
+              semanticLabel: semanticLabel,
               onChanged: onChanged,
               activeColor: AppColors.primary,
               materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
