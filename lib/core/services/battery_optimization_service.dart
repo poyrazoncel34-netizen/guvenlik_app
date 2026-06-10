@@ -61,7 +61,7 @@ class BatteryOptimizationService {
       await OptimizeBattery.stopOptimizingBatteryUsage();
 
       // Check if user granted
-      await Future.delayed(Duration(seconds: 1));
+      await Future.delayed(const Duration(seconds: 1));
       final isDisabled = await isOptimizationDisabled();
 
       if (isDisabled) {

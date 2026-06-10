@@ -112,7 +112,7 @@ class _AgeVerificationScreenState extends State<AgeVerificationScreen> {
 
           // Confirm button
           Container(
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               color: AppColors.surface,
               border: Border(top: BorderSide(color: AppColors.border)),
             ),

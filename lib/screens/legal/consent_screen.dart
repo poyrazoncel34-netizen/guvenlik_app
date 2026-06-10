@@ -224,7 +224,7 @@ class _ConsentScreenState extends State<ConsentScreen> {
 
           // Kaydet butonu
           Container(
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               color: AppColors.surface,
               border: Border(top: BorderSide(color: AppColors.border)),
             ),

@@ -26,7 +26,7 @@ class _ConsentManagementScreenState extends State<ConsentManagementScreen> {
   Map<String, bool> _consentStatus = {};
   bool _loading = false;
 
-  final List<_ConsentItem> _items = [
+  final List<_ConsentItem> _items = const [
     _ConsentItem(
       type: ConsentRecord.typeLocation,
       titleKey: 'legal_consent_location',

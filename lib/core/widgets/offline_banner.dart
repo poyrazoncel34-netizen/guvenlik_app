@@ -96,16 +96,19 @@ class _OfflineBannerState extends State<OfflineBanner>
     // 2 saniye sonra banner'ı gizle
     _reconnectedTimer = Timer(const Duration(seconds: 2), () {
       if (mounted) {
-        _controller.reverse().then((_) {
-          if (mounted) {
-            setState(() {
-              _showBanner = false;
-              _showReconnected = false;
+        _controller
+            .reverse()
+            .then((_) {
+              if (mounted) {
+                setState(() {
+                  _showBanner = false;
+                  _showReconnected = false;
+                });
+              }
+            })
+            .catchError((Object error, StackTrace stack) {
+              debugPrint('AnimationController.reverse failed: $error');
             });
-          }
-        }).catchError((Object error, StackTrace stack) {
-          debugPrint('AnimationController.reverse failed: $error');
-        });
       }
     });
   }
@@ -165,16 +168,16 @@ class _OfflineBannerContent extends StatelessWidget {
       color: const Color(
         0xFFCC3333,
       ), // koyu kırmızı — AppTheme.emergency'den biraz koyu
-      child: Row(
+      child: const Row(
         children: [
-          const Icon(Icons.wifi_off_rounded, color: Colors.white, size: 18),
-          const SizedBox(width: 10),
+          Icon(Icons.wifi_off_rounded, color: Colors.white, size: 18),
+          SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text(
+                Text(
                   'İnternet bağlantısı yok',
                   style: TextStyle(
                     color: Colors.white,
@@ -183,7 +186,7 @@ class _OfflineBannerContent extends StatelessWidget {
                     height: 1.2,
                   ),
                 ),
-                const Text(
+                Text(
                   'Uygulama tam çalışmaya devam ediyor',
                   style: TextStyle(
                     color: Colors.white70,
@@ -211,11 +214,11 @@ class _OnlineBannerContent extends StatelessWidget {
       color: const Color(
         0xFF1A9B7B,
       ), // koyu yeşil — AppTheme.success'ten biraz koyu
-      child: Row(
+      child: const Row(
         children: [
-          const Icon(Icons.wifi_rounded, color: Colors.white, size: 18),
-          const SizedBox(width: 10),
-          const Text(
+          Icon(Icons.wifi_rounded, color: Colors.white, size: 18),
+          SizedBox(width: 10),
+          Text(
             'Bağlantı yeniden kuruldu',
             style: TextStyle(
               color: Colors.white,

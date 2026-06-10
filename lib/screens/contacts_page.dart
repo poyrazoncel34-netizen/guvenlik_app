@@ -112,7 +112,7 @@ class _ContactsPageState extends State<ContactsPage> {
               children: [
                 Text(
                   "contacts_network_title".tr(),
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w800,
                     color: AppColors.textPrimary,
@@ -263,10 +263,10 @@ class _ContactsPageState extends State<ContactsPage> {
               borderRadius: BorderRadius.circular(16),
               border: Border.all(color: AppColors.border),
               boxShadow: [
-                BoxShadow(
+                const BoxShadow(
                   color: AppColors.shadow,
                   blurRadius: 6,
-                  offset: const Offset(0, 2),
+                  offset: Offset(0, 2),
                 ),
               ],
             ),

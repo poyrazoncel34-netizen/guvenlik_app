@@ -78,7 +78,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 const SizedBox(height: 20),
                 Text(
                   provider.profileName,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 26,
                     fontWeight: FontWeight.w800,
                     color: AppColors.textPrimary,
@@ -89,7 +89,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   const SizedBox(height: 6),
                   Text(
                     provider.profileEmail,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 15,
                       color: AppColors.textSecondary,
                       fontWeight: FontWeight.w500,
@@ -198,21 +198,23 @@ class _ProfilePageState extends State<ProfilePage> {
           if (itemKey == "profile_personal_info") {
             final provider = context.read<SettingsProvider>();
             Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => EditProfileScreen(
-                  name: provider.profileName,
-                  email: provider.profileEmail,
-                ),
-              ),
-            ).then((value) {
-              if (!mounted) return;
-              if (value == true) {
-                provider.loadProfile();
-              }
-            }).catchError((Object error, StackTrace stack) {
-              debugPrint('Navigator.push EditProfile failed: $error');
-            });
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => EditProfileScreen(
+                      name: provider.profileName,
+                      email: provider.profileEmail,
+                    ),
+                  ),
+                )
+                .then((value) {
+                  if (!mounted) return;
+                  if (value == true) {
+                    provider.loadProfile();
+                  }
+                })
+                .catchError((Object error, StackTrace stack) {
+                  debugPrint('Navigator.push EditProfile failed: $error');
+                });
           } else if (itemKey == "profile_security_pin") {
             PinSettingsHelper.showPinChangeSheet(context);
           } else if (itemKey == "profile_notifications") {

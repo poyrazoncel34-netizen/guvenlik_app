@@ -317,10 +317,10 @@ class _SubscriptionManagementScreenState
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.border),
         boxShadow: [
-          BoxShadow(
+          const BoxShadow(
             color: AppColors.shadow,
             blurRadius: 8,
-            offset: const Offset(0, 2),
+            offset: Offset(0, 2),
           ),
         ],
       ),
@@ -377,7 +377,7 @@ class _SubscriptionManagementScreenState
               ),
             ),
             trailing ??
-                Icon(
+                const Icon(
                   Icons.chevron_right_rounded,
                   color: AppColors.textSecondary,
                   size: 20,
@@ -417,7 +417,11 @@ class _SubscriptionManagementScreenState
               ),
             ),
           ),
-          Icon(Icons.check_circle_rounded, color: AppColors.success, size: 20),
+          const Icon(
+            Icons.check_circle_rounded,
+            color: AppColors.success,
+            size: 20,
+          ),
         ],
       ),
     );

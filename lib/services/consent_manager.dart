@@ -222,8 +222,9 @@ class ConsentManager {
   String _getOsVersion() {
     try {
       if (kIsWeb) return 'web';
-      if (Platform.isAndroid)
+      if (Platform.isAndroid) {
         return 'android-${Platform.operatingSystemVersion}';
+      }
       if (Platform.isIOS) return 'ios-${Platform.operatingSystemVersion}';
       return Platform.operatingSystemVersion;
     } catch (_) {

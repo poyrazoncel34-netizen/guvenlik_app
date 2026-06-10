@@ -66,7 +66,7 @@ class DozeModeService {
       await _channel.invokeMethod('requestDozeWhitelist');
 
       // Wait for user action
-      await Future.delayed(Duration(seconds: 2));
+      await Future.delayed(const Duration(seconds: 2));
 
       // Check if granted
       final whitelistStatus = await isWhitelisted();

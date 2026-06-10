@@ -8,7 +8,7 @@ Never place a real emergency call unless the release owner has a controlled, wri
 | --- | --- | --- | --- | --- | --- |
 | NEEDS_REAL_DEVICE_TEST | App launch | Install signed Play/internal test build and open the app | App reaches consent/onboarding/unlock or home without crash | NOT_RUN | TBD |
 | NEEDS_REAL_DEVICE_TEST | Consent/onboarding | Complete required legal consent and onboarding | App records local consent and enters main navigation | NOT_RUN | TBD |
-| NEEDS_REAL_DEVICE_TEST | Emergency 112 validation | Configure no emergency contact or an empty target in a controlled setup, start SOS/test flow without real call | Empty target falls back to `112`; app remains user-initiated and honest about manual confirmation | NOT_RUN | TBD |
+| NEEDS_REAL_DEVICE_TEST | Empty emergency target validation | Configure no emergency contact or an empty target in a controlled setup, start SOS/test flow without real call | Empty target is blocked/fails visibly and never falls back to `112`; app remains user-initiated and honest about manual confirmation | NOT_RUN | TBD |
 | NEEDS_REAL_DEVICE_TEST | Emergency permission granted | Grant `CALL_PHONE`, use test-safe number, start countdown | Direct-call path is attempted only after explicit countdown/user action | NOT_RUN | TBD |
 | NEEDS_REAL_DEVICE_TEST | Emergency permission denied | Deny `CALL_PHONE`, use test-safe number, start countdown | ACTION_DIAL opens and copy says the user must press the call button manually | NOT_RUN | TBD |
 | NEEDS_REAL_DEVICE_TEST | Emergency permanently denied | Permanently deny phone permission in Android settings, start countdown | App shows settings/manual dial path and does not silently fail | NOT_RUN | TBD |

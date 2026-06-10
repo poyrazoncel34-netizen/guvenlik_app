@@ -248,7 +248,7 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
                     ),
                     child: Row(
                       children: [
-                        Icon(
+                        const Icon(
                           Icons.info_outline_rounded,
                           color: AppColors.info,
                           size: 18,
