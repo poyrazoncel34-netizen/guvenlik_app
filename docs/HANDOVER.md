@@ -1,7 +1,6 @@
 # KoruBeni — DEVİR RAPORU (HANDOVER)
 
-> **Tarih:** 11 Haziran 2026 · **main HEAD:** `f4f9f00` + F1 commit'i (bu dosyanın repoya
-> girdiği commit) · **Doğrulama:** Bu rapordaki her
+> **Tarih:** 11 Haziran 2026 · **main HEAD:** `be37d2a` + bu commit · **Doğrulama:** Bu rapordaki her
 > iddia bu oturumda kod açılarak ve test koşularak doğrulanmıştır (dosya:satır referanslı).
 > **Bu raporu okuyan yeni oturum:** Önce §2'deki BAĞLAYICI KURALLARI oku. Bunlar eksik/bug
 > değil, bilinçli ürün kararlarıdır — "tamamlamaya" kalkma.
@@ -10,9 +9,9 @@
 
 | Komut | Sonuç |
 |---|---|
-| `flutter analyze` | **No issues found** (2.2s) |
-| `flutter test` | **402 test, tümü geçti** (`All tests passed!`) |
-| `./gradlew :app:testPlayDebugUnitTest` | **BUILD SUCCESSFUL — 29 test, 0 hata** (CheckInScheduler 2, EmergencyPrefsClear 1, FullScreenIntentNotification 2, EmergencyExecutor 6, NativeNotificationText 3, CheckInExpiryEscalation 6, NativeDispatchFailure 9) |
+| `flutter analyze` | **No issues found** (3.1s) |
+| `flutter test` | **405 test, tümü geçti** (`All tests passed!`) |
+| `./gradlew :app:testPlayDebugUnitTest` | **BUILD SUCCESSFUL — 32 test, 0 hata** (CheckInExpiryEscalation 6, CheckInScheduler 2, EmergencyExecutor 8, EmergencyPrefsClear 1, FullScreenIntentNotification 2, NativeDispatchFailure 9, NativeNotificationText 4) |
 | `grep -rniE "112\|911\|999" lib/ android/app/src/main/` | **Temiz** — yalnız yasal bilgilendirme stringleri ("112'yi SİZ arayın") ve "112 yok" yorumları (bkz. §2.1) |
 
 > ⚠️ Native test her zaman `:app:` scope ile koşulmalı: kök `testDebugUnitTest`,
@@ -422,10 +421,11 @@ CI (PR/main) kendi tek-kullanımlık NON_RELEASE_SMOKE anahtarını üretir ([ci
 
 ## 10. GIT DURUMU
 
-- **main HEAD:** `231e7a7` (F1: failed native dispatch asla sessiz yutulmaz) + bu seri
-  (i18n diakritik · a11y etiketleri · billing guard · hijyen · bu doküman commit'i) —
-  **origin/main'in ÖNÜNDE, push bekliyor** (operatör kararı). Yayın dalı yok; release
-  tag'le CI'dan.
+- **main HEAD:** `231e7a7` (F1: failed native dispatch asla sessiz yutulmaz) + devam serisi
+  (i18n diakritik · a11y etiketleri · billing guard · hijyen · F8 · F5 · F2/F3 plan kaydı ·
+  doküman senkronları). Yayın dalı yok; release tag'le CI'dan.
+- Yerel↔origin senkron durumunun tek doğru kaynağı git'tir (`git fetch && git status`);
+  bu doküman senkron iddiası taşımaz.
 - **Çalışma ağacı TEMİZ** (11 Haziran 2026): önceki raporda duran 21 commit'lenmemiş dosya
   bu seride mantıksal parçalara bölünerek commit'lendi — `fix(i18n)` tr-TR diakritik ·
   `feat(a11y)` lokalize rıza-checkbox `semanticLabel`'ları (legal_disclaimer'ın 5 hardcoded

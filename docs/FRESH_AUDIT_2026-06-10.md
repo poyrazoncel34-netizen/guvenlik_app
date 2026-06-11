@@ -3,7 +3,8 @@
 > **DURUM (11 Haziran 2026):**
 > **F1 = DÜZELTİLDİ** (`231e7a7`; çözüm ve yeni `ALARM_FIRED` semantiği için bkz.
 > [HANDOVER §4.3](HANDOVER.md)) · **F8 = DÜZELTİLDİ** (`fcef4ce`) ·
-> **F5 = DÜZELTİLDİ** (bu commit) · **F2/F3 = plan aşamasında** ·
+> **F5 = DÜZELTİLDİ** (`2b8a01e`) ·
+> **F2/F3 = tasarım donduruldu → [docs/PLAN_F2_F3.md](PLAN_F2_F3.md) (`be37d2a`)** ·
 > **F4, F6, F7 = açık/triyajda.**
 > Aşağıdaki bulgu metinleri 10 Haziran'daki denetim anının kaydıdır; bilerek değiştirilmedi.
 
