@@ -107,6 +107,39 @@ class EmergencyExecutorTest {
     }
 
     @Test
+    fun `formatted number is sanitized before dialing (audit F5)`() {
+        // Older builds persisted RAW formatted numbers into native prefs;
+        // the executor must strip separators at dial time (defense layer).
+        EmergencyExecutor.executeEmergency(context, "(0555) 010-20-30")
+        Thread.sleep(500)
+
+        val intent = shadowApp.nextStartedActivity
+        assertNotNull("Formatted-but-valid number must still dial", intent)
+        assertEquals(
+            "Separators must be stripped before the tel: URI is built",
+            "05550102030",
+            intent!!.data?.schemeSpecificPart,
+        )
+    }
+
+    @Test
+    fun `separator-only input places no call and reports failed (audit F5)`() {
+        val result = EmergencyExecutor.executeEmergency(context, "() -")
+        Thread.sleep(500)
+
+        assertEquals(
+            "Input that sanitizes to empty must take the empty-target failed " +
+                "path, never dial a garbage URI",
+            "failed",
+            result["status"],
+        )
+        assertNull(
+            "No intent may be started for a separator-only target",
+            shadowApp.nextStartedActivity,
+        )
+    }
+
+    @Test
     fun `executeEmergency never throws even if context is problematic`() {
         var threw = false
         try {

@@ -49,8 +49,24 @@ object EmergencyExecutor {
         }
     }
 
+    /**
+     * Kotlin mirror of the Dart normalizePhoneNumber chokepoint: keep digits
+     * plus a single leading '+', drop every separator. Defense-in-depth for
+     * numbers persisted RAW by older builds (audit F5) — makes a storage
+     * migration unnecessary because stale values are sanitized at dial time.
+     */
+    fun sanitizeForDial(raw: String): String {
+        val stripped = raw.trim().filter { it.isDigit() || it == '+' }
+        if (stripped.isEmpty()) return ""
+        return if (stripped.first() == '+') {
+            "+" + stripped.drop(1).filter { it.isDigit() }
+        } else {
+            stripped.filter { it.isDigit() }
+        }
+    }
+
     private fun openCall(context: Context, number: String): Map<String, Any?> {
-        val cleaned = number.trim()
+        val cleaned = sanitizeForDial(number)
 
         // No configured target — never synthesize 112. Report failure so the
         // caller surfaces the manual-dial fail-safe instead of calling anyone.

@@ -264,7 +264,9 @@ class MainActivity : FlutterFragmentActivity() {
     }
 
     private fun openDialer(number: String): Boolean {
-        val cleaned = number.trim()
+        // Audit F5: same separator-stripping defense as EmergencyExecutor.
+        val cleaned = com.poyrazoncel.korubeni.emergency.EmergencyExecutor
+            .sanitizeForDial(number)
         if (cleaned.isEmpty()) {
             return false
         }

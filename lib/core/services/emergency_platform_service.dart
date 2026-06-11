@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
+import 'android_intent_service.dart';
 import 'call_service.dart';
 import 'check_in_expiry_coordinator.dart';
 
@@ -66,7 +67,13 @@ class EmergencyPlatformService {
         'phase': phase,
         'deadlineMs': deadline.millisecondsSinceEpoch,
         'graceDurationMs': graceDuration.inMilliseconds,
-        'primaryNumber': primaryNumber,
+        // Audit F5: single normalization chokepoint — native persists/dials
+        // exactly what crosses the channel, so it must already be normalized.
+        // null stays null: the scheduler treats a null number as a phase-only
+        // update, not a fresh arm.
+        'primaryNumber': primaryNumber == null
+            ? null
+            : AndroidIntentService.normalizePhoneNumber(primaryNumber),
       },
     );
     return response['scheduled'] == true && response['exact'] == true;
@@ -183,15 +190,18 @@ class EmergencyPlatformService {
   Future<EmergencyCallResult> executeEmergencyNative({
     required String primaryNumber,
   }) async {
+    final normalized = AndroidIntentService.normalizePhoneNumber(
+      primaryNumber,
+    );
     if (!isSupported) {
-      return EmergencyCallResult.failed(primaryNumber);
+      return EmergencyCallResult.failed(normalized);
     }
     final response = await _invokeMap(
       'executeEmergencyNative',
-      arguments: <String, Object?>{'primaryNumber': primaryNumber},
+      arguments: <String, Object?>{'primaryNumber': normalized},
       timeout: _dispatchTimeout,
     );
-    final number = response['number'] as String? ?? primaryNumber;
+    final number = response['number'] as String? ?? normalized;
     switch (response['status']) {
       case 'directCallStarted':
         return EmergencyCallResult.direct(number);
@@ -215,7 +225,9 @@ class EmergencyPlatformService {
       'scheduleCountdownAlarm',
       arguments: {
         'deadlineMs': deadline.millisecondsSinceEpoch,
-        'primaryNumber': primaryNumber,
+        'primaryNumber': AndroidIntentService.normalizePhoneNumber(
+          primaryNumber,
+        ),
         'dispatchId': dispatchId,
       },
     );
