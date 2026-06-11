@@ -1,8 +1,9 @@
 # KoruBeni — BAĞIMSIZ TAZE KOD DENETİMİ (FRESH AUDIT)
 
 > **DURUM (11 Haziran 2026):**
-> **F1 = DÜZELTİLDİ** (bu commit; çözüm ve yeni `ALARM_FIRED` semantiği için bkz.
-> [HANDOVER §4.3](HANDOVER.md)) · **F2/F3 = plan aşamasında** · **F4–F8 = açık/triyajda.**
+> **F1 = DÜZELTİLDİ** (`231e7a7`; çözüm ve yeni `ALARM_FIRED` semantiği için bkz.
+> [HANDOVER §4.3](HANDOVER.md)) · **F8 = DÜZELTİLDİ** (bu commit) ·
+> **F2/F3 = plan aşamasında** · **F4–F7 = açık/triyajda.**
 > Aşağıdaki bulgu metinleri 10 Haziran'daki denetim anının kaydıdır; bilerek değiştirilmedi.
 
 > **Tarih:** 10 Haziran 2026 · **main HEAD:** `f4f9f00` · **Tür:** READ-ONLY adversarial denetim.

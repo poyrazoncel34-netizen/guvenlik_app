@@ -1,7 +1,6 @@
 package com.poyrazoncel.korubeni.emergency
 
 import android.content.Context
-import android.os.Build
 import java.util.Locale
 
 object NativeNotificationText {
@@ -92,9 +91,12 @@ object NativeNotificationText {
     }
 
     private fun resolveLanguage(context: Context): Language {
-        return languageFromPersistedLocale(context)
-            ?: languageFromSystemLocale(context)
-            ?: Language.EN
+        // Audit F8: the product is TR-locked (startLocale tr_TR; non-TR
+        // persisted locales are wiped at startup), so the lock-screen copy
+        // defaults to Turkish instead of following the system locale. If an
+        // EN locale unlock ever ships, revisit this default together with
+        // main.dart's locale wipe.
+        return languageFromPersistedLocale(context) ?: Language.TR
     }
 
     private fun languageFromPersistedLocale(context: Context): Language? {
@@ -119,16 +121,6 @@ object NativeNotificationText {
             }
         }
         return null
-    }
-
-    private fun languageFromSystemLocale(context: Context): Language? {
-        val locale = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            context.resources.configuration.locales.get(0)
-        } else {
-            @Suppress("DEPRECATION")
-            context.resources.configuration.locale
-        }
-        return languageFromRaw(locale?.language) ?: languageFromRaw(Locale.getDefault().language)
     }
 
     private fun languageFromRaw(raw: String?): Language? {

@@ -58,18 +58,33 @@ class NativeNotificationTextTest {
     }
 
     @Test
-    fun `unknown persisted locale falls back safely`() {
+    fun `unknown persisted locale falls back to Turkish (TR-locked product)`() {
         context.getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE)
             .edit()
             .putString("flutter.locale", "zz_ZZ")
             .commit()
 
         assertEquals(
-            "Emergency Alerts",
+            "Acil Bildirimler",
             NativeNotificationText.channelName(
                 context,
                 EmergencyNotificationHelper.CHANNEL_ALERTS,
             ),
         )
+    }
+
+    @Test
+    fun `no persisted locale defaults to Turkish even on an EN system`() {
+        // Audit F8: the product UI is TR-locked (startLocale tr_TR, non-TR
+        // persisted locale wiped at startup) — the lock-screen emergency copy
+        // must match it. System locale (Locale.US in setUp) must NOT pull the
+        // notification into English.
+        val copy = NativeNotificationText.graceStarted(
+            context,
+            CheckInScheduler.SESSION_CHECK_IN,
+        )
+
+        assertEquals("Check-in süresi doldu", copy.title)
+        assertEquals("Lütfen güvende olduğunuzu onaylayın.", copy.body)
     }
 }

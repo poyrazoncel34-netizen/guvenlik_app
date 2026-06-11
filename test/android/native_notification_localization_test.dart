@@ -49,8 +49,11 @@ void main() {
       final dictionary = File(localizationDictionary).readAsStringSync();
 
       expect(dictionary, contains('FlutterSharedPreferences'));
-      expect(dictionary, contains('Locale.getDefault().language'));
-      expect(dictionary, contains('?: Language.EN'));
+      // Audit F8: TR-locked product — persisted locale wins, otherwise TR.
+      // The system-locale step and the EN default are intentionally gone.
+      expect(dictionary, contains('?: Language.TR'));
+      expect(dictionary, isNot(contains('?: Language.EN')));
+      expect(dictionary, isNot(contains('Locale.getDefault')));
       expect(dictionary, contains('Emergency Alerts'));
       expect(dictionary, contains('Acil Bildirimler'));
       expect(dictionary, contains('Please confirm that you are safe.'));
