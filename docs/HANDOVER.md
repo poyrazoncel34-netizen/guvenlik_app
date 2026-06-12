@@ -385,7 +385,8 @@ yapıştırma paketi [PLAY_CONSOLE_COPY_PASTE_PACK.md](../store/PLAY_CONSOLE_COP
 | Ekran görüntüleri | ⚠️ `store/screenshots/android/` mevcut; Console'a yükleme operatör işi |
 | Console beyanları (FGS video, Data Safety, IARC) | ❌ OPERATÖR İŞİ (§12) |
 
-**Release akışı (tag→versionCode):** `v*.*.*` tag push → [release.yml](../.github/workflows/release.yml):
+**Release akışı (tag→versionCode):** workflow'lar Flutter **3.38.9**'a pinlidir
+(`FLUTTER_VERSION` env, ci.yml + release.yml). `v*.*.*` tag push → [release.yml](../.github/workflows/release.yml):
 `versionCode = MAJOR×10000 + MINOR×100 + PATCH` (v1.0.0 → **10000**), analyze + test + imzalı
 `app-play-release.aab` + debug-symbols artefaktı. **İlk Play yüklemesi MUTLAKA v* tag push ile
 yapılmalı** — lokal AAB yüklenmez (versionCode tutarlılığı + provenance).
@@ -411,7 +412,10 @@ CI (PR/main) kendi tek-kullanımlık NON_RELEASE_SMOKE anahtarını üretir ([ci
 5. **workmanager** uyumluluk sorunu nedeniyle devre dışı ([pubspec.yaml:42](../pubspec.yaml)) —
    AlarmManager+FGS deseni yerine geçti, geri eklenmesi planlanmıyor.
 6. **800+ satır dosyaların bölünmesi** — UI dokunmadan yapılamayacağı için bilinçli ertelendi (§7).
-7. **Direct Boot sınırı (FRESH_AUDIT F4):** Boot-restore zinciri `BOOT_COMPLETED` +
+7. **Flutter ≥3.44 yükseltmesi:** `app_theme.dart` yeni API'ye uyarlanmalı
+   (`CupertinoPageTransitionsBuilder` 3.44'te kalktı; UI dosyası — plan-onay zorunlu);
+   targetSdk 36 bump'ı ve workflow pin güncellemesiyle AYNI pakette, lansman sonrası.
+8. **Direct Boot sınırı (FRESH_AUDIT F4):** Boot-restore zinciri `BOOT_COMPLETED` +
    credential-encrypted prefs'e bağlıdır; cihaz reboot olur ve **ilk kilit açılışına dek**
    restore/eskalasyon çalışmaz. Bilinçli BİLİNEN SINIR olarak kabul edildi; `directBootAware`
    + device-protected storage mühendisliği backlog'dadır

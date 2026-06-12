@@ -1,5 +1,9 @@
 name: CI
 
+# Lokal araç zinciriyle bilinçli eşitlendi; yükseltme HANDOVER §9'daki planlı işle birlikte yapılır.
+env:
+  FLUTTER_VERSION: "3.38.9"
+
 on:
   push:
     branches: [main]
@@ -21,6 +25,7 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
           cache: true
 
       - name: Install dependencies
