@@ -136,11 +136,11 @@
 <body>
     <div class="container">
         <h1>KoruBeni Privacy Policy</h1>
-        <p class="subtitle">Last updated: March 19, 2026 &mdash; Version 3.0.0</p>
+        <p class="subtitle">Last updated: May 21, 2026 &mdash; Version 3.1.1</p>
 
         <p>KoruBeni ("App", "we", "our") is a personal safety application designed to support its users. This privacy
             policy explains what data we collect, how we use it, and how we protect it.</p>
-        <p><strong>KoruBeni works offline-first.</strong> The primary copy of your app data stays on your device and is not sent to a developer-operated cloud backend. Online map tiles and Google Play Billing may have their own technical network behavior under their providers' policies.</p>
+        <p><strong>KoruBeni works offline-first.</strong> The primary copy of your app data stays on your device and is not sent to a developer-operated cloud backend. Online map tiles, Google Play Billing, and RevenueCat may have their own technical network behavior under their providers' policies.</p>
 
         <h2>1. Age Restriction</h2>
         <p>KoruBeni is intended for users aged <strong>18 and older</strong>. Under-18 use is not supported in this release.</p>
@@ -149,7 +149,7 @@
 
         <h3 style="font-size:16px; margin-top:16px; margin-bottom:8px;">a) User-Provided Data</h3>
         <ul>
-            <li><strong>Emergency contacts:</strong> Names and phone numbers of contacts selected from your device</li>
+            <li><strong>Emergency contacts:</strong> The app does not read the full contacts list. It stores only emergency contacts selected or entered by the user, locally on the device.</li>
             <li><strong>Profile information:</strong> Name (optional, stored on device)</li>
             <li><strong>PIN code:</strong> Stored encrypted on-device only, never sent to any server</li>
             <li><strong>Fake call data:</strong> Caller name and configuration for the fake call feature, stored on-device only</li>
@@ -197,7 +197,7 @@
         <p>We do <strong>not sell</strong> your data to third parties. Safety data is not sent to a developer-operated backend. Subscription verification data may be processed by Google Play Billing and RevenueCat. Third-party network behavior is limited to online map tiles, Google Play Billing, and RevenueCat.</p>
         <ul>
             <li><strong>Emergency contacts:</strong> When an emergency is triggered, the Android call flow is started or the dialer is prepared for your selected contact</li>
-            <li><strong>Map providers:</strong> OpenStreetMap infrastructure may be contacted when map screens are opened</li>
+            <li><strong>Map providers:</strong> OpenStreetMap infrastructure may be contacted only for map tiles the user actively views. The app does not bulk download, pre-seed, scrape, archive, or package public OSM tiles.</li>
             <li><strong>RevenueCat:</strong> May process anonymous user ID, purchase events, device/app information, entitlement status, and related subscription verification data</li>
             <li><strong>Legal requirements:</strong> When required by law or court order</li>
         </ul>
@@ -207,7 +207,7 @@
         <ul>
             <li><strong>Right to be informed:</strong> Emergency contacts have the right to know that their data is stored in this app</li>
             <li><strong>Right to request deletion:</strong> Emergency contacts may request the removal of their data</li>
-            <li><strong>Right to object:</strong> Emergency contacts may object to the processing of their data</li>
+            <li><strong>Right to object:</strong> Emergency contacts may object to the use of their data</li>
         </ul>
         <p>It is the user's responsibility to inform their emergency contacts that their name and phone number are stored in this app and to obtain their consent where applicable. To exercise these rights, the data subject may contact us at the email address listed below.</p>
 
@@ -216,7 +216,7 @@
             <li>PIN code and first-responder profile information are stored with secure device storage where supported by the operating system</li>
             <li>Emergency contact records are stored in the app's local on-device database</li>
             <li>Fake call settings and optional avatar files are stored locally on the device</li>
-            <li>No app data is sent to a developer-operated cloud backend; online map tiles and Google Play Billing may have their own technical network behavior</li>
+            <li>No app data is sent to a developer-operated cloud backend; online map tiles, Google Play Billing, and RevenueCat may have their own technical network behavior</li>
         </ul>
 
         <h2>8. Data Retention</h2>
@@ -241,8 +241,14 @@
             </thead>
             <tbody>
                 <tr>
-                    <td>Name, Profile Photo</td>
+                    <td>Name</td>
                     <td>User identification within the app</td>
+                    <td>Explicit consent</td>
+                    <td>On-device only</td>
+                </tr>
+                <tr>
+                    <td>Optional Fake Call Avatar</td>
+                    <td>Fake call personalization</td>
                     <td>Explicit consent</td>
                     <td>On-device only</td>
                 </tr>
@@ -278,7 +284,7 @@
                 </tr>
             </tbody>
         </table>
-        <p><strong>No data is transferred to developer-operated servers.</strong> The primary copy of app data remains on the user's device. Online map tiles and Google Play Billing may have technical network behavior governed by their providers' policies.</p>
+        <p><strong>No data is transferred to developer-operated servers.</strong> The primary copy of app data remains on the user's device. Online map tiles, Google Play Billing, and RevenueCat may have technical network behavior governed by their providers' policies.</p>
 
         <h2>10. Your Rights (KVKK Article 11)</h2>
         <ul>
@@ -345,7 +351,7 @@
         </div>
 
         <footer>
-            <p>&copy; 2026 KoruBeni. All rights reserved. &mdash; Version 3.0.0</p>
+            <p>&copy; 2026 KoruBeni. All rights reserved. &mdash; Version 3.1.1</p>
         </footer>
     </div>
 </body>
