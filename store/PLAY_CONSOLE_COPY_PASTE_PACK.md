@@ -435,7 +435,7 @@ Safety / Emergency
 **Core functionality**
 
 ```text
-Acil durum geri sayımı tamamlandığında kullanıcının belirlediği acil durum kişisini aramak için kullanılır. Kullanıcı panik butonunu tetikler, geri sayımı PIN ile iptal etmezse Android arama akışı başlatılır. İzin yoksa arama ekranı açılır ve kullanıcı aramayı manuel onaylar.
+Used to call the user's pre-selected emergency contact when the emergency countdown completes, only inside a safety flow the user explicitly started. The user triggers the panic button; if the countdown is not cancelled with the PIN, the Android call flow starts. If CALL_PHONE is not granted, the dialer screen (ACTION_DIAL) opens instead and the user confirms the call manually. The app never auto-dials 112/911 or any official emergency short code.
 ```
 
 **Reviewer explanation**
@@ -529,8 +529,13 @@ Use a Google Play license tester account or internal test track account.
 Install the Play/internal testing build.
 Open the paywall from the locked panic/SOS button or Settings -> KoruBeni Pro.
 Complete a sandbox/test purchase for the configured monthly or annual plan.
+The test purchase is sandboxed via license testing and produces no real charge.
 Return to Home and verify the panic/SOS button shows active Pro copy before long press.
 ```
+
+Operator note (NEEDS_OPERATOR_ACTION): the reviewer's Google account must be added
+in advance under Play Console -> Setup -> License testing, otherwise the sandbox
+purchase path above will produce a real charge prompt instead of a test purchase.
 
 **Panic/SOS reviewer path**
 

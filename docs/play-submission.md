@@ -33,7 +33,9 @@
 KoruBeni uses a foreground service ONLY for active, user-started personal-safety
 sessions: Safe Walk, Check-In, and the emergency countdown/keepalive timer. The
 session shows a visible, persistent notification and is tied to the user's active
-safety flow; the user can stop or cancel it at any time.
+safety flow; the user can stop or cancel it at any time. Each session is
+time-bound: it runs for the user-selected duration plus a 60-second grace window,
+and the service stops when the session ends, is confirmed safe, or is cancelled.
 
 The service performs timer accounting, exact-alarm scheduling, and persistent
 notification upkeep only. It does NOT stream location, record audio, run ads,
@@ -46,8 +48,15 @@ specialUse is used because the work (a user-perceptible safety-session keepalive
 that keeps alarm + notification paths firing reliably under Doze) does not fit any
 named Android 14/15 type: 'location' would imply continuous location streaming
 (not done); 'dataSync' is capped at a 6-hour quota on Android 15+; 'shortService'
-is capped at ~3 minutes (sessions can run tens of minutes). Subtype declared in
-the manifest as emergency_checkin_keepalive.
+is capped at ~3 minutes (sessions can run tens of minutes). The 'phoneCall' type
+does not apply either: the foreground service does not manage or carry telephony —
+it only keeps the safety timer alive. Any emergency call is a separate,
+user-visible dial action that occurs after, and outside of, the service's timer
+work. Subtype declared in the manifest as emergency_checkin_keepalive.
+
+If the session expires unconfirmed, the app calls ONLY the user's pre-selected
+primary emergency contact. It NEVER dials 112/911 or any official emergency
+short code.
 ```
 
 > Tam tip-seçim gerekçesi (neden `location`/`dataSync`/`shortService` değil) için

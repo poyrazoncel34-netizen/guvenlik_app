@@ -135,6 +135,8 @@ yazılıp kullanıcı onayı alınır.** Bu bağlayıcıdır.
 `https://poyrazoncel34-netizen.github.io/guvenlik_app/…`, index.html dahil) buna eşitlendi
 (commit'ler `816cbbf`, `1977661`). Sürüm değişirse `LegalVersionChecker` kullanıcıyı yeniden
 onay akışına sokar ([splash_screen.dart:178+](../lib/screens/splash_screen.dart)).
+Yayın, gh-pages DALINA push ile gerçekleşir; main'e commit yayın değildir — 13 Haziran
+2026'da bayat yayın tespit edilip yeniden yayınlandı.
 
 ---
 
@@ -495,7 +497,12 @@ Kod/birim testle KANITLANAMAYAN, cihaz turu bekleyenler
 4. **Gerçek-cihaz QA turu** (§11) — production'dan ÖNCE, release AAB ile.
 5. **`v1.0.0` tag push** → CI AAB'sini Play **internal testing**'e yükle (ilk yükleme asla lokal
    AAB ile değil).
-6. Yasal URL'lerin canlı ve tarih damgalarının (21 Mayıs 2026) doğru olduğunun kontrolü.
+6. Yasal URL'lerin canlı doğrulaması — beş URL `curl` ile kontrol edilir (taban:
+   `https://poyrazoncel34-netizen.github.io/guvenlik_app/`): `privacy_policy.html`,
+   `kullanim_sartlari.html`, `aydinlatma.html`, `data_deletion.html`,
+   `privacy_policy_en.html`. Beklenen damgalar: kullanim_sartlari **3.1.0**;
+   privacy_policy / aydinlatma / privacy_policy_en **3.1.1**; tarih **21 Mayıs 2026**
+   (EN sayfada **May 21, 2026**); data_deletion için kriter erişilebilirlik (HTTP 200).
 7. Play Console "memory page size" (16KB) göstergesinin yeşil olduğunun teyidi.
 
 ---
