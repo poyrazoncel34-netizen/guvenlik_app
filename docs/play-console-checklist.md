@@ -211,7 +211,8 @@ the manifest as emergency_checkin_keepalive.
 > Tam tip-seçim gerekçesi (neden `location`/`dataSync`/`shortService` değil) +
 > Android 15 BOOT_COMPLETED bağlamı: [docs/play_console_declarations.md](play_console_declarations.md).
 
-**Demo video senaryosu (operatör çeker — 30–60 sn, gerçek cihaz, PII yok):**
+**Demo video senaryosu (operatör çeker — hedef 60–90 sn, gerçek cihaz, PII yok;
+çekime hazır kayıt planı: [play-submission.md §1 → "Demo video — shot list"](play-submission.md)):**
 1. Uygulamayı aç, **PIN ile** gir (biyometrik YOK — duress koruması).
 2. **Check-In** (veya Safe Walk) ekranını aç; süre seç (ör. 5 dk) ve oturumu
    **kullanıcı olarak başlat** → foreground service başlar.

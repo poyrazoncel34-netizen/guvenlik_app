@@ -79,6 +79,34 @@ gösterir:
 6. İkinci çekim: onay verilmezse süre + 60 sn grace dolar → **yalnız birincil
    acil kişi** aranır (112 yok). Otomatik aramayı bu noktada göster (bkz. §2).
 
+### Demo video — shot list (çekime hazır kayıt planı)
+
+> Yukarıdaki senaryonun çekime hazır hâli; Console'a yüklenecek video **bu listeyle**
+> çekilir — ikisi ayrışırsa bu shot list esastır. Aynı listeye QA matrisinden de
+> işaret edilir ([REAL_DEVICE_QA_MATRIX.md K1](../store/REAL_DEVICE_QA_MATRIX.md)).
+
+**Ön-koşullar:**
+
+- Gerçek cihaz; ideali **imzalı internal-testing build'i**.
+- Pro, **license tester** hesabıyla açık (paywall görünmez).
+- **İkinci telefon** birincil acil kişi olarak kayıtlı (otomatik aramanın hedefi).
+- Bildirimler açık; **durum çubuğu saati görünür** (zaman akışının kanıtı).
+- Hedef süre **60–90 sn**; sahne kesmeli kurgu serbest.
+- Teslim: **unlisted YouTube/Drive linki** (Console FGS beyan formuna eklenir).
+
+**Sahneler (altyazılar İngilizce — AYNEN bu metinlerle):**
+
+| # | Sahne | Altyazı (EN, aynen) |
+|---|---|---|
+| 1 | Ana ekran | "KoruBeni — personal safety app (Turkish UI)." |
+| 2 | Check-In ekranı; en kısa süre seçilir; Başlat | "User starts a timed safety check-in session." |
+| 3 | Bildirim çekmecesi; kalıcı FGS bildirimi 2–3 sn ekranda | "Ongoing foreground-service notification while the session is active." |
+| 4 | Uygulama arka plana + ekran kilidi; saat görünür | "App in background — the service keeps the session alive." |
+| 5 | Kesme ("a few minutes later"); süre dolar, grace heads-up görünür; cihaza DOKUNULMAZ | "Time expired — 60-second grace warning. User does not respond." |
+| 6 | Grace dolar → giden arama ekranı; ikinci telefonun numarası görünür | "No response → automatic call to the user-chosen emergency contact." |
+| 7 | (Opsiyonel) ikinci telefon çalarken dış çekim | "The pre-selected contact's phone rings. The app never auto-dials 112/911." |
+| 8 | Oturum kapanışı | "Session ends — fully user-initiated and time-bounded." |
+
 ---
 
 ## 2. CALL_PHONE / otomatik arama — mağaza açıklaması paragrafı

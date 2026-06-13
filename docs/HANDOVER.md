@@ -527,8 +527,9 @@ Yeni oturum bu dokümanlara bakarsa şu kısımlara **güvenmesin**:
 5. **[KEYSETUP.md](../KEYSETUP.md)** lokal keystore adı `korubeni-release-key.jks` örneği verir;
    CI gerçeği `android/app/korubeni_keystore.jks` (secret'tan decode, release.yml:53). Lokal
    kılavuz olarak okunmalı, CI yolu esas alınmalı.
-6. **Kök `README.md` / `BUILD_*.md` dosyaları** erken dönem build notlarıdır; release süreci
-   için tek doğru kaynak [release.yml](../.github/workflows/release.yml) +
+6. **Kök `BUILD_*.md` dosyaları** erken dönem build notlarıdır (kök `README.md` 13 Haziran
+   2026'da bağlayıcı kaynaklara işaret eden kısa yönlendirme sayfasıyla değiştirildi); release
+   süreci için tek doğru kaynak [release.yml](../.github/workflows/release.yml) +
    [play-console-checklist.md](play-console-checklist.md)'dir.
 7. **Eski "`ALARM_FIRED` = native ateşledi" semantiği BAYATTIR.** F1 düzeltmesi
    ([FRESH_AUDIT_2026-06-10.md](FRESH_AUDIT_2026-06-10.md)) sonrası doğru okuma:

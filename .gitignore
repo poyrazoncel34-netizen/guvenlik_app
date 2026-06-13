@@ -69,6 +69,7 @@ KEYSETUP.md
 
 # Build artifacts
 build/
+/release-artifacts/
 *.apk
 *.aab
 *.ipa
