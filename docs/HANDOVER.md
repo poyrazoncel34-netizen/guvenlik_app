@@ -131,12 +131,17 @@ yazılıp kullanıcı onayı alınır.** Bu bağlayıcıdır.
 
 ### 2.8 — Yasal sürümler tek-kaynak
 [legal_texts.dart:9-12](../lib/constants/legal_texts.dart): `termsVersion='3.1.0'`,
-`kvkkVersion='3.1.1'`, `lastUpdated='21 Mayıs 2026'`. Public sayfalar (gh-pages:
+`kvkkVersion='3.1.1'`, `lastUpdated='21 Mayıs 2026'`. Public sayfalar (canlı Pages:
 `https://poyrazoncel34-netizen.github.io/guvenlik_app/…`, index.html dahil) buna eşitlendi
 (commit'ler `816cbbf`, `1977661`). Sürüm değişirse `LegalVersionChecker` kullanıcıyı yeniden
 onay akışına sokar ([splash_screen.dart:178+](../lib/screens/splash_screen.dart)).
-Yayın, gh-pages DALINA push ile gerçekleşir; main'e commit yayın değildir — 13 Haziran
-2026'da bayat yayın tespit edilip yeniden yayınlandı.
+Yayın mekanizması: Canlı GitHub Pages **`main:.gh-pages-publish/`** dizininden workflow ile
+deploy olur ([.github/workflows/pages.yml](../.github/workflows/pages.yml), tetikleyici
+`paths: ['.gh-pages-publish/**']`); o dizin DIŞINA yapılan main commit'i (ör. `store/`'a) yayın
+DEĞİLDİR. **`gh-pages` dalı yayın kaynağı DEĞİLDİR** (bayat/yanıltıcı). Yasal sayfa güncellemesi
+`.gh-pages-publish/` altına commit edilmelidir (CDN cache `max-age=600`, ~10 dk propagasyon).
+13 ve 18 Haziran 2026'da bayat yayın tespit edilip düzeltildi (18 Haz: diakritik + hardening
+`store/`'a girmişti ama deploy dizinine taşınmamıştı).
 
 ---
 
@@ -450,7 +455,9 @@ CI (PR/main) kendi tek-kullanımlık NON_RELEASE_SMOKE anahtarını üretir ([ci
   dead-man's-switch + native yedek).
 - **Dal hijyeni:** ~90 bayat `claude/*` dalı + `feat/m2-*`, `fix/*`, `release/play-ready-20260521`,
   `wip/*`, `temp-rebase-*` dalları duruyor — temizlik opsiyonel, operatör kararı.
-- `gh-pages` dalı yasal sayfaları yayınlar (privacy_policy.html, data_deletion.html…).
+- Yasal sayfalar **`main:.gh-pages-publish/`** dizininden GitHub Pages workflow'u ile yayınlanır
+  (privacy_policy.html, index.html, data_deletion.html…); **`gh-pages` dalı yayın kaynağı
+  DEĞİLDİR** (bayat/yanıltıcı — bkz. §2.8, §12/6, EK §8).
 
 ---
 
@@ -497,7 +504,12 @@ Kod/birim testle KANITLANAMAYAN, cihaz turu bekleyenler
 4. **Gerçek-cihaz QA turu** (§11) — production'dan ÖNCE, release AAB ile.
 5. **`v1.0.0` tag push** → CI AAB'sini Play **internal testing**'e yükle (ilk yükleme asla lokal
    AAB ile değil).
-6. Yasal URL'lerin canlı doğrulaması — beş URL `curl` ile kontrol edilir (taban:
+6. Yasal URL'lerin canlı doğrulaması. **Yayın kaynağı:** Canlı GitHub Pages,
+   `main:.gh-pages-publish/` dizininden workflow ile deploy olur
+   ([.github/workflows/pages.yml](../.github/workflows/pages.yml), `paths: ['.gh-pages-publish/**']`);
+   **`gh-pages` dalı yayın kaynağı DEĞİLDİR.** Yasal sayfa güncellemesi `.gh-pages-publish/`
+   altına commit edilmelidir; CDN cache `max-age=600` (~10 dk). Beş URL `curl` ile kontrol
+   edilir (taban:
    `https://poyrazoncel34-netizen.github.io/guvenlik_app/`): `privacy_policy.html`,
    `kullanim_sartlari.html`, `aydinlatma.html`, `data_deletion.html`,
    `privacy_policy_en.html`. Beklenen damgalar: kullanim_sartlari **3.1.0**;
@@ -537,3 +549,9 @@ Yeni oturum bu dokümanlara bakarsa şu kısımlara **güvenmesin**:
    "arama sonrası bayrak yaz" tarifleri ve `markAlarmFiredAndDeactivate` adı geçen tüm eski
    açıklamalar bu yüzden güncel değildir — başarısızlıkta bayrak false kalır, elle-ara
    bildirimi devreye girer.
+8. **"`gh-pages` dalı yasal sayfaları yayınlar" iddiası BAYATTIR.** Canlı GitHub Pages
+   `main:.gh-pages-publish/` dizininden workflow ile
+   ([.github/workflows/pages.yml](../.github/workflows/pages.yml), `paths: ['.gh-pages-publish/**']`)
+   deploy olur; `gh-pages` dalı yayın kaynağı DEĞİLDİR (bayat/yanıltıcı — silinmesi veya
+   "kullanılmıyor" diye işaretlenmesi önerilir, §10). Yasal sayfa güncellemesi yalnızca
+   `.gh-pages-publish/` altına commit ile yayına çıkar. Bkz. §2.8, §12/6.

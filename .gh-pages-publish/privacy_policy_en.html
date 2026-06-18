@@ -149,7 +149,7 @@
 
         <h3 style="font-size:16px; margin-top:16px; margin-bottom:8px;">a) User-Provided Data</h3>
         <ul>
-            <li><strong>Emergency contacts:</strong> Names and phone numbers of contacts selected from your device</li>
+            <li><strong>Emergency contacts:</strong> The app does not read the full contacts list. It stores only emergency contacts selected or entered by the user, locally on the device.</li>
             <li><strong>Profile information:</strong> Name (optional, stored on device)</li>
             <li><strong>PIN code:</strong> Stored encrypted on-device only, never sent to any server</li>
             <li><strong>Fake call data:</strong> Caller name and configuration for the fake call feature, stored on-device only</li>
@@ -197,7 +197,7 @@
         <p>We do <strong>not sell</strong> your data to third parties. Safety data is not sent to a developer-operated backend. Subscription verification data may be processed by Google Play Billing and RevenueCat. Third-party network behavior is limited to online map tiles, Google Play Billing, and RevenueCat.</p>
         <ul>
             <li><strong>Emergency contacts:</strong> When an emergency is triggered, the Android call flow is started or the dialer is prepared for your selected contact</li>
-            <li><strong>Map providers:</strong> OpenStreetMap infrastructure may be contacted when map screens are opened</li>
+            <li><strong>Map providers:</strong> OpenStreetMap infrastructure may be contacted only for map tiles the user actively views. The app does not bulk download, pre-seed, scrape, archive, or package public OSM tiles.</li>
             <li><strong>RevenueCat:</strong> May process anonymous user ID, purchase events, device/app information, entitlement status, and related subscription verification data</li>
             <li><strong>Legal requirements:</strong> When required by law or court order</li>
         </ul>
@@ -241,8 +241,14 @@
             </thead>
             <tbody>
                 <tr>
-                    <td>Name, Profile Photo</td>
+                    <td>Name</td>
                     <td>User identification within the app</td>
+                    <td>Explicit consent</td>
+                    <td>On-device only</td>
+                </tr>
+                <tr>
+                    <td>Optional Fake Call Avatar</td>
+                    <td>Fake call personalization</td>
                     <td>Explicit consent</td>
                     <td>On-device only</td>
                 </tr>
