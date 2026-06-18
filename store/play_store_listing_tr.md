@@ -47,7 +47,7 @@ KoruBeni Pro isteğe bağlı bir aboneliktir. Satın alma, yenileme, iptal ve ge
 ★ GÜVENLİK ★
 
 • 4 haneli PIN ile uygulama koruması
-• PIN ve ilk müdahale bilgileri için güvenli cihaz içi depolama
+• PIN bilgisi için güvenli cihaz içi depolama
 • Acil kişi kayıtları için cihaz içi yerel veritabanı
 • Geliştirici sunucusu olmayan offline-first mimari
 

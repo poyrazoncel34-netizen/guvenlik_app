@@ -49,7 +49,7 @@ KoruBeni Pro is optional. Purchases, renewals, cancellations, and restore operat
 ★ SECURITY ★
 
 • 4-digit PIN app protection
-• Secure on-device storage for PIN and first-responder information
+• Secure on-device storage for PIN
 • Local on-device database for emergency contact records
 • Offline-first architecture without a developer backend
 

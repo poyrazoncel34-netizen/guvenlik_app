@@ -15,6 +15,9 @@ void main() {
         const forbiddenValueFragments = [
           'pin or biometric',
           'pin veya biyometrik',
+          'ilk müdahale',
+          'first-responder',
+          'first responder',
           'location and contacts permissions',
           'konum ve rehber izin',
           'always ready',
@@ -56,6 +59,9 @@ void main() {
         File('store/QA_SENARYOLAR.md'),
       ];
       const forbiddenFragments = [
+        'ilk müdahale',
+        'first-responder',
+        'first responder',
         'tüm verileriniz sadece cihazınızda kalır',
         'hiçbir sunucuya veri gönderilmez',
         'tüm verileriniz cihazınızda kalır. hiçbir sunucuya gönderilmez. kvkk uyumlu',

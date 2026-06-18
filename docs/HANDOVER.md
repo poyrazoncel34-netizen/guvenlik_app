@@ -131,7 +131,7 @@ yazılıp kullanıcı onayı alınır.** Bu bağlayıcıdır.
 
 ### 2.8 — Yasal sürümler tek-kaynak
 [legal_texts.dart:9-12](../lib/constants/legal_texts.dart): `termsVersion='3.1.0'`,
-`kvkkVersion='3.1.1'`, `lastUpdated='21 Mayıs 2026'`. Public sayfalar (canlı Pages:
+`kvkkVersion='3.1.1'`, `lastUpdated='21 Mayıs 2026'` (Kullanım Şartları), `lastUpdatedKvkk='18 Haziran 2026'` (KVKK/Gizlilik/Aydınlatma). Public sayfalar (canlı Pages:
 `https://poyrazoncel34-netizen.github.io/guvenlik_app/…`, index.html dahil) buna eşitlendi
 (commit'ler `816cbbf`, `1977661`). Sürüm değişirse `LegalVersionChecker` kullanıcıyı yeniden
 onay akışına sokar ([splash_screen.dart:178+](../lib/screens/splash_screen.dart)).
@@ -409,15 +409,17 @@ CI (PR/main) kendi tek-kullanımlık NON_RELEASE_SMOKE anahtarını üretir ([ci
 
 ## 9. AÇIK / ERTELENMİŞ KONULAR
 
-> **⚠️ FOLLOW-UP REQUIRED (next session) — legal copy debt:** The medical-profile
-> feature was removed (commit `refactor(profile): remove medical profile feature and
-> purge stored medical data`), but legal/marketing copy still references stored
-> health / first-aid ("ilk müdahale") data. This MUST be updated in:
-> [legal_texts.dart](../lib/constants/legal_texts.dart), tr-TR/en-US privacy bodies
-> (`detail_privacy_body_2/4/5`), store HTML (`.gh-pages-publish/` + `store/` + the
-> live gh-pages publish), store listing copy (`store/play_store_listing_*.md`,
-> `store/PLAY_CONSOLE_COPY_PASTE_PACK.md`), and this HANDOVER. **Play Data Safety /
-> Health Console forms must NOT be finalized until that legal update ships.**
+> **✅ RESOLVED (this commit) — legal copy debt:** medical-profile removal is now
+> reflected in all legal/marketing copy. First-responder / health data-storage
+> claims removed from [legal_texts.dart](../lib/constants/legal_texts.dart),
+> tr-TR/en-US privacy bodies (`detail_privacy_body_2/4/5`), published HTML
+> (`.gh-pages-publish/`) + `store/` parity copies, and store listing copy. The
+> KVKK/Gizlilik/Aydınlatma revision date is bumped to **18 Haziran 2026 /
+> June 18, 2026** (`lastUpdatedKvkk`); versions stay pinned (3.1.0 / 3.1.1) so
+> **no re-consent** is triggered, and Kullanım Şartları keeps **21 Mayıs 2026**.
+> Regression locked by `test/legal_no_first_responder_claims_test.dart`. Play
+> Data Safety already declares no health/fitness data — keep that category
+> **unselected** in Console. (Live publish + curl verification still pending.)
 
 
 1. **Full-screen-intent (SPEC 7a):** manifest izni + Console beyanı ertelendi; kod zarif-düşüşlü
@@ -523,9 +525,9 @@ Kod/birim testle KANITLANAMAYAN, cihaz turu bekleyenler
    edilir (taban:
    `https://poyrazoncel34-netizen.github.io/guvenlik_app/`): `privacy_policy.html`,
    `kullanim_sartlari.html`, `aydinlatma.html`, `data_deletion.html`,
-   `privacy_policy_en.html`. Beklenen damgalar: kullanim_sartlari **3.1.0**;
-   privacy_policy / aydinlatma / privacy_policy_en **3.1.1**; tarih **21 Mayıs 2026**
-   (EN sayfada **May 21, 2026**); data_deletion için kriter erişilebilirlik (HTTP 200).
+   `privacy_policy_en.html`. Beklenen damgalar: kullanim_sartlari **3.1.0 / 21 Mayıs 2026**;
+   privacy_policy / aydinlatma / privacy_policy_en **3.1.1 / 18 Haziran 2026**
+   (EN sayfada **June 18, 2026**); data_deletion için kriter erişilebilirlik (HTTP 200).
 7. Play Console "memory page size" (16KB) göstergesinin yeşil olduğunun teyidi.
 
 ---

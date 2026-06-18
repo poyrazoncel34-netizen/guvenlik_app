@@ -10,6 +10,10 @@ class LegalTexts {
   static const String kvkkVersion = '3.1.1';
   static const String lastUpdated = '21 Mayıs 2026';
   static const String lastUpdatedEn = 'May 21, 2026';
+  // KVKK/Gizlilik/Aydınlatma belgeleri kendi revizyon tarihini taşır;
+  // Kullanım Şartları (termsVersion) içerik değişmediği için lastUpdated'ı korur.
+  static const String lastUpdatedKvkk = '18 Haziran 2026';
+  static const String lastUpdatedKvkkEn = 'June 18, 2026';
 
   // ── Kullanım Sözleşmesi — Türkçe ─────────────────────────────────────────
   static const String termsOfServiceTr =
@@ -222,7 +226,7 @@ Contact: korubeni.destek@gmail.com
       '''
 KİŞİSEL VERİLERİN KORUNMASI KANUNU (KVKK)
 AYDINLATMA METNİ
-Sürüm $kvkkVersion | Son Güncelleme: $lastUpdated
+Sürüm $kvkkVersion | Son Güncelleme: $lastUpdatedKvkk
 
 6698 Sayılı Kişisel Verilerin Korunması Kanunu ("KVKK") Madde 10 kapsamında aydınlatma metnidir.
 
@@ -275,7 +279,7 @@ Uygulama tüm rehber listesini okumaz. Yalnızca kullanıcının seçtiği veya 
 ──────────────────────────────────────
 6. VERİ GÜVENLİĞİ
 ──────────────────────────────────────
-• PIN ve ilk müdahale bilgileri FlutterSecureStorage üzerinde saklanmaktadır.
+• PIN bilgisi FlutterSecureStorage üzerinde saklanmaktadır.
 • Acil kişi verisi cihaz içi yerel veritabanında saklanır; yedekleme kapalıdır ve gereksiz kopyalar temizlenir.
 • Uygulama, geliştirici backend'ine kişisel veri göndermemektedir; harita, Google Play Billing ve RevenueCat sağlayıcıları kendi teknik ağ davranışlarına sahip olabilir.
 
@@ -320,7 +324,7 @@ Bu metin, KVKK ve ilgili mevzuattaki değişiklikler doğrultusunda güncelleneb
       '''
 PERSONAL DATA PROTECTION LAW (KVKK)
 DISCLOSURE NOTICE
-Version $kvkkVersion | Last Updated: $lastUpdatedEn
+Version $kvkkVersion | Last Updated: $lastUpdatedKvkkEn
 
 This disclosure notice is provided pursuant to Article 10 of Law No. 6698 on the Protection of Personal Data ("KVKK").
 
@@ -371,7 +375,7 @@ The app does not read the full contacts list. It stores only emergency contacts 
 ──────────────────────────────────────
 6. DATA SECURITY
 ──────────────────────────────────────
-• PIN and first-responder information is stored in FlutterSecureStorage.
+• PIN information is stored in FlutterSecureStorage.
 • Emergency contact data is stored in the local on-device database; backup is disabled and unnecessary legacy copies are cleaned up.
 • The application does not send personal data to a developer backend; map, Google Play Billing, and RevenueCat providers may have their own technical network behavior.
 
