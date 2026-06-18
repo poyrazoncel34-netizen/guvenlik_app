@@ -15,6 +15,7 @@ import 'screens/splash_screen.dart';
 import 'core/services/offline_queue_service.dart';
 import 'core/services/crash_log_service.dart';
 import 'core/services/data_migration_service.dart';
+import 'core/services/medical_data_cleanup_service.dart';
 import 'core/services/foreground_service.dart';
 import 'core/services/haptic_service.dart';
 import 'core/services/connectivity_service.dart';
@@ -116,6 +117,10 @@ void main() async {
 
     final services = <Future<void>>[
       DataMigrationService.migrate(),
+      // KVKK Md.7 — purge orphaned medical-profile data from removed feature.
+      // Best-effort (internally try/catch); runs concurrently so it never
+      // blocks the emergency / notification startup path.
+      MedicalDataCleanupService.purgeIfNeeded(),
       OfflineQueueService.instance.initialize(),
       AtomicStorageService.instance.checkIntegrity(),
       HapticService.initialize(),

@@ -185,7 +185,7 @@ yalnız `en`,`tr`. Tek flavor: **`play`** (build komutlarında `--flavor play` z
 
 | Depo | İçerik |
 |---|---|
-| flutter_secure_storage ([secure_storage_keys.dart](../lib/core/security/secure_storage_keys.dart)) | `user_pin`, sahte-çağrı profili, `medical_profile`, kişi listeleri, acil kişi adı/numarası, `kvkk_consent_log`, PIN lockout sayaçları (`pin_lockout_*`, [pin_lockout_service.dart:33-34](../lib/core/services/pin_lockout_service.dart)) |
+| flutter_secure_storage ([secure_storage_keys.dart](../lib/core/security/secure_storage_keys.dart)) | `user_pin`, sahte-çağrı profili, ~~`medical_profile`~~ (özellik kaldırıldı; yalnız tek-seferlik temizlik için kalan anahtar — [medical_data_cleanup_service.dart](../lib/core/services/medical_data_cleanup_service.dart)), kişi listeleri, acil kişi adı/numarası, `kvkk_consent_log`, PIN lockout sayaçları (`pin_lockout_*`, [pin_lockout_service.dart:33-34](../lib/core/services/pin_lockout_service.dart)) |
 | SharedPreferences | `check_in_state_v2` / `safe_walk_state_v2` ([check_in_service.dart:53-54](../lib/core/services/check_in_service.dart)), yasal kabul bayrak/sürümleri, özellik-uyarı bayrakları, onboarding |
 | sqflite ([local_database_service.dart:37-64](../lib/core/services/local_database_service.dart)) | `contacts`, `activity_events`, `crash_logs`, `app_settings` tabloları |
 | **Native** SharedPreferences dosyası **`korubeni_emergency`** ([EmergencyPrefs.kt](../android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/EmergencyPrefs.kt)) | countdown: `countdown_active/deadline_ms/alarm_fired/primary_number/dispatch_id`; check-in (safe-walk için `_safe_walk` sonekli): `check_in_active/phase/deadline/grace_ms/primary_number/alarm_fired`; `pending_trigger` |
@@ -408,6 +408,17 @@ CI (PR/main) kendi tek-kullanımlık NON_RELEASE_SMOKE anahtarını üretir ([ci
 ---
 
 ## 9. AÇIK / ERTELENMİŞ KONULAR
+
+> **⚠️ FOLLOW-UP REQUIRED (next session) — legal copy debt:** The medical-profile
+> feature was removed (commit `refactor(profile): remove medical profile feature and
+> purge stored medical data`), but legal/marketing copy still references stored
+> health / first-aid ("ilk müdahale") data. This MUST be updated in:
+> [legal_texts.dart](../lib/constants/legal_texts.dart), tr-TR/en-US privacy bodies
+> (`detail_privacy_body_2/4/5`), store HTML (`.gh-pages-publish/` + `store/` + the
+> live gh-pages publish), store listing copy (`store/play_store_listing_*.md`,
+> `store/PLAY_CONSOLE_COPY_PASTE_PACK.md`), and this HANDOVER. **Play Data Safety /
+> Health Console forms must NOT be finalized until that legal update ships.**
+
 
 1. **Full-screen-intent (SPEC 7a):** manifest izni + Console beyanı ertelendi; kod zarif-düşüşlü
    hazır (§2.5). Karar operatörün.

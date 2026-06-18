@@ -37,7 +37,7 @@ class UserDataExportService {
         'kvkkNote':
             'Bu dışa aktarım KVKK Madde 11/ğ kapsamında veri portabilitesi hakkı çerçevesinde oluşturulmuştur.',
       },
-      'profile': await _profileData(prefs, secure),
+      'profile': await _profileData(prefs),
       'emergencyContacts': contacts.map((contact) => contact.toJson()).toList(),
       'settings': {
         'notificationsEnabled':
@@ -88,40 +88,14 @@ class UserDataExportService {
     return path.split('/').last;
   }
 
+  // Medical-profile data was removed from the export; only non-sensitive
+  // identity fields remain in the KVKK Md.11 portability output.
   static Future<Map<String, dynamic>> _profileData(
     SharedPreferences prefs,
-    SecureStorage secure,
   ) async {
-    final sensitive = await _sensitiveProfile(prefs, secure);
     return {
       'name': prefs.getString(AppConstants.prefProfileName) ?? '',
       'email': prefs.getString(AppConstants.prefProfileEmail) ?? '',
-      ...sensitive,
-    };
-  }
-
-  static Future<Map<String, String>> _sensitiveProfile(
-    SharedPreferences prefs,
-    SecureStorage secure,
-  ) async {
-    final raw = await secure.read(key: SecureStorageKeys.medicalProfile);
-    if (raw != null && raw.isNotEmpty) {
-      try {
-        final decoded = jsonDecode(raw);
-        if (decoded is Map) {
-          return decoded.map(
-            (key, value) => MapEntry(key.toString(), value?.toString() ?? ''),
-          );
-        }
-      } catch (_) {}
-    }
-
-    return {
-      'bloodType': prefs.getString(AppConstants.prefBloodType) ?? '',
-      'allergies': prefs.getString(AppConstants.prefAllergies) ?? '',
-      'medicalConditions':
-          prefs.getString(AppConstants.prefMedicalConditions) ?? '',
-      'emergencyNotes': prefs.getString(AppConstants.prefEmergencyNotes) ?? '',
     };
   }
 }

@@ -41,14 +41,18 @@ void main() {
         AppConstants.prefPinSetupDone,
         AppConstants.prefOnboardingDone,
         AppConstants.prefLegalDisclaimerAccepted,
-        AppConstants.prefKvkkHealthConsentAccepted,
         AppConstants.prefTermsVersion,
         AppConstants.prefNotificationPermissionPrompted,
         AppConstants.prefDemoMode,
         AppConstants.prefVolumeTrigger,
+        // Deprecated legacy medical keys retained for one-time cleanup only.
+        // ignore: deprecated_member_use_from_same_package
         AppConstants.prefBloodType,
+        // ignore: deprecated_member_use_from_same_package
         AppConstants.prefAllergies,
+        // ignore: deprecated_member_use_from_same_package
         AppConstants.prefMedicalConditions,
+        // ignore: deprecated_member_use_from_same_package
         AppConstants.prefEmergencyNotes,
       ];
       expect(

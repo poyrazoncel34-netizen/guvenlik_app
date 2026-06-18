@@ -26,16 +26,33 @@ class AppConstants {
   static const String prefOnboardingDone = 'pref_onboarding_done';
   static const String prefLegalDisclaimerAccepted =
       'pref_legal_disclaimer_accepted';
-  static const String prefKvkkHealthConsentAccepted =
-      'pref_kvkk_health_consent_accepted';
   static const String prefTermsVersion = 'pref_terms_version';
   static const String prefNotificationPermissionPrompted =
       'pref_notification_permission_prompted';
   static const String prefDemoMode = 'pref_demo_mode';
   static const String prefVolumeTrigger = 'pref_volume_trigger';
+
+  // One-time cleanup flag for the removed medical-profile feature (KVKK Md.7).
+  static const String prefMedicalCleanupDone = 'pref_medical_cleanup_done';
+
+  // Legacy medical-profile keys — feature removed; retained only so the
+  // one-time MedicalDataCleanupService can purge orphaned data on upgrade.
+  // Delete next release once the cleanup has shipped to all users.
+  @Deprecated(
+    'removed in this release; kept only for one-time cleanup, delete next release',
+  )
   static const String prefBloodType = 'profile_blood_type';
+  @Deprecated(
+    'removed in this release; kept only for one-time cleanup, delete next release',
+  )
   static const String prefAllergies = 'profile_allergies';
+  @Deprecated(
+    'removed in this release; kept only for one-time cleanup, delete next release',
+  )
   static const String prefMedicalConditions = 'profile_medical_conditions';
+  @Deprecated(
+    'removed in this release; kept only for one-time cleanup, delete next release',
+  )
   static const String prefEmergencyNotes = 'profile_emergency_notes';
   // Hukuki onay v1 (KVKK Kurul Kararı 2018/90 — aydınlatma + açık rıza ayrı kaydedilir)
   static const String prefLegalAcceptedV1 = 'legal_accepted_v1';
