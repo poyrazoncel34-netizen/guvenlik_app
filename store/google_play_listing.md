@@ -28,7 +28,7 @@ Dikkat çekmek için yüksek sesli acil durum sireni.
 👥 ACİL KİŞİLER
 Sistem seçicisiyle veya manuel girişle acil kişiler ekleyebilir ve birincil kişiyi seçebilirsiniz. READ_CONTACTS izni kullanılmaz. Uygulama tüm rehber listesini okumaz; yalnızca kullanıcının seçtiği veya girdiği acil kişi verisini cihazda yerel olarak saklar.
 
-KORUBENI PRO İLE
+KORUBENİ PRO İLE
 
 🚨 PANİK AKIŞI
 Panik butonuna basılı tutun, bırakın. Geri sayım PIN ile iptal edilmezse belirlediğiniz kişi için Android arama akışı başlatılır.
