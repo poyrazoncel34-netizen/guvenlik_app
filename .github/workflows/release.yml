@@ -55,7 +55,34 @@ jobs:
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
         run: |
-          printf '%s' "$KEYSTORE_BASE64" | base64 --decode > android/app/korubeni_keystore.jks
+          set -euo pipefail
+
+          # Fail early if the secret is missing/unset.
+          if [ -z "${KEYSTORE_BASE64:-}" ]; then
+            echo "::error title=KEYSTORE_BASE64 missing::Secret KEYSTORE_BASE64 is empty or unset. Re-add the base64 of android/app/korubeni_keystore.jks as a repo secret."
+            exit 1
+          fi
+
+          # Strip CR/LF/spaces that some secret editors inject (CRLF, wrapped lines,
+          # trailing whitespace) before decoding, otherwise base64 fails cryptically.
+          KEYSTORE_OUT="android/app/korubeni_keystore.jks"
+          printf '%s' "$KEYSTORE_BASE64" | tr -d '\r\n ' | base64 --decode > "$KEYSTORE_OUT"
+
+          # Decoded file must be non-empty.
+          if [ ! -s "$KEYSTORE_OUT" ]; then
+            echo "::error title=Keystore decode failed::Decoded keystore is empty. KEYSTORE_BASE64 is likely truncated or not valid base64."
+            exit 1
+          fi
+
+          # Verify magic bytes: JKS starts with 0xFEEDFEED, PKCS12/DER starts with 0x3082.
+          MAGIC="$(od -An -tx1 -N2 "$KEYSTORE_OUT" | tr -d ' \n')"
+          case "$MAGIC" in
+            feed|3082)
+              echo "::notice title=Keystore decoded::Keystore magic bytes OK (0x${MAGIC})." ;;
+            *)
+              echo "::error title=Invalid keystore::Decoded file is not a JKS (0xFEEDFEED) or PKCS12/DER (0x3082) keystore; got magic 0x${MAGIC}. Check that KEYSTORE_BASE64 holds the base64 of the .jks file."
+              exit 1 ;;
+          esac
 
       - name: Create key.properties
         env:
