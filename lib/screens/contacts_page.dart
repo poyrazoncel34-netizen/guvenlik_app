@@ -24,6 +24,21 @@ import '../widgets/emergency_contact_consent_dialog.dart';
 const int _manualContactPhoneInputLimit = 32;
 const int _manualContactNameInputLimit = 60;
 
+/// Validates a manually entered emergency-contact phone number.
+///
+/// Returns a translation key for the error message, or null when the number is
+/// acceptable. Kept as a pure top-level function so it can be unit-tested and
+/// reused by the inline field validator. The same rule is enforced again at
+/// submit time in [_addManualContact] (defense in depth).
+String? manualContactPhoneError(String raw) {
+  final phone = normalizePhoneNumber(raw);
+  if (phone.isEmpty ||
+      !EmergencyNumberValidator.isCallableEmergencyTarget(phone)) {
+    return 'contacts_manual_invalid_phone';
+  }
+  return null;
+}
+
 class ContactsPage extends StatefulWidget {
   const ContactsPage({super.key});
 
@@ -836,20 +851,26 @@ class _ContactsPageState extends State<ContactsPage> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                TextField(
+                TextFormField(
                   controller: phoneController,
                   keyboardType: TextInputType.phone,
                   textInputAction: TextInputAction.done,
+                  autovalidateMode: AutovalidateMode.onUserInteraction,
                   inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'[0-9+]')),
                     LengthLimitingTextInputFormatter(
                       _manualContactPhoneInputLimit,
                     ),
                   ],
+                  validator: (value) {
+                    final errorKey = manualContactPhoneError(value ?? '');
+                    return errorKey?.tr();
+                  },
                   decoration: InputDecoration(
                     labelText: "contacts_manual_phone_label".tr(),
                     prefixIcon: const Icon(Icons.phone_rounded),
                   ),
-                  onSubmitted: (_) => Navigator.pop(
+                  onFieldSubmitted: (_) => Navigator.pop(
                     sheetContext,
                     _AddContactSheetResult.manual(
                       nameController.text,
