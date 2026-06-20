@@ -6,7 +6,6 @@ void main() {
     late String source;
     late String mainNavigation;
     late String homeProvider;
-    late String emergencyMap;
 
     setUpAll(() {
       source = File('lib/screens/map_page.dart').readAsStringSync();
@@ -15,9 +14,6 @@ void main() {
       ).readAsStringSync();
       homeProvider = File(
         'lib/presentation/providers/home_provider.dart',
-      ).readAsStringSync();
-      emergencyMap = File(
-        'lib/screens/emergency_map_screen.dart',
       ).readAsStringSync();
     });
 
@@ -79,23 +75,26 @@ void main() {
       expect(source, contains('_initLocation();'));
     });
 
-    test('location sharing start surfaces success and failure to the user', () {
-      expect(homeProvider, contains('Future<bool> startLocationSharing'));
-      expect(homeProvider, contains('return false;'));
-      expect(homeProvider, contains('return true;'));
-      expect(
-        source,
-        contains(
-          'final started = await provider.startLocationSharing(minutes)',
-        ),
-      );
-      expect(source, contains('location_sharing_start_failed'));
-      expect(source, contains('home_location_shared_desc'));
-      expect(
-        emergencyMap,
-        contains('final started = await provider.startLocationSharing(10)'),
-      );
-      expect(emergencyMap, contains('location_sharing_start_failed'));
+    test('location-session sharing UI is removed (S6/S8)', () {
+      for (final symbol in const [
+        'startLocationSharing',
+        'isLocationSharing',
+        '_toggleLocationSharing',
+        '_showLocationShareOptions',
+        '"map_live"',
+        'location_share_duration',
+        'location_disabled_outlined',
+      ]) {
+        expect(
+          source.contains(symbol),
+          isFalse,
+          reason: '$symbol must be removed with the location-session feature',
+        );
+      }
+      // The free coordinate read-out must stay on the status card.
+      expect(source, contains('"map_location".tr()'));
+      // And the provider must no longer expose the sharing API.
+      expect(homeProvider.contains('startLocationSharing'), isFalse);
     });
 
     test('OpenStreetMap use stays user-viewed and attributed', () {
@@ -107,12 +106,9 @@ void main() {
       ].map((file) => file.readAsStringSync()).join('\n');
 
       expect(source, contains('© OpenStreetMap contributors'));
-      expect(emergencyMap, contains('© OpenStreetMap contributors'));
       expect(source, contains('user actively views'));
       expect(source, contains('Do not bulk download'));
-      expect(emergencyMap, contains('User-viewed online tiles only'));
       expect(source, isNot(contains('.mbtiles')));
-      expect(emergencyMap, isNot(contains('.mbtiles')));
       expect(docs, contains('must not bulk download'));
       expect(docs, contains('pre-seed'));
       expect(docs, contains('archive'));

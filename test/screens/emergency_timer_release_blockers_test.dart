@@ -170,28 +170,6 @@ void main() {
       expect(scheduler, contains('Exact alarm permission denied'));
     });
 
-    test('emergency map guards async location updates after dispose', () {
-      final source = File(
-        'lib/screens/emergency_map_screen.dart',
-      ).readAsStringSync();
-      final lastKnownAwait = source.indexOf(
-        'await _locationRepository.getLastKnownLocation()',
-      );
-      final currentAwait = source.indexOf(
-        'await _locationRepository.getCurrentLocation()',
-      );
-      expect(lastKnownAwait, isNot(-1));
-      expect(currentAwait, isNot(-1));
-      expect(
-        source.indexOf('if (!mounted) return;', lastKnownAwait),
-        lessThan(currentAwait),
-      );
-      expect(
-        source.indexOf('if (!mounted) return;', currentAwait),
-        lessThan(source.indexOf('setState(() {', currentAwait)),
-      );
-    });
-
     test('safe walk guards mounted after the async controller start', () {
       final source = File(
         'lib/screens/safe_walk_screen.dart',
