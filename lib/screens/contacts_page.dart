@@ -1022,85 +1022,94 @@ class _ContactsPageState extends State<ContactsPage> {
     }
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (sheetContext) => Container(
-        decoration: const BoxDecoration(
-          color: AppColors.cardBg,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      builder: (sheetContext) => SingleChildScrollView(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(sheetContext).viewInsets.bottom,
         ),
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: AppColors.border,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(height: 18),
-            Text(
-              "contacts_select_emergency_btn".tr(),
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w800,
-                color: AppColors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 12),
-            ...provider.emergencyContacts.map((contact) {
-              final isSelected =
-                  provider.selectedEmergencyPhone == contact.phone;
-              return ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: Container(
-                  width: 44,
-                  height: 44,
+        child: Container(
+          decoration: const BoxDecoration(
+            color: AppColors.cardBg,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          padding: const EdgeInsets.all(24),
+          child: SafeArea(
+            top: false,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 40,
+                  height: 4,
                   decoration: BoxDecoration(
-                    color: contact.color.withValues(alpha: 0.12),
-                    shape: BoxShape.circle,
+                    color: AppColors.border,
+                    borderRadius: BorderRadius.circular(2),
                   ),
-                  child: Icon(contact.icon, color: contact.color),
                 ),
-                title: Text(
-                  contact.name,
+                const SizedBox(height: 18),
+                Text(
+                  "contacts_select_emergency_btn".tr(),
                   style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800,
                     color: AppColors.textPrimary,
-                    fontWeight: FontWeight.w700,
                   ),
                 ),
-                subtitle: Text(
-                  contact.phone,
-                  style: const TextStyle(color: AppColors.textSecondary),
-                ),
-                trailing: Icon(
-                  isSelected
-                      ? Icons.check_circle_rounded
-                      : Icons.radio_button_unchecked_rounded,
-                  color: isSelected ? AppColors.accent : AppColors.border,
-                ),
-                onTap: () async {
-                  Navigator.pop(sheetContext);
-                  final allowed = await SubscriptionGate.ensureAccess(
-                    context,
-                    PremiumFeature.emergencyContactSelect,
-                  );
-                  if (!allowed || !mounted) return;
-                  await provider.selectEmergencyContact(contact);
-                  await _refreshHomeProvider();
-                  if (!mounted) return;
-                  _showSnack(
-                    "contacts_emergency_selected".tr(
-                      namedArgs: {"name": contact.name},
+                const SizedBox(height: 12),
+                ...provider.emergencyContacts.map((contact) {
+                  final isSelected =
+                      provider.selectedEmergencyPhone == contact.phone;
+                  return ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: contact.color.withValues(alpha: 0.12),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(contact.icon, color: contact.color),
                     ),
+                    title: Text(
+                      contact.name,
+                      style: const TextStyle(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    subtitle: Text(
+                      contact.phone,
+                      style: const TextStyle(color: AppColors.textSecondary),
+                    ),
+                    trailing: Icon(
+                      isSelected
+                          ? Icons.check_circle_rounded
+                          : Icons.radio_button_unchecked_rounded,
+                      color: isSelected ? AppColors.accent : AppColors.border,
+                    ),
+                    onTap: () async {
+                      Navigator.pop(sheetContext);
+                      final allowed = await SubscriptionGate.ensureAccess(
+                        context,
+                        PremiumFeature.emergencyContactSelect,
+                      );
+                      if (!allowed || !mounted) return;
+                      await provider.selectEmergencyContact(contact);
+                      await _refreshHomeProvider();
+                      if (!mounted) return;
+                      _showSnack(
+                        "contacts_emergency_selected".tr(
+                          namedArgs: {"name": contact.name},
+                        ),
+                      );
+                    },
                   );
-                },
-              );
-            }),
-            const SizedBox(height: 8),
-          ],
+                }),
+                const SizedBox(height: 8),
+              ],
+            ),
+          ),
         ),
       ),
     );
