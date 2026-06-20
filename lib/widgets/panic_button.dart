@@ -394,42 +394,52 @@ class _PanicButtonState extends State<PanicButton>
                     // Text
                     AnimatedSwitcher(
                       duration: const Duration(milliseconds: 200),
-                      child: Column(
-                        key: ValueKey('$_isArmed$_holdSeconds'),
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            _isArmed
-                                ? "panic_button_armed_title".tr()
-                                : isPro
-                                ? "panic_button_hold_title".tr()
-                                : "panic_button_locked_title".tr(),
-                            style: TextStyle(
-                              fontSize: _isArmed
-                                  ? titleFontSize * 0.75
-                                  : titleFontSize,
-                              fontWeight: FontWeight.w900,
-                              color: Colors.white,
-                              letterSpacing: _isArmed ? 2.2 : 2.8,
+                      child: SizedBox(
+                        width: buttonSize * 0.82,
+                        child: Column(
+                          key: ValueKey('$_isArmed$_holdSeconds'),
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                _isArmed
+                                    ? "panic_button_armed_title".tr()
+                                    : isPro
+                                    ? "panic_button_hold_title".tr()
+                                    : "panic_button_locked_title".tr(),
+                                maxLines: 1,
+                                style: TextStyle(
+                                  fontSize: _isArmed
+                                      ? titleFontSize * 0.75
+                                      : titleFontSize,
+                                  fontWeight: FontWeight.w900,
+                                  color: Colors.white,
+                                  letterSpacing: _isArmed ? 2.2 : 2.8,
+                                ),
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            _isArmed
-                                ? "${_holdSeconds}s"
-                                : isPro
-                                ? "panic_button_hold_subtitle".tr()
-                                : "panic_button_locked_subtitle".tr(),
-                            style: TextStyle(
-                              fontSize: _isArmed
-                                  ? subtitleFontSize * 1.2
-                                  : subtitleFontSize,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.white.withValues(alpha: 0.9),
-                              letterSpacing: 0.8,
+                            const SizedBox(height: 4),
+                            Text(
+                              _isArmed
+                                  ? "${_holdSeconds}s"
+                                  : isPro
+                                  ? "panic_button_hold_subtitle".tr()
+                                  : "panic_button_locked_subtitle".tr(),
+                              textAlign: TextAlign.center,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: _isArmed
+                                    ? subtitleFontSize * 1.2
+                                    : subtitleFontSize,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white.withValues(alpha: 0.9),
+                                letterSpacing: 0.8,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ],
