@@ -153,7 +153,7 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
               padding: const EdgeInsets.all(24),
               child: Column(
                 children: [
-                  const SizedBox(height: 40),
+                  const SizedBox(height: 16),
                   Container(
                     width: 80,
                     height: 80,
@@ -212,7 +212,7 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
                       ),
                     ),
                   ],
-                  const SizedBox(height: 40),
+                  const SizedBox(height: 28),
                   // PIN dots
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -230,7 +230,7 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
                       );
                     }),
                   ),
-                  const SizedBox(height: 40),
+                  const SizedBox(height: 24),
                   _buildNumberPad(),
                   const SizedBox(height: 16),
                   // PIN forgot info card
