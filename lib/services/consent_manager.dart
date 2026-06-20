@@ -24,6 +24,12 @@ class ConsentManager {
   final Map<String, bool> _consentCache = {};
   bool _initialized = false;
 
+  /// True when the most recent cache load could not read secure storage at all
+  /// (distinct from per-record parse skips). Surfaced by the consent UI so the
+  /// user is warned instead of silently seeing every consent as "off".
+  bool _loadFailed = false;
+  bool get loadFailed => _loadFailed;
+
   // ── Singleton başlatma ────────────────────────────────────────────────────
   Future<void> initialize() async {
     if (_initialized) return;
@@ -32,6 +38,7 @@ class ConsentManager {
   }
 
   Future<void> _loadConsentCache() async {
+    _loadFailed = false;
     try {
       final raw = await _storage.read(key: SecureStorageKeys.consentLog);
       if (raw == null || raw.isEmpty) return;
@@ -67,7 +74,10 @@ class ConsentManager {
         _consentCache[entry.key] = entry.value.granted;
       }
     } catch (e) {
-      // Outer catch handles unreadable storage / non-list JSON / decode errors.
+      // Storage itself was unreadable (not a per-record parse skip). Flag it so
+      // the consent UI can warn the user instead of silently showing every
+      // consent as "off".
+      _loadFailed = true;
       debugPrint('[ConsentManager] _loadConsentCache hata: $e');
     }
   }
@@ -181,33 +191,41 @@ class ConsentManager {
     required bool granted,
     String? locale,
   }) async {
-    try {
-      final appVersion = await _getAppVersion();
-      final record = ConsentRecord(
-        consentType: consentType,
-        granted: granted,
-        timestamp: DateTime.now(),
-        appVersion: appVersion,
-        osVersion: _getOsVersion(),
-        deviceModel: _getDeviceModel(),
-        consentTextVersion: _getConsentTextVersion(consentType),
-        locale: locale ?? 'tr',
-      );
+    final appVersion = await _getAppVersion();
+    final record = ConsentRecord(
+      consentType: consentType,
+      granted: granted,
+      timestamp: DateTime.now(),
+      appVersion: appVersion,
+      osVersion: _getOsVersion(),
+      deviceModel: _getDeviceModel(),
+      consentTextVersion: _getConsentTextVersion(consentType),
+      locale: locale ?? 'tr',
+    );
 
-      // Mevcut logu oku
-      final raw = await _storage.read(key: SecureStorageKeys.consentLog);
-      final List<dynamic> list = raw != null && raw.isNotEmpty
-          ? jsonDecode(raw) as List<dynamic>
-          : [];
-      list.add(record.toJson());
-
-      await _storage.write(
-        key: SecureStorageKeys.consentLog,
-        value: jsonEncode(list),
-      );
-    } catch (e) {
-      debugPrint('[ConsentManager] _recordConsent hata: $e');
+    // Read the existing log. Tolerate a corrupt/non-list blob by starting a
+    // fresh list so the new consent can still be recorded; genuine storage I/O
+    // errors are intentionally NOT swallowed here.
+    final raw = await _storage.read(key: SecureStorageKeys.consentLog);
+    var list = <dynamic>[];
+    if (raw != null && raw.isNotEmpty) {
+      try {
+        final decoded = jsonDecode(raw);
+        if (decoded is List) list = decoded;
+      } on FormatException catch (e) {
+        debugPrint('[ConsentManager] _recordConsent: corrupt log reset: $e');
+      }
     }
+    list.add(record.toJson());
+
+    // No silent catch: if the secure-storage write throws (e.g. keystore
+    // failure), the error propagates to grant/revokeConsent and on to the UI,
+    // so the user is told the change was NOT saved instead of the toggle
+    // appearing to succeed and silently reverting on next launch.
+    await _storage.write(
+      key: SecureStorageKeys.consentLog,
+      value: jsonEncode(list),
+    );
   }
 
   Future<String> _getAppVersion() async {

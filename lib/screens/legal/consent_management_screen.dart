@@ -89,6 +89,20 @@ class _ConsentManagementScreenState extends State<ConsentManagementScreen> {
       }
       if (newValue) await _updatePrefs(type, true);
       _loadStatus();
+    } on Exception catch (e) {
+      // Storage write failed (e.g. keystore error). Tell the user the change
+      // was NOT saved and re-sync the switches to the real (unchanged) state.
+      debugPrint('[ConsentManagement] toggle persist failed: $e');
+      if (mounted) {
+        _loadStatus();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('consent_save_failed'.tr()),
+            backgroundColor: AppColors.warning,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -189,6 +203,38 @@ class _ConsentManagementScreenState extends State<ConsentManagementScreen> {
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
+          if (_cm.loadFailed)
+            Container(
+              padding: const EdgeInsets.all(14),
+              margin: const EdgeInsets.only(bottom: 20),
+              decoration: BoxDecoration(
+                color: AppColors.warning.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: AppColors.warning.withValues(alpha: 0.4),
+                ),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.warning_amber_rounded,
+                    color: AppColors.warning,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'consent_load_failed'.tr(),
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: AppColors.warning,
+                        height: 1.5,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           // Bilgi kutusu
           Container(
             padding: const EdgeInsets.all(14),
