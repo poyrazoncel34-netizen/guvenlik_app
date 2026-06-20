@@ -7,10 +7,8 @@ import android.content.Intent
 import android.media.AudioManager
 import android.net.Uri
 import android.os.Build
-import android.os.Bundle
 import android.provider.Settings
 import android.view.KeyEvent
-import android.view.WindowManager
 import com.poyrazoncel.korubeni.emergency.EmergencyChannels
 import com.poyrazoncel.korubeni.emergency.EmergencyEventStreamHandler
 import com.poyrazoncel.korubeni.emergency.EmergencyPlatformHandler
@@ -29,14 +27,6 @@ class MainActivity : FlutterFragmentActivity() {
     private val volumeDetector = VolumeButtonDetector()
     private lateinit var dozeModeHandler: DozeModeHandler
     private lateinit var emergencyPlatformHandler: EmergencyPlatformHandler
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        window.setFlags(
-            WindowManager.LayoutParams.FLAG_SECURE,
-            WindowManager.LayoutParams.FLAG_SECURE,
-        )
-    }
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
