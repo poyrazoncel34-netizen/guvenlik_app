@@ -185,8 +185,8 @@ yalnız `en`,`tr`. Tek flavor: **`play`** (build komutlarında `--flavor play` z
 
 | Depo | İçerik |
 |---|---|
-| flutter_secure_storage ([secure_storage_keys.dart](../lib/core/security/secure_storage_keys.dart)) | `user_pin`, sahte-çağrı profili, ~~`medical_profile`~~ (özellik kaldırıldı; yalnız tek-seferlik temizlik için kalan anahtar — [medical_data_cleanup_service.dart](../lib/core/services/medical_data_cleanup_service.dart)), kişi listeleri, acil kişi adı/numarası, `kvkk_consent_log`, PIN lockout sayaçları (`pin_lockout_*`, [pin_lockout_service.dart:33-34](../lib/core/services/pin_lockout_service.dart)) |
-| SharedPreferences | `check_in_state_v2` / `safe_walk_state_v2` ([check_in_service.dart:53-54](../lib/core/services/check_in_service.dart)), yasal kabul bayrak/sürümleri, özellik-uyarı bayrakları, onboarding |
+| flutter_secure_storage ([secure_storage_keys.dart](../lib/core/security/secure_storage_keys.dart)) | `user_pin`, sahte-çağrı profili, ~~`medical_profile`~~ (özellik kaldırıldı; yalnız tek-seferlik temizlik için kalan anahtar — [medical_data_cleanup_service.dart](../lib/core/services/medical_data_cleanup_service.dart)), kişi listeleri, acil kişi adı/numarası, PIN lockout sayaçları (`pin_lockout_*`, [pin_lockout_service.dart:33-34](../lib/core/services/pin_lockout_service.dart)) |
+| SharedPreferences | `check_in_state_v2` / `safe_walk_state_v2` ([check_in_service.dart:53-54](../lib/core/services/check_in_service.dart)), yasal kabul bayrak/sürümleri, özellik-uyarı bayrakları, onboarding, `kvkk_consent_log_v2` (KVKK rıza audit log — keystore-bağımsız; eski secure-storage `kvkk_consent_log`'tan tek-seferlik salt-okunur migrasyon) |
 | sqflite ([local_database_service.dart:37-64](../lib/core/services/local_database_service.dart)) | `contacts`, `activity_events`, `crash_logs`, `app_settings` tabloları |
 | **Native** SharedPreferences dosyası **`korubeni_emergency`** ([EmergencyPrefs.kt](../android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/EmergencyPrefs.kt)) | countdown: `countdown_active/deadline_ms/alarm_fired/primary_number/dispatch_id`; check-in (safe-walk için `_safe_walk` sonekli): `check_in_active/phase/deadline/grace_ms/primary_number/alarm_fired`; `pending_trigger` |
 | Dosya | `legal_logs.json` — KVKK audit log, bozulursa kendini onaran ([legal_log_service.dart](../lib/core/services/legal_log_service.dart)) |
@@ -303,9 +303,12 @@ safe-walk bağlaması [safe_walk_screen.dart:34](../lib/screens/safe_walk_screen
   ([pin_lockout_service.dart:62-65](../lib/core/services/pin_lockout_service.dart)). Sayaçlar
   secure storage'da. PIN secure storage'da, legacy SharedPreferences'tan tek-seferlik migrasyon
   var ([countdown_screen.dart:102-117](../lib/screens/countdown_screen.dart)).
-- **Rıza audit log (KVKK):** her onay/geri-çekme `kvkk_consent_log`'a yazılır
-  ([consent_manager.dart](../lib/services/consent_manager.dart)); bozuk kayıt tüm logu silmez,
-  atlanır (commit `b53cfdd`); `legal_logs.json` bozulursa kendini onarır (`5132b7c`).
+- **Rıza audit log (KVKK):** her onay/geri-çekme düz app-private SharedPreferences
+  `kvkk_consent_log_v2`'ye yazılır (keystore-BAĞIMSIZ güvenilir kalıcılık; eski secure-storage
+  `kvkk_consent_log`'tan tek-seferlik salt-okunur migrasyon)
+  ([consent_manager.dart](../lib/services/consent_manager.dart)); yazma commit olmazsa hata
+  kullanıcıya yüzeye çıkar; bozuk kayıt tüm logu silmez, atlanır; `legal_logs.json` bozulursa
+  kendini onarır (`5132b7c`).
 - **Veri dışa aktarma (Md.11):** [user_data_export_service.dart](../lib/core/services/user_data_export_service.dart)
   — profil, sahte-çağrı, rıza logu dahil JSON üretir.
 - **TAM silme (Md.7):** `AppResetService.clearLocalData`

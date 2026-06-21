@@ -1,7 +1,10 @@
 // ============================================================================
 // CONSENT MANAGER — KVKK Rıza Yönetim Servisi
-// Tüm rızaları flutter_secure_storage üzerinde JSON olarak saklar.
-// Her işlemde audit log oluşturulur.
+// Rıza audit log'u (kullanıcının kendi onay/geri-çekme seçimleri + zaman
+// damgaları + app/OS metası) düz, uygulamaya-özel SharedPreferences'ta saklanır.
+// Bunlar sır değildir ve keystore bağımlılığı bu veride güvenilmez kalıcılığa
+// yol açıyordu. PIN/kişiler/ENCRYPTION_KEY şifreli deposuna DOKUNULMAZ; eski
+// kayıt yalnızca tek seferlik, salt-okunur migrasyon için okunur.
 // ============================================================================
 
 import 'dart:convert';
@@ -14,15 +17,28 @@ import '../core/security/secure_storage_keys.dart';
 import '../models/consent_record.dart';
 import '../constants/legal_texts.dart';
 
+/// Thrown when a consent record could not be persisted.
+class ConsentStorageException implements Exception {
+  const ConsentStorageException(this.message);
+  final String message;
+  @override
+  String toString() => 'ConsentStorageException: $message';
+}
+
 class ConsentManager {
-  final FlutterSecureStorage _storage = const FlutterSecureStorage(
-    aOptions: AndroidOptions(),
-    iOptions: IOSOptions(accessibility: KeychainAccessibility.first_unlock),
-  );
+  /// Plain app-private store key for the consent audit log (NOT the keystore).
+  static const String _consentLogKey = 'kvkk_consent_log_v2';
 
   // ── Mevcut onaylı rıza durumu (bellek önbelleği) ──────────────────────────
   final Map<String, bool> _consentCache = {};
   bool _initialized = false;
+  bool _legacyMigrationDone = false;
+
+  /// True when the most recent cache load could not read secure storage at all
+  /// (distinct from per-record parse skips). Surfaced by the consent UI so the
+  /// user is warned instead of silently seeing every consent as "off".
+  bool _loadFailed = false;
+  bool get loadFailed => _loadFailed;
 
   // ── Singleton başlatma ────────────────────────────────────────────────────
   Future<void> initialize() async {
@@ -32,10 +48,15 @@ class ConsentManager {
   }
 
   Future<void> _loadConsentCache() async {
+    _loadFailed = false;
     try {
-      final raw = await _storage.read(key: SecureStorageKeys.consentLog);
+      final prefs = await SharedPreferences.getInstance();
+      await _migrateLegacyConsentLog(prefs);
+      final raw = prefs.getString(_consentLogKey);
       if (raw == null || raw.isEmpty) return;
-      final List<dynamic> list = jsonDecode(raw) as List<dynamic>;
+      final decoded = jsonDecode(raw);
+      if (decoded is! List) return;
+      final List<dynamic> list = decoded;
       // Son durumu bul (her tür için en son kaydı al).
       // Tek bir bozuk kayıt, geçerli onayları SİLMEMELİ — KVKK kayıtları
       // kullanıcının açık iradesini yansıtır; yarım yazma veya şema
@@ -67,7 +88,10 @@ class ConsentManager {
         _consentCache[entry.key] = entry.value.granted;
       }
     } catch (e) {
-      // Outer catch handles unreadable storage / non-list JSON / decode errors.
+      // Storage itself was unreadable (not a per-record parse skip). Flag it so
+      // the consent UI can warn the user instead of silently showing every
+      // consent as "off".
+      _loadFailed = true;
       debugPrint('[ConsentManager] _loadConsentCache hata: $e');
     }
   }
@@ -105,9 +129,13 @@ class ConsentManager {
   // ── Tüm log kayıtları ─────────────────────────────────────────────────────
   Future<List<ConsentRecord>> getAllLogs() async {
     try {
-      final raw = await _storage.read(key: SecureStorageKeys.consentLog);
+      final prefs = await SharedPreferences.getInstance();
+      await _migrateLegacyConsentLog(prefs);
+      final raw = prefs.getString(_consentLogKey);
       if (raw == null || raw.isEmpty) return [];
-      final List<dynamic> list = jsonDecode(raw) as List<dynamic>;
+      final decoded = jsonDecode(raw);
+      if (decoded is! List) return [];
+      final List<dynamic> list = decoded;
       // Tek bir bozuk kayıt tüm KVKK audit log'unu silmesin — geçerli olan
       // kayıtlar export/management ekranlarında görünmeye devam etmeli.
       final records = <ConsentRecord>[];
@@ -148,10 +176,10 @@ class ConsentManager {
 
   // ── Tüm rızaları sıfırla (veri silme) ────────────────────────────────────
   Future<void> clearAll() async {
-    await _storage.delete(key: SecureStorageKeys.consentLog);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_consentLogKey);
     _consentCache.clear();
     // SharedPreferences legal flags temizle
-    final prefs = await SharedPreferences.getInstance();
     await prefs.remove('pref_legal_disclaimer_accepted');
     await prefs.remove('pref_terms_version');
     await prefs.remove('pref_kvkk_version');
@@ -181,32 +209,69 @@ class ConsentManager {
     required bool granted,
     String? locale,
   }) async {
+    final appVersion = await _getAppVersion();
+    final record = ConsentRecord(
+      consentType: consentType,
+      granted: granted,
+      timestamp: DateTime.now(),
+      appVersion: appVersion,
+      osVersion: _getOsVersion(),
+      deviceModel: _getDeviceModel(),
+      consentTextVersion: _getConsentTextVersion(consentType),
+      locale: locale ?? 'tr',
+    );
+
+    final prefs = await SharedPreferences.getInstance();
+    await _migrateLegacyConsentLog(prefs);
+
+    // Read the existing log. Tolerate a corrupt/non-list blob by starting a
+    // fresh list so the new consent can still be recorded.
+    final raw = prefs.getString(_consentLogKey);
+    var list = <dynamic>[];
+    if (raw != null && raw.isNotEmpty) {
+      try {
+        final decoded = jsonDecode(raw);
+        if (decoded is List) list = decoded;
+      } on FormatException catch (e) {
+        debugPrint('[ConsentManager] _recordConsent: corrupt log reset: $e');
+      }
+    }
+    list.add(record.toJson());
+
+    // No silent failure: if the write does not commit, surface it so the user
+    // is told the change was NOT saved instead of the toggle appearing to
+    // succeed and silently reverting on next launch.
+    final ok = await prefs.setString(_consentLogKey, jsonEncode(list));
+    if (!ok) {
+      throw const ConsentStorageException('consent log write did not commit');
+    }
+  }
+
+  /// One-time, read-only migration of the consent log from the old
+  /// keystore-backed secure store into [_consentLogKey]. The secure store
+  /// (shared with PIN/contacts/ENCRYPTION_KEY) is only READ — never written or
+  /// deleted. If the legacy read fails (e.g. keystore unavailable) the key is
+  /// left absent and migration retries next launch; meanwhile the user simply
+  /// has no prior consent and re-consents.
+  Future<void> _migrateLegacyConsentLog(SharedPreferences prefs) async {
+    if (_legacyMigrationDone || prefs.containsKey(_consentLogKey)) {
+      _legacyMigrationDone = true;
+      return;
+    }
     try {
-      final appVersion = await _getAppVersion();
-      final record = ConsentRecord(
-        consentType: consentType,
-        granted: granted,
-        timestamp: DateTime.now(),
-        appVersion: appVersion,
-        osVersion: _getOsVersion(),
-        deviceModel: _getDeviceModel(),
-        consentTextVersion: _getConsentTextVersion(consentType),
-        locale: locale ?? 'tr',
+      const legacy = FlutterSecureStorage(
+        aOptions: AndroidOptions(),
+        iOptions: IOSOptions(accessibility: KeychainAccessibility.first_unlock),
       );
-
-      // Mevcut logu oku
-      final raw = await _storage.read(key: SecureStorageKeys.consentLog);
-      final List<dynamic> list = raw != null && raw.isNotEmpty
-          ? jsonDecode(raw) as List<dynamic>
-          : [];
-      list.add(record.toJson());
-
-      await _storage.write(
-        key: SecureStorageKeys.consentLog,
-        value: jsonEncode(list),
+      final old = await legacy.read(key: SecureStorageKeys.consentLog);
+      // Read succeeded — seal the migration (even when empty) so it is one-time.
+      await prefs.setString(
+        _consentLogKey,
+        old != null && old.isNotEmpty ? old : '[]',
       );
-    } catch (e) {
-      debugPrint('[ConsentManager] _recordConsent hata: $e');
+      _legacyMigrationDone = true;
+    } on Exception catch (e) {
+      debugPrint('[ConsentManager] legacy consent migration deferred: $e');
     }
   }
 

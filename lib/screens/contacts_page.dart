@@ -7,7 +7,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:fluttercontactpicker_plus/fluttercontactpicker_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../core/app_colors.dart';
@@ -23,6 +22,45 @@ import '../widgets/emergency_contact_consent_dialog.dart';
 
 const int _manualContactPhoneInputLimit = 32;
 const int _manualContactNameInputLimit = 60;
+
+/// Validates a manually entered emergency-contact phone number.
+///
+/// Returns a translation key for the error message, or null when the number is
+/// acceptable. Kept as a pure top-level function so it can be unit-tested and
+/// reused by the inline field validator. The same rule is enforced again at
+/// submit time in [_addManualContact] (defense in depth).
+String? manualContactPhoneError(String raw) {
+  final phone = normalizePhoneNumber(raw);
+  if (phone.isEmpty ||
+      !EmergencyNumberValidator.isCallableEmergencyTarget(phone)) {
+    return 'contacts_manual_invalid_phone';
+  }
+  return null;
+}
+
+/// Native single-contact picker channel. Uses Intent.ACTION_PICK on the phone
+/// data URI, which grants the app temporary read access to just the picked row
+/// — no contacts permission and no broad address-book access.
+const MethodChannel _contactsPickerChannel = MethodChannel(
+  'com.poyrazoncel.korubeni/contacts_picker',
+);
+
+/// A phone contact returned by the native picker.
+class PickedPhoneContact {
+  const PickedPhoneContact({required this.name, required this.number});
+  final String name;
+  final String number;
+}
+
+/// Parses the {name, number} map returned by [_contactsPickerChannel]. Returns
+/// null when the user cancelled or no usable number came back.
+PickedPhoneContact? parsePickedPhoneContact(Map<dynamic, dynamic>? raw) {
+  if (raw == null) return null;
+  final number = (raw['number'] as String?)?.trim() ?? '';
+  if (number.isEmpty) return null;
+  final name = (raw['name'] as String?)?.trim() ?? '';
+  return PickedPhoneContact(name: name, number: number);
+}
 
 class ContactsPage extends StatefulWidget {
   const ContactsPage({super.key});
@@ -836,20 +874,26 @@ class _ContactsPageState extends State<ContactsPage> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                TextField(
+                TextFormField(
                   controller: phoneController,
                   keyboardType: TextInputType.phone,
                   textInputAction: TextInputAction.done,
+                  autovalidateMode: AutovalidateMode.onUserInteraction,
                   inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'[0-9+]')),
                     LengthLimitingTextInputFormatter(
                       _manualContactPhoneInputLimit,
                     ),
                   ],
+                  validator: (value) {
+                    final errorKey = manualContactPhoneError(value ?? '');
+                    return errorKey?.tr();
+                  },
                   decoration: InputDecoration(
                     labelText: "contacts_manual_phone_label".tr(),
                     prefixIcon: const Icon(Icons.phone_rounded),
                   ),
-                  onSubmitted: (_) => Navigator.pop(
+                  onFieldSubmitted: (_) => Navigator.pop(
                     sheetContext,
                     _AddContactSheetResult.manual(
                       nameController.text,
@@ -947,24 +991,31 @@ class _ContactsPageState extends State<ContactsPage> {
     if (!allowed || !mounted) return;
     if (!_requireEmergencyContactConsent()) return;
 
+    if (kIsWeb) {
+      _showSnack(
+        "contacts_web_picker_unsupported".tr(),
+        backgroundColor: AppColors.warning,
+      );
+      return;
+    }
+
     try {
-      if (kIsWeb) {
-        _showSnack(
-          "contacts_web_picker_unsupported".tr(),
-          backgroundColor: AppColors.warning,
-        );
-        return;
-      }
-      final contact = await FlutterContactPicker.pickPhoneContact(
-        askForPermission: false,
+      // Permissionless native picker (ACTION_PICK on the phone data URI).
+      final result = await _contactsPickerChannel.invokeMethod<dynamic>(
+        'pickPhoneContact',
       );
       if (!mounted) return;
-      final name = (contact.fullName?.trim().isNotEmpty ?? false)
-          ? contact.fullName!.trim()
-          : "contacts_unknown".tr();
-      final rawPhone = contact.phoneNumber?.number?.trim() ?? "";
-      final phone = normalizePhoneNumber(rawPhone);
 
+      final picked = parsePickedPhoneContact(result is Map ? result : null);
+      if (picked == null) {
+        // User cancelled, or the picked contact had no usable number.
+        return;
+      }
+
+      final name = picked.name.isNotEmpty
+          ? picked.name
+          : "contacts_unknown".tr();
+      final phone = normalizePhoneNumber(picked.number);
       if (phone.isEmpty) {
         _showSnack(
           "contacts_no_phone".tr(),
@@ -974,7 +1025,6 @@ class _ContactsPageState extends State<ContactsPage> {
       }
 
       // KVKK: Kişi ekleme öncesi rıza onayı
-      if (!mounted) return;
       final consentGiven = await EmergencyContactConsentDialog.show(
         context: context,
         contactName: name,
@@ -996,20 +1046,17 @@ class _ContactsPageState extends State<ContactsPage> {
       await _refreshHomeProvider();
       _showSnack("contacts_added".tr(namedArgs: {"name": name}));
       HapticFeedback.mediumImpact();
-    } on UserCancelledPickingException {
-      // User cancelled the system picker; no error state is needed.
     } on PlatformException catch (e) {
-      debugPrint('PlatformException picking contact: ${e.code}');
-      _showSnack(
-        e.code == 'INSUFFICIENT_PERMISSIONS' || e.code == 'PERMISSION_ERROR'
-            ? "contacts_picker_unavailable_manual".tr()
-            : "contacts_picker_failed".tr(),
-        backgroundColor: AppColors.warning,
-      );
-    } catch (_) {
+      debugPrint('Contact picker channel error: ${e.code}');
       _showSnack(
         "contacts_picker_failed".tr(),
-        backgroundColor: AppColors.emergency,
+        backgroundColor: AppColors.warning,
+      );
+    } on MissingPluginException catch (e) {
+      debugPrint('Contact picker channel missing: ${e.message}');
+      _showSnack(
+        "contacts_picker_failed".tr(),
+        backgroundColor: AppColors.warning,
       );
     }
   }
@@ -1022,85 +1069,94 @@ class _ContactsPageState extends State<ContactsPage> {
     }
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (sheetContext) => Container(
-        decoration: const BoxDecoration(
-          color: AppColors.cardBg,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      builder: (sheetContext) => SingleChildScrollView(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(sheetContext).viewInsets.bottom,
         ),
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: AppColors.border,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(height: 18),
-            Text(
-              "contacts_select_emergency_btn".tr(),
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w800,
-                color: AppColors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 12),
-            ...provider.emergencyContacts.map((contact) {
-              final isSelected =
-                  provider.selectedEmergencyPhone == contact.phone;
-              return ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: Container(
-                  width: 44,
-                  height: 44,
+        child: Container(
+          decoration: const BoxDecoration(
+            color: AppColors.cardBg,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          padding: const EdgeInsets.all(24),
+          child: SafeArea(
+            top: false,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 40,
+                  height: 4,
                   decoration: BoxDecoration(
-                    color: contact.color.withValues(alpha: 0.12),
-                    shape: BoxShape.circle,
+                    color: AppColors.border,
+                    borderRadius: BorderRadius.circular(2),
                   ),
-                  child: Icon(contact.icon, color: contact.color),
                 ),
-                title: Text(
-                  contact.name,
+                const SizedBox(height: 18),
+                Text(
+                  "contacts_select_emergency_btn".tr(),
                   style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800,
                     color: AppColors.textPrimary,
-                    fontWeight: FontWeight.w700,
                   ),
                 ),
-                subtitle: Text(
-                  contact.phone,
-                  style: const TextStyle(color: AppColors.textSecondary),
-                ),
-                trailing: Icon(
-                  isSelected
-                      ? Icons.check_circle_rounded
-                      : Icons.radio_button_unchecked_rounded,
-                  color: isSelected ? AppColors.accent : AppColors.border,
-                ),
-                onTap: () async {
-                  Navigator.pop(sheetContext);
-                  final allowed = await SubscriptionGate.ensureAccess(
-                    context,
-                    PremiumFeature.emergencyContactSelect,
-                  );
-                  if (!allowed || !mounted) return;
-                  await provider.selectEmergencyContact(contact);
-                  await _refreshHomeProvider();
-                  if (!mounted) return;
-                  _showSnack(
-                    "contacts_emergency_selected".tr(
-                      namedArgs: {"name": contact.name},
+                const SizedBox(height: 12),
+                ...provider.emergencyContacts.map((contact) {
+                  final isSelected =
+                      provider.selectedEmergencyPhone == contact.phone;
+                  return ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: contact.color.withValues(alpha: 0.12),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(contact.icon, color: contact.color),
                     ),
+                    title: Text(
+                      contact.name,
+                      style: const TextStyle(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    subtitle: Text(
+                      contact.phone,
+                      style: const TextStyle(color: AppColors.textSecondary),
+                    ),
+                    trailing: Icon(
+                      isSelected
+                          ? Icons.check_circle_rounded
+                          : Icons.radio_button_unchecked_rounded,
+                      color: isSelected ? AppColors.accent : AppColors.border,
+                    ),
+                    onTap: () async {
+                      Navigator.pop(sheetContext);
+                      final allowed = await SubscriptionGate.ensureAccess(
+                        context,
+                        PremiumFeature.emergencyContactSelect,
+                      );
+                      if (!allowed || !mounted) return;
+                      await provider.selectEmergencyContact(contact);
+                      await _refreshHomeProvider();
+                      if (!mounted) return;
+                      _showSnack(
+                        "contacts_emergency_selected".tr(
+                          namedArgs: {"name": contact.name},
+                        ),
+                      );
+                    },
                   );
-                },
-              );
-            }),
-            const SizedBox(height: 8),
-          ],
+                }),
+                const SizedBox(height: 8),
+              ],
+            ),
+          ),
         ),
       ),
     );

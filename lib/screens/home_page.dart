@@ -29,6 +29,7 @@ import 'check_in_screen.dart';
 import 'battery_optimization_wizard.dart';
 import '../core/services/emergency_readiness_service.dart';
 import '../core/services/notification_service.dart';
+import '../core/widgets/exact_alarm_permission_guard.dart';
 import '../core/utils/permission_helper.dart';
 
 class HomePage extends StatefulWidget {
@@ -699,6 +700,14 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       );
       return;
     }
+
+    // The fake call is delivered by an exact alarm; on Android 12+ that needs
+    // the "Alarms & reminders" special access. Confirm (or accept degraded
+    // mode) before scheduling so the user is not silently left without a call.
+    final exactAlarmAcknowledged = await confirmExactAlarmPermissionOrDegraded(
+      context,
+    );
+    if (!exactAlarmAcknowledged || !mounted) return;
 
     final scheduled = await NotificationService.instance.scheduleFakeCall(
       delay: delay,

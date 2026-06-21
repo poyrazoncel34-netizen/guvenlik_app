@@ -699,6 +699,8 @@
   "audio_consent_confirm_button": "OK",
   "consent_mgmt_title": "Consent Management",
   "consent_mgmt_info": "You can manage your consents on this screen. When you withdraw a consent, the related feature is immediately disabled. The withdrawal date is recorded.",
+  "consent_save_failed": "Couldn't save the consent change. Secure device storage did not respond; please try again.",
+  "consent_load_failed": "Couldn't read your consent records. The states below may be out of date; try restarting the app.",
   "consent_mgmt_footer": "Consent withdrawal dates are recorded in your KVKK compliance log.",
   "consent_revoke_title": "Withdraw Consent",
   "consent_revoke_desc": "If you withdraw this consent, the related feature will become unavailable. Do you want to continue?",

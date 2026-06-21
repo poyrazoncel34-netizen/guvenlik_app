@@ -151,7 +151,7 @@ class NotificationService {
           ),
         ),
         payload: 'fake_call',
-        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
         // uiLocalNotificationDateInterpretation parameter was removed in
         // flutter_local_notifications v19 (legacy iOS notifications API).
         // Behavior is now always absoluteTime on supported iOS versions.

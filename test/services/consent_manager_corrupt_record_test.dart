@@ -3,58 +3,22 @@
 // ============================================================================
 // KVKK rıza günlüğünde tek bir bozuk JSON satırı tüm onayları silmemeli.
 // _loadConsentCache / getAllLogs döngüleri per-item try/catch ile her bozuk
-// kaydı sessizce atlayıp sağlamları yüklemeli; aksi halde kullanıcı verdiği
-// onayları kaybeder, akış consent-siz kalır, KVKK denetiminde sorun çıkar.
+// kaydı sessizce atlayıp sağlamları yüklemeli. Günlük artık keystore yerine
+// düz, app-private SharedPreferences'ta tutulur.
 // ============================================================================
 
 import 'dart:convert';
 
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:guvenlik_app/core/security/secure_storage_keys.dart';
 import 'package:guvenlik_app/models/consent_record.dart';
 import 'package:guvenlik_app/services/consent_manager.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  // flutter_secure_storage MethodChannel mock — in-memory map yedek.
-  const channel = MethodChannel('plugins.it_nomads.com/flutter_secure_storage');
-  late Map<String, String> store;
-
-  setUp(() {
-    store = {};
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(channel, (MethodCall call) async {
-          final args = call.arguments is Map
-              ? Map<String, dynamic>.from(call.arguments as Map)
-              : <String, dynamic>{};
-          switch (call.method) {
-            case 'read':
-              return store[args['key'] as String];
-            case 'readAll':
-              return Map<String, dynamic>.from(store);
-            case 'write':
-              store[args['key'] as String] = args['value'] as String;
-              return null;
-            case 'delete':
-              store.remove(args['key'] as String);
-              return null;
-            case 'deleteAll':
-              store.clear();
-              return null;
-            case 'containsKey':
-              return store.containsKey(args['key'] as String);
-            default:
-              return null;
-          }
-        });
-  });
-
-  tearDown(() {
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(channel, null);
-  });
+  // Must match ConsentManager._consentLogKey.
+  const consentLogKey = 'kvkk_consent_log_v2';
 
   Map<String, dynamic> goodRecord({
     required String type,
@@ -86,7 +50,9 @@ void main() {
           granted: true,
         ),
       ];
-      store[SecureStorageKeys.consentLog] = jsonEncode(list);
+      SharedPreferences.setMockInitialValues({
+        consentLogKey: jsonEncode(list),
+      });
 
       final cm = ConsentManager();
       await cm.initialize();
@@ -125,7 +91,9 @@ void main() {
           timestamp: DateTime.utc(2026, 6, 1),
         ),
       ];
-      store[SecureStorageKeys.consentLog] = jsonEncode(list);
+      SharedPreferences.setMockInitialValues({
+        consentLogKey: jsonEncode(list),
+      });
 
       final cm = ConsentManager();
       await cm.initialize();
@@ -153,7 +121,9 @@ void main() {
         goodRecord(type: ConsentRecord.typeKvkk, granted: true),
         <String, dynamic>{},
       ];
-      store[SecureStorageKeys.consentLog] = jsonEncode(list);
+      SharedPreferences.setMockInitialValues({
+        consentLogKey: jsonEncode(list),
+      });
 
       final cm = ConsentManager();
       final logs = await cm.getAllLogs();
@@ -170,6 +140,7 @@ void main() {
   );
 
   test('getAllLogs: empty list when storage is empty', () async {
+    SharedPreferences.setMockInitialValues({});
     final cm = ConsentManager();
     final logs = await cm.getAllLogs();
     expect(logs, isEmpty);

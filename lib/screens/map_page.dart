@@ -8,17 +8,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../core/app_colors.dart';
-import '../core/constants/app_constants.dart';
 import '../core/di/service_locator.dart';
-import '../core/widgets/feature_warning_dialog.dart';
 import '../core/services/connectivity_service.dart';
 import '../core/services/location_service.dart';
-import '../core/utils/permission_helper.dart';
 import '../core/utils/map_utils.dart';
-import '../presentation/providers/home_provider.dart';
 import '../domain/repositories/location_repository.dart';
 
 class MapPage extends StatefulWidget {
@@ -317,118 +312,6 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Future<void> _toggleLocationSharing(HomeProvider provider) async {
-    HapticFeedback.mediumImpact();
-    if (provider.isLocationSharing) {
-      provider.stopLocationSharing(manual: true);
-      return;
-    }
-    final ok = await FeatureWarningHelper.showIfNeeded(
-      context,
-      prefKey: AppConstants.prefWarningLocation,
-      featureName: 'location_sharing',
-      title: FeatureWarningHelper.locationTitle,
-      content: FeatureWarningHelper.locationContent,
-    );
-    if (!ok || !mounted) return;
-    _showLocationShareOptions(provider);
-  }
-
-  void _showLocationShareOptions(HomeProvider provider) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        decoration: const BoxDecoration(
-          color: AppColors.cardBg,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: AppColors.border,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(height: 18),
-            Text(
-              "location_share_duration".tr(),
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w800,
-                color: AppColors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 16),
-            _buildShareOption(provider, "minutes_10".tr(), 10),
-            _buildShareOption(provider, "minutes_30".tr(), 30),
-            _buildShareOption(provider, "hour_1".tr(), 60),
-            const SizedBox(height: 12),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildShareOption(HomeProvider provider, String label, int minutes) {
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
-      title: Text(
-        label,
-        style: const TextStyle(
-          fontWeight: FontWeight.w700,
-          color: AppColors.textPrimary,
-        ),
-      ),
-      trailing: const Icon(
-        Icons.chevron_right_rounded,
-        color: AppColors.textSecondary,
-      ),
-      onTap: () {
-        Navigator.pop(context);
-        _startLocationSharing(provider, minutes);
-      },
-    );
-  }
-
-  Future<void> _startLocationSharing(HomeProvider provider, int minutes) async {
-    final notificationsAllowed =
-        await PermissionHelper.requestNotificationPermission(context);
-    if (!notificationsAllowed) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("notification_session_permission_required".tr()),
-            backgroundColor: AppColors.warning,
-          ),
-        );
-      }
-      return;
-    }
-    final started = await provider.startLocationSharing(minutes);
-    if (!mounted) return;
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          started
-              ? "home_location_shared_desc".tr(
-                  namedArgs: {'minutes': '$minutes'},
-                )
-              : "location_sharing_start_failed".tr(),
-        ),
-        backgroundColor: started ? AppColors.success : AppColors.warning,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
   }
@@ -799,7 +682,6 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
   }
 
   Widget _buildCustomAppBar() {
-    final provider = context.watch<HomeProvider>();
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
       decoration: BoxDecoration(
@@ -828,35 +710,6 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
               ),
             ),
           ),
-
-          // Location sharing indicator
-          if (provider.isLocationSharing)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(
-                color: AppColors.success.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(
-                    Icons.share_location,
-                    color: AppColors.success,
-                    size: 16,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    "map_live".tr(),
-                    style: const TextStyle(
-                      color: AppColors.success,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ],
-              ),
-            ),
         ],
       ),
     );
@@ -921,7 +774,6 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
   }
 
   Widget _buildBottomControls() {
-    final provider = context.watch<HomeProvider>();
     final locationText = _currentLocation != null
         ? '${_currentLocation!.latitude.toStringAsFixed(5)}, ${_currentLocation!.longitude.toStringAsFixed(5)}'
         : "map_location_unavailable".tr();
@@ -984,18 +836,6 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
                       ),
                     ),
                   ],
-                ),
-              ),
-              // Sharing toggle
-              IconButton(
-                onPressed: () => _toggleLocationSharing(provider),
-                icon: Icon(
-                  provider.isLocationSharing
-                      ? Icons.share_location
-                      : Icons.location_disabled_outlined,
-                  color: provider.isLocationSharing
-                      ? AppColors.success
-                      : AppColors.textSecondary,
                 ),
               ),
             ],

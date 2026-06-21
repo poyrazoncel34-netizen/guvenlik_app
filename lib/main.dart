@@ -24,7 +24,6 @@ import 'core/services/notification_service.dart';
 import 'core/widgets/emergency_trigger_host.dart';
 import 'core/widgets/app_privacy_shield.dart';
 import 'core/services/local_logger_service.dart';
-import 'core/widgets/offline_banner.dart';
 import 'core/services/revenue_cat_service.dart';
 import 'core/constants/feature_access_matrix.dart';
 import 'core/config/app_environment.dart';
@@ -244,13 +243,11 @@ class KoruBeniApp extends StatelessWidget {
             );
             return MediaQuery(
               data: mediaQuery.copyWith(textScaler: clampedTextScaler),
-              child: OfflineBanner(
-                child: AppPrivacyShield(
-                  child: Semantics(
-                    label: 'app_semantics_label'.tr(),
-                    hint: 'app_semantics_hint'.tr(),
-                    child: child ?? const SizedBox.shrink(),
-                  ),
+              child: AppPrivacyShield(
+                child: Semantics(
+                  label: 'app_semantics_label'.tr(),
+                  hint: 'app_semantics_hint'.tr(),
+                  child: child ?? const SizedBox.shrink(),
                 ),
               ),
             );

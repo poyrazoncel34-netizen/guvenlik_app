@@ -41,13 +41,21 @@ class ConnectivityService {
     });
   }
 
-  bool _hasConnection(List<ConnectivityResult> results) {
-    return results.any(
-      (r) =>
-          r == ConnectivityResult.mobile ||
-          r == ConnectivityResult.wifi ||
-          r == ConnectivityResult.ethernet,
-    );
+  bool _hasConnection(List<ConnectivityResult> results) =>
+      isOnlineFromResults(results);
+
+  /// Pure connectivity decision, extracted so it can be unit-tested without
+  /// the platform plugin.
+  ///
+  /// connectivity_plus reports the active transport(s), not real internet
+  /// reachability. Any transport other than [ConnectivityResult.none]
+  /// (mobile, wifi, ethernet, vpn, bluetooth, other) counts as online. The
+  /// previous allow-list of only mobile/wifi/ethernet wrongly reported
+  /// "offline" while the device was actually online over a VPN/other
+  /// transport, surfacing a false offline banner (S7).
+  static bool isOnlineFromResults(List<ConnectivityResult> results) {
+    if (results.isEmpty) return false;
+    return results.any((r) => r != ConnectivityResult.none);
   }
 
   void dispose() {

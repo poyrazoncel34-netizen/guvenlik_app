@@ -699,6 +699,8 @@
   "audio_consent_confirm_button": "Tamam",
   "consent_mgmt_title": "Rıza Yönetimi",
   "consent_mgmt_info": "Verdiğiniz rızaları bu ekrandan yönetebilirsiniz. Bir rızayı geri çektiğinizde, ilgili özellik anında devre dışı kalır. Geri çekme tarihi kayıt altına alınır.",
+  "consent_save_failed": "Rıza değişikliği kaydedilemedi. Cihaz güvenli depolaması yanıt vermedi; lütfen tekrar deneyin.",
+  "consent_load_failed": "Rıza kayıtları okunamadı. Aşağıdaki durumlar güncel olmayabilir; lütfen uygulamayı yeniden başlatmayı deneyin.",
   "consent_mgmt_footer": "Rıza geri çekme tarihleri KVKK uyum logunuza kaydedilir.",
   "consent_revoke_title": "Rızayı Geri Çek",
   "consent_revoke_desc": "Bu rızayı geri çekmeniz durumunda ilgili özellik kullanılamaz hale gelecektir. Devam etmek istiyor musunuz?",
