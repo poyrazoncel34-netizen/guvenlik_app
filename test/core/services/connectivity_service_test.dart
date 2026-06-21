@@ -9,8 +9,10 @@ import 'package:guvenlik_app/core/services/connectivity_service.dart';
 /// mobile/wifi/ethernet.
 void main() {
   group('ConnectivityService.isOnlineFromResults', () {
-    test('empty result list is treated as offline', () {
-      expect(ConnectivityService.isOnlineFromResults(const []), isFalse);
+    test('empty/unknown result list is fail-open (online), not offline', () {
+      // D5: a false offline banner (e.g. an empty cold-start read) is worse
+      // than briefly missing a true offline on an offline-first app.
+      expect(ConnectivityService.isOnlineFromResults(const []), isTrue);
     });
 
     test('only ConnectivityResult.none is offline', () {
