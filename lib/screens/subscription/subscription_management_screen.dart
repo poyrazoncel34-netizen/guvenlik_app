@@ -103,7 +103,12 @@ class _SubscriptionManagementScreenState
     return Scaffold(
       appBar: AppBar(title: Text('subscription_manage_title'.tr())),
       body: ListView(
-        padding: const EdgeInsets.all(20),
+        padding: EdgeInsets.fromLTRB(
+          20,
+          20,
+          20,
+          20 + MediaQuery.viewPaddingOf(context).bottom,
+        ),
         children: [
           // ── Status banner ──
           _buildStatusBanner(isPro, expiresDate),

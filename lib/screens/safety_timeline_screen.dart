@@ -425,7 +425,12 @@ class _SafetyTimelineScreenState extends State<SafetyTimelineScreen> {
 
   Widget _buildEntryList() {
     return ListView.builder(
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.fromLTRB(
+        20,
+        20,
+        20,
+        20 + MediaQuery.viewPaddingOf(context).bottom,
+      ),
       itemCount: _entries.length,
       itemBuilder: (context, index) {
         final entry = _entries[index];

@@ -103,7 +103,14 @@ class _PaywallScreenState extends State<PaywallScreen> {
     return Scaffold(
       appBar: AppBar(title: Text('subscription_upgrade_title'.tr())),
       body: ListView(
-        padding: const EdgeInsets.all(20),
+        // Edge-to-edge (Android 15 / targetSdk 35): pad the bottom by the system
+        // gesture-nav inset so the footer/links clear the navigation bar.
+        padding: EdgeInsets.fromLTRB(
+          20,
+          20,
+          20,
+          20 + MediaQuery.viewPaddingOf(context).bottom,
+        ),
         children: [
           _buildHeroCard(),
           const SizedBox(height: 20),

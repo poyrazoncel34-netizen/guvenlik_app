@@ -162,7 +162,12 @@ class _KvkkDisclosureScreenState extends State<KvkkDisclosureScreen> {
                 color: AppColors.surface,
                 border: Border(top: BorderSide(color: AppColors.border)),
               ),
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+              padding: EdgeInsets.fromLTRB(
+                20,
+                16,
+                20,
+                24 + MediaQuery.viewPaddingOf(context).bottom,
+              ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [

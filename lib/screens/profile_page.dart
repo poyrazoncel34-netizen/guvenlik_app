@@ -46,7 +46,12 @@ class _ProfilePageState extends State<ProfilePage> {
     return Scaffold(
       appBar: AppBar(title: Text("profile_title".tr())),
       body: ListView(
-        padding: const EdgeInsets.all(20),
+        padding: EdgeInsets.fromLTRB(
+          20,
+          20,
+          20,
+          20 + MediaQuery.viewPaddingOf(context).bottom,
+        ),
         children: [
           Center(
             child: Column(
