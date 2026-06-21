@@ -754,6 +754,24 @@ class _ContactsPageState extends State<ContactsPage> {
 
     final nameController = TextEditingController();
     final phoneController = TextEditingController();
+    final phoneFocusNode = FocusNode();
+    // D3: the sheet already uses isScrollControlled + viewInsets padding, but on
+    // a tall sheet the auto-scroll can leave the focused phone field behind the
+    // keyboard. When it gains focus, explicitly scroll it into view above the
+    // IME (after the keyboard's inset has settled).
+    phoneFocusNode.addListener(() {
+      if (!phoneFocusNode.hasFocus) return;
+      Future.delayed(const Duration(milliseconds: 300), () {
+        final fieldContext = phoneFocusNode.context;
+        if (fieldContext == null || !fieldContext.mounted) return;
+        Scrollable.ensureVisible(
+          fieldContext,
+          alignment: 0.5,
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeInOut,
+        );
+      });
+    });
 
     try {
       final result = await showModalBottomSheet<_AddContactSheetResult>(
@@ -876,6 +894,7 @@ class _ContactsPageState extends State<ContactsPage> {
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: phoneController,
+                  focusNode: phoneFocusNode,
                   keyboardType: TextInputType.phone,
                   textInputAction: TextInputAction.done,
                   autovalidateMode: AutovalidateMode.onUserInteraction,
@@ -931,6 +950,7 @@ class _ContactsPageState extends State<ContactsPage> {
     } finally {
       nameController.dispose();
       phoneController.dispose();
+      phoneFocusNode.dispose();
     }
   }
 
