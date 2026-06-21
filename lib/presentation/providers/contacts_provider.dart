@@ -4,6 +4,7 @@ import '../../core/app_colors.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/di/service_locator.dart';
 import '../../core/services/contact_service.dart';
+import '../../core/utils/emergency_number_validator.dart';
 import '../../domain/repositories/contacts_repository.dart';
 
 class ContactItem {
@@ -90,6 +91,15 @@ class ContactsProvider extends ChangeNotifier {
 
   Future<bool> addContact({required String name, required String phone}) async {
     if (name.trim().isEmpty || phone.trim().isEmpty) return false;
+    // D4: enforce the 7-15 digit rule on EVERY path (manual entry, the system
+    // picker, and any future caller) so an invalid/over-length number can never
+    // be persisted. The inline validator + manual submit-time check stay as the
+    // first lines of defense; this is the single chokepoint.
+    if (!EmergencyNumberValidator.isCallableEmergencyTarget(
+      normalizePhoneNumber(phone),
+    )) {
+      return false;
+    }
     if (containsPhone(phone)) return false;
     if (isAtLimit) return false;
 
