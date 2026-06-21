@@ -54,19 +54,23 @@ class _FakeCallScreenState extends State<FakeCallScreen>
     )..repeat(reverse: true);
     _loadSavedSettings();
     _startRingtone();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      // Show the first-use warning FIRST — accepting it grants fake-call consent
+      // — so a cold first use can grant consent here. (Note: home_page also
+      // gates entry on consent, so the reachable case is mainly defense in
+      // depth for scheduled calls.)
+      await _checkFirstUseWarning();
+      if (!mounted) return;
       // Defense-in-depth gate: a delayed/scheduled fake call may push this
       // screen even after consent was withdrawn from settings.
-      if (!mounted) return;
       if (!ConsentGateService.requireConsent(
         context,
         ConsentRecord.typeFakeCall,
       )) {
         unawaited(_stopRingtone());
         Navigator.of(context).maybePop();
-        return;
       }
-      unawaited(_checkFirstUseWarning());
     });
   }
 

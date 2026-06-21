@@ -43,19 +43,19 @@ void main() {
     );
 
     test(
-      'delayed fake call schedules an exact alarm gated by exact-alarm '
-      'permission (S9)',
+      'delayed fake call prefers exact alarm but falls back to inexact when '
+      'the exact-alarm permission is unavailable (S9 / D7)',
       () {
         final notif = File(
           'lib/core/services/notification_service.dart',
         ).readAsStringSync();
-        // Must fire on time even under Doze/battery optimization: exact, not
-        // inexact (which the OS may batch/defer well past the chosen delay).
+        // D7: prefer exact for on-time delivery, but fall back to inexact when
+        // the Android 12+ exact-alarm permission is denied (exact would throw
+        // SecurityException and drop the call entirely). The choice is gated on
+        // canScheduleExactAlarms().
         expect(notif, contains('AndroidScheduleMode.exactAllowWhileIdle'));
-        expect(
-          notif,
-          isNot(contains('AndroidScheduleMode.inexactAllowWhileIdle')),
-        );
+        expect(notif, contains('AndroidScheduleMode.inexactAllowWhileIdle'));
+        expect(notif, contains('canScheduleExactAlarms()'));
 
         final home = File('lib/screens/home_page.dart').readAsStringSync();
         final scheduleRegion = home.substring(
