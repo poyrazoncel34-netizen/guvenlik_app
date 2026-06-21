@@ -118,7 +118,7 @@ void main() {
         pickerStart,
       );
       final pickerOpen = source.indexOf(
-        'FlutterContactPicker.pickPhoneContact',
+        "_contactsPickerChannel.invokeMethod",
         pickerStart,
       );
       expect(pickerStart, isNot(-1));

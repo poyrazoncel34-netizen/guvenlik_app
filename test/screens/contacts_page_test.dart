@@ -3,18 +3,24 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('ContactsPage._pickContactFromDevice', () {
-    test('does not request READ_CONTACTS when picking a contact', () {
+    test('uses the permissionless native picker (no READ_CONTACTS)', () {
       final source = File('lib/screens/contacts_page.dart').readAsStringSync();
       expect(
         source,
-        contains('askForPermission: false'),
+        contains("_contactsPickerChannel.invokeMethod"),
         reason:
-            'Release contract: use user-selected picker/manual entry only; do not request READ_CONTACTS.',
+            'Release contract: pick via the native ACTION_PICK channel, which '
+            'needs no READ_CONTACTS permission.',
       );
       expect(
-        source,
-        isNot(contains('askForPermission: true')),
-        reason: 'The app must not trigger the plugin READ_CONTACTS request.',
+        source.contains('fluttercontactpicker_plus'),
+        isFalse,
+        reason: 'The old READ_CONTACTS-gated picker plugin must be dropped.',
+      );
+      expect(
+        source.contains('READ_CONTACTS'),
+        isFalse,
+        reason: 'The app must never reference the READ_CONTACTS permission.',
       );
     });
 
@@ -53,28 +59,31 @@ void main() {
   });
 
   group('ContactsPage._pickContactFromDevice catch block', () {
-    test('handles PlatformException separately from generic errors', () {
+    test('handles channel PlatformException without crashing', () {
       final source = File('lib/screens/contacts_page.dart').readAsStringSync();
       expect(
         source.contains('on PlatformException'),
         isTrue,
         reason:
-            '_pickContactFromDevice must catch PlatformException to distinguish permission errors from generic errors',
+            '_pickContactFromDevice must catch channel PlatformExceptions and '
+            'surface a friendly failure instead of crashing.',
       );
       expect(
-        source,
-        contains('contacts_picker_unavailable_manual'),
-        reason:
-            'If the no-READ_CONTACTS picker is unavailable, UI must point users to manual entry.',
+        source.contains('contacts_picker_failed'),
+        isTrue,
+        reason: 'A channel error must show the generic picker-failed message.',
       );
     });
 
-    test('handles picker cancel separately', () {
+    test('treats picker cancel as a handled no-op', () {
       final source = File('lib/screens/contacts_page.dart').readAsStringSync();
+      // Cancel / no-number now comes back as a null parse result, not an
+      // exception — the method returns quietly.
+      expect(source.contains('parsePickedPhoneContact'), isTrue);
       expect(
-        source,
-        contains('on UserCancelledPickingException'),
-        reason: 'Picker cancel must be a handled no-op, not a failure.',
+        source.contains('if (picked == null)'),
+        isTrue,
+        reason: 'A cancelled pick must be a quiet early return, not a failure.',
       );
     });
   });

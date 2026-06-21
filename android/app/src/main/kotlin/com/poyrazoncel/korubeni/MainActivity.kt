@@ -1,5 +1,6 @@
 package com.poyrazoncel.korubeni
 
+import android.app.Activity
 import android.content.ActivityNotFoundException
 import android.content.ComponentName
 import android.content.Context
@@ -7,6 +8,7 @@ import android.content.Intent
 import android.media.AudioManager
 import android.net.Uri
 import android.os.Build
+import android.provider.ContactsContract
 import android.provider.Settings
 import android.view.KeyEvent
 import com.poyrazoncel.korubeni.emergency.EmergencyChannels
@@ -22,11 +24,14 @@ class MainActivity : FlutterFragmentActivity() {
         private const val ANDROID_INTENTS_CHANNEL = "com.poyrazoncel.korubeni/android_intents"
         private const val SETTINGS_CHANNEL = "com.poyrazoncel.korubeni/settings"
         private const val AUDIO_CONTROL_CHANNEL = "com.poyrazoncel.korubeni/audio_control"
+        private const val CONTACTS_PICKER_CHANNEL = "com.poyrazoncel.korubeni/contacts_picker"
+        private const val CONTACT_PICK_REQUEST_CODE = 7341
     }
 
     private val volumeDetector = VolumeButtonDetector()
     private lateinit var dozeModeHandler: DozeModeHandler
     private lateinit var emergencyPlatformHandler: EmergencyPlatformHandler
+    private var pendingContactPickResult: MethodChannel.Result? = null
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
@@ -219,6 +224,22 @@ class MainActivity : FlutterFragmentActivity() {
                 android.util.Log.e("MainActivity", "Settings channel (extended) failed: ${e.message}", e)
             }
 
+            // Permissionless single-contact picker. ACTION_PICK on the phone
+            // data URI grants temporary read access to just the picked row, so
+            // no READ_CONTACTS permission and no broad address-book access.
+            try {
+                MethodChannel(messenger, CONTACTS_PICKER_CHANNEL)
+                    .setMethodCallHandler { call, result ->
+                        when (call.method) {
+                            "pickPhoneContact" -> startPhoneContactPick(result)
+                            else -> result.notImplemented()
+                        }
+                    }
+                android.util.Log.d("MainActivity", "Contacts picker channel configured")
+            } catch (e: Exception) {
+                android.util.Log.e("MainActivity", "Contacts picker channel failed: ${e.message}", e)
+            }
+
             android.util.Log.i("MainActivity", "All platform channels configured successfully")
         } catch (e: Exception) {
             android.util.Log.e("MainActivity", "Critical: configureFlutterEngine failed", e)
@@ -251,6 +272,68 @@ class MainActivity : FlutterFragmentActivity() {
             android.util.Log.e("MainActivity", "Cleanup failed: ${e.message}")
         }
         super.onDestroy()
+    }
+
+    @Suppress("DEPRECATION")
+    private fun startPhoneContactPick(result: MethodChannel.Result) {
+        // One pick at a time; reject re-entrancy without dropping the first.
+        if (pendingContactPickResult != null) {
+            result.error("ALREADY_ACTIVE", "A contact pick is already in progress", null)
+            return
+        }
+        val intent = Intent(
+            Intent.ACTION_PICK,
+            ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+        )
+        try {
+            pendingContactPickResult = result
+            startActivityForResult(intent, CONTACT_PICK_REQUEST_CODE)
+        } catch (e: ActivityNotFoundException) {
+            pendingContactPickResult = null
+            result.error("NO_PICKER", "No contacts app available to pick from", null)
+        }
+    }
+
+    @Suppress("DEPRECATION")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode != CONTACT_PICK_REQUEST_CODE) {
+            return
+        }
+        // One-shot guard: ignore any duplicate delivery or a callback that
+        // arrives after process death (pendingContactPickResult would be null).
+        val result = pendingContactPickResult ?: return
+        pendingContactPickResult = null
+
+        if (resultCode != Activity.RESULT_OK || data?.data == null) {
+            result.success(null) // user cancelled
+            return
+        }
+        try {
+            result.success(readPickedPhoneContact(data.data!!))
+        } catch (e: Exception) {
+            android.util.Log.e("MainActivity", "Contact pick query failed: ${e.message}", e)
+            result.error("PICK_FAILED", e.message, null)
+        }
+    }
+
+    private fun readPickedPhoneContact(uri: Uri): Map<String, String>? {
+        val projection = arrayOf(
+            ContactsContract.CommonDataKinds.Phone.NUMBER,
+            ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
+        )
+        contentResolver.query(uri, projection, null, null, null)?.use { cursor ->
+            if (cursor.moveToFirst()) {
+                val numberIdx =
+                    cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)
+                val nameIdx =
+                    cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME)
+                val number = if (numberIdx >= 0) cursor.getString(numberIdx) ?: "" else ""
+                val name = if (nameIdx >= 0) cursor.getString(nameIdx) ?: "" else ""
+                return mapOf("number" to number, "name" to name)
+            }
+        }
+        return null
     }
 
     private fun openDialer(number: String): Boolean {
