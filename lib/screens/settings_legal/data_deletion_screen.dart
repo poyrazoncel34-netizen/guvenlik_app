@@ -126,7 +126,12 @@ class _DataDeletionScreenState extends State<DataDeletionScreen> {
         ),
       ),
       body: ListView(
-        padding: const EdgeInsets.all(20),
+        padding: EdgeInsets.fromLTRB(
+          20,
+          20,
+          20,
+          20 + MediaQuery.viewPaddingOf(context).bottom,
+        ),
         children: [
           // Uyarı kutusu
           Container(

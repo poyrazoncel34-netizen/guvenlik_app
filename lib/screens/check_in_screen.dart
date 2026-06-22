@@ -203,7 +203,12 @@ class _CheckInScreenState extends State<CheckInScreen>
 
   Widget _buildSetupView() {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
+      padding: EdgeInsets.fromLTRB(
+        24,
+        24,
+        24,
+        24 + MediaQuery.viewPaddingOf(context).bottom,
+      ),
       child: Column(
         children: [
           const SizedBox(height: 20),
@@ -382,7 +387,12 @@ class _CheckInScreenState extends State<CheckInScreen>
         : 0.0;
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
+      padding: EdgeInsets.fromLTRB(
+        24,
+        24,
+        24,
+        24 + MediaQuery.viewPaddingOf(context).bottom,
+      ),
       child: Column(
         children: [
           const SizedBox(height: 20),

@@ -228,7 +228,12 @@ class _ConsentScreenState extends State<ConsentScreen> {
               color: AppColors.surface,
               border: Border(top: BorderSide(color: AppColors.border)),
             ),
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+            padding: EdgeInsets.fromLTRB(
+              20,
+              16,
+              20,
+              24 + MediaQuery.viewPaddingOf(context).bottom,
+            ),
             child: SizedBox(
               width: double.infinity,
               child: ElevatedButton(

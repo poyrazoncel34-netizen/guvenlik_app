@@ -5,6 +5,7 @@ import 'package:timezone/data/latest.dart' as tz_data;
 import 'package:timezone/timezone.dart' as tz;
 
 import 'app_settings_service.dart';
+import 'emergency_platform_service.dart';
 import '../navigation/app_navigator.dart';
 import '../utils/permission_helper.dart';
 import '../../screens/fake_call_screen.dart';
@@ -130,6 +131,16 @@ class NotificationService {
     try {
       await initialize();
       final scheduledAt = tz.TZDateTime.now(tz.local).add(delay);
+      // D7: prefer an exact alarm so the call lands on time, but FALL BACK to an
+      // inexact alarm when the app lacks the Android 12+ exact-alarm permission.
+      // setExactAndAllowWhileIdle (exact) throws SecurityException without that
+      // permission; setAndAllowWhileIdle (inexact) needs no permission and still
+      // fires (Doze may defer it) — so the fake call is delivered, not dropped.
+      final canExact =
+          await EmergencyPlatformService.instance.canScheduleExactAlarms();
+      final scheduleMode = canExact
+          ? AndroidScheduleMode.exactAllowWhileIdle
+          : AndroidScheduleMode.inexactAllowWhileIdle;
       await _plugin.zonedSchedule(
         31001,
         'fake_call_notification_title'.tr(),
@@ -151,7 +162,7 @@ class NotificationService {
           ),
         ),
         payload: 'fake_call',
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        androidScheduleMode: scheduleMode,
         // uiLocalNotificationDateInterpretation parameter was removed in
         // flutter_local_notifications v19 (legacy iOS notifications API).
         // Behavior is now always absoluteTime on supported iOS versions.
