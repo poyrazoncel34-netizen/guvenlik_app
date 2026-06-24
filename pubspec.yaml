@@ -89,6 +89,8 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
   mocktail: ^0.3.0
+  # Host-side (in-memory) sqflite for unit-testing DB-backed logic.
+  sqflite_common_ffi: ^2.3.3
   flutter_launcher_icons: ^0.13.1
   flutter_native_splash: ^2.4.7
 

@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../di/service_locator.dart';
 import '../security/secure_storage.dart';
 import 'emergency_platform_service.dart';
+import 'contact_service.dart';
 import 'local_database_service.dart';
 
 class AppResetService {
@@ -16,6 +17,9 @@ class AppResetService {
     await prefs.clear();
     await serviceLocator<SecureStorage>().deleteAll();
     await serviceLocator<LocalDatabaseService>().deleteDatabaseFile();
+    // Drop the in-memory emergency-contact cache so a deleted contact is
+    // never served again after KVKK "delete my data".
+    ContactService.resetCache();
     await _clearLocalFiles();
     // KVKK Md.7 (silme): also wipe the NATIVE korubeni_emergency prefs,
     // which hold the persisted primary contact number

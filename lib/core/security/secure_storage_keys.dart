@@ -9,6 +9,12 @@ class SecureStorageKeys {
   static const String medicalProfile = 'medical_profile';
   static const String contactsList = 'contacts_list';
   static const String contactsData = 'contacts_data';
+
+  /// Canonical at-rest store for emergency contacts (KRİTİK-1 / H1). Single
+  /// source of truth: a JSON envelope encrypted by the Android Keystore-backed
+  /// flutter_secure_storage. Legacy keys above are read only during one-time
+  /// migration and cleared afterwards.
+  static const String emergencyContactsV1 = 'emergency_contacts_v1';
   static const String emergencyContactsList = 'emergency_contacts_list';
   static const String emergencyContactName = 'emergency_contact_name';
   static const String emergencyContactPhone = 'emergency_contact_phone';

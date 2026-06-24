@@ -15,6 +15,7 @@ import 'screens/splash_screen.dart';
 import 'core/services/offline_queue_service.dart';
 import 'core/services/crash_log_service.dart';
 import 'core/services/data_migration_service.dart';
+import 'core/services/contact_service.dart';
 import 'core/services/medical_data_cleanup_service.dart';
 import 'core/services/foreground_service.dart';
 import 'core/services/haptic_service.dart';
@@ -112,6 +113,10 @@ void main() async {
   // Web: Skip NotificationService & ForegroundService (platform plugins don't support web)
   try {
     await setupServiceLocator();
+    // Warm the emergency-contact cache before the UI can trigger a panic
+    // (best-effort; ContactService.warmUp swallows failures so boot is
+    // never blocked, and lazy reads self-heal).
+    await ContactService.warmUp();
     FeatureAccessMatrix.debugPrintMatrix();
 
     final services = <Future<void>>[

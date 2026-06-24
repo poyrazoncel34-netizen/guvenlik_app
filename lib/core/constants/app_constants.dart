@@ -35,6 +35,13 @@ class AppConstants {
   // One-time cleanup flag for the removed medical-profile feature (KVKK Md.7).
   static const String prefMedicalCleanupDone = 'pref_medical_cleanup_done';
 
+  // Idempotency flag: emergency contacts have been migrated from the plaintext
+  // sqflite `contacts` table (and older secure/prefs keys) into the canonical
+  // keystore-backed secure store (KRİTİK-1 / H1). Only skips a legacy rescan;
+  // the authority for "migration complete" is an empty `contacts` table.
+  static const String prefContactsSecureMigratedV1 =
+      'pref_contacts_secure_migrated_v1';
+
   // Legacy medical-profile keys — feature removed; retained only so the
   // one-time MedicalDataCleanupService can purge orphaned data on upgrade.
   // Delete next release once the cleanup has shipped to all users.
