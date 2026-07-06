@@ -21,7 +21,7 @@ Do not mark local-only data as developer-collected/shared merely because it is s
 | Optional photos/images | Local-only | User-selected fake-call avatar images stay on device; no cloud upload. |
 | Phone number | Not collected by developer | Emergency contact numbers are stored locally and may be used by Android telephony when the user starts a call flow. |
 | Purchase history / subscription status | Processed by Google Play Billing and RevenueCat | Required for optional KoruBeni Pro entitlement verification and restore. |
-| Anonymous app/device/subscription identifiers | Processed by RevenueCat / Google Play Billing where applicable | Used for purchase verification, entitlement status, fraud prevention, and restore. |
+| Anonymous app/device/subscription identifiers and IP address (connection-level) | Processed by RevenueCat / Google Play Billing where applicable | Used for purchase verification, entitlement status, fraud prevention, and restore. |
 | Payment card credentials | Not collected by developer | Handled by Google Play. |
 | Crash logs / analytics / ads data | Not collected in this release based on repo verification | No Firebase Analytics, Crashlytics, Sentry, ads SDK, UGC, auth backend, or cloud database in current Play build. |
 | Audio / microphone | Not collected | Android Play release does not request microphone permission or record audio. |

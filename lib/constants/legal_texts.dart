@@ -249,6 +249,7 @@ Konum             | GPS koordinatları                 | Harita ve konum oturumu
 Güvenlik          | PIN kodu (şifreli)                | Uygulama erişim kontrolü              | Meşru menfaat
 Cihaz             | Cihaz tipi, OS versiyonu          | Teknik uyumluluk & rıza logu          | Meşru menfaat
 Yasal Rıza Logu   | Rıza türü, tarih, versiyon        | KVKK uyum kaydı                       | Hukuki yükümlülük
+Abonelik (Pro)    | IP, cihaz bilgisi, abone kimliği  | Pro abonelik doğrulama (RevenueCat)   | Sözleşmenin ifası
 
 ──────────────────────────────────────
 3. VERİLERİN İŞLENME AMACI
@@ -275,6 +276,7 @@ Uygulama tüm rehber listesini okumaz. Yalnızca kullanıcının seçtiği veya 
 • Acil durum kişileri  : Yalnızca seçtiğiniz veya girdiğiniz kişiler; siz silene kadar
 • Konum bilgisi        : Yalnızca aktif konum oturumu sırasında cihaz belleğinde geçici olarak tutulur; oturum bittiğinde silinir ve kalıcı olarak saklanmaz
 • Rıza logları         : Uygulama kullanıldığı sürece; cihaz verisini silene kadar
+• Abonelik verisi      : Doğrulama amacıyla RevenueCat/Google Play tarafından kendi saklama politikaları süresince işlenir; geliştirici ayrıca saklamaz
 • PIN (şifreli)        : Siz değiştirene veya silene kadar
 
 ──────────────────────────────────────
@@ -348,6 +350,7 @@ Location          | GPS coordinates                   | Map and location session
 Security          | PIN code (encrypted)              | App access control                    | Legitimate interest
 Device            | Device type, OS version           | Technical compatibility & consent log | Legitimate interest
 Legal Consent Log | Consent type, date, version       | KVKK compliance record                | Legal obligation
+Subscription (Pro)| IP, device info, subscriber ID    | Pro subscription verification         | Contract performance
 
 ──────────────────────────────────────
 3. PURPOSES OF PROCESSING
@@ -374,6 +377,7 @@ The app does not read the full contacts list. It stores only emergency contacts 
 • Emergency contacts       : Only contacts you select or enter; until you delete them
 • Location data            : Held only in device memory while a location session is active; cleared when the session ends and never persisted
 • Consent logs             : While the app is in use; until device data deletion
+• Subscription data        : Processed by RevenueCat/Google Play under their own retention policies for verification; not additionally stored by the developer
 • PIN (encrypted)          : Until you change or delete it
 
 ──────────────────────────────────────
