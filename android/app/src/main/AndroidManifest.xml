@@ -58,6 +58,14 @@
         android:fullBackupContent="false"
         android:usesCleartextTraffic="false"
         android:enableOnBackInvokedCallback="true">
+        <!-- Android 16 (API 36), sw>=600dp ekranlarda orientation/resizability
+             kisitlarini yok sayar; portre kilidi (main.dart) tablet/katlanabilirde
+             devre disi kalirdi. Bu property Google'in belgeledigi GECICI opt-out'tur
+             ve API 37 hedeflenince kalkacak — adaptif layout calismasi o zamana
+             kadar planlanmali. -->
+        <property
+            android:name="android.window.PROPERTY_COMPAT_ALLOW_RESTRICTED_RESIZABILITY"
+            android:value="true" />
         <activity
             android:name=".MainActivity"
             android:exported="true"
