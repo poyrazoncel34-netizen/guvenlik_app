@@ -87,3 +87,46 @@ anahtar seçimi serbesttir; ilk yüklemeden sonra kalıcılaşır.
 - Placeholder release AAB + 16KB hizalama: bu oturumda yeniden koşuldu (sonuç için
   oturum kaydı). ENCRYPTION_KEY **verilmeden** derlendi — söküm kanıtı.
 - Bu artefact Play'e yüklenmez; yalnızca pipeline kanıtıdır.
+
+---
+
+# ÖZ-DENETİM TURU 2 (aynı gün) — İlk uygulamanın eksikleri ve kapatılması
+
+İlk uygulama turu "her adım kanıtlı" iddiasındaydı; ikinci acımasız denetim şunları buldu:
+
+## Bulunan ve kapatılan eksikler
+
+1. **KVKK §2/§5 yapısal eksik:** Aktarım CÜMLESİ eklenmiş ama m.10'un istediği yapıya
+   — veri kategorileri tablosu ve saklama süreleri — abonelik verisi satırı eklenmemişti.
+   Kapatıldı: TR/EN tablolarına "Abonelik (Pro) | IP, cihaz bilgisi, abone kimliği |
+   ... | Sözleşmenin ifası (m.5/2-c)" satırı + saklama bölümlerine abonelik satırı +
+   HTML tablolarına aynı satır. Hukuki sebep bilinçli olarak açık rıza DEĞİL
+   sözleşmenin ifası seçildi (rıza enflasyonundan kaçınma: rıza geri çekilirse Pro
+   sözleşmesi ifa edilemez hale gelirdi).
+2. **Mevcut metinde madde atıf hatası (ilk turda gözden kaçtı):** HTML tablolar açık
+   rızayı "Md. 5/2-a" diye gösteriyordu; açık rıza m.5/1'dir, 5/2-a "kanunlarda
+   açıkça öngörülme"dir. 4 satır × 2 ayna düzeltildi.
+3. **targetSdk 36 etki analizi yüzeyseldi:** Android 16, sw>=600dp ekranlarda
+   orientation/resizability kısıtlarını YOK SAYAR (kaynak: developer.android.com
+   behavior-changes-16). main.dart:209 portre kilidi tablet/katlanabilirde devre
+   dışı kalacaktı. Google'ın belgelediği GEÇİCİ opt-out
+   (PROPERTY_COMPAT_ALLOW_RESTRICTED_RESIZABILITY) manifeste eklendi.
+   **TEKNİK BORÇ:** API 37'de opt-out kalkıyor — adaptif layout çalışması planlanmalı.
+4. **Billing Library kanıtı (ilk raporda kurulmayan bağlantı):** Play, 31 Ağustos
+   2026'dan itibaren yeni sürümlerde Billing Library v8 istiyor (developer.android.com
+   deprecation-faq). purchases_flutter 10.3.0'ın 'billingclient bc8' kullandığı pub
+   cache gradle'ında doğrulandı → RevenueCat v10 migrasyonu tercihe bağlı bir
+   iyileştirme değil, targetSdk 36 ile AYNI deadline'ın zorunluluğuydu. 8.x'te
+   kalınsaydı Ağustos sonrası güncelleme yüklenemezdi.
+5. **CI'da bayat keystore rehberliği:** release.yml, KEYSTORE_BASE64 secret'ını
+   şifresi bilinmeyen eski dosya adına referansla anlatıyordu. Dosya adları
+   korubeni_keystore_release.jks olarak güncellendi. **OPERATÖR:** KEYSTORE_BASE64
+   secret'ının, çalışan keystore'un base64'ü olduğunu doğrula:
+   `base64 -i android/app/korubeni_keystore_release.jks | tr -d '\n'`
+6. **Data Safety formu ile yeni legal metin arası tutarlılık:** IP adresi formda
+   yoktu, kimlik satırına eklendi.
+7. **"Operatör push'lasın" kaçamağı:** gh-pages branch'i lokalde mevcuttu; güncel
+   aydinlatma.html worktree ile commit'lendi (gh-pages @ 2135fe7). Kalan tek adım
+   `git push origin gh-pages` (yayına alma kararı operatörde).
+8. **Android lint/Kotlin testleri ilk turda atlanmıştı** (Haziran süreci koşuyordu):
+   bu turda lintPlayRelease + testPlayDebugUnitTest koşuldu (sonuç oturum kaydında).
