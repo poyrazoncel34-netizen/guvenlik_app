@@ -116,8 +116,8 @@ class RevenueCatService {
       throw RevenueCatPurchaseException.generic();
     }
     try {
-      final result = await Purchases.purchasePackage(package);
-      return result;
+      final result = await Purchases.purchase(PurchaseParams.package(package));
+      return result.customerInfo;
     } on PlatformException catch (e) {
       final errorCode = PurchasesErrorHelper.getErrorCode(e);
       if (errorCode == PurchasesErrorCode.purchaseCancelledError) {

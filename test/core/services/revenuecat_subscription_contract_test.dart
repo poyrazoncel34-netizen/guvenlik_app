@@ -33,7 +33,8 @@ void main() {
       () {
         expect(service, contains('Purchases.configure'));
         expect(service, contains('Purchases.getOfferings'));
-        expect(service, contains('Purchases.purchasePackage'));
+        expect(service, contains('Purchases.purchase'));
+        expect(service, contains('PurchaseParams.package'));
         expect(service, contains('Purchases.restorePurchases'));
       },
     );

@@ -195,6 +195,7 @@ class SubscriptionProvider extends ChangeNotifier {
     }
     return null;
   }
+
   bool _disposed = false;
 
   @override
