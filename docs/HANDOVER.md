@@ -553,7 +553,7 @@ Yeni oturum bu dokümanlara bakarsa şu kısımlara **güvenmesin**:
    minimum" der — bayat: fiili minSdk **24**'tür (Flutter 3.38 varsayılanı) ve biyometrik bu
    projede zaten yasaktır.
 5. **[KEYSETUP.md](../KEYSETUP.md)** lokal keystore adı `korubeni-release-key.jks` örneği verir;
-   CI gerçeği `android/app/korubeni_keystore.jks` (secret'tan decode, release.yml:53). Lokal
+   CI gerçeği `android/app/korubeni_keystore_release.jks` (secret'tan decode; 2026-07-06'da yeniden adlandırıldı, KEYSTORE_BASE64 secret'ı bu dosyanın base64'ü olmalı). Lokal
    kılavuz olarak okunmalı, CI yolu esas alınmalı.
 6. **Kök `BUILD_*.md` dosyaları** erken dönem build notlarıdır (kök `README.md` 13 Haziran
    2026'da bağlayıcı kaynaklara işaret eden kısa yönlendirme sayfasıyla değiştirildi); release

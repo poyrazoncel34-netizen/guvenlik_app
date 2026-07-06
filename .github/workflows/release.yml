@@ -59,13 +59,13 @@ jobs:
 
           # Fail early if the secret is missing/unset.
           if [ -z "${KEYSTORE_BASE64:-}" ]; then
-            echo "::error title=KEYSTORE_BASE64 missing::Secret KEYSTORE_BASE64 is empty or unset. Re-add the base64 of android/app/korubeni_keystore.jks as a repo secret."
+            echo "::error title=KEYSTORE_BASE64 missing::Secret KEYSTORE_BASE64 is empty or unset. Re-add the base64 of the WORKING release keystore (local name: android/app/korubeni_keystore_release.jks) as a repo secret."
             exit 1
           fi
 
           # Strip CR/LF/spaces that some secret editors inject (CRLF, wrapped lines,
           # trailing whitespace) before decoding, otherwise base64 fails cryptically.
-          KEYSTORE_OUT="android/app/korubeni_keystore.jks"
+          KEYSTORE_OUT="android/app/korubeni_keystore_release.jks"
           printf '%s' "$KEYSTORE_BASE64" | tr -d '\r\n ' | base64 --decode > "$KEYSTORE_OUT"
 
           # Decoded file must be non-empty.
@@ -95,7 +95,7 @@ jobs:
           storePassword=$STORE_PASSWORD
           keyPassword=$KEY_PASSWORD
           keyAlias=$KEY_ALIAS
-          storeFile=app/korubeni_keystore.jks
+          storeFile=app/korubeni_keystore_release.jks
           EOF
 
       - name: Flutter pub get
