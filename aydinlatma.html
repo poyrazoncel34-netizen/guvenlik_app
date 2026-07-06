@@ -121,7 +121,7 @@
 <body>
     <div class="container">
         <h1>KoruBeni KVKK Aydınlatma Metni</h1>
-        <p class="subtitle">Sürüm 3.1.1 &nbsp;|&nbsp; Son güncelleme: 21 Mayıs 2026 &nbsp;|&nbsp; 6698 Sayılı KVKK Md. 10 ve 10.03.2018 Tarihli Aydınlatma Tebliği Uyarınca</p>
+        <p class="subtitle">Sürüm 3.2.0 &nbsp;|&nbsp; Son güncelleme: 6 Temmuz 2026 &nbsp;|&nbsp; 6698 Sayılı KVKK Md. 10 ve 10.03.2018 Tarihli Aydınlatma Tebliği Uyarınca</p>
 
         <div class="warning-box">
             <strong>⚠️ ÖNEMLİ UYARI</strong><br>
@@ -154,22 +154,22 @@
                 <tr>
                     <td><strong>Kimlik (Ad)</strong></td>
                     <td>Uygulama profili</td>
-                    <td>Md. 5/2-a: İlgili kişinin açık rızası</td>
+                    <td>Md. 5/1: İlgili kişinin açık rızası</td>
                 </tr>
                 <tr>
                     <td><strong>Görsel (isteğe bağlı sahte çağrı avatarı)</strong></td>
                     <td>Sahte çağrı kişiselleştirme; yalnızca cihaz içinde saklanır</td>
-                    <td>Md. 5/2-a: İlgili kişinin açık rızası</td>
+                    <td>Md. 5/1: İlgili kişinin açık rızası</td>
                 </tr>
                 <tr>
                     <td><strong>Konum verisi (GPS)</strong></td>
                     <td>Acil durum veya konum oturumu sırasında konum durumunu uygulama içinde göstermek</td>
-                    <td>Md. 5/2-a: İlgili kişinin açık rızası</td>
+                    <td>Md. 5/1: İlgili kişinin açık rızası</td>
                 </tr>
                 <tr>
                     <td><strong>Acil durum kişisi adı ve telefon numarası</strong></td>
                     <td>Acil durum arama akışı için kişi bilgisi olarak kullanmak</td>
-                    <td>Md. 5/2-a: İlgili kişinin açık rızası</td>
+                    <td>Md. 5/1: İlgili kişinin açık rızası</td>
                 </tr>
                 <tr>
                     <td><strong>PIN kodu</strong></td>
@@ -190,6 +190,11 @@
                     <td><strong>Yasal Rıza Logu (Rıza türü, tarih, versiyon)</strong></td>
                     <td>KVKK uyum kaydı</td>
                     <td>Md. 5/2-ç: Veri sorumlusunun hukuki yükümlülüğünün yerine getirilmesi</td>
+                </tr>
+                <tr>
+                    <td><strong>Abonelik (IP adresi, cihaz modeli/OS bilgisi, anonim abone kimliği, satın alma olayları)</strong></td>
+                    <td>İsteğe bağlı KoruBeni Pro aboneliğinin doğrulanması ve yönetimi (RevenueCat/Google Play)</td>
+                    <td>Md. 5/2-c: Sözleşmenin kurulması veya ifasıyla doğrudan doğruya ilgili olması</td>
                 </tr>
             </tbody>
         </table>
@@ -214,7 +219,7 @@
             <li><strong>Harita servisi:</strong> Çevrimiçi harita görünümü harita karo servisine ağ isteği yapabilir; konum alınamazsa sahte koordinat gösterilmez.</li>
             <li><strong>OpenStreetMap:</strong> Harita görüntüleme için kullanılır; yalnızca kullanıcının aktif olarak görüntülediği çevrimiçi harita karoları istenirken sağlayıcıya teknik ağ isteği yapılabilir. Uygulama public OSM karolarını toplu indirmez, önceden yüklemez, scrape etmez, arşivlemez veya paketlemez.</li>
             <li><strong>Google Play Billing:</strong> İsteğe bağlı KoruBeni Pro abonelik satın alma, yenileme, iptal ve geri yükleme işlemleri Google Play üzerinden yönetilir.</li>
-            <li><strong>RevenueCat:</strong> İsteğe bağlı KoruBeni Pro abonelik ve yetki durumunu doğrulamaya yardımcı olabilir; ödeme bilgileri geliştirici tarafından saklanmaz.</li>
+            <li><strong>RevenueCat:</strong> İsteğe bağlı KoruBeni Pro aboneliği kullanıldığında; abonelik doğrulaması için sınırlı teknik veri (IP adresi, cihaz modeli/OS bilgisi, anonim abone kimliği, satın alma olayları) sunucuları yurt dışında (ABD) bulunan RevenueCat'e iletilir — KVKK Madde 9 kapsamında yurt dışına aktarım. Ödeme bilgileri geliştirici tarafından saklanmaz; reklam/atıf kimliği toplanmaz.</li>
             <li><strong>Yetkili makamlar:</strong> Mahkeme kararı veya yasal zorunluluk halinde ilgili kurum ve kuruluşlara aktarılabilir.</li>
         </ul>
         <div class="highlight">
@@ -236,7 +241,7 @@
 
         <h2>7. Kişisel Veri Güvenliği</h2>
         <ul>
-            <li>PIN doğrulama ve ilk müdahale profil bilgileri Android'in güvenli depolama altyapısı üzerinden yönetilir.</li>
+            <li>PIN doğrulama bilgileri Android'in güvenli depolama altyapısı üzerinden yönetilir.</li>
             <li>Acil kişi kayıtları uygulamanın cihaz içi yerel veritabanında saklanır.</li>
             <li>Uygulama offline-first çalışır; veriler geliştirici backend'ine gönderilmez.</li>
             <li>Bu sürümde reklam veya üçüncü taraf analitik SDK'si kullanılmaz.</li>
@@ -262,7 +267,7 @@
 
         <h2>10. Politika Değişiklikleri</h2>
         <p>Bu aydınlatma metninde yapılacak önemli değişiklikler uygulama içi bildirim aracılığıyla kullanıcılara duyurulur. Güncel metne bu sayfadan ulaşabilirsiniz.</p>
-        <p><strong>Son güncelleme:</strong> 21 Mayıs 2026</p>
+        <p><strong>Son güncelleme:</strong> 6 Temmuz 2026</p>
 
         <footer>
             <p>&copy; 2026 KoruBeni — Poyraz Öncel. Tüm hakları saklıdır.</p>
