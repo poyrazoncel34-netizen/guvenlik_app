@@ -169,3 +169,25 @@ anahtar seçimi serbesttir; ilk yüklemeden sonra kalıcılaşır.
 2. Play Console formları + kapalı test + 12 tester × 14 gün.
 3. Gerçek cihaz turu: Doze/OEM-killer/satın alma (emülatör smoke denemesi
    oturum kaydında; Doze yarışı ve billing yalnızca gerçek cihazda).
+
+## Emülatör smoke testi (Android 16 / API 36) — 2026-07-06
+
+Gerçek cihaz DEĞİL ama gerçek OS: AVD "Medium Phone API 36.1" (Android 16, SDK 36).
+İmzalı release APK (app-play-release.apk, 76.5MB) temiz kuruldu ve başlatıldı.
+
+**KANITLANAN (CONFIRMED):**
+- Android 16'da çökmeden açılıyor: `Displayed ... MainActivity +1s782ms`, PID canlı,
+  logcat'te FATAL/AndroidRuntime yok.
+- Tam servis init (önceki koşu logu): "Integrity check: all data consistent",
+  LocalLogger, ForegroundService, HapticService configured.
+- targetSdk 36 + FSI beyanı + orientation opt-out property'siyle kurulum/başlatma
+  sorunsuz.
+
+**KANITLANAMAYAN (gerçek cihaz gerektirir):**
+- Görsel UI doğrulaması: Flutter **Impeller (OpenGLES) backend** emülatörde
+  `screencap`'e siyah kare veriyor + pencere SurfaceFlinger'da (Secure) — ikisi de
+  bilinen yakalama artefaktı, uygulama bug'ı DEĞİL (loglar render + çalışmayı
+  kanıtlıyor). Yine de göz-ile UI doğrulaması gerçek cihazda yapılmalı.
+- Doze yarışı, OEM arka-plan katili, gerçek satın alma/restore: emülatör kapsamaz.
+- RevenueCat: placeholder anahtarla init beklenen şekilde devre dışı; gerçek panel
+  + lisans tester gerçek cihaz işi.
