@@ -146,8 +146,9 @@ object EmergencyNotificationHelper {
         // SPEC 3.1/3.3/3.6b: use a full-screen intent for the grace prompt WHEN the
         // platform/user permits it; otherwise degrade gracefully to a high-priority
         // heads-up notification. Must never crash on denial (Android 14+ runtime
-        // restriction). The USE_FULL_SCREEN_INTENT manifest/Console declaration is a
-        // separate deferred step (SPEC 3.6a) — until then this stays heads-up.
+        // restriction). USE_FULL_SCREEN_INTENT is declared in the manifest
+        // (2026-07-06, SPEC 3.6a closed); on devices where the system still
+        // withholds it (Android 14+ non call/alarm default) this stays heads-up.
         if (fullScreen && canUseFullScreenIntent(context)) {
             builder.setFullScreenIntent(
                 buildLaunchPendingIntent(context, triggerType),

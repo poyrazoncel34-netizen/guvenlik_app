@@ -122,6 +122,26 @@ void main() {
       expect(violations, isEmpty);
     });
 
+    test('full-screen intent declaration stays consistent with docs', () {
+      final manifest = File(
+        'android/app/src/main/AndroidManifest.xml',
+      ).readAsStringSync();
+      expect(
+        manifest,
+        contains('android.permission.USE_FULL_SCREEN_INTENT'),
+      );
+
+      final declarations = File(
+        'docs/play_console_declarations.md',
+      ).readAsStringSync();
+      expect(declarations, contains('USE_FULL_SCREEN_INTENT'));
+
+      final notes = File(
+        'store/permissions_declaration_notes.md',
+      ).readAsStringSync();
+      expect(notes, contains('USE_FULL_SCREEN_INTENT'));
+    });
+
     test(
       'audio recording and microphone collection are disabled in docs/code',
       () {

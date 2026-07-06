@@ -16,6 +16,13 @@
         tools:node="remove" />
     <!-- Notifications (Android 13+) -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Full-screen intent: sahte cagri kilitli ekranda gercek cagri gibi
+         calmali (cekirdek guvenlik senaryosu: taciz ortamindan cikis) ve acil
+         geri sayim uyarilari kilitli ekranda gorunmeli. Android 14+ cagri/alarm
+         disi uygulamalarda sistem izni kisabilir; kod canUseFullScreenIntent()
+         ile kontrol edip heads-up bildirime duser (EmergencyNotificationHelper).
+         Play Console FSI beyani gerekirse gerekce: docs/play_console_declarations.md -->
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
     <!-- RECORD_AUDIO removed — audio recording feature disabled -->
     <!-- Vibration for shake feedback -->
     <uses-permission android:name="android.permission.VIBRATE" />

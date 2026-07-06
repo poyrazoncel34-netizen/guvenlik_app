@@ -10,6 +10,7 @@ Dashboard completion is PLAY_CONSOLE / NEEDS_OPERATOR_ACTION. This file only pre
 | `SCHEDULE_EXACT_ALARM` | User-visible safety deadlines/timers | CODE_DONE copy prepared; PLAY_CONSOLE submit if required |
 | `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` | Optional reliability improvement for active safety sessions | CODE_DONE copy prepared; PLAY_CONSOLE submit if required |
 | `CALL_PHONE` | User-initiated Panic/SOS call flow after confirmation/countdown | CODE_DONE copy prepared; PLAY_CONSOLE submit if required |
+| `USE_FULL_SCREEN_INTENT` | Fake-call ring screen + emergency countdown alerts over lock screen | CODE_DONE (declared 2026-07-06); PLAY_CONSOLE submit if required |
 | `POST_NOTIFICATIONS` | User-visible safety notifications/reminders | CODE_DONE copy prepared |
 | Message/SMS permissions | Not present in this Android Play release | CODE_DONE |
 | `READ_PHONE_STATE` | Not present; fake call is an on-device simulation | CODE_DONE |
@@ -24,6 +25,17 @@ KoruBeni uses a foreground service only for active, user-started safety sessions
 Subtype is declared in `AndroidManifest.xml` as `emergency_checkin_keepalive` via the `PROPERTY_SPECIAL_USE_FGS_SUBTYPE` property on the service entry.
 
 For the full type-selection rationale (why `specialUse` over `location`, `dataSync`, `shortService`, etc.) and the Android 15 boot-restriction context, see [docs/play_console_declarations.md](../docs/play_console_declarations.md).
+
+## `USE_FULL_SCREEN_INTENT`
+
+Declared 2026-07-06. Core-functionality justification: the fake-call feature must
+present a realistic incoming-call screen over the lock screen (personal-safety
+exit scenario), and emergency countdown alerts must be visible when the device is
+locked. The app never crashes on denial: `EmergencyNotificationHelper` checks
+`NotificationManager.canUseFullScreenIntent()` and degrades to a high-priority
+heads-up notification (Android 14+ may withhold the grant for non call/alarm
+apps; the user can enable it in system settings). If Play Console presents an
+FSI declaration form, answer with this justification.
 
 ## `SCHEDULE_EXACT_ALARM`
 

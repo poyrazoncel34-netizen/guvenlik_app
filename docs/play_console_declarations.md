@@ -2,6 +2,17 @@
 
 Do not mark any Play Console declaration submitted from this repo. Copy/paste text is prepared here; dashboard completion is PLAY_CONSOLE / NEEDS_OPERATOR_ACTION.
 
+## `USE_FULL_SCREEN_INTENT` (declared 2026-07-06)
+
+Why: the fake-call ring screen must appear over the lock screen like a real
+incoming call (core personal-safety scenario), and emergency countdown alerts
+must be visible on a locked device. Behavior on denial is graceful: the native
+helper checks `canUseFullScreenIntent()` and falls back to a high-priority
+heads-up notification — no crash, no silent loss (Android 14+ withholds the
+default grant from non call/alarm apps; users can grant it via system settings).
+Console form (if presented): select the incoming-call / time-critical alert use
+case and reference the fake-call + emergency countdown features.
+
 ## Foreground Service `specialUse`
 
 Status: CODE_DONE copy prepared; PLAY_CONSOLE to submit in Play Console App content.
