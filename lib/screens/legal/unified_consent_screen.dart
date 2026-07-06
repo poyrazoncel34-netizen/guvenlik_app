@@ -28,7 +28,7 @@ class _UnifiedConsentScreenState extends State<UnifiedConsentScreen> {
   int? _selectedAgeOption; // 0 = 18+
 
   bool _isEulaAccepted = false;
-  bool _isKvkkAccepted = false;
+  bool _isKvkkAcknowledged = false;
 
   bool _consentLocation = false;
   bool _consentEmergencyContacts = false;
@@ -41,7 +41,7 @@ class _UnifiedConsentScreenState extends State<UnifiedConsentScreen> {
   bool _loading = false;
 
   bool get _canProceed =>
-      _selectedAgeOption != null && _isEulaAccepted && _isKvkkAccepted;
+      _selectedAgeOption != null && _isEulaAccepted && _isKvkkAcknowledged;
 
   bool get _isTurkish => context.locale.languageCode == 'tr';
 
@@ -484,10 +484,10 @@ class _UnifiedConsentScreenState extends State<UnifiedConsentScreen> {
         const SizedBox(height: 10),
         ConsentCheckboxWidget(
           label: 'legal_kvkk_accept_label'.tr(),
-          value: _isKvkkAccepted,
+          value: _isKvkkAcknowledged,
           onChanged: (v) {
             HapticFeedback.lightImpact();
-            setState(() => _isKvkkAccepted = v ?? false);
+            setState(() => _isKvkkAcknowledged = v ?? false);
           },
         ),
       ],
