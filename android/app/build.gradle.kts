@@ -79,7 +79,7 @@ android {
     defaultConfig {
         applicationId = "com.poyrazoncel.korubeni"
         minSdk = flutter.minSdkVersion // Android 6.0: USE_BIOMETRIC minimum
-        targetSdk = 35
+        targetSdk = 36
         versionCode = flutter.versionCode
         versionName = flutter.versionName
 
