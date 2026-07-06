@@ -109,7 +109,6 @@ jobs:
 
       - name: Build signed Play AAB
         env:
-          ENCRYPTION_KEY: ${{ secrets.ENCRYPTION_KEY }}
           REVENUECAT_ANDROID_API_KEY: ${{ secrets.REVENUECAT_ANDROID_API_KEY }}
         run: |
           echo "::notice title=RELEASE_SECRETS_REDACTED::Building signed Play AAB with secret values supplied through masked environment variables."
@@ -121,7 +120,6 @@ jobs:
             --build-name="${{ steps.version.outputs.version_name }}" \
             --build-number="${{ steps.version.outputs.version_code }}" \
             --dart-define=ENV=production \
-            --dart-define=ENCRYPTION_KEY="$ENCRYPTION_KEY" \
             --dart-define=REVENUECAT_ANDROID_API_KEY="$REVENUECAT_ANDROID_API_KEY"
 
       - name: Upload Play AAB artifact

@@ -53,15 +53,11 @@ fun dartDefineValue(name: String): String {
 if (releaseArtifactRequested) {
     val env = dartDefineValue("ENV")
     val revenueCatKey = dartDefineValue("REVENUECAT_ANDROID_API_KEY")
-    val encryptionKey = dartDefineValue("ENCRYPTION_KEY")
     if (env != "production") {
         throw GradleException("Release build requires --dart-define=ENV=production.")
     }
     if (revenueCatKey.isBlank()) {
         throw GradleException("Release build requires --dart-define=REVENUECAT_ANDROID_API_KEY.")
-    }
-    if (encryptionKey.isBlank()) {
-        throw GradleException("Release build requires --dart-define=ENCRYPTION_KEY.")
     }
 }
 

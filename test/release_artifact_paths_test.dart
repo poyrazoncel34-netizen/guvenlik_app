@@ -50,13 +50,11 @@ void main() {
         buildScript,
         contains('--dart-define=REVENUECAT_ANDROID_API_KEY='),
       );
-      expect(buildScript, contains('--dart-define=ENCRYPTION_KEY='));
       expect(buildScript, contains(r'${REVENUECAT_ANDROID_API_KEY:-}'));
-      expect(buildScript, contains(r'${ENCRYPTION_KEY:-}'));
 
       expect(fastfile, contains('--flavor play'));
       expect(fastfile, contains("ENV.fetch('REVENUECAT_ANDROID_API_KEY')"));
-      expect(fastfile, contains("ENV.fetch('ENCRYPTION_KEY')"));
+      expect(fastfile, isNot(contains('ENCRYPTION_KEY')));
     });
 
     test('release docs mention required RevenueCat Android API key', () {
@@ -86,7 +84,7 @@ void main() {
           'scripts/setup_play_release.sh',
         ).readAsStringSync();
 
-        expect(releaseWorkflow, contains('ENCRYPTION_KEY: \${{ secrets.'));
+        expect(releaseWorkflow, isNot(contains('ENCRYPTION_KEY')));
         expect(
           releaseWorkflow,
           contains('REVENUECAT_ANDROID_API_KEY: \${{ secrets.'),

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # KoruBeni - Play Store Release Akışı
 # Plan Madde 6-7: AAB build → Internal Testing → İncelemeye gönder
-# Kullanım: ENCRYPTION_KEY=<redacted> REVENUECAT_ANDROID_API_KEY=<redacted> ./scripts/release_to_play_store.sh
+# Kullanım: REVENUECAT_ANDROID_API_KEY=<redacted> ./scripts/release_to_play_store.sh
 
 set -e
 
@@ -12,24 +12,9 @@ echo ""
 
 # 1. İlk kez mi? Önce setup çalıştır: ./scripts/setup_play_release.sh
 
-# 2. Encryption key
-if [ -z "$ENCRYPTION_KEY" ]; then
-    if [ -n "$1" ]; then
-        ENCRYPTION_KEY="$1"
-    else
-        printf '%s\n' "ENCRYPTION_KEY gerekli:"
-        printf '%s\n' "  ENCRYPTION_KEY=<redacted> REVENUECAT_ANDROID_API_KEY=<redacted> $0"
-        echo ""
-        echo "Key üretmek için: openssl rand -base64 32"
-        exit 1
-    fi
-fi
-
-export ENCRYPTION_KEY
-
 if [ -z "${REVENUECAT_ANDROID_API_KEY:-}" ]; then
     printf '%s\n' "REVENUECAT_ANDROID_API_KEY gerekli:"
-    printf '%s\n' "  REVENUECAT_ANDROID_API_KEY=<redacted> ENCRYPTION_KEY=<redacted> $0"
+    printf '%s\n' "  REVENUECAT_ANDROID_API_KEY=<redacted> $0"
     exit 1
 fi
 

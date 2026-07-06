@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # KoruBeni - Production Build Script (Play Store AAB)
-# Kullanım: ENCRYPTION_KEY=<redacted> REVENUECAT_ANDROID_API_KEY=<redacted> ./scripts/build_production.sh
+# Kullanım: REVENUECAT_ANDROID_API_KEY=<redacted> ./scripts/build_production.sh
 # Key üretmek: openssl rand -base64 32
 
 set -euo pipefail
@@ -18,27 +18,6 @@ if [ ! -f "android/key.properties" ]; then
     echo "   (Dosya android/ klasöründe olmalı; kökteki key.properties kullanılmaz.)"
     exit 1
 fi
-
-# İlk parametre encryption key olabilir
-if [ -n "${1:-}" ]; then
-    ENCRYPTION_KEY="$1"
-fi
-
-# Encryption key kontrolü
-if [ -z "${ENCRYPTION_KEY:-}" ]; then
-    printf '%s\n' "⚠️  ENCRYPTION_KEY bulunamadı!"
-    echo ""
-    echo "Lütfen encryption key'i belirle:"
-    printf '%s\n' "export ENCRYPTION_KEY=<redacted>"
-    echo ""
-    echo "Veya script'e parametre olarak ver:"
-    printf '%s\n' "REVENUECAT_ANDROID_API_KEY=<redacted> ./scripts/build_production.sh <redacted>"
-    echo ""
-    exit 1
-fi
-
-echo "🔐 Encryption key set (not logged for security)."
-echo ""
 
 # RevenueCat Android API key kontrolü
 if [ -z "${REVENUECAT_ANDROID_API_KEY:-}" ]; then
@@ -83,8 +62,7 @@ flutter build appbundle --release \
   --obfuscate \
   --split-debug-info="$SYMBOLS_DIR" \
   --dart-define=ENV=production \
-  --dart-define=REVENUECAT_ANDROID_API_KEY="$REVENUECAT_ANDROID_API_KEY" \
-  --dart-define=ENCRYPTION_KEY="$ENCRYPTION_KEY" 2>&1 | tee "$BUILD_LOG"
+  --dart-define=REVENUECAT_ANDROID_API_KEY="$REVENUECAT_ANDROID_API_KEY" 2>&1 | tee "$BUILD_LOG"
 ANDROID_BUILD_EXIT=$?
 set -e
 

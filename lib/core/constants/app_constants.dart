@@ -4,12 +4,6 @@ class AppConstants {
   // Sabit appVersion/buildNumber kaldırıldı – tek kaynak pubspec.yaml.
   static const String supportEmail = 'korubeni.destek@gmail.com';
 
-  /// Encryption key is loaded from dart-define at build time.
-  /// Build with a redacted ENCRYPTION_KEY dart-define in release.
-  /// Falls back to empty string — EncryptionService must handle gracefully.
-  static String get encryptionKeyBase64 =>
-      const String.fromEnvironment('ENCRYPTION_KEY', defaultValue: '');
-
   // PIN
   static const int pinLength = 4;
   static const int countdownSeconds = 10;

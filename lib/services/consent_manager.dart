@@ -3,7 +3,7 @@
 // Rıza audit log'u (kullanıcının kendi onay/geri-çekme seçimleri + zaman
 // damgaları + app/OS metası) düz, uygulamaya-özel SharedPreferences'ta saklanır.
 // Bunlar sır değildir ve keystore bağımlılığı bu veride güvenilmez kalıcılığa
-// yol açıyordu. PIN/kişiler/ENCRYPTION_KEY şifreli deposuna DOKUNULMAZ; eski
+// yol açıyordu. PIN/kişiler şifreli deposuna DOKUNULMAZ; eski
 // kayıt yalnızca tek seferlik, salt-okunur migrasyon için okunur.
 // ============================================================================
 
@@ -249,7 +249,7 @@ class ConsentManager {
 
   /// One-time, read-only migration of the consent log from the old
   /// keystore-backed secure store into [_consentLogKey]. The secure store
-  /// (shared with PIN/contacts/ENCRYPTION_KEY) is only READ — never written or
+  /// (shared with PIN/contacts) is only READ — never written or
   /// deleted. If the legacy read fails (e.g. keystore unavailable) the key is
   /// left absent and migration retries next launch; meanwhile the user simply
   /// has no prior consent and re-consents.

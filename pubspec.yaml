@@ -36,7 +36,6 @@ dependencies:
   provider: ^6.1.2
   get_it: ^7.7.0
   flutter_secure_storage: ^10.0.0
-  encrypt: ^5.0.3
   sqflite: ^2.4.1
   # workmanager: ^0.5.2  # Geçici olarak devre dışı - uyumluluk sorunu
   # Pinned to >=19.1.0 to skip the v19.0.x release-mode bug

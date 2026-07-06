@@ -19,10 +19,6 @@ void main() {
       expect(AppConstants.maxEmergencyContacts, 5);
     });
 
-    test('encryptionKeyBase64 returns empty when not set via dart-define', () {
-      expect(AppConstants.encryptionKeyBase64, '');
-    });
-
     test('privacyPolicyUrl is a valid HTTPS URL', () {
       expect(AppConstants.privacyPolicyUrl, startsWith('https://'));
     });

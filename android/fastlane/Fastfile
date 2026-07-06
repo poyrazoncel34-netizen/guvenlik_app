@@ -11,7 +11,7 @@ platform :android do
     Dir.chdir(repo_root) do
       UI.message("Building Play AAB with dart defines redacted.")
       sh(
-        "flutter build appbundle --release --flavor play --dart-define=ENV=production --dart-define=REVENUECAT_ANDROID_API_KEY=#{ENV.fetch('REVENUECAT_ANDROID_API_KEY')} --dart-define=ENCRYPTION_KEY=#{ENV.fetch('ENCRYPTION_KEY')}",
+        "flutter build appbundle --release --flavor play --dart-define=ENV=production --dart-define=REVENUECAT_ANDROID_API_KEY=#{ENV.fetch('REVENUECAT_ANDROID_API_KEY')}",
         log: false
       )
     end

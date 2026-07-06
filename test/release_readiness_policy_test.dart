@@ -11,7 +11,9 @@ void main() {
       expect(gradle, contains('dartDefineValue("ENV")'));
       expect(gradle, contains('ENV=production'));
       expect(gradle, contains('REVENUECAT_ANDROID_API_KEY'));
-      expect(gradle, contains('ENCRYPTION_KEY'));
+      // ENCRYPTION_KEY söküldü (ölü EncryptionService, 2026-07-06);
+      // geri sızmasını engelle.
+      expect(gradle, isNot(contains('ENCRYPTION_KEY')));
     });
 
     test('Play declaration and data safety docs exist', () {

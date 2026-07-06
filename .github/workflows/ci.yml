@@ -62,15 +62,12 @@ jobs:
 
       - name: Build AAB (NON_RELEASE_SMOKE only, play flavor)
         env:
-          CI_ENCRYPTION_KEY: ${{ secrets.CI_ENCRYPTION_KEY }}
           REVENUECAT_ANDROID_API_KEY: ${{ secrets.REVENUECAT_ANDROID_API_KEY }}
         run: |
           echo "::notice title=NON_RELEASE_SMOKE::This app bundle validates buildability only. Dummy fallback keys may be used, so the artifact is not release-ready and must not be uploaded."
-          CI_SMOKE_ENCRYPTION_KEY="${CI_ENCRYPTION_KEY:-$(openssl rand -base64 32)}"
           CI_SMOKE_REVENUECAT_KEY="${REVENUECAT_ANDROID_API_KEY:-NON_RELEASE_SMOKE_REVENUECAT_KEY}"
           flutter build appbundle \
             --release \
             --flavor play \
             --dart-define=ENV=production \
-            --dart-define=ENCRYPTION_KEY="$CI_SMOKE_ENCRYPTION_KEY" \
             --dart-define=REVENUECAT_ANDROID_API_KEY="$CI_SMOKE_REVENUECAT_KEY"

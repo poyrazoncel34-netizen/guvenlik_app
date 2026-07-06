@@ -54,5 +54,5 @@ echo "════════════════════════�
 echo "  ✅ Hazırlık tamamlandı!"
 echo "═══════════════════════════════════════════════════════════"
 echo ""
-printf '%s\n' "Sonraki: ENCRYPTION_KEY=<redacted> REVENUECAT_ANDROID_API_KEY=<redacted> ./scripts/build_production.sh"
+printf '%s\n' "Sonraki: REVENUECAT_ANDROID_API_KEY=<redacted> ./scripts/build_production.sh"
 echo ""
