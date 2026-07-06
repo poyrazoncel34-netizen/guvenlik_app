@@ -218,20 +218,20 @@ void main() {
 
     test('canonical legal text versions stay pinned', () {
       expect(LegalTexts.termsVersion, '3.1.0');
-      expect(LegalTexts.kvkkVersion, '3.1.1');
+      expect(LegalTexts.kvkkVersion, '3.2.0');
       // Terms date is unchanged (content unchanged); KVKK/privacy carry their
       // own revision date after the first-responder claim removal.
       expect(LegalTexts.lastUpdated, '21 Mayıs 2026');
-      expect(LegalTexts.lastUpdatedKvkk, '18 Haziran 2026');
+      expect(LegalTexts.lastUpdatedKvkk, '6 Temmuz 2026');
 
       final disclosure = File('store/aydinlatma_metni.html').readAsStringSync();
       final publishedDisclosure = File(
         '.gh-pages-publish/aydinlatma.html',
       ).readAsStringSync();
-      expect(disclosure, contains('Sürüm 3.1.1'));
-      expect(disclosure, contains('18 Haziran 2026'));
-      expect(publishedDisclosure, contains('Sürüm 3.1.1'));
-      expect(publishedDisclosure, contains('18 Haziran 2026'));
+      expect(disclosure, contains('Sürüm 3.2.0'));
+      expect(disclosure, contains('6 Temmuz 2026'));
+      expect(publishedDisclosure, contains('Sürüm 3.2.0'));
+      expect(publishedDisclosure, contains('6 Temmuz 2026'));
     });
 
     test('stale Firebase FCM and resource monitor claims are cleaned', () {

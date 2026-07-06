@@ -7,13 +7,13 @@
 class LegalTexts {
   // ── Sürüm Numaraları ──────────────────────────────────────────────────────
   static const String termsVersion = '3.1.0';
-  static const String kvkkVersion = '3.1.1';
+  static const String kvkkVersion = '3.2.0';
   static const String lastUpdated = '21 Mayıs 2026';
   static const String lastUpdatedEn = 'May 21, 2026';
   // KVKK/Gizlilik/Aydınlatma belgeleri kendi revizyon tarihini taşır;
   // Kullanım Şartları (termsVersion) içerik değişmediği için lastUpdated'ı korur.
-  static const String lastUpdatedKvkk = '18 Haziran 2026';
-  static const String lastUpdatedKvkkEn = 'June 18, 2026';
+  static const String lastUpdatedKvkk = '6 Temmuz 2026';
+  static const String lastUpdatedKvkkEn = 'July 6, 2026';
 
   // ── Kullanım Sözleşmesi — Türkçe ─────────────────────────────────────────
   static const String termsOfServiceTr =
@@ -233,7 +233,8 @@ Sürüm $kvkkVersion | Son Güncelleme: $lastUpdatedKvkk
 ──────────────────────────────────────
 1. VERİ SORUMLUSUNUN KİMLİĞİ
 ──────────────────────────────────────
-Veri Sorumlusu : KoruBeni
+Veri Sorumlusu : Poyraz Öncel ("KoruBeni" uygulamasının geliştiricisi)
+Adres          : İzmir, Türkiye
 İletişim       : korubeni.destek@gmail.com
 
 ──────────────────────────────────────
@@ -262,7 +263,7 @@ Yasal Rıza Logu   | Rıza türü, tarih, versiyon        | KVKK uyum kaydı    
 ──────────────────────────────────────
 Kişisel verileriniz geliştirici sunucusuna aktarılmaz. Uygulama verilerinin ana kopyası cihazınızda saklanır. Çevrimiçi harita görünümü OpenStreetMap karo servisine ağ isteği yapabilir; isteğe bağlı Pro abonelik Google Play Billing üzerinden yönetilir ve RevenueCat abonelik/yetki durumunu doğrulamaya yardımcı olabilir; acil akış otomatik mesaj göndermez.
 
-Geliştirici tarafından işletilen yurt dışı veri aktarımı yapılmaz. Harita, Google Play Billing ve RevenueCat sağlayıcılarının teknik ağ davranışları kendi politikalarına tabidir.
+İsteğe bağlı Pro aboneliği kullanıldığında, abonelik doğrulaması için sınırlı teknik veri (IP adresi, cihaz modeli ve işletim sistemi bilgisi, anonim abone kimliği, satın alma olayları) sunucuları yurt dışında (ABD) bulunan hizmet sağlayıcı RevenueCat'e iletilir; bu, KVKK Madde 9 kapsamında yurt dışına aktarım niteliğindedir. Uygulama reklam/atıf kimliği toplamaz; Pro kullanılmadığında bu akış gerçekleşmez. Harita ve Google Play Billing sağlayıcılarının teknik ağ davranışları kendi politikalarına tabidir.
 
 Uygulama tüm rehber listesini okumaz. Yalnızca kullanıcının seçtiği veya girdiği acil kişiler cihazda yerel olarak saklanır.
 
@@ -331,7 +332,8 @@ This disclosure notice is provided pursuant to Article 10 of Law No. 6698 on the
 ──────────────────────────────────────
 1. DATA CONTROLLER IDENTITY
 ──────────────────────────────────────
-Data Controller : KoruBeni
+Data Controller : Poyraz Öncel (developer of the "KoruBeni" application)
+Address         : İzmir, Türkiye
 Contact         : korubeni.destek@gmail.com
 
 ──────────────────────────────────────
@@ -340,6 +342,7 @@ Contact         : korubeni.destek@gmail.com
 Category          | Data                              | Purpose                               | Legal Basis
 ─────────────────────────────────────────────────────────────────────────────────────────────────────────
 Identity          | Name                              | Application profile                   | Explicit consent
+Visual            | Optional fake-call avatar         | Fake call personalization             | Explicit consent
 Contact           | Emergency contact name, phone     | Emergency call flow                   | Explicit consent
 Location          | GPS coordinates                   | Map and location session              | Explicit consent
 Security          | PIN code (encrypted)              | App access control                    | Legitimate interest
@@ -359,7 +362,7 @@ Legal Consent Log | Consent type, date, version       | KVKK compliance record  
 ──────────────────────────────────────
 Your personal data is not transferred to developer servers. The primary copy of app data is stored on your device. Online map display may request OpenStreetMap tiles; optional Pro subscription handling is managed through Google Play Billing and RevenueCat may help verify subscription/entitlement status; the emergency flow does not send automatic messages.
 
-The developer does not operate cross-border data transfer. Map, Google Play Billing, and RevenueCat providers may have technical network behavior governed by their own policies.
+When the optional Pro subscription is used, limited technical data (IP address, device model and OS information, an anonymous subscriber ID, purchase events) is transmitted to RevenueCat, a service provider whose servers are located abroad (USA), to verify the subscription; this constitutes a cross-border transfer under Article 9 of KVKK. The app does not collect advertising/attribution identifiers; this flow does not occur when Pro is not used. Map and Google Play Billing providers' technical network behavior is governed by their own policies.
 
 The app does not read the full contacts list. It stores only emergency contacts selected or entered by the user, locally on the device.
 
@@ -367,6 +370,7 @@ The app does not read the full contacts list. It stores only emergency contacts 
 5. DATA RETENTION PERIODS
 ──────────────────────────────────────
 • Profile information      : While the app is in use; until you delete it
+• Fake call avatar         : Until you delete it or clear app data
 • Emergency contacts       : Only contacts you select or enter; until you delete them
 • Location data            : Held only in device memory while a location session is active; cleared when the session ends and never persisted
 • Consent logs             : While the app is in use; until device data deletion
