@@ -130,3 +130,42 @@ anahtar seçimi serbesttir; ilk yüklemeden sonra kalıcılaşır.
    `git push origin gh-pages` (yayına alma kararı operatörde).
 8. **Android lint/Kotlin testleri ilk turda atlanmıştı** (Haziran süreci koşuyordu):
    bu turda lintPlayRelease + testPlayDebugUnitTest koşuldu (sonuç oturum kaydında).
+
+---
+
+# %100 HAZIRLIK TURU (aynı gün, tur 3)
+
+## Kapatılanlar
+
+- **main + gh-pages push edildi** (7a24133..20c86e3, 93e225e..2135fe7). Canlı
+  aydınlatma 3.2.0'a döndü (yayın sonrası URL doğrulaması oturum kaydında).
+- **FSI kararı kapatıldı (madde 8b):** USE_FULL_SCREEN_INTENT manifeste beyan
+  edildi. Gerekçe: sahte çağrı kilitli ekranda gerçek çağrı gibi çalmalı
+  (çekirdek senaryo) + acil geri sayım uyarıları kilitli ekranda görünmeli.
+  Kod zaten canUseFullScreenIntent() ile düşüyor; beyan yalnızca yetenek
+  kazandırır, çökme yüzeyi eklemez. Console formu gerekirse gerekçe:
+  docs/play_console_declarations.md. Tutarlılık testi eklendi (manifest ↔ docs).
+  Operatör farklı tercih ederse beyanı kaldırmak tek satır + testi güncellemek.
+
+## RevenueCat m.9 KARAR KAYDI (madde 8a) — OPERATÖR ONAYI BEKLİYOR
+
+Öneri (mühendis değerlendirmesi, hukuki görüş değildir):
+- **Yayın için (a) belgelenmiş risk kabulü.** Dayanak: akış minimize
+  (collectDeviceIdentifiers çağrılmıyor, anonim abone kimliği, reklam/atıf
+  kimliği yok), aydınlatma 3.2.0 aktarımı m.9 kapsamında açıkça bildiriyor,
+  Data Safety formu tutarlı, küçük geliştiriciye bu zeminde yaptırım emsali
+  bulunamadı (garanti değildir). Kalan hukuki boşluk: Türk standart
+  sözleşmesinin RevenueCat ile imzalanmamış olması — bugün pratikte
+  kapatılamıyor.
+- **Yol haritası için (b):** ilk kararlı sürümden sonra saf Play Billing'e
+  geçiş değerlendirmesi (~1-2 hafta iş; aktaran sıfatını yapısal olarak
+  kaldırır). v1.1 aday maddesi.
+- Onay şekli: bu bölüme "ONAYLANDI — <tarih, isim>" satırı eklemek yeterli.
+
+## Bu turda da KAPANAMAYANLAR (yapısal olarak repo dışı)
+
+1. Gerçek REVENUECAT_ANDROID_API_KEY ile üretim AAB (anahtar yalnızca
+   RevenueCat panelinde).
+2. Play Console formları + kapalı test + 12 tester × 14 gün.
+3. Gerçek cihaz turu: Doze/OEM-killer/satın alma (emülatör smoke denemesi
+   oturum kaydında; Doze yarışı ve billing yalnızca gerçek cihazda).
