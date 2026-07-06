@@ -91,7 +91,6 @@ dev_dependencies:
   # Host-side (in-memory) sqflite for unit-testing DB-backed logic.
   sqflite_common_ffi: ^2.3.3
   flutter_launcher_icons: ^0.13.1
-  flutter_native_splash: ^2.4.7
 
 flutter_launcher_icons:
   android: true
@@ -109,6 +108,10 @@ flutter_launcher_icons:
   web:
     generate: false
 
+# Splash kaynaklari uretildi ve commit'lendi; paket build'de GEREKMEZ ve
+# dev_dependency olarak kalmasi release GeneratedPluginRegistrant uyusmazligi
+# yaratiyordu. Splash'i yenilemek icin paketi gecici ekleyip calistir:
+#   flutter pub add --dev flutter_native_splash && dart run flutter_native_splash:create
 flutter_native_splash:
   # Background color matching your app's theme
   color: "#0A1B2A"
