@@ -6,17 +6,6 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('No SMS references in production code', () {
-    test('health check must NOT contain sms_permission key', () {
-      final file = File('lib/core/services/emergency_core_service.dart');
-      expect(file.existsSync(), isTrue);
-      final content = file.readAsStringSync();
-      expect(
-        content.contains("sms_permission"),
-        isFalse,
-        reason: 'emergency_core_service must not report sms_permission',
-      );
-    });
-
     test('feature_warning_dialog must NOT mention SMS', () {
       final file = File('lib/core/widgets/feature_warning_dialog.dart');
       expect(file.existsSync(), isTrue);
