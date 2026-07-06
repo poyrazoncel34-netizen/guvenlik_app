@@ -75,6 +75,29 @@ void main() {
       expect(source, contains('_initLocation();'));
     });
 
+    test(
+      'location requests use prominent disclosure helper before native prompt',
+      () {
+        expect(
+          source,
+          contains("import '../core/utils/permission_helper.dart';"),
+        );
+        expect(source, contains('Future<bool> _ensureLocationPermission()'));
+        expect(
+          source,
+          contains('PermissionHelper.requestLocationPermission(context)'),
+        );
+        expect(
+          source.indexOf('_ensureLocationPermission()') <
+              source.indexOf('_locationRepository.getLastKnownLocation()'),
+          isTrue,
+          reason:
+              'Map tab must show the prominent location disclosure before '
+              'reading/requesting location via LocationService.',
+        );
+      },
+    );
+
     test('location-session sharing UI is removed (S6/S8)', () {
       for (final symbol in const [
         'startLocationSharing',

@@ -14,6 +14,7 @@ import '../core/di/service_locator.dart';
 import '../core/services/connectivity_service.dart';
 import '../core/services/location_service.dart';
 import '../core/utils/map_utils.dart';
+import '../core/utils/permission_helper.dart';
 import '../domain/repositories/location_repository.dart';
 
 class MapPage extends StatefulWidget {
@@ -83,6 +84,9 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
       _isLoading = true;
     });
 
+    final permissionGranted = await _ensureLocationPermission();
+    if (!permissionGranted) return;
+
     // First try to get last known location (faster)
     final lastKnown = await _locationRepository.getLastKnownLocation();
 
@@ -130,6 +134,9 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
     HapticFeedback.lightImpact();
 
     setState(() => _isLoading = true);
+
+    final permissionGranted = await _ensureLocationPermission();
+    if (!permissionGranted) return;
 
     final result = await _locationRepository.getCurrentLocation();
 
@@ -183,6 +190,20 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
       }
       _showPermissionError(result);
     }
+  }
+
+  Future<bool> _ensureLocationPermission() async {
+    final granted = await PermissionHelper.requestLocationPermission(context);
+    if (!mounted) return false;
+    if (granted) return true;
+
+    setState(() {
+      _isLoading = false;
+      _locationStatus = LocationStatus.permissionDenied;
+      _usingFallbackLocation = _currentLocation == null;
+      _fallbackCheckedAt = _currentLocation == null ? DateTime.now() : null;
+    });
+    return false;
   }
 
   void _showPermissionError(LocationResult result) {
