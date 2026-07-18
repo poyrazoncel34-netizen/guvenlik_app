@@ -4,6 +4,9 @@ name: CI
 env:
   FLUTTER_VERSION: "3.38.9"
 
+permissions:
+  contents: read
+
 on:
   push:
     branches: [main]
@@ -15,14 +18,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@c1e323688fd81a25caa38c78aa6df2d33d3e20d9 # v4
         with:
           distribution: temurin
           java-version: 17
 
-      - uses: subosito/flutter-action@v2
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
         with:
           channel: stable
           flutter-version: ${{ env.FLUTTER_VERSION }}
@@ -34,8 +37,27 @@ jobs:
       - name: Analyze
         run: flutter analyze --no-fatal-infos
 
-      - name: Test
-        run: flutter test --no-pub
+      - name: Test with critical safety coverage gate
+        run: |
+          flutter test --coverage --no-pub
+          dart scripts/verify_critical_coverage.dart \
+            --report build/coverage-evidence/critical-coverage.json
+
+      - name: Dependency vulnerability audit (OSV)
+        run: ./scripts/audit_dependencies_osv.sh
+
+      - name: Android host unit tests
+        working-directory: android
+        run: ./gradlew app:testPlayDebugUnitTest --console=plain
+
+      - name: Kill mandatory safety mutants
+        run: |
+          python3 scripts/run_safety_mutations.py \
+            --output build/release-evidence/safety-mutations.json
+
+      - name: Compile Android instrumentation tests
+        working-directory: android
+        run: ./gradlew app:assemblePlayDebugAndroidTest --console=plain
 
       - name: Create NON_RELEASE_SMOKE signing key
         run: |
@@ -60,14 +82,64 @@ jobs:
           storeFile=app/ci-release.jks
           EOF
 
-      - name: Build AAB (NON_RELEASE_SMOKE only, play flavor)
-        env:
-          REVENUECAT_ANDROID_API_KEY: ${{ secrets.REVENUECAT_ANDROID_API_KEY }}
+      - name: Build AAB (NON_RELEASE_SMOKE package only)
         run: |
-          echo "::notice title=NON_RELEASE_SMOKE::This app bundle validates buildability only. Dummy fallback keys may be used, so the artifact is not release-ready and must not be uploaded."
-          CI_SMOKE_REVENUECAT_KEY="${REVENUECAT_ANDROID_API_KEY:-NON_RELEASE_SMOKE_REVENUECAT_KEY}"
+          echo "::notice title=NON_RELEASE_SMOKE::This app bundle uses the .smoke application ID, temporary signing, and disabled billing. It must not be uploaded."
           flutter build appbundle \
             --release \
-            --flavor play \
-            --dart-define=ENV=production \
-            --dart-define=REVENUECAT_ANDROID_API_KEY="$CI_SMOKE_REVENUECAT_KEY"
+            --flavor smoke \
+            --target-platform android-arm64,android-x64 \
+            --dart-define=ENV=ci_smoke \
+            --dart-define=REVENUECAT_ANDROID_API_KEY=NON_RELEASE_SMOKE_REVENUECAT_KEY
+          if unzip -Z1 build/app/outputs/bundle/smokeRelease/app-smoke-release.aab | grep -Eq '^base/lib/(armeabi|armeabi-v7a|x86|mips[^/]*)/'; then
+            echo "::error title=Unexpected 32-bit ABI::NON_RELEASE_SMOKE AAB contains an unsupported 32-bit native library."
+            exit 1
+          fi
+          MERGED_MANIFEST=build/app/intermediates/merged_manifest/smokeRelease/processSmokeReleaseMainManifest/AndroidManifest.xml
+          grep -q 'package="com.poyrazoncel.korubeni.smoke"' "$MERGED_MANIFEST"
+          if grep -Eq 'android\.permission\.(USE_FULL_SCREEN_INTENT|FOREGROUND_SERVICE|READ_PHONE_STATE|READ_CONTACTS|RECORD_AUDIO|SEND_SMS|ACCESS_BACKGROUND_LOCATION)|android:foregroundServiceType|com\.amazon|ProxyAmazonBillingActivity' "$MERGED_MANIFEST"; then
+            echo "::error title=Forbidden merged-manifest surface::NON_RELEASE_SMOKE AAB contains a forbidden permission, FGS, or Amazon billing component."
+            exit 1
+          fi
+
+  android-instrumentation:
+    name: Android safety tests (API ${{ matrix.api-level }} emulator)
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        api-level: [29, 34, 36]
+
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - uses: actions/setup-java@c1e323688fd81a25caa38c78aa6df2d33d3e20d9 # v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Enable KVM permissions
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Run critical safety tests on emulator
+        uses: reactivecircus/android-emulator-runner@4c44018e59b437e86cdfc41da381398f93ed8808 # v2
+        with:
+          api-level: ${{ matrix.api-level }}
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          disable-animations: true
+          script: cd android && ./gradlew app:connectedPlayDebugAndroidTest --console=plain

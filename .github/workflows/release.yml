@@ -8,6 +8,9 @@ name: Release Play AAB
 env:
   FLUTTER_VERSION: "3.38.9"
 
+permissions:
+  contents: read
+
 on:
   push:
     tags:
@@ -17,25 +20,68 @@ jobs:
   build-play-aab:
     name: Build signed Play AAB
     runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
           fetch-depth: 0
 
       - name: Setup Java 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@c1e323688fd81a25caa38c78aa6df2d33d3e20d9 # v4
         with:
           distribution: 'temurin'
           java-version: '17'
 
+      - name: Verify signed annotated tag and main ancestry
+        run: |
+          set -euo pipefail
+          TAG_REF="refs/tags/${GITHUB_REF_NAME}"
+          if [ "$(git cat-file -t "$TAG_REF")" != "tag" ]; then
+            echo "::error title=Unsigned release ref::Production releases require a signed annotated tag."
+            exit 1
+          fi
+          git verify-tag "$GITHUB_REF_NAME"
+          TAG_COMMIT="$(git rev-list -n 1 "$TAG_REF")"
+          git merge-base --is-ancestor "$TAG_COMMIT" origin/main || {
+            echo "::error title=Release commit is not on main::Refusing to build a production artifact from an unmerged commit."
+            exit 1
+          }
+          if [ "$TAG_COMMIT" != "$(git rev-parse HEAD)" ]; then
+            echo "::error title=Checkout/tag mismatch::Checked-out commit does not match the signed tag target."
+            exit 1
+          fi
+
+      - name: Freeze clean source provenance
+        run: |
+          ./scripts/verify_release_source_provenance.sh \
+            --tag "$GITHUB_REF_NAME" \
+            --expected-commit "$GITHUB_SHA" \
+            --output build/release-evidence/source-provenance.txt
+
       - name: Setup Flutter
-        uses: subosito/flutter-action@v2
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
         with:
           channel: 'stable'
           flutter-version: ${{ env.FLUTTER_VERSION }}
           cache: true
+
+      - name: Verify Gradle wrapper integrity
+        run: |
+          set -euo pipefail
+          EXPECTED_WRAPPER_JAR_SHA256="7d3a4ac4de1c32b59bc6a4eb8ecb8e612ccd0cf1ae1e99f66902da64df296172"
+          ACTUAL_WRAPPER_JAR_SHA256="$(sha256sum android/gradle/wrapper/gradle-wrapper.jar | awk '{print $1}')"
+          [ "$ACTUAL_WRAPPER_JAR_SHA256" = "$EXPECTED_WRAPPER_JAR_SHA256" ] || {
+            echo "::error title=Gradle wrapper JAR mismatch::Tracked wrapper JAR is not the official Gradle 8.14 artifact."
+            exit 1
+          }
+          grep -qx 'distributionSha256Sum=efe9a3d147d948d7528a9887fa35abcf24ca1a43ad06439996490f77569b02d1' \
+            android/gradle/wrapper/gradle-wrapper.properties
 
       - name: Flutter version info
         run: flutter --version
@@ -43,13 +89,29 @@ jobs:
       - name: Extract version from tag
         id: version
         run: |
+          set -euo pipefail
+          umask 077
           TAG="${GITHUB_REF_NAME}"
-          VERSION="${TAG#v}"
-          IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+          if [[ ! "$TAG" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
+            echo "::error title=Invalid release tag::Expected strict vMAJOR.MINOR.PATCH with numeric segments and no leading zeroes; got $TAG"
+            exit 1
+          fi
+          MAJOR=$((10#${BASH_REMATCH[1]}))
+          MINOR=$((10#${BASH_REMATCH[2]}))
+          PATCH=$((10#${BASH_REMATCH[3]}))
+          if (( MINOR > 99 || PATCH > 99 )); then
+            echo "::error title=Version collision risk::MINOR and PATCH must each be <= 99 for the current versionCode formula."
+            exit 1
+          fi
           CODE=$(( MAJOR * 10000 + MINOR * 100 + PATCH ))
-          echo "version_name=$VERSION" >> $GITHUB_OUTPUT
-          echo "version_code=$CODE" >> $GITHUB_OUTPUT
-          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          if (( CODE < 1 || CODE > 2100000000 )); then
+            echo "::error title=Invalid versionCode::Computed Android versionCode $CODE is outside 1..2100000000."
+            exit 1
+          fi
+          VERSION="${BASH_REMATCH[1]}.${BASH_REMATCH[2]}.${BASH_REMATCH[3]}"
+          echo "version_name=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "version_code=$CODE" >> "$GITHUB_OUTPUT"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
 
       - name: Decode keystore
         env:
@@ -67,6 +129,7 @@ jobs:
           # trailing whitespace) before decoding, otherwise base64 fails cryptically.
           KEYSTORE_OUT="android/app/korubeni_keystore_release.jks"
           printf '%s' "$KEYSTORE_BASE64" | tr -d '\r\n ' | base64 --decode > "$KEYSTORE_OUT"
+          chmod 600 "$KEYSTORE_OUT"
 
           # Decoded file must be non-empty.
           if [ ! -s "$KEYSTORE_OUT" ]; then
@@ -84,12 +147,65 @@ jobs:
               exit 1 ;;
           esac
 
+      - name: Verify upload certificate identity
+        env:
+          STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          EXPECTED_UPLOAD_CERT_SHA256: ${{ secrets.EXPECTED_UPLOAD_CERT_SHA256 }}
+          EXPECTED_PLAY_APP_SIGNING_CERT_SHA256: ${{ secrets.EXPECTED_PLAY_APP_SIGNING_CERT_SHA256 }}
+        run: |
+          set -euo pipefail
+          for secret_name in STORE_PASSWORD KEY_ALIAS EXPECTED_UPLOAD_CERT_SHA256 EXPECTED_PLAY_APP_SIGNING_CERT_SHA256; do
+            if [ -z "${!secret_name:-}" ]; then
+              echo "::error title=Release secret missing::$secret_name is empty or unset."
+              exit 1
+            fi
+          done
+
+          EXPECTED="$(printf '%s' "$EXPECTED_UPLOAD_CERT_SHA256" | tr -d ' :\r\n' | tr '[:lower:]' '[:upper:]')"
+          if [[ ! "$EXPECTED" =~ ^[0-9A-F]{64}$ ]]; then
+            echo "::error title=Invalid certificate fingerprint::EXPECTED_UPLOAD_CERT_SHA256 must be a 64-hex SHA-256 fingerprint."
+            exit 1
+          fi
+
+          CERT_FILE="${RUNNER_TEMP}/korubeni-upload-cert.der"
+          keytool -exportcert \
+            -keystore android/app/korubeni_keystore_release.jks \
+            -storepass "$STORE_PASSWORD" \
+            -alias "$KEY_ALIAS" \
+            -file "$CERT_FILE"
+          ACTUAL="$(sha256sum "$CERT_FILE" | awk '{print toupper($1)}')"
+          if [ "$ACTUAL" != "$EXPECTED" ]; then
+            echo "::error title=Wrong upload certificate::Decoded keystore certificate does not match EXPECTED_UPLOAD_CERT_SHA256; refusing to build."
+            exit 1
+          fi
+          PLAY_APP_SIGNING_CERT="$(printf '%s' "$EXPECTED_PLAY_APP_SIGNING_CERT_SHA256" | tr -d ' :\r\n' | tr '[:lower:]' '[:upper:]')"
+          if [[ ! "$PLAY_APP_SIGNING_CERT" =~ ^[0-9A-F]{64}$ ]]; then
+            echo "::error title=Invalid Play app-signing fingerprint::EXPECTED_PLAY_APP_SIGNING_CERT_SHA256 must be a 64-hex SHA-256 fingerprint copied from Play Console."
+            exit 1
+          fi
+          echo "upload_cert_sha256=$ACTUAL" >> "$GITHUB_OUTPUT"
+          echo "play_app_signing_cert_sha256=$PLAY_APP_SIGNING_CERT" >> "$GITHUB_OUTPUT"
+          echo "::notice title=Upload certificate verified::Release keystore matches the pinned SHA-256 fingerprint."
+        id: upload_cert
+
       - name: Create key.properties
         env:
           STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
         run: |
+          set -euo pipefail
+          for secret_name in STORE_PASSWORD KEY_PASSWORD KEY_ALIAS; do
+            if [ -z "${!secret_name:-}" ]; then
+              echo "::error title=Release secret missing::$secret_name is empty or unset."
+              exit 1
+            fi
+            if [[ "${!secret_name}" == *$'\n'* || "${!secret_name}" == *$'\r'* ]]; then
+              echo "::error title=Invalid release secret::$secret_name must not contain a newline."
+              exit 1
+            fi
+          done
           umask 077
           cat > android/key.properties << EOF
           storePassword=$STORE_PASSWORD
@@ -104,17 +220,68 @@ jobs:
       - name: Flutter analyze
         run: flutter analyze --no-fatal-infos
 
-      - name: Flutter test
-        run: flutter test --no-pub
+      - name: Flutter test with critical safety coverage gate
+        run: |
+          flutter test --coverage --no-pub
+          dart scripts/verify_critical_coverage.dart \
+            --report build/release-evidence/critical-coverage.json
+          cp coverage/lcov.info build/release-evidence/coverage.lcov
+
+      - name: Kill mandatory safety mutants
+        run: |
+          python3 scripts/run_safety_mutations.py \
+            --output build/release-evidence/safety-mutations.json
+
+      - name: Dependency vulnerability audit (OSV)
+        run: ./scripts/audit_dependencies_osv.sh
+
+      - name: Scan tracked candidate source for credentials
+        run: |
+          python3 scripts/scan_release_secrets.py \
+            --repo . \
+            --output build/release-evidence/secret-scan.json
+
+      - name: Verify candidate SBOM licenses and third-party notices
+        run: |
+          dart scripts/generate_cyclonedx_sbom.dart \
+            --output build/release-evidence/sbom.cdx.json \
+            --license-evidence config/dependency_license_evidence.json
+          dart scripts/verify_sbom_license_policy.dart \
+            --sbom build/release-evidence/sbom.cdx.json \
+            --policy config/dependency_license_policy.json
+          python3 scripts/generate_third_party_notices.py \
+            --sbom build/release-evidence/sbom.cdx.json \
+            --evidence config/dependency_license_evidence.json \
+            --license-text-dir config/license-texts \
+            --output build/release-evidence/THIRD_PARTY_NOTICES.txt
+          cmp --silent \
+            assets/legal/THIRD_PARTY_NOTICES.txt \
+            build/release-evidence/THIRD_PARTY_NOTICES.txt || {
+              echo "::error title=Third-party notice drift::Tracked AAB notice asset does not match reviewed candidate evidence."
+              exit 1
+            }
 
       - name: Build signed Play AAB
         env:
           REVENUECAT_ANDROID_API_KEY: ${{ secrets.REVENUECAT_ANDROID_API_KEY }}
         run: |
+          set -euo pipefail
+          RC_KEY_LOWER="$(printf '%s' "${REVENUECAT_ANDROID_API_KEY:-}" | tr '[:upper:]' '[:lower:]')"
+          if [ -z "${REVENUECAT_ANDROID_API_KEY:-}" ] ||
+             [[ "$REVENUECAT_ANDROID_API_KEY" =~ [[:space:]] ]] ||
+             [[ "$RC_KEY_LOWER" != goog_* ]] ||
+             [[ "$RC_KEY_LOWER" == sk_* ]] ||
+             [[ "$RC_KEY_LOWER" == *placeholder* ]] ||
+             [[ "$RC_KEY_LOWER" == *dummy* ]] ||
+             [[ "$RC_KEY_LOWER" == *non_release_smoke* ]]; then
+            echo "::error title=Invalid RevenueCat key::A goog_ Android public SDK key is required; test_, sk_, and placeholder/smoke values are forbidden."
+            exit 1
+          fi
           echo "::notice title=RELEASE_SECRETS_REDACTED::Building signed Play AAB with secret values supplied through masked environment variables."
           flutter build appbundle \
             --release \
             --flavor play \
+            --target-platform android-arm64 \
             --obfuscate \
             --split-debug-info=build/debug-info \
             --build-name="${{ steps.version.outputs.version_name }}" \
@@ -122,18 +289,161 @@ jobs:
             --dart-define=ENV=production \
             --dart-define=REVENUECAT_ANDROID_API_KEY="$REVENUECAT_ANDROID_API_KEY"
 
-      - name: Upload Play AAB artifact
-        uses: actions/upload-artifact@v4
+      # Flutter native-assets uses a shared build path. Keep the release lint
+      # and playDebug test variants in separate Gradle processes so one
+      # variant cannot invalidate the other variant's directory snapshot.
+      - name: Android release lint
+        working-directory: android
+        run: ./gradlew app:lintPlayRelease --console=plain
+
+      - name: Android host tests and instrumentation compilation
+        working-directory: android
+        run: ./gradlew app:testPlayDebugUnitTest app:assemblePlayDebugAndroidTest --console=plain
+
+      - name: Verify AAB integrity, signature, 16 KB alignment, and provenance
+        env:
+          UPLOAD_CERT_SHA256: ${{ steps.upload_cert.outputs.upload_cert_sha256 }}
+          PLAY_APP_SIGNING_CERT_SHA256: ${{ steps.upload_cert.outputs.play_app_signing_cert_sha256 }}
+        run: |
+          set -euo pipefail
+          AAB="build/app/outputs/bundle/playRelease/app-play-release.aab"
+          MERGED_MANIFEST="build/app/intermediates/merged_manifest/playRelease/processPlayReleaseMainManifest/AndroidManifest.xml"
+          MAPPING="build/app/outputs/mapping/playRelease/mapping.txt"
+          LINT_REPORT="build/app/reports/lint-results-playRelease.xml"
+          SBOM="build/release-evidence/sbom.cdx.json"
+          CRITICAL_COVERAGE="build/release-evidence/critical-coverage.json"
+          SAFETY_MUTATIONS="build/release-evidence/safety-mutations.json"
+          LCOV_REPORT="build/release-evidence/coverage.lcov"
+          SOURCE_PROVENANCE="build/release-evidence/source-provenance.txt"
+          GRADLE_VERIFICATION_METADATA="android/gradle/verification-metadata.xml"
+          [ -s "$AAB" ] || { echo "::error title=AAB missing::$AAB was not produced."; exit 1; }
+          [ -s "$MERGED_MANIFEST" ] || { echo "::error title=Merged manifest missing::$MERGED_MANIFEST was not produced."; exit 1; }
+          [ -s "$MAPPING" ] || { echo "::error title=R8 mapping missing::$MAPPING was not produced."; exit 1; }
+          [ -s "$LINT_REPORT" ] || { echo "::error title=Lint report missing::$LINT_REPORT was not produced."; exit 1; }
+          [ -s "$SBOM" ] || { echo "::error title=SBOM missing::$SBOM was not produced."; exit 1; }
+          [ -s "$CRITICAL_COVERAGE" ] || { echo "::error title=Critical coverage report missing::$CRITICAL_COVERAGE was not produced."; exit 1; }
+          [ -s "$SAFETY_MUTATIONS" ] || { echo "::error title=Safety mutation report missing::$SAFETY_MUTATIONS was not produced."; exit 1; }
+          grep -q '"status": "PASS"' "$SAFETY_MUTATIONS" || { echo "::error title=Safety mutation gate failed::All six mandatory mutants must be killed."; exit 1; }
+          [ -s "$LCOV_REPORT" ] || { echo "::error title=LCOV report missing::$LCOV_REPORT was not produced."; exit 1; }
+          [ -s "$SOURCE_PROVENANCE" ] || { echo "::error title=Source provenance missing::$SOURCE_PROVENANCE was not produced before the build."; exit 1; }
+          [ -s "$GRADLE_VERIFICATION_METADATA" ] || { echo "::error title=Gradle dependency verification missing::$GRADLE_VERIFICATION_METADATA is required for strict artifact checksum verification."; exit 1; }
+          git diff --quiet --exit-code || { echo "::error title=Tracked source drift::Dependency resolution or build changed tracked source after provenance was frozen."; exit 1; }
+          unzip -tq "$AAB"
+          if unzip -Z1 "$AAB" | awk -F/ \
+              '/^base\/lib\/[^/]+\// && $3 != "arm64-v8a" { unexpected = 1 } END { exit !unexpected }'; then
+            echo "::error title=Unexpected ABI::Play AAB must contain arm64-v8a only."
+            exit 1
+          fi
+          grep -q 'package="com.poyrazoncel.korubeni"' "$MERGED_MANIFEST"
+          if grep -Eq 'android\.permission\.(USE_FULL_SCREEN_INTENT|FOREGROUND_SERVICE|READ_PHONE_STATE|READ_CONTACTS|RECORD_AUDIO|SEND_SMS|ACCESS_BACKGROUND_LOCATION)|android:foregroundServiceType|com\.amazon|ProxyAmazonBillingActivity' "$MERGED_MANIFEST"; then
+            echo "::error title=Forbidden Play manifest surface::A forbidden permission, FGS, or Amazon billing component survived manifest merging."
+            exit 1
+          fi
+          ./scripts/verify_16kb_alignment.sh "$AAB"
+
+          VERIFY_LOG="${RUNNER_TEMP}/korubeni-jarsigner-verify.log"
+          LC_ALL=C jarsigner -verify "$AAB" >"$VERIFY_LOG" 2>&1
+          if ! grep -q "jar verified\." "$VERIFY_LOG"; then
+            sed -n '1,80p' "$VERIFY_LOG"
+            echo "::error title=AAB signature missing::jarsigner did not verify the app bundle."
+            exit 1
+          fi
+          AAB_CERT_REPORT="${RUNNER_TEMP}/korubeni-aab-cert.txt"
+          LC_ALL=C keytool -printcert -jarfile "$AAB" > "$AAB_CERT_REPORT"
+          AAB_SIGNER_SHA256="$(sed -n 's/^[[:space:]]*SHA256: //p' "$AAB_CERT_REPORT" | head -n 1 | tr -d ' :\r\n' | tr '[:lower:]' '[:upper:]')"
+          if [ "$AAB_SIGNER_SHA256" != "$UPLOAD_CERT_SHA256" ]; then
+            echo "::error title=AAB signer mismatch::The bundle signer is not the pinned upload certificate."
+            exit 1
+          fi
+
+          mkdir -p build/release-evidence
+          unzip -Z1 "$AAB" | LC_ALL=C sort | awk \
+            '/^BUNDLE-METADATA\/com\.android\.tools\.build\.debugsymbols\/arm64-v8a\/.*\.dbg$/ { print }' \
+            > build/release-evidence/native-debug-symbols.index
+          if ! grep -q '/arm64-v8a/libflutter\.so\.dbg$' build/release-evidence/native-debug-symbols.index; then
+            echo "::error title=Embedded native symbols missing::The AAB has no arm64 libflutter debug-symbol metadata."
+            exit 1
+          fi
+          find build/debug-info -type f -print0 | LC_ALL=C sort -z | xargs -0 sha256sum \
+            > build/release-evidence/dart-symbols.index
+          [ -s build/release-evidence/dart-symbols.index ] || { echo "::error title=Dart symbols missing::No obfuscation symbol file was indexed."; exit 1; }
+          cp "$MERGED_MANIFEST" build/release-evidence/merged-AndroidManifest.xml
+          cp "$MAPPING" build/release-evidence/r8-mapping.txt
+          cp "$LINT_REPORT" build/release-evidence/lint-results-playRelease.xml
+          cp pubspec.lock build/release-evidence/pubspec.lock
+          cp android/app/gradle.lockfile build/release-evidence/android-app-gradle.lockfile
+          cp "$GRADLE_VERIFICATION_METADATA" build/release-evidence/gradle-verification-metadata.xml
+          AAB_SHA256="$(sha256sum "$AAB" | awk '{print $1}')"
+          GIT_COMMIT="$(git rev-parse HEAD)"
+          GIT_TREE="$(git rev-parse "HEAD^{tree}")"
+          TAG_OBJECT="$(git rev-parse "refs/tags/${{ steps.version.outputs.tag }}")"
+          python3 scripts/generate_release_provenance.py \
+            --output build/release-evidence/provenance-v2.json \
+            --tag "${{ steps.version.outputs.tag }}" \
+            --tag-object "$TAG_OBJECT" \
+            --commit "$GIT_COMMIT" \
+            --tree "$GIT_TREE" \
+            --version-name "${{ steps.version.outputs.version_name }}" \
+            --version-code "${{ steps.version.outputs.version_code }}" \
+            --upload-cert "$UPLOAD_CERT_SHA256" \
+            --play-app-signing-cert "$PLAY_APP_SIGNING_CERT_SHA256" \
+            --repository "$GITHUB_REPOSITORY" \
+            --workflow-run-url "https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" \
+            --artifact "aab=$AAB" \
+            --artifact "sbom=build/release-evidence/sbom.cdx.json" \
+            --artifact "mergedManifest=build/release-evidence/merged-AndroidManifest.xml" \
+            --artifact "r8Mapping=build/release-evidence/r8-mapping.txt" \
+            --artifact "dartSymbolsIndex=build/release-evidence/dart-symbols.index" \
+            --artifact "nativeSymbolsIndex=build/release-evidence/native-debug-symbols.index" \
+            --artifact "criticalCoverage=build/release-evidence/critical-coverage.json" \
+            --artifact "mutationReport=build/release-evidence/safety-mutations.json" \
+            --artifact "lintReport=build/release-evidence/lint-results-playRelease.xml" \
+            --artifact "dependencyLockPub=build/release-evidence/pubspec.lock" \
+            --artifact "dependencyLockGradle=build/release-evidence/android-app-gradle.lockfile" \
+            --artifact "gradleVerification=build/release-evidence/gradle-verification-metadata.xml" \
+            --artifact "sourceProvenance=build/release-evidence/source-provenance.txt" \
+            --artifact "secretScan=build/release-evidence/secret-scan.json" \
+            --artifact "thirdPartyNotices=build/release-evidence/THIRD_PARTY_NOTICES.txt"
+          sha256sum \
+            "$AAB" \
+            build/release-evidence/sbom.cdx.json \
+            build/release-evidence/critical-coverage.json \
+            build/release-evidence/safety-mutations.json \
+            build/release-evidence/coverage.lcov \
+            build/release-evidence/dart-symbols.index \
+            build/release-evidence/merged-AndroidManifest.xml \
+            build/release-evidence/r8-mapping.txt \
+            build/release-evidence/native-debug-symbols.index \
+            build/release-evidence/lint-results-playRelease.xml \
+            build/release-evidence/pubspec.lock \
+            build/release-evidence/android-app-gradle.lockfile \
+            build/release-evidence/gradle-verification-metadata.xml \
+            build/release-evidence/source-provenance.txt \
+            build/release-evidence/secret-scan.json \
+            build/release-evidence/THIRD_PARTY_NOTICES.txt \
+            build/release-evidence/provenance-v2.json \
+            > build/release-evidence/SHA256SUMS
+          echo "::notice title=Release artifact verified::AAB signature and signer identity, archive integrity, 16 KB alignment, hash, and upload certificate identity passed."
+
+      - name: Attest Play AAB provenance
+        uses: actions/attest-build-provenance@96b4a1ef7235a096b17240c259729fdd70c83d45 # v2
         with:
-          name: korubeni-play-${{ steps.version.outputs.version_name }}.aab
-          path: build/app/outputs/bundle/playRelease/app-play-release.aab
+          subject-path: build/app/outputs/bundle/playRelease/app-play-release.aab
+
+      - name: Upload Play AAB artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: korubeni-play-${{ steps.version.outputs.version_name }}
+          path: |
+            build/app/outputs/bundle/playRelease/app-play-release.aab
+            build/release-evidence
           if-no-files-found: error
 
       # Retain Dart obfuscation symbols for crash de-obfuscation. Without these
       # split-debug-info symbols, release crash stack traces cannot be
       # symbolicated (flutter symbolize). Do NOT commit them to the repo.
       - name: Upload Dart obfuscation symbols
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: korubeni-debug-symbols-${{ steps.version.outputs.version_name }}
           path: build/debug-info

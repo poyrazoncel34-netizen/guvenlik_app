@@ -8,12 +8,137 @@ void main() {
   group('release readiness policy files', () {
     test('Gradle release builds require production env and secrets', () {
       final gradle = File('android/app/build.gradle.kts').readAsStringSync();
+      final workflow = File('.github/workflows/release.yml').readAsStringSync();
+      final buildScript = File(
+        'scripts/build_production.sh',
+      ).readAsStringSync();
       expect(gradle, contains('dartDefineValue("ENV")'));
       expect(gradle, contains('ENV=production'));
       expect(gradle, contains('REVENUECAT_ANDROID_API_KEY'));
+      expect(gradle, contains('lower.startsWith("goog_")'));
+      expect(gradle, contains('test_, sk_, and placeholder values'));
+      expect(workflow, contains(r'[[ "$RC_KEY_LOWER" != goog_* ]]'));
+      expect(workflow, contains('test_, sk_, and placeholder/smoke values'));
+      expect(buildScript, contains(r'[[ "$RC_KEY_LOWER" != goog_* ]]'));
+      expect(buildScript, contains('test_/sk_/placeholder reddedilir'));
       // ENCRYPTION_KEY söküldü (ölü EncryptionService, 2026-07-06);
       // geri sızmasını engelle.
       expect(gradle, isNot(contains('ENCRYPTION_KEY')));
+    });
+
+    test('CI smoke artifact cannot impersonate the Play application', () {
+      final gradle = File('android/app/build.gradle.kts').readAsStringSync();
+      final ci = File('.github/workflows/ci.yml').readAsStringSync();
+      final verifier = File('scripts/verify_release.sh').readAsStringSync();
+
+      expect(gradle, contains('create("smoke")'));
+      expect(gradle, contains('applicationIdSuffix = ".smoke"'));
+      expect(gradle, contains('ENV=ci_smoke'));
+      expect(gradle, contains('NON_RELEASE_SMOKE_REVENUECAT_KEY'));
+      expect(ci, contains('--flavor smoke'));
+      expect(ci, contains('--target-platform android-arm64,android-x64'));
+      expect(ci, contains('--dart-define=ENV=ci_smoke'));
+      expect(ci, isNot(contains('--flavor play')));
+      expect(verifier, contains(r'FLAVOR="${FLAVOR:-smoke}"'));
+      expect(verifier, contains(r'if [ "$FLAVOR" != "smoke" ]'));
+      expect(verifier, contains(r'app:lint${CAP_FLAVOR}Release'));
+      expect(verifier, contains('app:testPlayDebugUnitTest'));
+      expect(verifier, contains('app:assemblePlayDebugAndroidTest'));
+      expect(verifier, isNot(contains(r'app:test${CAP_FLAVOR}DebugUnitTest')));
+      expect(
+        verifier,
+        isNot(contains(r'app:assemble${CAP_FLAVOR}DebugAndroidTest')),
+      );
+    });
+
+    test('Play release is arm64-only while debug/smoke keep emulator x64', () {
+      final gradle = File('android/app/build.gradle.kts').readAsStringSync();
+
+      expect(
+        RegExp(
+          r'abiFilters \+= listOf\("arm64-v8a"\)',
+        ).allMatches(gradle).length,
+        1,
+      );
+      expect(
+        RegExp(
+          r'abiFilters \+= listOf\("arm64-v8a", "x86_64"\)',
+        ).allMatches(gradle).length,
+        greaterThanOrEqualTo(2),
+      );
+      expect(gradle, isNot(contains('armeabi-v7a')));
+    });
+
+    test(
+      'release pipeline pins upload identity and hard-fails artifact gates',
+      () {
+        final workflow = File(
+          '.github/workflows/release.yml',
+        ).readAsStringSync();
+        final buildScript = File(
+          'scripts/build_production.sh',
+        ).readAsStringSync();
+
+        expect(workflow, contains('EXPECTED_UPLOAD_CERT_SHA256'));
+        expect(workflow, contains('Verify upload certificate identity'));
+        expect(workflow, contains('verify_16kb_alignment.sh'));
+        expect(workflow, contains('jarsigner -verify'));
+        expect(workflow, contains('SHA256SUMS'));
+        expect(workflow, contains('app:lintPlayRelease'));
+        expect(workflow, contains('Unexpected ABI'));
+        expect(workflow, contains('arm64-v8a only'));
+        expect(workflow, contains('Forbidden Play manifest surface'));
+        expect(buildScript, contains('ProxyAmazonBillingActivity'));
+        expect(workflow, contains('--target-platform android-arm64'));
+        expect(
+          workflow,
+          isNot(contains('--target-platform android-arm64,android-x64')),
+        );
+        expect(buildScript, contains('jarsigner -verify'));
+        expect(buildScript, contains('verify_16kb_alignment.sh'));
+        expect(buildScript, isNot(contains('alignment kontrolü uyarı verdi')));
+        expect(buildScript, isNot(contains('failed to strip debug symbols')));
+      },
+    );
+
+    test(
+      'CI and tagged releases audit Pub and Maven dependencies with OSV',
+      () {
+        final ci = File('.github/workflows/ci.yml').readAsStringSync();
+        final release = File(
+          '.github/workflows/release.yml',
+        ).readAsStringSync();
+        final scanner = File(
+          'scripts/audit_dependencies_osv.sh',
+        ).readAsStringSync();
+
+        expect(ci, contains('./scripts/audit_dependencies_osv.sh'));
+        expect(release, contains('./scripts/audit_dependencies_osv.sh'));
+        expect(scanner, contains('ecosystem: "Pub"'));
+        expect(scanner, contains('ecosystem: "Maven"'));
+        expect(scanner, contains('https://api.osv.dev/v1/querybatch'));
+        expect(scanner, contains('--fail'));
+        expect(scanner, contains('OSV response count mismatch'));
+        expect(scanner, isNot(contains('--insecure')));
+      },
+    );
+
+    test('Google Play build excludes optional Amazon billing adapter', () {
+      final gradle = File('android/app/build.gradle.kts').readAsStringSync();
+      final manifest = File(
+        'android/app/src/main/AndroidManifest.xml',
+      ).readAsStringSync();
+
+      expect(gradle, contains('module = "purchases-store-amazon"'));
+      expect(gradle, contains('module = "amazon-appstore-sdk"'));
+      expect(
+        gradle,
+        contains('KoruBeni is distributed only through Google Play'),
+      );
+      expect(manifest, contains('ProxyAmazonBillingActivity'));
+      expect(manifest, contains('tools:node="remove"'));
+      expect(manifest, contains('tools:ignore="MissingClass"'));
+      expect(manifest, isNot(contains('com.amazon.device.iap')));
     });
 
     test('Play declaration and data safety docs exist', () {
@@ -52,7 +177,7 @@ void main() {
         expect(disclosure, isNot(contains('profil fotoğrafı')));
         expect(publishedDisclosure, isNot(contains('profil fotoğrafı')));
         expect(publishedDisclosure, contains('sahte çağrı avatarı'));
-        expect(publishedDisclosure, contains('teknik ağ isteği'));
+        expect(publishedDisclosure, contains('ağ isteği'));
         expect(playForms, isNot(contains('profile/fake-call avatar')));
         expect(playForms, contains('fake-call avatar'));
         expect(englishPrivacy, isNot(contains('profile photo')));
@@ -122,24 +247,24 @@ void main() {
       expect(violations, isEmpty);
     });
 
-    test('full-screen intent declaration stays consistent with docs', () {
+    test('full-screen intent is absent and docs prohibit declaring it', () {
       final manifest = File(
         'android/app/src/main/AndroidManifest.xml',
       ).readAsStringSync();
       expect(
         manifest,
-        contains('android.permission.USE_FULL_SCREEN_INTENT'),
+        isNot(contains('android.permission.USE_FULL_SCREEN_INTENT')),
       );
 
       final declarations = File(
         'docs/play_console_declarations.md',
       ).readAsStringSync();
-      expect(declarations, contains('USE_FULL_SCREEN_INTENT'));
+      expect(declarations, contains('USE_FULL_SCREEN_INTENT` — NOT DECLARED'));
 
       final notes = File(
         'store/permissions_declaration_notes.md',
       ).readAsStringSync();
-      expect(notes, contains('USE_FULL_SCREEN_INTENT'));
+      expect(notes, contains('USE_FULL_SCREEN_INTENT` | Not requested'));
     });
 
     test(
@@ -157,7 +282,7 @@ void main() {
         final inventory = File(
           'docs/kvkk_veri_isleme_envanteri.md',
         ).readAsStringSync().toLowerCase();
-        expect(inventory, contains('devre dış'));
+        expect(inventory, contains('mikrofon/ses kaydı: devre dış'));
         expect(inventory, contains('record_audio'));
         expect(inventory, isNot(contains('consent_audio')));
         expect(inventory, isNot(contains('delil niteliğinde kayıt')));
@@ -195,7 +320,7 @@ void main() {
       ).readAsStringSync().toLowerCase();
 
       expect(disclosure, contains('openstreetmap'));
-      expect(disclosure, contains('teknik ağ isteği'));
+      expect(disclosure, contains('ağ isteği'));
       expect(disclosure, isNot(contains('kişisel veri aktarımı gerçekleşmez')));
       expect(appStoreReference, contains('eski planlama referansıdır'));
       expect(appStoreReference, contains('not_applicable / future_scope'));
@@ -238,20 +363,20 @@ void main() {
 
     test('canonical legal text versions stay pinned', () {
       expect(LegalTexts.termsVersion, '3.1.0');
-      expect(LegalTexts.kvkkVersion, '3.2.0');
+      expect(LegalTexts.kvkkVersion, '3.3.0');
       // Terms date is unchanged (content unchanged); KVKK/privacy carry their
       // own revision date after the first-responder claim removal.
       expect(LegalTexts.lastUpdated, '21 Mayıs 2026');
-      expect(LegalTexts.lastUpdatedKvkk, '6 Temmuz 2026');
+      expect(LegalTexts.lastUpdatedKvkk, '18 Temmuz 2026');
 
       final disclosure = File('store/aydinlatma_metni.html').readAsStringSync();
       final publishedDisclosure = File(
         '.gh-pages-publish/aydinlatma.html',
       ).readAsStringSync();
-      expect(disclosure, contains('Sürüm 3.2.0'));
-      expect(disclosure, contains('6 Temmuz 2026'));
-      expect(publishedDisclosure, contains('Sürüm 3.2.0'));
-      expect(publishedDisclosure, contains('6 Temmuz 2026'));
+      expect(disclosure, contains('Sürüm 3.3.0'));
+      expect(disclosure, contains('18 Temmuz 2026'));
+      expect(publishedDisclosure, contains('Sürüm 3.3.0'));
+      expect(publishedDisclosure, contains('18 Temmuz 2026'));
     });
 
     test('stale Firebase FCM and resource monitor claims are cleaned', () {

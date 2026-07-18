@@ -1,5 +1,12 @@
 # Denetim Uygulama Oturumu — 2026-07-06
 
+> **SUPERSEDED HISTORICAL RECORD — DO NOT USE AS RELEASE INSTRUCTIONS.**
+> This session captures decisions that were later reversed or strengthened,
+> including the old full-screen-intent declaration and earlier release flow.
+> Current source of truth: `store/release_checklist.md`,
+> `store/PRODUCTION_ROLLOUT_RUNBOOK.md`, and
+> `docs/qa/phase5-operational-readiness-evidence-2026-07-18.md`.
+
 Bu not, 2026-07-06 tarihli KVKK/yayına-hazırlık denetiminin **uygulama** aşamasını
 belgeler. Bulgular için: `codebase-audit-2026-06.md`, `release_readiness_research_2026-06-27.md`.
 

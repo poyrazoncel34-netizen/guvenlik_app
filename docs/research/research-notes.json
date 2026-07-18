@@ -1,0 +1,77 @@
+{
+  "meta": {
+    "title": "KoruBeni Competitive & Compliance Research",
+    "version": "1.0",
+    "compiled_date": "2026-06-29",
+    "analyst_role": "Product / market / mobile-security-policy / KVKK research",
+    "scope": "Personal-safety apps (global + Turkey): product, UA, monetization, revenue, Play/Apple/KVKK compliance, abuse mitigation",
+    "constraints": ["No source code modified", "Public sources only", "Every significant claim >=2 independent sources or flagged low-confidence"],
+    "companion_files": [
+      "evidence-log.csv", "competitor-profiles.csv", "feature-permissions-matrix.csv",
+      "monetization-pricing.csv", "revenue-estimates.csv", "hypotheses.csv",
+      "01-competitive-analysis-2026-06.md"
+    ]
+  },
+  "subject": {
+    "name": "KoruBeni",
+    "platform": "Flutter / Android (Google Play target)",
+    "free_features": ["fake call", "siren", "emergency contacts", "map/location session", "local PIN lock", "profile"],
+    "pro_features": ["panic/SOS", "emergency countdown", "emergency-contact auto-call", "Safe Walk", "check-in", "safety timeline", "volume trigger", "test mode"],
+    "architecture": "offline-first, no developer backend, no analytics/ads, no crash SDK, RevenueCat+Play Billing for Pro",
+    "deliberate_omissions": ["biometric unlock (duress safety)", "microphone/audio recording", "background location", "auto-SMS of location"],
+    "permissions": ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION", "READ_CONTACTS", "CALL_PHONE", "POST_NOTIFICATIONS", "VIBRATE", "FOREGROUND_SERVICE", "FOREGROUND_SERVICE_SPECIAL_USE", "WAKE_LOCK", "RECEIVE_BOOT_COMPLETED", "SCHEDULE_EXACT_ALARM", "REQUEST_IGNORE_BATTERY_OPTIMIZATIONS", "BILLING"]
+  },
+  "competitor_set": ["Life360", "bSafe", "Noonlight", "Citizen", "Hollie Guard", "KADES", "Pronet Panik Butonu", "One Scream", "Red Panic Button", "Google Personal Safety"],
+  "key_findings": [
+    "Life360 anchors the category: USD 489.5M FY2025 revenue, USD 369.3M subscriptions, 2.8M paying circles, ~95.8M MAU, 100M+ installs [E01-E07].",
+    "Consumer pricing ladder: low-end women-safety apps USD 2-8/mo (bSafe ~USD 2-4); monitored/agent apps USD 10-20/mo (Noonlight USD 5-10, Citizen USD 19.99) [E09,E12,E14].",
+    "Turkey's dominant app is FREE government KADES (~9.7M downloads, direct police dispatch) - KoruBeni must differentiate and disclaim it is not KADES/official [E17].",
+    "Every competitor with location sharing also AUTO-SENDS location to contacts/responders; KoruBeni does not (offline-first) - largest feature gap [E10,E16,E18,E30].",
+    "Industry-standard legal posture: 'not an emergency service' + no liability for false alarms/location errors (Life360 model) [E08].",
+    "Play compliance: specialUse FGS needs declaration + demo video [E19]; Apr-2026 update pushes broad contacts to the Contact Picker and drops geofencing as special-use [E20]; stalkerware policy demands consent + persistent notification for any tracking [E22].",
+    "KVKK: Mar-2026 principle decision requires separate disclosure vs consent approvals [E23]; explicit consent must be specific/informed/free/revocable [E24].",
+    "TR consumer law: 14-day withdrawal under 6502 + Distance Contracts Regulation, limited once digital service starts; pre-purchase disclosure duties remain [E25]."
+  ],
+  "hypothesis_tree": {
+    "root": "Can KoruBeni win a defensible niche in personal safety on Google Play / Turkey?",
+    "branches": [
+      {
+        "q": "Is the market monetizable for a small player?",
+        "confidence": "medium",
+        "children": [
+          {"h": "H1 Life360 leads, validates category", "status": "supported", "confidence": "high"},
+          {"h": "H2 freemium subscription is the model", "status": "supported", "confidence": "high"},
+          {"h": "H12 no reliable indie revenue benchmarks; low TR ARPU", "status": "supported", "confidence": "medium"}
+        ]
+      },
+      {
+        "q": "Where can KoruBeni differentiate?",
+        "confidence": "high",
+        "children": [
+          {"h": "H11 privacy-minimal/offline-first is a real differentiator", "status": "supported", "confidence": "high"},
+          {"h": "H7 but it lacks table-stakes auto-location-share", "status": "supported", "confidence": "high"},
+          {"h": "H6 and lacks evidence recording (by design)", "status": "supported", "confidence": "high"},
+          {"h": "H13 cannot offer monitored dispatch without a backend", "status": "inference", "confidence": "medium"}
+        ]
+      },
+      {
+        "q": "What are the launch blockers?",
+        "confidence": "high",
+        "children": [
+          {"h": "H9 specialUse FGS declaration + video required", "status": "supported", "confidence": "high"},
+          {"h": "H8 broad READ_CONTACTS at risk under Apr-2026 policy", "status": "supported", "confidence": "medium"},
+          {"h": "H10 KVKK separate consent/disclosure approvals", "status": "supported", "confidence": "medium"},
+          {"h": "H5 must disclaim not-an-emergency-service + liability", "status": "supported", "confidence": "high"},
+          {"h": "H14 TR subscription disclosure + withdrawal terms", "status": "supported", "confidence": "high"},
+          {"h": "H4 must not impersonate KADES/official", "status": "supported", "confidence": "high"}
+        ]
+      }
+    ]
+  },
+  "open_questions": [
+    "Exact Play install band for bSafe/Noonlight/Hollie Guard (Sensor Tower/Similarweb behind login).",
+    "Whether Google treats personal-safety contact lookup as a permitted broad-contacts use case or mandates the Contact Picker.",
+    "KoruBeni Pro price points + TRY/FX and trial length (to be set in RevenueCat).",
+    "Whether KoruBeni's onboarding currently nests consent under disclosure in a single approval (needs code/UX check)."
+  ]
+}

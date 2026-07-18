@@ -45,6 +45,11 @@ void main() {
       final fastfile = File('android/fastlane/Fastfile').readAsStringSync();
 
       expect(buildScript, contains('--flavor play'));
+      expect(buildScript, contains('--target-platform android-arm64'));
+      expect(
+        buildScript,
+        isNot(contains('--target-platform android-arm64,android-x64')),
+      );
       expect(buildScript, contains('--dart-define=ENV=production'));
       expect(
         buildScript,
@@ -53,6 +58,11 @@ void main() {
       expect(buildScript, contains(r'${REVENUECAT_ANDROID_API_KEY:-}'));
 
       expect(fastfile, contains('--flavor play'));
+      expect(fastfile, contains('--target-platform android-arm64'));
+      expect(
+        fastfile,
+        isNot(contains('--target-platform android-arm64,android-x64')),
+      );
       expect(fastfile, contains("ENV.fetch('REVENUECAT_ANDROID_API_KEY')"));
       expect(fastfile, isNot(contains('ENCRYPTION_KEY')));
     });
@@ -107,5 +117,17 @@ void main() {
         expect(setupScript, contains('ayrı operator adımı'));
       },
     );
+
+    test('Play handoff script never builds a locally uploadable artifact', () {
+      final handoff = File(
+        'scripts/release_to_play_store.sh',
+      ).readAsStringSync();
+
+      expect(handoff, isNot(contains('./scripts/build_production.sh')));
+      expect(handoff, isNot(contains('flutter build appbundle')));
+      expect(handoff, contains('Release Play AAB'));
+      expect(handoff, contains('PRODUCTION_ROLLOUT_RUNBOOK.md'));
+      expect(handoff, contains('yerel AAB DERLEMEZ ve YÜKLEMEZ'));
+    });
   });
 }

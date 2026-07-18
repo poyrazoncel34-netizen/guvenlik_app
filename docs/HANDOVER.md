@@ -1,4 +1,12 @@
-# KoruBeni — DEVİR RAPORU (HANDOVER)
+# KoruBeni — ARŞİVLENMİŞ DEVİR RAPORU (HANDOVER)
+
+> **ARŞİV / GÜNCEL YAYIN GERÇEĞİ DEĞİL.** Bu belge typed native safety
+> kernelinden önceki mimariyi ve artık kaldırılmış `EmergencyExecutor`,
+> `CheckInScheduler` ve `CountdownAlarmScheduler` dosyalarını anlatır. Güncel
+> karar ve kanıt kaynağı `docs/release/safety_case.md` ile
+> `docs/qa/phase5-operational-readiness-evidence-2026-07-18.md` dosyalarıdır.
+> Aşağıdaki eski test sayıları, kod bağlantıları ve dispatch tarifleri release
+> kanıtı olarak kullanılamaz.
 
 > **Tarih:** 11 Haziran 2026 · **main HEAD:** `be37d2a` + bu commit · **Doğrulama:** Bu rapordaki her
 > iddia bu oturumda kod açılarak ve test koşularak doğrulanmıştır (dosya:satır referanslı).
@@ -14,8 +22,8 @@
 | `./gradlew :app:testPlayDebugUnitTest` | **BUILD SUCCESSFUL — 32 test, 0 hata** (CheckInExpiryEscalation 6, CheckInScheduler 2, EmergencyExecutor 8, EmergencyPrefsClear 1, FullScreenIntentNotification 2, NativeDispatchFailure 9, NativeNotificationText 4) |
 | `grep -rniE "112\|911\|999" lib/ android/app/src/main/` | **Temiz** — yalnız yasal bilgilendirme stringleri ("112'yi SİZ arayın") ve "112 yok" yorumları (bkz. §2.1) |
 
-> ⚠️ Native test her zaman `:app:` scope ile koşulmalı: kök `testDebugUnitTest`,
-> üçüncü-parti `flutter_direct_caller_plugin`'in test-variant'ı yüzünden patlar (bilinen borç).
+> ℹ️ Eski `flutter_direct_caller_plugin` kaldırıldı. Native safety testleri `:app:` scope
+> ile koşulur; production otomatik arama isteğinin tek otoritesi typed native coordinator'dır.
 > Test çıktıları repo-kökü `build/` altına düşer (`build/app/test-results/...`).
 
 > ℹ️ `~/.claude/settings.json` şu an `{"hooks":{}}` — Stop hook **bilerek kapalı**;
@@ -26,7 +34,7 @@
 ## 1. UYGULAMA NEDİR
 
 **KoruBeni** (`com.poyrazoncel.korubeni`) — Android-hedefli, offline-first kişisel güvenlik
-uygulaması (Flutter). TR birincil / EN ikincil dil. Google Play Store hedefi.
+uygulaması (Flutter). İlk production runtime/listing yalnız Türkçe. Google Play Store hedefi.
 
 **Ne DEĞİLDİR (yasal sınırlar):**
 - Profesyonel güvenlik hizmeti DEĞİLDİR; 112 ve resmi acil servislerin YERİNİ TUTMAZ
@@ -111,14 +119,14 @@ Ağ kullanan opsiyoneller: harita karoları, RevenueCat/Play Billing, bağlantı
 **"%100 offline ürün" iddiası da yasaktır** (CLAUDE.md kural 1). Cleartext trafik kapalı
 ([network_security_config.xml](../android/app/src/main/res/xml/network_security_config.xml)).
 
-### 2.5 — Full-screen-intent BİLİNÇLİ EKLENMEDİ (SPEC Karar 7a ertelendi)
-`USE_FULL_SCREEN_INTENT` **manifest'te YOK** ([AndroidManifest.xml](../android/app/src/main/AndroidManifest.xml) — doğrulandı).
-Kod tarafı hazır ama zarif-düşüşlü: `showAlert(fullScreen=true)` çağrısı
-`canUseFullScreenIntent()` (Android 14+ runtime kontrolü) geçerse FSI ekler, geçmezse düz
-yüksek-öncelikli heads-up bildirimine düşer, **çökmez**
-([EmergencyNotificationHelper.kt:116-143](../android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/EmergencyNotificationHelper.kt)).
-Manifest izni olmadığından grace uyarısı bugün fiilen **heads-up bildirimdir**. Manifest izni +
-Play Console çekirdek-işlev beyanı ayrı, ertelenmiş bir adımdır — **eklemeyi önerme.**
+### 2.5 — Full-screen intent YOK (Play politika kararı)
+`USE_FULL_SCREEN_INTENT` **manifest'te yoktur**
+([AndroidManifest.xml](../android/app/src/main/AndroidManifest.xml)). KoruBeni alarm-saat veya
+gelen telefon/VoIP çağrısı uygulaması değildir; sahte çağrı da gerçek çağrı işlevi diye beyan
+edilemez. Ayrı açık-rıza/açıklama UI'si olmadığı için permission ve full-screen PendingIntent
+kodu kaldırıldı. Grace/acil uyarısı HIGH-importance **heads-up bildirimdir**
+([EmergencyNotificationHelper.kt](../android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/EmergencyNotificationHelper.kt)).
+Eski Console FSI taslağını kaldır; yeni izin-onay UX'i ve politika incelemesi olmadan geri ekleme.
 
 ### 2.6 — "Uygulama açıksa" metin güçlendirmesi ertelendi (SPEC Karar 8)
 Native-yedek arama kodu kanıtlandığı halde stringler bilinçli temkinli ("uygulama açıksa…").
@@ -152,7 +160,7 @@ State: **Provider** (`MultiProvider`, [main.dart:225](../lib/main.dart)) + DI: *
 ([service_locator.dart](../lib/core/di/service_locator.dart)). Sürüm: `1.0.0+1` (CI tag'i ezer, §8).
 
 **Android SDK:** minSdk **24** (Flutter 3.38 varsayılanı; merged manifest'ten doğrulandı),
-targetSdk **35**, compileSdk **36**, Java 17, yalnız 64-bit ABI (`arm64-v8a`,`x86_64` — 16KB
+targetSdk **36**, compileSdk **36**, Java 17, yalnız 64-bit ABI (`arm64-v8a`,`x86_64` — 16KB
 uyumu için bilinçli, [build.gradle.kts:90-95](../android/app/build.gradle.kts)), kaynak dilleri
 yalnız `en`,`tr`. Tek flavor: **`play`** (build komutlarında `--flavor play` zorunlu).
 
@@ -191,25 +199,29 @@ yalnız `en`,`tr`. Tek flavor: **`play`** (build komutlarında `--flavor play` z
 | **Native** SharedPreferences dosyası **`korubeni_emergency`** ([EmergencyPrefs.kt](../android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/EmergencyPrefs.kt)) | countdown: `countdown_active/deadline_ms/alarm_fired/primary_number/dispatch_id`; check-in (safe-walk için `_safe_walk` sonekli): `check_in_active/phase/deadline/grace_ms/primary_number/alarm_fired`; `pending_trigger` |
 | Dosya | `legal_logs.json` — KVKK audit log, bozulursa kendini onaran ([legal_log_service.dart](../lib/core/services/legal_log_service.dart)) |
 
-**EncryptionService** ([encryption_service.dart](../lib/core/security/encryption_service.dart)):
-AES-CBC, her şifrelemede `Random.secure()` ile rastgele IV, IV çıktının başına eklenir; eski
-statik-IV verisini de çözebilir. Anahtar `--dart-define=ENCRYPTION_KEY` (base64) —
-[app_constants.dart:8-11](../lib/core/constants/app_constants.dart); release'te boşsa build
-reddedilir (§8).
+**Eski EncryptionService kaldırıldı:** Dart define ile tüm cihazlara aynı anahtarı gömen
+`ENCRYPTION_KEY` modeli gerçek cihaz-bağlı şifreleme sağlamadığı ve acil okuma yoluna ek bir
+çökme noktası eklediği için 6 Temmuz 2026'da koddan/release zincirinden çıkarıldı. PIN, sahte
+çağrı profili ve acil kişi verileri `flutter_secure_storage` içinde; sqflite'taki operasyonel
+tablolar app-private depodadır. Bu, "tüm yerel DB şifrelidir" iddiası değildir; güncel trade-off
+ve tehdit modeli [SECURITY_AT_REST_DESIGN.md](SECURITY_AT_REST_DESIGN.md) içinde kayıtlıdır.
 
 **Offline güvenilirlik mekanizması:**
-- AlarmManager `setExactAndAllowWhileIdle` (Doze-geçirgen); exact izni yoksa/iptal edilirse
-  inexact `setAndAllowWhileIdle` fallback + Dart'a `nativeScheduleDegraded` bayrağı
-  ([CheckInScheduler.kt:234-282](../android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/CheckInScheduler.kt),
-  kullanıcıya snackbar: [check_in_screen.dart:89-97](../lib/screens/check_in_screen.dart)).
-- Boot-restore: `BootCompletedReceiver` → `restoreAfterBoot` — süre dolmamışsa alarmı yeniden
-  kurar; main bitmiş + grace varsa grace'i başlatır; **grace de geçmişse native olarak birincil
-  kişiyi arar** ([CheckInScheduler.kt:158-232](../android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/CheckInScheduler.kt)).
-- FGS: `flutter_background_service`, tip **`specialUse`**, subtype property
-  `emergency_checkin_keepalive` ([AndroidManifest.xml:86-97](../android/app/src/main/AndroidManifest.xml)).
-  Geolocator'ın konum FGS'i manifest'ten `tools:node="remove"` ile çıkarıldı (satır 99-101).
-- Doze/pil sihirbazı: [battery_optimization_wizard.dart](../lib/screens/battery_optimization_wizard.dart),
-  `doze_mode_service`, `battery_optimization_service` — izin reddi degraded modda devam eder.
+- Native AlarmManager final eskalasyon deadline'ına (`ana süre + 60 sn grace`)
+  `setExactAndAllowWhileIdle` kurar; exact izni yoksa veya sonradan iptal edilirse
+  bağımsız `setAndAllowWhileIdle` yedeği kalır. Dart grace ekranı best-effort'tur;
+  native tarafta ikinci bir exact alarm kurulmaz.
+- Boot-restore özgün final deadline'ı korur; deadline geçmediyse alarmı yeniden kurar,
+  geçtiyse aktif/dedup state kontrolüyle eskalasyonu yürütür. Exact-alarm izni yeniden
+  verilince aktif countdown/check-in/Safe Walk schedule'ları tekrar exact kurulur.
+- Özel foreground service yoktur. `flutter_background_service`, FGS izinleri ve
+  `specialUse` manifest girdisi kaldırılmıştır. Aktif oturumdaki yerel bildirim yalnız
+  kullanıcı görünürlüğüdür; timing/process keepalive garantisi değildir.
+- Doze/pil sihirbazı: [battery_optimization_wizard.dart](../lib/screens/battery_optimization_wizard.dart)
+  yalnız `battery_optimization_service` üzerinden typed emergency platform
+  kanalına gider. Eski Doze MethodChannel ve `optimize_battery` eklentisi
+  kaldırılmıştır. Muafiyet ekranının açılması grant sayılmaz; uygulama resume
+  olduğunda gerçek durum tekrar okunur. Ret degraded modda devam eder.
 
 ---
 
@@ -321,10 +333,10 @@ safe-walk bağlaması [safe_walk_screen.dart:34](../lib/screens/safe_walk_screen
   kullanıcı devam edebilir ([splash_screen.dart:156-172](../lib/screens/splash_screen.dart)).
 - **Ağ sertleştirme:** cleartext kapalı (network_security_config + `usesCleartextTraffic=false`),
   `allowBackup=false`, exported bileşen yalnız MainActivity + BOOT receiver (izin filtreli).
-- **Sır yönetimi:** `ENCRYPTION_KEY` ve `REVENUECAT_ANDROID_API_KEY` yalnız `--dart-define`;
-  release'te boşsa hem Gradle ([build.gradle.kts:53-66](../android/app/build.gradle.kts)) hem
-  Dart ([app_environment.dart:26-38](../lib/config/app_environment.dart)) build/açılışı reddeder.
-  Repo'da hardcoded sır yok (doğrulandı).
+- **Build girdisi yönetimi:** RevenueCat Android `goog_` **public SDK key** `--dart-define` ile verilir;
+  `sk_` server secret, placeholder ve CI smoke değeri Play release'te Gradle ve Dart tarafından
+  reddedilir. Signing parolaları/keystore ise istemci girdisi değildir ve yalnız secret store'da
+  tutulur. Release workflow upload sertifikasını `EXPECTED_UPLOAD_CERT_SHA256` ile sabitler.
 
 ---
 
@@ -335,7 +347,7 @@ safe-walk bağlaması [safe_walk_screen.dart:34](../lib/screens/safe_walk_screen
 - **Countdown canlı bölge:** ekran okuyucuya saniye ilanı `liveRegion` ile (commit `98cabfd`).
 - Alt gezinme sekmeleri seçilebilir buton semantiği (`5251b7c`), "Eve Dön" etiketi (`e4fe932`),
   iptal butonu kontrast artışı white38→white70 (`d673e83`).
-- Grace bildirimi: HIGH importance + DnD bypass + titreşim
+- Grace bildirimi: HIGH importance + yalnız kullanıcı Notification Policy erişimi vermişse DnD bypass + titreşim
   ([EmergencyNotificationHelper.kt:30-37](../android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/EmergencyNotificationHelper.kt)).
 - Çalışma ağacındaki commit'lenmemiş değişiklikler rıza checkbox'larına `semanticLabel` ekliyor (§10).
 
@@ -343,8 +355,9 @@ safe-walk bağlaması [safe_walk_screen.dart:34](../lib/screens/safe_walk_screen
 
 ## 7. TEST & KALİTE
 
-**Bu oturum sonuçları:** sayfa başındaki tabloya bakın (391 Dart + 20 native, hepsi yeşil;
-analyze temiz).
+**Güncel yerel sonuç:** tam Flutter paketi ve analyze temiz; Android host unit,
+instrumentation derleme, smoke release lint/AAB/imza/ABI ve 16KB kanıtı için
+[phase4-release-engineering-evidence-2026-07-17.md](qa/phase4-release-engineering-evidence-2026-07-17.md) dosyasına bakın.
 
 **Test deseni:** Acil akışlar **source-contract testleri** (kaynak kodda kritik kalıpların
 varlığını assert eden) + MethodChannel mock'larıyla test edilir; gerçek Doze yarışı yalnız
@@ -353,8 +366,8 @@ cihazda kanıtlanır. Kritik dosyalar: `test/core/services/emergency_platform_se
 `CheckInExpiryEscalationTest.kt` (112/failover-yok regresyon koruması dahil).
 
 **Bilinen borçlar:**
-- Kök `./gradlew testDebugUnitTest` PATLAR → daima `:app:testPlayDebugUnitTest`
-  (üçüncü-parti `flutter_direct_caller_plugin` test-variant sorunu).
+- Native safety testleri varyantı açıkça sabitlemek için `:app:testPlayDebugUnitTest`
+  olarak çalıştırılır; eski doğrudan-arama Flutter eklentisi artık dependency değildir.
 - 800+ satır dosyalar (CLAUDE.md 800-maks kuralını aşıyor; bölme = UI dokunma riski, ertelendi):
   [home_page.dart](../lib/screens/home_page.dart) 1271, [countdown_screen.dart](../lib/screens/countdown_screen.dart) 1189,
   [contacts_page.dart](../lib/screens/contacts_page.dart) 1108, [map_page.dart](../lib/screens/map_page.dart) 1017.
@@ -371,9 +384,9 @@ cihazda kanıtlanır. Kritik dosyalar: `test/core/services/emergency_platform_se
 | İzin | Gerekçe / Console işi |
 |---|---|
 | `CALL_PHONE` | Acil doğrudan arama; reddedilirse dialer'a düşer. **Console'da yüksek-riskli izin beyanı + çekirdek-işlev gerekçesi gerekir** (oto-arama yalnız kullanıcının kurduğu güvenlik oturumlarında). |
-| `FOREGROUND_SERVICE_SPECIAL_USE` + subtype property | **EN KRİTİK Console maddesi:** specialUse beyan metni hazır ([play-submission.md §1](play-submission.md)) + **demo video operatör işi**. |
+| Foreground service | **UYGULANMAZ:** Play manifestinde FGS izni/servisi yoktur. AAB upload sonrası transitive bir servis geri gelmediği doğrulanır; Console'a `specialUse` beyanı girilmez. |
 | `SCHEDULE_EXACT_ALARM` | Check-in/countdown deadline'ları; reddi degraded-inexact'e düşer. Console beyanı gerekir. |
-| `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` | Opsiyonel sunulur, reddi degraded modda devam (manifest yorumu satır 36-41). |
+| `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` | Yalnız kullanıcı jesti + in-app açıklama sonrası tek native otoriteden opsiyonel sunulur; ekranın açılması grant sayılmaz, reddi degraded modda devam eder. |
 | Konum (FINE/COARSE) | Yalnız ön planda, harita/güvenlik oturumu; arka plan konumu YOK. |
 | `READ_CONTACTS` | **`tools:node="remove"` ile ÇIKARILDI** — kişi seçimi ACTION_PICK ile. |
 | RECORD_AUDIO / mikrofon FGS | **YOK** (kayıt özelliği söküldü). |
@@ -391,7 +404,7 @@ yapıştırma paketi [PLAY_CONSOLE_COPY_PASTE_PACK.md](../store/PLAY_CONSOLE_COP
 | Dart obfuscation + split-debug-info | ✅ YAPILDI — release.yml `--obfuscate --split-debug-info` + sembol artefaktı (commit `f4f9f00`) |
 | Release'te debugPrint susturma | ✅ YAPILDI ([main.dart:41-44](../lib/main.dart)); FlutterError.onError pre-launch raporu için korunur (commit `2ac1fcb`) |
 | Feature graphic 1024×500 | ✅ VAR — [store/assets/feature_graphic_1024x500.png](../store/assets/feature_graphic_1024x500.png) + üretici script (commit `90e08c4`) |
-| 16KB page-size | ⚠️ KISMEN: 64-bit-only ABI + Flutter 3.38 + plugin matrisi analizi ([release_risks.md §16KB](release_risks.md)); **nihai kanıt Play Console "memory page size" göstergesi — operatör doğrulayacak** |
+| 16KB page-size | ✅ YEREL KANIT: temiz `.smoke` AAB'deki 10/10 native kütüphane uyumlu; ⚠️ üretim AAB'si için release workflow ve Play Console "memory page size" göstergesi hâlâ operatör kanıtıdır ([Phase 4 evidence](qa/phase4-release-engineering-evidence-2026-07-17.md)) |
 | Ekran görüntüleri | ⚠️ `store/screenshots/android/` mevcut; Console'a yükleme operatör işi |
 | Console beyanları (FGS video, Data Safety, IARC) | ❌ OPERATÖR İŞİ (§12) |
 
@@ -403,7 +416,9 @@ yapılmalı** — lokal AAB yüklenmez (versionCode tutarlılığı + provenance
 Mevcut tag'ler: `v1.0.0-rc1`, `v1.0.0-rc2` (final `v1.0.0` HENÜZ YOK).
 
 **Gerekli GitHub secrets:** `KEYSTORE_BASE64`, `STORE_PASSWORD`, `KEY_PASSWORD`, `KEY_ALIAS`,
-`ENCRYPTION_KEY`, `REVENUECAT_ANDROID_API_KEY` (CI smoke için opsiyonel `CI_ENCRYPTION_KEY`).
+`EXPECTED_UPLOAD_CERT_SHA256`, `REVENUECAT_ANDROID_API_KEY`. Sonuncusu Android public SDK
+key'dir; `sk_` server secret değildir. Normal CI gerçek uygulama kimliğini kullanmaz: ayrı
+`.smoke` application ID ve sabit, billing'i devre dışı bırakan sentinel kullanır.
 Lokal release build `android/key.properties` ister; yoksa Gradle release'i REDDEDER
 ([build.gradle.kts:25-27](../android/app/build.gradle.kts)) — debug imzaya sessiz düşüş yok.
 CI (PR/main) kendi tek-kullanımlık NON_RELEASE_SMOKE anahtarını üretir ([ci.yml:35-56](../.github/workflows/ci.yml)).
@@ -509,9 +524,9 @@ Kod/birim testle KANITLANAMAYAN, cihaz turu bekleyenler
 
 ## 12. OPERATÖRÜN MANUEL İŞLERİ (kod dışı)
 
-1. **Play Console beyanları:** FGS specialUse beyanı + **demo video** (senaryo:
-   [play-submission.md §1](play-submission.md)); CALL_PHONE izin beyanı; exact-alarm; Data
-   Safety formu; IARC content rating (18+); App access "Pro test talimatı". Sıra:
+1. **Play Console beyanları:** CALL_PHONE izin beyanı; exact-alarm; Data Safety formu;
+   IARC content rating (18+); App access "Pro test talimatı". FGS `specialUse` bu build
+   için uygulanmaz; eski Console taslağı kaldırılır ve AAB manifesti kontrol edilir. Sıra:
    [play-console-checklist.md](play-console-checklist.md).
 2. **Keystore yedeği:** `KEYSTORE_BASE64`/parolalar güvenli kasada; kaybolursa Play imza kimliği
    geri alınamaz (üretim adımları: [KEYSETUP.md](../KEYSETUP.md)).
@@ -549,13 +564,10 @@ Yeni oturum bu dokümanlara bakarsa şu kısımlara **güvenmesin**:
 3. **[docs/release_risks.md](release_risks.md) plugin tablosu:** `flutter_jailbreak_detection
    ^1.10.0` ve `flutter_local_notifications ^17.2.1` listeler — güncel pubspec'te root tespiti
    **`safe_device ^1.3.10`**, FLN **`^19.1.0`**. 16KB plugin matrisi bu satırlar için bayat.
-4. **[build.gradle.kts:85](../android/app/build.gradle.kts) yorumu** "Android 6.0: USE_BIOMETRIC
-   minimum" der — bayat: fiili minSdk **24**'tür (Flutter 3.38 varsayılanı) ve biyometrik bu
-   projede zaten yasaktır.
-5. **[KEYSETUP.md](../KEYSETUP.md)** lokal keystore adı `korubeni-release-key.jks` örneği verir;
+4. **[KEYSETUP.md](../KEYSETUP.md)** lokal keystore adı `korubeni-release-key.jks` örneği verir;
    CI gerçeği `android/app/korubeni_keystore_release.jks` (secret'tan decode; 2026-07-06'da yeniden adlandırıldı, KEYSTORE_BASE64 secret'ı bu dosyanın base64'ü olmalı). Lokal
    kılavuz olarak okunmalı, CI yolu esas alınmalı.
-6. **Kök `BUILD_*.md` dosyaları** erken dönem build notlarıdır (kök `README.md` 13 Haziran
+5. **Kök `BUILD_*.md` dosyaları** erken dönem build notlarıdır (kök `README.md` 13 Haziran
    2026'da bağlayıcı kaynaklara işaret eden kısa yönlendirme sayfasıyla değiştirildi); release
    süreci için tek doğru kaynak [release.yml](../.github/workflows/release.yml) +
    [play-console-checklist.md](play-console-checklist.md)'dir.

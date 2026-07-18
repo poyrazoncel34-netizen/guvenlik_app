@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 1,
+  "allowedCategories": [
+    "product",
+    "safety",
+    "safety-test",
+    "release",
+    "legal",
+    "generated",
+    "tooling",
+    "secret-quarantine"
+  ],
+  "forbiddenStagedCategories": [
+    "tooling",
+    "secret-quarantine"
+  ],
+  "rules": [
+    {
+      "pattern": "^(?:\\.agents/|\\.codex/|AGENTS\\.md$)",
+      "category": "tooling",
+      "commitGroup": "EXCLUDE",
+      "reason": "Local Codex/agent configuration is not product source."
+    },
+    {
+      "pattern": "(?:^|/)(?:key\\.properties|[^/]+\\.(?:jks|keystore))$|(?:^|/)google-services\\.json$|(?:^|/)GoogleService-Info\\.plist$|(?:^|/)firebase_app_id_file\\.json$|(?:^|/)\\.env(?:\\..+)?$",
+      "category": "secret-quarantine",
+      "commitGroup": "EXCLUDE",
+      "reason": "Signing material and environment secrets must remain outside release source."
+    },
+    {
+      "pattern": "^android/app/src/(?:test|androidTest)/kotlin/com/poyrazoncel/korubeni/emergency/",
+      "category": "safety-test",
+      "commitGroup": "01-native-safety-kernel",
+      "reason": "Executable native safety-kernel evidence belongs with the native implementation."
+    },
+    {
+      "pattern": "^android/app/src/main/kotlin/com/poyrazoncel/korubeni/(?:emergency/|MainActivity\\.kt$|DozeModeHandler\\.kt$)",
+      "category": "safety",
+      "commitGroup": "01-native-safety-kernel",
+      "reason": "Native emergency state, scheduling, dispatch, and platform-channel authority."
+    },
+    {
+      "pattern": "^test/(?:(?:android|core|screens|widgets)/|main_(?:locale|release_logging_contract|startup_init_order)_test\\.dart$)",
+      "category": "safety-test",
+      "commitGroup": "02-flutter-pin-session",
+      "reason": "Executable Flutter/platform safety behavior evidence."
+    },
+    {
+      "pattern": "^lib/(?:core/|presentation/|screens/|widgets/|main\\.dart$)",
+      "category": "safety",
+      "commitGroup": "02-flutter-pin-session",
+      "reason": "Flutter safety projection, PIN/session handling, and safety-facing lifecycle code."
+    },
+    {
+      "pattern": "^(?:android/(?:app/gradle\\.lockfile$|gradle/wrapper/gradle-wrapper\\.jar$|gradlew(?:\\.bat)?$)|store/screenshots/android/premium_app_store/.*\\.png$)",
+      "category": "generated",
+      "commitGroup": "03-android-build-dependency",
+      "reason": "Reproducible build wrapper/lock output or generated store media."
+    },
+    {
+      "pattern": "^(?:android/(?:\\.gitignore$|app/build\\.gradle\\.kts$|app/src/main/AndroidManifest\\.xml$|app/src/main/res/xml/|build\\.gradle\\.kts$|fastlane/|gradle/)|pubspec\\.(?:yaml|lock)$)",
+      "category": "release",
+      "commitGroup": "03-android-build-dependency",
+      "reason": "Android manifest, dependency, toolchain, and build configuration."
+    },
+    {
+      "pattern": "^(?:\\.github/|config/|release-evidence/|scripts/|docs/(?:qa/|release/|audit/|research/)|docs/(?:HANDOVER|release_risks)\\.md$|test/(?:critical_coverage_gate|external_release_gate_verifier|license_review_queue|release_|safety_mutation_runner_contract|sbom_|third_party_notices|store/|store_release_docs_test\\.dart$)|README\\.md$|SPEC\\.md$)",
+      "category": "release",
+      "commitGroup": "04-ci-evidence-security",
+      "reason": "CI, evidence, security, audit, or release-governance source."
+    },
+    {
+      "pattern": "^(?:\\.gh-pages-publish/|assets/legal/|lib/constants/legal_texts\\.dart$|docs/(?:kvkk_|play-|play_|verbis_|veri_ihlali_)|store/(?!screenshots/android/(?:generate_|premium_app_store/README)))",
+      "category": "legal",
+      "commitGroup": "05-legal-store",
+      "reason": "Candidate-facing legal, Play declaration, billing, QA, or store material."
+    },
+    {
+      "pattern": "^(?:assets/translations/|store/screenshots/android/(?:generate_|premium_app_store/README))",
+      "category": "product",
+      "commitGroup": "05-legal-store",
+      "reason": "Localized product copy or store-asset source."
+    }
+  ]
+}

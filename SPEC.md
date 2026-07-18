@@ -75,8 +75,9 @@ Check-in tarafında **60 saniyelik grace-period dead-man's-switch zaten uygulanm
 ### 1.3 Arama yolu (ACTION_CALL vs ACTION_DIAL)
 - **Native (countdown yolu):** [EmergencyExecutor.kt:48-79](android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/EmergencyExecutor.kt#L48) — `CALL_PHONE` izni VARSA `ACTION_CALL`, YOKSA `ACTION_DIAL`. Wake-lock (120sn) alır.
   > Not: Countdown/panik yolu ayrıca tüm numaraları dener + 112 son-çaresine sahiptir; **bu davranış M2'de DOKUNULMAZ.** M2 native-yedek, EmergencyExecutor'un **tek-numara** arama yeteneğini birincil kişi için kullanır.
-- **Dart (check-in yolu):** [CallService.startEmergencyCall](lib/core/services/call_service.dart#L73) — izin varsa `FlutterDirectCallerPlugin`, yoksa `openDialer`. Emergency anında **asla** `request()` etmez (C1 fix).
-- İkisi de aynı temel: **izin varsa doğrudan ara, yoksa dialer.**
+- **Güncel yol:** Flutter yalnız typed token taşır. Native coordinator fallback'i önce
+  kaydeder/post eder ve `TelecomManager.placeCall()` ile doğrulanmamış istek gönderir.
+  `ACTION_DIAL` yalnız görünür Activity veya TTL doğrulayan kullanıcı bildirimi eylemidir.
 
 ### 1.4 Reliability altyapısı (mevcut)
 - Native AlarmManager `setExactAndAllowWhileIdle` (Doze-geçirgen) — [CheckInScheduler.kt:178](android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/CheckInScheduler.kt#L178); exact izni yoksa inexact fallback.
@@ -246,7 +247,8 @@ Hedef: yeni iş mantığı ≥%80 (CLAUDE.md testing). TDD: önce kırmızı tes
 - ✅ **Sadece-PIN:** biyometrik eklenmez; grace iptali tek-dokunuş "Güvendeyim" (auth değil, "yaşam belirtisi").
 - ✅ **UI/tema/görsel DEĞİŞMEZ:** yeni ekran yok; safe-walk mevcut bileşenlerle ortak grace UI'ına bağlanır. **String'ler bu turda değişmez** (Karar 8).
 - ✅ **Acil akış korunur:** Countdown/panik yolunun tüm-numara + 112 davranışı **hiç dokunulmaz**. Check-in/safe-walk expiry yalnız birincil-kişi native-yedek ile **güçlendirilir** (countdown'dan kasıtlı dar — §0.1).
-- ✅ **Yeni kütüphane YOK:** mevcut `flutter_direct_caller_plugin`, AlarmManager, FGS yeniden kullanılır.
+- ✅ Eski `flutter_direct_caller_plugin` kaldırıldı; production safety dispatch'i native
+  typed coordinator, AlarmManager ve Android Telecom üzerinden yürür.
 
 ---
 
@@ -261,3 +263,10 @@ Hedef: yeni iş mantığı ≥%80 (CLAUDE.md testing). TDD: önce kırmızı tes
 | Çoklu-numara failover native tarafta mı? | **Karar 2:** failover YOK; tek hedef birincil kişi. Soru konusuz. |
 | Grace bildirimi full-screen-intent mi? | **Karar 7:** evet, ama (a) Console beyanı geliştirici işi, (b) kod izin reddini zarifçe heads-up'a düşürür (§3.6). |
 | App-kill kalıcılığı | Native AlarmManager ayakta kalır (kanıtlandı); manüfaktör-kill senaryoları gerçek-cihaz turunda doğrulanır (uygulama testinin parçası). |
+# Tarihsel not — production sözleşmesi değildir
+
+Bu dosya eski M2 tasarım çalışmasını korur ve aşağıdaki bazı akış/satır referansları artık
+bilerek geçersizdir. Güncel production sözleşmesi
+[`docs/release/safety_case.md`](docs/release/safety_case.md), typed
+`EmergencySessionCoordinator` ve `release-evidence` kapılarıdır. Bu dosyadan release iddiası
+veya uygulama davranışı türetilmez.

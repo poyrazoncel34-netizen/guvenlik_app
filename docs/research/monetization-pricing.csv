@@ -1,0 +1,10 @@
+app,free_tier_features,paid_tier_name,monthly_price,annual_price,other_price_points,trial,billing_platform,notes,evidence_ids
+"Life360","Basic location, 2-day history, 1 place alert, SOS","Silver / Gold / Platinum","Gold USD 14.99/mo","Silver USD 69.99; Gold USD 99.99; Platinum USD 199.99","Tile bundles; intl pricing varies","7 days","App stores + web","Tier-based upsell; covers whole Circle","E07"
+"bSafe","Basic SOS + GPS","Premium","~USD 2.00/mo","~USD 20.00/yr (~USD 4.17/mo)","USD 1/24h; ~USD 0.49/week","Varies","App stores","On-demand micro-subscriptions unusual in category","E09"
+"Noonlight","Panic button + 24/7 dispatch + Timeline (Android free)","Instant Access / Total Protection","USD 4.99 / ~USD 10.00","n/a (monthly)","-","30 days","Apple (paid tiers iOS-only)","Core safety free; pays for convenience + integrations","E12"
+"Citizen","Real-time incident alerts, live video","Citizen Protect","USD 19.99/mo","n/a","-","Varies","App stores","Most expensive consumer tier; live human agents","E14"
+"Hollie Guard","Core panic + evidence capture","Hollie Guard Extra","GBP 7.99/mo","n/a (org/annual via sales)","Business/lone-worker tiers via sales","Varies","App stores + B2B","Premium = monitored URN police escalation","E16"
+"One Scream","Limited / trial","Premium","Subscription (price varies by region)","Subscription","-","Varies","App stores","Voice detection is the paid hook","E27"
+"Red Panic Button","Panic SMS/email + media alert, Apple Watch, 1 secondary alert","Pro","-","-","~USD 4.99 one-time-style pro upgrade","n/a","App stores","Cheapest; unlimited contacts + no ads","E28"
+"KADES","All features free","-","-","-","-","-","Government","No monetization","E17"
+"KoruBeni (planned)","Fake call, siren, emergency contacts, map/location session, PIN lock","KoruBeni Pro","TBD (set in RevenueCat)","TBD","-","TBD (recommend 7-day)","Google Play Billing via RevenueCat","Pro gates panic/SOS, Safe Walk, check-in, timeline, volume trigger","E30"

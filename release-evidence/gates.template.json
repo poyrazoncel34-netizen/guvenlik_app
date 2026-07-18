@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 2,
+  "candidate": {
+    "gitCommit": "REPLACE_WITH_40_HEX_COMMIT",
+    "gitTree": "REPLACE_WITH_40_HEX_TREE",
+    "tag": "v0.0.0",
+    "tagObjectSha": "REPLACE_WITH_40_HEX_TAG_OBJECT",
+    "versionName": "0.0.0",
+    "versionCode": 0,
+    "aabSha256": "REPLACE_WITH_64_HEX_AAB_SHA256",
+    "uploadCertificateSha256": "REPLACE_WITH_64_HEX_UPLOAD_CERT_SHA256",
+    "playAppSigningCertificateSha256": "REPLACE_WITH_64_HEX_PLAY_CERT_SHA256",
+    "workflowRunUrl": "REPLACE_WITH_GITHUB_WORKFLOW_RUN_URL",
+    "provenance": {
+      "path": "provenance-v2.json",
+      "sha256": "REPLACE_WITH_64_HEX_PROVENANCE_SHA256"
+    }
+  },
+  "gates": [
+    {"id": "G0", "status": "UNVERIFIED", "owners": ["product", "safety"], "evidence": []},
+    {"id": "G1", "status": "UNVERIFIED", "owners": ["android_safety"], "evidence": []},
+    {"id": "G2", "status": "UNVERIFIED", "owners": ["flutter_safety"], "evidence": []},
+    {"id": "G3", "status": "UNVERIFIED", "owners": ["android_platform"], "evidence": []},
+    {"id": "G4", "status": "UNVERIFIED", "owners": ["security", "privacy_legal"], "evidence": []},
+    {"id": "G5", "status": "UNVERIFIED", "owners": ["qa"], "evidence": []},
+    {"id": "G6", "status": "UNVERIFIED", "owners": ["release"], "evidence": []},
+    {"id": "G7", "status": "UNVERIFIED", "owners": ["qa", "independent_witness"], "evidence": []},
+    {"id": "G8", "status": "UNVERIFIED", "owners": ["billing_play"], "evidence": []},
+    {"id": "G9", "status": "UNVERIFIED", "owners": ["release_owner"], "evidence": []},
+    {"id": "G10", "status": "UNVERIFIED", "owners": ["release_board"], "evidence": []}
+  ],
+  "openFindings": [],
+  "closedSoak": {
+    "status": "UNVERIFIED",
+    "days": 0,
+    "testers": 0,
+    "safetyIncidents": null,
+    "aabSha256": "REPLACE_WITH_64_HEX_AAB_SHA256"
+  },
+  "hotfixDrill": {"status": "UNVERIFIED"},
+  "approvals": []
+}

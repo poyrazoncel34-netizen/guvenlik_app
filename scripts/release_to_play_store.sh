@@ -1,34 +1,32 @@
 #!/usr/bin/env bash
-# KoruBeni - Play Store Release Akışı
-# Plan Madde 6-7: AAB build → Internal Testing → İncelemeye gönder
-# Kullanım: REVENUECAT_ANDROID_API_KEY=<redacted> ./scripts/release_to_play_store.sh
+# KoruBeni - Play Store release operator handoff
+# Kullanım: ./scripts/release_to_play_store.sh v1.0.0
+#
+# This helper deliberately does NOT build or upload an AAB. Upload provenance
+# comes only from the signed GitHub tag workflow. Local production builds are
+# diagnostics and must never be submitted to Play.
 
-set -e
+set -euo pipefail
+
+TAG="${1:-}"
+if [[ ! "$TAG" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
+    echo "Kullanım: $0 vMAJOR.MINOR.PATCH"
+    echo "Örnek: $0 v1.0.0"
+    exit 2
+fi
 
 echo "═══════════════════════════════════════════════════════════"
 echo "  KoruBeni - Play Store Release"
 echo "═══════════════════════════════════════════════════════════"
 echo ""
 
-# 1. İlk kez mi? Önce setup çalıştır: ./scripts/setup_play_release.sh
-
-if [ -z "${REVENUECAT_ANDROID_API_KEY:-}" ]; then
-    printf '%s\n' "REVENUECAT_ANDROID_API_KEY gerekli:"
-    printf '%s\n' "  REVENUECAT_ANDROID_API_KEY=<redacted> $0"
-    exit 1
-fi
-
-# 3. AAB build
-./scripts/build_production.sh
-
+echo "Tag: $TAG"
 echo ""
-echo "═══════════════════════════════════════════════════════════"
-echo "  Sonraki Adımlar (Play Console)"
-echo "═══════════════════════════════════════════════════════════"
-echo ""
-echo "1. Play Console → Release → Testing → Internal testing"
-echo "2. Create new release → AAB yükle: build/app/outputs/bundle/playRelease/app-play-release.aab"
-echo "3. Release notları yaz"
-echo "4. Save → Review release → Start rollout to Internal testing"
-echo "5. İncelemeye gönder (Send for review)"
-echo ""
+echo "Bu script yerel AAB DERLEMEZ ve YÜKLEMEZ."
+echo "1. Temiz commit üzerinde $TAG etiketini oluşturup origin'e gönderin."
+echo "2. GitHub Actions → 'Release Play AAB' çalışmasının yeşil olmasını bekleyin."
+echo "3. Çalışmadan AAB + provenance + SHA256SUMS + debug symbols indirin."
+echo "4. AAB yolu: build/app/outputs/bundle/playRelease/app-play-release.aab"
+echo "5. Upload sertifikası, SHA-256 ve workflow run URL kanıtını kaydedin."
+echo "6. Play Console → Testing → Internal testing bölümüne bu CI artifact'ını yükleyin."
+echo "7. store/PRODUCTION_ROLLOUT_RUNBOOK.md kapıları geçmeden production'a çıkmayın."

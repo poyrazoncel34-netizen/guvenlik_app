@@ -1,7 +1,7 @@
 # KoruBeni
 
-KoruBeni, Android hedefli, offline-first kişisel güvenlik uygulamasıdır (Flutter; TR birincil /
-EN ikincil dil, Google Play hedefi). Bu README yalnız bir yönlendirme sayfasıdır — güncel ve
+KoruBeni, Android hedefli, offline-first kişisel güvenlik uygulamasıdır (Flutter; ilk
+production runtime/listing yalnız Türkçe, Google Play hedefi). Bu README yalnız bir yönlendirme sayfasıdır — güncel ve
 bağlayıcı bilgi aşağıdaki kaynaklardadır; buradaki hiçbir şey onları ezmez.
 
 | Konu | Tek doğru kaynak |
@@ -19,7 +19,7 @@ flutter test
 (cd android && ./gradlew :app:testPlayDebugUnitTest)
 ```
 
-> Native testler daima `:app:` scope ile koşulur — kök `testDebugUnitTest`, üçüncü-parti
-> `flutter_direct_caller_plugin`'in test-variant'ı yüzünden patlar (bilinen borç,
-> HANDOVER §7). Kök `BUILD_*.md` dosyaları erken dönem notlarıdır; release için
+> Native safety testleri `:app:` scope ile koşulur. Dart tarafındaki eski doğrudan-arama
+> eklentisi kaldırılmıştır; otomatik istek native typed coordinator üzerinden Telecom'a gider.
+> Kök `BUILD_*.md` dosyaları erken dönem notlarıdır; release için
 > `release.yml` esastır.
