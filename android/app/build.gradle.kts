@@ -9,11 +9,36 @@ import java.util.Properties
 import java.io.FileInputStream
 import java.util.Base64
 
+// KoruBeni is distributed only through Google Play. RevenueCat's Flutter
+// hybrid dependency also exposes its optional Amazon store adapter; exclude
+// that adapter and Amazon Appstore SDK from every app variant. Google Play
+// Billing and RevenueCat core remain present.
+configurations.configureEach {
+    exclude(group = "com.revenuecat.purchases", module = "purchases-store-amazon")
+    exclude(group = "com.amazon.device", module = "amazon-appstore-sdk")
+}
+
 val keystoreProperties = Properties()
 val keystorePropertiesFile = rootProject.file("key.properties")
 val releaseArtifactRequested = gradle.startParameter.taskNames.any {
     val taskName = it.lowercase()
     taskName.contains("release") &&
+        (taskName.contains("assemble") ||
+            taskName.contains("bundle") ||
+            taskName.contains("package") ||
+            taskName.contains("install"))
+}
+val playReleaseArtifactRequested = gradle.startParameter.taskNames.any {
+    val taskName = it.lowercase()
+    taskName.contains("playrelease") &&
+        (taskName.contains("assemble") ||
+            taskName.contains("bundle") ||
+            taskName.contains("package") ||
+            taskName.contains("install"))
+}
+val smokeReleaseArtifactRequested = gradle.startParameter.taskNames.any {
+    val taskName = it.lowercase()
+    taskName.contains("smokerelease") &&
         (taskName.contains("assemble") ||
             taskName.contains("bundle") ||
             taskName.contains("package") ||
@@ -50,14 +75,58 @@ fun dartDefineValue(name: String): String {
         .orEmpty()
 }
 
-if (releaseArtifactRequested) {
+fun isProductionRevenueCatAndroidSdkKey(value: String): Boolean {
+    val normalized = value.trim()
+    val lower = normalized.lowercase()
+    return normalized.isNotEmpty() &&
+        !normalized.any { it.isWhitespace() } &&
+        lower.startsWith("goog_") &&
+        !lower.startsWith("sk_") &&
+        !lower.contains("placeholder") &&
+        !lower.contains("dummy") &&
+        !lower.contains("non_release_smoke")
+}
+
+if (playReleaseArtifactRequested) {
     val env = dartDefineValue("ENV")
     val revenueCatKey = dartDefineValue("REVENUECAT_ANDROID_API_KEY")
     if (env != "production") {
-        throw GradleException("Release build requires --dart-define=ENV=production.")
+        throw GradleException("Play release requires --dart-define=ENV=production.")
     }
-    if (revenueCatKey.isBlank()) {
-        throw GradleException("Release build requires --dart-define=REVENUECAT_ANDROID_API_KEY.")
+    if (!isProductionRevenueCatAndroidSdkKey(revenueCatKey)) {
+        throw GradleException(
+            "Play release requires a goog_ RevenueCat Android public SDK key; " +
+                "test_, sk_, and placeholder values are forbidden.",
+        )
+    }
+} else if (smokeReleaseArtifactRequested) {
+    val env = dartDefineValue("ENV")
+    val revenueCatKey = dartDefineValue("REVENUECAT_ANDROID_API_KEY")
+    if (env != "ci_smoke" || revenueCatKey != "NON_RELEASE_SMOKE_REVENUECAT_KEY") {
+        throw GradleException(
+            "Smoke release requires ENV=ci_smoke and the fixed non-release SDK-key sentinel.",
+        )
+    }
+} else if (releaseArtifactRequested) {
+    throw GradleException("Unknown release distribution; use --flavor play or --flavor smoke.")
+}
+
+if (releaseArtifactRequested && !playReleaseArtifactRequested && !smokeReleaseArtifactRequested) {
+    throw GradleException("Release artifact flavor could not be proven safe.")
+}
+
+if (playReleaseArtifactRequested && smokeReleaseArtifactRequested) {
+    throw GradleException("Play and smoke release artifacts cannot be requested together.")
+}
+
+if (!releaseArtifactRequested && (playReleaseArtifactRequested || smokeReleaseArtifactRequested)) {
+    throw GradleException("Inconsistent release artifact task detection.")
+}
+
+if (releaseArtifactRequested && keystorePropertiesFile.exists()) {
+    val storeFile = releaseSigningValue("storeFile")
+    if (!rootProject.file(storeFile).isFile) {
+        throw GradleException("Release keystore file does not exist at the configured storeFile path.")
     }
 }
 
@@ -78,22 +147,21 @@ android {
 
     defaultConfig {
         applicationId = "com.poyrazoncel.korubeni"
-        minSdk = flutter.minSdkVersion // Android 6.0: USE_BIOMETRIC minimum
+        // Published support envelope: telephony-capable phones on API 29-36.
+        // Keep this explicit; inheriting Flutter's lower default silently
+        // expands Play eligibility beyond the qualified device matrix.
+        minSdk = 29
         targetSdk = 36
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        // Ship only 64-bit native libraries. Almost all Android 7.0+ devices
-        // use a 64-bit ARM SoC; dropping 32-bit shrinks the AAB and avoids
-        // 16 KB page-size compatibility regressions on the 32-bit ELF path.
-        ndk {
-            abiFilters += listOf("arm64-v8a", "x86_64")
-        }
+    }
 
-        // Ship only Turkish and English resource flavors. The app is
-        // bilingual (TR primary, EN secondary) and bundling every Android
-        // locale's strings adds size with zero user benefit.
-        resourceConfigurations += listOf("en", "tr")
+    // First production runtime/listing is Turkish-only. English source copy is
+    // retained as an internal parity reference but is not shipped as a locale.
+    androidResources {
+        localeFilters += listOf("tr")
     }
 
     buildFeatures {
@@ -106,6 +174,18 @@ android {
         create("play") {
             dimension = "distribution"
             manifestPlaceholders["appLabelSuffix"] = ""
+        }
+        create("smoke") {
+            dimension = "distribution"
+            applicationIdSuffix = ".smoke"
+            versionNameSuffix = "-smoke"
+            manifestPlaceholders["appLabelSuffix"] = " Smoke"
+            // Emulator/CI-only distribution. The Play flavor never receives
+            // x86_64 through this flavor-specific filter.
+            ndk {
+                abiFilters.clear()
+                abiFilters += listOf("arm64-v8a", "x86_64")
+            }
         }
     }
 
@@ -123,6 +203,15 @@ android {
     buildTypes {
         release {
             signingConfigs.findByName("release")?.let { signingConfig = it }
+            // The production Play artifact is arm64-only. The smoke flavor
+            // explicitly adds x86_64 for emulator validation.
+            ndk {
+                abiFilters.clear()
+                abiFilters += listOf("arm64-v8a")
+                // Preserve full native symbols as a separate release artifact.
+                // This does not put debug symbols in the shipped libraries.
+                debugSymbolLevel = "FULL"
+            }
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(
@@ -131,6 +220,14 @@ android {
             )
         }
         debug {
+            // Keep host/instrumentation builds on the same supported ABI set
+            // as release. Mixing Flutter's 64-bit release native-assets
+            // snapshot with a later implicit armv7 debug build is
+            // nondeterministic and KoruBeni does not ship a 32-bit artifact.
+            ndk {
+                abiFilters.clear()
+                abiFilters += listOf("arm64-v8a", "x86_64")
+            }
             isMinifyEnabled = false
             isShrinkResources = false
         }
@@ -155,6 +252,9 @@ dependencies {
     testImplementation("org.robolectric:robolectric:4.12.1")
     testImplementation("org.mockito.kotlin:mockito-kotlin:5.2.1")
     testImplementation("androidx.test:core:1.5.0")
+    androidTestImplementation("androidx.test:core:1.7.0")
+    androidTestImplementation("androidx.test:runner:1.7.0")
+    androidTestImplementation("androidx.test.ext:junit:1.3.0")
 }
 
 flutter {

@@ -3,6 +3,12 @@ allprojects {
         google()
         mavenCentral()
     }
+
+    // Release resolution must be reproducible. Lockfiles are generated with
+    // `./gradlew app:dependencies --write-locks` and reviewed like source.
+    dependencyLocking {
+        lockAllConfigurations()
+    }
 }
 
 val newBuildDir: Directory =

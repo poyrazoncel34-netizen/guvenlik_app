@@ -358,46 +358,6 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
-  flutter_background_service:
-    dependency: "direct main"
-    description:
-      name: flutter_background_service
-      sha256: "70a1c185b1fa1a44f8f14ecd6c86f6e50366e3562f00b2fa5a54df39b3324d3d"
-      url: "https://pub.dev"
-    source: hosted
-    version: "5.1.0"
-  flutter_background_service_android:
-    dependency: "direct main"
-    description:
-      name: flutter_background_service_android
-      sha256: ca0793d4cd19f1e194a130918401a3d0b1076c81236f7273458ae96987944a87
-      url: "https://pub.dev"
-    source: hosted
-    version: "6.3.1"
-  flutter_background_service_ios:
-    dependency: transitive
-    description:
-      name: flutter_background_service_ios
-      sha256: "6037ffd45c4d019dab0975c7feb1d31012dd697e25edc05505a4a9b0c7dc9fba"
-      url: "https://pub.dev"
-    source: hosted
-    version: "5.0.3"
-  flutter_background_service_platform_interface:
-    dependency: transitive
-    description:
-      name: flutter_background_service_platform_interface
-      sha256: ca74aa95789a8304f4d3f57f07ba404faa86bed6e415f83e8edea6ad8b904a41
-      url: "https://pub.dev"
-    source: hosted
-    version: "5.1.2"
-  flutter_direct_caller_plugin:
-    dependency: "direct main"
-    description:
-      name: flutter_direct_caller_plugin
-      sha256: "0dc32a2cb351f41ea633a9c9e6be5eb5239197f390e519f3a991bda794bba0cd"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.0.4"
   flutter_launcher_icons:
     dependency: "direct dev"
     description:
@@ -885,14 +845,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "9.2.5"
-  optimize_battery:
-    dependency: "direct main"
-    description:
-      name: optimize_battery
-      sha256: "4f0f974addbe54d3a705c1da5bf3a4bdae39502b1b2d2a17f9da1e558a34a4f8"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.0.4"
   package_config:
     dependency: transitive
     description:
@@ -1097,18 +1049,18 @@ packages:
     dependency: "direct main"
     description:
       name: purchases_flutter
-      sha256: "7e849e3a94011109c4b91e1be65871bdb0f6aa3d577aee0764fbdb69b3eb6181"
+      sha256: c7a1b82b5c4c40a7f825bd6e8bb8715c3cc400e28619a1e00dedb9fa97247f5a
       url: "https://pub.dev"
     source: hosted
-    version: "10.3.0"
+    version: "10.4.2"
   purchases_ui_flutter:
     dependency: "direct main"
     description:
       name: purchases_ui_flutter
-      sha256: "7ec221d1511e57941fc56a34f13026fd973f3d755d29b962c99f3c551760ac74"
+      sha256: "2c5c6c6f86a5e8f74a061cdd68551c32df160eaef9da9b234247826bc1691f5a"
       url: "https://pub.dev"
     source: hosted
-    version: "10.3.0"
+    version: "10.4.2"
   safe_device:
     dependency: "direct main"
     description:

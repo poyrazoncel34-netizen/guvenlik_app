@@ -30,7 +30,6 @@ environment:
 dependencies:
   shared_preferences: ^2.2.2
   url_launcher: ^6.2.4
-  flutter_direct_caller_plugin: ^0.0.4
   image_picker: ^1.1.2
   path_provider: ^2.1.4
   provider: ^6.1.2
@@ -56,11 +55,6 @@ dependencies:
   connectivity_plus: ^6.1.4
   wakelock_plus: ^1.2.8
   vibration: ^2.0.0
-  # Foreground service for keeping app alive in background
-  flutter_background_service: ^5.1.0
-  flutter_background_service_android: ^6.2.7
-  # Battery optimization exemption
-  optimize_battery: ^0.0.4
   # Permissions handling
   permission_handler: ^11.3.1
   # Battery status
@@ -72,8 +66,8 @@ dependencies:
   package_info_plus: ^8.1.3
   share_plus: ^12.0.1
   # RevenueCat in-app purchases & subscriptions
-  purchases_flutter: ^10.3.0
-  purchases_ui_flutter: ^10.3.0
+  purchases_flutter: ^10.4.2
+  purchases_ui_flutter: ^10.4.2
   # Root/jailbreak detection
   safe_device: ^1.3.10
 
@@ -153,6 +147,7 @@ flutter:
     - assets/translations/
     - assets/sounds/ringtone.wav
     - assets/sounds/siren.wav
+    - assets/legal/THIRD_PARTY_NOTICES.txt
 
   # To add assets to your application, add an assets section, like this:
   # assets:
