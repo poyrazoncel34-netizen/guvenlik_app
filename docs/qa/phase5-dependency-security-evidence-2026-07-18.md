@@ -6,16 +6,27 @@ Android `playReleaseRuntimeClasspath`. Queries used the official OSV
 
 ## Result
 
+Scan time: `2026-07-18 23:32:28 +03`
+
+Resolved-input binding:
+
+- `pubspec.lock` SHA-256:
+  `287f44f31b9b6ead776a4edb1180bf6d5ac4347fd378c0b6d79aba80727b0e1f`
+- `android/app/gradle.lockfile` SHA-256:
+  `6f7167cca4679af7c951b9880fb0bbe9d3b1f9b4fef328565fa0a703431dccdb`
+
 | Layer | Exact versions queried | Result |
 | --- | ---: | --- |
-| Pub / Flutter | 199 | PASS — no known OSV finding |
+| Pub / Flutter | 197 | PASS — no known OSV finding |
 | Maven / Android Play release runtime | 203 | PASS — no known OSV finding |
 
-`flutter pub outdated` also reported 53 lockfile-upgradable packages and 31
-dependencies constrained below a newer resolvable version. That is maintenance
-debt, not proof of a vulnerability. Major upgrades must be isolated and repeat
-the full physical safety/billing matrix instead of being bundled into the first
-release without evidence.
+Total: 400 exact coordinates. This is a point-in-time vulnerability query, not
+the separate human licence review; licence evidence remains 0/400 and FAIL.
+
+`flutter pub outdated` still reports newer versions for part of the graph. That
+is maintenance debt, not proof of a vulnerability. Major upgrades must be
+isolated and repeat the full physical safety/billing matrix instead of being
+bundled into the first release without evidence.
 
 ## RevenueCat version decision
 

@@ -27,30 +27,60 @@ void main() {
       final entries = (payload['entries'] as List<dynamic>)
           .cast<Map<String, dynamic>>();
 
-      expect(entries, isNotEmpty);
+      expect(payload['entryCount'], entries.length);
       expect(payload['unclassifiedCount'], 0);
       expect(payload['forbiddenStagedCount'], 0);
       expect(payload['gitHead'], matches(RegExp(r'^[0-9a-f]{40}$')));
       expect(payload['statusSha256'], matches(RegExp(r'^[0-9a-f]{64}$')));
-
-      final byPath = {
-        for (final entry in entries) entry['path'] as String: entry,
-      };
-      expect(byPath['AGENTS.md']?['category'], 'tooling');
       expect(
-        entries
-            .where((entry) => (entry['path'] as String).startsWith('.agents/'))
-            .every((entry) => entry['category'] == 'tooling'),
-        isTrue,
-      );
-      expect(
-        entries
-            .where((entry) => (entry['path'] as String).startsWith('.codex/'))
-            .every((entry) => entry['category'] == 'tooling'),
+        entries.every(
+          (entry) =>
+              (entry['category'] as String?)?.isNotEmpty == true &&
+              (entry['commitGroup'] as String?)?.isNotEmpty == true &&
+              (entry['reason'] as String?)?.isNotEmpty == true,
+        ),
         isTrue,
       );
     },
   );
+
+  test('untracked local agent files are classified as tooling', () async {
+    final repository = await Directory.systemTemp.createTemp(
+      'korubeni-classification-tooling-',
+    );
+    addTearDown(() => repository.delete(recursive: true));
+    File(
+      '${repository.path}/AGENTS.md',
+    ).writeAsStringSync('local instructions');
+
+    expect(
+      (await Process.run('git', [
+        'init',
+      ], workingDirectory: repository.path)).exitCode,
+      0,
+    );
+
+    final output = File('${repository.path}/classification.json');
+    final result = await Process.run('python3', [
+      File('scripts/verify_release_change_classification.py').absolute.path,
+      '--repo',
+      repository.path,
+      '--config',
+      File('config/release_change_classification.json').absolute.path,
+      '--output',
+      output.path,
+    ]);
+
+    expect(result.exitCode, 0, reason: '${result.stdout}\n${result.stderr}');
+    final payload =
+        jsonDecode(output.readAsStringSync()) as Map<String, dynamic>;
+    final entry = (payload['entries'] as List<dynamic>).single;
+    expect(payload['unclassifiedCount'], 0);
+    expect(entry['path'], 'AGENTS.md');
+    expect(entry['staged'], isFalse);
+    expect(entry['category'], 'tooling');
+    expect(entry['commitGroup'], 'EXCLUDE');
+  });
 
   test(
     'staged tooling is rejected instead of silently entering release',
