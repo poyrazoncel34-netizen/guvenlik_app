@@ -21,6 +21,19 @@ class EmergencySessionCoordinatorTest {
     }
 
     @Test
+    fun `PREPARING commit failure produces no alarm or external side effect`() {
+        val fixture = Fixture(store = FakeStore(failWritesAt = setOf(1)))
+
+        val result = fixture.coordinator.arm(validArmRequest(randomId = "preparing-commit-failure"))
+
+        assertTrue(result is ArmResult.Unknown)
+        assertEquals("preparingCommitFailed", (result as ArmResult.Unknown).reasonCode)
+        assertEquals(null, fixture.store.current)
+        assertEquals(0, fixture.alarms.scheduled.size)
+        assertEquals(0, fixture.calls.targets.size)
+    }
+
+    @Test
     fun `alarm schedule and rollback cancel exceptions return a typed rejection`() {
         val fixture = Fixture(
             alarms = FakeAlarms(
@@ -52,6 +65,23 @@ class EmergencySessionCoordinatorTest {
         assertEquals(LifecycleState.CANCELLED, fixture.store.current?.lifecycleState)
         assertEquals("", fixture.store.current?.target)
         assertEquals(0, fixture.calls.targets.size)
+    }
+
+    @Test
+    fun `cancel commit failure is unknown and never a false cancellation acknowledgment`() {
+        val fixture = Fixture(store = FakeStore(failWritesAt = setOf(3)))
+        val armed = fixture.coordinator.arm(
+            validArmRequest(randomId = "cancel-commit-failure"),
+        ) as ArmResult.Armed
+
+        val cancel = fixture.coordinator.cancel(armed.token)
+
+        assertTrue(cancel is CancelResult.Unknown)
+        assertEquals("cancelCommitFailed", (cancel as CancelResult.Unknown).reasonCode)
+        assertEquals(LifecycleState.ARMED, fixture.store.current?.lifecycleState)
+        fixture.advanceToFinalDeadline()
+        fixture.coordinator.claimAndDispatch(armed.token)
+        assertEquals(1, fixture.calls.targets.size)
     }
 
     @Test
@@ -197,6 +227,24 @@ class EmergencySessionCoordinatorTest {
     }
 
     @Test
+    fun `CLAIMED commit failure performs neither fallback nor Telecom request`() {
+        val fixture = Fixture(store = FakeStore(failWritesAt = setOf(3)))
+        val armed = fixture.coordinator.arm(
+            validArmRequest(randomId = "claimed-commit-failure"),
+        ) as ArmResult.Armed
+        fixture.advanceToFinalDeadline()
+
+        val result = fixture.coordinator.claimAndDispatch(armed.token)
+
+        assertEquals(LifecycleState.ARMED, result.terminalState)
+        assertEquals(CallRequestOutcome.NOT_ATTEMPTED, result.callRequestOutcome)
+        assertEquals(FallbackOutcome.NOT_ATTEMPTED, result.fallbackOutcome)
+        assertEquals(LifecycleState.ARMED, fixture.store.current?.lifecycleState)
+        assertEquals(0, fixture.fallback.postAttempts)
+        assertEquals(0, fixture.calls.targets.size)
+    }
+
+    @Test
     fun `failed side effects plus terminal commit failure receive one bounded retry`() {
         val fixture = Fixture(
             store = FakeStore(failWritesAt = setOf(5)),
@@ -236,6 +284,103 @@ class EmergencySessionCoordinatorTest {
         assertEquals(CallRequestOutcome.NOT_ATTEMPTED, duplicate.callRequestOutcome)
         assertEquals(1, fixture.calls.targets.size)
         assertEquals(1, fixture.alarms.scheduled.size)
+    }
+
+    @Test
+    fun `process death after CLAIMED commit retries from durable state`() {
+        val store = FakeStore(crashAfterWritesAt = setOf(3))
+        val firstCalls = FakeCalls()
+        val first = Fixture(store = store, calls = firstCalls)
+        val armed = first.coordinator.arm(
+            validArmRequest(randomId = "death-after-claim"),
+        ) as ArmResult.Armed
+        first.advanceToFinalDeadline()
+
+        assertProcessDeath { first.coordinator.claimAndDispatch(armed.token) }
+        assertEquals(LifecycleState.CLAIMED, store.current?.lifecycleState)
+        assertEquals(0, first.fallback.postAttempts)
+        assertEquals(0, firstCalls.targets.size)
+
+        val recoveredCalls = FakeCalls()
+        val recovered = Fixture(store = store, calls = recoveredCalls)
+        val result = recovered.coordinator.claimAndDispatch(armed.token)
+
+        assertEquals(CallRequestOutcome.SUBMITTED_UNCONFIRMED, result.callRequestOutcome)
+        assertEquals(1, recoveredCalls.targets.size)
+    }
+
+    @Test
+    fun `process death before Telecom side effect retries one request`() {
+        val store = FakeStore()
+        val firstCalls = FakeCalls(crashBeforeRequest = true)
+        val first = Fixture(store = store, calls = firstCalls)
+        val armed = first.coordinator.arm(
+            validArmRequest(randomId = "death-before-request"),
+        ) as ArmResult.Armed
+        first.advanceToFinalDeadline()
+
+        assertProcessDeath { first.coordinator.claimAndDispatch(armed.token) }
+        assertEquals(LifecycleState.CLAIMED, store.current?.lifecycleState)
+        assertEquals(0, firstCalls.targets.size)
+
+        val recoveredCalls = FakeCalls()
+        val recovered = Fixture(store = store, calls = recoveredCalls)
+        val result = recovered.coordinator.claimAndDispatch(armed.token)
+
+        assertEquals(CallRequestOutcome.SUBMITTED_UNCONFIRMED, result.callRequestOutcome)
+        assertEquals(1, recoveredCalls.targets.size)
+    }
+
+    @Test
+    fun `process death after Telecom side effect exposes documented duplicate window`() {
+        val store = FakeStore()
+        val firstCalls = FakeCalls(crashAfterRequest = true)
+        val first = Fixture(store = store, calls = firstCalls)
+        val armed = first.coordinator.arm(
+            validArmRequest(randomId = "death-after-request"),
+        ) as ArmResult.Armed
+        first.advanceToFinalDeadline()
+
+        assertProcessDeath { first.coordinator.claimAndDispatch(armed.token) }
+        assertEquals(LifecycleState.CLAIMED, store.current?.lifecycleState)
+        assertEquals(1, firstCalls.targets.size)
+
+        val recoveredCalls = FakeCalls()
+        val recovered = Fixture(store = store, calls = recoveredCalls)
+        val result = recovered.coordinator.claimAndDispatch(armed.token)
+
+        assertEquals(CallRequestOutcome.SUBMITTED_UNCONFIRMED, result.callRequestOutcome)
+        assertEquals(1, recoveredCalls.targets.size)
+        assertEquals(
+            2,
+            firstCalls.targets.size + recoveredCalls.targets.size,
+            // The disk/Telecom transaction is irreducibly non-atomic. The
+            // safety contract prefers a duplicate over a silently missed
+            // emergency request after a real process death.
+        )
+    }
+
+    @Test
+    fun `process death after terminal commit does not repeat Telecom request`() {
+        val store = FakeStore(crashAfterWritesAt = setOf(5))
+        val firstCalls = FakeCalls()
+        val first = Fixture(store = store, calls = firstCalls)
+        val armed = first.coordinator.arm(
+            validArmRequest(randomId = "death-after-terminal"),
+        ) as ArmResult.Armed
+        first.advanceToFinalDeadline()
+
+        assertProcessDeath { first.coordinator.claimAndDispatch(armed.token) }
+        assertEquals(LifecycleState.REQUEST_SUBMITTED_UNCONFIRMED, store.current?.lifecycleState)
+        assertEquals(1, firstCalls.targets.size)
+
+        val recoveredCalls = FakeCalls()
+        val recovered = Fixture(store = store, calls = recoveredCalls)
+        val result = recovered.coordinator.claimAndDispatch(armed.token)
+
+        assertEquals(CallRequestOutcome.SUBMITTED_UNCONFIRMED, result.callRequestOutcome)
+        assertEquals(LifecycleState.REQUEST_SUBMITTED_UNCONFIRMED, result.terminalState)
+        assertEquals(0, recoveredCalls.targets.size)
     }
 
     @Test
@@ -400,6 +545,22 @@ class EmergencySessionCoordinatorTest {
     }
 
     @Test
+    fun `wipe clear failure remains unknown with a durable targetless tombstone`() {
+        val fixture = Fixture(store = FakeStore(failClear = true))
+        fixture.coordinator.arm(
+            validArmRequest(randomId = "wipe-clear-failure"),
+        ) as ArmResult.Armed
+
+        val result = fixture.coordinator.wipe()
+
+        assertEquals(WipeStatus.UNKNOWN, result.status)
+        assertEquals("wipeCommitFailed", result.reasonCode)
+        assertEquals(LifecycleState.CANCELLED, fixture.store.current?.lifecycleState)
+        assertEquals("", fixture.store.current?.target)
+        assertEquals(0, fixture.calls.targets.size)
+    }
+
+    @Test
     fun `one thousand cancel versus receiver interleavings preserve acknowledged cancel`() {
         var violations = 0
         repeat(1_000) { iteration ->
@@ -513,6 +674,16 @@ class EmergencySessionCoordinatorTest {
         pinConfigured = true,
     )
 
+    private fun assertProcessDeath(block: () -> Unit) {
+        var observed = false
+        try {
+            block()
+        } catch (_: SimulatedProcessDeath) {
+            observed = true
+        }
+        assertTrue("fault injector did not reach the declared process-death boundary", observed)
+    }
+
     private inner class Fixture(
         val store: FakeStore = FakeStore(),
         val alarms: FakeAlarms = FakeAlarms(),
@@ -548,6 +719,8 @@ class EmergencySessionCoordinatorTest {
 
     private class FakeStore(
         private val failWritesAt: Set<Int> = emptySet(),
+        private val crashAfterWritesAt: Set<Int> = emptySet(),
+        private val failClear: Boolean = false,
     ) : EmergencySessionStore {
         var current: EmergencySessionEnvelope? = null
         private var writes = 0
@@ -559,10 +732,12 @@ class EmergencySessionCoordinatorTest {
             writes += 1
             if (writes in failWritesAt) return false
             current = envelope
+            if (writes in crashAfterWritesAt) throw SimulatedProcessDeath()
             return true
         }
 
         override fun clearAll(): Boolean {
+            if (failClear) return false
             current = null
             return true
         }
@@ -595,8 +770,10 @@ class EmergencySessionCoordinatorTest {
         private val throwOnPost: Boolean = false,
     ) : EmergencyFallbackPoster {
         val cleared = mutableListOf<SessionToken>()
+        var postAttempts = 0
 
         override fun post(envelope: EmergencySessionEnvelope): FallbackOutcome {
+            postAttempts += 1
             order?.add("fallback")
             if (throwOnPost) throw IllegalStateException("injected notification failure")
             return outcome
@@ -611,16 +788,22 @@ class EmergencySessionCoordinatorTest {
         private val order: MutableList<String>? = null,
         private val outcome: CallRequestOutcome = CallRequestOutcome.SUBMITTED_UNCONFIRMED,
         private val throwOnRequest: Boolean = false,
+        private val crashBeforeRequest: Boolean = false,
+        private val crashAfterRequest: Boolean = false,
     ) : EmergencyCallRequester {
         val targets = mutableListOf<String>()
 
         override fun requestCall(target: String): CallRequestOutcome {
+            if (crashBeforeRequest) throw SimulatedProcessDeath()
             order?.add("call")
             targets += target
+            if (crashAfterRequest) throw SimulatedProcessDeath()
             if (throwOnRequest) throw SecurityException("injected Telecom failure")
             return outcome
         }
     }
+
+    private class SimulatedProcessDeath : Error()
 
     companion object {
         private val readyCapabilities = CapabilitySnapshot(
