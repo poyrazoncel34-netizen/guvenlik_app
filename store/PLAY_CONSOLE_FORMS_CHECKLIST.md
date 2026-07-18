@@ -9,7 +9,8 @@ No Play Console dashboard action is completed by this repo audit. Every submissi
 | Data Safety | `store/DATA_SAFETY_FORM.md` | CODE_DONE copy prepared; internal testing may be exempt; PLAY_CONSOLE submit for closed/open/production when Play requires it |
 | Content Rating | `store/CONTENT_RATING_ANSWERS.md` | CODE_DONE copy prepared; PLAY_CONSOLE submit |
 | Target Audience | `store/CONTENT_RATING_ANSWERS.md` and `docs/play_console_declarations.md` | CODE_DONE recommendation; PLAY_CONSOLE submit |
-| Foreground service specialUse | `docs/play_console_declarations.md` | CODE_DONE copy prepared; PLAY_CONSOLE submit |
+| Health Apps Declaration | `docs/play_console_declarations.md` | CODE_DONE answer prepared: actual build has no health feature; PLAY_CONSOLE submit is still required |
+| Foreground service | `docs/play_console_declarations.md` | NOT_APPLICABLE; verify uploaded AAB has no FGS permission/service and remove stale Console draft |
 | SCHEDULE_EXACT_ALARM | `docs/play_console_declarations.md` | CODE_DONE copy prepared; PLAY_CONSOLE submit if required |
 | REQUEST_IGNORE_BATTERY_OPTIMIZATIONS | `docs/play_console_declarations.md` | CODE_DONE copy prepared; PLAY_CONSOLE submit if required |
 | CALL_PHONE | `store/permissions_declaration_notes.md` | CODE_DONE copy prepared; PLAY_CONSOLE submit if required |
@@ -40,6 +41,7 @@ No Play Console dashboard action is completed by this repo audit. Every submissi
 | Data Safety submitted or internal-testing exemption evidenced | PLAY_CONSOLE | Not supplied |
 | Content Rating certificate obtained | PLAY_CONSOLE | Not supplied |
 | Target Audience submitted | PLAY_CONSOLE | Not supplied |
+| Health Apps Declaration submitted (`No health features`) | PLAY_CONSOLE | Not supplied |
 | FGS declaration submitted | PLAY_CONSOLE | Not supplied |
 | Exact alarm declaration submitted if required | PLAY_CONSOLE | Not supplied |
 | Battery optimization declaration submitted if required | PLAY_CONSOLE | Not supplied |

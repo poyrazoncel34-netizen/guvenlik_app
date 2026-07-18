@@ -13,8 +13,8 @@ External gates to record in the release tracker:
 ```text
 PLAY_CONSOLE: Data Safety, Content Rating, Target Audience, FGS declaration, exact alarm declaration if requested, CALL_PHONE/sensitive permission declaration, pre-launch report.
 REVENUECAT: dashboard app, entitlement, current offering, monthly/annual packages, purchase/restore/cancel/expired/no-offering/network evidence.
-SIGNING: real signing config, production secrets, signed AAB build, signed AAB upload.
-NEEDS_REAL_DEVICE_TEST: Android 13/14/15 device evidence, notification denied, exact alarm denied, no SIM, billing sandbox.
+SIGNING: real signing config, pinned upload-certificate fingerprint, signed AAB build, signed AAB upload. RevenueCat Android public SDK key is a client identifier; never substitute an `sk_` server secret.
+NEEDS_REAL_DEVICE_TEST: API29/API36/16 KB, Pixel/Samsung/Xiaomi, dual-SIM and low-memory evidence; notification/exact denial, Direct Boot, no SIM and billing sandbox.
 NEEDS_OPERATOR_ACTION: live privacy/terms/aydinlatma/data deletion URL verification, screenshot PII review, CI log secret review.
 NEEDS_OWNER_REVIEW: legal wording or policy claims not verified by repo evidence.
 UNKNOWN: any item where Play Console account state or external dashboard state is unavailable.
@@ -395,7 +395,7 @@ KoruBeni uses exact alarms for user-visible safety deadlines and timers, includi
 **Why required**
 
 ```text
-Android Doze, app standby, and OEM battery restrictions can delay Dart timers, foreground services, or inexact alarm behavior. Safety timers need the best available timing path when user-visible deadlines expire. SCHEDULE_EXACT_ALARM is used for those user-started safety timer/reminder flows.
+Android Doze, app standby, and OEM battery restrictions can delay Dart timers or inexact alarm behavior. Safety timers need the best available timing path when user-visible deadlines expire. SCHEDULE_EXACT_ALARM is used for those user-started safety timer/reminder flows.
 ```
 
 **Not used for**
@@ -407,22 +407,16 @@ Advertising, marketing, analytics, hidden location tracking, user monitoring, in
 **Fallback / degraded behavior**
 
 ```text
-If exact alarm access is denied or unavailable, the app falls back where possible to inexact alarms, foreground-service/session state, and local timer paths. The app presents degraded reliability messaging and does not guarantee that Android/OEM background behavior cannot delay timers.
+If exact alarm access is denied or unavailable, Check-In, Safe Walk, and scheduled fake-call sessions are not armed. Panic may continue only as a visible foreground countdown ending in a manual `ACTION_DIAL` path, with no background guarantee. An independently keyed inexact alarm is created only after exact scheduling succeeds, as a residual backup if the permission is later revoked.
 ```
 
-### FOREGROUND_SERVICE_SPECIAL_USE
+### FOREGROUND SERVICE — NOT APPLICABLE
 
-**Declaration text**
-
-```text
-KoruBeni uses a foreground service only for active, user-started safety sessions such as Safe Walk, check-in, and emergency timer reliability. The session shows a visible persistent notification and is tied to the user's active safety flow. The user can stop or cancel the session. The service is not used for ads, analytics, hidden tracking, silent background surveillance, or indefinite background execution.
-```
-
-**If specialUse remains declared**
-
-```text
-The app combines safety timers, user-visible check-in deadlines, and emergency countdown backup behavior that do not fit cleanly into a single standard foreground service type. The user starts the flow, sees UI/notification disclosure, and can stop it.
-```
+Do not paste an FGS declaration for this build. It does not request an FGS
+permission or start a custom foreground service. Remove any stale `specialUse`
+Console draft and confirm the uploaded AAB manifest contains no transitive FGS
+entry. Safety-session notifications are ordinary status UI; native alarms own
+deadline reliability.
 
 ### CALL_PHONE, if prompted
 
@@ -435,19 +429,19 @@ Safety / Emergency
 **Core functionality**
 
 ```text
-Used to call the user's pre-selected emergency contact when the emergency countdown completes, only inside a safety flow the user explicitly started. The user triggers the panic button; if the countdown is not cancelled with the PIN, the Android call flow starts. If CALL_PHONE is not granted, the dialer screen (ACTION_DIAL) opens instead and the user confirms the call manually. The app never auto-dials 112/911 or any official emergency short code.
+Used only for Panic/SOS, Check-In, and Safe Walk sessions that the user explicitly arms. When the relevant deadline expires, Android may submit an unconfirmed call request to the system Telecom service for the immutable pre-selected contact. The app never synthesizes 112/911 or another official short code and never claims ringing or connection. If automatic submission cannot be used, an actionable notification exposes a user-tapped ACTION_DIAL path.
 ```
 
 **Reviewer explanation**
 
 ```text
-CALL_PHONE is used only in the user-initiated Panic/SOS flow. The user explicitly starts the flow and sees a confirmation/countdown before any call attempt. If direct calling is denied, unavailable, or unsafe to use, the app falls back to ACTION_DIAL so the user can manually place the call. KoruBeni does not claim official 112/police integration and does not place hidden background calls.
+CALL_PHONE is limited to user-armed Panic/SOS, Check-In, and Safe Walk expiry. A successful API return means only that a request was submitted to Android Telecom; connection remains unknown. When automatic submission is unavailable, the user can tap the fallback notification to open ACTION_DIAL. KoruBeni has no official 112/police integration and never generates official short codes.
 ```
 
 ### FLAG_SECURE reviewer note
 
 ```text
-KoruBeni blocks screenshots in the app with FLAG_SECURE for user safety and privacy. Reviewers can still navigate the app normally. Use the provided store screenshots and reviewer instructions for visual review evidence.
+KoruBeni does not set Android FLAG_SECURE globally. Ordinary screenshots remain possible. An in-app privacy mask obscures the recent-apps preview while the app is backgrounded; it is not an OS screenshot block.
 ```
 
 ### POST_NOTIFICATIONS reviewer note
@@ -570,6 +564,6 @@ Deleting the app or clearing app storage removes on-device data. It does not can
 [ ] RevenueCat products/offering configured
 [ ] License tester monthly/annual purchase, restore, cancel/manage tested
 [ ] Signed AAB produced and uploaded
-[ ] Real-device QA matrix passed on Android 13 and Android 14 physical devices
+[ ] Real-device QA matrix passed on API29/API36/16 KB, Pixel/Samsung/Xiaomi, dual-SIM and low-memory physical devices
 [ ] Play Console production access screen checked; if the personal-account policy applies, 12 opted-in testers / 14 continuous days completed
 ```

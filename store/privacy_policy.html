@@ -137,7 +137,7 @@
         <h2>4. Veri Güvenliği</h2>
         <ul>
             <li>PIN kodu, işletim sisteminin desteklediği güvenli cihaz depolamasında saklanır</li>
-            <li>Acil kişi kayıtları uygulamanın cihaz içi yerel veritabanında saklanır</li>
+            <li>Acil kişi kayıtları uygulamaya özel cihaz içi güvenli depoda saklanır; aktif safety session yalnız minimal token/deadline/normalize hedef envelope'u kullanır</li>
             <li>Sahte çağrı ayarları ve isteğe bağlı avatar dosyaları cihazda yerel olarak saklanır</li>
             <li>Güvenlik verileri geliştirici backend'ine gönderilmez; çevrimiçi harita karoları, Google Play Billing ve RevenueCat kendi teknik ağ davranışlarına sahip olabilir</li>
         </ul>
@@ -147,6 +147,7 @@
             <li>Profil bilgileri: Kullanıcı silene kadar cihazda kalır</li>
             <li>Konum verileri: Paylaşım süresi olduğunda uygulama içinde aktif kullanılmaz</li>
             <li>Acil durum kişileri: Kullanıcı silene kadar cihazda kalır</li>
+            <li>Aktif safety session hedefi: Confirmed cancel/reset'e veya terminal sonrasında actionable fallback sona erene kadar device-protected app alanında tutulur. Fallback erişimi action, dismiss veya en geç 24 saatlik mantıksal TTL sonunda biter; cihaz kapalıysa fiziksel kayıt sonraki açılış/uzlaştırmada temizlenir. Bildirim/PendingIntent telefon numarasını taşımaz.</li>
             <li>Sahte çağrı verileri: Kullanıcı silene kadar cihazda kalır</li>
             <li>Yasal rıza logları: Kullanıcı silene kadar cihazda kalır</li>
         </ul>

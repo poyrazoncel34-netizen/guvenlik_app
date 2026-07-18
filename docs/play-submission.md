@@ -17,69 +17,38 @@
 
 ---
 
-## 1. Foreground Service `specialUse` gerekçesi (EN KRİTİK Console maddesi)
+## 1. Foreground service beyanı — UYGULANMAZ
 
-**Manifest gerçeği:** `android/app/src/main/AndroidManifest.xml`
-- `FOREGROUND_SERVICE_SPECIAL_USE` izni beyan edilmiş.
-- `id.flutter.flutter_background_service.BackgroundService` →
-  `android:foregroundServiceType="specialUse"`.
-- `PROPERTY_SPECIAL_USE_FGS_SUBTYPE` = **`emergency_checkin_keepalive`**.
-- Geolocator'ın konum FGS'i (`GeolocatorLocationService`) manifest'ten
-  `tools:node="remove"` ile **çıkarılmıştır** — serviste konum akışı yoktur.
+**Manifest gerçeği:** Play build'i `FOREGROUND_SERVICE` veya
+`FOREGROUND_SERVICE_SPECIAL_USE` istemez; uygulama özel bir Android foreground
+service başlatmaz. Eski `flutter_background_service` bağımlılığı, servis girdisi
+ve `specialUse` subtype property kaldırılmıştır.
 
-### Console "App content → Special Use foreground service" beyan metni (yapıştır)
+Aktif oturumdaki görünür bildirim sıradan bir yerel durum bildirimidir; process
+keepalive veya zamanlama garantisi değildir. Deadline güvenilirliği native
+`AlarmManager` exact alarmı, yalnız başarılı arm sonrası kurulan ayrı inexact yedeği, kalıcı deadline state'i ve
+boot/exact-izin restorasyonu ile sağlanır.
 
-```text
-KoruBeni uses a foreground service ONLY for active, user-started personal-safety
-sessions: Safe Walk, Check-In, and the emergency countdown/keepalive timer. The
-session shows a visible, persistent notification and is tied to the user's active
-safety flow; the user can stop or cancel it at any time. Each session is
-time-bound: it runs for the user-selected duration plus a 60-second grace window,
-and the service stops when the session ends, is confirmed safe, or is cancelled.
+**Play Console işlemi:** Bu build için `specialUse` beyanı veya FGS demo videosu
+gönderme. Console'da eski taslak varsa kaldır. Upload edilen AAB'nin merged
+manifestinde FGS izni/servisi bulunmadığını ayrıca doğrula.
 
-The service performs timer accounting, exact-alarm scheduling, and persistent
-notification upkeep only. It does NOT stream location, record audio, run ads,
-collect analytics, perform hidden tracking, or execute indefinitely in the
-background. Geolocator's bundled foreground location service is removed from the
-merged manifest (tools:node="remove"); location is read on demand only, in the
-foreground Activity context.
+### Gerçek-cihaz alarm + bildirim kanıtı
 
-specialUse is used because the work (a user-perceptible safety-session keepalive
-that keeps alarm + notification paths firing reliably under Doze) does not fit any
-named Android 14/15 type: 'location' would imply continuous location streaming
-(not done); 'dataSync' is capped at a 6-hour quota on Android 15+; 'shortService'
-is capped at ~3 minutes (sessions can run tens of minutes). The 'phoneCall' type
-does not apply either: the foreground service does not manage or carry telephony —
-it only keeps the safety timer alive. Any emergency call is a separate,
-user-visible dial action that occurs after, and outside of, the service's timer
-work. Subtype declared in the manifest as emergency_checkin_keepalive.
-
-If the session expires unconfirmed, the app calls ONLY the user's pre-selected
-primary emergency contact. It NEVER dials 112/911 or any official emergency
-short code.
-```
-
-> Tam tip-seçim gerekçesi (neden `location`/`dataSync`/`shortService` değil) için
-> [docs/play_console_declarations.md](play_console_declarations.md) §"Foreground
-> Service specialUse".
-
-### Demo video senaryosu (Console için ben çekeceğim)
-
-FGS'i tetikleyen adımları, persistent notification'ı ve kullanıcı kontrolünü
+Bu kayıt Play FGS beyanı için değil, release QA kanıtı içindir. Oturum durum
+bildiriminin kullanıcı kontrolünü ve native deadline'ın arka plan/Doze davranışını
 gösterir:
 
 1. Uygulamayı aç, PIN ile gir (biyometrik YOK — duress koruması).
-2. **Check-In** (veya Safe Walk) ekranını aç; bir süre seç (ör. 5 dk) ve
-   oturumu **kullanıcı olarak başlat** → bu noktada foreground service başlar.
-3. Status bar'da **kalıcı bildirimi göster** (oturum aktif olduğunun kanıtı).
-4. Telefonu kilitle / uygulamayı arka plana al → bildirim kalır, oturum sayacı
-   sürer (Doze altında keepalive amacı budur).
-5. Geri dön; süre/grace dolmadan **"Güvendeyim" onayı** ver → service durur,
-   bildirim kaybolur (kullanıcı kontrolü kanıtı).
+2. **Check-In** (veya Safe Walk) ekranını aç; bir süre seç ve oturumu başlat.
+3. Status bar'da oturum durum bildirimini göster.
+4. Telefonu kilitle / uygulamayı arka plana al ve cihazı Doze'a al.
+5. Geri dön; süre/grace dolmadan **"Güvendeyim" onayı** ver → native alarm ve
+   yedeği iptal edilir, bildirim kaybolur.
 6. İkinci çekim: onay verilmezse süre + 60 sn grace dolar → **yalnız birincil
    acil kişi** aranır (112 yok). Otomatik aramayı bu noktada göster (bkz. §2).
 
-### Demo video — shot list (çekime hazır kayıt planı)
+### QA evidence video — shot list (çekime hazır kayıt planı)
 
 > Yukarıdaki senaryonun çekime hazır hâli; Console'a yüklenecek video **bu listeyle**
 > çekilir — ikisi ayrışırsa bu shot list esastır. Aynı listeye QA matrisinden de
@@ -92,7 +61,8 @@ gösterir:
 - **İkinci telefon** birincil acil kişi olarak kayıtlı (otomatik aramanın hedefi).
 - Bildirimler açık; **durum çubuğu saati görünür** (zaman akışının kanıtı).
 - Hedef süre **60–90 sn**; sahne kesmeli kurgu serbest.
-- Teslim: **unlisted YouTube/Drive linki** (Console FGS beyan formuna eklenir).
+- Teslim: erişimi kısıtlı, redacted iç QA arşivi. Bu build FGS beyan etmediği için
+  video bir Console FGS formuna yüklenmez.
 
 **Sahneler (altyazılar İngilizce — AYNEN bu metinlerle):**
 
@@ -100,10 +70,10 @@ gösterir:
 |---|---|---|
 | 1 | Ana ekran | "KoruBeni — personal safety app (Turkish UI)." |
 | 2 | Check-In ekranı; en kısa süre seçilir; Başlat | "User starts a timed safety check-in session." |
-| 3 | Bildirim çekmecesi; kalıcı FGS bildirimi 2–3 sn ekranda | "Ongoing foreground-service notification while the session is active." |
-| 4 | Uygulama arka plana + ekran kilidi; saat görünür | "App in background — the service keeps the session alive." |
+| 3 | Bildirim çekmecesi; oturum durum bildirimi 2–3 sn ekranda | "Visible status notification while the safety session is active." |
+| 4 | Uygulama arka plana + ekran kilidi; saat görünür | "Native alarm scheduling protects the user-started deadline in the background." |
 | 5 | Kesme ("a few minutes later"); süre dolar, grace heads-up görünür; cihaza DOKUNULMAZ | "Time expired — 60-second grace warning. User does not respond." |
-| 6 | Grace dolar → giden arama ekranı; ikinci telefonun numarası görünür | "No response → automatic call to the user-chosen emergency contact." |
+| 6 | Grace dolar → giden arama ekranı; test numarası kayıtta maskelenir | "No response → automatic call to the user-chosen emergency contact." |
 | 7 | (Opsiyonel) ikinci telefon çalarken dış çekim | "The pre-selected contact's phone rings. The app never auto-dials 112/911." |
 | 8 | Oturum kapanışı | "Session ends — fully user-initiated and time-bounded." |
 

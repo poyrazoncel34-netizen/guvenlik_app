@@ -49,7 +49,7 @@
      3.4 Content rating (IARC) ──► SERTİFİKA   (production'dan önce zorunlu)
      3.5 Target audience = 18+
      3.6 Data safety           (closed/open/production'dan önce zorunlu)
-     3.7 Foreground service specialUse + demo video   (EN KRİTİK)
+     3.7 Foreground service manifest check (beyan UYGULANMAZ)
      3.8 Hassas izinler: CALL_PHONE / EXACT_ALARM / BATTERY
      3.9 Government/Financial/Health = N/A
      3.10 Data deletion URL
@@ -89,8 +89,10 @@ Panik/SOS Pro; konum, sahte çağrı ve siren ücretsiz.
 ```
 
 **Full description:** [store/play_store_listing_tr.md](../store/play_store_listing_tr.md) içindeki
-"Full Description (4000 karakter)" bloğunu yapıştır. (EN listing:
-[store/play_store_listing_en.md](../store/play_store_listing_en.md).)
+"Full Description (4000 karakter)" bloğunu yapıştır. İlk sürüm
+**Turkish-only**: [store/play_store_listing_en.md](../store/play_store_listing_en.md)
+yalnız iç referanstır; İngilizce runtime yeniden açılıp gerçek cihazda test
+edilmeden Play Console'a yapıştırma veya İngilizce listing oluşturma.
 
 **Grafikler (Graphics):**
 
@@ -179,50 +181,17 @@ Tam form + veri türü tablosu: [store/DATA_SAFETY_FORM.md](../store/DATA_SAFETY
 KoruBeni does not operate a developer backend. Emergency contacts, profile data, PIN, fake-call settings, local activity history, and consent records are stored on device. The app does not read the full contacts list; it stores only emergency contacts selected or entered by the user, locally on the device. Optional Pro subscription processing is handled by Google Play Billing and RevenueCat. Online map screens may request map tiles from the configured map tile provider, currently OpenStreetMap tile infrastructure, only for the map viewport the user actively opens. The app does not bulk download, scrape, pre-seed, archive, or package OpenStreetMap public tiles. The app does not use ads, analytics, crash reporting SDKs, auth backend, cloud database, SMS sending, microphone, audio recording, account creation, or user-generated content in this Play release.
 ```
 
-### 3.7 Foreground service permissions (specialUse) — EN KRİTİK
+### 3.7 Foreground service — beyan UYGULANMAZ
 
-**Nereye:** App content → **App permissions / Foreground service** (Play, manifest'teki
-`FOREGROUND_SERVICE_SPECIAL_USE` için beyan + demo video ister).
-**Manifest gerçeği:** `id.flutter.flutter_background_service.BackgroundService` →
-`foregroundServiceType="specialUse"`, subtype `emergency_checkin_keepalive`.
-Geolocator'ın konum FGS'i `tools:node="remove"` ile kaldırılmıştır.
+Play build'i `FOREGROUND_SERVICE` / `FOREGROUND_SERVICE_SPECIAL_USE` istemez ve
+özel bir foreground service başlatmaz. `flutter_background_service`, servis
+manifest girdisi ve `specialUse` subtype property kaldırılmıştır.
 
-**Declaration (paste):**
-```text
-KoruBeni uses a foreground service ONLY for active, user-started personal-safety
-sessions: Safe Walk, Check-In, and the emergency countdown/keepalive timer. The
-session shows a visible, persistent notification and is tied to the user's active
-safety flow; the user can stop or cancel it at any time.
-
-The service performs timer accounting, exact-alarm scheduling, and persistent
-notification upkeep only. It does NOT stream location, record audio, run ads,
-collect analytics, perform hidden tracking, or execute indefinitely in the
-background. Geolocator's bundled foreground location service is removed from the
-merged manifest (tools:node="remove"); location is read on demand only, in the
-foreground Activity context.
-
-specialUse is used because the work (a user-perceptible safety-session keepalive
-that keeps alarm + notification paths firing reliably under Doze) does not fit any
-named Android 14/15 type: 'location' would imply continuous location streaming
-(not done); 'dataSync' is capped at a 6-hour quota on Android 15+; 'shortService'
-is capped at ~3 minutes (sessions can run tens of minutes). Subtype declared in
-the manifest as emergency_checkin_keepalive.
-```
-> Tam tip-seçim gerekçesi (neden `location`/`dataSync`/`shortService` değil) +
-> Android 15 BOOT_COMPLETED bağlamı: [docs/play_console_declarations.md](play_console_declarations.md).
-
-**Demo video senaryosu (operatör çeker — hedef 60–90 sn, gerçek cihaz, PII yok;
-çekime hazır kayıt planı: [play-submission.md §1 → "Demo video — shot list"](play-submission.md)):**
-1. Uygulamayı aç, **PIN ile** gir (biyometrik YOK — duress koruması).
-2. **Check-In** (veya Safe Walk) ekranını aç; süre seç (ör. 5 dk) ve oturumu
-   **kullanıcı olarak başlat** → foreground service başlar.
-3. Status bar'da **kalıcı bildirimi göster** (oturum aktif kanıtı).
-4. Telefonu kilitle / uygulamayı arka plana al → bildirim kalır, sayaç sürer.
-5. Geri dön; süre dolmadan **"Güvendeyim" onayı** ver → service durur, bildirim
-   kaybolur (kullanıcı kontrolü kanıtı).
-6. (İsteğe bağlı 2. çekim) Onay verilmezse süre + 60 sn grace dolar → **yalnız
-   birincil acil kişi** aranır (**112 YOK**); test-güvenli numarayla çevirici
-   ön-dolumunu göster, gerçek 112 ARAMA.
+**Operatör kontrolü:** AAB upload sonrasında bundle izinleri/merged manifestte
+FGS izni veya servisi görünmemeli. Eski Console taslağı varsa kaldır; bu build
+için FGS beyanı veya demo videosu gönderme. Oturum bildirimi yalnız kullanıcıya
+durum gösterir; timing güvenilirliği exact alarm + bağımsız inexact fallback +
+boot/izin restorasyonuna dayanır.
 
 ### 3.8 Hassas izinler (varsa Console ayrı beyan ister)
 
@@ -231,7 +200,7 @@ Tam metinler: [store/permissions_declaration_notes.md](../store/permissions_decl
 
 **CALL_PHONE (paste) — 112 YOK:**
 ```text
-CALL_PHONE is used only in the user-initiated Panic/SOS flow. The user explicitly starts the flow and sees a confirmation/countdown before any call attempt. If direct calling is denied, unavailable, or unsafe to use, the app falls back to ACTION_DIAL so the user can manually place the call. KoruBeni does not claim official 112/police integration and does not place hidden background calls.
+CALL_PHONE is limited to Panic/SOS, Check-In, and Safe Walk sessions explicitly armed by the user. At expiry Android may submit an unconfirmed Telecom request for the immutable pre-selected contact; the app never claims ringing or connection and never synthesizes 112/911. If automatic submission cannot be used, an actionable notification exposes a user-tapped ACTION_DIAL path.
 ```
 
 **SCHEDULE_EXACT_ALARM (paste):**
@@ -240,7 +209,7 @@ KoruBeni uses exact alarms for user-visible safety deadlines and timers, includi
 ```
 Fallback (gerekirse paste):
 ```text
-If exact alarm access is denied or unavailable, the app falls back where possible to inexact alarms, foreground-service/session state, and local timer paths. The app presents degraded reliability messaging and does not guarantee that Android/OEM background behavior cannot delay timers.
+If exact alarm access is denied or unavailable, Check-In, Safe Walk, and scheduled fake-call sessions are not armed. Panic may continue only as a visible foreground countdown ending in a user-confirmed `ACTION_DIAL` path; no background guarantee is claimed. The independently keyed inexact alarm is armed only after exact scheduling succeeds, as a residual backup if exact access is later revoked.
 ```
 
 **REQUEST_IGNORE_BATTERY_OPTIMIZATIONS (paste):**
@@ -253,10 +222,11 @@ KoruBeni requests battery optimization exemption only as an optional reliability
 
 ### 3.9 Diğer App content kalemleri
 
-- **Government apps:** No · **Financial features:** None · **Health:** N/A
-- **FLAG_SECURE reviewer note** (gerekirse paste): KoruBeni ekran görüntüsünü
-  FLAG_SECURE ile engeller; reviewer normal gezinebilir, görsel kanıt için store
-  ekran görüntülerini kullanın.
+- **Government apps:** No · **Financial features:** None.
+- **Health Apps Declaration:** Form bütün uygulamalar için gönderilir; actual
+  build sağlık özelliği sunmadığından “No health features” seçilir.
+- **FLAG_SECURE reviewer note:** Global `FLAG_SECURE` yoktur; screenshot
+  mümkündür. Yalnız app background olduğunda recents privacy mask gösterilir.
 
 ### 3.10 Data deletion
 
@@ -311,7 +281,7 @@ ardından **Production**.
   batarya, bildirim, konum, offline/no-SIM — özellikle **Xiaomi/MIUI + Samsung**.
   Emülatör kesin değil. ([MANUAL_SMOKE_TEST_SCRIPT.md](../store/MANUAL_SMOKE_TEST_SCRIPT.md))
 - **Play Console'da form gönderme / beyan tıklama / FGS demo videosu çekme** (§3.7).
-- **Keystore yedeği + production secret'ları** (REVENUECAT / ENCRYPTION_KEY / imza).
+- **Keystore yedeği + imza sırları + upload sertifika parmak izi**; RevenueCat için istemciye uygun Android public SDK key kullanılır, `sk_` server secret gömülmez.
 - **`v1.0.0` etiketini push edip CI'dan imzalı AAB üretmek** (lokal AAB değil).
 - Yayında **paket sürümü YÜKSELTME** (özellikle `purchases_flutter`); pinler test edilmiş.
 

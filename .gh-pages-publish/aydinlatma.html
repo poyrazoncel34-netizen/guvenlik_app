@@ -121,7 +121,7 @@
 <body>
     <div class="container">
         <h1>KoruBeni KVKK Aydınlatma Metni</h1>
-        <p class="subtitle">Sürüm 3.2.0 &nbsp;|&nbsp; Son güncelleme: 6 Temmuz 2026 &nbsp;|&nbsp; 6698 Sayılı KVKK Md. 10 ve 10.03.2018 Tarihli Aydınlatma Tebliği Uyarınca</p>
+        <p class="subtitle">Sürüm 3.3.0 &nbsp;|&nbsp; Son güncelleme: 18 Temmuz 2026 &nbsp;|&nbsp; 6698 Sayılı KVKK Md. 10 ve 10.03.2018 Tarihli Aydınlatma Tebliği Uyarınca</p>
 
         <div class="warning-box">
             <strong>⚠️ ÖNEMLİ UYARI</strong><br>
@@ -207,7 +207,7 @@
         <ul>
             <li><strong>Kullanıcı tarafından doğrudan girilmesi:</strong> Acil durum kişi bilgileri, PIN kodu, profil adı, isteğe bağlı sahte çağrı avatarı</li>
             <li><strong>Cihaz sensörleri:</strong> GPS konum verisi (yalnızca konum izni verildiğinde)</li>
-            <li><strong>Otomatik olarak:</strong> Acil durum tetiklendiğinde anlık konum bilgisi</li>
+            <li><strong>Otomatik safety state:</strong> Kullanıcının arm ettiği session için minimal token, generation, deadline ve normalize hedef; konum otomatik mesajla gönderilmez</li>
             <li><strong>Biyometrik okuyucu:</strong> Bu Android Play sürümünde kullanılmaz</li>
             <li><strong>Otomatik cihaz bilgisi:</strong> Cihaz tipi ve OS versiyonu (teknik uyumluluk amacıyla)</li>
         </ul>
@@ -215,11 +215,11 @@
         <h2>4. Kişisel Verilerin Aktarılması</h2>
         <p>Kişisel verileriniz yalnızca aşağıdaki sınırlı durumlarda ve şekillerde aktarılır:</p>
         <ul>
-            <li><strong>Acil durum kişileri:</strong> Acil durum tetiklendiğinde belirlediğiniz kişi için Android arama akışı başlatılır veya arama ekranı hazırlanır.</li>
-            <li><strong>Harita servisi:</strong> Çevrimiçi harita görünümü harita karo servisine ağ isteği yapabilir; konum alınamazsa sahte koordinat gösterilmez.</li>
-            <li><strong>OpenStreetMap:</strong> Harita görüntüleme için kullanılır; yalnızca kullanıcının aktif olarak görüntülediği çevrimiçi harita karoları istenirken sağlayıcıya teknik ağ isteği yapılabilir. Uygulama public OSM karolarını toplu indirmez, önceden yüklemez, scrape etmez, arşivlemez veya paketlemez.</li>
+            <li><strong>Acil durum kişileri:</strong> Kullanıcının arm ettiği Panic/SOS, Check-In veya Safe Walk deadline'ında normalize hedef Android Telecom'a verilebilir. Bu yalnız doğrulanmamış request'tir; bağlantı sonucu bilinmez.</li>
+            <li><strong>Harita servisi:</strong> Çevrimiçi harita görünümü karo servisine ağ isteği yapabilir; istek IP adresi, User-Agent ve görüntülenen alanı çıkarsatabilen tile koordinatlarını gösterebilir.</li>
+            <li><strong>OpenStreetMap:</strong> Yalnız kullanıcının aktif görüntülediği karolar istenir; public karolar toplu indirilmez, önceden yüklenmez, scrape edilmez, offline arşivlenmez veya paketlenmez.</li>
             <li><strong>Google Play Billing:</strong> İsteğe bağlı KoruBeni Pro abonelik satın alma, yenileme, iptal ve geri yükleme işlemleri Google Play üzerinden yönetilir.</li>
-            <li><strong>RevenueCat:</strong> İsteğe bağlı KoruBeni Pro aboneliği kullanıldığında; abonelik doğrulaması için sınırlı teknik veri (IP adresi, cihaz modeli/OS bilgisi, anonim abone kimliği, satın alma olayları) sunucuları yurt dışında (ABD) bulunan RevenueCat'e iletilir — KVKK Madde 9 kapsamında yurt dışına aktarım. Ödeme bilgileri geliştirici tarafından saklanmaz; reklam/atıf kimliği toplanmaz.</li>
+            <li><strong>RevenueCat:</strong> Güncel hukuki akış tamamlandıktan ve kullanıcı Pro/paywall/restore yoluna girdikten sonra lazy başlatılır; IP adresi, cihaz/app bilgisi, anonim abone kimliği, satın alma olayları ve entitlement metası RevenueCat ve alt işleyenleri tarafından Türkiye dışında işlenebilir. KVKK Madde 9 mekanizması ve sözleşme kanıtı yayın kapısında ayrıca doğrulanır. Ödeme kartı geliştirici tarafından saklanmaz.</li>
             <li><strong>Yetkili makamlar:</strong> Mahkeme kararı veya yasal zorunluluk halinde ilgili kurum ve kuruluşlara aktarılabilir.</li>
         </ul>
         <div class="highlight">
@@ -229,7 +229,8 @@
         <h2>5. Kişisel Verilerin Saklanma Süreleri</h2>
         <ul>
             <li><strong>Konum verisi:</strong> Acil durum paylaşımı sona erdiğinde cihaz belleğinden silinir; kalıcı olarak depolanmaz.</li>
-            <li><strong>Acil durum kişileri (ad + telefon):</strong> Kullanıcı uygulamadan silene kadar cihaz içi yerel veritabanında saklanır.</li>
+            <li><strong>Acil durum kişileri (ad + telefon):</strong> Kullanıcı uygulamadan silene kadar uygulamaya özel cihaz içi güvenli depoda saklanır.</li>
+            <li><strong>Aktif safety session hedefi:</strong> Confirmed cancel/reset'e veya terminal sonrasında actionable fallback sona erene kadar device-protected app alanında tutulur. Fallback için erişim action, dismiss veya en geç 24 saatlik mantıksal TTL sonunda sona erer. Cihaz TTL boyunca kapalıysa fiziksel kayıt sonraki açılış/uzlaştırmada temizlenir; bildirim metni ve PendingIntent telefon numarasını taşımaz.</li>
             <li><strong>PIN kodu:</strong> Kullanıcı değiştirene veya silene kadar cihazın güvenli depolama alanında (Keychain/Keystore) şifreli olarak tutulur.</li>
             <li><strong>Biyometrik veri:</strong> Bu Android Play sürümünde kullanılmaz ve uygulama tarafından işlenmez.</li>
             <li><strong>Rıza logları:</strong> Uygulama kullanıldığı sürece cihazda tutulur.</li>
@@ -242,7 +243,8 @@
         <h2>7. Kişisel Veri Güvenliği</h2>
         <ul>
             <li>PIN doğrulama bilgileri Android'in güvenli depolama altyapısı üzerinden yönetilir.</li>
-            <li>Acil kişi kayıtları uygulamanın cihaz içi yerel veritabanında saklanır.</li>
+            <li>Acil kişi kayıtları uygulamaya özel güvenli cihaz depolamasında saklanır; Android yedekleme kapalıdır.</li>
+            <li>Device-protected aktif oturum zarfında yalnız token/generation, oturum türü, normalize hedef, son tarihler ve zamanlama modu bulunur; PIN, kişi adı, konum, geçmiş veya RevenueCat kimliği bulunmaz.</li>
             <li>Uygulama offline-first çalışır; veriler geliştirici backend'ine gönderilmez.</li>
             <li>Bu sürümde reklam veya üçüncü taraf analitik SDK'si kullanılmaz.</li>
         </ul>
@@ -267,7 +269,7 @@
 
         <h2>10. Politika Değişiklikleri</h2>
         <p>Bu aydınlatma metninde yapılacak önemli değişiklikler uygulama içi bildirim aracılığıyla kullanıcılara duyurulur. Güncel metne bu sayfadan ulaşabilirsiniz.</p>
-        <p><strong>Son güncelleme:</strong> 6 Temmuz 2026</p>
+        <p><strong>Son güncelleme:</strong> 18 Temmuz 2026</p>
 
         <footer>
             <p>&copy; 2026 KoruBeni — Poyraz Öncel. Tüm hakları saklıdır.</p>

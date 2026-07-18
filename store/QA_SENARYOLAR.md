@@ -14,16 +14,19 @@ This file is a summary only. Production readiness must be based on the matrix ro
 
 | Device set | Status |
 | --- | --- |
-| Android 13 physical device | NEEDS_REAL_DEVICE_TEST |
-| Android 14 physical device | NEEDS_REAL_DEVICE_TEST |
-| Android 15 physical device | NEEDS_REAL_DEVICE_TEST if available to release team; otherwise document unavailability |
+| API 29 arm64 boundary phone | NEEDS_REAL_DEVICE_TEST |
+| API 36 Pixel/AOSP, 16 KB kernel | NEEDS_REAL_DEVICE_TEST |
+| Samsung One UI API 34/35+ | NEEDS_REAL_DEVICE_TEST |
+| Xiaomi/HyperOS API 34/35+ | NEEDS_REAL_DEVICE_TEST |
+| Dual-SIM + low-memory coverage | NEEDS_REAL_DEVICE_TEST |
 | Aggressive OEM battery device such as Samsung/Xiaomi/Oppo | Optional but recommended |
 
 ## Required Flow Groups
 
 - Fresh install and first-run legal/PIN flow.
 - TR and EN locale review, including native notification copy.
-- Notification, location, exact alarm, and battery optimization denied/degraded paths.
+- Notification/location denial, exact-alarm fail-closed arming, post-arm
+  revocation backup, and optional battery-exemption paths.
 - Safe Walk start/stop/timeout.
 - Check-in start/expiry/grace period.
 - Emergency dispatch, Panic/SOS permission granted and denied paths, and `ACTION_DIAL` fallback.

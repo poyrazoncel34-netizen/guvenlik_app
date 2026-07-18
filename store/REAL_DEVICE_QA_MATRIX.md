@@ -4,6 +4,15 @@ Status: NEEDS_REAL_DEVICE_TEST. Runtime/device execution is not evidenced from t
 
 Every scenario remains not-run until an operator records physical-device evidence in the Evidence log (§5). Redact phone numbers, precise coordinates, account emails, order IDs, screenshots with PII, and any sensitive logs before sharing evidence.
 
+> **Process death is not Force stop.** Use `adb shell am kill PACKAGE` (or an OEM
+> process-kill action that does not put the package in the stopped state) for
+> Dart-dead/native-alarm tests. `adb shell am force-stop PACKAGE` is a separate
+> user-stop contract: the package cannot self-start while stopped. On Android 15
+> the system also [cancels all pending intents when the package enters the stopped
+> state](https://developer.android.com/about/versions/15/behavior-changes-all).
+> Therefore a call firing *during* Force stop is not a valid pass criterion; G6A
+> tests honest suspension and recovery after explicit user relaunch.
+
 > ⚠️ **Run device QA on the SIGNED RELEASE AAB** (internal-testing track): debug builds skip
 > R8/obfuscation, so keep-rule regressions (receiver names, MethodChannel) only show in release.
 > Never place a real emergency call; use the second test phone as the emergency contact.
@@ -16,20 +25,59 @@ covers all eight device-only proof items of `docs/HANDOVER.md` §11 — see the 
 
 | Column | Device class | Target Android | Why this device |
 | --- | --- | --- | --- |
-| PIX | Stock Android / Google Pixel | Android 15 | Reference (un-skinned) behavior |
-| SAM | Samsung (One UI) | Android 14 | OEM battery management, lock-screen notification skinning |
-| XIA | Xiaomi (MIUI/HyperOS) | Android 13 | Most aggressive app-kill / autostart policies |
+| PIX | Stock Android / Google Pixel | API 36, 16 KB kernel | Upper-bound OS and page-size behavior |
+| SAM | Samsung (One UI) | API 34/35+ | OEM battery management, lock-screen notification skinning |
+| XIA | Xiaomi / HyperOS | API 34/35+ | Aggressive app-kill / autostart policies |
 
-Together the pool must cover Android 13, 14, and 15 (at least one device per major version).
-If the available device runs a different version, record the actual model/OS/build in the
-Evidence log; the column mapping stays the same.
+In addition to the three columns, the evidence bundle must include an arm64
+API 29 boundary phone and must collectively cover one dual-SIM device and one
+low-memory phone. These are mandatory support-envelope checks, not optional
+substitutes. Record their repeated deadline/race sweeps as additional device
+entries in the Evidence log.
 
 Cell legend: `☐P ☐F` = mark P (passed) or F (failed) after the run; `—` = not applicable on
 that device; "1 device" in Notes = running it on a single device is enough.
 
+### 1.1 Release-blocking repetition and timing acceptance
+
+On every Pixel/Samsung/Xiaomi column, execute 100 fake deadline deliveries,
+50 cancel-vs-expiry races, and 20 process-kill/Doze/reboot cycles. Across the
+pool, use a controlled second phone for at least 10 automatic Telecom requests
+and 10 manual dial observations; include dual-SIM, ask-every-time, no-SIM,
+airplane, no-service, and ongoing-call states.
+
+- Panic backup: p99 no more than 5 seconds late; no sample over 10 seconds.
+- Check-In/Safe Walk final deadline: p99 no more than 10 seconds late; no
+  sample over 30 seconds.
+- One unexplained missed deadline, wrong target, confirmed-cancel dispatch, or
+  PIN bypass fails G7 and invalidates the candidate.
+- Connection may be observed by a witness but remains `unknown` in app state.
+
+### 1.2 Mandatory signed-candidate preflight
+
+Before scenario A1 on each fresh device/build combination, run the read-only
+preflight. Copy the Play Console **app-signing** SHA-256 certificate fingerprint,
+not the upload-certificate fingerprint:
+
+```bash
+ANDROID_SERIAL=<adb-serial> \
+PHASE3_DEVICE_LABEL=PIX-01 \
+EXPECTED_VERSION_NAME=1.0.0 \
+EXPECTED_VERSION_CODE=10000 \
+EXPECTED_APP_SIGNING_SHA256=<64-hex-play-app-signing-digest> \
+./scripts/phase3_physical_device_preflight.sh
+```
+
+The preflight refuses emulators, the wrong package/version, debug/test-only
+builds, non-Play installs and a mismatched Play app-signing certificate. It
+records no device serial and performs no app launch, permission mutation, call,
+process kill or reboot. `PASS_PREFLIGHT_ONLY` proves device/build identity; it
+does **not** pass any scenario row. Attach its generated Markdown file to the
+evidence bundle, then execute the operator-observed matrix below.
+
 ## 2. Recommended run order (per device)
 
-Run phases in this order on EACH device. **Destructive steps — permission revoke, force-stop,
+Run phases in this order on EACH device. **Destructive steps — permission revoke, process kill, force-stop,
 data wipe — always come LAST (Phase 8):** they invalidate install state, and anything executed
 after them on the same install is not clean evidence.
 
@@ -42,9 +90,10 @@ after them on the same install is not clean evidence.
 7. **Phase 6 — maps & extras:** H1 → H4, I1 → I4. (A4 legal URLs anytime; K video on the best-looking device.)
 8. **Phase 7 — billing (license-tester device only):** J1 → J7.
 9. **Phase 8 — DESTRUCTIVE, in this order:** G1 (reboot, active) → G2 (reboot, expired) →
-   G3 (exact-alarm revoke mid-session) → G4 (force-stop + formatted number + BAL) →
-   G5 (CALL_PHONE revoke + force-stop tour) → G6 (force-stop dedup race) →
-   G7 ("Delete my data" wipe) → G8 (reinstall + billing restore).
+   G3 (exact-alarm revoke mid-session) → G4 (process death + formatted number + BAL) →
+   G5 (CALL_PHONE revoke + process-death tour) → G6 (process-death dedup race) →
+   G6A (explicit Force stop contract) → G7 ("Delete my data" wipe) →
+   G8 (reinstall + billing restore).
 
 ## 3. Scenario catalog + per-device matrix
 
@@ -72,9 +121,9 @@ after them on the same install is not clean evidence.
 
 | ID | Gate | Scenario | Steps | Expected | PIX | SAM | XIA | Notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| C1 | NEEDS_REAL_DEVICE_TEST | Emergency CALL_PHONE granted direct path | Grant CALL_PHONE; start SOS/countdown from an explicit user action | Direct call is attempted only after the explicit user flow and permission grant; no background/autonomous call | ☐P ☐F | ☐P ☐F | ☐P ☐F | |
-| C2 | NEEDS_REAL_DEVICE_TEST | CALL_PHONE denied ACTION_DIAL fallback | Deny CALL_PHONE at the runtime prompt; start countdown | Dialer opens pre-filled; copy says the user must press the call button manually | ☐P ☐F | ☐P ☐F | ☐P ☐F | |
-| C3 | NEEDS_REAL_DEVICE_TEST | Native direct call failure fallback | Where safely forceable, make the native direct-call dispatch fail | Fallback opens ACTION_DIAL **for the user's target number** or surfaces a visible failure; never `112` | ☐P ☐F | ☐P ☐F | ☐P ☐F | Fixes stale "ACTION_DIAL for 112" wording; HANDOVER §2.1 |
+| C1 | NEEDS_REAL_DEVICE_TEST | Emergency CALL_PHONE granted Telecom path | Grant CALL_PHONE; start SOS/countdown from an explicit user action | An unconfirmed request is submitted to Android Telecom only after the user-armed flow; the app never records ringing/connection | ☐P ☐F | ☐P ☐F | ☐P ☐F | |
+| C2 | NEEDS_REAL_DEVICE_TEST | CALL_PHONE denied ACTION_DIAL fallback | Deny CALL_PHONE; try long-running sessions and a visible Panic countdown | Check-In/Safe Walk are not armed. Panic remains a foreground countdown and opens the dialer only from the visible Activity; no automatic/background claim | ☐P ☐F | ☐P ☐F | ☐P ☐F | |
+| C3 | NEEDS_REAL_DEVICE_TEST | Native Telecom request failure fallback | Where safely forceable, make the native Telecom request fail | An actionable TTL-bounded notification opens ACTION_DIAL **for the user's target number** after user tap, or a visible failure is surfaced; never `112` | ☐P ☐F | ☐P ☐F | ☐P ☐F | |
 | C4 | NEEDS_REAL_DEVICE_TEST | No SIM / airplane mode | Enable airplane mode or remove SIM; start SOS with the test-safe number | Visible dialer/manual/failure state; app never silently fails; no crash | ☐P ☐F | ☐P ☐F | ☐P ☐F | |
 
 ### D — Sessions & timers (Pro active)
@@ -83,41 +132,42 @@ after them on the same install is not clean evidence.
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | D1 | NEEDS_REAL_DEVICE_TEST | Safe Walk start/check-in/expiry/cancel | Start, check in, cancel; separately run the expiry path | Session is user-visible, cancellable, clears state, escalates only through the expected flow on expiry | ☐P ☐F | ☐P ☐F | ☐P ☐F | |
 | D2 | NEEDS_REAL_DEVICE_TEST | Check-In start/grace/expiry/cancel | Start timer, enter grace, expire; repeat with cancel/reset | Grace and expiry are visible; "I'm safe" in grace is a single PIN-less tap; state clears correctly | ☐P ☐F | ☐P ☐F | ☐P ☐F | |
-| D3 | NEEDS_REAL_DEVICE_TEST | Countdown cancel & PIN gate | Start panic countdown; cancel with PIN (and once with no PIN set) | PIN required when set (wrong PIN hits exponential lockout); one-tap cancel when no PIN is defined | ☐P ☐F | ☐P ☐F | ☐P ☐F | |
-| D4 | NEEDS_REAL_DEVICE_TEST | Single-dispatch dedup (Dart alive) | Start countdown, keep app foreground, let it fire | Exactly ONE call; the +12s native backup is cancelled; no duplicate call within the backup window | ☐P ☐F | ☐P ☐F | ☐P ☐F | HANDOVER §11/3 (in-app half; force-stop race is G6) |
+| D3 | NEEDS_REAL_DEVICE_TEST | Countdown cancel & PIN gate | Try to arm without a PIN; configure PIN; then cancel with wrong and correct PIN | No-PIN state cannot arm; loading/read failure never becomes PINless cancel; only correct PIN plus native acknowledgment shows confirmed cancellation | ☐P ☐F | ☐P ☐F | ☐P ☐F | |
+| D4 | NEEDS_REAL_DEVICE_TEST | Single-dispatch claim (Dart alive) | Start countdown, keep app foreground, let it fire | One generation claim and at most one Telecom request in normal execution; connection remains `unknown`; exact/inexact loser reads durable terminal state | ☐P ☐F | ☐P ☐F | ☐P ☐F | Process-death residual is G6 |
 | D5 | NEEDS_REAL_DEVICE_TEST | Exact alarm allowed | With exact-alarm access granted start Safe Walk, Check-In, countdown backup | No degraded warning; timer scheduling succeeds | ☐P ☐F | ☐P ☐F | ☐P ☐F | |
-| D6 | NEEDS_REAL_DEVICE_TEST | Exact alarm denied/default-denied | Fresh install with exact alarm denied (Android 14 default-deny); start safety timers | Degraded copy shown; inexact fallback used where possible; no crash | ☐P ☐F | ☐P ☐F | ☐P ☐F | Mid-session revoke is G3 |
+| D6 | NEEDS_REAL_DEVICE_TEST | Exact alarm denied/default-denied | Fresh install with exact alarm denied; try Check-In, Safe Walk, scheduled fake call, and Panic | Long-running/scheduled sessions never become `ARMED`; Panic is visible foreground/manual-dial only and has no background guarantee; no crash | ☐P ☐F | ☐P ☐F | ☐P ☐F | Mid-session revoke is G3 |
 
 ### E — Notifications & locale
 
 | ID | Gate | Scenario | Steps | Expected | PIX | SAM | XIA | Notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| E1 | NEEDS_REAL_DEVICE_TEST | Notification allowed | Allow notifications; start Safe Walk or Check-In; background the app and lock the screen | Persistent safety-session notification is visible (incl. lock screen) and names the active session | ☐P ☐F | ☐P ☐F | ☐P ☐F | |
-| E2 | NEEDS_REAL_DEVICE_TEST | Notification denied | Deny notification permission; start a session | App explains reduced timer reliability/visibility; no crash | ☐P ☐F | ☐P ☐F | ☐P ☐F | |
-| E3 | NEEDS_REAL_DEVICE_TEST | FGS notification content (A14/15) | Start a session, background the app | Foreground-service notification clearly names the active safety session | ☐P ☐F | ☐P ☐F | — | |
-| E4 | NEEDS_REAL_DEVICE_TEST | FGS stop/cancel | Cancel / check in / end session | Timer stops; persistent notification clears | ☐P ☐F | ☐P ☐F | ☐P ☐F | |
-| E5 | NEEDS_REAL_DEVICE_TEST | Grace heads-up visible | Let the main timer expire with the app backgrounded | HIGH-importance heads-up grace warning appears (no full-screen intent is declared — heads-up is the expected form), with DnD bypass and vibration | ☐P ☐F | ☐P ☐F | ☐P ☐F | |
-| E6 | NEEDS_REAL_DEVICE_TEST | Turkish notification on English system locale (audit F8) | Set the device SYSTEM LANGUAGE to English; start Check-In; lock the screen; let the main timer expire | The lock-screen emergency/grace notification text appears in TURKISH; actions still work | ☐P ☐F | ☐P ☐F | ☐P ☐F | |
+| E1 | NEEDS_REAL_DEVICE_TEST | Notification allowed | Allow notifications; start Safe Walk or Check-In; background the app and lock the screen | Ongoing safety-session notification exists; secure-lock-screen content follows Android privacy settings and must not expose the contact number | ☐P ☐F | ☐P ☐F | ☐P ☐F | |
+| E2 | NEEDS_REAL_DEVICE_TEST | Notification denied | Deny notification permission; try to start long-running sessions | Session is not armed, readiness explains the blocker, and no crash occurs | ☐P ☐F | ☐P ☐F | ☐P ☐F | |
+| E3 | NEEDS_REAL_DEVICE_TEST | Status-notification truth (A14/15) | Start a session, background the app; inspect App info → active services where available | Ordinary local ongoing notification names the session; no foreground service is running or declared, and the notification is never treated as process-liveness proof | ☐P ☐F | ☐P ☐F | — | |
+| E4 | NEEDS_REAL_DEVICE_TEST | Status notification stop/cancel | Cancel / check in / end session | Timer state and native schedules stop; ongoing status notification clears | ☐P ☐F | ☐P ☐F | ☐P ☐F | |
+| E5 | NEEDS_REAL_DEVICE_TEST | Urgent alert | Let the timer expire with the app backgrounded | A HIGH-importance heads-up/actionable fallback is attempted. No full-screen-intent or DnD-bypass claim exists; the number is absent from lock-screen copy | ☐P ☐F | ☐P ☐F | ☐P ☐F | |
+| E6 | NEEDS_REAL_DEVICE_TEST | Turkish notification on English system locale (audit F8) | Set SYSTEM LANGUAGE to English; start Check-In; lock the screen; let the main timer expire; then unlock | Secure lock screen shows only privacy-appropriate notification presence; after unlock, emergency/grace copy is TURKISH and actions work | ☐P ☐F | ☐P ☐F | ☐P ☐F | |
 
 ### F — Doze / OEM reliability
 
 | ID | Gate | Scenario | Steps | Expected | PIX | SAM | XIA | Notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | F1 | NEEDS_REAL_DEVICE_TEST | Battery optimization not exempted | Without the exemption, start a safety timer and background the app | App explains the optional reliability improvement and the degraded behavior; works degraded | ☐P ☐F | ☐P ☐F | ☐P ☐F | |
-| F2 | NEEDS_REAL_DEVICE_TEST | Doze/app-kill: countdown native backup fires | Start countdown; background + screen off (Doze; `adb shell cmd deviceidle force-idle` may TRIGGER the state, but evidence is the observed call, not adb output) | The native backup call is actually placed to the test-safe number | ☐P ☐F | ☐P ☐F | ☐P ☐F | HANDOVER §11/1 |
-| F3 | NEEDS_REAL_DEVICE_TEST | Doze/app-kill: check-in & safe-walk native escalation fires | Same as F2 for Check-In and Safe Walk expiry | Native escalation calls ONLY the primary contact; visible afterwards | ☐P ☐F | ☐P ☐F | ☐P ☐F | HANDOVER §11/1 |
-| F4 | NEEDS_REAL_DEVICE_TEST | OEM-kill survival | On Samsung/Xiaomi default aggressive battery settings, run a 10+ min session in background | Alarm/FGS survives and fires on time, OR the degraded warning was honestly shown beforehand | — | ☐P ☐F | ☐P ☐F | HANDOVER §11/4 |
+| F2 | NEEDS_REAL_DEVICE_TEST | Doze/process death: countdown native backup fires | Start countdown; background + screen off; use `adb shell am kill PACKAGE`, never `am force-stop`; `adb shell cmd deviceidle force-idle` may trigger Doze, but evidence is the observed request/fallback | At least one request or actionable fallback is observed. Any duplicate is recorded and investigated against the documented request/terminal-commit crash window; no “exactly once” claim is made | ☐P ☐F | ☐P ☐F | ☐P ☐F | |
+| F3 | NEEDS_REAL_DEVICE_TEST | Doze/process death: check-in & safe-walk escalation fires | Same as F2 for Check-In and Safe Walk expiry, using process death rather than Force stop | Native escalation targets ONLY the immutable primary snapshot; at least one request/actionable fallback is observed, and duplicate residual risk is recorded rather than hidden | ☐P ☐F | ☐P ☐F | ☐P ☐F | |
+| F4 | NEEDS_REAL_DEVICE_TEST | OEM-kill survival | On Samsung/Xiaomi default aggressive battery settings, run the repeated deadline suite in background | Armed sessions meet the declared delivery bounds with no missed deadline; any miss fails G7. No FGS survival claim exists | — | ☐P ☐F | ☐P ☐F | |
 
 ### G — DESTRUCTIVE (always LAST on each device, in this order)
 
 | ID | Gate | Scenario | Steps | Expected | PIX | SAM | XIA | Notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| G1 | NEEDS_REAL_DEVICE_TEST | Boot restore (active timer) | Start an active timer; reboot; unlock; reopen app | Active/expired state restored or surfaced honestly. Direct Boot limit (FRESH_AUDIT F4): nothing fires before the FIRST unlock — expected, record it | ☐P ☐F | ☐P ☐F | ☐P ☐F | HANDOVER §11/2 |
-| G2 | NEEDS_REAL_DEVICE_TEST | Boot restore (expired session) | Let main+grace expire across a reboot; unlock | After first unlock the native call to the PRIMARY contact is placed (not just a notification) | ☐P ☐F | ☐P ☐F | ☐P ☐F | HANDOVER §11/2 |
-| G3 | NEEDS_REAL_DEVICE_TEST | Exact alarm revoked mid-session | Revoke exact-alarm access while timers are active | Degraded warning; inexact fallback; timers continue (possibly delayed); no crash | ☐P ☐F | ☐P ☐F | ☐P ☐F | HANDOVER §11/5 |
-| G4 | NEEDS_REAL_DEVICE_TEST | Dart-dead native call with formatted number + BAL visibility (audit F5) | Primary = B5 contact saved as `(0555) 010-20-30`; start Check-In (shortest); FORCE-STOP the app; let main+grace expire | Native backup dials the CORRECT normalized number (verify the ringing number on the second phone). The receiver-launched call/dialer screen is VISIBLE on the device (Background-Activity-Launch check): `startActivity` returning without exception does NOT prove the UI was shown — confirm by eye | ☐P ☐F | ☐P ☐F | ☐P ☐F | |
-| G5 | NEEDS_REAL_DEVICE_TEST | Dispatch-failure fail-safe tour (audit F1) | With a session active: revoke CALL_PHONE in settings → force-stop the app → let main+grace expire. Run across Android 13/14/15 devices | "Call manually" notification appears with the CORRECT number; content visible on the lock screen. Tap **7304** (countdown failure): dialer opens with the number PRE-FILLED, WITHOUT passing the app/PIN gate. Tap **7303** (check-in): app opens; observe the restore/retry flow; with the app PIN lock enabled, record whether the automatic retry is blocked at the PIN gate | ☐P ☐F | ☐P ☐F | ☐P ☐F | HANDOVER §11/8 |
-| G6 | NEEDS_REAL_DEVICE_TEST | Dedup race under force-stop | Force-stop right around expiry; let native fire; reopen the app (Dart resume) | Exactly ONE call in total; on resume Dart skips its own call (ALARM_FIRED = native dispatch succeeded); failure is never silently swallowed | ☐P ☐F | ☐P ☐F | ☐P ☐F | HANDOVER §11/3 (device-race half) |
+| G1 | NEEDS_REAL_DEVICE_TEST | Direct Boot restore (active timer) | Start an active timer; reboot and leave the device locked past boot completion | Device-protected token/generation/deadline is reconciled without Flutter, secure storage, PIN, or RevenueCat; the alarm remains armed | ☐P ☐F | ☐P ☐F | ☐P ☐F | |
+| G2 | NEEDS_REAL_DEVICE_TEST | Direct Boot restore (expired session) | Arrange final deadline to pass during reboot; keep device locked | Native request+actionable fallback are attempted before user unlock; app later shows only typed unconfirmed/manual/failed truth | ☐P ☐F | ☐P ☐F | ☐P ☐F | |
+| G3 | NEEDS_REAL_DEVICE_TEST | Exact alarm revoked mid-session | Revoke exact-alarm access while timers are active | Android cancels the exact alarm and may stop the app; the independently armed inexact backup remains the degraded path. On next user open, degraded state is surfaced/reconciled; delivery may be late; no crash or guarantee claim | ☐P ☐F | ☐P ☐F | ☐P ☐F | [Android alarm permission behavior](https://developer.android.com/develop/background-work/services/alarms); HANDOVER §11/5 |
+| G4 | NEEDS_REAL_DEVICE_TEST | Dart-dead native call with formatted number + BAL visibility (audit F5) | Primary = B5 formatted contact; start shortest Check-In; background it; run `adb shell am kill PACKAGE` (not Force stop); let main+grace expire | Native backup targets the CORRECT normalized number. Confirm by eye whether the call UI/second phone is reached; `startActivity` returning is not proof. If Android BAL blocks UI, the unconfirmed/manual notification path must be visible after unlock | ☐P ☐F | ☐P ☐F | ☐P ☐F | |
+| G5 | NEEDS_REAL_DEVICE_TEST | Dispatch-failure fail-safe tour | With a session active: revoke CALL_PHONE, kill the process (not Force Stop), and let final deadline expire | Actionable notification appears without exposing the number. A user tap atomically consumes the token-gated target and opens the dialer; stale/replayed actions fail closed | ☐P ☐F | ☐P ☐F | ☐P ☐F | |
+| G6 | NEEDS_REAL_DEVICE_TEST | Dispatch race under process death | Kill the process around expiry; let exact/inexact/native/Dart contenders run; reopen app | Normal execution is at-most-one request. Any duplicate in the narrow request-before-terminal-commit crash window is recorded as the declared residual; missed dispatch or false confirmed cancel fails the gate | ☐P ☐F | ☐P ☐F | ☐P ☐F | |
+| G6A | NEEDS_REAL_DEVICE_TEST | Explicit Force stop contract (Android 15+) | Arm a controlled test-safe timer; run `adb shell am force-stop PACKAGE`; wait past deadline; explicitly relaunch app | No autonomous alarm/call is expected while stopped because Android 15 cancels PendingIntents. Relaunch removes stopped state; app/BOOT_COMPLETED restoration surfaces the overdue state honestly without duplicate dispatch | ☐P ☐F | ☐P ☐F | ☐P ☐F | This is platform suspension, not a native-alarm failure |
 | G7 | NEEDS_REAL_DEVICE_TEST | "Delete my data" native wipe | Run full data deletion from the app; then probe behaviorally | Native `korubeni_emergency` prefs are empty: no stale primary number anywhere; arming demands re-adding a contact; no expiry path can ever call the OLD number | ☐P ☐F | ☐P ☐F | ☐P ☐F | HANDOVER §11/6 |
 | G8 | REVENUECAT | Reinstall + billing restore | Reinstall/clear data; tap restore | Active tester purchase restores Pro, or the no-purchase state is explicit | ☐P ☐F | — | — | 1 device (license tester); PLAY_CONSOLE also required |
 
@@ -151,11 +201,11 @@ after them on the same install is not clean evidence.
 | J6 | REVENUECAT | No-offering fallback | With a controlled no-offering dashboard/build state, open the paywall | Fallback/retry UI appears; no crash | ☐P ☐F | — | — | |
 | J7 | REVENUECAT | Billing network failure | Open paywall/purchase/restore while offline | Sanitized error appears; no secret/error dump | ☐P ☐F | — | — | Restore itself is G8 |
 
-### K — Play declaration video
+### K — Release QA evidence video
 
 | ID | Gate | Scenario | Steps | Expected | PIX | SAM | XIA | Notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| K1 | PLAY_CONSOLE | FGS demo video capture | Record per the canonical shot list: [docs/play-submission.md §1 → "Demo video — shot list"](../docs/play-submission.md) | Video shows user-started, visible, time-bound, cancellable behavior; no PII | ☐P ☐F | — | — | 1 device; redacted video for Play Console only |
+| K1 | NEEDS_REAL_DEVICE_TEST | Alarm/status-flow evidence capture | Record per the canonical shot list: [docs/play-submission.md §1 → "QA evidence video — shot list"](../docs/play-submission.md) | Video shows user-started, visible, time-bound, cancellable behavior; all numbers/account data redacted | ☐P ☐F | — | — | Internal release evidence; do not submit as an FGS declaration |
 
 ## 4. HANDOVER §11 coverage map
 
@@ -164,8 +214,8 @@ after them on the same install is not clean evidence.
 | 1. Native backup call actually fires under Doze/app-kill (countdown + check-in/safe-walk) | F2, F3 |
 | 2. Boot-restore expired-session native call | G1, G2 |
 | 3. Dedup race (Dart resume ↔ native fire) | D4, G6 |
-| 4. OEM-kill (Xiaomi/Samsung) FGS + alarm survival | F4 |
-| 5. Exact-alarm denial → degraded inexact + user warning | D6, G3 |
+| 4. OEM-kill (Xiaomi/Samsung) native-alarm behavior | F4 |
+| 5. Exact-alarm denial → fail-closed arming; post-arm revoke → inexact backup | D6, G3 |
 | 6. "Delete my data" → native `korubeni_emergency` really emptied | G7 |
 | 7. Empty-target fail-safe visible/blocking on device | A3 |
 | 8. Dispatch-failure fail-safe tour (F1): manual-call notification, 7304/7303 tap paths, lock screen, BAL visibility | G5 (+ G4 for the BAL eye-check) |

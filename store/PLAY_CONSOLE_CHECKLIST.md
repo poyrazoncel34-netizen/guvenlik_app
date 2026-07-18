@@ -11,7 +11,7 @@ This checklist prepares operator actions only. No dashboard item is marked done 
 | Data Safety | Verify Play Console track requirements; internal testing may be exempt, closed/open/production require submission from `store/DATA_SAFETY_FORM.md` | PLAY_CONSOLE |
 | Content Rating | Complete questionnaire from `store/CONTENT_RATING_ANSWERS.md` | PLAY_CONSOLE |
 | Target Audience | Select adult / 18+ intended audience; do not choose Designed for Families | PLAY_CONSOLE |
-| Foreground service | Submit `specialUse` declaration for Android 14+ target requirements | PLAY_CONSOLE |
+| Foreground service | Do not submit `specialUse`; verify uploaded AAB has no FGS permission/service and remove any stale draft | NEEDS_OPERATOR_ACTION |
 | Exact alarm | Submit declaration if Play Console requires it | PLAY_CONSOLE |
 | Battery optimization | Submit declaration if Play Console requires it | PLAY_CONSOLE |
 | CALL_PHONE | Submit declaration/reviewer note if requested | PLAY_CONSOLE |
@@ -26,10 +26,10 @@ This checklist prepares operator actions only. No dashboard item is marked done 
 
 ## Build Artifact Reference
 
-Production build command must use Play flavor, production env, and operator-supplied secrets:
+Production build command must use Play flavor, production env, release signing, and the RevenueCat `goog_` Android public SDK key (`test_`/`sk_` keys are forbidden):
 
 ```text
-flutter build appbundle --release --flavor play --dart-define=ENV=production --dart-define=REVENUECAT_ANDROID_API_KEY=... --dart-define=ENCRYPTION_KEY=...
+flutter build appbundle --release --flavor play --target-platform android-arm64 --dart-define=ENV=production --dart-define=REVENUECAT_ANDROID_API_KEY=...
 ```
 
 Expected AAB path:
@@ -51,10 +51,10 @@ build/app/outputs/bundle/playRelease/app-play-release.aab
 
 - Panic/SOS is Pro-only.
 - Basic access has no login.
-- `FLAG_SECURE` blocks screenshots for safety/privacy; reviewers can still navigate the app.
-- CALL_PHONE is user-initiated through Panic/SOS with confirmation/countdown and `ACTION_DIAL` fallback.
-- Foreground service is only for active user-started safety sessions with visible persistent notification and no hidden tracking.
-- Exact alarm denial has fallback/degraded behavior; no guarantee language.
+- Global `FLAG_SECURE` is not declared; screenshots remain possible. An in-app privacy mask covers the recent-apps preview while backgrounded.
+- CALL_PHONE is limited to user-armed Panic/SOS, Check-In, and Safe Walk expiry; the result is an unconfirmed Telecom request, with a user-tapped `ACTION_DIAL` fallback notification.
+- The build does not use an Android foreground service. Safety-session notifications are status UI; native alarms own deadlines.
+- Exact alarm denial blocks long-running/scheduled arming; Panic is foreground/manual-dial only and makes no background guarantee.
 
 ## AAB Upload Gate
 

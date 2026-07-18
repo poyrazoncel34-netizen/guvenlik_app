@@ -45,7 +45,7 @@ Baseline issues found:
 - CODE_DONE: Store docs need icon-size, short-description, overclaim, screenshot source-of-truth, Play declaration, billing checklist, QA matrix, and final gate hardening.
 - PLAY_CONSOLE / SIGNING / NEEDS_OPERATOR_ACTION: Play Console forms, app content declarations, target audience, content rating, data safety, privacy/data deletion URLs, signed AAB upload, tester setup, and closed testing evidence remain external.
 - REVENUECAT / PLAY_CONSOLE: RevenueCat/Google Play subscription dashboard setup and license tester billing validation remain external.
-- NEEDS_REAL_DEVICE_TEST: Android 13/14 physical-device safety, permissions, boot, killed-app, notification channel, siren, call, map, and billing QA remain not run.
+- NEEDS_REAL_DEVICE_TEST: API29/API36/16 KB, Pixel/Samsung/Xiaomi, dual-SIM and low-memory physical-device safety, permissions, Direct Boot, process-death, notification, call, map, and billing QA remain not run.
 - NOT_TESTED_RUNTIME: Android runtime behavior, device install, emulator behavior, Play Billing purchase/restore flows, and Play Console dashboard state were not tested because runtime/device/dashboard execution is forbidden.
 
 Runtime/device command confirmation:

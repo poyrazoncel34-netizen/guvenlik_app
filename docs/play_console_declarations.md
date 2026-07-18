@@ -2,82 +2,40 @@
 
 Do not mark any Play Console declaration submitted from this repo. Copy/paste text is prepared here; dashboard completion is PLAY_CONSOLE / NEEDS_OPERATOR_ACTION.
 
-## `USE_FULL_SCREEN_INTENT` (declared 2026-07-06)
+## `USE_FULL_SCREEN_INTENT` — NOT DECLARED
 
-Why: the fake-call ring screen must appear over the lock screen like a real
-incoming call (core personal-safety scenario), and emergency countdown alerts
-must be visible on a locked device. Behavior on denial is graceful: the native
-helper checks `canUseFullScreenIntent()` and falls back to a high-priority
-heads-up notification — no crash, no silent loss (Android 14+ withholds the
-default grant from non call/alarm apps; users can grant it via system settings).
-Console form (if presented): select the incoming-call / time-critical alert use
-case and reference the fake-call + emergency countdown features.
+Status: NOT_APPLICABLE in the current Play build. KoruBeni is not an alarm-clock
+app and does not receive phone or video calls. Its fake-call feature is an
+on-device simulation, so it must not be represented to Play as incoming-call
+functionality. The app also has no dedicated in-app explanation and explicit
+consent flow for this special access.
 
-## Foreground Service `specialUse`
+The manifest therefore does not request `USE_FULL_SCREEN_INTENT`, and urgent
+safety events use a HIGH-importance heads-up notification. Remove any stale FSI
+declaration from Play Console. If the product later adds a compliant consent
+flow, policy and physical lock-screen testing must be repeated before restoring
+the permission.
 
-Status: CODE_DONE copy prepared; PLAY_CONSOLE to submit in Play Console App content.
+## Foreground service declaration — NOT APPLICABLE
 
-Declaration text:
+Status: CODE_DONE. The Play build no longer declares or starts an Android
+foreground service. `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_SPECIAL_USE`, the
+`specialUse` subtype property, and `flutter_background_service` were removed.
 
-```text
-KoruBeni uses a foreground service only for active, user-started safety sessions such as Safe Walk, check-in, and emergency timer reliability. The session shows a visible persistent notification and is tied to the user's active safety flow. The user can stop or cancel the session. The service is not used for ads, analytics, hidden tracking, silent background surveillance, or indefinite background execution.
-```
+The visible notification shown during a user-started safety session is an
+ordinary local status notification. It is not a foreground-service notification
+and must not be described to Play as a process keepalive or timing guarantee.
+Safety timing is owned by native `AlarmManager` scheduling instead:
 
-Suggested Play declaration text:
+- exact `setExactAndAllowWhileIdle` when exact-alarm access is available;
+- an independently cancellable `setAndAllowWhileIdle` post-arm revocation backup;
+- persisted deadline state restored by `BOOT_COMPLETED`;
+- exact schedules restored after exact-alarm access is granted again.
 
-```text
-KoruBeni uses a foreground service during active user-started safety sessions such as Safe Walk and Check-In. The service keeps a visible safety timer active and displays a persistent notification. If the timer expires without check-in, the app escalates to the emergency countdown flow. The service is user-visible, time-bound, and can be cancelled by the user.
-```
-
-Reviewer note:
-
-```text
-The app combines user-visible safety timers, check-in deadlines, Safe Walk sessions, and emergency countdown reliability. These do not fit cleanly into a single standard foreground service type. The work starts from user action, remains visible through notification/UI, and stops when the session ends or is cancelled.
-```
-
-Android 14+ note: apps targeting Android 14+ must declare foreground service types in Play Console App content.
-
-### Type selection rationale
-
-The service is declared as `foregroundServiceType="specialUse"` because the work it performs does not fit any of the named Android 14 foreground service types cleanly:
-
-- `location` would imply continuous location streaming. The keepalive does not stream location; location is only read on demand by the user-initiated map/SOS flows in the regular activity context.
-- `dataSync` is subject to a 6-hour quota on Android 15+ (developer.android.com/about/versions/15/behavior-changes-15) and is not intended for safety-timer reliability.
-- `shortService` is capped at ~3 minutes — too short for check-in/Safe Walk sessions that can run for tens of minutes.
-- `mediaPlayback`, `mediaProjection`, `camera`, `microphone`, `connectedDevice`, `phoneCall`, `health`, `remoteMessaging` — none describe the actual work (a user-perceptible safety-session timer/keepalive that allows alarm and notification paths to fire reliably).
-
-Per Android docs, `specialUse` is the documented fallback when a foreground service does real, user-perceptible work that does not match the other named types. The service is started only by user action, displays a persistent notification, and ends when the user cancels or the session timer expires.
-
-### Reviewer note — why this is NOT a `location` service
-
-KoruBeni's keepalive service intentionally does **not** read or stream location while running. Specifically:
-
-- The bundled service entry that uses `foregroundServiceType="specialUse"` is `id.flutter.flutter_background_service.BackgroundService` (see `android/app/src/main/AndroidManifest.xml`); the service body performs **timer accounting, alarm scheduling, and persistent notification upkeep only**.
-- Geolocator's bundled foreground location service (`com.baseflow.geolocator.GeolocatorLocationService`) is explicitly removed from the merged manifest via `tools:node="remove"`. Location is never accessed in a background/service context.
-- Location is read **on demand only**, in the regular foreground Activity context, when the user opens the map screen or starts an in-app SOS flow. There is no continuous streaming, no geofencing, no background location.
-- `ACCESS_BACKGROUND_LOCATION` is not declared. Only `ACCESS_FINE_LOCATION` / `ACCESS_COARSE_LOCATION`, requested as foreground permissions.
-
-If `foregroundServiceType="location"` were declared instead, it would (a) misrepresent the service's actual behavior to Play review, (b) imply continuous location access that the user did not consent to, and (c) require ACCESS_BACKGROUND_LOCATION review treatment that does not apply here. `specialUse` is the accurate type.
-
-### Subtype declaration
-
-The manifest declares the special-use subtype as a `<property>` on the service entry, per Android requirements:
-
-```xml
-<property
-    android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-    android:value="emergency_checkin_keepalive" />
-```
-
-The subtype value (`emergency_checkin_keepalive`) describes the use case in human-readable form for Play review.
-
-### Android 15 BOOT_COMPLETED context
-
-Android 15 restricts foreground service start from `BOOT_COMPLETED` for the following types: `dataSync`, `mediaPlayback`, `mediaProjection`, `phoneCall`, `microphone`, and `camera` (developer.android.com/about/versions/15/behavior-changes-15). `specialUse` and `location` are not in that restricted list, so KoruBeni's boot-restore path (re-arming an active check-in/Safe Walk after device reboot) remains supported on Android 15+.
-
-### Reviewer demo
-
-A 30–60 second physical-device recording showing: (1) user starts Safe Walk or check-in from the in-app button, (2) persistent notification with Stop action appears, (3) user taps Stop or session expires, (4) notification clears. Recording must avoid real PII (use test contacts and never dial real 112 — only verify dialer pre-fill).
+Play Console action: do not submit a `specialUse` declaration or FGS demo for
+this build. If an older draft declaration exists in Console, remove it before
+submission. A release-bundle manifest inspection must confirm that no custom or
+transitive foreground-service entry has returned.
 
 ## `SCHEDULE_EXACT_ALARM`
 
@@ -86,13 +44,13 @@ Status: CODE_DONE copy prepared; PLAY_CONSOLE to submit if Play Console requires
 Declaration text:
 
 ```text
-KoruBeni uses exact alarms for user-started safety timers such as Check-In, Safe Walk expiry, and emergency countdown backup. These timers are safety-critical because delayed execution may prevent timely emergency escalation. If exact alarm access is not granted, the app continues with degraded/inexact scheduling and informs the user that reliability may be reduced.
+KoruBeni uses exact alarms for user-started safety timers such as Check-In, Safe Walk expiry, and emergency countdown backup. These timers are safety-critical because delayed execution may prevent timely emergency escalation. If exact alarm access is not granted, Check-In, Safe Walk, and scheduled fake-call sessions are not armed; Panic is limited to a visible foreground countdown and manual dial path without a background guarantee.
 ```
 
 Denied/fallback note:
 
 ```text
-If exact alarm access is denied or unavailable, the app falls back where possible to inexact alarms, foreground-service/session state, and local timer paths. The app presents degraded reliability messaging and does not guarantee that Android/OEM background behavior cannot delay timers.
+The independently keyed inexact alarm is a backup only after exact scheduling has succeeded, so a later revocation does not silently erase every schedule. It is not used to mislabel an exact-denied long-running session as armed.
 ```
 
 ## `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS`
@@ -112,15 +70,15 @@ Status: CODE_DONE copy prepared; PLAY_CONSOLE to submit if Play Console requires
 Reviewer note:
 
 ```text
-KoruBeni is a personal safety app. CALL_PHONE is used only when the user explicitly starts an emergency SOS flow and grants phone permission. The app attempts to call the user's pre-configured primary emergency contact (a real contact phone number); it does not call 112 or any official emergency short code. If CALL_PHONE is denied, unavailable, or direct calling fails, the app falls back to ACTION_DIAL so the user can manually confirm the call. The app does not read call logs and does not place background calls without user action.
+KoruBeni is a personal safety app. CALL_PHONE is used only for a Panic/SOS, Check-In, or Safe Walk safety session that the user explicitly arms. When a countdown or long-session deadline expires, Android may submit an unconfirmed call request to the system Telecom service for the user's immutable pre-selected primary contact. The app never synthesizes 112/911 or another official short code and never claims that a call rang or connected. If automatic submission cannot be used, an actionable notification provides a user-tapped ACTION_DIAL path. The app does not read call logs.
 ```
 
 ## `FLAG_SECURE`
 
-Status: CODE_DONE copy prepared; PLAY_CONSOLE to include as reviewer note if screenshots or review access are affected.
+Status: NOT DECLARED; reviewer copy must describe the actual recents privacy mask.
 
 ```text
-KoruBeni blocks screenshots in the app with FLAG_SECURE for user safety and privacy. Reviewers can still navigate the app normally. If Play review needs visual evidence, use the provided store screenshots and reviewer instructions rather than expecting OS screenshots from protected screens.
+KoruBeni does not set Android FLAG_SECURE globally. Ordinary screenshots remain possible. When the app moves to the background, an in-app privacy mask obscures sensitive content in the recent-apps preview; this is not an OS-level screenshot prohibition.
 ```
 
 ## Target Audience
@@ -129,6 +87,17 @@ Status: CODE_DONE recommendation prepared; PLAY_CONSOLE to submit.
 
 ```text
 KoruBeni is intended for adults / 18+ users. Do not enter Designed for Families unless the product decision, copy, legal basis, and child-safety review explicitly change.
+```
+
+## Health Apps Declaration
+
+Status: CODE_DONE answer prepared; PLAY_CONSOLE submission is still required.
+
+```text
+The uploaded build does not provide a health feature, medical diagnosis,
+health measurement, treatment, or Health Connect integration. Select “No
+health features” for the Health Apps Declaration. Re-evaluate from the exact
+AAB if the product scope changes.
 ```
 
 ## Data Safety Summary
@@ -185,7 +154,7 @@ Status: CODE_DONE copy prepared; PLAY_CONSOLE / NEEDS_OPERATOR_ACTION to submit 
 Sensitive permissions:
 
 ```text
-KoruBeni requests only permissions needed for user-facing safety features: location for map/location sessions, CALL_PHONE for user-started SOS direct-call attempts with ACTION_DIAL fallback, POST_NOTIFICATIONS for visible timer/session alerts, SCHEDULE_EXACT_ALARM for user-started safety timers with degraded fallback, foreground service permissions for visible active safety sessions, and Google Play Billing for optional Pro subscriptions.
+KoruBeni requests only permissions needed for user-facing safety features: location for map/location sessions, CALL_PHONE for user-started SOS direct-call attempts with ACTION_DIAL fallback, POST_NOTIFICATIONS for visible timer/session alerts, SCHEDULE_EXACT_ALARM for user-started safety timers with fail-closed arming, and Google Play Billing for optional Pro subscriptions. It does not request an Android foreground-service permission.
 ```
 
 No READ_CONTACTS:

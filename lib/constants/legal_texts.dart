@@ -7,13 +7,13 @@
 class LegalTexts {
   // ── Sürüm Numaraları ──────────────────────────────────────────────────────
   static const String termsVersion = '3.1.0';
-  static const String kvkkVersion = '3.2.0';
+  static const String kvkkVersion = '3.3.0';
   static const String lastUpdated = '21 Mayıs 2026';
   static const String lastUpdatedEn = 'May 21, 2026';
   // KVKK/Gizlilik/Aydınlatma belgeleri kendi revizyon tarihini taşır;
   // Kullanım Şartları (termsVersion) içerik değişmediği için lastUpdated'ı korur.
-  static const String lastUpdatedKvkk = '6 Temmuz 2026';
-  static const String lastUpdatedKvkkEn = 'July 6, 2026';
+  static const String lastUpdatedKvkk = '18 Temmuz 2026';
+  static const String lastUpdatedKvkkEn = 'July 18, 2026';
 
   // ── Kullanım Sözleşmesi — Türkçe ─────────────────────────────────────────
   static const String termsOfServiceTr =
@@ -250,6 +250,8 @@ Güvenlik          | PIN kodu (şifreli)                | Uygulama erişim kontr
 Cihaz             | Cihaz tipi, OS versiyonu          | Teknik uyumluluk & rıza logu          | Meşru menfaat
 Yasal Rıza Logu   | Rıza türü, tarih, versiyon        | KVKK uyum kaydı                       | Hukuki yükümlülük
 Abonelik (Pro)    | IP, cihaz bilgisi, abone kimliği  | Pro abonelik doğrulama (RevenueCat)   | Sözleşmenin ifası
+Harita ağı        | IP, User-Agent, karo koordinatı   | OpenStreetMap karolarını göstermek    | Açık rıza
+Aktif oturum      | Numara, token, tür ve son tarihler| Alarmı reboot/Doze sırasında sürdürmek| Sözleşmenin ifası
 
 ──────────────────────────────────────
 3. VERİLERİN İŞLENME AMACI
@@ -262,11 +264,11 @@ Abonelik (Pro)    | IP, cihaz bilgisi, abone kimliği  | Pro abonelik doğrulama
 ──────────────────────────────────────
 4. VERİ AKTARIMI
 ──────────────────────────────────────
-Kişisel verileriniz geliştirici sunucusuna aktarılmaz. Uygulama verilerinin ana kopyası cihazınızda saklanır. Çevrimiçi harita görünümü OpenStreetMap karo servisine ağ isteği yapabilir; isteğe bağlı Pro abonelik Google Play Billing üzerinden yönetilir ve RevenueCat abonelik/yetki durumunu doğrulamaya yardımcı olabilir; acil akış otomatik mesaj göndermez.
+Kişisel verileriniz geliştiriciye ait bir backend sunucusuna aktarılmaz. Uygulama verilerinin ana kopyası cihazınızda saklanır. Çevrimiçi harita açıldığında OpenStreetMap karo sağlayıcısına IP adresi, uygulamanın User-Agent bilgisi ve istenen karo koordinatları gider; bu koordinatlardan görüntülenen yaklaşık harita alanı çıkarılabilir. İsteğe bağlı Pro abonelik Google Play Billing üzerinden yönetilir; RevenueCat abonelik/yetki durumunu doğrulamaya yardımcı olabilir. Acil akış otomatik mesaj göndermez.
 
-İsteğe bağlı Pro aboneliği kullanıldığında, abonelik doğrulaması için sınırlı teknik veri (IP adresi, cihaz modeli ve işletim sistemi bilgisi, anonim abone kimliği, satın alma olayları) sunucuları yurt dışında (ABD) bulunan hizmet sağlayıcı RevenueCat'e iletilir; bu, KVKK Madde 9 kapsamında yurt dışına aktarım niteliğindedir. Uygulama reklam/atıf kimliği toplamaz; Pro kullanılmadığında bu akış gerçekleşmez. Harita ve Google Play Billing sağlayıcılarının teknik ağ davranışları kendi politikalarına tabidir.
+RevenueCat yalnız güncel Kullanım Şartları ve KVKK akışı tamamlandıktan sonra; kullanıcı Pro/paywall/restore ekranına girdiğinde veya cihazda daha önce doğrulanmış Pro kullanımına ilişkin yalnız başlatma amacı taşıyan yerel ipucu varsa yapılandırılır. Bu ipucu Pro hakkı kanıtı değildir. Yapılandırıldığında abonelik doğrulaması için sınırlı teknik veri (IP adresi, cihaz/işletim sistemi bilgisi, anonim abone kimliği ve satın alma olayları) RevenueCat'e; ödeme olayları Google Play'e aktarılabilir. RevenueCat, Google ve OpenStreetMap sağlayıcılarının yurt dışında veri işlemesi KVKK Madde 9 kapsamındadır ve yayımdan önce uygulanabilir aktarım mekanizması ile hizmet sağlayıcı kayıtları veri sorumlusu tarafından tamamlanır. Uygulama reklam/atıf kimliği toplamaz.
 
-Uygulama tüm rehber listesini okumaz. Yalnızca kullanıcının seçtiği veya girdiği acil kişiler cihazda yerel olarak saklanır.
+Uygulama tüm rehber listesini okumaz. Yalnızca kullanıcının sistem seçicisinde seçtiği veya elle girdiği acil kişiler uygulamaya özel güvenli cihaz depolamasında saklanır.
 
 ──────────────────────────────────────
 5. VERİ SAKLAMA SÜRELERİ
@@ -278,13 +280,16 @@ Uygulama tüm rehber listesini okumaz. Yalnızca kullanıcının seçtiği veya 
 • Rıza logları         : Uygulama kullanıldığı sürece; cihaz verisini silene kadar
 • Abonelik verisi      : Doğrulama amacıyla RevenueCat/Google Play tarafından kendi saklama politikaları süresince işlenir; geliştirici ayrıca saklamaz
 • PIN (şifreli)        : Siz değiştirene veya silene kadar
+• Aktif oturum zarfı   : Oturum terminal duruma gelene, doğrulanmış iptal veya cihaz verisi silme tamamlanana kadar; iptalde hedef numara hemen silinir
+• Manuel arama fallback: Bildirim eylemi kullanıldığında, bildirim kapatıldığında veya en geç 24 saat sonunda silinir
 
 ──────────────────────────────────────
 6. VERİ GÜVENLİĞİ
 ──────────────────────────────────────
 • PIN bilgisi FlutterSecureStorage üzerinde saklanmaktadır.
-• Acil kişi verisi cihaz içi yerel veritabanında saklanır; yedekleme kapalıdır ve gereksiz kopyalar temizlenir.
-• Uygulama, geliştirici backend'ine kişisel veri göndermemektedir; harita, Google Play Billing ve RevenueCat sağlayıcıları kendi teknik ağ davranışlarına sahip olabilir.
+• Acil kişi verisi uygulamaya özel güvenli cihaz depolamasında saklanır; Android yedekleme kapalıdır ve eski gereksiz kopyalar temizlenir.
+• Reboot öncesi kurulmuş güvenlik oturumunu sürdürebilmek için cihaz kilidi açılmadan erişilebilen uygulamaya özel alanda yalnız protokol/sürüm, rastgele token, generation, oturum türü, normalize hedef, son tarihler ve zamanlama modu tutulur. PIN, kişi adı, konum, geçmiş, RevenueCat kimliği ve serbest metin log bu alana yazılmaz.
+• Uygulama geliştirici backend'ine kişisel veri göndermez; OpenStreetMap, Google Play Billing ve RevenueCat ağ aktarımları yukarıda ayrıca açıklanmıştır.
 
 ──────────────────────────────────────
 7. ÜÇÜNCÜ KİŞİ VERİ SAHİPLERİNİN HAKLARI
@@ -351,6 +356,8 @@ Security          | PIN code (encrypted)              | App access control      
 Device            | Device type, OS version           | Technical compatibility & consent log | Legitimate interest
 Legal Consent Log | Consent type, date, version       | KVKK compliance record                | Legal obligation
 Subscription (Pro)| IP, device info, subscriber ID    | Pro subscription verification         | Contract performance
+Map network       | IP, User-Agent, tile coordinates  | Display OpenStreetMap tiles            | Explicit consent
+Active session    | Number, token, kind and deadlines | Survive reboot/Doze alarm delivery      | Contract performance
 
 ──────────────────────────────────────
 3. PURPOSES OF PROCESSING
@@ -363,11 +370,11 @@ Subscription (Pro)| IP, device info, subscriber ID    | Pro subscription verific
 ──────────────────────────────────────
 4. DATA TRANSFER
 ──────────────────────────────────────
-Your personal data is not transferred to developer servers. The primary copy of app data is stored on your device. Online map display may request OpenStreetMap tiles; optional Pro subscription handling is managed through Google Play Billing and RevenueCat may help verify subscription/entitlement status; the emergency flow does not send automatic messages.
+Your personal data is not transferred to a developer-operated backend. The primary copy of app data is stored on your device. When the online map is opened, the OpenStreetMap tile provider receives the IP address, the app User-Agent, and requested tile coordinates; those coordinates can reveal the approximate map viewport. Optional Pro subscriptions are managed through Google Play Billing, and RevenueCat may help verify subscription/entitlement status. The emergency flow does not send automatic messages.
 
-When the optional Pro subscription is used, limited technical data (IP address, device model and OS information, an anonymous subscriber ID, purchase events) is transmitted to RevenueCat, a service provider whose servers are located abroad (USA), to verify the subscription; this constitutes a cross-border transfer under Article 9 of KVKK. The app does not collect advertising/attribution identifiers; this flow does not occur when Pro is not used. Map and Google Play Billing providers' technical network behavior is governed by their own policies.
+RevenueCat is configured only after the current Terms and KVKK flow is completed and the user enters a Pro/paywall/restore flow, or when a local prior-Pro initialization hint exists. That hint is not proof of entitlement. Once configured, limited technical data (IP address, device/OS information, an anonymous subscriber ID, and purchase events) may be transferred to RevenueCat; payment events may be transferred to Google Play. Processing abroad by RevenueCat, Google, and OpenStreetMap falls under Article 9 of KVKK; the applicable transfer mechanism and provider records must be completed by the data controller before publication. The app does not collect advertising/attribution identifiers.
 
-The app does not read the full contacts list. It stores only emergency contacts selected or entered by the user, locally on the device.
+The app does not read the full contacts list. It stores only emergency contacts selected through the system picker or entered by the user in app-private secure on-device storage.
 
 ──────────────────────────────────────
 5. DATA RETENTION PERIODS
@@ -379,13 +386,16 @@ The app does not read the full contacts list. It stores only emergency contacts 
 • Consent logs             : While the app is in use; until device data deletion
 • Subscription data        : Processed by RevenueCat/Google Play under their own retention policies for verification; not additionally stored by the developer
 • PIN (encrypted)          : Until you change or delete it
+• Active-session envelope  : Until terminal state, acknowledged cancellation, or completed device-data deletion; the target is removed immediately on cancellation
+• Manual-call fallback     : Removed on action, dismissal, or no later than 24 hours
 
 ──────────────────────────────────────
 6. DATA SECURITY
 ──────────────────────────────────────
 • PIN information is stored in FlutterSecureStorage.
-• Emergency contact data is stored in the local on-device database; backup is disabled and unnecessary legacy copies are cleaned up.
-• The application does not send personal data to a developer backend; map, Google Play Billing, and RevenueCat providers may have their own technical network behavior.
+• Emergency contact data is stored in app-private secure on-device storage; Android backup is disabled and unnecessary legacy copies are cleaned up.
+• To preserve a previously armed safety session across reboot, the app-private device-protected area contains only protocol/schema version, random token, generation, session kind, normalized target, deadlines, and scheduling mode. PIN, contact name, location, history, RevenueCat ID, and free-text logs are not stored there.
+• The application does not send personal data to a developer backend; OpenStreetMap, Google Play Billing, and RevenueCat network transfers are separately disclosed above.
 
 ──────────────────────────────────────
 7. THIRD-PARTY DATA SUBJECT RIGHTS

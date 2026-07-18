@@ -15,9 +15,9 @@ Never place a real emergency call unless the release owner has a controlled, wri
 | NEEDS_REAL_DEVICE_TEST | No SIM / airplane mode | Enable no-SIM or airplane-mode test state and start SOS with test-safe number | App shows dialer/manual/failure path visibly; no crash | NOT_RUN | TBD |
 | NEEDS_REAL_DEVICE_TEST | Notification allowed | Allow notifications, start Safe Walk or Check-In, background app | Persistent safety-session notification is visible and names the active session | NOT_RUN | TBD |
 | NEEDS_REAL_DEVICE_TEST | Notification denied | Deny notifications, start Safe Walk or Check-In | App explains reduced timer reliability/visibility and does not crash | NOT_RUN | TBD |
-| NEEDS_REAL_DEVICE_TEST | Foreground service cancel | Start Safe Walk or Check-In, then cancel/check in | Timer stops and foreground notification clears | NOT_RUN | TBD |
+| NEEDS_REAL_DEVICE_TEST | Session cancellation | Start Safe Walk or Check-In, then cancel/check in | Native exact/inexact schedules are cancelled and the status notification clears | NOT_RUN | TBD |
 | NEEDS_REAL_DEVICE_TEST | Exact alarm allowed | Grant exact alarm access, start Safe Walk, Check-In, countdown backup | No degraded exact-alarm warning; scheduling succeeds | NOT_RUN | TBD |
-| NEEDS_REAL_DEVICE_TEST | Exact alarm denied | Deny/revoke exact alarm access on Android 14+, start safety timers | Degraded copy appears and inexact fallback is used where possible | NOT_RUN | TBD |
+| NEEDS_REAL_DEVICE_TEST | Exact alarm denied | Deny exact alarm access, then try Check-In, Safe Walk, scheduled fake call, and Panic | Long-running/scheduled sessions are not armed; Panic is foreground/manual-dial only with no background promise; no crash | NOT_RUN | TBD |
 | NEEDS_REAL_DEVICE_TEST | Boot restore | Start active timer, reboot, reopen app | Timer restores or expired state is surfaced honestly | NOT_RUN | TBD |
 | NEEDS_REAL_DEVICE_TEST | Contacts picker select/cancel | Select a test contact, then repeat and cancel picker | Only selected contact is stored; cancel stores nothing; no READ_CONTACTS prompt | NOT_RUN | TBD |
 | NEEDS_REAL_DEVICE_TEST | Manual contact entry | Add a test contact manually | Contact saves locally and can be selected as emergency contact | NOT_RUN | TBD |

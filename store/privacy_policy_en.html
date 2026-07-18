@@ -214,7 +214,7 @@
         <h2>7. Data Security</h2>
         <ul>
             <li>PIN code is stored with secure device storage where supported by the operating system</li>
-            <li>Emergency contact records are stored in the app's local on-device database</li>
+            <li>Emergency contacts are stored in app-private secure on-device storage; an armed safety session uses only a minimal token/deadline/normalized-target envelope</li>
             <li>Fake call settings and optional avatar files are stored locally on the device</li>
             <li>No app data is sent to a developer-operated cloud backend; online map tiles, Google Play Billing, and RevenueCat may have their own technical network behavior</li>
         </ul>
@@ -223,6 +223,7 @@
         <ul>
             <li>Profile data: Until the user deletes it on the device</li>
             <li>Emergency contacts: Until the user deletes them on the device</li>
+            <li>Armed safety target: Retained in device-protected app storage until confirmed cancel/reset or until an actionable fallback ends after terminal dispatch. Fallback access expires on action, dismiss, or a maximum logical 24-hour TTL; if the device is powered off, the physical record is purged at the next boot/reconciliation. The notification and PendingIntent do not carry the phone number.</li>
             <li>Location data: Used only during active emergency and sharing flows</li>
             <li>Fake call settings and avatar files: Until the user deletes app data on the device</li>
             <li>Legal consent log: Retained on-device for the duration of app usage</li>
@@ -293,7 +294,7 @@
             <li><strong>Deletion:</strong> Delete app data by clearing storage or uninstalling the app</li>
             <li><strong>Permission management:</strong> Change location, phone, and notification permissions at any
                 time</li>
-            <li><strong>Data portability:</strong> Request a copy of your data</li>
+            <li><strong>Access and information:</strong> Request information about processing and, where applicable, a copy of data; this is not presented as a separate KVKK data-portability right</li>
             <li><strong>Right to object:</strong> Object to processing of your data</li>
             <li><strong>Right to complain:</strong> File a complaint with the Personal Data Protection Board (KVKK Kurulu)</li>
         </ul>
@@ -303,7 +304,7 @@
 
         <h2>12. Third-Party Services</h2>
         <ul>
-            <li><strong>OpenStreetMap:</strong> Map display (tile data only, no personal data sent)</li>
+            <li><strong>OpenStreetMap:</strong> Online map display. The network request can expose the device IP address, User-Agent, and requested tile coordinates (which can imply the viewed map area); no PIN or emergency-contact record is intentionally included.</li>
             <li><strong>Google Play Billing:</strong> Optional Pro subscription purchase, renewal, cancellation, and restore handling</li>
             <li><strong>RevenueCat:</strong> Optional Pro subscription verification and entitlement management</li>
         </ul>

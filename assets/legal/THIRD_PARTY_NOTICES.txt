@@ -1,0 +1,7 @@
+KoruBeni THIRD-PARTY SOFTWARE NOTICES
+
+NOT A PRODUCTION CANDIDATE
+
+The exact dependency review is incomplete. The tagged release workflow must
+replace this file with output from scripts/generate_third_party_notices.py and
+prove byte-for-byte equality before an AAB can be accepted.

@@ -6,36 +6,32 @@ Dashboard completion is PLAY_CONSOLE / NEEDS_OPERATOR_ACTION. This file only pre
 
 | Permission / App content item | Manifest / app use | Status |
 | --- | --- | --- |
-| Foreground service `specialUse` | Active user-started safety sessions with visible notification | CODE_DONE copy prepared; PLAY_CONSOLE submit |
+| Foreground service | Not declared or started in the Play build | NOT_APPLICABLE; verify uploaded AAB and remove stale Console draft |
 | `SCHEDULE_EXACT_ALARM` | User-visible safety deadlines/timers | CODE_DONE copy prepared; PLAY_CONSOLE submit if required |
 | `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` | Optional reliability improvement for active safety sessions | CODE_DONE copy prepared; PLAY_CONSOLE submit if required |
 | `CALL_PHONE` | User-initiated Panic/SOS call flow after confirmation/countdown | CODE_DONE copy prepared; PLAY_CONSOLE submit if required |
-| `USE_FULL_SCREEN_INTENT` | Fake-call ring screen + emergency countdown alerts over lock screen | CODE_DONE (declared 2026-07-06); PLAY_CONSOLE submit if required |
+| `USE_FULL_SCREEN_INTENT` | Not requested; urgent events use heads-up notifications | NOT_APPLICABLE; remove stale Console declaration |
 | `POST_NOTIFICATIONS` | User-visible safety notifications/reminders | CODE_DONE copy prepared |
 | Message/SMS permissions | Not present in this Android Play release | CODE_DONE |
 | `READ_PHONE_STATE` | Not present; fake call is an on-device simulation | CODE_DONE |
 | `ACCESS_BACKGROUND_LOCATION` | Not present | CODE_DONE |
 
-## Foreground Service `specialUse`
+## Foreground Service — NOT APPLICABLE
 
-```text
-KoruBeni uses a foreground service only for active, user-started safety sessions such as Safe Walk, check-in, and emergency timer reliability. The session shows a visible persistent notification and is tied to the user's active safety flow. The user can stop or cancel the session. The service is not used for ads, analytics, hidden tracking, silent background surveillance, or indefinite background execution.
-```
+The Play build does not request `FOREGROUND_SERVICE` or
+`FOREGROUND_SERVICE_SPECIAL_USE` and does not declare/start a custom foreground
+service. The session notification is ordinary status UI. Do not submit the old
+`specialUse` copy; remove any stale Console draft and confirm the uploaded AAB
+manifest has no transitive FGS entry. See
+[docs/play_console_declarations.md](../docs/play_console_declarations.md).
 
-Subtype is declared in `AndroidManifest.xml` as `emergency_checkin_keepalive` via the `PROPERTY_SPECIAL_USE_FGS_SUBTYPE` property on the service entry.
+## `USE_FULL_SCREEN_INTENT` — NOT APPLICABLE
 
-For the full type-selection rationale (why `specialUse` over `location`, `dataSync`, `shortService`, etc.) and the Android 15 boot-restriction context, see [docs/play_console_declarations.md](../docs/play_console_declarations.md).
-
-## `USE_FULL_SCREEN_INTENT`
-
-Declared 2026-07-06. Core-functionality justification: the fake-call feature must
-present a realistic incoming-call screen over the lock screen (personal-safety
-exit scenario), and emergency countdown alerts must be visible when the device is
-locked. The app never crashes on denial: `EmergencyNotificationHelper` checks
-`NotificationManager.canUseFullScreenIntent()` and degrades to a high-priority
-heads-up notification (Android 14+ may withhold the grant for non call/alarm
-apps; the user can enable it in system settings). If Play Console presents an
-FSI declaration form, answer with this justification.
+The current Play manifest does not request this special access. KoruBeni is not
+an alarm-clock or incoming phone/video-call app, and the simulated fake-call
+feature must not be presented as a real calling-app use case. Urgent events use
+a HIGH-importance heads-up notification. Remove any stale FSI declaration from
+Play Console rather than submitting the former justification.
 
 ## `SCHEDULE_EXACT_ALARM`
 
@@ -46,7 +42,7 @@ KoruBeni uses exact alarms for user-visible safety deadlines and timers, includi
 Fallback:
 
 ```text
-If exact alarm access is denied or unavailable, the app falls back where possible to inexact alarms, foreground-service/session state, and local timer paths. The app presents degraded reliability messaging and does not guarantee that Android/OEM background behavior cannot delay timers.
+If exact alarm access is denied or unavailable, Check-In, Safe Walk, and scheduled fake-call sessions are not armed. Panic may continue only as a visible foreground countdown ending in `ACTION_DIAL`; no background guarantee is made. The independently keyed inexact alarm is created only after exact scheduling succeeds, as a residual backup for a later revocation.
 ```
 
 ## `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS`
@@ -60,19 +56,19 @@ KoruBeni requests battery optimization exemption only as an optional reliability
 Category: Safety / Emergency
 
 ```text
-CALL_PHONE is used only in the user-initiated Panic/SOS flow. The user explicitly starts the flow and sees a confirmation/countdown before any call attempt. If direct calling is denied, unavailable, or unsafe to use, the app falls back to ACTION_DIAL so the user can manually place the call. KoruBeni does not claim official 112/police integration and does not place hidden background calls.
+CALL_PHONE is limited to user-armed Panic/SOS, Check-In, and Safe Walk expiry. Android may submit an unconfirmed Telecom request for the immutable pre-selected contact; the app never claims ringing or connection. If automatic submission cannot be used, an actionable notification exposes a user-tapped ACTION_DIAL path. KoruBeni has no official 112/police integration and never generates official short codes.
 ```
 
 ## `POST_NOTIFICATIONS`
 
 ```text
-Notifications are used for visible safety timer/session reliability and reminders in user-started flows. They are not used for ads, marketing, analytics, hidden tracking, silent surveillance, or indefinite background execution. The user can deny notification permission and the app must show degraded behavior where relevant.
+Notifications are used for visible safety timer/session reliability and reminders in user-started flows. They are not used for ads, marketing, analytics, hidden tracking, silent surveillance, or indefinite background execution. If notifications or the high-importance alert channel are unavailable, long-running safety sessions are not armed; the denial is surfaced without a crash.
 ```
 
 ## `FLAG_SECURE` Reviewer Note
 
 ```text
-KoruBeni blocks screenshots in the app with FLAG_SECURE for user safety and privacy. Reviewers can still navigate the app normally. Use the provided store screenshots and reviewer instructions for visual review evidence.
+KoruBeni does not set Android FLAG_SECURE globally. Screenshots remain possible. The app uses an in-app privacy mask only for its background/recent-apps preview.
 ```
 
 ## Video / Manual Demo Notes

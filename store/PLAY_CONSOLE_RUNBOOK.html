@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KoruBeni — Play Console Operatör Runbook + Quiz (v1.0.0)</title>
+<style>
+  :root{--ink:#1a1a2e;--mut:#5a5a72;--line:#e2e2ea;--ok:#0a7d33;--warn:#b45309;--crit:#b91c1c;--bg:#fafafa;--card:#fff;--acc:#1d4ed8}
+  *{box-sizing:border-box}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;color:var(--ink);background:var(--bg);margin:0;padding:24px;line-height:1.55}
+  main{max-width:880px;margin:0 auto}
+  h1{font-size:1.5rem;margin:0 0 4px}
+  h2{font-size:1.15rem;border-bottom:2px solid var(--line);padding-bottom:6px;margin-top:36px}
+  h3{font-size:1rem;margin-bottom:6px}
+  .sub{color:var(--mut);margin:0 0 20px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 20px;margin:14px 0}
+  .warn{border-left:4px solid var(--warn);background:#fffbeb}
+  .crit{border-left:4px solid var(--crit);background:#fef2f2}
+  .ok{border-left:4px solid var(--ok);background:#f0fdf4}
+  table{border-collapse:collapse;width:100%;font-size:.92rem}
+  th,td{border:1px solid var(--line);padding:7px 10px;text-align:left;vertical-align:top}
+  th{background:#f4f4f8}
+  code{background:#eef0f6;padding:1px 5px;border-radius:4px;font-size:.88em}
+  pre{background:#1a1a2e;color:#e8e8f0;padding:12px 16px;border-radius:8px;overflow-x:auto;font-size:.85rem}
+  .tag{display:inline-block;font-size:.72rem;font-weight:700;padding:2px 8px;border-radius:99px;vertical-align:middle}
+  .t-op{background:#fef3c7;color:#92400e}.t-done{background:#dcfce7;color:#166534}.t-wait{background:#fee2e2;color:#991b1b}
+  ul{padding-left:22px}
+  .q{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 18px;margin:12px 0}
+  .q p{font-weight:600;margin:0 0 8px}
+  .q label{display:block;padding:6px 10px;border-radius:6px;cursor:pointer;font-weight:400}
+  .q label:hover{background:#f0f2f8}
+  .expl{display:none;margin-top:8px;padding:8px 12px;border-radius:6px;font-size:.9rem}
+  .expl.right{display:block;background:#f0fdf4;border-left:3px solid var(--ok)}
+  .expl.wrong{display:block;background:#fef2f2;border-left:3px solid var(--crit)}
+  #score{font-size:1.1rem;font-weight:700;padding:16px 20px;border-radius:10px;margin-top:20px}
+  button{background:var(--acc);color:#fff;border:none;border-radius:8px;padding:10px 22px;font-size:1rem;font-weight:600;cursor:pointer}
+  button:hover{opacity:.9}
+  @media print{.q label{pointer-events:none}button{display:none}}
+</style>
+</head>
+<body>
+<main>
+<h1>KoruBeni v1.0.0 — Play Console Operatör Runbook</h1>
+<p class="sub">Derleme tarihi: 7 Temmuz 2026 · Kaynaklar: <code>docs/audit/session-2026-07-06-uygulama.md</code> (tur 1–3),
+<code>docs/audit/release_readiness_research_2026-06-27.md</code>, <code>store/PLAY_CONSOLE_*.md</code>, <code>store/DATA_SAFETY_FORM.md</code>.
+Repo denetimi Console'da hiçbir adımı "yapılmış" sayamaz — her Console adımı operatör kanıtı ister.</p>
+
+<div class="card crit">
+<strong>Bu runbook'un tek amacı:</strong> denetimlerin açık bıraktığı 1 numaralı riski kapatmak —
+<em>"kod hazır ama Play Console panelinin doğru doldurulduğu kanıtlanamaz."</em>
+Sondaki quizde 12/12 almadan üretim gönderimi yapma.
+</div>
+
+<h2>0. Önkoşullar (yüklemeden ÖNCE)</h2>
+<div class="card">
+<ul>
+<li><span class="tag t-op">OPERATÖR</span> <strong>Play App Signing'e kaydol.</strong> Uygulama henüz yayınlanmadığı için anahtar seçimi serbest; ilk yüklemeden sonra kalıcılaşır.</li>
+<li><span class="tag t-done">HAZIR</span> <strong>Doğru keystore:</strong> <code>android/app/korubeni_keystore_release.jks</code>, alias <code>upload</code>.
+SHA-256: <code>AF:68:8F:50:BB:20:0C:6A:A2:1D:69:E2:8A:F1:41:45:F3:F2:76:11:E2:C1:4E:1A:D3:FE:2F:DF:FD:D2:95:94</code>.
+<code>korubeni_keystore_SIFRESI_BILINMIYOR_KULLANMA.jks</code>'ye adının söylediği gibi davran.</li>
+<li><span class="tag t-op">OPERATÖR</span> Keystore + şifreleri şifre kasasına ve ayrı bir fiziksel yedeğe koy.</li>
+<li><span class="tag t-op">OPERATÖR</span> GitHub secret <code>KEYSTORE_BASE64</code>'ün çalışan keystore'un base64'ü olduğunu doğrula:
+<code>base64 -i android/app/korubeni_keystore_release.jks | tr -d '\n'</code></li>
+<li><span class="tag t-op">OPERATÖR</span> Artık kullanılmayan <code>CI_ENCRYPTION_KEY</code> ve <code>ENCRYPTION_KEY</code> GitHub secret'larını sil (temizlik; zorunlu değil).</li>
+<li><span class="tag t-wait">KURAL</span> Kişisel geliştirici hesabı için üretim şartı: <strong>kapalı testte 12 tester × 14 gün</strong>.</li>
+</ul>
+</div>
+
+<h2>1. Üretim AAB'si</h2>
+<div class="card">
+<p><strong>Tercih edilen yol — CI:</strong> <code>v1.0.0</code> tag'i push'la; <code>release.yml</code> (<code>v*.*.*</code> tetikleyicisi)
+imzalı Play AAB'sini üretir. Gerçek <code>REVENUECAT_ANDROID_API_KEY</code> GitHub secret'tan gelir.</p>
+<p><strong>Yerel alternatif:</strong></p>
+<pre>flutter build appbundle --release --flavor play \
+  --target-platform android-arm64 \
+  --dart-define=ENV=production \
+  --dart-define=REVENUECAT_ANDROID_API_KEY=&lt;gerçek anahtar&gt;</pre>
+<p>Çıktı: <code>build/app/outputs/bundle/playRelease/app-play-release.aab</code>.
+<code>scripts/verify_release.sh</code> yalnız ayrı <code>.smoke</code> kimlikli kod/build doğrulamasıdır;
+üretim kanıtı release workflow'undaki upload-sertifika, imza, lint/test, 16KB ve SHA-256 kapılarıdır.</p>
+</div>
+<div class="card crit">
+<code>.smoke</code> application ID veya geçici CI imzasıyla derlenen hiçbir AAB Play'e yüklenmez.
+</div>
+
+<h2>2. App Content formları</h2>
+<div class="card">
+<table>
+<tr><th>Form</th><th>Kaynak (kopyala)</th><th>Kritik cevap / tuzak</th></tr>
+<tr><td><strong>Data Safety</strong></td><td><code>store/DATA_SAFETY_FORM.md</code></td>
+<td>"Veri topluyor/paylaşıyor mu?" = <strong>EVET</strong> — ama sebep RevenueCat/Play Billing (satın alma, anonim abone kimliği, IP) ve harita tile sağlayıcısıdır. <strong>Cihazda kalan yerel verileri (kişiler, PIN, profil) "geliştirici topluyor" diye İŞARETLEME.</strong> Şifreleme-in-transit'e battaniye "evet" verme. Veri silme = Evet (cihaz verisi; abonelik Play'de).</td></tr>
+<tr><td><strong>İçerik derecelendirme (IARC)</strong></td><td><code>store/CONTENT_RATING_ANSWERS.md</code></td><td>Nihai build davranışına göre doldur.</td></tr>
+<tr><td><strong>Hedef kitle</strong></td><td><code>store/CONTENT_RATING_ANSWERS.md</code></td><td><strong>18+</strong>. "Designed for Families" ASLA seçilmez.</td></tr>
+<tr><td><strong>Foreground service</strong></td><td><code>docs/play_console_declarations.md</code></td><td>Bu build'de FGS yoktur. Eski <code>specialUse</code> taslağını kaldır; beyan veya FGS videosu gönderme.</td></tr>
+<tr><td><strong>SCHEDULE_EXACT_ALARM</strong></td><td><code>docs/play_console_declarations.md</code></td><td>Console isterse beyan et; izin reddi fallback'li — "garanti" dili kullanma.</td></tr>
+<tr><td><strong>REQUEST_IGNORE_BATTERY_OPTIMIZATIONS</strong></td><td><code>docs/play_console_declarations.md</code></td><td>Console isterse beyan et.</td></tr>
+<tr><td><strong>CALL_PHONE</strong></td><td><code>store/permissions_declaration_notes.md</code></td><td>Kullanıcının kurduğu Panik/SOS, Check-In ve Safe Walk; sonuç yalnız doğrulanmamış Telecom isteğidir, fallback kullanıcı dokunuşlu <code>ACTION_DIAL</code> bildirimidir.</td></tr>
+<tr><td><strong>USE_FULL_SCREEN_INTENT</strong></td><td><code>docs/play_console_declarations.md</code></td><td>Manifestte yoktur. KoruBeni alarm-saat/gelen çağrı uygulaması değildir; eski FSI Console taslağını kaldır. Acil uyarılar heads-up bildirime düşer.</td></tr>
+<tr><td><strong>Gizlilik politikası + veri silme URL</strong></td><td>gh-pages adayı (aydınlatma 3.3.0; canlı yayın henüz UNVERIFIED)</td><td>Canlı URL'yi tarayıcıda AÇIP doğrula, sonra Console'a yapıştır.</td></tr>
+<tr><td><strong>App Access</strong></td><td><code>docs/play_console_declarations.md</code></td><td>Temel özellikler girişsiz; Pro için <strong>lisans tester e-postası</strong> ver. Global <code>FLAG_SECURE</code> yoktur; screenshot mümkündür, yalnız background recents privacy mask vardır.</td></tr>
+</table>
+<p><em>Not:</em> READ_CONTACTS beyanı GEREKMİYOR — manifest <code>tools:node="remove"</code> ile kaldırıyor; kişi seçimi native picker (<code>ACTION_PICK</code>) ile.</p>
+</div>
+
+<h2>3. Mağaza girişi</h2>
+<div class="card">
+<ul>
+<li>İlk sürüm <strong>yalnızca Türkçe</strong> listing: <code>store/PLAY_CONSOLE_COPY_PASTE_PACK.md</code>. İngilizce listing ekleme.</li>
+<li>İddia sınırı: uygulama <strong>resmî acil servis / KADES değildir</strong>; kurtarma/müdahale vaadi yok. Store metnindeki iddialar <code>legal_no_first_responder_claims_test</code> + <code>public_release_overclaim_copy_test</code> ile pinli — metni Console'da elle "iyileştirme".</li>
+<li>Görseller: 512×512 ikon, 1024×500 feature graphic, ekran görüntüleri <code>store/screenshots/android/final/</code> (PII kontrolünden sonra).</li>
+</ul>
+</div>
+
+<h2>4. Test parkuru</h2>
+<div class="card">
+<ol>
+<li><strong>İç test:</strong> imzalı AAB yükle (Data Safety bu aşamada muaf olabilir — Console ne isterse o).</li>
+<li><strong>RevenueCat paneli:</strong> gerçek Android API key, aktif offering, monthly/annual paket eşlemesi, <code>KoruBeni Pro</code> entitlement-ürün bağlantısı; lisans testerlarla satın alma/restore/iptal.</li>
+<li><strong>Kapalı test:</strong> 12 tester × 14 gün (kişisel hesap şartı). Tester rehberi: <code>store/CLOSED_TEST_TESTER_GUIDE.md</code>.</li>
+<li><strong>Gerçek cihaz QA:</strong> <code>store/REAL_DEVICE_QA_MATRIX.md</code> — en az bir <strong>Xiaomi</strong> dahil; Doze altında acil akış; satın alma/restore/iptal uçtan uca.</li>
+<li><strong>Üretim:</strong> tüm kapılar kanıtlı olduktan sonra kademeli yayın.</li>
+</ol>
+</div>
+<div class="card warn">
+<strong>Emülatör kanıtının sınırı (2026-07-06 smoke):</strong> Android 16'da çökmesiz açılış + tam servis init CONFIRMED.
+<strong>Kanıtlanamayanlar</strong> (gerçek cihaz işi): Doze yarışı, OEM arka plan katili, gerçek satın alma/restore, göz-ile UI doğrulaması
+(Global FLAG_SECURE yoktur; screenshot kararması görülürse cihaz/emülatör veya privacy-mask zamanlaması ayrıca incelenir).
+</div>
+
+<h2>5. Açık kararlar (yalnızca operatör kapatabilir)</h2>
+<div class="card">
+<ul>
+<li><strong>RevenueCat m.9 karar kaydı — ONAY BEKLİYOR:</strong> Öneri: yayın için <strong>(a) belgelenmiş risk kabulü</strong>
+(akış minimize: <code>collectDeviceIdentifiers()</code> çağrılmıyor, anonim abone kimliği, reklam kimliği yok; aydınlatma 3.3.0 aktarımı m.9 kapsamında bildiriyor)
++ v1.1 yol haritasına <strong>(b) saf Play Billing'e geçiş değerlendirmesi</strong> (~1-2 hafta; "aktaran" sıfatını yapısal kaldırır).
+Onay şekli: <code>docs/audit/session-2026-07-06-uygulama.md</code>'deki bölüme "<strong>ONAYLANDI — tarih, isim</strong>" satırı.</li>
+<li><strong>Teknik borç:</strong> API 37'de orientation/resizability opt-out'u kalkıyor — adaptif layout işi v1.x planına girmeli.</li>
+</ul>
+</div>
+
+<h2>6. Quiz — 12/12 almadan gönderme</h2>
+<p class="sub">Her soru tek doğru cevaplı. Yanlışta açıklama görünür; formu doldurmadan önce kaynağa dön.</p>
+
+<div id="quiz"></div>
+<button onclick="score()">Puanla</button>
+<div id="score"></div>
+
+<script>
+const QS = [
+ {q:"1. Üretim imzası için hangi keystore kullanılır?",
+  o:["korubeni_keystore.jks","korubeni_keystore_release.jks (alias: upload)","Play'in üreteceği yeni anahtar; yerel keystore gerekmez"],a:1,
+  e:"Şifresi doğrulanan tek keystore korubeni_keystore_release.jks (SHA-256 AF:68:8F:50...). Diğeri SIFRESI_BILINMIYOR_KULLANMA olarak yeniden adlandırıldı."},
+ {q:"2. İlk AAB yüklemesinden önce imzalama tarafında yapılması gereken nedir?",
+  o:["Hiçbir şey; yükleme yeterli","Play App Signing'e kayıt","Keystore'u Play Console'a yüklemek zorunlu değildir, şifresini girmek yeterli"],a:1,
+  e:"Play App Signing kaydı ilk yüklemeden önce yapılır; anahtar seçimi ilk yüklemeden sonra kalıcılaşır."},
+ {q:"3. Üretim AAB'si için hangi secret ZORUNLU?",
+  o:["RevenueCat goog_ Android public SDK key ve release signing materyali","Bir test_ veya sk_ RevenueCat key","Rastgele üretilmiş bir placeholder key"],a:0,
+  e:"goog_ public SDK key Google Play istemcisi için tasarlanmıştır; test_ yalnız Test Store içindir, sk_ secret yalnız sunucuda kalır. İmza parolaları ve keystore secret store'da tutulur."},
+ {q:"4. Data Safety 'uygulama veri topluyor/paylaşıyor mu?' sorusunun cevabı?",
+  o:["Hayır — uygulama offline-first, backend yok","Evet — RevenueCat/Play Billing işlemesi ve harita tile sağlayıcısı nedeniyle","Evet — kişiler ve PIN cihazda saklandığı için"],a:1,
+  e:"Cevap EVET ama gerekçe kritik: abonelik işleme (RevenueCat/Billing) + tile istekleri. Cihazda kalan yerel veri 'geliştirici toplaması' DEĞİLDİR."},
+ {q:"5. Cihazda kalan yerel veriler (kişiler, PIN, profil) formda nasıl işaretlenir?",
+  o:["Toplanan veri olarak — sonuçta cihazda duruyor","Geliştirici toplaması/paylaşması olarak İŞARETLENMEZ","Paylaşılan veri olarak"],a:1,
+  e:"Cihaz-dışına aktarım yoksa 'collected/shared' işaretlenmez — formun temel guardrail'i."},
+ {q:"6. Hedef kitle seçimi?",
+  o:["13+ ve Designed for Families","18+ / yetişkin; Designed for Families asla","Tüm yaşlar"],a:1,
+  e:"Karar: 18+. Families programı ürün kararı değişmeden asla."},
+ {q:"7. Foreground service beyanı bu build için nedir?",
+  o:["Yok; eski specialUse taslağı kaldırılır","specialUse (+ demo video)","dataSync"],a:0,
+  e:"Play manifesti FGS izni veya servis içermez; durum bildirimi normal local notification'dır."},
+ {q:"8. Kişisel hesapta üretime çıkış şartı?",
+  o:["İç testte 5 tester × 7 gün","Kapalı testte 12 tester × 14 gün","Şart yok, doğrudan üretim"],a:1,
+  e:"12 tester × 14 gün kapalı test — denetimin 'repo dışı kapanamayan' maddelerinden."},
+ {q:"9. USE_FULL_SCREEN_INTENT için güncel karar nedir?",
+  o:["Manifestte yok; eski Console taslağı kaldırılır","Sahte çağrı gerçek telefon çağrısı diye beyan edilir","Her bildirim için zorunludur"],a:0,
+  e:"KoruBeni alarm-saat veya gelen çağrı uygulaması değildir ve ayrı açık-rıza UX'i yoktur; acil uyarılar heads-up kullanır."},
+ {q:"10. RevenueCat m.9 (yurt dışı aktarım) için yayın önerisi nedir?",
+  o:["RevenueCat'i yayından önce sökmek","(a) Belgelenmiş risk kabulü ile yayın + (b) v1.1'de saf Play Billing değerlendirmesi","Görmezden gelmek; KVKK abonelik verisini kapsamaz"],a:1,
+  e:"Karar kaydı (a)+(b) çizgisini öneriyor; onay session dokümanına 'ONAYLANDI — tarih, isim' satırıyla düşülür. Tek açık hukuki risk budur."},
+ {q:"11. Emülatör smoke testi neyi KANITLAMADI?",
+  o:["Android 16'da açılışı","Doze yarışı, gerçek satın alma/restore ve göz-ile UI doğrulamasını","Servis init sırasını"],a:1,
+  e:"Açılış + servis init CONFIRMED; Doze/billing/görsel doğrulama yalnızca gerçek cihazda (en az bir Xiaomi dahil) yapılabilir."},
+ {q:"12. App Access / incelemeci notlarında ne mutlaka yer almalı?",
+  o:["Sadece 'giriş gerekmez' cümlesi","Girişsiz temel erişim + Pro için lisans tester e-postası + global FLAG_SECURE olmadığı/yalnız recents maskesi bulunduğu notu","İncelemecilere özel PIN'siz build sözü"],a:1,
+  e:"Girişsiz temel akış, Pro lisans tester'ı ve gerçek screenshot davranışı birlikte yazılır: global FLAG_SECURE yoktur; yalnız background recents privacy maskesi vardır."}
+];
+const qdiv=document.getElementById('quiz');
+QS.forEach((it,i)=>{
+  const d=document.createElement('div');d.className='q';
+  d.innerHTML='<p>'+it.q+'</p>'+it.o.map((o,j)=>
+    '<label><input type="radio" name="q'+i+'" value="'+j+'"> '+o+'</label>').join('')+
+    '<div class="expl" id="e'+i+'"></div>';
+  qdiv.appendChild(d);
+});
+function score(){
+  let ok=0;
+  QS.forEach((it,i)=>{
+    const sel=document.querySelector('input[name="q'+i+'"]:checked');
+    const e=document.getElementById('e'+i);
+    if(sel&&+sel.value===it.a){ok++;e.className='expl right';e.textContent='✓ Doğru. '+it.e;}
+    else{e.className='expl wrong';e.textContent='✗ '+(sel?'Yanlış. ':'Boş. ')+it.e;}
+  });
+  const s=document.getElementById('score');
+  s.textContent='Sonuç: '+ok+'/12 — '+(ok===12?'Üretim gönderimine hazırsın.':'12/12 olmadan Console formlarını gönderme; yanlışların kaynağına dön.');
+  s.style.background=ok===12?'#dcfce7':'#fee2e2';
+  s.style.color=ok===12?'#166534':'#991b1b';
+}
+</script>
+</main>
+</body>
+</html>
