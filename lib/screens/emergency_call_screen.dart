@@ -19,6 +19,7 @@ class EmergencyCallScreen extends StatefulWidget {
   final String phone;
   final EmergencyCallResult callResult;
   final String? emergencyMessage;
+  final String? foregroundOwner;
 
   const EmergencyCallScreen({
     super.key,
@@ -26,6 +27,7 @@ class EmergencyCallScreen extends StatefulWidget {
     this.phone = '',
     required this.callResult,
     this.emergencyMessage,
+    this.foregroundOwner,
   });
 
   @override
@@ -67,8 +69,8 @@ class _EmergencyCallScreenState extends State<EmergencyCallScreen>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    // Backgrounded (e.g. the user was sent into the system dialer on the
-    // dialerOpened path): release the wakelock and stop the emergency
+    // Backgrounded (e.g. Android honored a call/dialer request): release the
+    // wakelock and stop the emergency
     // foreground service. That path has no auto-dismiss, so otherwise the
     // CPU/screen lock and the persistent "running" notification would linger
     // until the user manually returns home.
@@ -78,7 +80,7 @@ class _EmergencyCallScreenState extends State<EmergencyCallScreen>
         debugPrint('EmergencyCallScreen: lifecycle wakelock disable: $e');
       }),
     );
-    unawaited(KoruBeniForegroundService.stop());
+    unawaited(_releaseForegroundOwner());
   }
 
   void _scheduleFailSafe() {
@@ -100,7 +102,7 @@ class _EmergencyCallScreenState extends State<EmergencyCallScreen>
 
   Future<void> _returnHome() async {
     _autoDismissTimer?.cancel();
-    await KoruBeniForegroundService.stop();
+    await _releaseForegroundOwner();
     if (!mounted) return;
     Navigator.of(context).popUntil((route) => route.isFirst);
   }
@@ -264,6 +266,12 @@ class _EmergencyCallScreenState extends State<EmergencyCallScreen>
     );
   }
 
+  Future<void> _releaseForegroundOwner() async {
+    final owner = widget.foregroundOwner;
+    if (owner == null || owner.isEmpty) return;
+    await KoruBeniForegroundService.stop(owner: owner);
+  }
+
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
@@ -277,6 +285,7 @@ class _EmergencyCallScreenState extends State<EmergencyCallScreen>
         debugPrint('EmergencyCallScreen: WakelockPlus.disable failed: $e');
       }),
     );
+    unawaited(_releaseForegroundOwner());
     super.dispose();
   }
 
@@ -596,14 +605,15 @@ class _EmergencyCallScreenState extends State<EmergencyCallScreen>
 
   _StatusPresentation _buildCallPresentation(EmergencyCallResult result) {
     switch (result.status) {
-      case EmergencyCallStatus.directCallStarted:
+      case EmergencyCallStatus.callRequested:
         return _StatusPresentation(
-          icon: Icons.phone_forwarded_rounded,
-          color: AppColors.success,
+          icon: Icons.phone_in_talk_rounded,
+          color: AppColors.warning,
           summary: result.statusMessage,
-          detail: 'emergency_call_started_hint'.tr(),
+          detail: 'emergency_call_requested_hint'.tr(),
+          requiresAction: true,
         );
-      case EmergencyCallStatus.dialerOpened:
+      case EmergencyCallStatus.dialerRequested:
         return _StatusPresentation(
           icon: Icons.touch_app_rounded,
           color: AppColors.warning,

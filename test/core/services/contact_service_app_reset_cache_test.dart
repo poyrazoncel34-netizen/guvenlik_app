@@ -33,7 +33,12 @@ void main() {
     serviceLocator.registerSingleton<LocalDatabaseService>(db);
     ContactService.resetCache();
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(channel, (call) async => null);
+        .setMockMethodCallHandler(channel, (call) async {
+          if (call.method == 'wipeEmergencySessions') {
+            return <String, Object?>{'type': 'completed'};
+          }
+          return null;
+        });
   });
 
   tearDown(() async {

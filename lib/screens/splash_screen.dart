@@ -2,6 +2,8 @@
 // SPLASH EKRANI - Premium animasyonlu giriş
 // ============================================================================
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -124,10 +126,6 @@ class _SplashScreenState extends State<SplashScreen>
 
   Future<void> _runAnimations() async {
     if (!mounted) return;
-    // Initialize subscription state in the background (fire-and-forget).
-    // RevenueCat uses local cache when offline, so this is always safe.
-    context.read<SubscriptionProvider>().initialize();
-
     final reduceMotion = MediaQuery.of(context).disableAnimations;
 
     if (reduceMotion) {
@@ -191,6 +189,16 @@ class _SplashScreenState extends State<SplashScreen>
             savedKvkkVersion != LegalTexts.kvkkVersion);
 
     if (!mounted) return;
+
+    // A historical Pro hint is only a reason to refresh RevenueCat after the
+    // current legal texts have been accepted. It is never entitlement proof
+    // and this fire-and-forget refresh cannot unlock a safety feature by
+    // itself.
+    if (legalAccepted && !needsReConsent) {
+      unawaited(
+        context.read<SubscriptionProvider>().initializeFromPriorProHint(),
+      );
+    }
 
     final hasConfiguredPin = await _hasConfiguredPin();
     if (!mounted) return;

@@ -4,8 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 
 /// SPEC 0 Karar 1/2 + 3.2 + 7 ("112/failover CAGRILMAZ"):
 /// the check-in expiry path must call ONLY the primary number — no multi-number
-/// failover loop, no 112 default — and must dedup against the native-fired flag
-/// before placing a Dart call.
+/// failover loop, no 112 default — and both Dart/receiver dispatchers must use
+/// the same native token claim instead of stale fired flags.
 void main() {
   late String triggerBody;
 
@@ -16,7 +16,10 @@ void main() {
     final start = source.indexOf('_triggerEmergency(');
     expect(start, isNot(-1), reason: '_triggerEmergency must exist');
     // Body up to the next top-level private method declaration after it.
-    final next = source.indexOf('Future<void> _startBackgroundProtection', start);
+    final next = source.indexOf(
+      'Future<void> _startBackgroundProtection',
+      start,
+    );
     triggerBody = source.substring(start, next == -1 ? source.length : next);
   });
 
@@ -24,23 +27,28 @@ void main() {
     expect(
       triggerBody.contains('for (final fallbackNumber in numbers)'),
       isFalse,
-      reason: 'Check-in escalation must not iterate fallback numbers (no failover).',
+      reason:
+          'Check-in escalation must not iterate fallback numbers (no failover).',
     );
   });
 
-  test('does not synthesize 112 / turkeyEmergencyNumber as a default target', () {
-    expect(
-      triggerBody.contains('AppConstants.turkeyEmergencyNumber'),
-      isFalse,
-      reason: 'Check-in escalation must never fall back to 112.',
-    );
-  });
+  test(
+    'does not synthesize 112 / turkeyEmergencyNumber as a default target',
+    () {
+      expect(
+        triggerBody.contains('AppConstants.turkeyEmergencyNumber'),
+        isFalse,
+        reason: 'Check-in escalation must never fall back to 112.',
+      );
+    },
+  );
 
-  test('checks the native-fired dedup flag before placing a Dart call', () {
+  test('delegates dedup and dispatch to the typed native claim', () {
     expect(
-      triggerBody.contains('didCheckInAlarmFire'),
+      triggerBody.contains('dispatchEmergencySession('),
       isTrue,
-      reason: 'Dart path must skip when the native backup already fired.',
+      reason: 'Dart expiry must enter the same native claim as AlarmManager.',
     );
+    expect(triggerBody.contains('didCheckInAlarmFire'), isFalse);
   });
 }

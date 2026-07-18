@@ -6,7 +6,10 @@ import 'package:flutter/material.dart';
 import '../app_colors.dart';
 import '../services/emergency_platform_service.dart';
 
-Future<bool> confirmExactAlarmPermissionOrDegraded(BuildContext context) async {
+/// Timed safety sessions and delayed fake calls are not acknowledged unless
+/// Android exact-alarm access is currently available. Opening Settings is not
+/// an acknowledgement: the caller must retry after returning to the app.
+Future<bool> requireExactAlarmPermission(BuildContext context) async {
   final platform = EmergencyPlatformService.instance;
   if (!platform.isSupported) {
     return true;
@@ -21,7 +24,7 @@ Future<bool> confirmExactAlarmPermissionOrDegraded(BuildContext context) async {
     return false;
   }
 
-  final acknowledged = await showDialog<bool>(
+  await showDialog<void>(
     context: context,
     barrierDismissible: false,
     builder: (dialogContext) => AlertDialog(
@@ -37,27 +40,20 @@ Future<bool> confirmExactAlarmPermissionOrDegraded(BuildContext context) async {
       ),
       actions: [
         TextButton(
-          onPressed: () => Navigator.of(dialogContext).pop(false),
+          onPressed: () => Navigator.of(dialogContext).pop(),
           child: Text('exact_alarm_degraded_cancel'.tr()),
         ),
         OutlinedButton.icon(
           onPressed: () {
+            Navigator.of(dialogContext).pop();
             unawaited(platform.requestExactAlarmPermission());
           },
           icon: const Icon(Icons.settings_rounded, size: 18),
           label: Text('exact_alarm_degraded_settings'.tr()),
         ),
-        ElevatedButton(
-          onPressed: () => Navigator.of(dialogContext).pop(true),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.warning,
-            foregroundColor: Colors.white,
-          ),
-          child: Text('exact_alarm_degraded_continue'.tr()),
-        ),
       ],
     ),
   );
 
-  return acknowledged == true;
+  return false;
 }

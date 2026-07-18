@@ -39,11 +39,57 @@ void main() {
       },
     );
 
-    test('RevenueCat SDK calls are guarded until the SDK is configured', () {
-      expect(service, contains('bool _isConfigured = false'));
-      expect(service, contains('bool get _canUsePurchases'));
-      expect(service, contains('if (!_canUsePurchases) return null'));
-      expect(service, contains('if (!_canUsePurchases) {'));
+    test(
+      'RevenueCat SDK calls lazily enforce configuration and legal gate',
+      () {
+        expect(service, contains('bool _isConfigured = false'));
+        expect(service, contains('bool get _canUsePurchases'));
+        expect(service, contains('await ensureInitialized()'));
+        expect(service, contains('hasCurrentLegalAcceptance()'));
+        expect(
+          service,
+          contains('RevenueCat deferred until current legal acceptance'),
+        );
+      },
+    );
+
+    test(
+      'Trusted Entitlements are informational and fail closed for new arms',
+      () {
+        expect(service, contains('EntitlementVerificationMode.informational'));
+        expect(service, contains('VerificationResult.verified'));
+        expect(service, contains('VerificationResult.verifiedOnDevice'));
+        expect(service, contains('EntitlementDecision.unknown'));
+        expect(provider, contains('evaluateEntitlement(info)'));
+        expect(provider, contains('_access.markUnavailable()'));
+      },
+    );
+
+    test(
+      'client accepts only public SDK keys and disables CI smoke billing',
+      () {
+        expect(
+          service,
+          contains('AppEnvironment.isProductionRevenueCatAndroidSdkKey'),
+        );
+        expect(
+          service,
+          contains('AppEnvironment.isSafeRevenueCatClientSdkKey'),
+        );
+        expect(service, contains('AppEnvironment.isCiSmoke'));
+        expect(
+          service,
+          contains('RevenueCat disabled in non-release smoke build'),
+        );
+        expect(service, contains('not valid for this Android environment'));
+      },
+    );
+
+    test('provider follows entitlement changes while the app remains open', () {
+      expect(provider, contains('CustomerInfoUpdateListener'));
+      expect(provider, contains('Purchases.addCustomerInfoUpdateListener'));
+      expect(provider, contains('Purchases.removeCustomerInfoUpdateListener'));
+      expect(provider, contains('_applyCustomerInfo(info)'));
     });
 
     test(
@@ -90,6 +136,9 @@ void main() {
       expect(provider, isNot(contains('e.message')));
       expect(paywall, isNot(contains('PlatformException')));
       expect(paywall, isNot(contains('RevenueCatPurchaseException')));
+      expect(service, contains('Purchases.setLogLevel(LogLevel.error)'));
+      expect(service, isNot(contains('LogLevel.debug')));
+      expect(service, isNot(contains('originalAppUserId')));
     });
 
     test('billing docs keep every external purchase flow as not run', () {

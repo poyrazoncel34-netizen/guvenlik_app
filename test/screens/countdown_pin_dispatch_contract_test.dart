@@ -52,11 +52,10 @@ void main() {
 
       expect(
         pinBody,
-        contains(
-          'if (_isPinLockedOut || _isNavigating || _emergencyDispatched) return;',
-        ),
+        contains('_emergencyDispatched'),
         reason: 'Late PIN input must not race with emergency dispatch.',
       );
+      expect(pinBody, contains('_verificationInProgress'));
     });
   });
 }

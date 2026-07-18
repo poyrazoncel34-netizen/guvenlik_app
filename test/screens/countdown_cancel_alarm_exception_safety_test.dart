@@ -2,7 +2,9 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
-/// Blocker 1: cancelCountdownAlarm exception must never block _executeEmergency.
+/// A panic expiry must claim/dispatch through the native coordinator before
+/// non-critical Flutter bookkeeping. Alarm cancellation is not a dispatch
+/// prerequisite and widget lifecycle is not cancellation authority.
 void main() {
   late String source;
 
@@ -10,33 +12,37 @@ void main() {
     source = File('lib/screens/countdown_screen.dart').readAsStringSync();
   });
 
-  test(
-    'cancelCountdownAlarm is wrapped in try-catch so dispatch is never blocked',
-    () {
-      final makeCallIdx = source.indexOf('Future<void> _makeEmergencyCall()');
-      final executeIdx = source.indexOf(
-        'await _executeEmergency()',
-        makeCallIdx,
-      );
-
-      final body = source.substring(makeCallIdx, executeIdx);
-
-      final cancelIdx = body.indexOf('cancelCountdownAlarm');
-      final tryBeforeCancel = body.lastIndexOf('try {', cancelIdx);
+  test('dispatch precedes queue, log, haptic and Flutter notification', () {
+    final executeStart = source.indexOf('Future<void> _executeEmergency()');
+    final executeEnd = source.indexOf(
+      'Future<void> _showBlockingFailure',
+      executeStart,
+    );
+    final body = source.substring(executeStart, executeEnd);
+    final dispatch = body.indexOf('dispatchEmergencySession');
+    expect(dispatch, isNot(-1));
+    for (final nonCritical in <String>[
+      'OfflineQueueService.instance.enqueue',
+      'ActivityService.logEvent',
+      'HapticService.emergencyTriggered',
+      'NotificationService.instance.showEmergencyAlert',
+    ]) {
       expect(
-        tryBeforeCancel,
-        isNot(-1),
-        reason:
-            'cancelCountdownAlarm must be inside a try block so exceptions do not kill dispatch',
+        dispatch < body.indexOf(nonCritical),
+        isTrue,
+        reason: '$nonCritical must not precede native dispatch.',
       );
+    }
+  });
 
-      final catchAfterCancel = body.indexOf('} on Exception catch', cancelIdx);
-      expect(
-        catchAfterCancel,
-        isNot(-1),
-        reason:
-            'Exception from cancelCountdownAlarm must be caught; dispatch must continue',
-      );
-    },
-  );
+  test('panic dispatch path never cancels the native session as cleanup', () {
+    final makeCallStart = source.indexOf('Future<void> _makeEmergencyCall()');
+    final cancelStart = source.indexOf(
+      'Future<void> _cancelCountdownAndExit',
+      makeCallStart,
+    );
+    final dispatchBody = source.substring(makeCallStart, cancelStart);
+    expect(dispatchBody, isNot(contains('cancelCountdownAlarm')));
+    expect(dispatchBody, isNot(contains('cancelEmergencySession')));
+  });
 }

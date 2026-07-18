@@ -33,8 +33,8 @@ class _EmergencyTriggerHostState extends State<EmergencyTriggerHost>
   /// shares the same controller as check-in, no separate CountdownScreen).
   CheckInService _controllerFor(String? sessionId) =>
       sessionId == CheckInExpiryCoordinator.safeWalkSession
-          ? CheckInService.safeWalk
-          : CheckInService.instance;
+      ? CheckInService.safeWalk
+      : CheckInService.instance;
 
   @override
   void initState() {
@@ -86,14 +86,17 @@ class _EmergencyTriggerHostState extends State<EmergencyTriggerHost>
         prefs.getBool(AppConstants.prefVolumeTrigger) ?? false;
     if (volumeEnabled) {
       final subscription = context.read<SubscriptionProvider>();
-      await subscription.initialize();
+      final access = await subscription.resolveAccess();
       if (!mounted) return;
-      if (!subscription.isPro) {
+      if (access.shouldShowPaywall) {
         await VolumeTriggerService.instance.setEnabled(false);
         return;
       }
-    }
-    if (volumeEnabled) {
+      if (!access.canUsePaidSafetyFeature) {
+        // Unknown is not free and does not authorize a new safety session, but
+        // it also must not erase the user's preference as if access were denied.
+        return;
+      }
       VolumeTriggerService.instance.startListening(
         onPanicTriggered: _openCountdown,
       );
@@ -117,6 +120,13 @@ class _EmergencyTriggerHostState extends State<EmergencyTriggerHost>
             }
             if (type == 'checkInExpired') {
               await _handleCheckInExpired(sessionId: sessionId);
+              return;
+            }
+            if (type == 'safetyClockChanged') {
+              await Future.wait([
+                CheckInService.instance.handleAppResumed(),
+                CheckInService.safeWalk.handleAppResumed(),
+              ]);
             }
           } catch (_) {
             // Native event handling must never crash the root widget.
@@ -156,6 +166,10 @@ class _EmergencyTriggerHostState extends State<EmergencyTriggerHost>
       return;
     }
 
+    final subscription = context.read<SubscriptionProvider>();
+    final access = await subscription.resolveAccess();
+    if (!mounted || !access.canUsePaidSafetyFeature) return;
+
     final navigator = rootNavigatorKey.currentState;
     if (navigator == null) {
       return;
@@ -165,7 +179,11 @@ class _EmergencyTriggerHostState extends State<EmergencyTriggerHost>
     try {
       await HapticFeedback.heavyImpact();
       await navigator.push(
-        MaterialPageRoute(builder: (_) => const CountdownScreen()),
+        MaterialPageRoute(
+          builder: (_) => CountdownScreen(
+            entitlementDecision: access.entitlementDecision,
+          ),
+        ),
       );
     } finally {
       _countdownOpen = false;

@@ -7,19 +7,13 @@ class CrashLogService {
 
   static final CrashLogService instance = CrashLogService._();
 
-  Future<void> record({
-    required String source,
-    required Object error,
-    StackTrace? stackTrace,
-  }) async {
+  Future<void> record(LocalErrorCode code) async {
     try {
       final db = await serviceLocator<LocalDatabaseService>().database;
       await db.insert('crash_logs', {
-        'source': source,
-        'error': LocalLoggerService.redactSensitive(error.toString()),
-        'stack': stackTrace == null
-            ? null
-            : LocalLoggerService.redactSensitive(stackTrace.toString()),
+        'source': 'runtime',
+        'error': code.wireCode,
+        'stack': null,
         'created_at': DateTime.now().toIso8601String(),
       });
       await db.delete(

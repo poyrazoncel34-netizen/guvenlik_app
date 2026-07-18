@@ -2,24 +2,17 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
-/// System 4B: EmergencyPlatformHandler must register executeEmergencyNative.
+/// EmergencyPlatformHandler must route the typed native coordinator API and
+/// explicitly retire the legacy executor entry point.
 void main() {
-  test('EmergencyPlatformHandler should handle executeEmergencyNative', () {
+  test('EmergencyPlatformHandler routes typed session dispatch', () {
     final source = File(
       'android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/EmergencyPlatformHandler.kt',
     ).readAsStringSync();
 
-    expect(
-      source.contains('executeEmergencyNative'),
-      isTrue,
-      reason:
-          'EmergencyPlatformHandler must route executeEmergencyNative to EmergencyExecutor',
-    );
-
-    expect(
-      source.contains('EmergencyExecutor'),
-      isTrue,
-      reason: 'Must delegate to EmergencyExecutor',
-    );
+    expect(source, contains('"dispatchEmergencySession"'));
+    expect(source, contains('.claimAndDispatch(token)'));
+    expect(source, contains('"executeEmergencyNative",'));
+    expect(source, contains('-> result.notImplemented()'));
   });
 }

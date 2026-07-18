@@ -40,7 +40,7 @@ void main() {
 
     test('release opens CountdownScreen only', () {
       expect(
-        source.contains('const CountdownScreen()'),
+        source.contains('CountdownScreen(entitlementDecision: entitlementDecision)'),
         isTrue,
         reason: 'PanicButton release should navigate to countdown.',
       );

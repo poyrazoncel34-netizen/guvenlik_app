@@ -7,11 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('Android Platform Audit', () {
-    test('foreground_service.dart must use specialUse type to match manifest', () {
-      // The AndroidManifest.xml declares BackgroundService with
-      // android:foregroundServiceType="specialUse". The Dart config must
-      // match, otherwise Android 14+ throws
-      // ForegroundServiceTypeNotAllowedException.
+    test('generic specialUse foreground service must stay retired', () {
       final file = File('lib/core/services/foreground_service.dart');
       expect(
         file.existsSync(),
@@ -19,19 +15,13 @@ void main() {
         reason: 'foreground_service.dart must exist',
       );
       final content = file.readAsStringSync();
+      final manifest = File(
+        'android/app/src/main/AndroidManifest.xml',
+      ).readAsStringSync();
 
-      expect(
-        content,
-        contains('AndroidForegroundType.specialUse'),
-        reason:
-            'Dart foreground service type must be specialUse to match manifest',
-      );
-      expect(
-        content,
-        isNot(contains('AndroidForegroundType.dataSync')),
-        reason:
-            'dataSync type will crash on Android 14+ (manifest declares specialUse)',
-      );
+      expect(content, isNot(contains('FlutterBackgroundService')));
+      expect(manifest, isNot(contains('FOREGROUND_SERVICE_SPECIAL_USE')));
+      expect(manifest, isNot(contains('BackgroundService')));
     });
 
     test(
@@ -53,20 +43,12 @@ void main() {
       },
     );
 
-    test('manifest must NOT listen for LOCKED_BOOT_COMPLETED (dead code)', () {
-      // BootCompletedReceiver is not directBootAware and uses
-      // credential-protected storage. LOCKED_BOOT_COMPLETED is never
-      // delivered by the system without directBootAware="true".
+    test('manifest wires the Direct Boot recovery receiver', () {
       final file = File('android/app/src/main/AndroidManifest.xml');
       final content = file.readAsStringSync();
 
-      expect(
-        content,
-        isNot(contains('LOCKED_BOOT_COMPLETED')),
-        reason:
-            'LOCKED_BOOT_COMPLETED requires directBootAware="true" and '
-            'device-protected storage. Without these, the intent is never delivered.',
-      );
+      expect(content, contains('LOCKED_BOOT_COMPLETED'));
+      expect(content, contains('android:directBootAware="true"'));
     });
 
     test(
@@ -93,32 +75,29 @@ void main() {
       },
     );
 
-    test(
-      'CheckInScheduler must guard scheduleAlarm with canScheduleExactAlarms',
-      () {
-        // On Android 14+ (API 34), SCHEDULE_EXACT_ALARM is not auto-granted.
-        // Calling setExactAndAllowWhileIdle() without permission throws
-        // SecurityException. scheduleAlarm must check and fall back to inexact.
-        final file = File(
-          'android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/CheckInScheduler.kt',
-        );
-        expect(file.existsSync(), isTrue);
-        final content = file.readAsStringSync();
+    test('typed scheduler must guard exact alarms and arm an inexact backup', () {
+      // On Android 14+ (API 34), SCHEDULE_EXACT_ALARM is not auto-granted.
+      // Calling setExactAndAllowWhileIdle() without permission throws
+      // SecurityException. scheduleAlarm must check and fall back to inexact.
+      final file = File(
+        'android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/AndroidEmergencySessionRuntime.kt',
+      );
+      expect(file.existsSync(), isTrue);
+      final content = file.readAsStringSync();
 
-        // The private scheduleAlarm function must include a fallback to
-        // setAndAllowWhileIdle (inexact) when exact alarms are not permitted.
-        final scheduleAlarmBody = content.substring(
-          content.indexOf('private fun scheduleAlarm'),
-        );
-        expect(
-          scheduleAlarmBody,
-          contains('canScheduleExactAlarms'),
-          reason:
-              'scheduleAlarm must check canScheduleExactAlarms before calling '
-              'setExactAndAllowWhileIdle to avoid SecurityException on API 34+',
-        );
-      },
-    );
+      final scheduler = content.substring(
+        content.indexOf('class AndroidEmergencySessionAlarmScheduler'),
+      );
+      expect(
+        scheduler,
+        contains('canScheduleExactAlarms'),
+        reason:
+            'scheduleAlarm must check canScheduleExactAlarms before calling '
+            'setExactAndAllowWhileIdle to avoid SecurityException on API 34+',
+      );
+      expect(scheduler, contains('catch (_: SecurityException)'));
+      expect(scheduler, contains('setAndAllowWhileIdle'));
+    });
 
     test(
       'EmergencyNotificationHelper must check POST_NOTIFICATIONS on API 33+',
@@ -153,18 +132,15 @@ void main() {
     });
 
     test('foreground_service.dart should not use WakelockPlus', () {
-      // WakelockPlus is a screen-on wakelock. flutter_background_service
-      // already acquires a PARTIAL_WAKE_LOCK. Screen-on wakelock is
-      // unnecessary for background services and wastes battery.
+      // The active-session status layer is notification-only. Deadline
+      // delivery belongs to native alarms; no wakelock belongs here.
       final file = File('lib/core/services/foreground_service.dart');
       final content = file.readAsStringSync();
 
       expect(
         content,
         isNot(contains('WakelockPlus')),
-        reason:
-            'WakelockPlus (screen-on) is unnecessary — '
-            'flutter_background_service already holds a partial wakelock',
+        reason: 'The status notification layer must not acquire a wakelock.',
       );
     });
   });

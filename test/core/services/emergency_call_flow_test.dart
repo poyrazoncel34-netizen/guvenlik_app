@@ -1,4 +1,4 @@
-// Integration test: Emergency call flow — countdown → call dispatch → failover.
+// Source-contract test: countdown → typed native session dispatch.
 // Verifies the critical path that is the app's reason for existing.
 
 import 'dart:io';
@@ -21,20 +21,20 @@ void main() {
             'countdown_screen must call _makeEmergencyCall when timer expires',
       );
 
-      // 2. _executeEmergency fetches contacts and calls native platform bridge
+      // 2. _executeEmergency dispatches the already-armed immutable token.
       expect(
-        content.contains('executeEmergencyNative'),
-        isTrue,
+        content,
+        matches(RegExp(r'dispatchEmergencySession\s*\(\s*token:\s*token')),
         reason:
-            'countdown_screen must dispatch native call only after countdown expiry',
+            'countdown_screen must dispatch the typed native session after expiry',
       );
 
-      // 3. Failover: iterates through numbers if first call fails
+      // 3. Target failover is forbidden: arming snapshots one immutable target.
       expect(
         content.contains('fallbackNumber'),
-        isTrue,
+        isFalse,
         reason:
-            'countdown_screen must try fallback numbers when primary call fails',
+            'countdown_screen must not redirect an armed session to another number',
       );
 
       // 4. Shows blocking failure screen if ALL calls fail
@@ -54,20 +54,28 @@ void main() {
       );
     });
 
-    test('Doze mode guard prevents double-dispatch', () {
+    test('Doze mode dedup is owned by the native token claim', () {
       final content = File(
         'lib/screens/countdown_screen.dart',
       ).readAsStringSync();
+      final coordinator = File(
+        'android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/'
+        'EmergencySessionCoordinator.kt',
+      ).readAsStringSync();
 
-      // C4: Native alarm may fire while Dart timer is frozen by Doze.
-      // CountdownScreen must check didCountdownAlarmFire before dispatching.
+      // Dart and AlarmManager may race. Both use the same native claim path;
+      // stale boolean flags are no longer a second authority.
       expect(
-        content.contains('didCountdownAlarmFire'),
-        isTrue,
-        reason:
-            'countdown_screen must check native alarm to prevent '
-            'double-dispatch when Dart timer was frozen by Doze',
+        content,
+        matches(RegExp(r'dispatchEmergencySession\s*\(\s*token:\s*token')),
       );
+      expect(
+        coordinator,
+        contains('fun claimAndDispatch(token: SessionToken)'),
+      );
+      expect(coordinator, contains('current.token != token'));
+      expect(coordinator, contains('LifecycleState.CLAIMED'));
+      expect(content, isNot(contains('didCountdownAlarmFire')));
 
       // _emergencyDispatched flag must exist as second guard
       expect(
@@ -108,14 +116,14 @@ void main() {
         reason: 'must have failed status',
       );
       expect(
-        content.contains('EmergencyCallStatus.directCallStarted'),
+        content.contains('EmergencyCallStatus.callRequested'),
         isTrue,
-        reason: 'must have directCallStarted status',
+        reason: 'must represent an unconfirmed direct call request',
       );
       expect(
-        content.contains('EmergencyCallStatus.dialerOpened'),
+        content.contains('EmergencyCallStatus.dialerRequested'),
         isTrue,
-        reason: 'must have dialerOpened fallback for denied CALL_PHONE',
+        reason: 'must represent an unconfirmed dialer request',
       );
     });
 

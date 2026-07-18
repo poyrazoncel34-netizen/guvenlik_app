@@ -6,14 +6,19 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:provider/provider.dart';
 import '../core/app_colors.dart';
 import '../core/constants/app_constants.dart';
 import '../core/services/check_in_service.dart';
 import '../core/services/contact_service.dart';
+import '../core/services/emergency_session_contract.dart';
+import '../core/services/pin_verification_service.dart';
 import '../core/utils/emergency_number_validator.dart';
 import '../core/utils/permission_helper.dart';
 import '../core/widgets/exact_alarm_permission_guard.dart';
 import '../core/widgets/feature_warning_dialog.dart';
+import '../core/widgets/safety_session_pin_gate.dart';
+import '../presentation/providers/subscription_provider.dart';
 import 'contacts_page.dart';
 // Analytics service removed (offline-first)
 
@@ -29,6 +34,7 @@ class _CheckInScreenState extends State<CheckInScreen>
   late AnimationController _pulseController;
   late AnimationController _staggerController;
   final CheckInService _service = CheckInService.instance;
+  bool _safetyIntentInProgress = false;
 
   @override
   void initState() {
@@ -60,8 +66,9 @@ class _CheckInScreenState extends State<CheckInScreen>
 
   Future<bool> _hasEmergencyContact() async {
     try {
-      final numbers = await ContactService.getAllEmergencyNumbers();
-      return numbers.any(EmergencyNumberValidator.isCallableEmergencyTarget);
+      final contact = await ContactService.getEmergencyContact();
+      return contact != null &&
+          EmergencyNumberValidator.isCallableEmergencyTarget(contact.phone);
     } catch (_) {
       return false;
     }
@@ -86,11 +93,38 @@ class _CheckInScreenState extends State<CheckInScreen>
     );
   }
 
-  void _showTimerSchedulingDegraded() {
+  void _showArmFailure(ArmResult result, PinState pinState) {
+    var messageKey = 'safety_session_not_ready';
+    if (result is ArmUnknown) {
+      messageKey = 'safety_session_arm_unknown';
+    } else if (pinState == PinState.loading) {
+      messageKey = 'pin_state_loading';
+    } else if (pinState == PinState.absent) {
+      messageKey = 'safety_session_pin_required';
+    } else if (pinState == PinState.readFailed) {
+      messageKey = 'pin_state_read_failed';
+    } else if (result is ArmRejected &&
+        (result.reasonCode == 'entitlementDenied' ||
+            result.reasonCode == 'entitlementUnknown')) {
+      messageKey = 'safety_session_entitlement_unverified';
+    }
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('timer_scheduling_degraded'.tr()),
+        content: Text(messageKey.tr()),
         backgroundColor: AppColors.warning,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  void _showCancelFailure(CancelResult? result) {
+    final messageKey = result is SessionCancelTooLate
+        ? 'emergency_cancel_too_late'
+        : 'emergency_cancel_unconfirmed';
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(messageKey.tr()),
+        backgroundColor: AppColors.emergency,
         behavior: SnackBarBehavior.floating,
       ),
     );
@@ -118,46 +152,53 @@ class _CheckInScreenState extends State<CheckInScreen>
         await PermissionHelper.requestNotificationPermission(currentContext);
     if (!currentContext.mounted) return;
     if (!notificationsAllowed) {
-      // Rapor M.3 step 4: surface a "start anyway?" dialog instead of
-      // silently blocking. Lets the user choose between opening settings,
-      // cancelling, or starting the session in degraded mode.
-      final startAnyway =
-          await PermissionHelper.confirmStartSessionWithoutNotifications(
-            currentContext,
-          );
-      if (!currentContext.mounted) return;
-      if (!startAnyway) {
-        ScaffoldMessenger.of(currentContext).showSnackBar(
-          SnackBar(
-            content: Text("notification_session_permission_required".tr()),
-            backgroundColor: AppColors.warning,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
+      ScaffoldMessenger.of(currentContext).showSnackBar(
+        SnackBar(
+          content: Text('notification_session_permission_required'.tr()),
+          backgroundColor: AppColors.warning,
+          behavior: SnackBarBehavior.floating,
+          action: SnackBarAction(
+            label: 'open_notification_settings'.tr(),
+            onPressed: () {
+              PermissionHelper.openNotificationSettings();
+            },
           ),
-        );
-        return;
-      }
+        ),
+      );
+      return;
     }
 
-    final exactAlarmAcknowledged = await confirmExactAlarmPermissionOrDegraded(
-      currentContext,
-    );
-    if (!exactAlarmAcknowledged || !currentContext.mounted) return;
+    final exactAlarmGranted = await requireExactAlarmPermission(currentContext);
+    if (!exactAlarmGranted || !currentContext.mounted) return;
+
+    final subscription = currentContext.read<SubscriptionProvider>();
+    final accessFuture = subscription.resolveAccess();
+    final pinStateFuture = PinVerificationService.instance.loadState();
+    final access = await accessFuture;
+    final pinState = await pinStateFuture;
+    if (!currentContext.mounted) return;
 
     HapticFeedback.mediumImpact();
-    final fullyScheduled = await _service.start(minutes);
+    final result = await _service.startSession(
+      minutes: minutes,
+      entitlementDecision: access.entitlementDecision,
+      pinConfigured: pinState == PinState.configured,
+    );
     if (!mounted) return;
-    if (!fullyScheduled) {
-      _showTimerSchedulingDegraded();
+    if (result is! Armed) {
+      _showArmFailure(result, pinState);
     }
   }
 
   Future<void> _confirmSafe() async {
+    if (!await _verifySafetyIntent()) return;
     HapticFeedback.heavyImpact();
-    await _service.confirmSafe();
+    final result = await _service.confirmSafeSession();
     if (!mounted) return;
+    if (result is! Armed) {
+      _showArmFailure(result, PinVerificationService.instance.state);
+      return;
+    }
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -179,8 +220,23 @@ class _CheckInScreenState extends State<CheckInScreen>
   }
 
   Future<void> _stopCheckIn() async {
+    if (!await _verifySafetyIntent()) return;
     HapticFeedback.lightImpact();
-    await _service.stop();
+    final result = await _service.stopSession();
+    if (!mounted) return;
+    if (result == null || !result.isConfirmedCancelled) {
+      _showCancelFailure(result);
+    }
+  }
+
+  Future<bool> _verifySafetyIntent() async {
+    if (_safetyIntentInProgress) return false;
+    _safetyIntentInProgress = true;
+    try {
+      return await SafetySessionPinGate.verify(context);
+    } finally {
+      _safetyIntentInProgress = false;
+    }
   }
 
   String _formatTime(int totalSeconds) {

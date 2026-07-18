@@ -701,13 +701,12 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       return;
     }
 
-    // The fake call is delivered by an exact alarm; on Android 12+ that needs
-    // the "Alarms & reminders" special access. Confirm (or accept degraded
-    // mode) before scheduling so the user is not silently left without a call.
-    final exactAlarmAcknowledged = await confirmExactAlarmPermissionOrDegraded(
+    // A delayed fake call is only shown as scheduled when exact-alarm access
+    // is currently granted. Returning from Settings requires an explicit retry.
+    final exactAlarmGranted = await requireExactAlarmPermission(
       context,
     );
-    if (!exactAlarmAcknowledged || !mounted) return;
+    if (!exactAlarmGranted || !mounted) return;
 
     final scheduled = await NotificationService.instance.scheduleFakeCall(
       delay: delay,

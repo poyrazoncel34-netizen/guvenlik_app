@@ -2,40 +2,37 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
-/// Source-contract guard ([[emergency-flow-test-convention]]): the 4 emergency
-/// read points and the native method-channel argument must keep reading the
-/// Dart-resolved contact, and ContactService must be the single source (no DB
-/// writes), with no biometrics / 112 synthesis introduced.
+/// Source-contract guard: each arm path resolves exactly one primary contact,
+/// then passes an immutable target to the typed native session authority.
 void main() {
   String read(String path) => File(path).readAsStringSync();
 
-  test('panic button pre-check still reads getAllEmergencyNumbers', () {
+  test('panic button pre-check resolves one emergency contact', () {
     final src = read('lib/widgets/panic_button.dart');
-    expect(src.contains('ContactService.getAllEmergencyNumbers()'), isTrue);
+    expect(src.contains('ContactService.getEmergencyContact()'), isTrue);
   });
 
   test(
-    'countdown screen reads contacts and passes primaryNumber to native',
+    'countdown screen resolves primary contact and snapshots target at arm',
     () {
       final src = read('lib/screens/countdown_screen.dart');
-      expect(src.contains('getAllEmergencyNumbers()'), isTrue);
       expect(src.contains('getPrimaryEmergencyContact()'), isTrue);
-      expect(src.contains('scheduleCountdownAlarm('), isTrue);
-      expect(src.contains('primaryNumber:'), isTrue);
+      expect(src.contains('armEmergencySession('), isTrue);
+      expect(src.contains('target: _armedTargetNumber!'), isTrue);
     },
   );
 
-  test('check-in and safe-walk still read getAllEmergencyNumbers', () {
+  test('check-in and safe-walk resolve one emergency contact', () {
     expect(
       read(
         'lib/core/services/check_in_service.dart',
-      ).contains('getAllEmergencyNumbers()'),
+      ).contains('getPrimaryEmergencyContact()'),
       isTrue,
     );
     expect(
       read(
         'lib/screens/safe_walk_screen.dart',
-      ).contains('getAllEmergencyNumbers()'),
+      ).contains('ContactService.getEmergencyContact()'),
       isTrue,
     );
   });
@@ -61,15 +58,13 @@ void main() {
     expect(src.contains("'112'"), isFalse);
   });
 
-  test(
-    'native AlarmManager backup channel layer is untouched by this change',
-    () {
-      final src = read('lib/core/services/emergency_platform_service.dart');
-      expect(
-        src.contains('primaryNumber'),
-        isTrue,
-        reason: 'method-channel argument contract preserved',
-      );
-    },
-  );
+  test('typed native envelope keeps an immutable target argument', () {
+    final src = read('lib/core/services/emergency_platform_service.dart');
+    expect(
+      src.contains(
+        "'target': AndroidIntentService.normalizePhoneNumber(target)",
+      ),
+      isTrue,
+    );
+  });
 }

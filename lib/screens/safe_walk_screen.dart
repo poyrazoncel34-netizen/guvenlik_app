@@ -5,11 +5,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:provider/provider.dart';
 import '../core/app_colors.dart';
 import '../core/services/activity_service.dart';
 import '../core/services/check_in_expiry_coordinator.dart';
 import '../core/services/check_in_service.dart';
 import '../core/services/contact_service.dart';
+import '../core/services/emergency_session_contract.dart';
+import '../core/services/pin_verification_service.dart';
 import '../core/utils/emergency_number_validator.dart';
 import '../core/services/notification_service.dart';
 import '../core/utils/permission_helper.dart';
@@ -17,7 +20,9 @@ import '../core/utils/permission_helper.dart';
 import '../core/constants/app_constants.dart';
 import '../core/widgets/exact_alarm_permission_guard.dart';
 import '../core/widgets/feature_warning_dialog.dart';
+import '../core/widgets/safety_session_pin_gate.dart';
 import '../domain/models/activity_event.dart';
+import '../presentation/providers/subscription_provider.dart';
 import 'contacts_page.dart';
 
 class SafeWalkScreen extends StatefulWidget {
@@ -35,6 +40,7 @@ class _SafeWalkScreenState extends State<SafeWalkScreen> {
 
   int _selectedMinutes = 15;
   bool _preWarningFired = false;
+  bool _safetyIntentInProgress = false;
 
   final List<int> _durations = [5, 10, 15, 30, 60];
 
@@ -42,8 +48,9 @@ class _SafeWalkScreenState extends State<SafeWalkScreen> {
   bool get _isGrace => _controller.isGracePeriod;
   int get _remainingSeconds => _controller.remainingSeconds;
   bool get _nativeScheduleDegraded => _controller.nativeScheduleDegraded;
-  int get _totalSeconds =>
-      _controller.totalSeconds > 0 ? _controller.totalSeconds : _selectedMinutes * 60;
+  int get _totalSeconds => _controller.totalSeconds > 0
+      ? _controller.totalSeconds
+      : _selectedMinutes * 60;
 
   @override
   void initState() {
@@ -71,9 +78,7 @@ class _SafeWalkScreenState extends State<SafeWalkScreen> {
     final warningThreshold = _selectedMinutes >= 4
         ? 120
         : (_selectedMinutes * 60 * 0.1).round();
-    if (!_preWarningFired &&
-        remaining <= warningThreshold &&
-        remaining > 0) {
+    if (!_preWarningFired && remaining <= warningThreshold && remaining > 0) {
       _preWarningFired = true;
       _firePreExpiryWarning();
     }
@@ -102,50 +107,50 @@ class _SafeWalkScreenState extends State<SafeWalkScreen> {
         await PermissionHelper.requestNotificationPermission(currentContext);
     if (!currentContext.mounted) return;
     if (!notificationsAllowed) {
-      // Rapor M.3 step 4: surface a "start anyway?" dialog instead of
-      // silently blocking. Lets the user choose between opening settings,
-      // cancelling, or starting the session in degraded mode (FGS still
-      // runs even without POST_NOTIFICATIONS granted).
-      final startAnyway =
-          await PermissionHelper.confirmStartSessionWithoutNotifications(
-            currentContext,
-          );
-      if (!currentContext.mounted) return;
-      if (!startAnyway) {
-        ScaffoldMessenger.of(currentContext).showSnackBar(
-          SnackBar(
-            content: Text("notification_session_permission_required".tr()),
-            backgroundColor: AppColors.warning,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
+      ScaffoldMessenger.of(currentContext).showSnackBar(
+        SnackBar(
+          content: Text('notification_session_permission_required'.tr()),
+          backgroundColor: AppColors.warning,
+          behavior: SnackBarBehavior.floating,
+          action: SnackBarAction(
+            label: 'open_notification_settings'.tr(),
+            onPressed: () {
+              PermissionHelper.openNotificationSettings();
+            },
           ),
-        );
-        return;
-      }
+        ),
+      );
+      return;
     }
 
-    final exactAlarmAcknowledged = await confirmExactAlarmPermissionOrDegraded(
-      currentContext,
-    );
-    if (!exactAlarmAcknowledged || !currentContext.mounted) return;
+    final exactAlarmGranted = await requireExactAlarmPermission(currentContext);
+    if (!exactAlarmGranted || !currentContext.mounted) return;
+
+    final subscription = currentContext.read<SubscriptionProvider>();
+    final accessFuture = subscription.resolveAccess();
+    final pinStateFuture = PinVerificationService.instance.loadState();
+    final access = await accessFuture;
+    final pinState = await pinStateFuture;
+    if (!currentContext.mounted) return;
 
     HapticFeedback.mediumImpact();
     _preWarningFired = false;
-    // Delegate to the shared session controller (60s grace + native primary
-    // backup). Returns false when native scheduling is degraded (inexact alarm).
-    final fullyScheduled = await _controller.start(_selectedMinutes);
+    final result = await _controller.startSession(
+      minutes: _selectedMinutes,
+      entitlementDecision: access.entitlementDecision,
+      pinConfigured: pinState == PinState.configured,
+    );
     if (!mounted) return;
-    if (!fullyScheduled) {
-      _showTimerSchedulingDegraded();
+    if (result is! Armed) {
+      _showArmFailure(result, pinState);
     }
   }
 
   Future<bool> _hasEmergencyContact() async {
     try {
-      final numbers = await ContactService.getAllEmergencyNumbers();
-      return numbers.any(EmergencyNumberValidator.isCallableEmergencyTarget);
+      final contact = await ContactService.getEmergencyContact();
+      return contact != null &&
+          EmergencyNumberValidator.isCallableEmergencyTarget(contact.phone);
     } catch (_) {
       return false;
     }
@@ -170,11 +175,38 @@ class _SafeWalkScreenState extends State<SafeWalkScreen> {
     );
   }
 
-  void _showTimerSchedulingDegraded() {
+  void _showArmFailure(ArmResult result, PinState pinState) {
+    var messageKey = 'safety_session_not_ready';
+    if (result is ArmUnknown) {
+      messageKey = 'safety_session_arm_unknown';
+    } else if (pinState == PinState.loading) {
+      messageKey = 'pin_state_loading';
+    } else if (pinState == PinState.absent) {
+      messageKey = 'safety_session_pin_required';
+    } else if (pinState == PinState.readFailed) {
+      messageKey = 'pin_state_read_failed';
+    } else if (result is ArmRejected &&
+        (result.reasonCode == 'entitlementDenied' ||
+            result.reasonCode == 'entitlementUnknown')) {
+      messageKey = 'safety_session_entitlement_unverified';
+    }
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('timer_scheduling_degraded'.tr()),
+        content: Text(messageKey.tr()),
         backgroundColor: AppColors.warning,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  void _showCancelFailure(CancelResult? result) {
+    final messageKey = result is SessionCancelTooLate
+        ? 'emergency_cancel_too_late'
+        : 'emergency_cancel_unconfirmed';
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(messageKey.tr()),
+        backgroundColor: AppColors.emergency,
         behavior: SnackBarBehavior.floating,
       ),
     );
@@ -197,14 +229,25 @@ class _SafeWalkScreenState extends State<SafeWalkScreen> {
     )) {
       return;
     }
+    if (!await _verifySafetyIntent()) return;
     HapticFeedback.lightImpact();
-    await _controller.stop();
+    final result = await _controller.stopSession();
+    if (!mounted) return;
+    if (result == null || !result.isConfirmedCancelled) {
+      _showCancelFailure(result);
+      return;
+    }
     // Analytics removed (offline-first)
-    ActivityService.logEvent(
-      type: ActivityType.safetyCheck,
-      title: "safe_walk_completed_activity".tr(),
-      description: "safe_walk_completed_desc".tr(),
-    );
+    try {
+      await ActivityService.logEvent(
+        type: ActivityType.safetyCheck,
+        title: "safe_walk_completed_activity".tr(),
+        description: "safe_walk_completed_desc".tr(),
+      );
+    } catch (_) {
+      // The durable cancellation acknowledgement is authoritative; local
+      // history is best-effort and must not turn a safe stop into a failure.
+    }
     if (!mounted) return;
 
     ScaffoldMessenger.of(context).showSnackBar(
@@ -226,15 +269,31 @@ class _SafeWalkScreenState extends State<SafeWalkScreen> {
     );
   }
 
-  Future<void> _cancelWalk() async {
+  Future<bool> _cancelWalk() async {
     if (CheckInExpiryCoordinator.instance.isClaimedFor(
       CheckInExpiryCoordinator.safeWalkSession,
     )) {
-      return;
+      return false;
     }
+    if (!await _verifySafetyIntent()) return false;
     HapticFeedback.lightImpact();
-    await _controller.stop();
-    if (!mounted) return;
+    final result = await _controller.stopSession();
+    if (!mounted) return result?.isConfirmedCancelled ?? false;
+    if (result == null || !result.isConfirmedCancelled) {
+      _showCancelFailure(result);
+      return false;
+    }
+    return true;
+  }
+
+  Future<bool> _verifySafetyIntent() async {
+    if (_safetyIntentInProgress) return false;
+    _safetyIntentInProgress = true;
+    try {
+      return await SafetySessionPinGate.verify(context);
+    } finally {
+      _safetyIntentInProgress = false;
+    }
   }
 
   String _formatTime(int totalSeconds) {
@@ -605,9 +664,9 @@ class _SafeWalkScreenState extends State<SafeWalkScreen> {
           TextButton(
             onPressed: () async {
               Navigator.pop(ctx);
-              await _cancelWalk();
+              final cancelled = await _cancelWalk();
               if (!mounted) return;
-              Navigator.pop(context);
+              if (cancelled) Navigator.pop(context);
             },
             child: Text(
               "safe_walk_exit_cancel".tr(),

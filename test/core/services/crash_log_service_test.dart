@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
 import 'package:guvenlik_app/core/services/crash_log_service.dart';
+import 'package:guvenlik_app/core/services/local_logger_service.dart';
 
 void main() {
   group('CrashLogService', () {
@@ -22,25 +23,13 @@ void main() {
       // No LocalDatabaseService registered — simulates database failure.
       // record() must not throw; it swallows to protect emergency flow.
       final service = CrashLogService.instance;
-      await service.record(
-        source: 'test',
-        error: Exception('Test error'),
-        stackTrace: StackTrace.current,
-      );
+      await service.record(LocalErrorCode.flutterFrameworkUnhandled);
       // If we reach here without exception, the test passes.
     });
 
-    test('record accepts null stackTrace without error', () async {
+    test('record accepts allowlisted platform code without error', () async {
       final service = CrashLogService.instance;
-      await service.record(source: 'test', error: 'No stack');
-    });
-
-    test('record handles various error types silently', () async {
-      final service = CrashLogService.instance;
-      await service.record(source: 'test', error: 'string error');
-      await service.record(source: 'test', error: Exception('exception'));
-      await service.record(source: 'test', error: StateError('state error'));
-      // All should be silently handled — no throw.
+      await service.record(LocalErrorCode.platformDispatcherUnhandled);
     });
   });
 }

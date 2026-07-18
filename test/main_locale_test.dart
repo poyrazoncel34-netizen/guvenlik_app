@@ -37,7 +37,7 @@ void main() {
     (tester) async {
       await tester.pumpWidget(
         EasyLocalization(
-          supportedLocales: const [Locale('tr', 'TR'), Locale('en', 'US')],
+          supportedLocales: const [Locale('tr', 'TR')],
           path: 'assets/translations',
           assetLoader: const _MapAssetLoader({
             'tr-TR': _trTranslations,

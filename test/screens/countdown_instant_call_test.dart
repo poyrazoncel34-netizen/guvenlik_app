@@ -29,14 +29,14 @@ void main() {
       );
     });
 
-    test('executeEmergencyNative is called from countdown path', () {
+    test('typed native coordinator dispatch is called from countdown path', () {
       final executeIdx = source.indexOf('_executeEmergency');
-      final nativeIdx = source.indexOf('executeEmergencyNative', executeIdx);
+      final nativeIdx = source.indexOf('dispatchEmergencySession', executeIdx);
       expect(
         nativeIdx > executeIdx,
         isTrue,
         reason:
-            'Native emergency call must live under countdown execution, not PanicButton.',
+            'Native coordinator dispatch must live under countdown execution, not PanicButton.',
       );
     });
   });

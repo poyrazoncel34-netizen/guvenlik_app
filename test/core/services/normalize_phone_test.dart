@@ -2,6 +2,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guvenlik_app/core/services/contact_service.dart';
 import 'package:guvenlik_app/core/services/emergency_platform_service.dart';
+import 'package:guvenlik_app/core/services/emergency_session_contract.dart';
 import 'dart:io';
 
 void main() {
@@ -27,7 +28,7 @@ void main() {
     });
 
     test(
-      'source contract: the three channel methods normalize their number',
+      'source contract: typed arm normalizes its immutable target',
       () {
         final source = File(
           'lib/core/services/emergency_platform_service.dart',
@@ -49,22 +50,40 @@ void main() {
     );
 
     test(
-      'scheduleCheckIn sends the NORMALIZED primary number to native',
+      'typed arm sends the NORMALIZED target snapshot to native',
       () async {
         Object? captured;
         TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
             .setMockMethodCallHandler(channel, (MethodCall call) async {
-              if (call.method == 'scheduleCheckIn') {
-                captured = (call.arguments as Map)['primaryNumber'];
-                return {'scheduled': true, 'exact': true};
+              if (call.method == 'armEmergencySession') {
+                final arguments = call.arguments as Map;
+                captured = arguments['target'];
+                return {
+                  'type': 'armed',
+                  'token': {
+                    'protocolVersion': 1,
+                    'randomId': arguments['randomId'],
+                    'generation': 1,
+                    'kind': 'checkIn',
+                  },
+                  'mainDeadlineMs': arguments['mainDeadlineMs'],
+                  'finalDeadlineMs': arguments['finalDeadlineMs'],
+                };
               }
               return null;
             });
 
-        await EmergencyPlatformService.instance.scheduleCheckIn(
-          phase: 'main',
-          deadline: DateTime.now().add(const Duration(minutes: 10)),
-          primaryNumber: '(0555) 010-20-30',
+        final service = EmergencyPlatformService.forTesting(
+          methodChannel: channel,
+        );
+        final deadline = DateTime.now().add(const Duration(minutes: 10));
+        await service.armEmergencySession(
+          kind: EmergencySessionKind.checkIn,
+          mainDeadline: deadline,
+          finalDeadline: deadline.add(const Duration(minutes: 1)),
+          target: '(0555) 010-20-30',
+          entitlementDecision: EntitlementDecision.authorized,
+          pinConfigured: true,
         );
 
         expect(
@@ -72,27 +91,9 @@ void main() {
           '05550102030',
           reason:
               'Raw formatted input must be normalized BEFORE it is '
-              'persisted into native prefs',
+              'persisted into the native envelope',
         );
       },
     );
-
-    test('executeEmergencyNative dials the NORMALIZED number', () async {
-      Object? captured;
-      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockMethodCallHandler(channel, (MethodCall call) async {
-            if (call.method == 'executeEmergencyNative') {
-              captured = (call.arguments as Map)['primaryNumber'];
-              return {'status': 'dialerOpened', 'number': captured};
-            }
-            return null;
-          });
-
-      await EmergencyPlatformService.instance.executeEmergencyNative(
-        primaryNumber: '+90 (555) 010 20 30',
-      );
-
-      expect(captured, '+905550102030');
-    });
   });
 }

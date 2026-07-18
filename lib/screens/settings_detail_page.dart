@@ -11,6 +11,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../core/app_colors.dart';
+import '../core/services/sensitive_temp_file_service.dart';
 import '../core/services/user_data_export_service.dart';
 
 /// Section keys used for content lookup (locale-independent).
@@ -280,11 +281,13 @@ class _DataExportButtonState extends State<_DataExportButton> {
   Future<void> _exportData() async {
     if (_exporting) return;
     setState(() => _exporting = true);
+    File? exportFile;
     try {
       final exportData = await UserDataExportService.buildExportData();
       final jsonStr = const JsonEncoder.withIndent('  ').convert(exportData);
       final dir = await getTemporaryDirectory();
       final file = File('${dir.path}/korubeni_verilerim.json');
+      exportFile = file;
       await file.writeAsString(jsonStr);
 
       await SharePlus.instance.share(
@@ -303,6 +306,7 @@ class _DataExportButtonState extends State<_DataExportButton> {
         );
       }
     } finally {
+      await SensitiveTempFileService.delete(exportFile);
       if (mounted) setState(() => _exporting = false);
     }
   }

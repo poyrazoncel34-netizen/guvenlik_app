@@ -2,32 +2,23 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
-/// S6: CheckInScheduler.scheduleAlarm must check canScheduleExactAlarms()
-/// before calling setExactAndAllowWhileIdle. On Android 12+, if exact alarm
-/// permission is denied, the alarm is silently demoted to inexact.
 void main() {
-  test('CheckInScheduler.scheduleAlarm should check canScheduleExactAlarms', () {
+  test('typed scheduler guards exact access and still arms inexact backup', () {
     final source = File(
-      'android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/CheckInScheduler.kt',
+      'android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/'
+      'AndroidEmergencySessionRuntime.kt',
     ).readAsStringSync();
-
-    // scheduleAlarm should reference canScheduleExactAlarms before setting alarm
-    expect(
-      source.contains('canScheduleExactAlarms('),
-      isTrue,
-      reason: 'CheckInScheduler already has canScheduleExactAlarms method',
+    final scheduler = source.substring(
+      source.indexOf('class AndroidEmergencySessionAlarmScheduler'),
     );
 
-    // The scheduleAlarm method should use canScheduleExactAlarms internally
-    final scheduleAlarmBody = source.substring(
-      source.indexOf('private fun scheduleAlarm'),
-    );
+    expect(scheduler, contains('manager.canScheduleExactAlarms()'));
+    expect(scheduler, contains('catch (_: SecurityException)'));
+    expect(scheduler, contains('setExactAndAllowWhileIdle'));
+    expect(scheduler, contains('setAndAllowWhileIdle'));
     expect(
-      scheduleAlarmBody.contains('canScheduleExactAlarms'),
-      isTrue,
-      reason:
-          'scheduleAlarm must check canScheduleExactAlarms() before calling '
-          'setExactAndAllowWhileIdle — denied permission causes silent demotion',
+      scheduler,
+      contains('AlarmScheduleResult(exactAccepted, inexactAccepted)'),
     );
   });
 }

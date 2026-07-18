@@ -17,20 +17,28 @@ void main() {
       expect(source, contains('context.watch<SubscriptionProvider>().isPro'));
     });
 
-    test('free long press uses SubscriptionGate and cannot open countdown', () {
-      final startIndex = source.indexOf('Future<void> _onPressStart');
+    test('free hold uses SubscriptionGate and cannot open countdown', () {
+      final startIndex = source.indexOf('Future<void> _armPress');
       final openIndex = source.indexOf('Future<void> _openCountdownScreen');
       final pressStart = source.substring(startIndex, openIndex);
 
       expect(pressStart, contains('PremiumFeature.panic'));
       expect(pressStart, contains('SubscriptionGate.ensureAccess'));
-      expect(pressStart, contains('if (!allowed || !mounted) return;'));
+      expect(
+        pressStart,
+        contains(
+          'if (!mounted || !allowed || !_isCurrentPress(epoch)) return;',
+        ),
+      );
     });
 
     test('Pro users retain active panic copy and countdown route', () {
       expect(source, contains('panic_button_hold_title'));
       expect(source, contains('panic_button_hold_subtitle'));
-      expect(source, contains('const CountdownScreen()'));
+      expect(
+        source,
+        contains('CountdownScreen(entitlementDecision: entitlementDecision)'),
+      );
     });
   });
 }

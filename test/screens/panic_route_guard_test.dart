@@ -7,11 +7,13 @@ void main() {
     test('PanicButton only opens countdown from an armed press', () {
       final source = File('lib/widgets/panic_button.dart').readAsStringSync();
 
-      expect(source, contains('final wasArmed = _isArmed;'));
+      expect(source, contains('final completed ='));
       expect(
         source,
-        contains('if (!wasArmed) return;'),
-        reason: 'Release callbacks that never armed must not open countdown.',
+        contains('if (!completed) return;'),
+        reason:
+            'Release callbacks that never completed three seconds must not '
+            'open countdown.',
       );
     });
 

@@ -91,10 +91,8 @@ class ContactService {
     if (emergency != null && emergency.phone.isNotEmpty) {
       return emergency.phone;
     }
-    final list = await getAllEmergencyNumbers();
-    if (list.isNotEmpty) {
-      return list.first;
-    }
+    // List order is not consent to call. Safety flows require an explicitly
+    // selected primary contact and fail closed when it is absent.
     return null;
   }
 

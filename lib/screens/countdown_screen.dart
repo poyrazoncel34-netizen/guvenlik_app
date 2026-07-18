@@ -7,10 +7,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../core/di/service_locator.dart';
-import '../core/security/secure_storage.dart';
-import '../core/security/secure_storage_keys.dart';
 import '../core/app_colors.dart';
 import '../core/services/contact_service.dart';
 import '../domain/repositories/contacts_repository.dart';
@@ -24,14 +21,26 @@ import 'emergency_call_screen.dart';
 import '../core/services/foreground_service.dart';
 import '../core/services/haptic_service.dart';
 import '../core/services/notification_service.dart';
+import '../core/services/emergency_dispatch_pipeline.dart';
 import '../core/services/emergency_platform_service.dart';
+import '../core/services/emergency_session_contract.dart';
+import '../core/services/pin_verification_service.dart';
 import '../core/utils/emergency_number_validator.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
 class CountdownScreen extends StatefulWidget {
   final bool isTestMode;
+  final EntitlementDecision entitlementDecision;
+  final PinVerificationService? pinVerificationService;
+  final EmergencyPlatformService? emergencyPlatformService;
 
-  const CountdownScreen({super.key, this.isTestMode = false});
+  const CountdownScreen({
+    super.key,
+    this.isTestMode = false,
+    this.entitlementDecision = EntitlementDecision.unknown,
+    this.pinVerificationService,
+    this.emergencyPlatformService,
+  });
 
   @override
   State<CountdownScreen> createState() => _CountdownScreenState();
@@ -42,23 +51,35 @@ class _CountdownScreenState extends State<CountdownScreen>
   int _countdown = 10;
   Timer? _timer;
   String _pin = "";
-  String? _correctPin;
+  PinState _pinState = PinState.loading;
+  bool _verificationInProgress = false;
+  DateTime? _lastWrongPinEvaluation;
   late AnimationController _shakeController;
   late AnimationController _tickBounceController;
   late AnimationController _glowController;
   EmergencyContact? _emergencyContact;
   late final ContactsRepository _contactsRepository =
       serviceLocator<ContactsRepository>();
-  // Offline-first: No EmergencyRepository (Firebase removed)
-  late final SecureStorage _secureStorage = serviceLocator<SecureStorage>();
+  late final PinVerificationService _pinVerificationService =
+      widget.pinVerificationService ?? PinVerificationService.instance;
+  late final EmergencyPlatformService _emergencyPlatformService =
+      widget.emergencyPlatformService ?? EmergencyPlatformService.instance;
+  late final EmergencyDispatchPipeline _dispatchPipeline =
+      EmergencyDispatchPipeline(
+        onBestEffortError: (error, _) {
+          debugPrint('CountdownScreen best-effort operation failed: $error');
+        },
+      );
   bool _handoffToEmergencyScreen = false;
   bool _isNavigating = false;
   bool _emergencyDispatched = false;
   late final String _dispatchId =
       'countdown-${DateTime.now().microsecondsSinceEpoch}-${Random.secure().nextInt(1 << 32)}';
-  DateTime? _lockoutEndTime;
-  StreamSubscription<int>? _lockoutSubscription;
-  int _lockoutRemaining = 0;
+  String get _foregroundOwner => 'countdown:$_dispatchId';
+  SessionToken? _sessionToken;
+  ArmResult? _armResult;
+  String? _armedTargetNumber;
+  String? _armedTargetName;
 
   @override
   void initState() {
@@ -76,11 +97,16 @@ class _CountdownScreenState extends State<CountdownScreen>
       duration: const Duration(milliseconds: 800),
     )..repeat(reverse: true);
 
-    _loadPin();
-    _loadEmergencyContact();
-    _syncLockoutState();
-    _startCountdownAfterPermission();
-    KoruBeniForegroundService.start();
+    _bootstrapAndStartCountdown();
+    unawaited(KoruBeniForegroundService.start(owner: _foregroundOwner));
+  }
+
+  Future<void> _bootstrapAndStartCountdown() async {
+    if (!widget.isTestMode) {
+      await Future.wait<void>([_loadPin(), _loadEmergencyContact()]);
+    }
+    if (!mounted) return;
+    await _startCountdownAfterPermission();
   }
 
   /// Release-of-panic-button kicks off the countdown immediately.
@@ -100,20 +126,8 @@ class _CountdownScreenState extends State<CountdownScreen>
   }
 
   Future<void> _loadPin() async {
-    final secureValue = await _secureStorage.read(
-      key: SecureStorageKeys.userPin,
-    );
-    if (secureValue != null && secureValue.isNotEmpty) {
-      if (mounted) setState(() => _correctPin = secureValue);
-      return;
-    }
-    final prefs = await SharedPreferences.getInstance();
-    final legacy = prefs.getString(SecureStorageKeys.userPin);
-    if (legacy != null && legacy.isNotEmpty) {
-      await _secureStorage.write(key: SecureStorageKeys.userPin, value: legacy);
-      await prefs.remove(SecureStorageKeys.userPin);
-      if (mounted) setState(() => _correctPin = legacy);
-    }
+    final state = await _pinVerificationService.loadState();
+    if (mounted) setState(() => _pinState = state);
   }
 
   Future<void> _loadEmergencyContact() async {
@@ -123,15 +137,11 @@ class _CountdownScreenState extends State<CountdownScreen>
     }
   }
 
-  /// Schedule a native AlarmManager backup after the primary Dart path is armed.
-  /// If exact alarms are denied, native falls back to an inexact alarm; this is
-  /// a degraded safety net, not a guarantee.
-  Future<void> _scheduleNativeBackupAlarm() async {
+  /// Arm the native authority before starting the Dart projection. Exact-alarm
+  /// access is required at arm time; a distinct inexact alarm is retained only
+  /// as a best-effort backup if that access is revoked after arming.
+  Future<ArmResult> _scheduleNativeBackupAlarm() async {
     try {
-      final numbers = await _contactsRepository.getAllEmergencyNumbers();
-      final validNumbers = numbers
-          .where(EmergencyNumberValidator.isCallableEmergencyTarget)
-          .toList(growable: false);
       final primaryCandidate = _emergencyContact?.phone;
       final primaryNumber =
           primaryCandidate != null &&
@@ -139,23 +149,37 @@ class _CountdownScreenState extends State<CountdownScreen>
                 primaryCandidate,
               )
           ? primaryCandidate
-          : (validNumbers.isNotEmpty ? validNumbers.first : null);
+          : null;
 
-      // No callable target configured — never synthesize 112. Skip the native
-      // backup; the Dart path surfaces the manual-dial fail-safe instead.
+      // A safety session is bound only to the explicitly selected primary.
+      // Silently falling back to list order can dispatch to the wrong person.
       if (primaryNumber == null) {
-        return;
+        return const ArmRejected('callableTargetMissing');
       }
 
-      // Schedule alarm for 12 seconds from now (10s countdown + 2s grace)
-      final deadline = DateTime.now().add(const Duration(seconds: 12));
-      await EmergencyPlatformService.instance.scheduleCountdownAlarm(
-        deadline: deadline,
-        primaryNumber: primaryNumber,
-        dispatchId: _dispatchId,
+      _armedTargetNumber = AndroidIntentService.normalizePhoneNumber(
+        primaryNumber,
       );
-    } catch (e) {
-      debugPrint('CountdownScreen: Native alarm scheduling failed: $e');
+      _armedTargetName = _emergencyContact?.name;
+
+      // Dart and native race against the same 10-second deadline. Whichever
+      // claims first performs the request; the loser reads the durable result.
+      final deadline = DateTime.now().add(const Duration(seconds: 10));
+      final result = await _emergencyPlatformService.armEmergencySession(
+        kind: EmergencySessionKind.panic,
+        mainDeadline: deadline,
+        finalDeadline: deadline,
+        target: _armedTargetNumber!,
+        entitlementDecision: widget.entitlementDecision,
+        pinConfigured: _pinState == PinState.configured,
+        randomId: _dispatchId,
+      );
+      _armResult = result;
+      _sessionToken = result.token;
+      return result;
+    } catch (error) {
+      debugPrint('CountdownScreen: Native session arm failed: $error');
+      return const ArmUnknown('flutterArmException');
     }
   }
 
@@ -165,15 +189,20 @@ class _CountdownScreenState extends State<CountdownScreen>
     // transition during this window cannot leave us without a safety net.
     await _scheduleNativeBackupAlarm();
     if (!mounted || _timer != null) return;
+    _startDartCountdownTimer();
+  }
+
+  void _startDartCountdownTimer() {
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (_countdown > 0) {
+      if (_countdown > 1) {
         setState(() => _countdown--);
         HapticService.countdownTick(secondsRemaining: _countdown);
         // ── Tick bounce animation ──
         _tickBounceController.forward(from: 0);
       } else {
+        if (mounted) setState(() => _countdown = 0);
         timer.cancel();
-        _makeEmergencyCall();
+        unawaited(_makeEmergencyCall());
       }
     });
   }
@@ -182,38 +211,13 @@ class _CountdownScreenState extends State<CountdownScreen>
     if (_emergencyDispatched || _isNavigating) return;
     _emergencyDispatched = true;
 
-    // If native backup already fired, skip duplicate execution.
-    try {
-      final alarmFired = await EmergencyPlatformService.instance
-          .didCountdownAlarmFire(dispatchId: _dispatchId);
-      if (alarmFired) {
-        debugPrint(
-          'CountdownScreen: Native alarm already fired — skipping Dart dispatch',
-        );
-        await KoruBeniForegroundService.stop();
-        if (mounted) Navigator.pop(context);
-        return;
-      }
-    } catch (_) {}
-    // Cancel the native backup alarm. Cleanup-only: if it fails, emergency
-    // dispatch MUST still proceed. Never let cleanup block dispatch.
-    try {
-      await EmergencyPlatformService.instance.cancelCountdownAlarm(
-        dispatchId: _dispatchId,
-      );
-    } on Exception catch (e) {
-      debugPrint(
-        'CountdownScreen: cancelCountdownAlarm failed, continuing dispatch: $e',
-      );
-    }
-
     // WakeLock safety net: ensure CPU stays awake during emergency execution
     try {
       await WakelockPlus.enable();
     } catch (_) {}
 
     if (widget.isTestMode) {
-      await KoruBeniForegroundService.stop();
+      await KoruBeniForegroundService.stop(owner: _foregroundOwner);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -231,7 +235,7 @@ class _CountdownScreenState extends State<CountdownScreen>
     } catch (e) {
       // FAIL-SAFE: If ANY unhandled exception occurs, show blocking error with manual call option.
       debugPrint('CountdownScreen: Emergency execution crashed: $e');
-      await KoruBeniForegroundService.stop();
+      await KoruBeniForegroundService.stop(owner: _foregroundOwner);
       if (mounted) {
         final primaryNumber = _emergencyContact?.phone ?? '';
         await _showBlockingFailure(
@@ -244,66 +248,69 @@ class _CountdownScreenState extends State<CountdownScreen>
   }
 
   Future<void> _executeEmergency() async {
-    // All configured, callable numbers — the panic flow still fails over across
-    // every one of them. Never synthesize 112 when the list is empty.
-    final numbers = (await _contactsRepository.getAllEmergencyNumbers())
-        .where(EmergencyNumberValidator.isCallableEmergencyTarget)
-        .toList(growable: false);
+    // The arming-time target is immutable. Contact edits during a countdown
+    // cannot redirect an already-authorized safety action.
+    final primaryNumber = _armedTargetNumber;
 
-    final primaryCandidate = _emergencyContact?.phone;
-    final primaryNumber =
-        primaryCandidate != null &&
-            EmergencyNumberValidator.isCallableEmergencyTarget(primaryCandidate)
-        ? primaryCandidate
-        : (numbers.isNotEmpty ? numbers.first : null);
-
-    OfflineQueueService.instance.enqueue(
-      OfflineEvent(
-        type: 'emergency',
-        title: "countdown_emergency_title".tr(),
-        description: "countdown_emergency_desc".tr(),
-        data: const {},
-      ),
-    );
-
-    await ActivityService.logEvent(
-      type: ActivityType.emergencyTriggered,
-      title: "countdown_emergency_title".tr(),
-      description: "countdown_emergency_desc".tr(),
-    );
-
-    await HapticService.emergencyTriggered();
-
-    await NotificationService.instance.showEmergencyAlert(
-      id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
-      title: 'countdown_emergency_title'.tr(),
-      body: 'alarm_notification_body'.tr(),
-    );
-
-    // Failover: try each number until one opens a direct call or dialer.
-    var callResult = EmergencyCallResult.failed('');
-    var calledNumber = primaryNumber ?? '';
-    if (primaryNumber != null && primaryNumber.isNotEmpty) {
-      callResult = await EmergencyPlatformService.instance
-          .executeEmergencyNative(primaryNumber: primaryNumber);
-      if (callResult.isSuccess) {
-        calledNumber = callResult.number;
-      }
-      if (!callResult.isSuccess && numbers.length > 1) {
-        for (final fallbackNumber in numbers) {
-          if (fallbackNumber == primaryNumber) continue;
-          callResult = await EmergencyPlatformService.instance
-              .executeEmergencyNative(primaryNumber: fallbackNumber);
-          if (callResult.isSuccess) {
-            calledNumber = fallbackNumber;
-            break;
+    final callResult = await _dispatchPipeline.execute<EmergencyCallResult?>(
+      criticalOperation: () async {
+        final token = _sessionToken;
+        if (token != null) {
+          final dispatch = await _emergencyPlatformService
+              .dispatchEmergencySession(
+                token: token,
+                source: 'dartPanicCountdown',
+              );
+          if (dispatch.wasCancelled) {
+            await KoruBeniForegroundService.stop(owner: _foregroundOwner);
+            if (mounted) Navigator.pop(context);
+            return null;
+          }
+          if (dispatch.requestWasSubmitted) {
+            return EmergencyCallResult.requested(primaryNumber ?? '');
           }
         }
-      }
-    }
+
+        // A timeout/failed request may still have raced across the native
+        // boundary. A visible Activity can request ACTION_DIAL without making
+        // a false automatic-call claim. A missing token means native arm was
+        // definitively rejected and uses the same foreground-only path.
+        final dialerOpened = primaryNumber != null && primaryNumber.isNotEmpty
+            ? await AndroidIntentService.openDialer(primaryNumber)
+            : false;
+        return dialerOpened
+            ? EmergencyCallResult.dialer(primaryNumber)
+            : EmergencyCallResult.failed(primaryNumber ?? '');
+      },
+      shouldRunBestEffort: (result) => result != null,
+      bestEffortOperations: <FutureOr<void> Function()>[
+        () => OfflineQueueService.instance.enqueue(
+          OfflineEvent(
+            type: 'emergency',
+            title: "countdown_emergency_title".tr(),
+            description: "countdown_emergency_desc".tr(),
+            data: const {},
+          ),
+        ),
+        () => ActivityService.logEvent(
+          type: ActivityType.emergencyTriggered,
+          title: "countdown_emergency_title".tr(),
+          description: "countdown_emergency_desc".tr(),
+        ),
+        HapticService.emergencyTriggered,
+        () => NotificationService.instance.showEmergencyAlert(
+          id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+          title: 'countdown_emergency_title'.tr(),
+          body: 'alarm_notification_body'.tr(),
+        ),
+      ],
+    );
+    if (callResult == null) return;
+
+    final calledNumber = primaryNumber ?? '';
 
     if (callResult.isFailed) {
-      await KoruBeniForegroundService.stop();
+      await KoruBeniForegroundService.stop(owner: _foregroundOwner);
       if (mounted) {
         await _showBlockingFailure(
           title: 'emergency_total_failure_title'.tr(),
@@ -322,9 +329,14 @@ class _CountdownScreenState extends State<CountdownScreen>
           context,
           MaterialPageRoute(
             builder: (context) => EmergencyCallScreen(
-              name: _emergencyContact?.name ?? "countdown_emergency_label".tr(),
+              name:
+                  _armedTargetName ??
+                  _emergencyContact?.name ??
+                  "countdown_emergency_label".tr(),
+              // Display the immutable arming-time identity when available.
               phone: calledNumber,
               callResult: callResult,
+              foregroundOwner: _foregroundOwner,
             ),
           ),
         );
@@ -510,18 +522,14 @@ class _CountdownScreenState extends State<CountdownScreen>
   @override
   void dispose() {
     _timer?.cancel();
-    _lockoutSubscription?.cancel();
     _shakeController.dispose();
     _tickBounceController.dispose();
     _glowController.dispose();
     if (!_handoffToEmergencyScreen && !_emergencyDispatched) {
-      // Only cancel alarm if we're not handing off to emergency
-      unawaited(
-        EmergencyPlatformService.instance.cancelCountdownAlarm(
-          dispatchId: _dispatchId,
-        ),
-      );
-      KoruBeniForegroundService.stop();
+      // Widget lifecycle is not cancellation authority. The native session
+      // survives route disposal/process recreation until verified PIN cancel,
+      // dispatch or expiry reaches a durable terminal state.
+      unawaited(KoruBeniForegroundService.stop(owner: _foregroundOwner));
     }
     // Release the wakelock unless EmergencyCallScreen is taking over. If
     // wakelock was never enabled (cancelled before dispatch), disable() is
@@ -537,12 +545,6 @@ class _CountdownScreenState extends State<CountdownScreen>
     super.dispose();
   }
 
-  void _cancelWithoutPin() {
-    unawaited(
-      _cancelCountdownAndExit(description: "emergency_cancelled_no_pin".tr()),
-    );
-  }
-
   Future<void> _cancelCountdownAndExit({
     required String description,
     bool resetPinLockout = false,
@@ -550,11 +552,39 @@ class _CountdownScreenState extends State<CountdownScreen>
     if (_isNavigating || _emergencyDispatched) return;
     _isNavigating = true;
     _timer?.cancel();
-    await EmergencyPlatformService.instance.cancelCountdownAlarm(
-      dispatchId: _dispatchId,
-    );
+    _timer = null;
+    final token = _sessionToken;
+    final cancelResult = token == null
+        ? null
+        : await _emergencyPlatformService.cancelEmergencySession(token);
+    final definitivelyNoNativeSession =
+        token == null && _armResult is ArmRejected;
+    final cancellationConfirmed =
+        definitivelyNoNativeSession ||
+        (cancelResult?.isConfirmedCancelled ?? false);
+    if (!cancellationConfirmed) {
+      _isNavigating = false;
+      if (mounted) {
+        final message = cancelResult is SessionCancelTooLate
+            ? 'emergency_cancel_too_late'.tr()
+            : 'emergency_cancel_unconfirmed'.tr();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(message),
+            backgroundColor: AppColors.emergency,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+      if (cancelResult is SessionCancelTooLate) {
+        _emergencyDispatched = false;
+        unawaited(_makeEmergencyCall());
+      } else {
+        _startDartCountdownTimer();
+      }
+      return;
+    }
     if (resetPinLockout) {
-      _lockoutSubscription?.cancel();
       await PinLockoutService.instance.reset();
     }
     await ActivityService.logEvent(
@@ -562,46 +592,19 @@ class _CountdownScreenState extends State<CountdownScreen>
       title: "countdown_cancelled_title".tr(),
       description: description,
     );
-    await KoruBeniForegroundService.stop();
+    await KoruBeniForegroundService.stop(owner: _foregroundOwner);
     if (mounted) {
       Navigator.pop(context);
     }
   }
 
-  bool get _isPinLockedOut =>
-      _lockoutEndTime != null && DateTime.now().isBefore(_lockoutEndTime!);
-
-  Future<void> _syncLockoutState() async {
-    final state = await PinLockoutService.instance.getState();
-    if (!mounted) return;
-    setState(() {
-      _lockoutEndTime = state.lockedUntil;
-      _lockoutRemaining = state.remainingSeconds;
-    });
-    if (state.isLocked) {
-      _startPinLockout(state);
-    }
-  }
-
-  void _startPinLockout(PinLockoutState state) {
-    _lockoutSubscription?.cancel();
-    _lockoutSubscription = PinLockoutService.instance
-        .countdownStream(state)
-        .listen((remaining) {
-          if (!mounted) {
-            return;
-          }
-          setState(() {
-            _lockoutRemaining = remaining;
-            if (remaining == 0) {
-              _lockoutEndTime = null;
-            }
-          });
-        });
-  }
-
   void _handlePinInput(String key) {
-    if (_isPinLockedOut || _isNavigating || _emergencyDispatched) return;
+    if (_pinState != PinState.configured ||
+        _verificationInProgress ||
+        _isNavigating ||
+        _emergencyDispatched) {
+      return;
+    }
     HapticFeedback.lightImpact();
 
     if (key == "DEL") {
@@ -615,58 +618,60 @@ class _CountdownScreenState extends State<CountdownScreen>
       setState(() => _pin += key);
 
       if (_pin.length == 4) {
-        if (_correctPin != null && _pin == _correctPin && !_isNavigating) {
-          unawaited(
-            _cancelCountdownAndExit(
-              description: "countdown_cancelled_pin".tr(),
-              resetPinLockout: true,
-            ),
-          );
-        } else {
-          _shakeController.forward(from: 0);
-          HapticFeedback.vibrate();
-          PinLockoutService.instance
-              .registerFailure()
-              .then((state) {
-                if (!mounted) return;
-                setState(() {
-                  _lockoutEndTime = state.lockedUntil;
-                  _lockoutRemaining = state.remainingSeconds;
-                });
-                if (state.isLocked) {
-                  _startPinLockout(state);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        'brute_force_locked'.tr(
-                          namedArgs: {'seconds': '${state.remainingSeconds}'},
-                        ),
-                      ),
-                      backgroundColor: AppColors.emergency,
-                      behavior: SnackBarBehavior.floating,
-                      duration: const Duration(seconds: 3),
-                    ),
-                  );
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text("pin_mismatch".tr()),
-                      backgroundColor: AppColors.emergency,
-                    ),
-                  );
-                }
-              })
-              .catchError((Object error, StackTrace stack) {
-                debugPrint('PinLockoutService.registerFailure failed: $error');
-              });
-          Future.delayed(const Duration(milliseconds: 300), () {
-            if (mounted) {
-              setState(() => _pin = "");
-            }
-          });
-        }
+        final candidate = _pin;
+        _verificationInProgress = true;
+        unawaited(_verifyPinAndMaybeCancel(candidate));
       }
     }
+  }
+
+  Future<void> _verifyPinAndMaybeCancel(String candidate) async {
+    final verification = await _pinVerificationService.verify(candidate);
+    if (!mounted) return;
+    _pinState = verification.state;
+    if (verification.matches && !_isNavigating) {
+      _verificationInProgress = false;
+      await _cancelCountdownAndExit(
+        description: "countdown_cancelled_pin".tr(),
+        resetPinLockout: true,
+      );
+      return;
+    }
+
+    final now = DateTime.now();
+    final shouldEvaluateWrongPin =
+        verification.state == PinState.configured &&
+        (_lastWrongPinEvaluation == null ||
+            now.difference(_lastWrongPinEvaluation!) >=
+                const Duration(seconds: 1));
+    _lastWrongPinEvaluation = shouldEvaluateWrongPin
+        ? now
+        : _lastWrongPinEvaluation;
+    if (shouldEvaluateWrongPin) {
+      await PinLockoutService.instance.registerFailure().catchError((
+        Object error,
+      ) {
+        debugPrint('PinLockoutService.registerFailure failed: $error');
+        return const PinLockoutState(failedAttempts: 0, lockedUntil: null);
+      });
+    }
+    if (!mounted) return;
+    _shakeController.forward(from: 0);
+    HapticFeedback.vibrate();
+    setState(() {
+      _pin = '';
+      _verificationInProgress = false;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          verification.state == PinState.readFailed
+              ? 'pin_state_read_failed'.tr()
+              : "pin_mismatch".tr(),
+        ),
+        backgroundColor: AppColors.emergency,
+      ),
+    );
   }
 
   @override
@@ -674,328 +679,296 @@ class _CountdownScreenState extends State<CountdownScreen>
     final isUrgent = _countdown <= 5;
     final urgentColor = isUrgent ? AppColors.emergency : AppColors.warning;
 
-    return Semantics(
-      label: "semantics_countdown".tr(),
-      hint: "semantics_countdown_hint".tr(),
-      child: Scaffold(
-        backgroundColor: AppColors.background,
-        body: AnimatedBuilder(
-          animation: _glowController,
-          builder: (context, child) {
-            // ── Pulsating background glow in last 5 seconds ──
-            final glowAlpha = isUrgent
-                ? (0.03 + _glowController.value * 0.08)
-                : 0.0;
-            return Container(
-              decoration: BoxDecoration(
-                gradient: RadialGradient(
-                  center: Alignment.topCenter,
-                  radius: 1.2,
-                  colors: [
-                    AppColors.emergency.withValues(alpha: glowAlpha),
-                    AppColors.background,
-                  ],
+    return PopScope(
+      // The explicit PIN/no-PIN controls below are the only cancellation
+      // authority. Allowing Navigator to pop this route would run dispose(),
+      // cancel the native alarm, and silently bypass that contract.
+      // `canPop: false` also covers Android predictive Back.
+      canPop: false,
+      child: Semantics(
+        label: "semantics_countdown".tr(),
+        hint: "semantics_countdown_hint".tr(),
+        child: Scaffold(
+          backgroundColor: AppColors.background,
+          body: AnimatedBuilder(
+            animation: _glowController,
+            builder: (context, child) {
+              // ── Pulsating background glow in last 5 seconds ──
+              final glowAlpha = isUrgent
+                  ? (0.03 + _glowController.value * 0.08)
+                  : 0.0;
+              return Container(
+                decoration: BoxDecoration(
+                  gradient: RadialGradient(
+                    center: Alignment.topCenter,
+                    radius: 1.2,
+                    colors: [
+                      AppColors.emergency.withValues(alpha: glowAlpha),
+                      AppColors.background,
+                    ],
+                  ),
                 ),
-              ),
-              child: child,
-            );
-          },
-          child: SafeArea(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final compact = constraints.maxHeight < 720;
-                final pagePadding = compact ? 16.0 : 24.0;
-                final topGap = compact ? 8.0 : 12.0;
-                final sectionGap = 24.0;
-                final pinGap = compact ? 28.0 : 24.0;
-                final bottomGap = 16.0;
-                final circleSize = compact ? 152.0 : 144.0;
-                final countdownFontSize = compact ? 58.0 : 56.0;
-                final bannerPadding = compact ? 16.0 : 20.0;
-                return SingleChildScrollView(
-                  padding: EdgeInsets.all(pagePadding),
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(
-                      minHeight: constraints.maxHeight - (pagePadding * 2),
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        SizedBox(height: topGap),
-                        // Warning banner
-                        Container(
-                          padding: EdgeInsets.all(bannerPadding),
-                          decoration: BoxDecoration(
-                            color: AppColors.emergency.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(18),
-                            border: Border.all(
-                              color: AppColors.emergency.withValues(alpha: 0.3),
-                              width: 2,
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              const Icon(
-                                Icons.warning_rounded,
-                                color: AppColors.emergency,
-                                size: 26,
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: Text(
-                                  "countdown_warning_title".tr(),
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w800,
-                                    color: AppColors.textPrimary,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        if (widget.isTestMode) ...[
-                          const SizedBox(height: 10),
+                child: child,
+              );
+            },
+            child: SafeArea(
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final compact = constraints.maxHeight < 720;
+                  final pagePadding = compact ? 16.0 : 24.0;
+                  final topGap = compact ? 8.0 : 12.0;
+                  final sectionGap = 24.0;
+                  final pinGap = compact ? 28.0 : 24.0;
+                  final bottomGap = 16.0;
+                  final circleSize = compact ? 152.0 : 144.0;
+                  final countdownFontSize = compact ? 58.0 : 56.0;
+                  final bannerPadding = compact ? 16.0 : 20.0;
+                  return SingleChildScrollView(
+                    padding: EdgeInsets.all(pagePadding),
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        minHeight: constraints.maxHeight - (pagePadding * 2),
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          SizedBox(height: topGap),
+                          // Warning banner
                           Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical: 8,
-                            ),
+                            padding: EdgeInsets.all(bannerPadding),
                             decoration: BoxDecoration(
-                              color: AppColors.success.withValues(alpha: 0.15),
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color: AppColors.success.withValues(alpha: 0.3),
-                              ),
-                            ),
-                            child: Text(
-                              "countdown_test_mode".tr(),
-                              style: const TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.success,
-                              ),
-                            ),
-                          ),
-                        ],
-                        SizedBox(height: sectionGap),
-                        // ── Countdown circle with gradient arc + tick bounce ──
-                        Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            // Gradient arc
-                            SizedBox(
-                              width: circleSize,
-                              height: circleSize,
-                              child: CustomPaint(
-                                painter: _GradientArcPainter(
-                                  progress: _countdown / 10,
-                                  startColor: urgentColor,
-                                  endColor: isUrgent
-                                      ? const Color(0xFFFF8A65)
-                                      : AppColors.primary,
-                                  bgColor: AppColors.border.withValues(
-                                    alpha: 0.5,
-                                  ),
-                                  strokeWidth: 14,
-                                ),
-                              ),
-                            ),
-                            // Bouncing countdown number
-                            Semantics(
-                              liveRegion: true,
-                              container: true,
-                              label: _liveCountdownAnnouncement(_countdown),
-                              child: ExcludeSemantics(
-                                child: AnimatedBuilder(
-                                  animation: _tickBounceController,
-                                  builder: (context, child) {
-                                    final bounceScale =
-                                        1.0 +
-                                        (sin(_tickBounceController.value * pi) *
-                                            0.12);
-                                    return Transform.scale(
-                                      scale: bounceScale,
-                                      child: child,
-                                    );
-                                  },
-                                  child: Column(
-                                    children: [
-                                      Text(
-                                        "$_countdown",
-                                        style: TextStyle(
-                                          fontSize: countdownFontSize,
-                                          fontWeight: FontWeight.w900,
-                                          color: urgentColor,
-                                          height: 1,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        "countdown_seconds".tr(),
-                                        style: const TextStyle(
-                                          fontSize: 15,
-                                          color: AppColors.textSecondary,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: sectionGap),
-                        if (_isPinLockedOut) ...[
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 10,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppColors.emergency.withValues(
-                                alpha: 0.12,
-                              ),
-                              borderRadius: BorderRadius.circular(12),
+                              color: AppColors.emergency.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(18),
                               border: Border.all(
                                 color: AppColors.emergency.withValues(
-                                  alpha: 0.4,
+                                  alpha: 0.3,
                                 ),
+                                width: 2,
                               ),
                             ),
                             child: Row(
-                              mainAxisSize: MainAxisSize.min,
                               children: [
                                 const Icon(
-                                  Icons.lock_clock_rounded,
+                                  Icons.warning_rounded,
                                   color: AppColors.emergency,
-                                  size: 20,
+                                  size: 26,
                                 ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  'brute_force_locked_short'.tr(
-                                    namedArgs: {
-                                      'seconds': '$_lockoutRemaining',
-                                    },
-                                  ),
-                                  style: const TextStyle(
-                                    color: AppColors.emergency,
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 14,
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: Text(
+                                    "countdown_warning_title".tr(),
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w800,
+                                      color: AppColors.textPrimary,
+                                    ),
                                   ),
                                 ),
                               ],
                             ),
                           ),
-                          const SizedBox(height: 12),
-                        ],
-                        Text(
-                          _correctPin == null
-                              ? "settings_pin_not_found".tr()
-                              : "countdown_enter_pin".tr(),
-                          style: const TextStyle(
-                            fontSize: 19,
-                            fontWeight: FontWeight.w800,
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
-                        if (_emergencyContact != null) ...[
-                          const SizedBox(height: 6),
-                          Text(
-                            "countdown_emergency_contact".tr(
-                              namedArgs: {"name": _emergencyContact!.name},
-                            ),
-                            style: const TextStyle(
-                              fontSize: 13,
-                              color: AppColors.textSecondary,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                        const SizedBox(height: 10),
-                        Text(
-                          _correctPin == null
-                              ? "emergency_no_pin_warning".tr()
-                              : "countdown_disclaimer".tr(),
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: AppColors.textSecondary,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                        if (_correctPin == null) ...[
-                          const SizedBox(height: 16),
-                          OutlinedButton.icon(
-                            onPressed: _cancelWithoutPin,
-                            icon: const Icon(Icons.close_rounded, size: 20),
-                            label: Text("emergency_cancel_without_pin".tr()),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: AppColors.warning,
-                              side: const BorderSide(color: AppColors.warning),
+                          if (widget.isTestMode) ...[
+                            const SizedBox(height: 10),
+                            Container(
                               padding: const EdgeInsets.symmetric(
-                                horizontal: 24,
-                                vertical: 14,
+                                horizontal: 14,
+                                vertical: 8,
                               ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(14),
+                              decoration: BoxDecoration(
+                                color: AppColors.success.withValues(
+                                  alpha: 0.15,
+                                ),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: AppColors.success.withValues(
+                                    alpha: 0.3,
+                                  ),
+                                ),
+                              ),
+                              child: Text(
+                                "countdown_test_mode".tr(),
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.success,
+                                ),
                               ),
                             ),
+                          ],
+                          SizedBox(height: sectionGap),
+                          // ── Countdown circle with gradient arc + tick bounce ──
+                          Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              // Gradient arc
+                              SizedBox(
+                                width: circleSize,
+                                height: circleSize,
+                                child: CustomPaint(
+                                  painter: _GradientArcPainter(
+                                    progress: _countdown / 10,
+                                    startColor: urgentColor,
+                                    endColor: isUrgent
+                                        ? const Color(0xFFFF8A65)
+                                        : AppColors.primary,
+                                    bgColor: AppColors.border.withValues(
+                                      alpha: 0.5,
+                                    ),
+                                    strokeWidth: 14,
+                                  ),
+                                ),
+                              ),
+                              // Bouncing countdown number
+                              Semantics(
+                                liveRegion: true,
+                                container: true,
+                                label: _liveCountdownAnnouncement(_countdown),
+                                child: ExcludeSemantics(
+                                  child: AnimatedBuilder(
+                                    animation: _tickBounceController,
+                                    builder: (context, child) {
+                                      final bounceScale =
+                                          1.0 +
+                                          (sin(
+                                                _tickBounceController.value *
+                                                    pi,
+                                              ) *
+                                              0.12);
+                                      return Transform.scale(
+                                        scale: bounceScale,
+                                        child: child,
+                                      );
+                                    },
+                                    child: Column(
+                                      children: [
+                                        Text(
+                                          "$_countdown",
+                                          style: TextStyle(
+                                            fontSize: countdownFontSize,
+                                            fontWeight: FontWeight.w900,
+                                            color: urgentColor,
+                                            height: 1,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          "countdown_seconds".tr(),
+                                          style: const TextStyle(
+                                            fontSize: 15,
+                                            color: AppColors.textSecondary,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                        ],
-                        SizedBox(height: sectionGap),
-                        if (_correctPin != null) ...[
-                          // ── PIN dots with shake ──
-                          AnimatedBuilder(
-                            animation: _shakeController,
-                            builder: (context, child) {
-                              final offset =
-                                  sin(_shakeController.value * pi * 4) * 12;
-                              return Transform.translate(
-                                offset: Offset(offset, 0),
-                                child: child,
-                              );
+                          SizedBox(height: sectionGap),
+                          Text(
+                            switch (_pinState) {
+                              PinState.loading => 'pin_state_loading'.tr(),
+                              PinState.configured => "countdown_enter_pin".tr(),
+                              PinState.absent => "settings_pin_not_found".tr(),
+                              PinState.readFailed =>
+                                'pin_state_read_failed'.tr(),
                             },
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: List.generate(4, (index) {
-                                final isFilled = index < _pin.length;
-                                return AnimatedContainer(
-                                  duration: const Duration(milliseconds: 150),
-                                  curve: Curves.easeOutBack,
-                                  margin: const EdgeInsets.symmetric(
-                                    horizontal: 10,
-                                  ),
-                                  width: isFilled ? 20 : 18,
-                                  height: isFilled ? 20 : 18,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: isFilled
-                                        ? AppColors.primary
-                                        : AppColors.border,
-                                    boxShadow: isFilled
-                                        ? [
-                                            BoxShadow(
-                                              color: AppColors.primary
-                                                  .withValues(alpha: 0.4),
-                                              blurRadius: 8,
-                                            ),
-                                          ]
-                                        : null,
-                                  ),
-                                );
-                              }),
+                            style: const TextStyle(
+                              fontSize: 19,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.textPrimary,
                             ),
                           ),
-                          SizedBox(height: pinGap),
-                          _buildNumberPad(),
+                          if (_emergencyContact != null) ...[
+                            const SizedBox(height: 6),
+                            Text(
+                              "countdown_emergency_contact".tr(
+                                namedArgs: {
+                                  "name":
+                                      _armedTargetName ??
+                                      _emergencyContact!.name,
+                                },
+                              ),
+                              style: const TextStyle(
+                                fontSize: 13,
+                                color: AppColors.textSecondary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                          const SizedBox(height: 10),
+                          Text(
+                            _pinState == PinState.configured
+                                ? "countdown_disclaimer".tr()
+                                : switch (_pinState) {
+                                    PinState.loading =>
+                                      'pin_state_loading'.tr(),
+                                    PinState.readFailed =>
+                                      'pin_state_read_failed'.tr(),
+                                    _ => "settings_pin_not_found".tr(),
+                                  },
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: AppColors.textSecondary,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          SizedBox(height: sectionGap),
+                          if (_pinState == PinState.configured) ...[
+                            // ── PIN dots with shake ──
+                            AnimatedBuilder(
+                              animation: _shakeController,
+                              builder: (context, child) {
+                                final offset =
+                                    sin(_shakeController.value * pi * 4) * 12;
+                                return Transform.translate(
+                                  offset: Offset(offset, 0),
+                                  child: child,
+                                );
+                              },
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: List.generate(4, (index) {
+                                  final isFilled = index < _pin.length;
+                                  return AnimatedContainer(
+                                    duration: const Duration(milliseconds: 150),
+                                    curve: Curves.easeOutBack,
+                                    margin: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                    ),
+                                    width: isFilled ? 20 : 18,
+                                    height: isFilled ? 20 : 18,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: isFilled
+                                          ? AppColors.primary
+                                          : AppColors.border,
+                                      boxShadow: isFilled
+                                          ? [
+                                              BoxShadow(
+                                                color: AppColors.primary
+                                                    .withValues(alpha: 0.4),
+                                                blurRadius: 8,
+                                              ),
+                                            ]
+                                          : null,
+                                    ),
+                                  );
+                                }),
+                              ),
+                            ),
+                            SizedBox(height: pinGap),
+                            _buildNumberPad(),
+                          ],
+                          SizedBox(height: bottomGap),
                         ],
-                        SizedBox(height: bottomGap),
-                      ],
+                      ),
                     ),
-                  ),
-                );
-              },
+                  );
+                },
+              ),
             ),
           ),
         ),

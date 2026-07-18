@@ -5,14 +5,12 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:optimize_battery/optimize_battery.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../app_colors.dart';
 import '../services/app_settings_service.dart';
+import '../services/battery_optimization_service.dart';
 
 enum NotificationPermissionRequestStatus { granted, denied, permanentlyDenied }
-
-enum _NotificationDeniedChoice { openSettings, cancel, startAnyway }
 
 /// Centralized permission handling with user-friendly dialogs.
 /// Play Store Prominent Disclosure: Tehlikeli izinler (arka plan konum, pil optimizasyonu)
@@ -75,7 +73,8 @@ class PermissionHelper {
 
   /// Pil optimizasyonu muafiyeti - Prominent Disclosure ile.
   /// Play Store: REQUEST_IGNORE_BATTERY_OPTIMIZATIONS izni için önce açık beyan.
-  /// Returns true if user accepted and system dialog completed successfully.
+  /// Returns true only if Android accepted the settings intent. The caller
+  /// must re-read the current exemption state after the app resumes.
   static Future<bool> requestBatteryOptimizationExemption(
     BuildContext context,
   ) async {
@@ -91,8 +90,7 @@ class PermissionHelper {
     if (accepted != true) return false;
 
     try {
-      await OptimizeBattery.stopOptimizingBatteryUsage();
-      return true;
+      return BatteryOptimizationService.instance.requestDisableOptimization();
     } catch (e) {
       return false;
     }
@@ -226,115 +224,6 @@ class PermissionHelper {
     return result.isPermanentlyDenied
         ? NotificationPermissionRequestStatus.permanentlyDenied
         : NotificationPermissionRequestStatus.denied;
-  }
-
-  /// Shows a "notifications denied — start session anyway?" confirmation
-  /// dialog per the Play readiness report M.3 step 4. Returns `true` if
-  /// the caller should proceed with the safety session despite missing
-  /// notification permission (user has explicitly accepted the degraded
-  /// mode warning). Returns `false` if the user opens settings or
-  /// cancels.
-  static Future<bool> confirmStartSessionWithoutNotifications(
-    BuildContext context,
-  ) async {
-    final result = await showDialog<_NotificationDeniedChoice>(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => Semantics(
-        label:
-            '${'notification_denied_session_title'.tr()}. '
-            '${'notification_denied_session_body'.tr()}',
-        child: AlertDialog(
-          backgroundColor: AppColors.cardBg,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 64,
-                height: 64,
-                decoration: BoxDecoration(
-                  color: AppColors.warning.withValues(alpha: 0.12),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.notifications_off_rounded,
-                  color: AppColors.warning,
-                  size: 32,
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'notification_denied_session_title'.tr(),
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.textPrimary,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 10),
-              Text(
-                'notification_denied_session_body'.tr(),
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: AppColors.textSecondary,
-                  height: 1.5,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-          actionsOverflowDirection: VerticalDirection.down,
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(
-                ctx,
-                _NotificationDeniedChoice.openSettings,
-              ),
-              child: Text(
-                'notification_denied_session_open_settings'.tr(),
-                style: const TextStyle(color: AppColors.primary),
-              ),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(
-                ctx,
-                _NotificationDeniedChoice.cancel,
-              ),
-              child: Text(
-                'perm_cancel'.tr(),
-                style: const TextStyle(color: AppColors.textSecondary),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () => Navigator.pop(
-                ctx,
-                _NotificationDeniedChoice.startAnyway,
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.warning,
-                foregroundColor: AppColors.background,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: Text(
-                'notification_denied_session_start_anyway'.tr(),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-
-    if (result == _NotificationDeniedChoice.openSettings) {
-      await openNotificationSettings();
-      return false;
-    }
-    return result == _NotificationDeniedChoice.startAnyway;
   }
 
   /// Open the system notification settings page for KoruBeni.

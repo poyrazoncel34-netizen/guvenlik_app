@@ -2,17 +2,29 @@
 // SUBSCRIPTION PROVIDER — KoruBeni Pro abonelik durumu
 // ============================================================================
 
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 import '../../core/services/revenue_cat_service.dart';
 import '../../core/di/service_locator.dart';
+import '../../core/services/emergency_session_contract.dart';
+import '../../core/services/subscription_access_state.dart';
 
 class SubscriptionProvider extends ChangeNotifier {
+  SubscriptionProvider({RevenueCatService? revenueCatService})
+    : _injectedRevenueCatService = revenueCatService;
+
   // ---------------------------------------------------------------------------
   // State
   // ---------------------------------------------------------------------------
-  bool _isPro = false;
+  final RevenueCatService? _injectedRevenueCatService;
   bool _isLoading = false;
+  SubscriptionAccessState _access =
+      const SubscriptionAccessState.uninitialized();
+  Future<void>? _initializationFuture;
+  Future<void>? _refreshFuture;
+  CustomerInfoUpdateListener? _customerInfoUpdateListener;
   Offerings? _offerings;
   CustomerInfo? _customerInfo;
   String? _errorMessage;
@@ -20,8 +32,11 @@ class SubscriptionProvider extends ChangeNotifier {
   // ---------------------------------------------------------------------------
   // Getters
   // ---------------------------------------------------------------------------
-  bool get isPro => _isPro;
+  bool get isPro => _access.canUsePaidSafetyFeature;
   bool get isLoading => _isLoading;
+  SubscriptionAccessState get access => _access;
+  SubscriptionAccessStatus get accessStatus => _access.status;
+  EntitlementDecision get entitlementDecision => _access.entitlementDecision;
   Offerings? get offerings => _offerings;
   CustomerInfo? get customerInfo => _customerInfo;
   String? get errorMessage => _errorMessage;
@@ -38,17 +53,35 @@ class SubscriptionProvider extends ChangeNotifier {
       monthlyPackage != null &&
       annualPackage != null;
 
-  RevenueCatService get _rcService => serviceLocator<RevenueCatService>();
+  RevenueCatService get _rcService =>
+      _injectedRevenueCatService ?? serviceLocator<RevenueCatService>();
 
   // ---------------------------------------------------------------------------
   // Initialization
   // ---------------------------------------------------------------------------
 
-  /// Call once after RevenueCatService.initialize() to load current state.
-  Future<void> initialize() async {
-    if (kIsWeb) return;
+  /// Lazy entry point for Pro/paywall flows. RevenueCatService enforces the
+  /// current Terms+KVKK gate before configuring the SDK.
+  Future<void> initialize() {
+    if (kIsWeb) return Future<void>.value();
+    if (_access.status == SubscriptionAccessStatus.verifiedPro ||
+        _access.status == SubscriptionAccessStatus.verifiedFree) {
+      return Future<void>.value();
+    }
+    return _initializationFuture ??= _initializeOnce().whenComplete(() {
+      _initializationFuture = null;
+    });
+  }
+
+  Future<void> _initializeOnce() async {
     _setLoading(true);
+    _setAccess(_access.markLoading());
     try {
+      if (!await _rcService.ensureInitialized()) {
+        _setAccess(_access.markUnavailable());
+        _errorMessage = 'subscription_error_plans_unavailable';
+        return;
+      }
       final results = await Future.wait([
         _rcService.getCustomerInfo(),
         _rcService.getOfferings(),
@@ -56,16 +89,27 @@ class SubscriptionProvider extends ChangeNotifier {
       final info = results[0] as CustomerInfo?;
       final offs = results[1] as Offerings?;
       if (info != null) {
-        _customerInfo = info;
-        _isPro = _rcService.isPro(info);
+        _applyCustomerInfo(info);
+      } else {
+        _setAccess(_access.markUnavailable());
       }
       _offerings = offs;
       _errorMessage = _offeringErrorKey();
     } catch (e) {
+      _setAccess(_access.markUnavailable());
       _errorMessage = 'subscription_error_plans_unavailable';
     } finally {
       _setLoading(false);
+      _registerCustomerInfoUpdates();
     }
+  }
+
+  /// Optional post-legal startup refresh for users who have previously held a
+  /// verified Pro entitlement. The hint only triggers initialization; access
+  /// remains unknown until a current Trusted Entitlements result is applied.
+  Future<void> initializeFromPriorProHint() async {
+    if (kIsWeb || !await _rcService.hasPriorProInitializationHint()) return;
+    await initialize();
   }
 
   // ---------------------------------------------------------------------------
@@ -79,10 +123,8 @@ class SubscriptionProvider extends ChangeNotifier {
     _errorMessage = null;
     try {
       final info = await _rcService.purchasePackage(package);
-      _customerInfo = info;
-      _isPro = _rcService.isPro(info);
-      notifyListeners();
-      if (!_isPro) {
+      _applyCustomerInfo(info);
+      if (!isPro) {
         _errorMessage = 'subscription_error_entitlement';
         return _errorMessage;
       }
@@ -113,9 +155,7 @@ class SubscriptionProvider extends ChangeNotifier {
     _errorMessage = null;
     try {
       final info = await _rcService.restorePurchases();
-      _customerInfo = info;
-      _isPro = _rcService.isPro(info);
-      notifyListeners();
+      _applyCustomerInfo(info);
       return null;
     } on RevenueCatPurchaseException catch (e) {
       _errorMessage = e.isOffline
@@ -137,16 +177,39 @@ class SubscriptionProvider extends ChangeNotifier {
   // ---------------------------------------------------------------------------
 
   /// Re-fetch CustomerInfo (e.g. on app resume or after returning from paywall).
-  Future<void> refresh() async {
-    if (kIsWeb) return;
+  Future<void> refresh() {
+    if (kIsWeb) return Future<void>.value();
+    return _refreshFuture ??= _refreshOnce().whenComplete(() {
+      _refreshFuture = null;
+    });
+  }
+
+  Future<void> _refreshOnce() async {
     try {
       final info = await _rcService.getCustomerInfo();
       if (info != null) {
-        _customerInfo = info;
-        _isPro = _rcService.isPro(info);
-        notifyListeners();
+        _applyCustomerInfo(info);
+      } else {
+        _setAccess(_access.markUnavailable());
       }
-    } catch (_) {}
+    } catch (_) {
+      _setAccess(_access.markUnavailable());
+    }
+  }
+
+  /// Waits for the first entitlement decision. Loading/network failure is
+  /// returned explicitly; it is never silently converted to verified-free.
+  /// Every already-initialized new-arm decision refreshes CustomerInfo so an
+  /// old in-process Pro fact cannot silently authorize another session.
+  Future<SubscriptionAccessState> resolveAccess() async {
+    if (_access.status == SubscriptionAccessStatus.uninitialized) {
+      await initialize();
+    } else if (_access.status == SubscriptionAccessStatus.loading) {
+      await _initializationFuture;
+    } else {
+      await refresh();
+    }
+    return _access;
   }
 
   Future<void> refreshOfferings() async {
@@ -169,6 +232,44 @@ class SubscriptionProvider extends ChangeNotifier {
   void _setLoading(bool value) {
     _isLoading = value;
     notifyListeners();
+  }
+
+  void _applyCustomerInfo(CustomerInfo info) {
+    final decision = _rcService.evaluateEntitlement(info);
+    switch (decision) {
+      case EntitlementDecision.authorized:
+        _customerInfo = info;
+        _setAccess(_access.markVerified(isPro: true));
+        unawaited(_rcService.rememberVerifiedProInitializationHint());
+      case EntitlementDecision.denied:
+        _customerInfo = info;
+        _setAccess(_access.markVerified(isPro: false));
+      case EntitlementDecision.unknown:
+        // Preserve lastVerifiedPro only as an already-armed in-process lease.
+        // `canUsePaidSafetyFeature` remains false, so no new arm is authorized.
+        _setAccess(_access.markUnavailable());
+    }
+  }
+
+  void _setAccess(SubscriptionAccessState value) {
+    _access = value;
+    notifyListeners();
+  }
+
+  void _registerCustomerInfoUpdates() {
+    if (_customerInfoUpdateListener != null || !_rcService.isConfigured) return;
+    void listener(CustomerInfo info) {
+      if (_disposed) return;
+      _applyCustomerInfo(info);
+    }
+
+    try {
+      Purchases.addCustomerInfoUpdateListener(listener);
+      _customerInfoUpdateListener = listener;
+    } catch (_) {
+      // Configuration state is already reflected as unavailable. Listener
+      // registration is best-effort and never changes entitlement truth.
+    }
   }
 
   Package? _packageByType(PackageType type) {
@@ -201,6 +302,15 @@ class SubscriptionProvider extends ChangeNotifier {
   @override
   void dispose() {
     _disposed = true;
+    final listener = _customerInfoUpdateListener;
+    if (listener != null) {
+      try {
+        Purchases.removeCustomerInfoUpdateListener(listener);
+      } catch (_) {
+        // Best-effort SDK cleanup only.
+      }
+      _customerInfoUpdateListener = null;
+    }
     super.dispose();
   }
 

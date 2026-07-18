@@ -25,7 +25,7 @@ import 'core/services/notification_service.dart';
 import 'core/widgets/emergency_trigger_host.dart';
 import 'core/widgets/app_privacy_shield.dart';
 import 'core/services/local_logger_service.dart';
-import 'core/services/revenue_cat_service.dart';
+import 'core/services/sensitive_temp_file_service.dart';
 import 'core/constants/feature_access_matrix.dart';
 import 'core/config/app_environment.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -35,11 +35,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Release log hygiene: silence app-level debugPrint so logs never reach
-  // logcat (PII safety). On-device error logging via CrashLogService /
-  // LocalLoggerService is unaffected. Capture the real console sink FIRST so
-  // Flutter framework errors can still be forwarded to logcat for the Google
-  // Play Pre-launch Report (see FlutterError.onError below).
-  final consoleSink = debugPrint;
+  // logcat. Local diagnostics below persist allowlisted event codes only.
   if (kReleaseMode) {
     debugPrint = (String? message, {int? wrapWidth}) {};
   }
@@ -130,11 +126,11 @@ void main() async {
       HapticService.initialize(),
       ConnectivityService.instance.initialize(),
       LocalLoggerService.instance.initialize(),
+      SensitiveTempFileService.purgeStaleExports(),
     ];
     if (!kIsWeb) {
       services.add(NotificationService.instance.initialize());
       services.add(KoruBeniForegroundService.configure());
-      services.add(serviceLocator<RevenueCatService>().initialize());
     }
     await Future.wait(services);
   } catch (e) {
@@ -143,53 +139,37 @@ void main() async {
 
   // Error handling for Flutter errors — local device-only crash log.
   FlutterError.onError = (details) {
-    CrashLogService.instance.record(
-      source: 'flutter_error',
-      error: details.exception,
-      stackTrace: details.stack,
-    );
-    LocalLoggerService.instance.error(
+    CrashLogService.instance.record(LocalErrorCode.flutterFrameworkUnhandled);
+    LocalLoggerService.instance.errorCode(
       'FlutterError',
-      details.exception,
-      details.stack,
+      LocalErrorCode.flutterFrameworkUnhandled,
     );
     assert(() {
       debugPrint('FlutterError: ${details.exception}');
       return true;
     }());
-    // Forward to the framework's default presenter so the error is
-    // also written to Logcat / stderr in release builds. This is
-    // required for Google Play Pre-launch Report to surface Flutter
-    // framework errors (build/widget exceptions); without it, only
-    // native crashes appear in the report and Dart-side bugs stay
-    // invisible to automated QA crawlers.
-    // In release, debugPrint is globally silenced (see main()), which would
-    // also mute presentError's logcat output. Temporarily restore the real
-    // console sink around presentError so framework errors still reach the
-    // Pre-launch Report, then re-silence app-level logging.
-    if (kReleaseMode) {
-      final silenced = debugPrint;
-      debugPrint = consoleSink;
-      FlutterError.presentError(details);
-      debugPrint = silenced;
-    } else {
+    // Framework exception text/stacks can contain PII. Keep raw presentation
+    // in debug builds only; release diagnostics use the structured code above.
+    if (!kReleaseMode) {
       FlutterError.presentError(details);
     }
   };
 
   // Zero-fault: Fatal hataları yutma - return false ile standart hata yönetimine bırak
   PlatformDispatcher.instance.onError = (error, stack) {
-    CrashLogService.instance.record(
-      source: 'platform_dispatcher',
-      error: error,
-      stackTrace: stack,
+    CrashLogService.instance.record(LocalErrorCode.platformDispatcherUnhandled);
+    LocalLoggerService.instance.errorCode(
+      'PlatformDispatcher',
+      LocalErrorCode.platformDispatcherUnhandled,
     );
-    LocalLoggerService.instance.error('PlatformDispatcher', error, stack);
     assert(() {
       debugPrint('PlatformDispatcher.onError: $error');
       return true;
     }());
-    return false;
+    // Returning false causes the engine to print the raw exception/stack.
+    // Release handles it locally to preserve logcat privacy; debug retains the
+    // default crash visibility for developers.
+    return kReleaseMode;
   };
 
   // Android 15 (API 35) enforces edge-to-edge for any app targeting SDK 35
@@ -213,7 +193,10 @@ void main() async {
 
   runApp(
     EasyLocalization(
-      supportedLocales: const [Locale('tr', 'TR'), Locale('en', 'US')],
+      // First production market/runtime is intentionally Turkish-only. Keep
+      // the English catalog as an internal parity reference until that runtime
+      // path has its own device and Play evidence.
+      supportedLocales: const [Locale('tr', 'TR')],
       path: 'assets/translations',
       startLocale: const Locale('tr', 'TR'),
       fallbackLocale: const Locale('tr', 'TR'),

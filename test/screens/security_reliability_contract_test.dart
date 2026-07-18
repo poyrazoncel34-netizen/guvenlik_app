@@ -42,44 +42,39 @@ void main() {
       },
     );
 
-    test(
-      'delayed fake call prefers exact alarm but falls back to inexact when '
-      'the exact-alarm permission is unavailable (S9 / D7)',
-      () {
-        final notif = File(
-          'lib/core/services/notification_service.dart',
-        ).readAsStringSync();
-        // D7: prefer exact for on-time delivery, but fall back to inexact when
-        // the Android 12+ exact-alarm permission is denied (exact would throw
-        // SecurityException and drop the call entirely). The choice is gated on
-        // canScheduleExactAlarms().
-        expect(notif, contains('AndroidScheduleMode.exactAllowWhileIdle'));
-        expect(notif, contains('AndroidScheduleMode.inexactAllowWhileIdle'));
-        expect(notif, contains('canScheduleExactAlarms()'));
+    test('delayed fake call is not scheduled without exact-alarm access', () {
+      final notif = File(
+        'lib/core/services/notification_service.dart',
+      ).readAsStringSync();
+      expect(notif, contains('AndroidScheduleMode.exactAllowWhileIdle'));
+      expect(notif, isNot(contains('AndroidScheduleMode.inexactAllowWhileIdle')));
+      expect(notif, contains('canScheduleExactAlarms()'));
+      expect(notif, contains('if (!canExact) return false;'));
 
-        final home = File('lib/screens/home_page.dart').readAsStringSync();
-        final scheduleRegion = home.substring(
-          home.indexOf('Future<void> _scheduleDelayedFakeCall'),
-          home.indexOf('Widget _buildOnboardingCard'),
-        );
-        // The exact-alarm permission guard must run before scheduling.
-        expect(
-          scheduleRegion,
-          contains('confirmExactAlarmPermissionOrDegraded('),
-        );
-        expect(
-          scheduleRegion.indexOf('confirmExactAlarmPermissionOrDegraded('),
-          lessThan(scheduleRegion.indexOf('scheduleFakeCall(')),
-        );
-      },
-    );
+      final home = File('lib/screens/home_page.dart').readAsStringSync();
+      final scheduleRegion = home.substring(
+        home.indexOf('Future<void> _scheduleDelayedFakeCall'),
+        home.indexOf('Widget _buildOnboardingCard'),
+      );
+      // The exact-alarm permission guard must run before scheduling.
+      expect(
+        scheduleRegion,
+        contains('requireExactAlarmPermission('),
+      );
+      expect(
+        scheduleRegion.indexOf('requireExactAlarmPermission('),
+        lessThan(scheduleRegion.indexOf('scheduleFakeCall(')),
+      );
+    });
 
-    test('BootCompletedReceiver restores only active sessions', () {
+    test('BootCompletedReceiver reconciles only the typed native authority', () {
       final receiver = File(
         'android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/BootCompletedReceiver.kt',
       ).readAsStringSync();
       expect(receiver, contains('Intent.ACTION_BOOT_COMPLETED'));
-      expect(receiver, contains('CheckInScheduler.hasActiveSession(context)'));
+      expect(receiver, contains('EmergencySessionRuntime.coordinator(context)'));
+      expect(receiver, isNot(contains('CheckInScheduler.restoreAfterBoot')));
+      expect(receiver, isNot(contains('CountdownAlarmScheduler.restoreAfterBoot')));
       expect(receiver, isNot(contains('startForegroundService')));
     });
   });

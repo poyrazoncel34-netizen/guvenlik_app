@@ -18,6 +18,7 @@ import '../services/activity_service.dart';
 import '../services/call_service.dart';
 import '../services/check_in_expiry_coordinator.dart';
 import '../services/emergency_platform_service.dart';
+import '../services/emergency_session_contract.dart';
 import '../services/foreground_service.dart';
 import '../services/haptic_service.dart';
 import '../services/notification_service.dart';
@@ -30,7 +31,26 @@ import '../utils/emergency_number_validator.dart';
 /// user does not confirm safety within the set duration + grace period, ONLY the
 /// primary emergency contact is called (no 112, no failover — SPEC §0 K1/K2).
 class CheckInService extends ChangeNotifier {
-  CheckInService._(this._sessionId);
+  CheckInService._(
+    this._sessionId, {
+    EmergencyPlatformService? platform,
+    ContactsRepository? contactsRepository,
+    bool sideEffectsEnabled = true,
+  }) : _platform = platform ?? EmergencyPlatformService.instance,
+       _contactsRepositoryOverride = contactsRepository,
+       _sideEffectsEnabled = sideEffectsEnabled;
+
+  factory CheckInService.forTesting({
+    required String sessionId,
+    required EmergencyPlatformService platform,
+    required ContactsRepository contactsRepository,
+    bool sideEffectsEnabled = false,
+  }) => CheckInService._(
+    sessionId,
+    platform: platform,
+    contactsRepository: contactsRepository,
+    sideEffectsEnabled: sideEffectsEnabled,
+  );
 
   /// Check-in session controller (default).
   static final CheckInService instance = CheckInService._(
@@ -43,9 +63,17 @@ class CheckInService extends ChangeNotifier {
   );
 
   final String _sessionId;
+  final EmergencyPlatformService _platform;
+  final ContactsRepository? _contactsRepositoryOverride;
+  final bool _sideEffectsEnabled;
+
+  ContactsRepository get _contactsRepository =>
+      _contactsRepositoryOverride ?? serviceLocator<ContactsRepository>();
 
   String get sessionId => _sessionId;
-  bool get _isSafeWalk => _sessionId == CheckInExpiryCoordinator.safeWalkSession;
+  String get _foregroundOwner => 'safety_session:$_sessionId';
+  bool get _isSafeWalk =>
+      _sessionId == CheckInExpiryCoordinator.safeWalkSession;
 
   static const int _gracePeriodSeconds = 60;
 
@@ -68,7 +96,12 @@ class CheckInService extends ChangeNotifier {
   bool _isActive = false;
   bool _isGracePeriod = false;
   bool _emergencyInProgress = false;
+  bool _mutationInProgress = false;
   bool _nativeScheduleDegraded = false;
+  SessionToken? _sessionToken;
+  String? _armedTarget;
+  ArmResult? _lastArmResult;
+  CancelResult? _lastCancelResult;
   int _remainingSeconds = 0;
   int _totalSeconds = 0;
 
@@ -78,6 +111,9 @@ class CheckInService extends ChangeNotifier {
   int get remainingSeconds => _remainingSeconds;
   int get totalSeconds => _totalSeconds;
   DateTime? get endAt => _isGracePeriod ? _graceEndAt : _endAt;
+  SessionToken? get sessionToken => _sessionToken;
+  ArmResult? get lastArmResult => _lastArmResult;
+  CancelResult? get lastCancelResult => _lastCancelResult;
 
   Future<void> initialize() async {
     await _restoreFromStorage();
@@ -87,183 +123,293 @@ class CheckInService extends ChangeNotifier {
     await _restoreFromStorage();
   }
 
-  /// Start a session timer with [minutes] duration.
-  Future<bool> start(int minutes) async {
-    await stop();
-    CheckInExpiryCoordinator.instance.arm(_sessionId);
+  /// Native-acknowledged arm. Dart becomes active only after [Armed].
+  Future<ArmResult> startSession({
+    required int minutes,
+    required EntitlementDecision entitlementDecision,
+    required bool pinConfigured,
+  }) async {
+    if (_mutationInProgress) {
+      return _lastArmResult = ArmRejected(
+        'operationInProgress',
+        rejectedToken: _sessionToken,
+      );
+    }
+    _mutationInProgress = true;
+    try {
+      return await _startSessionUnlocked(
+        minutes: minutes,
+        entitlementDecision: entitlementDecision,
+        pinConfigured: pinConfigured,
+      );
+    } finally {
+      _mutationInProgress = false;
+    }
+  }
 
-    _totalSeconds = minutes * 60;
-    _remainingSeconds = _totalSeconds;
+  Future<ArmResult> _startSessionUnlocked({
+    required int minutes,
+    required EntitlementDecision entitlementDecision,
+    required bool pinConfigured,
+  }) async {
+    if (_isActive || _sessionToken != null) {
+      return _lastArmResult = ArmRejected(
+        'sessionAlreadyActive',
+        rejectedToken: _sessionToken,
+      );
+    }
+    if (minutes <= 0) {
+      return _lastArmResult = const ArmRejected('invalidDuration');
+    }
+    final target = await _resolvePrimaryNumber();
+    if (target.isEmpty) {
+      return _lastArmResult = const ArmRejected('callableTargetMissing');
+    }
+
+    final totalSeconds = minutes * 60;
+    final mainDeadline = DateTime.now().add(Duration(seconds: totalSeconds));
+    final finalDeadline = mainDeadline.add(
+      const Duration(seconds: _gracePeriodSeconds),
+    );
+    final result = await _platform.armEmergencySession(
+      kind: _isSafeWalk
+          ? EmergencySessionKind.safeWalk
+          : EmergencySessionKind.checkIn,
+      mainDeadline: mainDeadline,
+      finalDeadline: finalDeadline,
+      target: target,
+      entitlementDecision: entitlementDecision,
+      pinConfigured: pinConfigured,
+    );
+    _lastArmResult = result;
+    if (result is! Armed) return result;
+
+    _sessionToken = result.sessionToken;
+    _armedTarget = target;
+    _totalSeconds = totalSeconds;
+    _remainingSeconds = totalSeconds;
     _isActive = true;
     _isGracePeriod = false;
-    _endAt = DateTime.now().add(Duration(minutes: minutes));
-    _graceEndAt = null;
-
-    await _persistState();
-    final nativeScheduled = await _scheduleNativeMainDeadline();
-    _nativeScheduleDegraded = !nativeScheduled;
-    await _startBackgroundProtection();
-    _startMainTicker();
-
-    await ActivityService.logEvent(
-      type: _isSafeWalk ? ActivityType.locationShared : ActivityType.checkIn,
-      title: (_isSafeWalk ? "safe_walk_started_activity" : "check_in_started_title")
-          .tr(),
-      description:
-          (_isSafeWalk ? "safe_walk_started_desc" : "check_in_started_desc").tr(
-        namedArgs: {'minutes': '$minutes'},
-      ),
-    );
-
-    notifyListeners();
-    return nativeScheduled;
-  }
-
-  /// User confirms they are safe — resets the timer (check-in semantics).
-  Future<void> confirmSafe() async {
-    if (!_isActive ||
-        _totalSeconds <= 0 ||
-        _emergencyInProgress ||
-        CheckInExpiryCoordinator.instance.isClaimedFor(_sessionId)) {
-      return;
-    }
-    CheckInExpiryCoordinator.instance.arm(_sessionId);
-
-    _isGracePeriod = false;
-    _graceEndAt = null;
-    _endAt = DateTime.now().add(Duration(seconds: _totalSeconds));
-    _remainingSeconds = _totalSeconds;
-
-    await _persistState();
-    final nativeScheduled = await _scheduleNativeMainDeadline();
-    _nativeScheduleDegraded = !nativeScheduled;
-    await _startBackgroundProtection();
-    _startMainTicker();
-
-    await ActivityService.logEvent(
-      type: ActivityType.checkIn,
-      title: "check_in_confirmed_title".tr(),
-      description: "check_in_confirmed_desc".tr(),
-    );
-
-    notifyListeners();
-  }
-
-  /// Stop the session completely.
-  Future<void> stop() async {
-    _cancelTicker();
-    _isActive = false;
-    _isGracePeriod = false;
-    _graceEndAt = null;
-    _endAt = null;
-    _remainingSeconds = 0;
-    _totalSeconds = 0;
-    _emergencyInProgress = false;
+    _endAt = result.mainDeadline;
+    _graceEndAt = result.finalDeadline;
     _nativeScheduleDegraded = false;
-    CheckInExpiryCoordinator.instance.reset(sessionId: _sessionId);
 
-    await _clearPersistedState();
-    await EmergencyPlatformService.instance.cancelCheckIn(
-      sessionId: _sessionId,
-    );
-    await KoruBeniForegroundService.stop();
+    // Native ARMED is authoritative. A projection write failure must not turn
+    // a real armed session into a UI-level arm exception.
+    await _bestEffort(_persistState);
+    if (_sideEffectsEnabled) {
+      await _bestEffort(_startBackgroundProtection);
+      await _bestEffort(() async {
+        await ActivityService.logEvent(
+          type: _isSafeWalk
+              ? ActivityType.locationShared
+              : ActivityType.checkIn,
+          title:
+              (_isSafeWalk
+                      ? "safe_walk_started_activity"
+                      : "check_in_started_title")
+                  .tr(),
+          description:
+              (_isSafeWalk ? "safe_walk_started_desc" : "check_in_started_desc")
+                  .tr(namedArgs: {'minutes': '$minutes'}),
+        );
+      });
+    }
+    _startMainTicker();
     notifyListeners();
+    return result;
   }
+
+  /// Compatibility boundary. Unknown entitlement/PIN is intentionally denied;
+  /// callers must migrate to [startSession] and pass verified decisions.
+  @Deprecated('Use startSession and handle ArmResult explicitly.')
+  Future<bool> start(int minutes) async => (await startSession(
+    minutes: minutes,
+    entitlementDecision: EntitlementDecision.unknown,
+    pinConfigured: false,
+  )).isArmed;
+
+  /// Atomically revises the native generation; old alarms become stale.
+  Future<ArmResult> confirmSafeSession() async {
+    if (_mutationInProgress) {
+      return _lastArmResult = ArmRejected(
+        'operationInProgress',
+        rejectedToken: _sessionToken,
+      );
+    }
+    _mutationInProgress = true;
+    try {
+      return await _confirmSafeSessionUnlocked();
+    } finally {
+      _mutationInProgress = false;
+    }
+  }
+
+  Future<ArmResult> _confirmSafeSessionUnlocked() async {
+    final token = _sessionToken;
+    final target = _armedTarget;
+    if (!_isActive ||
+        token == null ||
+        target == null ||
+        _totalSeconds <= 0 ||
+        _emergencyInProgress) {
+      return _lastArmResult = ArmRejected(
+        'noRevisableSession',
+        rejectedToken: token,
+      );
+    }
+
+    final mainDeadline = DateTime.now().add(Duration(seconds: _totalSeconds));
+    final finalDeadline = mainDeadline.add(
+      const Duration(seconds: _gracePeriodSeconds),
+    );
+    final result = await _platform.reviseEmergencySession(
+      token: token,
+      mainDeadline: mainDeadline,
+      finalDeadline: finalDeadline,
+      targetSnapshot: target,
+    );
+    _lastArmResult = result;
+    if (result is! Armed) return result;
+
+    _sessionToken = result.sessionToken;
+    _isGracePeriod = false;
+    _endAt = result.mainDeadline;
+    _graceEndAt = result.finalDeadline;
+    _remainingSeconds = _totalSeconds;
+    await _bestEffort(_persistState);
+    if (_sideEffectsEnabled) {
+      await _bestEffort(_startBackgroundProtection);
+      await _bestEffort(() async {
+        await ActivityService.logEvent(
+          type: ActivityType.checkIn,
+          title: "check_in_confirmed_title".tr(),
+          description: "check_in_confirmed_desc".tr(),
+        );
+      });
+    }
+    _startMainTicker();
+    notifyListeners();
+    return result;
+  }
+
+  @Deprecated('Use confirmSafeSession and handle ArmResult explicitly.')
+  Future<ArmResult> confirmSafe() => confirmSafeSession();
+
+  /// Native tombstone acknowledgement is required before local state clears.
+  Future<CancelResult?> stopSession() async {
+    final token = _sessionToken;
+    if (token == null) return null;
+    if (_mutationInProgress) {
+      return _lastCancelResult = SessionCancelUnknown(
+        token,
+        'operationInProgress',
+      );
+    }
+    _mutationInProgress = true;
+    try {
+      return await _stopSessionUnlocked(token);
+    } finally {
+      _mutationInProgress = false;
+    }
+  }
+
+  Future<CancelResult> _stopSessionUnlocked(SessionToken token) async {
+    _cancelTicker();
+    final result = await _platform.cancelEmergencySession(token);
+    _lastCancelResult = result;
+    if (!result.isConfirmedCancelled) {
+      _startTickerForCurrentPhase();
+      notifyListeners();
+      return result;
+    }
+
+    await _clearLocalProjection(stopForeground: true);
+    return result;
+  }
+
+  @Deprecated('Use stopSession and handle CancelResult explicitly.')
+  Future<CancelResult?> stop() => stopSession();
 
   Future<void> _restoreFromStorage() async {
     final prefs = await SharedPreferences.getInstance();
-
-    // Try atomic JSON blob first
     final stateJson = prefs.getString(_stateKey);
-    if (stateJson != null) {
-      try {
-        final state = jsonDecode(stateJson) as Map<String, dynamic>;
-        final active = state['active'] as bool? ?? false;
-        if (!active) return;
-
-        final totalSeconds = state['totalSeconds'] as int? ?? 0;
-        final restoredEndAt = _parseDateTime(state['endAt'] as String?);
-        if (totalSeconds <= 0 || restoredEndAt == null) {
-          await stop();
-          return;
-        }
-
-        _isActive = true;
-        _totalSeconds = totalSeconds;
-        _endAt = restoredEndAt;
-        _graceEndAt = _parseDateTime(state['graceEndAt'] as String?);
-
-        await _reconcileWithClock();
-        return;
-      } catch (_) {
-        // Corrupted JSON — fall through to legacy
-      }
-    }
-
-    // Legacy key migration — check-in session only (safe-walk had no v1 blob).
-    if (_isSafeWalk) return;
-
-    final storedActive = prefs.getBool(_activeKey) ?? false;
-    if (!storedActive) return;
-
-    final totalSeconds = prefs.getInt(_totalSecondsKey) ?? 0;
-    final restoredEndAt = _parseDateTime(prefs.getString(_endAtKey));
-    if (totalSeconds <= 0 || restoredEndAt == null) {
-      await stop();
+    if (stateJson == null) {
+      // Legacy active state has no versioned token and therefore cannot be a
+      // safety authority. Do not silently re-arm it with fresh commercial or
+      // contact decisions.
+      await _clearLegacyKeys(prefs);
       return;
     }
 
-    _isActive = true;
-    _totalSeconds = totalSeconds;
-    _endAt = restoredEndAt;
-    _graceEndAt = _parseDateTime(prefs.getString(_graceEndAtKey));
+    try {
+      final state = jsonDecode(stateJson) as Map<String, dynamic>;
+      final token = SessionToken.fromMap(state['token']);
+      final totalSeconds = state['totalSeconds'] as int? ?? 0;
+      if (token == null || totalSeconds <= 0) {
+        await _clearPersistedState();
+        return;
+      }
 
-    // Migrate to atomic format
-    await _persistState();
-    await _clearLegacyKeys(prefs);
+      final snapshot = await _platform.readEmergencySession(token);
+      if (!snapshot.isPresent ||
+          snapshot.lifecycleState == EmergencySessionLifecycle.cancelled ||
+          snapshot.lifecycleState.isTerminal) {
+        await _clearLocalProjection(stopForeground: true);
+        return;
+      }
+      if (snapshot.lifecycleState != EmergencySessionLifecycle.armed) {
+        // Claimed/preparing/unknown cannot be projected as an active, safely
+        // cancellable timer. Native remains authoritative and will reconcile.
+        _sessionToken = snapshot.token ?? token;
+        _emergencyInProgress =
+            snapshot.lifecycleState == EmergencySessionLifecycle.claimed;
+        _cancelTicker();
+        return;
+      }
 
-    await _reconcileWithClock();
+      _sessionToken = snapshot.token;
+      _armedTarget = snapshot.target;
+      _totalSeconds = totalSeconds;
+      _isActive = true;
+      _endAt = snapshot.mainDeadline;
+      _graceEndAt = snapshot.finalDeadline;
+      if (_endAt == null || _graceEndAt == null || _armedTarget == null) {
+        _cancelTicker();
+        return;
+      }
+      await _reconcileWithClock();
+    } catch (_) {
+      // Corrupt Dart projection must never synthesize a new native session.
+      await _clearPersistedState();
+    }
   }
 
   Future<void> _reconcileWithClock() async {
-    if (!_isActive || _endAt == null) {
+    if (!_isActive || _endAt == null || _graceEndAt == null) {
       return;
     }
 
     final now = DateTime.now();
-    if (_graceEndAt != null) {
-      final graceRemaining = _graceEndAt!.difference(now).inSeconds;
-      if (graceRemaining > 0) {
-        _isGracePeriod = true;
-        _remainingSeconds = graceRemaining;
-        await _startBackgroundProtection();
-        _startGraceTicker();
-        notifyListeners();
-        return;
-      }
-
-      await _triggerEmergency();
-      return;
-    }
-
     final mainRemaining = _endAt!.difference(now).inSeconds;
     if (mainRemaining > 0) {
       _isGracePeriod = false;
       _remainingSeconds = mainRemaining;
-      await _startBackgroundProtection();
+      if (_sideEffectsEnabled) {
+        await _bestEffort(_startBackgroundProtection);
+      }
       _startMainTicker();
       notifyListeners();
       return;
     }
 
     _isGracePeriod = true;
-    _graceEndAt = _endAt!.add(const Duration(seconds: _gracePeriodSeconds));
-    await _persistState();
-
     final graceRemaining = _graceEndAt!.difference(now).inSeconds;
     if (graceRemaining > 0) {
       _remainingSeconds = graceRemaining;
-      await _startBackgroundProtection();
+      if (_sideEffectsEnabled) {
+        await _bestEffort(_startBackgroundProtection);
+      }
       _startGraceTicker();
       notifyListeners();
       return;
@@ -319,16 +465,22 @@ class CheckInService extends ChangeNotifier {
 
     _cancelTicker();
     _isGracePeriod = true;
-    _graceEndAt = DateTime.now().add(
-      const Duration(seconds: _gracePeriodSeconds),
-    );
-    _remainingSeconds = _gracePeriodSeconds;
+    final finalDeadline = _graceEndAt;
+    if (finalDeadline == null) {
+      await _triggerEmergency();
+      return;
+    }
+    _remainingSeconds = finalDeadline
+        .difference(DateTime.now())
+        .inSeconds
+        .clamp(0, _gracePeriodSeconds)
+        .toInt();
 
     await _persistState();
-    final nativeScheduled = await _scheduleNativeGraceDeadline();
-    _nativeScheduleDegraded = !nativeScheduled;
-    await _startBackgroundProtection();
-    await _showGraceNotification();
+    if (_sideEffectsEnabled) {
+      await _bestEffort(_startBackgroundProtection);
+      await _bestEffort(_showGraceNotification);
+    }
     _startGraceTicker();
     notifyListeners();
   }
@@ -349,91 +501,77 @@ class CheckInService extends ChangeNotifier {
   }
 
   Future<void> _triggerEmergency() async {
-    if (_emergencyInProgress) {
-      return;
-    }
-    if (!CheckInExpiryCoordinator.instance.tryClaim(
-      'check_in_service',
-      sessionId: _sessionId,
-    )) {
-      return;
-    }
+    if (_emergencyInProgress) return;
+    final token = _sessionToken;
+    if (token == null) return;
     _emergencyInProgress = true;
     _cancelTicker();
 
     try {
-      // Native-fired dedup: if the AlarmManager backup already called the
-      // primary number (Dart frozen under Doze/app-kill), skip a second call.
-      // Mirrors the countdown didCountdownAlarmFire guard (SPEC §3.2 / §5).
-      final nativeAlreadyFired = await EmergencyPlatformService.instance
-          .didCheckInAlarmFire(sessionId: _sessionId);
-      if (nativeAlreadyFired) {
-        await _clearMonitoringState(stopForeground: true);
+      // This is the first external/safety-relevant side effect. Native owns
+      // claim, fallback post and Telecom request; DB/log/haptic/navigation can
+      // fail afterwards without turning the event into a zero-dispatch path.
+      final dispatch = await _platform.dispatchEmergencySession(
+        token: token,
+        source: 'dartCheckInExpiry',
+      );
+      if (dispatch.isUnknown) {
+        // Unknown is neither success nor failure. Keep native/Dart projection
+        // intact for same-token reconciliation and never show a false terminal
+        // state.
+        return;
+      }
+      if (dispatch.wasCancelled) {
+        await _clearLocalProjection(stopForeground: true);
         return;
       }
 
-      // Cancel the native AlarmManager backup BEFORE any log / notification /
-      // call, mirroring the proven countdown pattern (countdown_screen.dart
-      // _makeEmergencyCall: "cancel native first, THEN dispatch"). This shrinks
-      // the native-fired dedup window from the whole escalation body down to a
-      // single cancel round-trip (SPEC §3.2 / §5). Cleanup-only: a failure here
-      // must NEVER block the actual call (fail-safe) — cancelCheckIn already
-      // swallows its own errors, and this guard mirrors countdown defensively.
-      try {
-        await EmergencyPlatformService.instance.cancelCheckIn(
-          sessionId: _sessionId,
-        );
-      } on Exception catch (e) {
-        debugPrint(
-          'CheckInService: cancelCheckIn failed, continuing escalation: $e',
-        );
+      final primaryNumber = _armedTarget ?? '';
+      final callResult = dispatch.requestWasSubmitted
+          ? EmergencyCallResult.requested(primaryNumber)
+          : EmergencyCallResult.failed(primaryNumber);
+
+      await _clearLocalProjection(stopForeground: !callResult.isSuccess);
+
+      if (_sideEffectsEnabled) {
+        await _bestEffort(() async {
+          await ActivityService.logEvent(
+            type: ActivityType.emergencyTriggered,
+            title: "check_in_emergency_title".tr(),
+            description: "check_in_emergency_desc".tr(),
+          );
+        });
+        await _bestEffort(HapticService.emergencyTriggered);
+        await _bestEffort(() async {
+          await NotificationService.instance.showEmergencyAlert(
+            id: _alertNotificationId,
+            title: "check_in_emergency_title".tr(),
+            body: "alarm_notification_body".tr(),
+          );
+        });
       }
-
-      await ActivityService.logEvent(
-        type: ActivityType.emergencyTriggered,
-        title: "check_in_emergency_title".tr(),
-        description: "check_in_emergency_desc".tr(),
-      );
-      await HapticService.emergencyTriggered();
-      await NotificationService.instance.showEmergencyAlert(
-        id: _alertNotificationId,
-        title: "check_in_emergency_title".tr(),
-        body: "alarm_notification_body".tr(),
-      );
-
-      final contactsRepo = serviceLocator<ContactsRepository>();
-      final primaryContact = await contactsRepo.getPrimaryEmergencyContact();
-      final configuredNumbers = await contactsRepo.getAllEmergencyNumbers();
-
-      // YALNIZ BIRINCIL KISI — tek hedef, failover yok, 112 yok (SPEC §0 K1/K2).
-      final primaryNumber = resolvePrimaryNumber(
-        primaryContactPhone: primaryContact?.phone,
-        configuredNumbers: configuredNumbers,
-      );
-      var callResult = EmergencyCallResult.failed(primaryNumber);
-      if (primaryNumber.isNotEmpty) {
-        callResult = await CallService.startEmergencyCall(primaryNumber);
-      }
-
-      await _clearMonitoringState(stopForeground: !callResult.isSuccess);
 
       final navigator = rootNavigatorKey.currentState;
       if (navigator != null) {
-        navigator.push(
-          MaterialPageRoute(
-            builder: (_) => EmergencyCallScreen(
-              name: primaryContact?.name ?? "pin_verify_emergency_contact".tr(),
-              phone: primaryNumber,
-              callResult: callResult,
+        await _bestEffort(() async {
+          await navigator.push(
+            MaterialPageRoute(
+              builder: (_) => EmergencyCallScreen(
+                name: "pin_verify_emergency_contact".tr(),
+                phone: primaryNumber,
+                callResult: callResult,
+                foregroundOwner: _foregroundOwner,
+              ),
             ),
-          ),
+          );
+        });
+      } else if (callResult.isSuccess && _sideEffectsEnabled) {
+        await _bestEffort(
+          () => KoruBeniForegroundService.stop(owner: _foregroundOwner),
         );
-      } else if (callResult.isSuccess) {
-        await KoruBeniForegroundService.stop();
       }
     } catch (e) {
       debugPrint('CheckInService emergency trigger failed: $e');
-      await _clearMonitoringState(stopForeground: true);
     } finally {
       _emergencyInProgress = false;
     }
@@ -442,36 +580,24 @@ class CheckInService extends ChangeNotifier {
   /// Resolve the SINGLE primary escalation target (SPEC §0 Karar 1/2).
   /// Never synthesizes 112; returns empty when nothing callable is configured
   /// so the caller places NO call (requirement (b)).
-  static String resolvePrimaryNumber({
-    required String? primaryContactPhone,
-    required List<String> configuredNumbers,
-  }) {
+  static String resolvePrimaryNumber({required String? primaryContactPhone}) {
     if (primaryContactPhone != null &&
         EmergencyNumberValidator.isCallableEmergencyTarget(
           primaryContactPhone,
         )) {
       return primaryContactPhone;
     }
-    for (final number in configuredNumbers) {
-      if (EmergencyNumberValidator.isCallableEmergencyTarget(number)) {
-        return number;
-      }
-    }
     return '';
   }
 
   Future<String> _resolvePrimaryNumber() async {
-    final contactsRepo = serviceLocator<ContactsRepository>();
-    final primaryContact = await contactsRepo.getPrimaryEmergencyContact();
-    final configuredNumbers = await contactsRepo.getAllEmergencyNumbers();
-    return resolvePrimaryNumber(
-      primaryContactPhone: primaryContact?.phone,
-      configuredNumbers: configuredNumbers,
-    );
+    final primaryContact = await _contactsRepository
+        .getPrimaryEmergencyContact();
+    return resolvePrimaryNumber(primaryContactPhone: primaryContact?.phone);
   }
 
   Future<void> _startBackgroundProtection() async {
-    await KoruBeniForegroundService.start();
+    await KoruBeniForegroundService.start(owner: _foregroundOwner);
 
     final String label;
     final String body;
@@ -487,7 +613,11 @@ class CheckInService extends ChangeNotifier {
       body =
           '${"check_in_remaining".tr()}: ${_formatDuration(_remainingSeconds)}';
     }
-    KoruBeniForegroundService.updateNotification(label, body);
+    KoruBeniForegroundService.updateNotification(
+      owner: _foregroundOwner,
+      title: label,
+      content: body,
+    );
   }
 
   Future<void> _persistState() async {
@@ -503,6 +633,7 @@ class CheckInService extends ChangeNotifier {
       'totalSeconds': _totalSeconds,
       'endAt': _endAt?.toIso8601String(),
       'graceEndAt': _graceEndAt?.toIso8601String(),
+      'token': _sessionToken?.toMap(),
     };
     await prefs.setString(_stateKey, jsonEncode(state));
   }
@@ -521,7 +652,7 @@ class CheckInService extends ChangeNotifier {
     await prefs.remove(_graceEndAtKey);
   }
 
-  Future<void> _clearMonitoringState({required bool stopForeground}) async {
+  Future<void> _clearLocalProjection({required bool stopForeground}) async {
     _cancelTicker();
     _isActive = false;
     _isGracePeriod = false;
@@ -530,75 +661,39 @@ class CheckInService extends ChangeNotifier {
     _remainingSeconds = 0;
     _totalSeconds = 0;
     _nativeScheduleDegraded = false;
+    _sessionToken = null;
+    _armedTarget = null;
 
-    await _clearPersistedState();
-    await EmergencyPlatformService.instance.cancelCheckIn(
-      sessionId: _sessionId,
-    );
-    if (stopForeground) {
-      await KoruBeniForegroundService.stop();
+    await _bestEffort(_clearPersistedState);
+    if (stopForeground && _sideEffectsEnabled) {
+      await _bestEffort(
+        () => KoruBeniForegroundService.stop(owner: _foregroundOwner),
+      );
     }
     notifyListeners();
   }
 
   Future<void> handleNativeGraceStarted() async {
-    if (!_isActive) {
+    final token = _sessionToken;
+    if (!_isActive || token == null) return;
+    final snapshot = await _platform.readEmergencySession(token);
+    if (!snapshot.isPresent ||
+        snapshot.lifecycleState != EmergencySessionLifecycle.armed) {
       return;
     }
-    _cancelTicker();
-    _isGracePeriod = true;
-    _graceEndAt = DateTime.now().add(
-      const Duration(seconds: _gracePeriodSeconds),
-    );
-    _remainingSeconds = _gracePeriodSeconds;
-    await _persistState();
-    final nativeScheduled = await _scheduleNativeGraceDeadline();
-    _nativeScheduleDegraded = !nativeScheduled;
-    await _showGraceNotification();
-    _startGraceTicker();
-    notifyListeners();
+    _sessionToken = snapshot.token ?? token;
+    _endAt = snapshot.mainDeadline ?? _endAt;
+    _graceEndAt = snapshot.finalDeadline ?? _graceEndAt;
+    _armedTarget = snapshot.target ?? _armedTarget;
+    await _reconcileWithClock();
+    if (_sideEffectsEnabled && _isGracePeriod) {
+      await _bestEffort(_showGraceNotification);
+    }
   }
 
   Future<void> handleNativeExpired() async {
-    if (!_isActive) {
-      return;
-    }
+    if (!_isActive) return;
     await _triggerEmergency();
-  }
-
-  Future<bool> _scheduleNativeMainDeadline() async {
-    if (_endAt == null) {
-      return false;
-    }
-    final primaryNumber = await _resolvePrimaryNumber();
-    return EmergencyPlatformService.instance.scheduleCheckIn(
-      sessionId: _sessionId,
-      phase: 'main',
-      deadline: _endAt!,
-      graceDuration: const Duration(seconds: _gracePeriodSeconds),
-      primaryNumber: primaryNumber,
-    );
-  }
-
-  Future<bool> _scheduleNativeGraceDeadline() async {
-    if (_graceEndAt == null) {
-      return false;
-    }
-    final primaryNumber = await _resolvePrimaryNumber();
-    return EmergencyPlatformService.instance.scheduleCheckIn(
-      sessionId: _sessionId,
-      phase: 'grace',
-      deadline: _graceEndAt!,
-      graceDuration: Duration.zero,
-      primaryNumber: primaryNumber,
-    );
-  }
-
-  DateTime? _parseDateTime(String? value) {
-    if (value == null || value.isEmpty) {
-      return null;
-    }
-    return DateTime.tryParse(value);
   }
 
   String _formatDuration(int totalSeconds) {
@@ -612,10 +707,28 @@ class CheckInService extends ChangeNotifier {
     _tickTimer = null;
   }
 
+  void _startTickerForCurrentPhase() {
+    if (!_isActive) return;
+    if (_isGracePeriod) {
+      _startGraceTicker();
+    } else {
+      _startMainTicker();
+    }
+  }
+
+  Future<void> _bestEffort(Future<void> Function() operation) async {
+    try {
+      await operation();
+    } catch (error) {
+      debugPrint('CheckInService best-effort operation failed: $error');
+    }
+  }
+
   bool _disposed = false;
 
   @override
   void dispose() {
+    _cancelTicker();
     _disposed = true;
     super.dispose();
   }

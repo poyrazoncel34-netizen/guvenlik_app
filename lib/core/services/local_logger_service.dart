@@ -10,6 +10,15 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 
+enum LocalErrorCode {
+  flutterFrameworkUnhandled('flutter_framework_unhandled'),
+  platformDispatcherUnhandled('platform_dispatcher_unhandled'),
+  revenueCatOperationFailed('revenuecat_operation_failed');
+
+  const LocalErrorCode(this.wireCode);
+  final String wireCode;
+}
+
 class LocalLoggerService {
   static final LocalLoggerService _instance = LocalLoggerService._();
   static LocalLoggerService get instance => _instance;
@@ -33,10 +42,14 @@ class LocalLoggerService {
     }
   }
 
-  /// Log an error with optional stack trace. Safe to call from any isolate.
-  Future<void> error(String tag, Object error, [StackTrace? stack]) async {
-    final msg = _format('ERROR', tag, error.toString(), stack?.toString());
-    debugPrint(msg);
+  /// Persists only an allowlisted code. Exception text and stacks can contain
+  /// PINs, customer identifiers, coordinates, URIs or contact data.
+  Future<void> errorCode(String tag, LocalErrorCode code) async {
+    final msg = _format('ERROR', tag, code.wireCode, null);
+    assert(() {
+      debugPrint(msg);
+      return true;
+    }());
     await _write(msg);
   }
 

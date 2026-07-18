@@ -34,14 +34,10 @@ void main() {
       final source = File(
         'lib/core/services/check_in_service.dart',
       ).readAsStringSync();
-      // Single shared code path: main schedule always carries the 60s grace,
-      // for either session.
-      expect(
-        source,
-        contains(
-          "graceDuration: const Duration(seconds: _gracePeriodSeconds),",
-        ),
-      );
+      // Native receives both deadlines in one atomic arm. No second grace
+      // reschedule is required at the phase boundary.
+      expect(source, contains('finalDeadline: finalDeadline'));
+      expect(source, contains('const Duration(seconds: _gracePeriodSeconds)'));
       expect(source, contains('static const int _gracePeriodSeconds = 60;'));
     });
 
@@ -52,12 +48,14 @@ void main() {
       expect(
         source.contains('Duration.zero'),
         isFalse,
-        reason: 'Safe-walk must not schedule a zero grace (immediate escalate).',
+        reason:
+            'Safe-walk must not schedule a zero grace (immediate escalate).',
       );
       expect(
         source.contains("phase: 'grace'"),
         isFalse,
-        reason: 'Safe-walk delegates scheduling to the controller (main phase).',
+        reason:
+            'Safe-walk delegates scheduling to the controller (main phase).',
       );
     });
   });

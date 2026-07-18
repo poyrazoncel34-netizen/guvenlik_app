@@ -12,7 +12,6 @@ import 'health_check_service.dart';
 import 'connectivity_service.dart';
 import 'offline_queue_service.dart';
 import 'battery_optimization_service.dart';
-import 'doze_mode_service.dart';
 
 /// Device information for diagnostics
 class DeviceInfo {
@@ -111,11 +110,6 @@ class StartupDiagnosticsService {
           .isOptimizationDisabled();
       if (!batteryOptDisabled) {
         debugPrint('⚠️ Battery optimization is enabled');
-      }
-
-      final dozeWhitelisted = await DozeModeService.instance.isWhitelisted();
-      if (!dozeWhitelisted) {
-        debugPrint('⚠️ Not whitelisted from Doze Mode');
       }
     } catch (e) {
       debugPrint('Failed to check Android optimizations: $e');

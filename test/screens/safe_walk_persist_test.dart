@@ -6,25 +6,37 @@ import 'package:flutter_test/flutter_test.dart';
 /// CheckInService.safeWalk controller. The screen must still guard mounted
 /// after the async stop()/start() calls before touching UI.
 void main() {
-  test('safe_walk_screen cancel path stops the controller and guards mounted', () {
-    final source = File('lib/screens/safe_walk_screen.dart').readAsStringSync();
+  test(
+    'safe_walk_screen cancel path stops the controller and guards mounted',
+    () {
+      final source = File(
+        'lib/screens/safe_walk_screen.dart',
+      ).readAsStringSync();
 
-    final cancelStart = source.indexOf('Future<void> _cancelWalk()');
-    expect(cancelStart, isNot(-1));
-    final cancelEnd = source.indexOf('String _formatTime', cancelStart);
-    final cancelBody = source.substring(cancelStart, cancelEnd);
+      final cancelStart = source.indexOf('Future<bool> _cancelWalk()');
+      expect(cancelStart, isNot(-1));
+      final cancelEnd = source.indexOf('String _formatTime', cancelStart);
+      final cancelBody = source.substring(cancelStart, cancelEnd);
 
-    expect(cancelBody, contains('await _controller.stop();'));
-    expect(cancelBody, contains('if (!mounted) return;'));
-  });
+      final stopIndex = cancelBody.indexOf('await _controller.stopSession();');
+      final mountedIndex = cancelBody.indexOf('if (!mounted)', stopIndex);
+      expect(stopIndex, isNot(-1));
+      expect(mountedIndex, greaterThan(stopIndex));
+    },
+  );
 
   test('safe_walk start guards mounted after the async controller start', () {
     final source = File('lib/screens/safe_walk_screen.dart').readAsStringSync();
 
-    final startIdx = source.indexOf('final fullyScheduled = await _controller.start(');
+    final startIdx = source.indexOf(
+      'final result = await _controller.startSession(',
+    );
     expect(startIdx, isNot(-1));
     final mountedIdx = source.indexOf('if (!mounted) return;', startIdx);
-    final degradedIdx = source.indexOf('_showTimerSchedulingDegraded()', startIdx);
+    final degradedIdx = source.indexOf(
+      '_showArmFailure(result, pinState)',
+      startIdx,
+    );
 
     expect(mountedIdx, isNot(-1));
     expect(degradedIdx, isNot(-1));
@@ -42,6 +54,6 @@ void main() {
     final exitBody = source.substring(exitStart);
     expect(exitBody, contains('onPressed: () async'));
     expect(exitBody, contains('await _cancelWalk();'));
-    expect(exitBody, contains('if (!mounted) return;'));
+    expect(exitBody, contains('if (!mounted)'));
   });
 }

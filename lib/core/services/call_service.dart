@@ -1,13 +1,6 @@
-import 'dart:io';
-
 import 'package:easy_localization/easy_localization.dart';
-import 'package:flutter_direct_caller_plugin/flutter_direct_caller_plugin.dart';
-import 'package:permission_handler/permission_handler.dart';
 
-import '../utils/emergency_number_validator.dart';
-import 'android_intent_service.dart';
-
-enum EmergencyCallStatus { directCallStarted, dialerOpened, failed }
+enum EmergencyCallStatus { callRequested, dialerRequested, failed }
 
 class EmergencyCallResult {
   final EmergencyCallStatus status;
@@ -15,16 +8,16 @@ class EmergencyCallResult {
 
   const EmergencyCallResult._({required this.status, required this.number});
 
-  factory EmergencyCallResult.direct(String number) {
+  factory EmergencyCallResult.requested(String number) {
     return EmergencyCallResult._(
-      status: EmergencyCallStatus.directCallStarted,
+      status: EmergencyCallStatus.callRequested,
       number: number,
     );
   }
 
   factory EmergencyCallResult.dialer(String number) {
     return EmergencyCallResult._(
-      status: EmergencyCallStatus.dialerOpened,
+      status: EmergencyCallStatus.dialerRequested,
       number: number,
     );
   }
@@ -36,72 +29,33 @@ class EmergencyCallResult {
     );
   }
 
-  /// True ONLY when a direct call was placed by the OS (no user action needed).
-  bool get isConfirmed => status == EmergencyCallStatus.directCallStarted;
+  /// Intent dispatch cannot confirm that call UI appeared or a call connected.
+  bool get isConfirmed => false;
 
-  /// True when dialer opened but USER MUST PRESS THE GREEN CALL BUTTON.
-  bool get requiresUserAction => status == EmergencyCallStatus.dialerOpened;
+  /// A dialer request requires the user to press the system call button.
+  bool get requiresUserAction => status == EmergencyCallStatus.dialerRequested;
+
+  /// Android Telecom accepted a request, but the user must still verify the
+  /// outcome; ringing and connection are never inferred.
+  bool get requiresVerification => status == EmergencyCallStatus.callRequested;
 
   /// True when the action completely failed (nothing opened).
   bool get isFailed => status == EmergencyCallStatus.failed;
 
-  /// True when at least something happened (call placed OR dialer opened).
-  /// WARNING: This does NOT mean the call connected.
+  /// True only means Android accepted an intent request. It does not prove the
+  /// phone UI appeared, a call was placed, or the other party answered.
   bool get isSuccess => status != EmergencyCallStatus.failed;
 
-  bool get requiresManualConfirmation =>
-      status == EmergencyCallStatus.dialerOpened;
+  bool get requiresManualConfirmation => status != EmergencyCallStatus.failed;
 
   String get statusMessage {
     switch (status) {
-      case EmergencyCallStatus.directCallStarted:
-        return 'emergency_call_direct_started'.tr();
-      case EmergencyCallStatus.dialerOpened:
-        return 'emergency_call_dialer_opened'.tr();
+      case EmergencyCallStatus.callRequested:
+        return 'emergency_call_requested'.tr();
+      case EmergencyCallStatus.dialerRequested:
+        return 'emergency_dialer_requested'.tr();
       case EmergencyCallStatus.failed:
         return 'emergency_call_failed_status'.tr();
     }
-  }
-}
-
-class CallService {
-  CallService._();
-
-  static const Duration callTimeout = Duration(seconds: 5);
-
-  static Future<EmergencyCallResult> startEmergencyCall(String number) async {
-    // Never synthesize 112: an empty/blank target is a failure, not a fallback.
-    final normalized = AndroidIntentService.normalizePhoneNumber(number);
-    if (!EmergencyNumberValidator.isCallableEmergencyTarget(normalized)) {
-      return EmergencyCallResult.failed(normalized);
-    }
-
-    if (Platform.isAndroid) {
-      try {
-        // C1 FIX: Check permission status only — never request() during emergency.
-        // Permission is pre-requested at app startup via PermissionHelper.
-        // request() shows a blocking dialog that kills the call if phone is in pocket.
-        final phoneStatus = await Permission.phone.status;
-        if (phoneStatus.isGranted) {
-          final directCallStarted =
-              await FlutterDirectCallerPlugin.callNumber(
-                normalized,
-              ).timeout(callTimeout, onTimeout: () => false) ??
-              false;
-          if (directCallStarted) {
-            return EmergencyCallResult.direct(normalized);
-          }
-        }
-      } catch (_) {
-        // Fallback to dialer below.
-      }
-    }
-
-    final dialerOpened = await AndroidIntentService.openDialer(normalized);
-    if (dialerOpened) {
-      return EmergencyCallResult.dialer(normalized);
-    }
-
-    return EmergencyCallResult.failed(normalized);
   }
 }

@@ -9,19 +9,18 @@ void main() {
   final ktBase = '$base/android/app/src/main/kotlin/com/poyrazoncel/korubeni';
 
   group('Call-only executor', () {
-    test('EmergencyExecutor.kt must NOT reference SmsSender', () {
-      final file = File('$ktBase/emergency/EmergencyExecutor.kt');
+    test('target validator is side-effect free and has no SMS surface', () {
+      final file = File('$ktBase/emergency/EmergencyTargetValidator.kt');
       expect(
         file.existsSync(),
         isTrue,
-        reason: 'EmergencyExecutor.kt must exist',
+        reason: 'The single native target validator must exist',
       );
       final content = file.readAsStringSync();
-      expect(
-        content.contains('SmsSender'),
-        isFalse,
-        reason: 'EmergencyExecutor must not reference SmsSender',
-      );
+      expect(content, isNot(contains('SmsSender')));
+      expect(content, isNot(contains('TelecomManager')));
+      expect(content, isNot(contains('startActivity')));
+      expect(content, isNot(contains('Intent.ACTION_')));
     });
 
     test('EmergencyPlatformHandler.kt must NOT have sendSms case', () {
@@ -83,57 +82,61 @@ void main() {
       );
     });
 
-    test('EmergencyExecutor never falls back to / synthesizes 112', () {
-      final file = File('$ktBase/emergency/EmergencyExecutor.kt');
-      expect(file.existsSync(), isTrue);
-      final content = file.readAsStringSync();
+    test('typed native coordinator never falls back to / synthesizes 112', () {
+      final validator = File(
+        '$ktBase/emergency/EmergencyTargetValidator.kt',
+      ).readAsStringSync();
+      final runtime = File(
+        '$ktBase/emergency/AndroidEmergencySessionRuntime.kt',
+      ).readAsStringSync();
+      final coordinator = File(
+        '$ktBase/emergency/EmergencySessionCoordinator.kt',
+      ).readAsStringSync();
+      final content = '$validator\n$runtime\n$coordinator';
       // No 112 literal in any callable form, no coercion helper, no
       // short-code allow-list. On total dispatch failure it reports failure.
       expect(content, isNot(contains('"112"')));
       expect(content, isNot(contains('ifEmpty { "112" }')));
       expect(content, isNot(contains('normalizeEmergencyTarget')));
       expect(content, isNot(contains('OFFICIAL_EMERGENCY_SHORT_CODES')));
-      expect(content, contains('Intent.ACTION_CALL'));
-      expect(content, contains('Intent.ACTION_DIAL'));
-      expect(content, contains('"status" to "failed"'));
+      expect(runtime, contains('telecom.placeCall('));
+      expect(runtime, isNot(contains('Intent.ACTION_CALL')));
+      expect(runtime, isNot(contains('startActivity(')));
+      expect(coordinator, contains('LifecycleState.REQUEST_FAILED'));
     });
 
     test(
-      'EmergencyExecutor uses ACTION_CALL only when CALL_PHONE is granted',
+      'Telecom request requires CALL_PHONE and raw ACTION_CALL is absent',
       () {
-        final file = File('$ktBase/emergency/EmergencyExecutor.kt');
+        final file = File(
+          '$ktBase/emergency/AndroidEmergencySessionRuntime.kt',
+        );
         final content = file.readAsStringSync();
         final permissionCheck = content.indexOf(
           'Manifest.permission.CALL_PHONE',
         );
-        final actionCall = content.indexOf('Intent.ACTION_CALL');
-        final actionDial = content.indexOf('Intent.ACTION_DIAL');
+        final placeCall = content.indexOf('telecom.placeCall(');
 
         expect(permissionCheck, isNot(-1));
-        expect(actionCall, isNot(-1));
-        expect(actionDial, isNot(-1));
-        expect(permissionCheck < actionCall, isTrue);
+        expect(placeCall, isNot(-1));
+        expect(permissionCheck < placeCall, isTrue);
+        expect(content, isNot(contains('Intent.ACTION_CALL')));
       },
     );
 
-    test(
-      'CountdownAlarmScheduler.kt must NOT reference recipients or message',
-      () {
-        final file = File('$ktBase/emergency/CountdownAlarmScheduler.kt');
-        expect(file.existsSync(), isTrue);
-        final content = file.readAsStringSync();
+    test('legacy scheduler and executor authorities must not compile', () {
+      for (final fileName in [
+        'CountdownAlarmScheduler.kt',
+        'CheckInScheduler.kt',
+        'EmergencyExecutor.kt',
+      ]) {
         expect(
-          content.contains('KEY_COUNTDOWN_RECIPIENTS'),
+          File('$ktBase/emergency/$fileName').existsSync(),
           isFalse,
-          reason: 'No recipients key in CountdownAlarmScheduler',
+          reason: '$fileName would reintroduce a second safety authority',
         );
-        expect(
-          content.contains('KEY_COUNTDOWN_MESSAGE'),
-          isFalse,
-          reason: 'No message key in CountdownAlarmScheduler',
-        );
-      },
-    );
+      }
+    });
 
     test('MainActivity.kt must NOT have composeSms method', () {
       final file = File(

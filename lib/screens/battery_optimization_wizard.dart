@@ -10,10 +10,10 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:optimize_battery/optimize_battery.dart';
 import 'package:easy_localization/easy_localization.dart';
 
 import '../core/app_colors.dart';
+import '../core/services/battery_optimization_service.dart';
 import '../core/utils/permission_helper.dart';
 
 /// Key for battery optimization wizard seen flag
@@ -68,19 +68,35 @@ class BatteryOptimizationWizard extends StatefulWidget {
       _BatteryOptimizationWizardState();
 }
 
-class _BatteryOptimizationWizardState extends State<BatteryOptimizationWizard> {
+class _BatteryOptimizationWizardState extends State<BatteryOptimizationWizard>
+    with WidgetsBindingObserver {
   bool _isOptimizationDisabled = false;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _checkStatus();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _checkStatus();
+    }
   }
 
   Future<void> _checkStatus() async {
     if (!Platform.isAndroid) return;
     try {
-      final isIgnoring = await OptimizeBattery.isIgnoringBatteryOptimizations();
+      final isIgnoring = await BatteryOptimizationService.instance
+          .isOptimizationDisabled();
       if (mounted) {
         setState(() => _isOptimizationDisabled = isIgnoring);
       }
@@ -95,7 +111,6 @@ class _BatteryOptimizationWizardState extends State<BatteryOptimizationWizard> {
       final success =
           await PermissionHelper.requestBatteryOptimizationExemption(context);
       if (success) {
-        await Future.delayed(const Duration(milliseconds: 500));
         await _checkStatus();
       }
     } catch (e) {
@@ -105,14 +120,9 @@ class _BatteryOptimizationWizardState extends State<BatteryOptimizationWizard> {
 
   Future<void> _openBatterySettings() async {
     try {
-      // Android'in pil ayarları sayfasını aç
-      const channel = MethodChannel('com.poyrazoncel.korubeni/settings');
-      await channel.invokeMethod('openBatterySettings');
-    } catch (_) {
-      // Fallback: genel ayarları aç
-      try {
-        await OptimizeBattery.openBatteryOptimizationSettings();
-      } catch (_) {}
+      await BatteryOptimizationService.instance.openBatterySettings();
+    } catch (e) {
+      debugPrint('Battery settings failed: $e');
     }
   }
 

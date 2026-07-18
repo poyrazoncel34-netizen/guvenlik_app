@@ -39,12 +39,18 @@ class SubscriptionGate {
     BuildContext context,
     PremiumFeature feature,
   ) async {
-    final isPro = context.read<SubscriptionProvider>().isPro;
-    if (canUseFeature(feature: feature, isPro: isPro)) {
-      return true;
-    }
+    if (isFreeFeature(feature)) return true;
 
-    await showPaywall(context, lockedFeature: feature);
+    final provider = context.read<SubscriptionProvider>();
+    final access = await provider.resolveAccess();
+    if (!context.mounted) return false;
+    if (access.canUsePaidSafetyFeature) return true;
+
+    // Loading/unavailable is not evidence of a free account. Only a real
+    // CustomerInfo response that verified "free" may route to the paywall.
+    if (access.shouldShowPaywall) {
+      await showPaywall(context, lockedFeature: feature);
+    }
     return false;
   }
 

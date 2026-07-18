@@ -14,7 +14,7 @@ void main() {
         'FeatureWarningHelper.showIfNeeded',
         start,
       );
-      final sessionStart = source.indexOf('_controller.start(', start);
+      final sessionStart = source.indexOf('_controller.startSession(', start);
 
       expect(start, isNot(-1));
       expect(contactCheck, isNot(-1));
@@ -40,10 +40,10 @@ void main() {
         start,
       );
       final exactAlarmGuard = source.indexOf(
-        'confirmExactAlarmPermissionOrDegraded',
+        'requireExactAlarmPermission',
         start,
       );
-      final sessionStart = source.indexOf('_controller.start(', start);
+      final sessionStart = source.indexOf('_controller.startSession(', start);
 
       expect(start, isNot(-1));
       expect(warning, isNot(-1));
@@ -66,7 +66,7 @@ void main() {
         'FeatureWarningHelper.showIfNeeded',
         start,
       );
-      final serviceStart = source.indexOf('_service.start(minutes)', start);
+      final serviceStart = source.indexOf('_service.startSession(', start);
 
       expect(start, isNot(-1));
       expect(contactCheck, isNot(-1));
@@ -78,35 +78,32 @@ void main() {
       expect(source, contains('ContactsPage'));
     });
 
-    test('native scheduling degradation is surfaced by both timer flows', () {
+    test('both timer flows require typed native arm acknowledgement', () {
       final platform = File(
         'lib/core/services/emergency_platform_service.dart',
       ).readAsStringSync();
-      expect(
-        platform,
-        contains("response['scheduled'] == true && response['exact'] == true"),
-      );
+      expect(platform, contains('Future<ArmResult> armEmergencySession'));
 
       final service = File(
         'lib/core/services/check_in_service.dart',
       ).readAsStringSync();
-      expect(service, contains('Future<bool> start(int minutes)'));
-      expect(service, contains('_nativeScheduleDegraded = !nativeScheduled'));
+      expect(service, contains('Future<ArmResult> startSession'));
+      expect(service, contains('if (result is! Armed) return result;'));
 
       final checkIn = File(
         'lib/screens/check_in_screen.dart',
       ).readAsStringSync();
-      expect(checkIn, contains('final fullyScheduled = await _service.start'));
-      expect(checkIn, contains('timer_scheduling_degraded'));
+      expect(checkIn, contains('final result = await _service.startSession'));
+      expect(checkIn, contains('if (result is! Armed)'));
 
       final safeWalk = File(
         'lib/screens/safe_walk_screen.dart',
       ).readAsStringSync();
-      expect(safeWalk, contains('final fullyScheduled = await'));
-      expect(safeWalk, contains('timer_scheduling_degraded'));
+      expect(safeWalk, contains('final result = await _controller.startSession'));
+      expect(safeWalk, contains('if (result is! Armed)'));
     });
 
-    test('exact alarm degraded mode requires explicit acknowledgment', () {
+    test('exact alarm denial is fail-closed and cannot be acknowledged away', () {
       final guard = File(
         'lib/core/widgets/exact_alarm_permission_guard.dart',
       ).readAsStringSync();
@@ -116,11 +113,12 @@ void main() {
       expect(guard, contains('canScheduleExactAlarms'));
       expect(guard, contains('requestExactAlarmPermission'));
       expect(guard, contains('barrierDismissible: false'));
-      expect(guard, contains('exact_alarm_degraded_continue'));
+      expect(guard, isNot(contains('exact_alarm_degraded_continue')));
+      expect(guard, contains('return false;'));
       expect(
         enTranslations,
         contains(
-          'Exact alarm access improves safety timer reliability. Without it, timers may be delayed.',
+          'This timed action cannot be armed without exact-alarm access.',
         ),
       );
 
@@ -129,11 +127,11 @@ void main() {
       ).readAsStringSync();
       final checkInStart = checkIn.indexOf('Future<void> _startCheckIn');
       final checkInGuard = checkIn.indexOf(
-        'confirmExactAlarmPermissionOrDegraded',
+        'requireExactAlarmPermission',
         checkInStart,
       );
       final serviceStart = checkIn.indexOf(
-        '_service.start(minutes)',
+        '_service.startSession(',
         checkInStart,
       );
       expect(checkInGuard, isNot(-1));
@@ -145,29 +143,32 @@ void main() {
       ).readAsStringSync();
       final safeWalkStart = safeWalk.indexOf('Future<void> _startSafeWalk');
       final safeWalkGuard = safeWalk.indexOf(
-        'confirmExactAlarmPermissionOrDegraded',
+        'requireExactAlarmPermission',
         safeWalkStart,
       );
-      final sessionStart = safeWalk.indexOf('_controller.start(', safeWalkStart);
+      final sessionStart = safeWalk.indexOf(
+        '_controller.startSession(',
+        safeWalkStart,
+      );
       expect(safeWalkGuard, isNot(-1));
       expect(sessionStart, isNot(-1));
       expect(safeWalkGuard < sessionStart, isTrue);
     });
 
-    test('countdown backup alarm has denied/degraded native fallback', () {
+    test('typed countdown has exact plus distinct inexact revocation backup', () {
       final countdown = File(
         'lib/screens/countdown_screen.dart',
       ).readAsStringSync();
       expect(countdown, contains('_scheduleNativeBackupAlarm'));
-      expect(countdown, contains('degraded safety net'));
+      expect(countdown, contains('armEmergencySession'));
 
-      final scheduler = File(
-        'android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/CountdownAlarmScheduler.kt',
+      final runtime = File(
+        'android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/AndroidEmergencySessionRuntime.kt',
       ).readAsStringSync();
-      expect(scheduler, contains('CheckInScheduler.canScheduleExactAlarms'));
-      expect(scheduler, contains('setExactAndAllowWhileIdle'));
-      expect(scheduler, contains('setAndAllowWhileIdle'));
-      expect(scheduler, contains('Exact alarm permission denied'));
+      expect(runtime, contains('setExactAndAllowWhileIdle'));
+      expect(runtime, contains('setAndAllowWhileIdle'));
+      expect(runtime, contains('val exactIntent'));
+      expect(runtime, contains('val inexactIntent'));
     });
 
     test('safe walk guards mounted after the async controller start', () {
@@ -175,21 +176,21 @@ void main() {
         'lib/screens/safe_walk_screen.dart',
       ).readAsStringSync();
       final startAwait = source.indexOf(
-        'final fullyScheduled = await _controller.start(',
+        'final result = await _controller.startSession(',
       );
       final mountedGuard = source.indexOf('if (!mounted) return;', startAwait);
-      final degradedSnack = source.indexOf(
-        '_showTimerSchedulingDegraded();',
+      final failureSurface = source.indexOf(
+        '_showArmFailure(result, pinState);',
         startAwait,
       );
 
       expect(startAwait, isNot(-1));
       expect(mountedGuard, isNot(-1));
-      expect(degradedSnack, isNot(-1));
+      expect(failureSurface, isNot(-1));
       expect(
-        mountedGuard < degradedSnack,
+        mountedGuard < failureSurface,
         isTrue,
-        reason: 'mounted must be checked before touching UI after start().',
+        reason: 'mounted must be checked before touching UI after startSession().',
       );
     });
   });

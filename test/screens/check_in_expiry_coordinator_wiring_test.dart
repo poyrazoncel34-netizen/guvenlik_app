@@ -19,7 +19,7 @@ void main() {
         reason: 'Safe-walk expiry must not open the panic CountdownScreen.',
       );
       expect(
-        source.contains("await _controller.start("),
+        source.contains('await _controller.startSession('),
         isTrue,
         reason: 'Safe-walk must start the shared session controller.',
       );
@@ -31,7 +31,7 @@ void main() {
       ).readAsStringSync();
 
       final triggerIdx = source.indexOf('Future<void> _triggerEmergency()');
-      final claimIdx = source.indexOf('tryClaim', triggerIdx);
+      final claimIdx = source.indexOf('dispatchEmergencySession(', triggerIdx);
       final logIdx = source.indexOf('ActivityService.logEvent', triggerIdx);
 
       expect(claimIdx, isNot(-1));
@@ -39,24 +39,27 @@ void main() {
       expect(
         claimIdx < logIdx,
         isTrue,
-        reason: 'Check-in expiry must claim before side effects.',
+        reason: 'Typed native claim/dispatch must precede bookkeeping.',
       );
     });
 
-    test('EmergencyTriggerHost routes both sessions through the controller', () {
-      final source = File(
-        'lib/core/widgets/emergency_trigger_host.dart',
-      ).readAsStringSync();
+    test(
+      'EmergencyTriggerHost routes both sessions through the controller',
+      () {
+        final source = File(
+          'lib/core/widgets/emergency_trigger_host.dart',
+        ).readAsStringSync();
 
-      expect(
-        source,
-        contains('Future<void> _handleCheckInExpired({String? sessionId})'),
-      );
-      // Session-aware controller resolution (check-in vs safe-walk).
-      expect(source, contains('_controllerFor'));
-      expect(source, contains('CheckInExpiryCoordinator.safeWalkSession'));
-      expect(source, contains('CheckInService.safeWalk'));
-      expect(source, contains('handleNativeExpired'));
-    });
+        expect(
+          source,
+          contains('Future<void> _handleCheckInExpired({String? sessionId})'),
+        );
+        // Session-aware controller resolution (check-in vs safe-walk).
+        expect(source, contains('_controllerFor'));
+        expect(source, contains('CheckInExpiryCoordinator.safeWalkSession'));
+        expect(source, contains('CheckInService.safeWalk'));
+        expect(source, contains('handleNativeExpired'));
+      },
+    );
   });
 }

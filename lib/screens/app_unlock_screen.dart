@@ -13,6 +13,7 @@ import '../core/di/service_locator.dart';
 import '../core/security/secure_storage.dart';
 import '../core/security/secure_storage_keys.dart';
 import '../core/services/app_reset_service.dart';
+import '../core/services/emergency_session_contract.dart';
 import '../core/services/pin_lockout_service.dart';
 import 'settings_legal/legal_settings_screen.dart';
 import 'splash_screen.dart';
@@ -405,8 +406,14 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> {
               onPressed: confirmController.text == resetToken
                   ? () async {
                       Navigator.pop(ctx);
-                      await AppResetService.clearLocalData();
+                      final wipe = await AppResetService.clearLocalData();
                       if (!mounted) return;
+                      if (wipe != WipeResult.completed) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('data_delete_pending'.tr())),
+                        );
+                        return;
+                      }
                       Navigator.of(context).pushAndRemoveUntil(
                         PageRouteBuilder(
                           pageBuilder: (_, _, _) => const SplashScreen(),

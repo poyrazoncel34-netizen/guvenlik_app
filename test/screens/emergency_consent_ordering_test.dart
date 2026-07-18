@@ -22,14 +22,14 @@ void main() {
 
       final executeMethodIndex = content.indexOf('_executeEmergency');
       final nativeCallIndex = content.indexOf(
-        'executeEmergencyNative',
+        'dispatchEmergencySession',
         executeMethodIndex,
       );
       expect(
         nativeCallIndex,
         greaterThan(executeMethodIndex),
         reason:
-            'Native call must be reached only from countdown _executeEmergency.',
+            'Typed native dispatch must be reached only from countdown execution.',
       );
     });
   });

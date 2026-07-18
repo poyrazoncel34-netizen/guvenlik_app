@@ -12,6 +12,7 @@ import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 import '../../core/app_colors.dart';
 import '../../core/services/user_data_export_service.dart';
+import '../../core/services/sensitive_temp_file_service.dart';
 
 class DataExportScreen extends StatefulWidget {
   const DataExportScreen({super.key});
@@ -27,6 +28,7 @@ class _DataExportScreenState extends State<DataExportScreen> {
     if (_exporting) return;
     setState(() => _exporting = true);
     HapticFeedback.mediumImpact();
+    File? exportFile;
 
     try {
       final exportData = await UserDataExportService.buildExportData();
@@ -37,6 +39,7 @@ class _DataExportScreenState extends State<DataExportScreen> {
       final file = File(
         '${dir.path}/korubeni_data_export_${DateTime.now().millisecondsSinceEpoch}.json',
       );
+      exportFile = file;
       await file.writeAsString(jsonStr, encoding: utf8);
 
       if (!mounted) return;
@@ -61,6 +64,7 @@ class _DataExportScreenState extends State<DataExportScreen> {
         ),
       );
     } finally {
+      await SensitiveTempFileService.delete(exportFile);
       if (mounted) setState(() => _exporting = false);
     }
   }

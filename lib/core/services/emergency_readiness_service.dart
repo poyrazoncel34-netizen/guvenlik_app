@@ -16,7 +16,7 @@ class EmergencyReadinessService {
 
   ReadinessState? get lastState => _lastState;
 
-  bool get isReady => _lastState?.batteryOptimizationWhitelisted ?? false;
+  bool get isReady => _lastState?.criticalSafetyReady ?? false;
 
   Future<ReadinessState> checkReadiness() async {
     try {
@@ -29,6 +29,7 @@ class EmergencyReadinessService {
             deviceState['batteryOptimizationsIgnored'] == true,
         exactAlarmPermission: deviceState['canScheduleExactAlarms'] == true,
         callPermission: deviceState['callPermissionGranted'] == true,
+        notificationPermission: deviceState['notificationsEnabled'] == true,
       );
     } on TimeoutException {
       debugPrint('[EmergencyReadiness] checkReadiness timed out');
@@ -36,6 +37,7 @@ class EmergencyReadinessService {
         batteryOptimizationWhitelisted: false,
         exactAlarmPermission: false,
         callPermission: false,
+        notificationPermission: false,
       );
     } catch (e) {
       debugPrint('[EmergencyReadiness] checkReadiness failed: $e');
@@ -43,6 +45,7 @@ class EmergencyReadinessService {
         batteryOptimizationWhitelisted: false,
         exactAlarmPermission: false,
         callPermission: false,
+        notificationPermission: false,
       );
     }
 
@@ -54,10 +57,20 @@ class ReadinessState {
   final bool batteryOptimizationWhitelisted;
   final bool exactAlarmPermission;
   final bool callPermission;
+  final bool notificationPermission;
 
   const ReadinessState({
     required this.batteryOptimizationWhitelisted,
     required this.exactAlarmPermission,
     required this.callPermission,
+    required this.notificationPermission,
   });
+
+  /// Required for a timed background alert to be both timely and visible.
+  bool get backgroundAlertReady =>
+      exactAlarmPermission && notificationPermission;
+
+  /// Direct-call permission is required for the hands-free request path. A
+  /// dialer fallback still exists, but it is intentionally not called ready.
+  bool get criticalSafetyReady => backgroundAlertReady && callPermission;
 }

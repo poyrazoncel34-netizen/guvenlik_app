@@ -8,9 +8,9 @@
 
 import 'dart:io';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart';
-import 'package:optimize_battery/optimize_battery.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import 'emergency_platform_service.dart';
 
 /// Battery optimization guidance service for Android.
 ///
@@ -30,7 +30,9 @@ class BatteryOptimizationService {
     if (!Platform.isAndroid) return true; // iOS doesn't need this
 
     try {
-      final isIgnoring = await OptimizeBattery.isIgnoringBatteryOptimizations();
+      final deviceState = await EmergencyPlatformService.instance
+          .getDeviceState();
+      final isIgnoring = deviceState['batteryOptimizationsIgnored'] == true;
       debugPrint('🔋 Battery optimization disabled: $isIgnoring');
 
       // Cache result
@@ -45,8 +47,11 @@ class BatteryOptimizationService {
   }
 
   /// Request optional battery optimization exemption.
-  /// Shows a system dialog/settings screen and returns false if the user
-  /// declines or the platform refuses the request.
+  /// Opens the system request after an explicit user gesture.
+  ///
+  /// A true result means only that Android accepted the request intent. It is
+  /// not evidence that the user granted the exemption; status is reconciled
+  /// when the app resumes.
   Future<bool> requestDisableOptimization() async {
     if (!Platform.isAndroid) return true;
 
@@ -57,20 +62,8 @@ class BatteryOptimizationService {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool(_prefKeyAsked, true);
 
-      // Show system dialog
-      await OptimizeBattery.stopOptimizingBatteryUsage();
-
-      // Check if user granted
-      await Future.delayed(const Duration(seconds: 1));
-      final isDisabled = await isOptimizationDisabled();
-
-      if (isDisabled) {
-        debugPrint('✅ Battery optimization exemption granted');
-      } else {
-        debugPrint('❌ Battery optimization exemption not granted');
-      }
-
-      return isDisabled;
+      return EmergencyPlatformService.instance
+          .requestBatteryOptimizationExemption();
     } catch (e) {
       debugPrint('Battery optimization request failed: $e');
       return false;
@@ -102,21 +95,15 @@ class BatteryOptimizationService {
   }
 
   /// Open system battery optimization settings
-  Future<void> openBatterySettings() async {
-    if (!Platform.isAndroid) return;
+  Future<bool> openBatterySettings() async {
+    if (!Platform.isAndroid) return false;
 
     try {
-      // Open system settings for this app
-      const platform = MethodChannel('com.poyrazoncel.korubeni/settings');
-      await platform.invokeMethod('openBatterySettings');
+      return EmergencyPlatformService.instance
+          .openBatteryOptimizationSettings();
     } catch (e) {
       debugPrint('Failed to open battery settings: $e');
-      // Fallback: try generic battery optimization request
-      try {
-        await OptimizeBattery.stopOptimizingBatteryUsage();
-      } catch (e2) {
-        debugPrint('Fallback also failed: $e2');
-      }
+      return false;
     }
   }
 
@@ -183,34 +170,14 @@ class BatteryOptimizationService {
   /// Falls back to standard battery settings on unknown OEMs.
   Future<void> openManufacturerBatterySettings() async {
     if (!Platform.isAndroid) return;
-    final m = _cachedManufacturer.toLowerCase();
     try {
-      const platform = MethodChannel('com.poyrazoncel.korubeni/settings');
-      String? intent;
-      if (m.contains('xiaomi')) {
-        intent = 'com.miui.securitycenter/.MainActivity';
-      } else if (m.contains('huawei') || m.contains('honor')) {
-        intent =
-            'com.huawei.systemmanager/.startupmgr.ui.StartupNormalAppListActivity';
-      } else if (m.contains('oppo')) {
-        intent = 'com.coloros.safecenter/.startupapp.StartupAppListActivity';
-      } else if (m.contains('vivo')) {
-        intent =
-            'com.vivo.permissionmanager/.activity.BgStartUpManagerActivity';
-      } else if (m.contains('oneplus')) {
-        intent = 'com.oneplus.security/.autostart.AutoStartActivity';
-      } else if (m.contains('realme')) {
-        intent = 'com.coloros.safecenter/.startupapp.StartupAppListActivity';
-      } else if (m.contains('samsung')) {
-        intent = 'com.samsung.android.lool/.DeviceHealthMonitorMainActivity';
-      }
-      if (intent != null) {
-        await platform.invokeMethod('openActivityByComponent', {
-          'component': intent,
-        });
+      final opened = await EmergencyPlatformService.instance
+          .openManufacturerSettings();
+      if (opened) {
         return;
       }
-    } catch (_) {
+    } catch (e) {
+      debugPrint('Manufacturer battery settings failed: $e');
       // Fall through to generic settings
     }
     // Generic fallback: standard battery settings

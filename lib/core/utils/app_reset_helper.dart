@@ -9,6 +9,7 @@ import '../di/service_locator.dart';
 import '../security/secure_storage.dart';
 import '../security/secure_storage_keys.dart';
 import '../services/app_reset_service.dart';
+import '../services/emergency_session_contract.dart';
 
 class AppResetHelper {
   AppResetHelper._();
@@ -83,8 +84,14 @@ class AppResetHelper {
                       Navigator.pop(dialogContext);
                       final pinVerified = await _verifyPinIfConfigured(context);
                       if (!pinVerified) return;
-                      await AppResetService.clearLocalData();
+                      final wipe = await AppResetService.clearLocalData();
                       if (!context.mounted) return;
+                      if (wipe != WipeResult.completed) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('data_delete_pending'.tr())),
+                        );
+                        return;
+                      }
                       Navigator.of(context).pushAndRemoveUntil(
                         MaterialPageRoute(builder: (_) => const SplashScreen()),
                         (_) => false,

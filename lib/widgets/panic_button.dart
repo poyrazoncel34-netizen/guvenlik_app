@@ -10,11 +10,13 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:provider/provider.dart';
 import '../core/app_colors.dart';
 import '../core/constants/app_constants.dart';
+import '../core/services/emergency_session_contract.dart';
 import '../core/services/subscription_gate.dart';
 import '../core/widgets/feature_warning_dialog.dart';
 import '../presentation/providers/subscription_provider.dart';
 import '../core/services/contact_service.dart';
 import '../core/utils/emergency_number_validator.dart';
+import '../core/utils/panic_hold_gate.dart';
 import '../screens/contacts_page.dart';
 import '../screens/countdown_screen.dart';
 
@@ -35,6 +37,9 @@ class _PanicButtonState extends State<PanicButton>
   Timer? _hapticTimer;
   int _holdSeconds = 0;
   Timer? _holdTimer;
+  Stopwatch? _holdStopwatch;
+  bool _pointerDown = false;
+  int _pressEpoch = 0;
 
   @override
   void initState() {
@@ -66,19 +71,29 @@ class _PanicButtonState extends State<PanicButton>
     _progressController.dispose();
     _hapticTimer?.cancel();
     _holdTimer?.cancel();
+    _holdStopwatch?.stop();
     super.dispose();
   }
 
-  Future<void> _onPressStart(LongPressStartDetails details) async {
+  void _onPressStart(TapDownDetails details) {
+    if (_pointerDown || _isArmed || _countdownOpening) return;
+
+    _pointerDown = true;
+    final epoch = ++_pressEpoch;
+    _holdStopwatch?.stop();
+    _holdStopwatch = Stopwatch()..start();
+    unawaited(_armPress(epoch));
+  }
+
+  Future<void> _armPress(int epoch) async {
     _hapticTimer?.cancel();
     _holdTimer?.cancel();
-    if (_isArmed) return;
 
     final allowed = await SubscriptionGate.ensureAccess(
       context,
       PremiumFeature.panic,
     );
-    if (!allowed || !mounted) return;
+    if (!mounted || !allowed || !_isCurrentPress(epoch)) return;
 
     // İlk kullanımda uyarı dialogu göster; dialog varsa press iptal edilir.
     final shown = await FeatureWarningHelper.showIfNeeded(
@@ -88,35 +103,71 @@ class _PanicButtonState extends State<PanicButton>
       title: FeatureWarningHelper.panicTitle,
       content: FeatureWarningHelper.panicContent,
     );
-    if (!shown || !mounted) return;
+    if (!shown || !_isCurrentPress(epoch)) return;
+
+    final elapsed = _holdStopwatch?.elapsed ?? Duration.zero;
     HapticFeedback.heavyImpact();
     setState(() {
       _isArmed = true;
-      _holdSeconds = 0;
+      _holdSeconds = elapsed.inSeconds.clamp(
+        0,
+        PanicHoldGate.requiredDuration.inSeconds,
+      );
     });
 
     // Start armed pulse
     _armedPulseController.repeat(reverse: true);
 
     // Start progress ring
-    _progressController.forward(from: 0);
+    _progressController.forward(from: PanicHoldGate.progress(elapsed));
 
     // Periodic haptic feedback every 500ms
     _hapticTimer = Timer.periodic(const Duration(milliseconds: 500), (_) {
       HapticFeedback.mediumImpact();
     });
 
-    // Count seconds held
-    _holdTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (mounted) {
-        setState(() => _holdSeconds++);
+    // The display follows the same monotonic clock as the release gate. A
+    // wall-clock/time-zone change can never complete the safety gesture.
+    _holdTimer = Timer.periodic(const Duration(milliseconds: 100), (_) {
+      if (!_isCurrentPress(epoch)) return;
+      final seconds = (_holdStopwatch?.elapsed.inSeconds ?? 0).clamp(
+        0,
+        PanicHoldGate.requiredDuration.inSeconds,
+      );
+      if (seconds != _holdSeconds) {
+        setState(() => _holdSeconds = seconds);
       }
     });
   }
 
-  void _onPressEnd(LongPressEndDetails details) {
-    final wasArmed = _isArmed;
-    setState(() => _isArmed = false);
+  bool _isCurrentPress(int epoch) {
+    return mounted && _pointerDown && _pressEpoch == epoch;
+  }
+
+  void _onPressEnd(TapUpDetails details) {
+    final elapsed = _holdStopwatch?.elapsed ?? Duration.zero;
+    final completed =
+        _pointerDown && _isArmed && PanicHoldGate.isComplete(elapsed);
+    _resetPress();
+
+    if (!completed) return;
+
+    HapticFeedback.vibrate();
+    unawaited(_openCountdownScreen());
+  }
+
+  void _onPressCancel() {
+    _resetPress();
+  }
+
+  void _resetPress() {
+    _pointerDown = false;
+    _pressEpoch++;
+    _holdStopwatch?.stop();
+    _holdStopwatch = null;
+    if (mounted && _isArmed) {
+      setState(() => _isArmed = false);
+    }
     _armedPulseController.stop();
     _armedPulseController.reset();
     _progressController.stop();
@@ -124,16 +175,33 @@ class _PanicButtonState extends State<PanicButton>
     _hapticTimer?.cancel();
     _holdTimer?.cancel();
     _holdSeconds = 0;
-
-    // Vibrate
-    HapticFeedback.vibrate();
-
-    if (!wasArmed) return;
-    unawaited(_openCountdownScreen());
   }
 
   Future<void> _openCountdownScreen() async {
     if (_countdownOpening || !mounted) return;
+
+    // Resolve a fresh entitlement decision at the actual arm boundary. The
+    // earlier long-press gate is UX; it is not an entitlement lease.
+    final allowed = await SubscriptionGate.ensureAccess(
+      context,
+      PremiumFeature.panic,
+    );
+    if (!mounted) return;
+    final entitlementDecision = context
+        .read<SubscriptionProvider>()
+        .entitlementDecision;
+    if (!allowed || entitlementDecision != EntitlementDecision.authorized) {
+      if (entitlementDecision == EntitlementDecision.unknown) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('safety_session_entitlement_unverified'.tr()),
+            backgroundColor: AppColors.warning,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+      return;
+    }
 
     // Personless-trigger guard: with 112 removed, the countdown has nothing to
     // call unless a callable emergency contact is configured. Redirect the user
@@ -150,7 +218,7 @@ class _PanicButtonState extends State<PanicButton>
       context,
       PageRouteBuilder(
         pageBuilder: (context, animation, secondaryAnimation) =>
-            const CountdownScreen(),
+            CountdownScreen(entitlementDecision: entitlementDecision),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return FadeTransition(
             opacity: animation,
@@ -176,8 +244,9 @@ class _PanicButtonState extends State<PanicButton>
 
   Future<bool> _hasCallableContact() async {
     try {
-      final numbers = await ContactService.getAllEmergencyNumbers();
-      return numbers.any(EmergencyNumberValidator.isCallableEmergencyTarget);
+      final contact = await ContactService.getEmergencyContact();
+      return contact != null &&
+          EmergencyNumberValidator.isCallableEmergencyTarget(contact.phone);
     } on Exception {
       return false;
     }
@@ -286,7 +355,7 @@ class _PanicButtonState extends State<PanicButton>
 
     // When TalkBack/VoiceOver is active, the standard double-tap activation
     // fires Semantics.onTap — it does NOT reliably reach a raw
-    // GestureDetector's onLongPressStart. Without an alternative path, the
+    // GestureDetector's pointer handlers. Without an alternative path, the
     // single SOS entry point would be inaccessible. We expose onTap →
     // confirmation dialog → countdown, and silence the long-press handlers
     // so a stray gesture during AT mode cannot start the timer twice.
@@ -308,8 +377,9 @@ class _PanicButtonState extends State<PanicButton>
       button: true,
       onTap: accessibleNavigation ? _onAccessibleTap : null,
       child: GestureDetector(
-        onLongPressStart: accessibleNavigation ? null : _onPressStart,
-        onLongPressEnd: accessibleNavigation ? null : _onPressEnd,
+        onTapDown: accessibleNavigation ? null : _onPressStart,
+        onTapUp: accessibleNavigation ? null : _onPressEnd,
+        onTapCancel: accessibleNavigation ? null : _onPressCancel,
         child: SizedBox(
           width: baseSize * 1.4,
           height: baseSize * 1.4,

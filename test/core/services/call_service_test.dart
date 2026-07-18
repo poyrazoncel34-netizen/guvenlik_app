@@ -3,52 +3,33 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guvenlik_app/core/services/call_service.dart';
 
-/// M3: Phone number validation — numbers shorter than 7 digits should fail.
-/// H4: Consent gate should not block emergency calls.
-/// CallService.callTimeout must exist for plugin safety.
+/// The Dart layer contains presentation-only outcomes. Native Telecom and the
+/// typed safety coordinator are the sole automatic request authority.
 void main() {
-  test(
-    'startEmergencyCall rejects phone numbers shorter than 7 digits',
-    () async {
-      final result = await CallService.startEmergencyCall('123');
-      expect(result.isSuccess, isFalse);
-      expect(result.status, EmergencyCallStatus.failed);
-      expect(result.number, '123');
-    },
-  );
+  test('outcome model never promotes a request to a confirmed call', () {
+    final requested = EmergencyCallResult.requested('+905551234567');
+    final dialer = EmergencyCallResult.dialer('+905551234567');
+    final failed = EmergencyCallResult.failed('');
 
-  test(
-    'startEmergencyCall returns failed (never 112) when no number is configured',
-    () async {
-      final result = await CallService.startEmergencyCall('');
-      expect(result.status, EmergencyCallStatus.failed);
-      expect(result.isFailed, isTrue);
-      expect(
-        result.number,
-        isNot('112'),
-        reason: 'Empty target must NOT be coerced to 112.',
-      );
-    },
-  );
+    expect(requested.isConfirmed, isFalse);
+    expect(requested.requiresVerification, isTrue);
+    expect(dialer.isConfirmed, isFalse);
+    expect(dialer.requiresUserAction, isTrue);
+    expect(failed.isFailed, isTrue);
+    expect(failed.number, isNot('112'));
+  });
 
-  test(
-    'CALL_PHONE direct path is permission-gated and falls back to dialer',
-    () {
-      final source = File(
-        'lib/core/services/call_service.dart',
-      ).readAsStringSync();
-      final permissionCheck = source.indexOf('Permission.phone.status');
-      final directCall = source.indexOf('FlutterDirectCallerPlugin.callNumber');
-      final dialerFallback = source.indexOf('AndroidIntentService.openDialer');
+  test('Dart has no independent direct-call authority', () {
+    final source = File(
+      'lib/core/services/call_service.dart',
+    ).readAsStringSync();
+    final pubspec = File('pubspec.yaml').readAsStringSync();
 
-      expect(permissionCheck, isNot(-1));
-      expect(directCall, isNot(-1));
-      expect(dialerFallback, isNot(-1));
-      expect(permissionCheck < directCall, isTrue);
-      expect(directCall < dialerFallback, isTrue);
-      expect(source, isNot(contains('Permission.phone.request()')));
-    },
-  );
+    expect(source, isNot(contains('class CallService')));
+    expect(source, isNot(contains('FlutterDirectCallerPlugin')));
+    expect(source, isNot(contains('Permission.phone')));
+    expect(pubspec, isNot(contains('flutter_direct_caller_plugin')));
+  });
 
   test('permanently denied phone permission shows manual/settings copy', () {
     final helper = File(
@@ -61,8 +42,8 @@ void main() {
     expect(helper, contains('perm_call_denied_title'));
     expect(helper, contains('perm_call_denied_msg'));
     expect(helper, contains('openAppSettings'));
-    expect(en, contains('Direct emergency calling is disabled'));
-    expect(tr, contains('Doğrudan acil arama Android ayarlarında kapalı'));
+    expect(en, contains('Automatic call-request submission is disabled'));
+    expect(tr, contains('Otomatik arama isteği Android ayarlarında kapalı'));
   });
 
   test('countdown / panic flow no longer synthesizes 112', () {
@@ -100,10 +81,5 @@ void main() {
       reason: 'Check-in must not synthesize 112 as an escalation target.',
     );
     expect(checkIn, contains('resolvePrimaryNumber('));
-  });
-
-  test('CallService has a call timeout constant for plugin safety', () {
-    expect(CallService.callTimeout, isA<Duration>());
-    expect(CallService.callTimeout.inSeconds, lessThanOrEqualTo(5));
   });
 }

@@ -34,7 +34,7 @@ void main() {
     test('exposes an onTap handler on the Semantics wrapper', () {
       // Without onTap on Semantics, TalkBack's double-tap gesture cannot
       // activate the button — it does NOT reach the underlying
-      // GestureDetector's onLongPressStart in any reliable way.
+      // GestureDetector's pointer-down path in any reliable way.
       expect(
         source.contains('onTap: accessibleNavigation ? _onAccessibleTap'),
         isTrue,
@@ -43,46 +43,45 @@ void main() {
       );
     });
 
-    test(
-      'silences the long-press handlers when AT is active to prevent '
-      'double-dispatch from stray gestures',
-      () {
-        expect(
-          source.contains(
-            'onLongPressStart: accessibleNavigation ? null : _onPressStart',
-          ),
-          isTrue,
-          reason:
-              'When AT is on, the long-press path must be disabled so a '
-              'stray gesture cannot start a parallel countdown.',
-        );
-        expect(
-          source.contains(
-            'onLongPressEnd: accessibleNavigation ? null : _onPressEnd',
-          ),
-          isTrue,
-        );
-      },
-    );
+    test('silences the hold handlers when AT is active to prevent '
+        'double-dispatch from stray gestures', () {
+      expect(
+        source.contains(
+          'onTapDown: accessibleNavigation ? null : _onPressStart',
+        ),
+        isTrue,
+        reason:
+            'When AT is on, the long-press path must be disabled so a '
+            'stray gesture cannot start a parallel countdown.',
+      );
+      expect(
+        source.contains('onTapUp: accessibleNavigation ? null : _onPressEnd'),
+        isTrue,
+      );
+      expect(
+        source.contains(
+          'onTapCancel: accessibleNavigation ? null : _onPressCancel',
+        ),
+        isTrue,
+      );
+    });
 
     test('preserves the original 3-second-hold path when AT is off', () {
       // Sighted users must keep the existing dead-man-switch UX — this is
       // the accidental-trigger guard for the non-AT case.
       expect(
-        source.contains('_onPressStart(LongPressStartDetails details)'),
+        source.contains('_onPressStart(TapDownDetails details)'),
         isTrue,
         reason:
             'The original long-press handler must still exist for non-AT use.',
       );
-      expect(
-        source.contains('_onPressEnd(LongPressEndDetails details)'),
-        isTrue,
-      );
+      expect(source.contains('_onPressEnd(TapUpDetails details)'), isTrue);
       // And the 3-second AnimationController must still drive the ring.
       expect(
         source.contains('duration: const Duration(seconds: 3)'),
         isTrue,
-        reason: '3-second progress ring is the visual contract for sighted use.',
+        reason:
+            '3-second progress ring is the visual contract for sighted use.',
       );
     });
 
@@ -100,7 +99,7 @@ void main() {
       // methodStart, whichever comes first. Fall back to end-of-file.
       int methodEnd = source.length;
       for (final anchor in [
-        'Future<void> _onPressStart',
+        '  void _onPressStart',
         '  void _onPressEnd',
         '  void _openCountdownScreen',
         '  Widget build',

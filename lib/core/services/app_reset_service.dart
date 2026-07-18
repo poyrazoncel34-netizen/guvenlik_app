@@ -6,13 +6,25 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../di/service_locator.dart';
 import '../security/secure_storage.dart';
 import 'emergency_platform_service.dart';
+import 'emergency_session_contract.dart';
 import 'contact_service.dart';
 import 'local_database_service.dart';
 
 class AppResetService {
   AppResetService._();
 
-  static Future<void> clearLocalData() async {
+  /// Cancels and wipes native safety state before deleting credential/local
+  /// data. An unacknowledged native wipe is not deletion success: callers must
+  /// keep the user in a pending/recovery state and may retry reconciliation.
+  static Future<WipeResult> clearLocalData({
+    EmergencyPlatformService? emergencyPlatform,
+  }) async {
+    final platform = emergencyPlatform ?? EmergencyPlatformService.instance;
+    if (platform.isSupported) {
+      final wipeResult = await platform.wipeEmergencySessions();
+      if (wipeResult != WipeResult.completed) return wipeResult;
+    }
+
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear();
     await serviceLocator<SecureStorage>().deleteAll();
@@ -21,12 +33,7 @@ class AppResetService {
     // never served again after KVKK "delete my data".
     ContactService.resetCache();
     await _clearLocalFiles();
-    // KVKK Md.7 (silme): also wipe the NATIVE korubeni_emergency prefs,
-    // which hold the persisted primary contact number
-    // (KEY_CHECK_IN_PRIMARY_NUMBER / KEY_COUNTDOWN_PRIMARY_NUMBER). Dart's
-    // prefs.clear() only touches the Flutter-managed store, so without this
-    // the number could survive a data deletion.
-    await EmergencyPlatformService.instance.clearEmergencyPrefs();
+    return WipeResult.completed;
   }
 
   static Future<void> _clearLocalFiles() async {
