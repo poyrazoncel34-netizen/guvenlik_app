@@ -48,6 +48,11 @@ app.*.map.json
 .claude/
 .claire/
 
+# Local Codex/agent tooling (never product or release source)
+/.agents/
+/.codex/
+/AGENTS.md
+
 # Security - NEVER commit these
 key.properties
 android/key.properties

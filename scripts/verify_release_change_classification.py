@@ -121,7 +121,10 @@ def main() -> int:
         _, rule = matches[0]
         category = str(rule["category"])
         staged = status[0] not in {" ", "?", "!"}
-        if staged and category in forbidden:
+        # Removing previously tracked local tooling/credential material is the
+        # one safe staged transition for a forbidden category. Add/modify/
+        # rename remains blocked.
+        if staged and status[0] != "D" and category in forbidden:
             forbidden_staged.append(path)
         entries.append(
             {

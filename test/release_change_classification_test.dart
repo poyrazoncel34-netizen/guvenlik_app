@@ -90,4 +90,69 @@ void main() {
       expect(result.stderr, contains('.agents/private.txt'));
     },
   );
+
+  test('staged deletion removes legacy tooling from release source', () async {
+    final repository = await Directory.systemTemp.createTemp(
+      'korubeni-classification-delete-',
+    );
+    addTearDown(() => repository.delete(recursive: true));
+    final tooling = File('${repository.path}/.codex/environment.toml');
+    tooling.parent.createSync(recursive: true);
+    tooling.writeAsStringSync('local-only tooling');
+
+    expect(
+      (await Process.run('git', [
+        'init',
+      ], workingDirectory: repository.path)).exitCode,
+      0,
+    );
+    expect(
+      (await Process.run('git', [
+        'add',
+        '.codex/environment.toml',
+      ], workingDirectory: repository.path)).exitCode,
+      0,
+    );
+    expect(
+      (await Process.run('git', [
+        '-c',
+        'user.name=KoruBeni Test',
+        '-c',
+        'user.email=test@localhost',
+        'commit',
+        '-m',
+        'fixture',
+      ], workingDirectory: repository.path)).exitCode,
+      0,
+    );
+    tooling.deleteSync();
+    expect(
+      (await Process.run('git', [
+        'add',
+        '-u',
+      ], workingDirectory: repository.path)).exitCode,
+      0,
+    );
+
+    final output = File('${repository.path}/classification.json');
+    final result = await Process.run('python3', [
+      File('scripts/verify_release_change_classification.py').absolute.path,
+      '--repo',
+      repository.path,
+      '--config',
+      File('config/release_change_classification.json').absolute.path,
+      '--output',
+      output.path,
+    ]);
+
+    expect(result.exitCode, 0, reason: '${result.stdout}\n${result.stderr}');
+    final payload =
+        jsonDecode(output.readAsStringSync()) as Map<String, dynamic>;
+    final entry = (payload['entries'] as List<dynamic>).single;
+    expect(payload['forbiddenStagedCount'], 0);
+    expect(entry['path'], '.codex/environment.toml');
+    expect(entry['status'], 'D ');
+    expect(entry['staged'], isTrue);
+    expect(entry['category'], 'tooling');
+  });
 }
