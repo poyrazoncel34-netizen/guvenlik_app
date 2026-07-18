@@ -40,8 +40,8 @@ object NativeNotificationText {
         restoredAfterBoot: Boolean = false,
     ): NotificationCopy {
         val strings = strings(context)
-        return when (CheckInScheduler.normalizeSession(sessionId)) {
-            CheckInScheduler.SESSION_SAFE_WALK -> {
+        return when (normalizeLegacySessionLabel(sessionId)) {
+            "safe_walk" -> {
                 if (restoredAfterBoot) strings.safeWalkBootGraceStarted else strings.safeWalkGraceStarted
             }
             else -> {
@@ -56,8 +56,8 @@ object NativeNotificationText {
         restoredAfterBoot: Boolean = false,
     ): NotificationCopy {
         val strings = strings(context)
-        return when (CheckInScheduler.normalizeSession(sessionId)) {
-            CheckInScheduler.SESSION_SAFE_WALK -> {
+        return when (normalizeLegacySessionLabel(sessionId)) {
+            "safe_walk" -> {
                 if (restoredAfterBoot) strings.safeWalkBootExpired else strings.safeWalkExpired
             }
             else -> {
@@ -70,16 +70,24 @@ object NativeNotificationText {
 
     /**
      * F1 fail-safe copy: the native backup call could not be dispatched
-     * (ACTION_CALL and ACTION_DIAL both failed). The body embeds the primary
-     * number so the user can dial manually straight from the lock screen.
+     * (Telecom request and the user-action fallback both failed). The body embeds the primary
+     * target stays out of notification text and notification-listener APIs.
      */
-    fun dispatchFailed(context: Context, number: String): NotificationCopy {
-        val template = strings(context).dispatchFailed
-        return NotificationCopy(
-            title = template.title,
-            body = template.body.replace("{number}", number.trim()),
-        )
-    }
+    fun dispatchFailed(context: Context): NotificationCopy = strings(context).dispatchFailed
+
+    /**
+     * Android accepted an unconfirmed Telecom request; that cannot prove that
+     * the phone UI appeared, the device rang, or a call connected.
+     */
+    fun dispatchUnconfirmed(context: Context): NotificationCopy =
+        strings(context).dispatchUnconfirmed
+
+    /**
+     * Posted before the Telecom request. It therefore makes no claim that a
+     * call started, rang, or connected; it only exposes a direct user-action
+     * fallback which remains useful if the automatic request is ambiguous.
+     */
+    fun manualFallback(context: Context): NotificationCopy = strings(context).manualFallback
 
     fun serviceActive(context: Context): NotificationCopy = strings(context).serviceActive
 
@@ -100,6 +108,10 @@ object NativeNotificationText {
     }
 
     private fun languageFromPersistedLocale(context: Context): Language? {
+        // Credential-protected Flutter preferences are unavailable before the
+        // first unlock. Direct-Boot dispatch must remain native-only and use
+        // the product's Turkish default instead of touching CE storage.
+        if (!DirectBootAccess.isUserUnlocked(context)) return null
         val preferenceFiles = listOf(
             "FlutterSharedPreferences",
             "${context.packageName}_preferences",
@@ -137,6 +149,11 @@ object NativeNotificationText {
         }
     }
 
+    private fun normalizeLegacySessionLabel(raw: String): String = raw
+        .trim()
+        .lowercase(Locale.US)
+        .replace("-", "_")
+
     private data class Strings(
         val emergencyChannelName: String,
         val emergencyChannelDescription: String,
@@ -155,6 +172,8 @@ object NativeNotificationText {
         val emergencyTriggered: NotificationCopy,
         val serviceActive: NotificationCopy,
         val dispatchFailed: NotificationCopy,
+        val dispatchUnconfirmed: NotificationCopy,
+        val manualFallback: NotificationCopy,
     )
 
     private val enStrings = Strings(
@@ -206,7 +225,15 @@ object NativeNotificationText {
         ),
         dispatchFailed = NotificationCopy(
             title = "Emergency call could not be started",
-            body = "Automatic dialing failed. Please call manually: {number}",
+            body = "Automatic dialing failed. Tap the protected action to call manually.",
+        ),
+        dispatchUnconfirmed = NotificationCopy(
+            title = "Verify the emergency call",
+            body = "Android accepted the request but could not confirm the call. Tap the protected action if needed.",
+        ),
+        manualFallback = NotificationCopy(
+            title = "Emergency call action",
+            body = "An automatic request will be attempted. Tap the protected action to call manually if needed.",
         ),
     )
 
@@ -259,7 +286,15 @@ object NativeNotificationText {
         ),
         dispatchFailed = NotificationCopy(
             title = "Acil arama başlatılamadı",
-            body = "Otomatik arama yapılamadı. Lütfen elle arayın: {number}",
+            body = "Otomatik arama yapılamadı. Elle aramak için korumalı eyleme dokunun.",
+        ),
+        dispatchUnconfirmed = NotificationCopy(
+            title = "Acil aramayı doğrulayın",
+            body = "Android isteği kabul etti ancak aramayı doğrulayamadı. Gerekirse korumalı eyleme dokunun.",
+        ),
+        manualFallback = NotificationCopy(
+            title = "Acil arama işlemi",
+            body = "Otomatik istek denenecek. Gerekirse elle aramak için korumalı eyleme dokunun.",
         ),
     )
 }

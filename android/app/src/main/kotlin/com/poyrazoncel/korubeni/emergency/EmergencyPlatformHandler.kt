@@ -2,6 +2,7 @@ package com.poyrazoncel.korubeni.emergency
 
 import android.Manifest
 import android.app.Activity
+import android.app.AlarmManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -11,6 +12,7 @@ import android.os.PowerManager
 import android.provider.Settings
 import android.telephony.TelephonyManager
 import androidx.core.content.ContextCompat
+import androidx.core.app.NotificationManagerCompat
 import android.content.pm.PackageManager
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
@@ -20,45 +22,81 @@ class EmergencyPlatformHandler(
 ) : MethodChannel.MethodCallHandler {
     private val context: Context = activity.applicationContext
 
-    fun openBatterySettingsProxy(): Boolean = openBatterySettings()
-
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
         try {
             when (call.method) {
-                "scheduleCheckIn" -> {
-                    val sessionId = call.argument<String>("sessionId") ?: CheckInScheduler.SESSION_CHECK_IN
-                    val phase = call.argument<String>("phase") ?: CheckInScheduler.PHASE_MAIN
-                    val deadlineMs = call.argument<Number>("deadlineMs")?.toLong() ?: 0L
-                    val graceDurationMs = call.argument<Number>("graceDurationMs")?.toLong() ?: 0L
-                    val primaryNumber = call.argument<String>("primaryNumber")
-                    CheckInScheduler.schedule(context, sessionId, phase, deadlineMs, graceDurationMs, primaryNumber)
-                    result.success(mapOf(
-                        "scheduled" to true,
-                        "exact" to CheckInScheduler.canScheduleExactAlarms(context)
-                    ))
+                "armEmergencySession" -> {
+                    result.success(armEmergencySession(call).toMap())
                 }
-                "didCheckInAlarmFire" -> {
-                    val sessionId = call.argument<String>("sessionId") ?: CheckInScheduler.SESSION_CHECK_IN
-                    result.success(CheckInScheduler.didAlarmFire(context, sessionId))
+                "cancelEmergencySession" -> {
+                    val token = tokenFromCall(call)
+                    if (token == null) {
+                        result.success(mapOf(
+                            "type" to "unknown",
+                            "reasonCode" to "invalidToken",
+                        ))
+                    } else {
+                        result.success(
+                            EmergencySessionRuntime.coordinator(context)
+                                .cancel(token)
+                                .toMap(),
+                        )
+                    }
                 }
-                "cancelCheckIn" -> {
-                    val sessionId = call.argument<String>("sessionId") ?: CheckInScheduler.SESSION_CHECK_IN
-                    CheckInScheduler.cancel(context, sessionId)
-                    result.success(true)
+                "readEmergencySession" -> {
+                    result.success(readEmergencySession(call))
                 }
+                "dispatchEmergencySession" -> {
+                    val token = tokenFromCall(call)
+                    if (token == null) {
+                        result.success(mapOf(
+                            "callRequestOutcome" to "notAttempted",
+                            "fallbackOutcome" to "notAttempted",
+                            "connectionState" to "unknown",
+                            "reasonCode" to "invalidToken",
+                        ))
+                    } else {
+                        result.success(
+                            EmergencySessionRuntime.coordinator(context)
+                                .claimAndDispatch(token)
+                                .toMap(),
+                        )
+                    }
+                }
+                "getEmergencyCapabilities" -> {
+                    result.success(getEmergencyCapabilities(call).toMap())
+                }
+                "wipeEmergencySessions" -> {
+                    val wipe = EmergencySessionRuntime.coordinator(context).wipe()
+                    if (wipe.status == WipeStatus.COMPLETED) {
+                        // Remove pre-v1 credential-protected remnants only
+                        // after the authoritative device-protected wipe is
+                        // durably acknowledged.
+                        EmergencyPrefs.clear(context)
+                    }
+                    result.success(wipe.toMap())
+                }
+                // Removed production safety authorities. Keeping these names
+                // explicitly notImplemented lets old Flutter code fail closed
+                // while every supported flow uses the typed coordinator API.
+                "scheduleCheckIn",
+                "didCheckInAlarmFire",
+                "getCheckInDeadlineState",
+                "cancelCheckIn",
+                "executeEmergencyNative",
+                "scheduleCountdownAlarm",
+                "cancelCountdownAlarm",
+                "didCountdownAlarmFire",
+                "clearEmergencyPrefs" -> result.notImplemented()
                 "consumePendingTrigger" -> {
                     result.success(EmergencyEventBus.consumePendingTrigger(context))
                 }
                 "canScheduleExactAlarms" -> {
-                    result.success(CheckInScheduler.canScheduleExactAlarms(context))
+                    result.success(canScheduleExactAlarms())
                 }
                 "requestExactAlarmPermission" -> {
-                    CheckInScheduler.openExactAlarmSettings(context)
+                    openExactAlarmSettings()
                     result.success(true)
-                }
-                "executeEmergencyNative" -> {
-                    val primaryNumber = call.argument<String>("primaryNumber").orEmpty()
-                    result.success(EmergencyExecutor.executeEmergency(context, primaryNumber))
                 }
                 "getDeviceState" -> {
                     result.success(getDeviceState())
@@ -66,42 +104,80 @@ class EmergencyPlatformHandler(
                 "openManufacturerSettings" -> {
                     result.success(openManufacturerSettings())
                 }
-                "openBatterySettings" -> {
-                    result.success(openBatterySettings())
+                "requestBatteryOptimizationExemption" -> {
+                    result.success(requestBatteryOptimizationExemption())
                 }
-                "scheduleCountdownAlarm" -> {
-                    val deadlineMs = call.argument<Number>("deadlineMs")?.toLong() ?: 0L
-                    val primaryNumber = call.argument<String>("primaryNumber").orEmpty()
-                    val dispatchId = call.argument<String>("dispatchId").orEmpty()
-                    if (deadlineMs <= 0L || primaryNumber.isBlank() || dispatchId.isBlank()) {
-                        result.success(mapOf("scheduled" to false, "exact" to false))
-                        return
-                    }
-                    CountdownAlarmScheduler.schedule(context, deadlineMs, primaryNumber, dispatchId)
-                    result.success(mapOf(
-                        "scheduled" to true,
-                        "exact" to CheckInScheduler.canScheduleExactAlarms(context)
-                    ))
-                }
-                "cancelCountdownAlarm" -> {
-                    val dispatchId = call.argument<String>("dispatchId")
-                    result.success(CountdownAlarmScheduler.cancel(context, dispatchId))
-                }
-                "didCountdownAlarmFire" -> {
-                    val dispatchId = call.argument<String>("dispatchId").orEmpty()
-                    result.success(CountdownAlarmScheduler.didAlarmFire(context, dispatchId))
-                }
-                "clearEmergencyPrefs" -> {
-                    // KVKK Md.7 (silme): reset path wipes the native emergency store
-                    // (primary contact number) so it does not survive data deletion.
-                    EmergencyPrefs.clear(context)
-                    result.success(true)
+                "openBatteryOptimizationSettings" -> {
+                    result.success(openBatteryOptimizationSettings())
                 }
                 else -> result.notImplemented()
             }
         } catch (e: Exception) {
             result.error("EMERGENCY_PLATFORM_ERROR", "Emergency platform request failed", null)
         }
+    }
+
+    private fun armEmergencySession(call: MethodCall): ArmResult {
+        val protocol = call.argument<Number>("protocolVersion")?.toInt() ?: -1
+        val kind = SessionKind.fromWire(call.argument<String>("kind"))
+            ?: return ArmResult.Rejected("invalidKind")
+        val randomId = call.argument<String>("randomId").orEmpty()
+        val requestedGeneration =
+            call.argument<Number>("requestedGeneration")?.toLong() ?: -1L
+        val mainDeadline = call.argument<Number>("mainDeadlineMs")?.toLong() ?: -1L
+        val finalDeadline = call.argument<Number>("finalDeadlineMs")?.toLong() ?: -1L
+        val target = call.argument<String>("target").orEmpty()
+        val entitlement = EntitlementDecision.fromWire(
+            call.argument<String>("entitlementDecision"),
+        )
+        val pinConfigured = call.argument<Boolean>("pinConfigured") == true
+        return EmergencySessionRuntime.coordinator(context).arm(
+            ArmRequest(
+                protocolVersion = protocol,
+                randomId = randomId,
+                kind = kind,
+                mainDeadlineMs = mainDeadline,
+                finalDeadlineMs = finalDeadline,
+                target = target,
+                entitlementDecision = entitlement,
+                pinConfigured = pinConfigured,
+                requestedGeneration = requestedGeneration,
+            ),
+        )
+    }
+
+    private fun readEmergencySession(call: MethodCall): Map<String, Any?> {
+        val token = tokenFromCall(call)
+            ?: return mapOf("type" to "corrupted", "reasonCode" to "invalidToken")
+        val read = EmergencySessionRuntime.coordinator(context).read(token.kind)
+        if (read is ReadSessionResult.Present && read.envelope.token != token) {
+            return ReadSessionResult.Absent.toMap()
+        }
+        return read.toMap()
+    }
+
+    private fun getEmergencyCapabilities(call: MethodCall): CapabilitySnapshot {
+        val callableTarget = call.argument<Boolean>("callableTarget") == true
+        val entitlement = EntitlementDecision.fromWire(
+            call.argument<String>("entitlementDecision"),
+        )
+        return AndroidEmergencyCapabilityProvider(context).snapshot(
+            ArmRequest(
+                protocolVersion = call.argument<Number>("protocolVersion")?.toInt() ?: -1,
+                randomId = "capability-probe",
+                kind = SessionKind.CHECK_IN,
+                mainDeadlineMs = System.currentTimeMillis() + 60_000L,
+                finalDeadlineMs = System.currentTimeMillis() + 120_000L,
+                target = if (callableTarget) "+900000000000" else "",
+                entitlementDecision = entitlement,
+                pinConfigured = call.argument<Boolean>("pinConfigured") == true,
+            ),
+        )
+    }
+
+    private fun tokenFromCall(call: MethodCall): SessionToken? {
+        val raw = call.argument<Map<String, Any?>>("token")
+        return SessionToken.fromMap(raw)
     }
 
     private fun getDeviceState(): Map<String, Any?> {
@@ -128,8 +204,10 @@ class EmergencyPlatformHandler(
                 } else {
                     true
                 }),
-            "canScheduleExactAlarms" to CheckInScheduler.canScheduleExactAlarms(context),
+            "canScheduleExactAlarms" to canScheduleExactAlarms(),
             "callPermissionGranted" to callGranted,
+            "notificationsEnabled" to
+                NotificationManagerCompat.from(context).areNotificationsEnabled(),
         )
     }
 
@@ -164,14 +242,26 @@ class EmergencyPlatformHandler(
         return candidates.firstOrNull { launchIntent(it) } != null
     }
 
-    private fun openBatterySettings(): Boolean {
-        val candidates = listOf(
+    /**
+     * Opens Android's app-scoped exemption request. This method is exposed
+     * only through the emergency platform channel and must be reached from an
+     * explicit user gesture after the in-app disclosure.
+     *
+     * A true result means only that Android accepted the intent. It does not
+     * mean the user granted the exemption; callers must read device state
+     * again after the app resumes.
+     */
+    private fun requestBatteryOptimizationExemption(): Boolean {
+        return launchIntent(
             Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
                 data = Uri.parse("package:${context.packageName}")
             },
-            Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS),
         )
-        return candidates.firstOrNull { launchIntent(it) } != null
+    }
+
+    /** Opens the generic system list without requesting an exemption. */
+    private fun openBatteryOptimizationSettings(): Boolean {
+        return launchIntent(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))
     }
 
     private fun launchIntent(intent: Intent): Boolean {
@@ -182,5 +272,19 @@ class EmergencyPlatformHandler(
         } catch (_: Exception) {
             false
         }
+    }
+
+    private fun canScheduleExactAlarms(): Boolean {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return true
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as? AlarmManager
+        return alarmManager?.canScheduleExactAlarms() == true
+    }
+
+    private fun openExactAlarmSettings() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return
+        val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        }
+        context.startActivity(intent)
     }
 }

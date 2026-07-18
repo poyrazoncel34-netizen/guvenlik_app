@@ -13,13 +13,9 @@ import org.robolectric.Shadows
 import org.robolectric.annotation.Config
 
 /**
- * SPEC §3.1 / §3.3 / §3.6b: the grace prompt uses a full-screen intent WHEN the
- * platform permits it, and degrades gracefully to a high-priority heads-up
- * notification (no crash) when the Android 14+ runtime restriction denies it.
- *
- * Robolectric's NotificationManager.canUseFullScreenIntent() defaults to false
- * on API 34 (denied), while pre-34 the capability is available — so the two SDK
- * levels deterministically exercise both branches without a shadow setter.
+ * Play policy contract: KoruBeni is not an alarm-clock or incoming-call app and
+ * does not request USE_FULL_SCREEN_INTENT. Grace alerts remain high-importance
+ * heads-up notifications on both old and new Android versions.
  */
 @RunWith(RobolectricTestRunner::class)
 class FullScreenIntentNotificationTest {
@@ -36,7 +32,6 @@ class FullScreenIntentNotificationTest {
             "title",
             "body",
             "checkInGraceStarted",
-            fullScreen = true,
         )
     }
 
@@ -45,31 +40,30 @@ class FullScreenIntentNotificationTest {
             .getNotification(EmergencyNotificationHelper.CHECK_IN_NOTIFICATION_ID)
 
     @Test
-    @Config(sdk = [28])
-    fun graceAlertUsesFullScreenIntentWhenPermitted() {
+    @Config(sdk = [29])
+    fun graceAlertNeverAttachesFullScreenIntentAtSupportedLowerBound() {
         postGraceAlert()
 
         val posted = postedNotification()
         assertNotNull("Grace alert must be posted", posted)
-        assertNotNull(
-            "Must attach a full-screen intent when the platform permits it",
+        assertNull(
+            "Play build must not attach a full-screen intent",
             posted!!.fullScreenIntent,
         )
     }
 
     @Test
     @Config(sdk = [34])
-    fun graceAlertFallsBackToHeadsUpWhenFullScreenDenied() {
-        // API 34 runtime restriction: canUseFullScreenIntent() is false by default.
+    fun graceAlertRemainsHeadsUpOnAndroid14() {
         Shadows.shadowOf(RuntimeEnvironment.getApplication())
             .grantPermissions(Manifest.permission.POST_NOTIFICATIONS)
 
-        postGraceAlert() // must NOT throw
+        postGraceAlert()
 
         val posted = postedNotification()
         assertNotNull("Heads-up alert must still be posted", posted)
         assertNull(
-            "Must NOT attach a full-screen intent when denied (heads-up fallback)",
+            "Play build must not attach a full-screen intent",
             posted!!.fullScreenIntent,
         )
     }

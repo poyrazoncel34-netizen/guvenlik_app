@@ -34,7 +34,7 @@ class NativeNotificationTextTest {
 
         val copy = NativeNotificationText.graceStarted(
             context,
-            CheckInScheduler.SESSION_CHECK_IN,
+            "check_in",
         )
 
         assertEquals("Check-in expired", copy.title)
@@ -50,7 +50,7 @@ class NativeNotificationTextTest {
 
         val copy = NativeNotificationText.graceStarted(
             context,
-            CheckInScheduler.SESSION_CHECK_IN,
+            "check_in",
         )
 
         assertEquals("Check-in süresi doldu", copy.title)
@@ -81,7 +81,7 @@ class NativeNotificationTextTest {
         // notification into English.
         val copy = NativeNotificationText.graceStarted(
             context,
-            CheckInScheduler.SESSION_CHECK_IN,
+            "check_in",
         )
 
         assertEquals("Check-in süresi doldu", copy.title)

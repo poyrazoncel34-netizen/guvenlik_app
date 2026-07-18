@@ -29,7 +29,6 @@ class MainActivity : FlutterFragmentActivity() {
     }
 
     private val volumeDetector = VolumeButtonDetector()
-    private lateinit var dozeModeHandler: DozeModeHandler
     private lateinit var emergencyPlatformHandler: EmergencyPlatformHandler
     private var pendingContactPickResult: MethodChannel.Result? = null
 
@@ -117,16 +116,6 @@ class MainActivity : FlutterFragmentActivity() {
                 android.util.Log.e("MainActivity", "Audio control channel failed: ${e.message}", e)
             }
 
-            // Doze Mode handler — optional battery optimization reliability flow
-            try {
-                dozeModeHandler = DozeModeHandler(this)
-                MethodChannel(messenger, DozeModeHandler.CHANNEL)
-                    .setMethodCallHandler(dozeModeHandler)
-                android.util.Log.d("MainActivity", "Doze Mode handler configured")
-            } catch (e: Exception) {
-                android.util.Log.e("MainActivity", "Doze Mode handler failed: ${e.message}", e)
-            }
-
             try {
                 MethodChannel(messenger, EmergencyChannels.METHOD)
                     .setMethodCallHandler(emergencyPlatformHandler)
@@ -158,23 +147,14 @@ class MainActivity : FlutterFragmentActivity() {
                 android.util.Log.e("MainActivity", "Android intent channel failed: ${e.message}", e)
             }
             
-            // Settings channel (extended) — battery optimization + manufacturer auto-start
+            // Settings channel — notification and explicit OEM settings links.
+            // Battery exemption authority belongs exclusively to
+            // EmergencyPlatformHandler.
             try {
                 MethodChannel(messenger, SETTINGS_CHANNEL)
                     .setMethodCallHandler { call, result ->
                         try {
                             when (call.method) {
-                                "openBatterySettings" -> {
-                                    val intent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                                        Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
-                                            data = Uri.parse("package:$packageName")
-                                        }
-                                    } else {
-                                        Intent(Settings.ACTION_BATTERY_SAVER_SETTINGS)
-                                    }
-                                    startActivity(intent)
-                                    result.success(true)
-                                }
                                 "openActivityByComponent" -> {
                                     val component = call.argument<String>("component").orEmpty()
                                     if (component.isEmpty()) {
@@ -337,10 +317,10 @@ class MainActivity : FlutterFragmentActivity() {
     }
 
     private fun openDialer(number: String): Boolean {
-        // Audit F5: same separator-stripping defense as EmergencyExecutor.
-        val cleaned = com.poyrazoncel.korubeni.emergency.EmergencyExecutor
-            .sanitizeForDial(number)
-        if (cleaned.isEmpty()) {
+        // Use the same side-effect-free target boundary as the safety kernel.
+        val cleaned = com.poyrazoncel.korubeni.emergency.EmergencyTargetValidator
+            .normalize(number)
+        if (!com.poyrazoncel.korubeni.emergency.EmergencyTargetValidator.isCallable(cleaned)) {
             return false
         }
 
