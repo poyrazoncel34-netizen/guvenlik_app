@@ -14,6 +14,15 @@ import re
 import sys
 from pathlib import Path
 
+from verify_gate_evidence import (
+    REQUIRED_APPROVAL_ROLES,
+    REQUIRED_EVIDENCE_KINDS,
+    REQUIRED_GATE_OWNERS,
+    accountable_identity,
+    exact_string_set,
+    parse_utc,
+    validate_gate_evidence,
+)
 from verify_masvs_assessment import validate_assessment
 
 
@@ -35,15 +44,6 @@ REQUIRED_PROVENANCE_ARTIFACTS = {
     "sourceProvenance",
     "secretScan",
     "thirdPartyNotices",
-}
-REQUIRED_APPROVALS = {
-    "product",
-    "safety",
-    "qa",
-    "security",
-    "privacy_legal",
-    "billing_play",
-    "release",
 }
 SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 COMMIT_RE = re.compile(r"^[0-9a-f]{40}$")
@@ -243,6 +243,8 @@ def main() -> int:
     require(isinstance(gates, list), "gates must be an array", errors)
     seen: set[str] = set()
     g4_masvs_paths: list[Path] = []
+    used_evidence_paths: set[Path] = set()
+    typed_evidence_payloads: dict[str, dict[str, object]] = {}
     if isinstance(gates, list):
         for gate in gates:
             if not isinstance(gate, dict):
@@ -254,7 +256,20 @@ def main() -> int:
             seen.add(gate_id)
             require(gate.get("status") == "PASS", f"{gate_id} is not PASS", errors)
             owners = gate.get("owners")
-            require(isinstance(owners, list) and bool(owners), f"{gate_id} has no owner", errors)
+            require(
+                isinstance(owners, list)
+                and exact_string_set(owners) == REQUIRED_GATE_OWNERS.get(gate_id, set()),
+                f"{gate_id} owner set mismatch",
+                errors,
+            )
+            declared_kinds = gate.get("requiredEvidenceKinds")
+            expected_kinds = REQUIRED_EVIDENCE_KINDS.get(gate_id, set())
+            require(
+                isinstance(declared_kinds, list)
+                and exact_string_set(declared_kinds) == expected_kinds,
+                f"{gate_id} requiredEvidenceKinds mismatch",
+                errors,
+            )
             evidence = gate.get("evidence")
             require(
                 isinstance(evidence, list) and bool(evidence),
@@ -263,12 +278,16 @@ def main() -> int:
             )
             if not isinstance(evidence, list):
                 continue
+            actual_kinds: list[str] = []
             for item in evidence:
                 if not isinstance(item, dict):
                     errors.append(f"{gate_id} evidence must be an object")
                     continue
                 rel_path = str(item.get("path", ""))
+                kind = str(item.get("kind", ""))
+                actual_kinds.append(kind)
                 item_hash = str(item.get("sha256", "")).lower()
+                require(kind in expected_kinds, f"{gate_id}:{rel_path} has unexpected kind {kind}", errors)
                 require(item.get("candidateBound") is True, f"{gate_id}:{rel_path} is not candidate-bound", errors)
                 require(bool(SHA256_RE.fullmatch(item_hash)), f"{gate_id}:{rel_path} has invalid hash", errors)
                 evidence_path = (manifest_dir / rel_path).resolve()
@@ -277,11 +296,36 @@ def main() -> int:
                 except ValueError:
                     errors.append(f"{gate_id}:{rel_path} escapes the evidence directory")
                     continue
+                require(evidence_path not in used_evidence_paths, f"evidence path reused: {rel_path}", errors)
+                used_evidence_paths.add(evidence_path)
                 require(evidence_path.is_file(), f"{gate_id}:{rel_path} is missing", errors)
                 if evidence_path.is_file() and SHA256_RE.fullmatch(item_hash):
                     require(sha256(evidence_path) == item_hash, f"{gate_id}:{rel_path} hash mismatch", errors)
-                if gate_id == "G4" and item.get("kind") == "masvsAssessment":
+                if gate_id == "G4" and kind == "masvsAssessment":
                     g4_masvs_paths.append(evidence_path)
+                elif kind in expected_kinds and evidence_path.is_file():
+                    gate_errors = validate_gate_evidence(
+                        evidence_path,
+                        gate_id,
+                        kind,
+                        actual_aab_hash,
+                        "com.poyrazoncel.korubeni",
+                        version_name,
+                        version_code,
+                    )
+                    errors.extend(f"{gate_id} {kind}: {error}" for error in gate_errors)
+                    try:
+                        typed_payload = json.loads(evidence_path.read_text(encoding="utf-8"))
+                    except (OSError, json.JSONDecodeError):
+                        typed_payload = None
+                    if isinstance(typed_payload, dict):
+                        require(kind not in typed_evidence_payloads, f"duplicate typed evidence kind: {kind}", errors)
+                        typed_evidence_payloads[kind] = typed_payload
+            require(
+                set(actual_kinds) == expected_kinds and len(actual_kinds) == len(expected_kinds),
+                f"{gate_id} evidence kind set mismatch",
+                errors,
+            )
 
     require(seen == EXPECTED_GATES, f"gate set mismatch: found {sorted(seen)}", errors)
     require(
@@ -314,20 +358,164 @@ def main() -> int:
         require(isinstance(soak.get("testers"), int) and soak["testers"] >= 12, "closed soak has fewer than 12 testers", errors)
         require(soak.get("safetyIncidents") == 0, "closed soak has a safety incident", errors)
         require(str(soak.get("aabSha256", "")).lower() == expected_aab_hash, "closed soak used a different AAB", errors)
+        soak_report = typed_evidence_payloads.get("closedSoakReport")
+        soak_metrics = soak_report.get("metrics") if isinstance(soak_report, dict) else None
+        if isinstance(soak_metrics, dict):
+            require(
+                soak.get("testers") == soak_metrics.get("testers"),
+                "closed soak testers do not match typed report",
+                errors,
+            )
+            require(
+                soak.get("safetyIncidents") == soak_metrics.get("safetyIncidents"),
+                "closed soak incidents do not match typed report",
+                errors,
+            )
+            started_at = parse_utc(soak_metrics.get("startedAt"))
+            finished_at = parse_utc(soak_metrics.get("finishedAt"))
+            if started_at is not None and finished_at is not None:
+                complete_days = int((finished_at - started_at).total_seconds() // 86_400)
+                require(
+                    soak.get("days") == complete_days,
+                    "closed soak days do not match typed report",
+                    errors,
+                )
 
     drill = payload.get("hotfixDrill")
     require(isinstance(drill, dict) and drill.get("status") == "PASS", "hotfix drill is not PASS", errors)
+    if isinstance(drill, dict):
+        duration = drill.get("durationMinutes")
+        require(
+            isinstance(duration, int)
+            and not isinstance(duration, bool)
+            and 1 <= duration <= 120,
+            "hotfix drill duration must be 1..120 minutes",
+            errors,
+        )
+        reserved_code = drill.get("reservedVersionCode")
+        require(
+            isinstance(reserved_code, int)
+            and not isinstance(reserved_code, bool)
+            and reserved_code > version_code,
+            "hotfix drill reservedVersionCode must exceed candidate",
+            errors,
+        )
+        require(
+            str(drill.get("aabSha256", "")).lower() == expected_aab_hash,
+            "hotfix drill used a different AAB",
+            errors,
+        )
+        drill_report = typed_evidence_payloads.get("hotfixDrillReport")
+        drill_metrics = drill_report.get("metrics") if isinstance(drill_report, dict) else None
+        if isinstance(drill_metrics, dict):
+            require(
+                drill.get("durationMinutes") == drill_metrics.get("durationMinutes"),
+                "hotfix drill duration does not match typed report",
+                errors,
+            )
+            require(
+                drill.get("reservedVersionCode") == drill_metrics.get("reservedVersionCode"),
+                "hotfix drill reservedVersionCode does not match typed report",
+                errors,
+            )
 
     approvals = payload.get("approvals")
     approved_roles: set[str] = set()
+    seen_approval_roles: set[str] = set()
     if isinstance(approvals, list):
         for approval in approvals:
-            if isinstance(approval, dict) and approval.get("decision") == "APPROVE":
-                if approval.get("signer") and approval.get("signedAt"):
-                    approved_roles.add(str(approval.get("role", "")))
+            if not isinstance(approval, dict):
+                errors.append("approval record must be an object")
+                continue
+            role = str(approval.get("role", ""))
+            require(role in REQUIRED_APPROVAL_ROLES, f"unknown approval role: {role}", errors)
+            require(role not in seen_approval_roles, f"duplicate approval role: {role}", errors)
+            seen_approval_roles.add(role)
+            require(approval.get("decision") == "APPROVE", f"{role} did not approve", errors)
+            require(accountable_identity(approval.get("signer")), f"{role} signer is not accountable", errors)
+            approval_signed_at = parse_utc(approval.get("signedAt"))
+            require(approval_signed_at is not None, f"{role} signedAt must be UTC", errors)
+            soak_report = typed_evidence_payloads.get("closedSoakReport")
+            soak_metrics = soak_report.get("metrics") if isinstance(soak_report, dict) else None
+            soak_finished_at = parse_utc(soak_metrics.get("finishedAt")) if isinstance(soak_metrics, dict) else None
+            if approval_signed_at is not None and soak_finished_at is not None:
+                require(
+                    approval_signed_at >= soak_finished_at,
+                    f"{role} approval predates closed soak completion",
+                    errors,
+                )
+            require(
+                str(approval.get("candidateAabSha256", "")).lower() == expected_aab_hash,
+                f"{role} approval used a different AAB",
+                errors,
+            )
+            require(
+                approval.get("versionCode") == version_code,
+                f"{role} approval versionCode mismatch",
+                errors,
+            )
+            approval_rel = approval.get("evidencePath")
+            approval_hash = str(approval.get("evidenceSha256", "")).lower()
+            require(
+                isinstance(approval_rel, str) and bool(approval_rel.strip()),
+                f"{role} approval evidencePath is required",
+                errors,
+            )
+            require(
+                bool(SHA256_RE.fullmatch(approval_hash)),
+                f"{role} approval evidenceSha256 is invalid",
+                errors,
+            )
+            require(
+                approval.get("evidenceCandidateBound") is True,
+                f"{role} approval evidence is not candidate-bound",
+                errors,
+            )
+            if isinstance(approval_rel, str) and approval_rel.strip():
+                approval_path = (manifest_dir / approval_rel).resolve()
+                try:
+                    approval_path.relative_to(manifest_dir)
+                except ValueError:
+                    errors.append(f"{role} approval evidence escapes the evidence directory")
+                else:
+                    require(
+                        approval_path not in used_evidence_paths,
+                        f"evidence path reused: {approval_rel}",
+                        errors,
+                    )
+                    used_evidence_paths.add(approval_path)
+                    require(approval_path.is_file(), f"{role} approval evidence is missing", errors)
+                    if approval_path.is_file() and SHA256_RE.fullmatch(approval_hash):
+                        require(
+                            sha256(approval_path) == approval_hash,
+                            f"{role} approval evidence hash mismatch",
+                            errors,
+                        )
+                        try:
+                            approval_payload = json.loads(approval_path.read_text(encoding="utf-8"))
+                        except (OSError, json.JSONDecodeError) as exc:
+                            errors.append(f"{role} approval evidence cannot be parsed: {exc}")
+                        else:
+                            require(isinstance(approval_payload, dict), f"{role} approval evidence must be an object", errors)
+                            if isinstance(approval_payload, dict):
+                                for field in (
+                                    "role",
+                                    "decision",
+                                    "signer",
+                                    "signedAt",
+                                    "candidateAabSha256",
+                                    "versionCode",
+                                ):
+                                    require(
+                                        approval_payload.get(field) == approval.get(field),
+                                        f"{role} approval evidence {field} mismatch",
+                                        errors,
+                                    )
+            if approval.get("decision") == "APPROVE" and role in REQUIRED_APPROVAL_ROLES:
+                approved_roles.add(role)
     require(
-        REQUIRED_APPROVALS.issubset(approved_roles),
-        f"missing approvals: {sorted(REQUIRED_APPROVALS - approved_roles)}",
+        approved_roles == REQUIRED_APPROVAL_ROLES,
+        f"missing approvals: {sorted(REQUIRED_APPROVAL_ROLES - approved_roles)}",
         errors,
     )
 

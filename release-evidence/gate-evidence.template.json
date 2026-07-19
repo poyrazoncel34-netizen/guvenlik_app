@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "evidenceType": "REPLACE_WITH_REQUIRED_EVIDENCE_KIND",
+  "gateId": "REPLACE_WITH_G0_TO_G10",
+  "status": "UNVERIFIED",
+  "summary": "",
+  "candidate": {
+    "packageName": "com.poyrazoncel.korubeni",
+    "versionName": "REPLACE_WITH_VERSION_NAME",
+    "versionCode": 0,
+    "aabSha256": "REPLACE_WITH_64_HEX_AAB_SHA256"
+  },
+  "review": {
+    "performedBy": "REPLACE_WITH_ACCOUNTABLE_OPERATOR",
+    "performedAt": "REPLACE_WITH_ISO_8601_UTC_TIMESTAMP",
+    "independentFromImplementation": false
+  },
+  "artifacts": [],
+  "metrics": {}
+}

@@ -17,17 +17,17 @@
     }
   },
   "gates": [
-    {"id": "G0", "status": "UNVERIFIED", "owners": ["product", "safety"], "evidence": []},
-    {"id": "G1", "status": "UNVERIFIED", "owners": ["android_safety"], "evidence": []},
-    {"id": "G2", "status": "UNVERIFIED", "owners": ["flutter_safety"], "evidence": []},
-    {"id": "G3", "status": "UNVERIFIED", "owners": ["android_platform"], "evidence": []},
-    {"id": "G4", "status": "UNVERIFIED", "owners": ["security", "privacy_legal"], "evidence": []},
-    {"id": "G5", "status": "UNVERIFIED", "owners": ["qa"], "evidence": []},
-    {"id": "G6", "status": "UNVERIFIED", "owners": ["release"], "evidence": []},
-    {"id": "G7", "status": "UNVERIFIED", "owners": ["qa", "independent_witness"], "evidence": []},
-    {"id": "G8", "status": "UNVERIFIED", "owners": ["billing_play"], "evidence": []},
-    {"id": "G9", "status": "UNVERIFIED", "owners": ["release_owner"], "evidence": []},
-    {"id": "G10", "status": "UNVERIFIED", "owners": ["release_board"], "evidence": []}
+    {"id": "G0", "status": "UNVERIFIED", "owners": ["product", "safety"], "requiredEvidenceKinds": ["safetyCaseReview"], "evidence": []},
+    {"id": "G1", "status": "UNVERIFIED", "owners": ["android_safety"], "requiredEvidenceKinds": ["nativeKernelReport", "mutationReport"], "evidence": []},
+    {"id": "G2", "status": "UNVERIFIED", "owners": ["flutter_safety"], "requiredEvidenceKinds": ["flutterSessionReport"], "evidence": []},
+    {"id": "G3", "status": "UNVERIFIED", "owners": ["android_platform"], "requiredEvidenceKinds": ["androidPlatformMatrix"], "evidence": []},
+    {"id": "G4", "status": "UNVERIFIED", "owners": ["security", "privacy_legal"], "requiredEvidenceKinds": ["masvsAssessment", "licensePolicyReport", "privacyCounselDecision"], "evidence": []},
+    {"id": "G5", "status": "UNVERIFIED", "owners": ["qa"], "requiredEvidenceKinds": ["qualityMatrix"], "evidence": []},
+    {"id": "G6", "status": "UNVERIFIED", "owners": ["release"], "requiredEvidenceKinds": ["artifactChainReport"], "evidence": []},
+    {"id": "G7", "status": "UNVERIFIED", "owners": ["qa", "independent_witness"], "requiredEvidenceKinds": ["physicalDeviceMatrix"], "evidence": []},
+    {"id": "G8", "status": "UNVERIFIED", "owners": ["billing_play"], "requiredEvidenceKinds": ["billingPlayMatrix", "playPolicyDisposition"], "evidence": []},
+    {"id": "G9", "status": "UNVERIFIED", "owners": ["release_owner"], "requiredEvidenceKinds": ["closedSoakReport"], "evidence": []},
+    {"id": "G10", "status": "UNVERIFIED", "owners": ["release_board"], "requiredEvidenceKinds": ["hotfixDrillReport", "releaseBoardDecision"], "evidence": []}
   ],
   "openFindings": [],
   "closedSoak": {
@@ -37,6 +37,11 @@
     "safetyIncidents": null,
     "aabSha256": "REPLACE_WITH_64_HEX_AAB_SHA256"
   },
-  "hotfixDrill": {"status": "UNVERIFIED"},
+  "hotfixDrill": {
+    "status": "UNVERIFIED",
+    "durationMinutes": 0,
+    "reservedVersionCode": 0,
+    "aabSha256": "REPLACE_WITH_64_HEX_AAB_SHA256"
+  },
   "approvals": []
 }

@@ -3,6 +3,44 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
+const _requiredEvidenceKinds = <String, Set<String>>{
+  'G0': {'safetyCaseReview'},
+  'G1': {'nativeKernelReport', 'mutationReport'},
+  'G2': {'flutterSessionReport'},
+  'G3': {'androidPlatformMatrix'},
+  'G4': {'masvsAssessment', 'licensePolicyReport', 'privacyCounselDecision'},
+  'G5': {'qualityMatrix'},
+  'G6': {'artifactChainReport'},
+  'G7': {'physicalDeviceMatrix'},
+  'G8': {'billingPlayMatrix', 'playPolicyDisposition'},
+  'G9': {'closedSoakReport'},
+  'G10': {'hotfixDrillReport', 'releaseBoardDecision'},
+};
+
+const _requiredGateOwners = <String, Set<String>>{
+  'G0': {'product', 'safety'},
+  'G1': {'android_safety'},
+  'G2': {'flutter_safety'},
+  'G3': {'android_platform'},
+  'G4': {'security', 'privacy_legal'},
+  'G5': {'qa'},
+  'G6': {'release'},
+  'G7': {'qa', 'independent_witness'},
+  'G8': {'billing_play'},
+  'G9': {'release_owner'},
+  'G10': {'release_board'},
+};
+
+const _approvalRoles = <String>{
+  'product',
+  'safety',
+  'qa',
+  'security',
+  'privacy_legal',
+  'billing_play',
+  'release',
+};
+
 void main() {
   test('external gate template is fail-closed and complete', () {
     final payload =
@@ -19,6 +57,27 @@ void main() {
     });
     expect(gates.every((gate) => gate['status'] == 'UNVERIFIED'), isTrue);
     expect(gates.every((gate) => (gate['evidence'] as List).isEmpty), isTrue);
+    for (final gate in gates) {
+      expect(
+        (gate['requiredEvidenceKinds'] as List<dynamic>).toSet(),
+        _requiredEvidenceKinds[gate['id']],
+      );
+    }
+    final evidenceTemplate =
+        jsonDecode(
+              File(
+                'release-evidence/gate-evidence.template.json',
+              ).readAsStringSync(),
+            )
+            as Map<String, dynamic>;
+    expect(evidenceTemplate['status'], 'UNVERIFIED');
+    expect(evidenceTemplate['artifacts'], isEmpty);
+    expect(evidenceTemplate['metrics'], isEmpty);
+    expect(
+      (evidenceTemplate['review']
+          as Map<String, dynamic>)['independentFromImplementation'],
+      isFalse,
+    );
     expect(
       File('scripts/verify_external_release_gates.py').readAsStringSync(),
       allOf(
@@ -104,15 +163,71 @@ void main() {
     final masvsAssessment = File('${directory.path}/masvs-assessment.json')
       ..writeAsStringSync(
         jsonEncode(
-          _masvsAssessment(
-            aabHash: aabHash,
-            witnessHash: witnessHash,
-          ),
+          _masvsAssessment(aabHash: aabHash, witnessHash: witnessHash),
         ),
       );
     final masvsHash = _sha256(masvsAssessment);
+    final typedEvidence = <String, List<Map<String, dynamic>>>{};
+    for (final gateEntry in _requiredEvidenceKinds.entries) {
+      final items = <Map<String, dynamic>>[];
+      for (final kind in gateEntry.value) {
+        if (kind == 'masvsAssessment') {
+          items.add(<String, dynamic>{
+            'kind': kind,
+            'path': 'masvs-assessment.json',
+            'sha256': masvsHash,
+            'candidateBound': true,
+          });
+          continue;
+        }
+        final rawArtifact = File('${directory.path}/$kind.raw.json')
+          ..writeAsStringSync(
+            jsonEncode(<String, Object?>{
+              'candidateAabSha256': aabHash,
+              'kind': kind,
+              'result': 'PASS',
+            }),
+          );
+        final evidenceFile = File('${directory.path}/$kind.json')
+          ..writeAsStringSync(
+            jsonEncode(
+              _gateEvidence(
+                gateId: gateEntry.key,
+                kind: kind,
+                aabHash: aabHash,
+                artifactPath: '$kind.raw.json',
+                artifactSha256: _sha256(rawArtifact),
+              ),
+            ),
+          );
+        items.add(<String, dynamic>{
+          'kind': kind,
+          'path': '$kind.json',
+          'sha256': _sha256(evidenceFile),
+          'candidateBound': true,
+        });
+      }
+      typedEvidence[gateEntry.key] = items;
+    }
+    final approvalEvidence = <String, File>{
+      for (final role in _approvalRoles)
+        role: File('${directory.path}/approval-$role.json')
+          ..writeAsStringSync(
+            jsonEncode(<String, Object?>{
+              'role': role,
+              'decision': 'APPROVE',
+              'signer': '$role-reviewer',
+              'signedAt': '2026-07-18T12:00:00Z',
+              'candidateAabSha256': aabHash,
+              'versionCode': 10003,
+            }),
+          ),
+    };
     final manifest = File('${directory.path}/gates.json');
-    Map<String, dynamic> completeManifest() => <String, dynamic>{
+    Map<String, dynamic> completeManifest({
+      bool typed = false,
+      bool approvalsBound = true,
+    }) => <String, dynamic>{
       'schemaVersion': 2,
       'candidate': <String, dynamic>{
         'gitCommit': 'b' * 40,
@@ -135,8 +250,12 @@ void main() {
           <String, dynamic>{
             'id': 'G$index',
             'status': 'PASS',
-            'owners': <String>['owner'],
-            'evidence': index == 4
+            'owners': _requiredGateOwners['G$index']!.toList(),
+            'requiredEvidenceKinds': _requiredEvidenceKinds['G$index']!
+                .toList(),
+            'evidence': typed
+                ? typedEvidence['G$index']!
+                : index == 4
                 ? <Map<String, dynamic>>[
                     <String, dynamic>{
                       'kind': 'masvsAssessment',
@@ -162,22 +281,26 @@ void main() {
         'safetyIncidents': 0,
         'aabSha256': aabHash,
       },
-      'hotfixDrill': <String, dynamic>{'status': 'PASS'},
+      'hotfixDrill': <String, dynamic>{
+        'status': 'PASS',
+        'durationMinutes': 90,
+        'reservedVersionCode': 10004,
+        'aabSha256': aabHash,
+      },
       'approvals': <Map<String, dynamic>>[
-        for (final role in <String>[
-          'product',
-          'safety',
-          'qa',
-          'security',
-          'privacy_legal',
-          'billing_play',
-          'release',
-        ])
+        for (final role in _approvalRoles)
           <String, dynamic>{
             'role': role,
             'decision': 'APPROVE',
             'signer': '$role-reviewer',
             'signedAt': '2026-07-18T12:00:00Z',
+            'candidateAabSha256': aabHash,
+            'versionCode': 10003,
+            if (approvalsBound) ...<String, dynamic>{
+              'evidencePath': 'approval-$role.json',
+              'evidenceSha256': _sha256(approvalEvidence[role]!),
+              'evidenceCandidateBound': true,
+            },
           },
       ],
     };
@@ -190,10 +313,296 @@ void main() {
       '--aab',
       aab.path,
     ]);
-    expect(passed.exitCode, 0, reason: '${passed.stdout}\n${passed.stderr}');
-    expect(passed.stdout, contains('MASTER_GO_NO_GO_PASS'));
+    expect(passed.exitCode, 1);
+    expect(passed.stderr, contains('G0 evidence kind set mismatch'));
 
-    final missingMasvs = completeManifest();
+    manifest.writeAsStringSync(jsonEncode(completeManifest(typed: true)));
+    final typedPassed = await Process.run('python3', <String>[
+      'scripts/verify_external_release_gates.py',
+      '--manifest',
+      manifest.path,
+      '--aab',
+      aab.path,
+    ]);
+    expect(
+      typedPassed.exitCode,
+      0,
+      reason: '${typedPassed.stdout}\n${typedPassed.stderr}',
+    );
+    expect(typedPassed.stdout, contains('MASTER_GO_NO_GO_PASS'));
+
+    manifest.writeAsStringSync(
+      jsonEncode(completeManifest(typed: true, approvalsBound: false)),
+    );
+    final unboundApprovalsResult = await Process.run('python3', <String>[
+      'scripts/verify_external_release_gates.py',
+      '--manifest',
+      manifest.path,
+      '--aab',
+      aab.path,
+    ]);
+    expect(unboundApprovalsResult.exitCode, 1);
+    expect(
+      unboundApprovalsResult.stderr,
+      contains('approval evidencePath is required'),
+    );
+
+    final productApprovalFile = approvalEvidence['product']!;
+    final productApprovalOriginal = productApprovalFile.readAsStringSync();
+    final earlyApprovalPayload =
+        jsonDecode(productApprovalOriginal) as Map<String, dynamic>;
+    earlyApprovalPayload['signedAt'] = '2026-07-14T12:00:00Z';
+    productApprovalFile.writeAsStringSync(jsonEncode(earlyApprovalPayload));
+    final earlyApprovalManifest = completeManifest(typed: true);
+    ((earlyApprovalManifest['approvals'] as List<dynamic>)
+            .cast<Map<String, dynamic>>()
+            .singleWhere(
+              (approval) => approval['role'] == 'product',
+            ))['signedAt'] =
+        '2026-07-14T12:00:00Z';
+    manifest.writeAsStringSync(jsonEncode(earlyApprovalManifest));
+    final earlyApprovalResult = await Process.run('python3', <String>[
+      'scripts/verify_external_release_gates.py',
+      '--manifest',
+      manifest.path,
+      '--aab',
+      aab.path,
+    ]);
+    expect(earlyApprovalResult.exitCode, 1);
+    expect(
+      earlyApprovalResult.stderr,
+      contains('product approval predates closed soak completion'),
+    );
+    productApprovalFile.writeAsStringSync(productApprovalOriginal);
+
+    final kernelRawFile = File('${directory.path}/nativeKernelReport.raw.json');
+    final kernelRawOriginal = kernelRawFile.readAsStringSync();
+    kernelRawFile.writeAsStringSync('$kernelRawOriginal\ntampered');
+    manifest.writeAsStringSync(jsonEncode(completeManifest(typed: true)));
+    final rawArtifactDriftResult = await Process.run('python3', <String>[
+      'scripts/verify_external_release_gates.py',
+      '--manifest',
+      manifest.path,
+      '--aab',
+      aab.path,
+    ]);
+    expect(rawArtifactDriftResult.exitCode, 1);
+    expect(
+      rawArtifactDriftResult.stderr,
+      contains('artifact nativeKernelReport.raw.json hash mismatch'),
+    );
+    kernelRawFile.writeAsStringSync(kernelRawOriginal);
+
+    final approvalDrift = completeManifest(typed: true);
+    ((approvalDrift['approvals'] as List<dynamic>).first
+            as Map<String, dynamic>)['candidateAabSha256'] =
+        'f' * 64;
+    manifest.writeAsStringSync(jsonEncode(approvalDrift));
+    final approvalDriftResult = await Process.run('python3', <String>[
+      'scripts/verify_external_release_gates.py',
+      '--manifest',
+      manifest.path,
+      '--aab',
+      aab.path,
+    ]);
+    expect(approvalDriftResult.exitCode, 1);
+    expect(
+      approvalDriftResult.stderr,
+      contains('approval used a different AAB'),
+    );
+
+    final slowHotfix = completeManifest(typed: true);
+    (slowHotfix['hotfixDrill'] as Map<String, dynamic>)['durationMinutes'] =
+        121;
+    manifest.writeAsStringSync(jsonEncode(slowHotfix));
+    final slowHotfixResult = await Process.run('python3', <String>[
+      'scripts/verify_external_release_gates.py',
+      '--manifest',
+      manifest.path,
+      '--aab',
+      aab.path,
+    ]);
+    expect(slowHotfixResult.exitCode, 1);
+    expect(
+      slowHotfixResult.stderr,
+      contains('hotfix drill duration must be 1..120 minutes'),
+    );
+
+    final hotfixReportDrift = completeManifest(typed: true);
+    (hotfixReportDrift['hotfixDrill']
+            as Map<String, dynamic>)['durationMinutes'] =
+        60;
+    manifest.writeAsStringSync(jsonEncode(hotfixReportDrift));
+    final hotfixReportDriftResult = await Process.run('python3', <String>[
+      'scripts/verify_external_release_gates.py',
+      '--manifest',
+      manifest.path,
+      '--aab',
+      aab.path,
+    ]);
+    expect(hotfixReportDriftResult.exitCode, 1);
+    expect(
+      hotfixReportDriftResult.stderr,
+      contains('hotfix drill duration does not match typed report'),
+    );
+
+    final soakSummaryDrift = completeManifest(typed: true);
+    (soakSummaryDrift['closedSoak'] as Map<String, dynamic>)['testers'] = 13;
+    manifest.writeAsStringSync(jsonEncode(soakSummaryDrift));
+    final soakSummaryDriftResult = await Process.run('python3', <String>[
+      'scripts/verify_external_release_gates.py',
+      '--manifest',
+      manifest.path,
+      '--aab',
+      aab.path,
+    ]);
+    expect(soakSummaryDriftResult.exitCode, 1);
+    expect(
+      soakSummaryDriftResult.stderr,
+      contains('closed soak testers do not match typed report'),
+    );
+
+    final ownerDrift = completeManifest(typed: true);
+    ((ownerDrift['gates'] as List<dynamic>).first
+        as Map<String, dynamic>)['owners'] = <String>[
+      'self-approved',
+    ];
+    manifest.writeAsStringSync(jsonEncode(ownerDrift));
+    final ownerDriftResult = await Process.run('python3', <String>[
+      'scripts/verify_external_release_gates.py',
+      '--manifest',
+      manifest.path,
+      '--aab',
+      aab.path,
+    ]);
+    expect(ownerDriftResult.exitCode, 1);
+    expect(ownerDriftResult.stderr, contains('G0 owner set mismatch'));
+
+    final malformedOwner = completeManifest(typed: true);
+    ((malformedOwner['gates'] as List<dynamic>).first
+        as Map<String, dynamic>)['owners'] = <Object?>[
+      <String, Object?>{},
+    ];
+    manifest.writeAsStringSync(jsonEncode(malformedOwner));
+    final malformedOwnerResult = await Process.run('python3', <String>[
+      'scripts/verify_external_release_gates.py',
+      '--manifest',
+      manifest.path,
+      '--aab',
+      aab.path,
+    ]);
+    expect(malformedOwnerResult.exitCode, 1);
+    expect(malformedOwnerResult.stderr, contains('G0 owner set mismatch'));
+    expect(malformedOwnerResult.stderr, isNot(contains('Traceback')));
+
+    void refreshEvidenceHash(String gateId, String kind, File file) {
+      typedEvidence[gateId]!.singleWhere(
+        (item) => item['kind'] == kind,
+      )['sha256'] = _sha256(
+        file,
+      );
+    }
+
+    final licenseFile = File('${directory.path}/licensePolicyReport.json');
+    final licenseOriginal = licenseFile.readAsStringSync();
+    final licensePayload = jsonDecode(licenseOriginal) as Map<String, dynamic>;
+    (licensePayload['metrics'] as Map<String, dynamic>)['reviewed'] = 399;
+    licenseFile.writeAsStringSync(jsonEncode(licensePayload));
+    refreshEvidenceHash('G4', 'licensePolicyReport', licenseFile);
+    manifest.writeAsStringSync(jsonEncode(completeManifest(typed: true)));
+    final licenseResult = await Process.run('python3', <String>[
+      'scripts/verify_external_release_gates.py',
+      '--manifest',
+      manifest.path,
+      '--aab',
+      aab.path,
+    ]);
+    expect(licenseResult.exitCode, 1);
+    expect(
+      licenseResult.stderr,
+      contains('licensePolicyReport.reviewed must equal components'),
+    );
+    licenseFile.writeAsStringSync(licenseOriginal);
+    refreshEvidenceHash('G4', 'licensePolicyReport', licenseFile);
+
+    final platformFile = File('${directory.path}/androidPlatformMatrix.json');
+    final platformOriginal = platformFile.readAsStringSync();
+    final platformPayload =
+        jsonDecode(platformOriginal) as Map<String, dynamic>;
+    (platformPayload['metrics'] as Map<String, dynamic>)['apiLevels'] =
+        <Object?>[<String, Object?>{}];
+    platformFile.writeAsStringSync(jsonEncode(platformPayload));
+    refreshEvidenceHash('G3', 'androidPlatformMatrix', platformFile);
+    manifest.writeAsStringSync(jsonEncode(completeManifest(typed: true)));
+    final platformResult = await Process.run('python3', <String>[
+      'scripts/verify_external_release_gates.py',
+      '--manifest',
+      manifest.path,
+      '--aab',
+      aab.path,
+    ]);
+    expect(platformResult.exitCode, 1);
+    expect(
+      platformResult.stderr,
+      contains('androidPlatformMatrix.apiLevels must cover API 29-36'),
+    );
+    expect(platformResult.stderr, isNot(contains('Traceback')));
+    platformFile.writeAsStringSync(platformOriginal);
+    refreshEvidenceHash('G3', 'androidPlatformMatrix', platformFile);
+
+    final physicalFile = File('${directory.path}/physicalDeviceMatrix.json');
+    final physicalOriginal = physicalFile.readAsStringSync();
+    final physicalPayload =
+        jsonDecode(physicalOriginal) as Map<String, dynamic>;
+    ((((physicalPayload['metrics'] as Map<String, dynamic>)['deviceResults']
+                    as List<dynamic>)
+                .first)
+            as Map<String, dynamic>)['fakeDeadlines'] =
+        99;
+    physicalFile.writeAsStringSync(jsonEncode(physicalPayload));
+    refreshEvidenceHash('G7', 'physicalDeviceMatrix', physicalFile);
+    manifest.writeAsStringSync(jsonEncode(completeManifest(typed: true)));
+    final physicalResult = await Process.run('python3', <String>[
+      'scripts/verify_external_release_gates.py',
+      '--manifest',
+      manifest.path,
+      '--aab',
+      aab.path,
+    ]);
+    expect(physicalResult.exitCode, 1);
+    expect(
+      physicalResult.stderr,
+      contains(
+        'physicalDeviceMatrix.api29_boundary.fakeDeadlines is below 100',
+      ),
+    );
+    physicalFile.writeAsStringSync(physicalOriginal);
+    refreshEvidenceHash('G7', 'physicalDeviceMatrix', physicalFile);
+
+    final soakFile = File('${directory.path}/closedSoakReport.json');
+    final soakOriginal = soakFile.readAsStringSync();
+    final soakPayload = jsonDecode(soakOriginal) as Map<String, dynamic>;
+    (soakPayload['metrics'] as Map<String, dynamic>)['finishedAt'] =
+        '2026-07-14T23:59:59Z';
+    soakFile.writeAsStringSync(jsonEncode(soakPayload));
+    refreshEvidenceHash('G9', 'closedSoakReport', soakFile);
+    manifest.writeAsStringSync(jsonEncode(completeManifest(typed: true)));
+    final soakResult = await Process.run('python3', <String>[
+      'scripts/verify_external_release_gates.py',
+      '--manifest',
+      manifest.path,
+      '--aab',
+      aab.path,
+    ]);
+    expect(soakResult.exitCode, 1);
+    expect(
+      soakResult.stderr,
+      contains('closedSoakReport duration is below 14 days'),
+    );
+    soakFile.writeAsStringSync(soakOriginal);
+    refreshEvidenceHash('G9', 'closedSoakReport', soakFile);
+
+    final missingMasvs = completeManifest(typed: true);
     final g4 = (missingMasvs['gates'] as List<dynamic>)
         .cast<Map<String, dynamic>>()
         .singleWhere((gate) => gate['id'] == 'G4');
@@ -218,7 +627,7 @@ void main() {
       contains('G4 requires one candidate-bound MASVS assessment'),
     );
 
-    final malformedVersion = completeManifest();
+    final malformedVersion = completeManifest(typed: true);
     (malformedVersion['candidate'] as Map<String, dynamic>)['versionCode'] =
         null;
     manifest.writeAsStringSync(jsonEncode(malformedVersion));
@@ -236,7 +645,7 @@ void main() {
     );
     expect(malformedVersionResult.stderr, isNot(contains('Traceback')));
 
-    final drifted = completeManifest();
+    final drifted = completeManifest(typed: true);
     (drifted['candidate'] as Map<String, dynamic>)['gitTree'] = 'f' * 40;
     manifest.writeAsStringSync(jsonEncode(drifted));
     final failed = await Process.run('python3', <String>[
@@ -250,6 +659,223 @@ void main() {
     expect(failed.stderr, contains('provenance gitTree mismatch'));
   });
 }
+
+Map<String, Object?> _gateEvidence({
+  required String gateId,
+  required String kind,
+  required String aabHash,
+  required String artifactPath,
+  required String artifactSha256,
+}) => <String, Object?>{
+  'schemaVersion': 1,
+  'evidenceType': kind,
+  'gateId': gateId,
+  'status': 'PASS',
+  'summary': 'Candidate-bound acceptance evidence completed successfully.',
+  'candidate': <String, Object?>{
+    'packageName': 'com.poyrazoncel.korubeni',
+    'versionName': '1.0.3',
+    'versionCode': 10003,
+    'aabSha256': aabHash,
+  },
+  'review': <String, Object?>{
+    'performedBy': 'accountable-$kind-operator',
+    'performedAt': '2026-07-18T12:00:00Z',
+    'independentFromImplementation': true,
+  },
+  'artifacts': <Object?>[
+    <String, Object?>{
+      'path': artifactPath,
+      'sha256': artifactSha256,
+      'candidateBound': true,
+      'description': 'Redacted raw evidence for the exact candidate.',
+    },
+  ],
+  'metrics': _gateMetrics(kind),
+};
+
+Map<String, Object?> _gateMetrics(String kind) => switch (kind) {
+  'safetyCaseReview' => <String, Object?>{
+    'openS4': 0,
+    'uncontrolledS3': 0,
+    'hazards': <Object?>[
+      for (var index = 1; index <= 15; index++)
+        <String, Object?>{
+          'id': 'H${index.toString().padLeft(2, '0')}',
+          'status': 'CONTROLLED',
+          'controlEvidence': 'Candidate-bound control evidence verified.',
+        },
+    ],
+  },
+  'nativeKernelReport' => <String, Object?>{
+    'nativeTests': 60,
+    'modelOperations': 10000000,
+    'raceFamilies': 5,
+    'interleavingsPerFamily': 1000,
+    'criticalSafetyViolations': 0,
+  },
+  'mutationReport' => <String, Object?>{
+    'total': 6,
+    'killed': 6,
+    'baselinePassed': true,
+  },
+  'flutterSessionReport' => <String, Object?>{
+    'dartTests': 688,
+    'criticalCoverageFiles': 4,
+    'minimumCriticalCoveragePercent': 90.57,
+    'pinReadFailureProtected': true,
+    'lifecycleCancelProtected': true,
+    'falseCancelProtected': true,
+  },
+  'androidPlatformMatrix' => <String, Object?>{
+    'apiLevels': <int>[29, 30, 31, 32, 33, 34, 35, 36],
+    'directBootReboot': true,
+    'doze': true,
+    'permissionRevokeRegrant': true,
+    'telecomRequest': true,
+    'playDeliveredCandidate': true,
+    'criticalSafetyViolations': 0,
+  },
+  'licensePolicyReport' => <String, Object?>{
+    'components': 400,
+    'reviewed': 400,
+    'unverified': 0,
+    'policyPassed': true,
+    'noticesParity': true,
+  },
+  'privacyCounselDecision' => <String, Object?>{
+    'decision': 'APPROVED',
+    'fieldInventoryComplete': true,
+    'transferMechanismsResolved': true,
+    'deletionRunbookVerified': true,
+  },
+  'qualityMatrix' => <String, Object?>{
+    'accessibility': <String, String>{
+      'talkBack': 'PASS',
+      'switchAccess': 'PASS',
+      'accessibilityScanner': 'PASS',
+      'font200Percent': 'PASS',
+    },
+    'featureMatrixPassed': true,
+    'migrationMatrixPassed': true,
+    'criticalCrashAnr': 0,
+    'coldStartP95Ms': 4000,
+    'armAckP95Ms': 500,
+    'receiverFallbackP95Ms': 1000,
+    'wakeLockMaxMs': 10000,
+    'idleBatteryDeltaPercentagePoints': 2,
+  },
+  'artifactChainReport' => <String, Object?>{
+    'bundletoolValid': true,
+    'arm64Only': true,
+    'page16kCompatible': true,
+    'signatureValid': true,
+    'attestationVerified': true,
+    'provenanceVerified': true,
+    'sbomVerified': true,
+    'symbolsComplete': true,
+    'productionRevenueCatKey': true,
+    'buildCount': 1,
+  },
+  'physicalDeviceMatrix' => <String, Object?>{
+    'deviceResults': <Object?>[
+      for (final profile in <String>[
+        'api29_boundary',
+        'pixel_api36_16kb',
+        'samsung_oneui',
+        'xiaomi_hyperos',
+      ])
+        <String, Object?>{
+          'profile': profile,
+          'physical': true,
+          'playInstalled': true,
+          'fakeDeadlines': 100,
+          'missedDeadlines': 0,
+          'cancelRaces': 50,
+          'confirmedCancelDispatches': 0,
+          'lifecycleCycles': 20,
+          'wrongTargets': 0,
+          'pinBypasses': 0,
+          'safetyCrashes': 0,
+        },
+    ],
+    'automaticRequestsObserved': 10,
+    'manualDialObserved': 10,
+    'criticalCrashAnr': 0,
+  },
+  'billingPlayMatrix' => <String, Object?>{
+    'cases': <String, String>{
+      for (final name in <String>[
+        'monthlyPurchase',
+        'annualPurchase',
+        'pending',
+        'userCancel',
+        'cancelledUntilExpiry',
+        'restore',
+        'reinstall',
+        'renewal',
+        'grace',
+        'pauseResume',
+        'accountHold',
+        'refundRevoke',
+        'expiryLapse',
+        'multiGoogleAccount',
+        'offlineCacheInside',
+        'offlineCacheOutside',
+        'noOffering',
+        'networkFailure',
+        'revenueCatOutage',
+      ])
+        name: 'PASS',
+    },
+    'finalConfigurationRestored': true,
+    'smokePurchaseRestorePassed': true,
+  },
+  'playPolicyDisposition' => <String, Object?>{
+    'forms': <String, String>{
+      for (final name in <String>[
+        'dataSafety',
+        'healthApps',
+        'targetAudience',
+        'contentRating',
+        'appAccess',
+        'privacyUrl',
+        'deletionUrl',
+      ])
+        name: 'PASS',
+    },
+    'bundleExplorer16kb': true,
+    'permissionsMatchDeclarations': true,
+    'noFgsFsiBackgroundLocation': true,
+    'preLaunchOpenFindings': 0,
+  },
+  'closedSoakReport' => <String, Object?>{
+    'startedAt': '2026-07-01T00:00:00Z',
+    'finishedAt': '2026-07-15T00:00:00Z',
+    'testers': 12,
+    'manualProbeDays': 14,
+    'safetyIncidents': 0,
+    'openP0P1': 0,
+    'criticalCrashAnr': 0,
+    'purchaseRestoreFailures': 0,
+    'aabChanged': false,
+    'dashboardFrozen': true,
+  },
+  'hotfixDrillReport' => <String, Object?>{
+    'durationMinutes': 90,
+    'internalTrackReady': true,
+    'nonUploadableArtifact': true,
+    'regressionSelected': true,
+    'reservedVersionCode': 10004,
+  },
+  'releaseBoardDecision' => <String, Object?>{
+    'decision': 'GO',
+    'approvedRoles': _approvalRoles.toList(),
+    'openP0P1': 0,
+    'safetyIncidents': 0,
+  },
+  _ => throw ArgumentError.value(kind, 'kind', 'unsupported evidence kind'),
+};
 
 Map<String, Object?> _masvsAssessment({
   required String aabHash,
