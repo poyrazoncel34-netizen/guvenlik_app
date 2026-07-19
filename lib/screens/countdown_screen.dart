@@ -24,6 +24,7 @@ import '../core/services/notification_service.dart';
 import '../core/services/emergency_dispatch_pipeline.dart';
 import '../core/services/emergency_platform_service.dart';
 import '../core/services/emergency_session_contract.dart';
+import '../core/services/panic_arm_policy.dart';
 import '../core/services/pin_verification_service.dart';
 import '../core/utils/emergency_number_validator.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
@@ -141,6 +142,20 @@ class _CountdownScreenState extends State<CountdownScreen>
   /// access is required at arm time; a distinct inexact alarm is retained only
   /// as a best-effort backup if that access is revoked after arming.
   Future<ArmResult> _scheduleNativeBackupAlarm() async {
+    if (widget.entitlementDecision != EntitlementDecision.authorized) {
+      return _recordRejectedArm(
+        widget.entitlementDecision == EntitlementDecision.denied
+            ? 'entitlementDenied'
+            : 'entitlementUnknown',
+      );
+    }
+    if (_pinState != PinState.configured) {
+      return _recordRejectedArm(
+        _pinState == PinState.readFailed ? 'pinReadFailed' : 'pinNotConfigured',
+      );
+    }
+
+    ArmResult result;
     try {
       final primaryCandidate = _emergencyContact?.phone;
       final primaryNumber =
@@ -154,7 +169,7 @@ class _CountdownScreenState extends State<CountdownScreen>
       // A safety session is bound only to the explicitly selected primary.
       // Silently falling back to list order can dispatch to the wrong person.
       if (primaryNumber == null) {
-        return const ArmRejected('callableTargetMissing');
+        return _recordRejectedArm('callableTargetMissing');
       }
 
       _armedTargetNumber = AndroidIntentService.normalizePhoneNumber(
@@ -165,7 +180,7 @@ class _CountdownScreenState extends State<CountdownScreen>
       // Dart and native race against the same 10-second deadline. Whichever
       // claims first performs the request; the loser reads the durable result.
       final deadline = DateTime.now().add(const Duration(seconds: 10));
-      final result = await _emergencyPlatformService.armEmergencySession(
+      result = await _emergencyPlatformService.armEmergencySession(
         kind: EmergencySessionKind.panic,
         mainDeadline: deadline,
         finalDeadline: deadline,
@@ -174,22 +189,60 @@ class _CountdownScreenState extends State<CountdownScreen>
         pinConfigured: _pinState == PinState.configured,
         randomId: _dispatchId,
       );
-      _armResult = result;
-      _sessionToken = result.token;
-      return result;
     } catch (error) {
       debugPrint('CountdownScreen: Native session arm failed: $error');
-      return const ArmUnknown('flutterArmException');
+      result = const ArmUnknown('flutterArmException');
     }
+    _armResult = result;
+    _sessionToken = PanicArmPolicy.activeOrUncertainToken(result);
+    return result;
+  }
+
+  ArmRejected _recordRejectedArm(String reasonCode) {
+    final result = ArmRejected(reasonCode);
+    _armResult = result;
+    _sessionToken = null;
+    return result;
   }
 
   Future<void> _startCountdown() async {
     if (_timer != null) return;
+    if (widget.isTestMode) {
+      // Test mode is a local UI rehearsal. It neither arms native safety state
+      // nor needs a real contact, entitlement lease, or PIN.
+      _startDartCountdownTimer();
+      return;
+    }
     // Arm native AlarmManager backup BEFORE the Dart timer starts, so a Doze
     // transition during this window cannot leave us without a safety net.
-    await _scheduleNativeBackupAlarm();
+    final armResult = await _scheduleNativeBackupAlarm();
     if (!mounted || _timer != null) return;
+    if (!PanicArmPolicy.shouldStartCountdown(armResult)) {
+      // Ownership is released synchronously. The platform notification update
+      // is best-effort and must not delay the fail-closed rejection UI.
+      unawaited(KoruBeniForegroundService.stop(owner: _foregroundOwner));
+      if (!mounted) return;
+      await _showBlockingFailure(
+        title: 'emergency_total_failure_title'.tr(),
+        body: _blockedArmMessageKey(armResult).tr(),
+        phoneNumber: '',
+      );
+      return;
+    }
     _startDartCountdownTimer();
+  }
+
+  String _blockedArmMessageKey(ArmResult result) {
+    if (result is! ArmRejected) return 'safety_session_not_ready';
+    return switch (result.reasonCode) {
+      'entitlementDenied' ||
+      'entitlementUnknown' => 'safety_session_entitlement_unverified',
+      'pinNotConfigured' => 'safety_session_pin_required',
+      'pinReadFailed' => 'pin_state_read_failed',
+      'targetNotCallable' ||
+      'callableTargetMissing' => 'timer_emergency_contact_required',
+      _ => 'safety_session_not_ready',
+    };
   }
 
   void _startDartCountdownTimer() {
@@ -211,13 +264,16 @@ class _CountdownScreenState extends State<CountdownScreen>
     if (_emergencyDispatched || _isNavigating) return;
     _emergencyDispatched = true;
 
-    // WakeLock safety net: ensure CPU stays awake during emergency execution
-    try {
-      await WakelockPlus.enable();
-    } catch (_) {}
+    // Native dispatch and fallback must never wait on a plugin channel. The
+    // wakelock is a best-effort execution aid, not safety authority.
+    unawaited(
+      WakelockPlus.enable().catchError((Object error) {
+        debugPrint('CountdownScreen: WakelockPlus.enable failed: $error');
+      }),
+    );
 
     if (widget.isTestMode) {
-      await KoruBeniForegroundService.stop(owner: _foregroundOwner);
+      unawaited(KoruBeniForegroundService.stop(owner: _foregroundOwner));
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -235,7 +291,7 @@ class _CountdownScreenState extends State<CountdownScreen>
     } catch (e) {
       // FAIL-SAFE: If ANY unhandled exception occurs, show blocking error with manual call option.
       debugPrint('CountdownScreen: Emergency execution crashed: $e');
-      await KoruBeniForegroundService.stop(owner: _foregroundOwner);
+      unawaited(KoruBeniForegroundService.stop(owner: _foregroundOwner));
       if (mounted) {
         final primaryNumber = _emergencyContact?.phone ?? '';
         await _showBlockingFailure(
@@ -262,7 +318,7 @@ class _CountdownScreenState extends State<CountdownScreen>
                 source: 'dartPanicCountdown',
               );
           if (dispatch.wasCancelled) {
-            await KoruBeniForegroundService.stop(owner: _foregroundOwner);
+            unawaited(KoruBeniForegroundService.stop(owner: _foregroundOwner));
             if (mounted) Navigator.pop(context);
             return null;
           }
@@ -310,7 +366,7 @@ class _CountdownScreenState extends State<CountdownScreen>
     final calledNumber = primaryNumber ?? '';
 
     if (callResult.isFailed) {
-      await KoruBeniForegroundService.stop(owner: _foregroundOwner);
+      unawaited(KoruBeniForegroundService.stop(owner: _foregroundOwner));
       if (mounted) {
         await _showBlockingFailure(
           title: 'emergency_total_failure_title'.tr(),
@@ -587,12 +643,22 @@ class _CountdownScreenState extends State<CountdownScreen>
     if (resetPinLockout) {
       await PinLockoutService.instance.reset();
     }
-    await ActivityService.logEvent(
-      type: ActivityType.emergencyCancelled,
-      title: "countdown_cancelled_title".tr(),
-      description: description,
-    );
-    await KoruBeniForegroundService.stop(owner: _foregroundOwner);
+    try {
+      await ActivityService.logEvent(
+        type: ActivityType.emergencyCancelled,
+        title: "countdown_cancelled_title".tr(),
+        description: description,
+      );
+    } catch (error) {
+      // Native cancellation is already durably acknowledged. A local history
+      // failure must not trap the user on an active-looking countdown or
+      // weaken the cancellation result.
+      debugPrint('CountdownScreen: cancellation log failed: $error');
+    }
+    // Native cancellation is already durable and ownership is released before
+    // the notification plugin is awaited internally. A stalled plugin channel
+    // must not trap the user on an active-looking countdown.
+    unawaited(KoruBeniForegroundService.stop(owner: _foregroundOwner));
     if (mounted) {
       Navigator.pop(context);
     }

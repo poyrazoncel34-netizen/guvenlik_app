@@ -14,10 +14,13 @@ void main() {
       'dispatch does not start while cancellation/navigation is in progress',
       () {
         final makeCallIdx = source.indexOf('Future<void> _makeEmergencyCall()');
-        final body = source.substring(
+        final executeIdx = source.indexOf(
+          'Future<void> _executeEmergency()',
           makeCallIdx,
-          source.indexOf('// WakeLock'),
         );
+        expect(makeCallIdx, isNonNegative);
+        expect(executeIdx, greaterThan(makeCallIdx));
+        final body = source.substring(makeCallIdx, executeIdx);
 
         expect(
           body,
