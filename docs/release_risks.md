@@ -2,9 +2,17 @@
 
 ## OpenStreetMap Tiles
 
-The app currently uses `https://tile.openstreetmap.org/{z}/{x}/{y}.png` directly for the in-app map. Attribution is visible and a package user agent is set, but this endpoint is not intended as an enterprise-grade production tile service.
+The app currently uses `https://tile.openstreetmap.org/{z}/{x}/{y}.png`
+directly for the in-app map. Attribution is visible and a package user agent is
+set, but the current `TileLayer` has no repository evidence of a persistent
+HTTP cache that honours `Cache-Control`/`Expires`/`ETag` or retains tiles for at
+least seven days. OSMF requires that caching behavior and provides no SLA.
 
-Before a larger production launch, switch to a production-suitable provider such as MapTiler, Stadia, Thunderforest, Mapbox, or a self-hosted tile service with a proper API key and quota policy.
+**Release status: `OSM_TILE_GATE_OPEN`.** Before the first production
+candidate, either add and test a compliant persistent HTTP cache, move to a
+provider whose contract/configuration is recorded in the candidate evidence,
+or remove the public network-tile path from the production flavor. A User-Agent
+and attribution alone do not close this gate.
 
 Current mitigation:
 - OSM attribution is shown in the map UI.
@@ -12,6 +20,10 @@ Current mitigation:
 - The app only requests tiles for the map viewport the user actively opens.
 - The app must not bulk download, scrape, pre-seed, cache as an offline archive, or package OpenStreetMap public tiles.
 - Store/legal copy does not claim enterprise-grade map reliability.
+
+These mitigations reduce load and overclaim risk; they do not substitute for
+the missing persistent-cache proof. Source:
+https://operations.osmfoundation.org/policies/tiles/
 
 ## Manual Play Console Items
 
@@ -28,7 +40,7 @@ Current mitigation:
 
 - Real-device QA is not complete. Emulator evidence is not accepted for production readiness.
 - Billing is not complete. Monthly purchase, annual purchase, restore, cancel/manage, no-offering, and network-failure fallback must be tested through Play test tracks and license testers.
-- Production is DO_NOT_CLAIM_READY until Play Console forms, billing tests, Android 13/14 physical-device QA, screenshot PII review, and closed testing if required are complete with evidence.
+- Production is DO_NOT_CLAIM_READY until Play Console forms, billing tests, the declared API 29–36 physical-device/OEM matrix, screenshot PII review, and the mandatory KoruBeni 12-tester/14-day closed soak are complete for one immutable AAB.
 
 ## Android 15 / Android 16 / 16 KB Page Size Readiness
 
@@ -36,10 +48,9 @@ Current mitigation:
 
 | Date | Requirement | Source |
 | --- | --- | --- |
-| 2025-08-31 | New apps + updates must target API 35 (Android 15) | https://support.google.com/googleplay/android-developer/answer/11926878 |
-| 2025-11-01 | New apps and new builds (with native libs) must support 16 KB memory page sizes | https://developer.android.com/guide/practices/page-sizes |
-| 2026-05-01 | Updates to existing apps (with native libs) must support 16 KB page sizes | Same |
-| 2026-08-31 | New apps and updates must target API 36 (Android 16). | https://developer.android.com/google/play/requirements/target-sdk |
+| 31 August 2025 | New apps + updates must target API 35 (Android 15) | https://support.google.com/googleplay/android-developer/answer/11926878 |
+| 1 November 2025 | New apps and updates submitted to Play and targeting Android 15+ must support 16 KB page sizes | https://developer.android.com/guide/practices/page-sizes |
+| 31 August 2026 | New apps and updates must target API 36 (Android 16); Play documents an extension path to 1 November 2026 | https://support.google.com/googleplay/android-developer/answer/11926878 |
 
 ### Current build configuration
 
@@ -47,7 +58,7 @@ From [`android/app/build.gradle.kts`](../android/app/build.gradle.kts):
 
 - `compileSdk = 36` (Android 16 — uses the newest build APIs)
 - `targetSdk = 36` (Android 16 — meets the 2026 Play target requirement)
-- `minSdk = flutter.minSdkVersion` = API 24 (verified in the clean smoke merged manifest)
+- `minSdk = 29` (the locked first-release support floor; verified by build config and merged-manifest audit)
 - `compileOptions.isCoreLibraryDesugaringEnabled = true` (required for `flutter_local_notifications` on lower minSdk)
 - `kotlinOptions.jvmTarget = JavaVersion.VERSION_17.toString()` (Java 17 toolchain)
 - `productFlavors { play { ... }; smoke { applicationIdSuffix = ".smoke" } }` (Play and non-uploadable CI-smoke distributions)
@@ -78,27 +89,24 @@ Recommendation: keep `targetSdk = 36`; re-run the Android 16 emulator/instrument
 
 ### 16 KB page size readiness
 
-Flutter native-library page-size alignment requires:
+Android's current primary guidance recommends AGP 8.5.1 or newer and NDK r28
+or newer so newly compiled libraries receive compatible packaging/alignment by
+default. That does **not** prove prebuilt SDK libraries are compatible; every
+ELF in the exact candidate must still be inspected.
 
-- Flutter SDK 3.27+ (re-aligns the bundled engine to 16 KB).
-- AGP 8.5.1+ (already inherited via Flutter Gradle plugin).
-- NDK r28+ (Flutter bundles this; do not pin an older NDK).
-- All third-party native plugins compiled with 16 KB-aligned ELF segments.
+Current local evidence is deliberately narrower:
 
-KoruBeni's native plugin surface (from [`pubspec.yaml`](../pubspec.yaml)) and 16 KB status snapshot:
-
-| Plugin | Native? | 16 KB note |
-| --- | --- | --- |
-| `geolocator: ^13.0.2` | Yes | 13.x compiled with 16 KB alignment per upstream. |
-| `permission_handler: ^11.3.1` | Yes | 11.x supports 16 KB. |
-| `flutter_local_notifications: ^17.2.1` | Yes | 17.x supports 16 KB. |
-| `path_provider: ^2.1.4` | Yes | Supported. |
-| `audioplayers: ^6.5.1` | Yes | 6.x supports 16 KB. |
-| `flutter_map: ^7.0.2` | No (Dart-only canvas rendering) | Not applicable. |
-| `purchases_flutter: ^8.10.1` | Yes | RevenueCat Android SDK 8.x supports 16 KB. |
-| `flutter_jailbreak_detection: ^1.10.0` | Yes | Verify in Play Console "Memory page size" indicator. |
-| `optimize_battery: ^0.0.4` | Likely Dart-only | Low risk. |
-| `local_auth` | Not in pubspec (intentionally — biometric forbidden per CLAUDE.md) | N/A. |
+- `verify_release.sh` built a `NON_RELEASE_SMOKE` AAB and inspected every
+  64-bit native library's `PT_LOAD` alignment.
+- Result for that smoke artifact: **10/10** libraries passed (five arm64-v8a,
+  five x86_64).
+- The smoke application id ends in `.smoke`, includes x86_64, and is not
+  uploadable to the production Play app. It is **not production-candidate
+  evidence**.
+- The production gate remains open until the exact arm64 Play AAB reports
+  `PAGE_ALIGNMENT_16K`, generated APKs pass `zipalign -c -P 16`, the Play Bundle
+  Explorer reports 16 KB compatibility, and a real 16 KB-kernel device runs
+  with compatibility mode disabled.
 
 ### AAB verification checklist (post-upload)
 
@@ -107,6 +115,8 @@ In Play Console after uploading the AAB to an internal/closed track:
 1. Open the bundle in "Latest releases and bundles".
 2. In the bundle details, look for the "Memory page size" indicator. Expected: **"16 KB compatible"**.
 3. If any native lib is flagged as non-compatible, the indicator will name the offending `.so` file.
-4. Remediation: run `flutter pub upgrade --major-versions` to pull in the latest 16 KB-aligned plugin versions, then rebuild.
+4. If a library is flagged, identify its owning SDK, update or rebuild that
+   dependency in isolation, then invalidate and repeat build/security/OEM
+   evidence. Do not bulk-upgrade the graph inside an active candidate.
 
 This is an OPERATOR_ACTION because the indicator is only visible post-upload to Play Console.
