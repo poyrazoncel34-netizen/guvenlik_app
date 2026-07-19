@@ -8,6 +8,7 @@ import '../constants/app_constants.dart';
 import '../di/service_locator.dart';
 import '../security/secure_storage.dart';
 import '../security/secure_storage_keys.dart';
+import '../utils/emergency_number_validator.dart';
 import 'local_database_service.dart';
 
 String normalizePhoneNumber(String raw) {
@@ -105,20 +106,21 @@ class ContactService {
     final contacts = <EmergencyContact>[];
 
     for (final number in numbers) {
-      final normalizedPhone = normalizePhoneNumber(number);
-      if (normalizedPhone.isEmpty ||
-          contacts.any((contact) => contact.matchesPhone(number))) {
+      final normalizedPhone =
+          EmergencyNumberValidator.normalizedCallableTargetOrNull(number);
+      if (normalizedPhone == null ||
+          contacts.any((contact) => contact.matchesPhone(normalizedPhone))) {
         continue;
       }
 
-      final existingContact = _findContactByPhone(existing, number);
+      final existingContact = _findContactByPhone(existing, normalizedPhone);
       contacts.add(
         existingContact ??
             EmergencyContact(
               name: "contacts_person_label".tr(
                 namedArgs: {'index': '${contacts.length + 1}'},
               ),
-              phone: number.trim(),
+              phone: normalizedPhone,
             ),
       );
     }
@@ -137,14 +139,16 @@ class ContactService {
       final name = contact.name.trim().isEmpty
           ? _unknownNameFallback
           : contact.name.trim();
-      final phone = contact.phone.trim();
+      final phone = EmergencyNumberValidator.normalizedCallableTargetOrNull(
+        contact.phone,
+      );
+      if (phone == null) continue;
       final candidate = EmergencyContact(
         name: name,
         phone: phone,
         isPrimary: currentPrimary != null && currentPrimary.matchesPhone(phone),
       );
-      if (candidate.normalizedPhone.isEmpty ||
-          deduplicated.any((item) => item.matchesPhone(candidate.phone))) {
+      if (deduplicated.any((item) => item.matchesPhone(candidate.phone))) {
         continue;
       }
       deduplicated.add(candidate);
@@ -164,9 +168,12 @@ class ContactService {
     required String name,
     required String phone,
   }) async {
-    final normalizedPhone = normalizePhoneNumber(phone);
-    if (normalizedPhone.isEmpty) {
-      await clearPrimaryEmergencyContact();
+    final normalizedPhone =
+        EmergencyNumberValidator.normalizedCallableTargetOrNull(phone);
+    if (normalizedPhone == null) {
+      if (phone.trim().isEmpty) {
+        await clearPrimaryEmergencyContact();
+      }
       return;
     }
 
@@ -174,7 +181,7 @@ class ContactService {
     final trimmedName = name.trim().isEmpty
         ? _unknownNameFallback
         : name.trim();
-    final trimmedPhone = phone.trim();
+    final trimmedPhone = normalizedPhone;
 
     final updated = <EmergencyContact>[];
     var found = false;
@@ -427,13 +434,14 @@ class ContactService {
   ) {
     final out = <EmergencyContact>[];
     for (final contact in contacts) {
-      if (contact.normalizedPhone.isEmpty) {
+      final normalizedPhone = contact.normalizedPhone;
+      if (normalizedPhone.isEmpty) {
         continue;
       }
-      if (out.any((item) => item.matchesPhone(contact.phone))) {
+      if (out.any((item) => item.matchesPhone(normalizedPhone))) {
         continue;
       }
-      out.add(contact);
+      out.add(contact.copyWith(phone: normalizedPhone));
     }
     return out;
   }
@@ -642,14 +650,19 @@ class ContactService {
     final result = <String>[];
     for (final entry in numbers) {
       final phone = entry.trim();
-      final normalizedPhone = normalizePhoneNumber(phone);
-      if (normalizedPhone.isEmpty ||
+      final normalizedPhone =
+          EmergencyNumberValidator.normalizedCallableTargetOrNull(phone);
+      if (normalizedPhone == null ||
           result.any(
-            (existing) => normalizePhoneNumber(existing) == normalizedPhone,
+            (existing) =>
+                EmergencyNumberValidator.normalizedCallableTargetOrNull(
+                  existing,
+                ) ==
+                normalizedPhone,
           )) {
         continue;
       }
-      result.add(phone);
+      result.add(normalizedPhone);
     }
     return result;
   }
@@ -688,10 +701,13 @@ class EmergencyContact {
     this.isPrimary = false,
   });
 
-  String get normalizedPhone => normalizePhoneNumber(phone);
+  String get normalizedPhone =>
+      EmergencyNumberValidator.normalizedCallableTargetOrNull(phone) ?? '';
 
   bool matchesPhone(String otherPhone) {
-    return normalizedPhone == normalizePhoneNumber(otherPhone);
+    final otherNormalized =
+        EmergencyNumberValidator.normalizedCallableTargetOrNull(otherPhone);
+    return normalizedPhone.isNotEmpty && normalizedPhone == otherNormalized;
   }
 
   EmergencyContact copyWith({String? name, String? phone, bool? isPrimary}) {

@@ -94,6 +94,12 @@ class EmergencyPlatformService {
     if (!isSupported) {
       return ArmRejected('unsupportedPlatform', rejectedToken: proposedToken);
     }
+    final normalizedTarget = AndroidIntentService.normalizedCallableOrNull(
+      target,
+    );
+    if (normalizedTarget == null) {
+      return ArmRejected('invalidTarget', rejectedToken: proposedToken);
+    }
 
     final invocation = await _invokeTypedMap(
       'armEmergencySession',
@@ -104,7 +110,7 @@ class EmergencyPlatformService {
         'requestedGeneration': proposedToken.generation,
         'mainDeadlineMs': mainDeadline.millisecondsSinceEpoch,
         'finalDeadlineMs': finalDeadline.millisecondsSinceEpoch,
-        'target': AndroidIntentService.normalizePhoneNumber(target),
+        'target': normalizedTarget,
         'entitlementDecision': entitlementDecision.wireName,
         'pinConfigured': pinConfigured,
       },

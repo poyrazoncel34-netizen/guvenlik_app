@@ -68,6 +68,27 @@ void main() {
       expect(EmergencyNumberValidator.isCallableEmergencyTarget('12'), isFalse);
     });
 
+    test('rejects URI syntax extensions pauses and control characters', () {
+      const unsafeTargets = <String>[
+        'tel:+905551234567',
+        '+905551234567?body=999',
+        '+905551234567;ext=123',
+        '+905551234567,123',
+        '+905551234567#123',
+        '+905551234567*123',
+        '+905551234567\r\n999',
+        '90+5551234567',
+      ];
+
+      for (final target in unsafeTargets) {
+        expect(
+          EmergencyNumberValidator.isCallableEmergencyTarget(target),
+          isFalse,
+          reason: 'unsafe syntax became callable: ${target.codeUnits}',
+        );
+      }
+    });
+
     test('callable target is exactly a user contact phone number', () {
       // No short-code allow-list any more: callability == user contact number.
       expect(

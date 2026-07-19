@@ -7,9 +7,7 @@ class EmergencyNumberValidator {
   static const int maxUserContactDigits = 15;
 
   static bool isUserContactPhoneNumber(String number) {
-    final digitCount = _digitsOnly(number).length;
-    return digitCount >= minUserContactDigits &&
-        digitCount <= maxUserContactDigits;
+    return normalizedCallableTargetOrNull(number) != null;
   }
 
   /// A target is callable ONLY when it is a real user contact phone number.
@@ -19,9 +17,7 @@ class EmergencyNumberValidator {
     return isUserContactPhoneNumber(number);
   }
 
-  static String _digitsOnly(String number) {
-    return AndroidIntentService.normalizePhoneNumber(
-      number,
-    ).replaceAll(RegExp(r'\D'), '');
+  static String? normalizedCallableTargetOrNull(String number) {
+    return AndroidIntentService.normalizedCallableOrNull(number);
   }
 }

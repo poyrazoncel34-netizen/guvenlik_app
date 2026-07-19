@@ -6,23 +6,22 @@ import 'package:guvenlik_app/presentation/providers/contacts_provider.dart';
 /// any persistence, so it needs no DI.
 void main() {
   group('ContactsProvider.addContact validation', () {
-    test('rejects an over-length (>15 digit) number and stores nothing',
-        () async {
-      final provider = ContactsProvider();
-      final added = await provider.addContact(
-        name: 'Ayşe',
-        phone: '1234567890123456789', // 19 digits
-      );
-      expect(added, isFalse);
-      expect(provider.emergencyContacts, isEmpty);
-    });
+    test(
+      'rejects an over-length (>15 digit) number and stores nothing',
+      () async {
+        final provider = ContactsProvider();
+        final added = await provider.addContact(
+          name: 'Ayşe',
+          phone: '1234567890123456789', // 19 digits
+        );
+        expect(added, isFalse);
+        expect(provider.emergencyContacts, isEmpty);
+      },
+    );
 
     test('rejects a too-short (<7 digit) number', () async {
       final provider = ContactsProvider();
-      expect(
-        await provider.addContact(name: 'X', phone: '12345'),
-        isFalse,
-      );
+      expect(await provider.addContact(name: 'X', phone: '12345'), isFalse);
       expect(provider.emergencyContacts, isEmpty);
     });
 
@@ -32,5 +31,21 @@ void main() {
       expect(await provider.addContact(name: 'X', phone: 'abcdef'), isFalse);
       expect(provider.emergencyContacts, isEmpty);
     });
+
+    test(
+      'rejects URI syntax instead of stripping it into a phone number',
+      () async {
+        final provider = ContactsProvider();
+        expect(
+          await provider.addContact(name: 'X', phone: 'tel:+905551234567'),
+          isFalse,
+        );
+        expect(
+          await provider.addContact(name: 'X', phone: '+905551234567;ext=123'),
+          isFalse,
+        );
+        expect(provider.emergencyContacts, isEmpty);
+      },
+    );
   });
 }

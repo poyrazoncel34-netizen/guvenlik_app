@@ -24,13 +24,14 @@ void main() {
       );
     });
 
-    test('normalizes phone number from picker before passing to addContact', () {
+    test('validates and normalizes picker number before addContact', () {
       final source = File('lib/screens/contacts_page.dart').readAsStringSync();
       expect(
-        source.contains('normalizePhoneNumber('),
+        source.contains('normalizedCallableTargetOrNull('),
         isTrue,
         reason:
-            '_pickContactFromDevice must normalize the phone number before calling addContact',
+            '_pickContactFromDevice must reject URI/dial syntax and normalize '
+            'the number before calling addContact',
       );
     });
   });
@@ -47,8 +48,10 @@ void main() {
       expect(source, contains('contacts_manual_phone_label'));
       expect(
         source,
-        contains('EmergencyNumberValidator.isCallableEmergencyTarget'),
-        reason: 'Manual entries must reject invalid short/random numbers.',
+        contains('EmergencyNumberValidator.normalizedCallableTargetOrNull'),
+        reason:
+            'Manual entries must reject invalid/hostile syntax and normalize '
+            'the accepted target atomically.',
       );
       expect(
         source,

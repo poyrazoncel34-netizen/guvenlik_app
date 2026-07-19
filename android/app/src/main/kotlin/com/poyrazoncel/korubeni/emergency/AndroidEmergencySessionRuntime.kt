@@ -74,8 +74,8 @@ class AndroidEmergencyCallRequester(
     private val context: Context,
 ) : EmergencyCallRequester {
     override fun requestCall(target: String): CallRequestOutcome {
-        val cleaned = EmergencyTargetValidator.normalize(target)
-        if (!EmergencyTargetValidator.isCallable(cleaned)) return CallRequestOutcome.FAILED
+        val cleaned = EmergencyTargetValidator.normalizedCallableOrNull(target)
+            ?: return CallRequestOutcome.FAILED
         if (
             ContextCompat.checkSelfPermission(context, Manifest.permission.CALL_PHONE) !=
             PackageManager.PERMISSION_GRANTED

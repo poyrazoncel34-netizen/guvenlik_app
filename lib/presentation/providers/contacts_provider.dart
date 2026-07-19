@@ -95,18 +95,16 @@ class ContactsProvider extends ChangeNotifier {
     // picker, and any future caller) so an invalid/over-length number can never
     // be persisted. The inline validator + manual submit-time check stay as the
     // first lines of defense; this is the single chokepoint.
-    if (!EmergencyNumberValidator.isCallableEmergencyTarget(
-      normalizePhoneNumber(phone),
-    )) {
-      return false;
-    }
+    final normalizedPhone =
+        EmergencyNumberValidator.normalizedCallableTargetOrNull(phone);
+    if (normalizedPhone == null) return false;
     if (containsPhone(phone)) return false;
     if (isAtLimit) return false;
 
     _emergencyContacts.add(
       ContactItem(
         name: name.trim(),
-        phone: normalizePhoneNumber(phone),
+        phone: normalizedPhone,
         icon: Icons.person_rounded,
         color: _getColorForIndex(_emergencyContacts.length),
       ),
@@ -200,6 +198,7 @@ class ContactsProvider extends ChangeNotifier {
     );
     return leftSuffix == rightSuffix;
   }
+
   bool _disposed = false;
 
   @override

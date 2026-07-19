@@ -40,7 +40,7 @@
       "reason": "Native emergency state, scheduling, dispatch, and platform-channel authority."
     },
     {
-      "pattern": "^test/(?:(?:android|core|screens|widgets)/|main_(?:locale|release_logging_contract|startup_init_order)_test\\.dart$)",
+      "pattern": "^test/(?:(?:android|core|presentation|screens|widgets)/|main_(?:locale|release_logging_contract|startup_init_order)_test\\.dart$)",
       "category": "safety-test",
       "commitGroup": "02-flutter-pin-session",
       "reason": "Executable Flutter/platform safety behavior evidence."

@@ -411,12 +411,15 @@ class EmergencySessionCoordinatorTest {
     }
 
     @Test
-    fun `arm rejects short long and unicode digit targets before scheduling`() {
+    fun `arm rejects short long unicode and URI targets before scheduling`() {
         val invalidTargets = listOf(
             "112",
             "+1234567890123456",
             "１２３４５６７８９０",
             "+",
+            "tel:+905001234567",
+            "+905001234567;ext=123",
+            "+905001234567\r\n999",
         )
 
         invalidTargets.forEach { target ->

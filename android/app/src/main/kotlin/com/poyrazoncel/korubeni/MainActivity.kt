@@ -319,10 +319,7 @@ class MainActivity : FlutterFragmentActivity() {
     private fun openDialer(number: String): Boolean {
         // Use the same side-effect-free target boundary as the safety kernel.
         val cleaned = com.poyrazoncel.korubeni.emergency.EmergencyTargetValidator
-            .normalize(number)
-        if (!com.poyrazoncel.korubeni.emergency.EmergencyTargetValidator.isCallable(cleaned)) {
-            return false
-        }
+            .normalizedCallableOrNull(number) ?: return false
 
         val intent = Intent(Intent.ACTION_DIAL).apply {
             data = Uri.parse("tel:$cleaned")

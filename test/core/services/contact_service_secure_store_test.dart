@@ -66,6 +66,22 @@ void main() {
     expect(prefs.getBool(AppConstants.prefContactsSecureMigratedV1), isTrue);
   });
 
+  test(
+    'unsafe URI-like targets never enter the canonical contact store',
+    () async {
+      await ContactService.saveContactRecords(const [
+        EmergencyContact(name: 'URI', phone: 'tel:+905551112233'),
+        EmergencyContact(name: 'Extension', phone: '+905554445566;ext=123'),
+        EmergencyContact(name: 'Safe', phone: ' (+90) 555-777.88.99 '),
+      ]);
+
+      final read = await ContactService.getContactRecords();
+      expect(read, hasLength(1));
+      expect(read.single.name, 'Safe');
+      expect(read.single.phone, '+905557778899');
+    },
+  );
+
   test('read with cold cache loads from secure storage and warms', () async {
     // Pre-populate the canonical key directly, then drop the cache.
     secure.store[SecureStorageKeys.emergencyContactsV1] = jsonEncode({

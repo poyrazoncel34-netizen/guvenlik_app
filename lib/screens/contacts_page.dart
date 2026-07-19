@@ -12,7 +12,6 @@ import 'package:easy_localization/easy_localization.dart';
 import '../core/app_colors.dart';
 import '../core/constants/app_constants.dart';
 import '../core/services/consent_gate_service.dart';
-import '../core/services/contact_service.dart';
 import '../core/services/subscription_gate.dart';
 import '../core/utils/emergency_number_validator.dart';
 import '../models/consent_record.dart';
@@ -30,9 +29,7 @@ const int _manualContactNameInputLimit = 60;
 /// reused by the inline field validator. The same rule is enforced again at
 /// submit time in [_addManualContact] (defense in depth).
 String? manualContactPhoneError(String raw) {
-  final phone = normalizePhoneNumber(raw);
-  if (phone.isEmpty ||
-      !EmergencyNumberValidator.isCallableEmergencyTarget(phone)) {
+  if (EmergencyNumberValidator.normalizedCallableTargetOrNull(raw) == null) {
     return 'contacts_manual_invalid_phone';
   }
   return null;
@@ -971,8 +968,10 @@ class _ContactsPageState extends State<ContactsPage> {
       return;
     }
 
-    final phone = normalizePhoneNumber(rawPhone);
-    if (!EmergencyNumberValidator.isCallableEmergencyTarget(phone)) {
+    final phone = EmergencyNumberValidator.normalizedCallableTargetOrNull(
+      rawPhone,
+    );
+    if (phone == null) {
       _showSnack(
         "contacts_manual_invalid_phone".tr(),
         backgroundColor: AppColors.warning,
@@ -1035,8 +1034,10 @@ class _ContactsPageState extends State<ContactsPage> {
       final name = picked.name.isNotEmpty
           ? picked.name
           : "contacts_unknown".tr();
-      final phone = normalizePhoneNumber(picked.number);
-      if (phone.isEmpty) {
+      final phone = EmergencyNumberValidator.normalizedCallableTargetOrNull(
+        picked.number,
+      );
+      if (phone == null) {
         _showSnack(
           "contacts_no_phone".tr(),
           backgroundColor: AppColors.warning,

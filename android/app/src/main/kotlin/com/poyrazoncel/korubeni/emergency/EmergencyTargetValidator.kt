@@ -5,6 +5,8 @@ package com.poyrazoncel.korubeni.emergency
  * target. This object performs no side effects and owns no dispatch state.
  */
 object EmergencyTargetValidator {
+    private val safeFormattingCharacters = setOf(' ', '-', '(', ')', '.')
+
     fun normalize(raw: String): String {
         // Kotlin Char.isDigit() accepts Unicode numerals. Telecom targets are
         // deliberately restricted to ASCII digits plus one leading '+'.
@@ -17,9 +19,41 @@ object EmergencyTargetValidator {
         }
     }
 
-    fun isCallable(raw: String): Boolean {
+    fun normalizedCallableOrNull(raw: String): String? {
+        if (!hasSafeConfiguredTargetSyntax(raw)) return null
         val normalized = normalize(raw)
         val digits = if (normalized.startsWith('+')) normalized.drop(1) else normalized
-        return digits.length in 7..15 && digits.all { it in '0'..'9' }
+        return normalized.takeIf {
+            digits.length in 7..15 && digits.all { digit -> digit in '0'..'9' }
+        }
+    }
+
+    fun isCallable(raw: String): Boolean = normalizedCallableOrNull(raw) != null
+
+    /**
+     * Accept only a configured phone number, never a URI, dial-string command,
+     * extension, pause/wait sequence, or control-character-bearing payload.
+     *
+     * Formatting characters are accepted for contact-book compatibility. A
+     * single '+' is accepted only before the first ASCII digit. Normalization
+     * remains a presentation/storage operation; it must not turn hostile input
+     * into an otherwise-callable number.
+     */
+    private fun hasSafeConfiguredTargetSyntax(raw: String): Boolean {
+        var sawDigit = false
+        var sawPlus = false
+
+        raw.forEach { character ->
+            when {
+                character in '0'..'9' -> sawDigit = true
+                character == '+' -> {
+                    if (sawDigit || sawPlus) return false
+                    sawPlus = true
+                }
+                character in safeFormattingCharacters -> Unit
+                else -> return false
+            }
+        }
+        return true
     }
 }

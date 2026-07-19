@@ -22,10 +22,11 @@ void main() {
         'lib/presentation/providers/contacts_provider.dart',
       ).readAsStringSync();
       expect(
-        source.contains('phone: normalizePhoneNumber(phone)'),
+        source.contains('phone: normalizedPhone'),
         isTrue,
         reason:
-            'ContactItem must be created with normalizePhoneNumber(phone), not phone.trim()',
+            'ContactItem must use the strict validated canonical target, not '
+            'phone.trim() or a permissive sanitizer',
       );
     });
   });

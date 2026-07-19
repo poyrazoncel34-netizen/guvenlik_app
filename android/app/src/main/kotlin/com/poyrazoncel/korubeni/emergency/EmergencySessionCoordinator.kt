@@ -38,10 +38,8 @@ class EmergencySessionCoordinator(
             return@synchronized ArmResult.Rejected("invalidDeadline")
         }
 
-        val normalizedTarget = EmergencyTargetValidator.normalize(request.target)
-        if (!EmergencyTargetValidator.isCallable(normalizedTarget)) {
-            return@synchronized ArmResult.Rejected("invalidTarget")
-        }
+        val normalizedTarget = EmergencyTargetValidator.normalizedCallableOrNull(request.target)
+            ?: return@synchronized ArmResult.Rejected("invalidTarget")
         val normalizedRequest = request.copy(target = normalizedTarget)
         val capabilities = capabilityProvider.snapshot(normalizedRequest)
         capabilities.rejectionReason()?.let {

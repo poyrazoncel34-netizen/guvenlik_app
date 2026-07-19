@@ -102,6 +102,29 @@ void main() {
     expect(arguments['entitlementDecision'], 'authorized');
   });
 
+  test('malicious target is rejected before the platform channel', () async {
+    var invocationCount = 0;
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, (call) async {
+          invocationCount += 1;
+          return null;
+        });
+
+    final result = await service.armEmergencySession(
+      kind: EmergencySessionKind.checkIn,
+      mainDeadline: DateTime.fromMillisecondsSinceEpoch(4102444800000),
+      finalDeadline: DateTime.fromMillisecondsSinceEpoch(4102444860000),
+      target: 'tel:+905551234567',
+      entitlementDecision: EntitlementDecision.authorized,
+      pinConfigured: true,
+      randomId: token().randomId,
+    );
+
+    expect(result, isA<ArmRejected>());
+    expect((result as ArmRejected).reasonCode, 'invalidTarget');
+    expect(invocationCount, 0);
+  });
+
   test('armed response without its token and deadlines is Unknown', () async {
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(

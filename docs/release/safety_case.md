@@ -43,7 +43,7 @@ gibi sonuçlar gösterebilir.
 | H10 | RevenueCat outage free/Pro diye yanlış sınıflanır | S3 | Trusted Entitlements; `unknown` yeni arm'ı bloklar; armed lease immutable | failed/notRequested/offline/outage/refund | G2/G8 | `LOCAL_PARTIAL`, dashboard unverified |
 | H11 | Kişi değişimi aktif session hedefini sessizce değiştirir | S4 | Arm-time normalized immutable target snapshot; değişiklik için confirmed stop+re-arm | contact mutation trace | G1/G2/G5 | `LOCAL_PASS` |
 | H12 | Duplicate concurrent native/Dart/exact/inexact dispatch | S3 | Tek `claimAndDispatch`, per-generation lock; crash residual documented | exact-vs-inexact/Dart/receiver + process-death points | G1 model/fault evidence | `LOCAL_PASS`, crash-device evidence open |
-| H13 | Yanlış resmî kısa kod aranır | S4 | Callable target validator; app kısa kod sentezlemez | malicious URI/3-digit/Unicode phone fuzz | G1/G4 security | `LOCAL_PASS`, fuzz depth partial |
+| H13 | Yanlış resmî kısa kod veya URI'den türetilmiş hedef aranır | S4 | Dart+native strict callable-target grammar; URI/extension/control syntax normalize edilmeden reddedilir; app kısa kod sentezlemez | 20.000 fixed-seed native hostile-input trace; Dart/manual/picker/repository/channel corpus; 3-digit/Unicode sınırları | G1/G4 security | `LOCAL_PASS`, runtime/device fuzz unverified |
 | H14 | App “call connected” diyerek yanlış güven üretir | S3 | Connection state daima `unknown`; call/fallback outcome ayrımı; listing parity | UI/store copy scan + device observation | G2/G8 | `LOCAL_PASS`, Play/device unverified |
 | H15 | Force Stop normal process kill gibi vaat edilir | S3 | Destek sözleşmesinden açıkça hariç; QA matrisi ayrı sonuç | `am kill` PASS, Settings Force Stop unsupported | G5/G7/G8 | `DOCUMENTED`, `UNVERIFIED` |
 

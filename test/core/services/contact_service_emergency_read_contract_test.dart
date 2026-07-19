@@ -60,11 +60,7 @@ void main() {
 
   test('typed native envelope keeps an immutable target argument', () {
     final src = read('lib/core/services/emergency_platform_service.dart');
-    expect(
-      src.contains(
-        "'target': AndroidIntentService.normalizePhoneNumber(target)",
-      ),
-      isTrue,
-    );
+    expect(src.contains('normalizedCallableOrNull'), isTrue);
+    expect(src.contains("'target': normalizedTarget"), isTrue);
   });
 }

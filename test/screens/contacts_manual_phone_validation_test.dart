@@ -15,6 +15,12 @@ void main() {
       expect(manualContactPhoneError('abcdef'), isNotNull);
     });
 
+    test('URI and extension syntax is rejected before normalization', () {
+      expect(manualContactPhoneError('tel:+905551234567'), isNotNull);
+      expect(manualContactPhoneError('+905551234567;ext=123'), isNotNull);
+      expect(manualContactPhoneError('+905551234567\r\n999'), isNotNull);
+    });
+
     test('too-short numbers (< 7 digits) are rejected', () {
       expect(manualContactPhoneError('12345'), isNotNull);
       expect(manualContactPhoneError('123456'), isNotNull);
