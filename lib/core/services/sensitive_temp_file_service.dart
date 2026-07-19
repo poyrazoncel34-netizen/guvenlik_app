@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 
 /// Owns short-lived files that can contain user PII. Cleanup is best effort;
@@ -13,6 +14,13 @@ class SensitiveTempFileService {
   static Future<void> purgeStaleExports() async {
     try {
       final directory = await getTemporaryDirectory();
+      await purgeStaleExportsInDirectory(directory);
+    } catch (_) {}
+  }
+
+  @visibleForTesting
+  static Future<void> purgeStaleExportsInDirectory(Directory directory) async {
+    try {
       if (!await directory.exists()) return;
       await for (final entity in directory.list(followLinks: false)) {
         if (entity is! File) continue;
