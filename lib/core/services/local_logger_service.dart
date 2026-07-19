@@ -13,9 +13,25 @@ import 'package:path_provider/path_provider.dart';
 enum LocalErrorCode {
   flutterFrameworkUnhandled('flutter_framework_unhandled'),
   platformDispatcherUnhandled('platform_dispatcher_unhandled'),
-  revenueCatOperationFailed('revenuecat_operation_failed');
+  revenueCatInitializeFailed('revenuecat_initialize_failed'),
+  revenueCatLegalStateReadFailed('revenuecat_legal_state_read_failed'),
+  revenueCatPriorProHintReadFailed('revenuecat_prior_pro_hint_read_failed'),
+  revenueCatPriorProHintWriteFailed('revenuecat_prior_pro_hint_write_failed'),
+  revenueCatCustomerInfoFailed('revenuecat_customer_info_failed'),
+  revenueCatOfferingsFailed('revenuecat_offerings_failed'),
+  revenueCatPurchaseFailed('revenuecat_purchase_failed'),
+  revenueCatRestoreFailed('revenuecat_restore_failed');
 
   const LocalErrorCode(this.wireCode);
+  final String wireCode;
+}
+
+enum LocalWarningCode {
+  revenueCatLegalAcceptanceRequired('revenuecat_legal_acceptance_required'),
+  revenueCatDisabledInSmoke('revenuecat_disabled_in_smoke'),
+  revenueCatApiKeyMissing('revenuecat_api_key_missing');
+
+  const LocalWarningCode(this.wireCode);
   final String wireCode;
 }
 
@@ -44,8 +60,8 @@ class LocalLoggerService {
 
   /// Persists only an allowlisted code. Exception text and stacks can contain
   /// PINs, customer identifiers, coordinates, URIs or contact data.
-  Future<void> errorCode(String tag, LocalErrorCode code) async {
-    final msg = _format('ERROR', tag, code.wireCode, null);
+  Future<void> errorCode(LocalErrorCode code) async {
+    final msg = _format('ERROR', 'runtime', code.wireCode, null);
     assert(() {
       debugPrint(msg);
       return true;
@@ -53,10 +69,14 @@ class LocalLoggerService {
     await _write(msg);
   }
 
-  /// Log a warning message.
-  Future<void> warning(String tag, String message) async {
-    final msg = _format('WARN', tag, message, null);
-    debugPrint(msg);
+  /// Persists only an allowlisted warning code. Free-form SDK errors and user
+  /// values are intentionally not accepted by the release diagnostics API.
+  Future<void> warningCode(LocalWarningCode code) async {
+    final msg = _format('WARN', 'runtime', code.wireCode, null);
+    assert(() {
+      debugPrint(msg);
+      return true;
+    }());
     await _write(msg);
   }
 

@@ -48,7 +48,7 @@ void main() {
         expect(service, contains('hasCurrentLegalAcceptance()'));
         expect(
           service,
-          contains('RevenueCat deferred until current legal acceptance'),
+          contains('LocalWarningCode.revenueCatLegalAcceptanceRequired'),
         );
       },
     );
@@ -79,7 +79,7 @@ void main() {
         expect(service, contains('AppEnvironment.isCiSmoke'));
         expect(
           service,
-          contains('RevenueCat disabled in non-release smoke build'),
+          contains('LocalWarningCode.revenueCatDisabledInSmoke'),
         );
         expect(service, contains('not valid for this Android environment'));
       },

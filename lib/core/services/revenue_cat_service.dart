@@ -68,9 +68,8 @@ class RevenueCatService {
     // have been accepted.
     if (!await hasCurrentLegalAcceptance()) {
       _isConfigured = false;
-      await LocalLoggerService.instance.warning(
-        'RevenueCatService.initialize',
-        'RevenueCat deferred until current legal acceptance',
+      await LocalLoggerService.instance.warningCode(
+        LocalWarningCode.revenueCatLegalAcceptanceRequired,
       );
       return false;
     }
@@ -79,17 +78,15 @@ class RevenueCatService {
       if (AppEnvironment.isCiSmoke &&
           _androidApiKey == AppEnvironment.ciSmokeRevenueCatKey) {
         _isConfigured = false;
-        await LocalLoggerService.instance.warning(
-          'RevenueCatService.initialize',
-          'RevenueCat disabled in non-release smoke build',
+        await LocalLoggerService.instance.warningCode(
+          LocalWarningCode.revenueCatDisabledInSmoke,
         );
         return false;
       }
       if (_androidApiKey.isEmpty) {
         _isConfigured = false;
-        await LocalLoggerService.instance.warning(
-          'RevenueCatService.initialize',
-          'RevenueCat disabled: Android API key is not configured',
+        await LocalLoggerService.instance.warningCode(
+          LocalWarningCode.revenueCatApiKeyMissing,
         );
         return false;
       }
@@ -114,9 +111,9 @@ class RevenueCatService {
       await Purchases.configure(config);
       _isConfigured = true;
       return true;
-    } catch (e, st) {
+    } catch (_) {
       _isConfigured = false;
-      _logSanitizedFailure('RevenueCatService.initialize', e, st);
+      _logSanitizedFailure(LocalErrorCode.revenueCatInitializeFailed);
       return false;
     }
   }
@@ -133,12 +130,8 @@ class RevenueCatService {
               LegalTexts.termsVersion &&
           prefs.getString(AppConstants.prefKvkkVersion) ==
               LegalTexts.kvkkVersion;
-    } catch (e, st) {
-      _logSanitizedFailure(
-        'RevenueCatService.hasCurrentLegalAcceptance',
-        e,
-        st,
-      );
+    } catch (_) {
+      _logSanitizedFailure(LocalErrorCode.revenueCatLegalStateReadFailed);
       return false;
     }
   }
@@ -147,12 +140,8 @@ class RevenueCatService {
     try {
       final prefs = await SharedPreferences.getInstance();
       return prefs.getBool(priorProInitializationHintKey) ?? false;
-    } catch (e, st) {
-      _logSanitizedFailure(
-        'RevenueCatService.hasPriorProInitializationHint',
-        e,
-        st,
-      );
+    } catch (_) {
+      _logSanitizedFailure(LocalErrorCode.revenueCatPriorProHintReadFailed);
       return false;
     }
   }
@@ -161,12 +150,8 @@ class RevenueCatService {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool(priorProInitializationHintKey, true);
-    } catch (e, st) {
-      _logSanitizedFailure(
-        'RevenueCatService.rememberVerifiedProInitializationHint',
-        e,
-        st,
-      );
+    } catch (_) {
+      _logSanitizedFailure(LocalErrorCode.revenueCatPriorProHintWriteFailed);
     }
   }
 
@@ -224,11 +209,11 @@ class RevenueCatService {
     if (!await ensureInitialized() || !_canUsePurchases) return null;
     try {
       return await Purchases.getCustomerInfo();
-    } on PlatformException catch (e) {
-      _logSanitizedFailure('RevenueCatService.getCustomerInfo', e);
+    } on PlatformException catch (_) {
+      _logSanitizedFailure(LocalErrorCode.revenueCatCustomerInfoFailed);
       return null;
-    } catch (e) {
-      _logSanitizedFailure('RevenueCatService.getCustomerInfo', e);
+    } catch (_) {
+      _logSanitizedFailure(LocalErrorCode.revenueCatCustomerInfoFailed);
       return null;
     }
   }
@@ -242,11 +227,11 @@ class RevenueCatService {
     if (!await ensureInitialized() || !_canUsePurchases) return null;
     try {
       return await Purchases.getOfferings();
-    } on PlatformException catch (e) {
-      _logSanitizedFailure('RevenueCatService.getOfferings', e);
+    } on PlatformException catch (_) {
+      _logSanitizedFailure(LocalErrorCode.revenueCatOfferingsFailed);
       return null;
-    } catch (e) {
-      _logSanitizedFailure('RevenueCatService.getOfferings', e);
+    } catch (_) {
+      _logSanitizedFailure(LocalErrorCode.revenueCatOfferingsFailed);
       return null;
     }
   }
@@ -272,10 +257,10 @@ class RevenueCatService {
       if (errorCode == PurchasesErrorCode.networkError) {
         throw RevenueCatPurchaseException.offline();
       }
-      _logSanitizedFailure('RevenueCatService.purchasePackage', e);
+      _logSanitizedFailure(LocalErrorCode.revenueCatPurchaseFailed);
       throw RevenueCatPurchaseException.generic();
-    } catch (e) {
-      _logSanitizedFailure('RevenueCatService.purchasePackage', e);
+    } catch (_) {
+      _logSanitizedFailure(LocalErrorCode.revenueCatPurchaseFailed);
       throw RevenueCatPurchaseException.generic();
     }
   }
@@ -297,10 +282,10 @@ class RevenueCatService {
       if (errorCode == PurchasesErrorCode.networkError) {
         throw RevenueCatPurchaseException.offline();
       }
-      _logSanitizedFailure('RevenueCatService.restorePurchases', e);
+      _logSanitizedFailure(LocalErrorCode.revenueCatRestoreFailed);
       throw RevenueCatPurchaseException.generic();
-    } catch (e) {
-      _logSanitizedFailure('RevenueCatService.restorePurchases', e);
+    } catch (_) {
+      _logSanitizedFailure(LocalErrorCode.revenueCatRestoreFailed);
       throw RevenueCatPurchaseException.generic();
     }
   }
@@ -309,17 +294,11 @@ class RevenueCatService {
       result == VerificationResult.verified ||
       result == VerificationResult.verifiedOnDevice;
 
-  void _logSanitizedFailure(
-    String source,
-    Object error, [
-    StackTrace? stackTrace,
-  ]) {
+  void _logSanitizedFailure(LocalErrorCode code) {
     // Never persist exception messages/details here: SDK exceptions can carry
-    // identifiers. Runtime type + local stack is enough for local diagnosis.
-    LocalLoggerService.instance.errorCode(
-      source,
-      LocalErrorCode.revenueCatOperationFailed,
-    );
+    // identifiers. The operation-specific allowlisted code is the entire
+    // persisted diagnostic payload.
+    LocalLoggerService.instance.errorCode(code);
   }
 
   bool get _canUsePurchases => !kIsWeb && Platform.isAndroid && _isConfigured;

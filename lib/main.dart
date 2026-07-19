@@ -141,7 +141,6 @@ void main() async {
   FlutterError.onError = (details) {
     CrashLogService.instance.record(LocalErrorCode.flutterFrameworkUnhandled);
     LocalLoggerService.instance.errorCode(
-      'FlutterError',
       LocalErrorCode.flutterFrameworkUnhandled,
     );
     assert(() {
@@ -159,7 +158,6 @@ void main() async {
   PlatformDispatcher.instance.onError = (error, stack) {
     CrashLogService.instance.record(LocalErrorCode.platformDispatcherUnhandled);
     LocalLoggerService.instance.errorCode(
-      'PlatformDispatcher',
       LocalErrorCode.platformDispatcherUnhandled,
     );
     assert(() {
