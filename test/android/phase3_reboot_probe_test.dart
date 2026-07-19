@@ -16,8 +16,9 @@ void main() {
     expect(script, contains('am wait-for-broadcast-idle'));
     expect(script, contains('phase3Probe'));
     expect(script, contains('OK (1 test)'));
-    expect(script, contains('cmd package unstop'));
-    expect(script, contains('--user current'));
+    expect(script, contains('make_boot_eligible_after_instrumentation'));
+    expect(script, isNot(contains('cmd package unstop')));
+    expect(script, contains('input keyevent KEYCODE_HOME'));
     expect(script, contains('cmd package wait-for-handler'));
     expect(script, contains('--timeout 10000'));
     expect(script, contains('PACKAGE_STATE_FLUSH_SECONDS'));

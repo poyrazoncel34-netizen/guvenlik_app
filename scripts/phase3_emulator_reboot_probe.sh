@@ -71,6 +71,30 @@ run_probe() {
   [[ "$output" == *"OK (1 test)"* ]] || fail "$mode instrumentation probe failed"
 }
 
+make_boot_eligible_after_instrumentation() {
+  # AndroidJUnitRunner force-stops its target. Re-launching the real Activity
+  # is the portable API 29-36, user-equivalent way to clear FLAG_STOPPED;
+  # API 34 and below do not expose API 36's shell-only unstop command.
+  "$ADB_BIN" -s "$DEVICE_SERIAL" shell am start -W \
+    -n "$APP_PACKAGE/.MainActivity" >/dev/null
+  "$ADB_BIN" -s "$DEVICE_SERIAL" shell input keyevent KEYCODE_HOME >/dev/null
+
+  local package_state
+  package_state="$("$ADB_BIN" -s "$DEVICE_SERIAL" shell dumpsys package "$APP_PACKAGE")"
+  [[ "$package_state" == *"stopped=false"* ]] || \
+    fail "target package remained stopped after instrumentation"
+  [[ "$package_state" == *"notLaunched=false"* ]] || \
+    fail "target package is not BOOT_COMPLETED eligible"
+
+  # wait-for-handler alone can overtake PackageManager's delayed restrictions
+  # write. Waiting past that delay avoids a test-only reboot race seen on the
+  # API 36 16 KB image; a real armed app is already running and not stopped.
+  sleep "$PACKAGE_STATE_FLUSH_SECONDS"
+  "$ADB_BIN" -s "$DEVICE_SERIAL" shell cmd package wait-for-handler \
+    --timeout 10000
+  "$ADB_BIN" -s "$DEVICE_SERIAL" shell sync
+}
+
 # A freshly installed package starts FLAG_STOPPED. Launching the real activity
 # once is an explicit user-equivalent start and makes BOOT_COMPLETED eligibility
 # testable; the probe then clears/arms only its own native prefs.
@@ -78,23 +102,7 @@ run_probe() {
   -n "$APP_PACKAGE/.MainActivity" >/dev/null
 run_probe arm armTypedSessionForRealReboot
 
-# AndroidJUnitRunner force-stops its target when instrumentation finishes. A
-# stopped package cannot receive BOOT_COMPLETED, so remove only that package
-# state without launching app code or changing the armed native preferences.
-"$ADB_BIN" -s "$DEVICE_SERIAL" shell cmd package unstop \
-  --user current "$APP_PACKAGE"
-PACKAGE_STATE="$("$ADB_BIN" -s "$DEVICE_SERIAL" shell dumpsys package "$APP_PACKAGE")"
-[[ "$PACKAGE_STATE" == *"stopped=false"* ]] || \
-  fail "target package remained stopped after instrumentation"
-[[ "$PACKAGE_STATE" == *"notLaunched=false"* ]] || \
-  fail "target package is not BOOT_COMPLETED eligible"
-# wait-for-handler alone can overtake PackageManager's delayed restrictions
-# write. Waiting past that delay avoids a test-only reboot race seen on the
-# API 36 16 KB image; a real armed app is already running and not stopped.
-sleep "$PACKAGE_STATE_FLUSH_SECONDS"
-"$ADB_BIN" -s "$DEVICE_SERIAL" shell cmd package wait-for-handler \
-  --timeout 10000
-"$ADB_BIN" -s "$DEVICE_SERIAL" shell sync
+make_boot_eligible_after_instrumentation
 
 "$ADB_BIN" -s "$DEVICE_SERIAL" reboot
 "$ADB_BIN" -s "$DEVICE_SERIAL" wait-for-device
