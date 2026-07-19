@@ -44,8 +44,8 @@ class MainActivity : FlutterFragmentActivity() {
                 EventChannel(messenger, VolumeButtonDetector.CHANNEL)
                     .setStreamHandler(volumeDetector)
                 android.util.Log.d("MainActivity", "Volume detector EventChannel configured")
-            } catch (e: Exception) {
-                android.util.Log.e("MainActivity", "Volume EventChannel failed: ${e.message}", e)
+            } catch (_: Exception) {
+                android.util.Log.e("MainActivity", "VOLUME_EVENT_CHANNEL_CONFIG_FAILED")
             }
 
             // Volume button MethodChannel — enable/disable kontrolü
@@ -61,14 +61,14 @@ class MainActivity : FlutterFragmentActivity() {
                                 }
                                 else -> result.notImplemented()
                             }
-                        } catch (e: Exception) {
-                            android.util.Log.e("MainActivity", "Volume control error: ${e.message}")
-                            result.error("ERROR", e.message, null)
+                        } catch (_: Exception) {
+                            android.util.Log.e("MainActivity", "VOLUME_CONTROL_ERROR")
+                            result.error("ERROR", "Volume control failed", null)
                         }
                     }
                 android.util.Log.d("MainActivity", "Volume detector MethodChannel configured")
-            } catch (e: Exception) {
-                android.util.Log.e("MainActivity", "Volume MethodChannel failed: ${e.message}", e)
+            } catch (_: Exception) {
+                android.util.Log.e("MainActivity", "VOLUME_METHOD_CHANNEL_CONFIG_FAILED")
             }
 
             try {
@@ -106,14 +106,14 @@ class MainActivity : FlutterFragmentActivity() {
                                 }
                                 else -> result.notImplemented()
                             }
-                        } catch (e: Exception) {
-                            android.util.Log.e("MainActivity", "Audio control error: ${e.message}")
-                            result.error("AUDIO_CONTROL_ERROR", e.message, null)
+                        } catch (_: Exception) {
+                            android.util.Log.e("MainActivity", "AUDIO_CONTROL_ERROR")
+                            result.error("AUDIO_CONTROL_ERROR", "Audio control failed", null)
                         }
                     }
                 android.util.Log.d("MainActivity", "Audio control MethodChannel configured")
-            } catch (e: Exception) {
-                android.util.Log.e("MainActivity", "Audio control channel failed: ${e.message}", e)
+            } catch (_: Exception) {
+                android.util.Log.e("MainActivity", "AUDIO_CONTROL_CHANNEL_CONFIG_FAILED")
             }
 
             try {
@@ -122,8 +122,8 @@ class MainActivity : FlutterFragmentActivity() {
                 EventChannel(messenger, EmergencyChannels.EVENTS)
                     .setStreamHandler(EmergencyEventStreamHandler())
                 android.util.Log.d("MainActivity", "Emergency platform configured")
-            } catch (e: Exception) {
-                android.util.Log.e("MainActivity", "Emergency platform failed: ${e.message}", e)
+            } catch (_: Exception) {
+                android.util.Log.e("MainActivity", "EMERGENCY_PLATFORM_CONFIG_FAILED")
             }
 
             try {
@@ -137,14 +137,14 @@ class MainActivity : FlutterFragmentActivity() {
                                 }
                                 else -> result.notImplemented()
                             }
-                        } catch (e: Exception) {
-                            android.util.Log.e("MainActivity", "Android intents error: ${e.message}", e)
-                            result.error("ANDROID_INTENTS_ERROR", e.message, null)
+                        } catch (_: Exception) {
+                            android.util.Log.e("MainActivity", "ANDROID_INTENTS_ERROR")
+                            result.error("ANDROID_INTENTS_ERROR", "Intent request failed", null)
                         }
                     }
                 android.util.Log.d("MainActivity", "Android intent channel configured")
-            } catch (e: Exception) {
-                android.util.Log.e("MainActivity", "Android intent channel failed: ${e.message}", e)
+            } catch (_: Exception) {
+                android.util.Log.e("MainActivity", "ANDROID_INTENT_CHANNEL_CONFIG_FAILED")
             }
             
             // Settings channel — notification and explicit OEM settings links.
@@ -193,15 +193,15 @@ class MainActivity : FlutterFragmentActivity() {
                                 }
                                 else -> result.notImplemented()
                             }
-                        } catch (e: ActivityNotFoundException) {
-                            result.error("NOT_FOUND", "Settings screen not available: ${e.message}", null)
-                        } catch (e: Exception) {
-                            result.error("ERROR", e.message, null)
+                        } catch (_: ActivityNotFoundException) {
+                            result.error("NOT_FOUND", "Settings screen not available", null)
+                        } catch (_: Exception) {
+                            result.error("ERROR", "Settings request failed", null)
                         }
                     }
                 android.util.Log.d("MainActivity", "Settings channel (extended) configured")
-            } catch (e: Exception) {
-                android.util.Log.e("MainActivity", "Settings channel (extended) failed: ${e.message}", e)
+            } catch (_: Exception) {
+                android.util.Log.e("MainActivity", "SETTINGS_CHANNEL_CONFIG_FAILED")
             }
 
             // Permissionless single-contact picker. ACTION_PICK on the phone
@@ -216,13 +216,13 @@ class MainActivity : FlutterFragmentActivity() {
                         }
                     }
                 android.util.Log.d("MainActivity", "Contacts picker channel configured")
-            } catch (e: Exception) {
-                android.util.Log.e("MainActivity", "Contacts picker channel failed: ${e.message}", e)
+            } catch (_: Exception) {
+                android.util.Log.e("MainActivity", "CONTACTS_PICKER_CHANNEL_CONFIG_FAILED")
             }
 
             android.util.Log.i("MainActivity", "All platform channels configured successfully")
-        } catch (e: Exception) {
-            android.util.Log.e("MainActivity", "Critical: configureFlutterEngine failed", e)
+        } catch (_: Exception) {
+            android.util.Log.e("MainActivity", "FLUTTER_ENGINE_CONFIG_FAILED")
             // Don't crash - let Flutter handle it
         }
     }
@@ -248,8 +248,8 @@ class MainActivity : FlutterFragmentActivity() {
         try {
             volumeDetector.setEnabled(false)
             android.util.Log.d("MainActivity", "Resources cleaned up")
-        } catch (e: Exception) {
-            android.util.Log.e("MainActivity", "Cleanup failed: ${e.message}")
+        } catch (_: Exception) {
+            android.util.Log.e("MainActivity", "LIFECYCLE_CLEANUP_FAILED")
         }
         super.onDestroy()
     }
@@ -291,9 +291,9 @@ class MainActivity : FlutterFragmentActivity() {
         }
         try {
             result.success(readPickedPhoneContact(data.data!!))
-        } catch (e: Exception) {
-            android.util.Log.e("MainActivity", "Contact pick query failed: ${e.message}", e)
-            result.error("PICK_FAILED", e.message, null)
+        } catch (_: Exception) {
+            android.util.Log.e("MainActivity", "CONTACT_PICK_QUERY_FAILED")
+            result.error("PICK_FAILED", "Contact query failed", null)
         }
     }
 
@@ -333,8 +333,8 @@ class MainActivity : FlutterFragmentActivity() {
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             startActivity(intent)
             true
-        } catch (e: ActivityNotFoundException) {
-            android.util.Log.e("MainActivity", "Intent launch failed: ${e.message}", e)
+        } catch (_: ActivityNotFoundException) {
+            android.util.Log.e("MainActivity", "INTENT_LAUNCH_NOT_FOUND")
             false
         }
     }
