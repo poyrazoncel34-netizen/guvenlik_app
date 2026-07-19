@@ -90,8 +90,12 @@ make_boot_eligible_after_instrumentation() {
   # write. Waiting past that delay avoids a test-only reboot race seen on the
   # API 36 16 KB image; a real armed app is already running and not stopped.
   sleep "$PACKAGE_STATE_FLUSH_SECONDS"
-  "$ADB_BIN" -s "$DEVICE_SERIAL" shell cmd package wait-for-handler \
-    --timeout 10000
+  local package_help
+  package_help="$("$ADB_BIN" -s "$DEVICE_SERIAL" shell cmd package help 2>&1)"
+  if [[ "$package_help" == *"wait-for-handler"* ]]; then
+    "$ADB_BIN" -s "$DEVICE_SERIAL" shell cmd package wait-for-handler \
+      --timeout 10000
+  fi
   "$ADB_BIN" -s "$DEVICE_SERIAL" shell sync
 }
 

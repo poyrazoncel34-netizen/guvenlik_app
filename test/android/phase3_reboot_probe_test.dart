@@ -22,6 +22,8 @@ void main() {
     expect(script, contains('input keyevent KEYCODE_HOME'));
     expect(script, contains('cmd package wait-for-handler'));
     expect(script, contains('--timeout 10000'));
+    expect(script, contains('package_help'));
+    expect(script, contains('*"wait-for-handler"*'));
     expect(script, contains('PACKAGE_STATE_FLUSH_SECONDS'));
     expect(script, contains('stopped=false'));
     expect(script, contains('notLaunched=false'));
