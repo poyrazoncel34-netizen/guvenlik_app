@@ -24,6 +24,7 @@ void main() {
     expect(script, contains('--timeout 10000'));
     expect(script, contains('package_help'));
     expect(script, contains('*"wait-for-handler"*'));
+    expect(script, contains('cmd package help 2>&1 || true'));
     expect(script, contains('PACKAGE_STATE_FLUSH_SECONDS'));
     expect(script, contains('stopped=false'));
     expect(script, contains('notLaunched=false'));

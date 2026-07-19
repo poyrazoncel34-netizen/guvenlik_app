@@ -91,7 +91,7 @@ make_boot_eligible_after_instrumentation() {
   # API 36 16 KB image; a real armed app is already running and not stopped.
   sleep "$PACKAGE_STATE_FLUSH_SECONDS"
   local package_help
-  package_help="$("$ADB_BIN" -s "$DEVICE_SERIAL" shell cmd package help 2>&1)"
+  package_help="$("$ADB_BIN" -s "$DEVICE_SERIAL" shell cmd package help 2>&1 || true)"
   if [[ "$package_help" == *"wait-for-handler"* ]]; then
     "$ADB_BIN" -s "$DEVICE_SERIAL" shell cmd package wait-for-handler \
       --timeout 10000
