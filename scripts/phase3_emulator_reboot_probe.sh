@@ -16,6 +16,9 @@ APP_APK="$PROJECT_ROOT/build/app/outputs/apk/play/debug/app-play-debug.apk"
 TEST_APK="$PROJECT_ROOT/build/app/outputs/apk/androidTest/play/debug/app-play-debug-androidTest.apk"
 EVIDENCE_OUTPUT="${PHASE3_EVIDENCE_OUTPUT:-$PROJECT_ROOT/build/release-evidence/phase3-emulator-reboot.json}"
 EVIDENCE_WRITER="$PROJECT_ROOT/scripts/write_phase3_emulator_evidence.py"
+# PackageManager batches package-restriction writes (including FLAG_STOPPED).
+# Give the delayed write time to run before a hard reboot, then flush it.
+PACKAGE_STATE_FLUSH_SECONDS=12
 
 fail() {
   printf 'FAIL: %s\n' "$1" >&2
@@ -80,8 +83,18 @@ run_probe arm armTypedSessionForRealReboot
 # state without launching app code or changing the armed native preferences.
 "$ADB_BIN" -s "$DEVICE_SERIAL" shell cmd package unstop \
   --user current "$APP_PACKAGE"
+PACKAGE_STATE="$("$ADB_BIN" -s "$DEVICE_SERIAL" shell dumpsys package "$APP_PACKAGE")"
+[[ "$PACKAGE_STATE" == *"stopped=false"* ]] || \
+  fail "target package remained stopped after instrumentation"
+[[ "$PACKAGE_STATE" == *"notLaunched=false"* ]] || \
+  fail "target package is not BOOT_COMPLETED eligible"
+# wait-for-handler alone can overtake PackageManager's delayed restrictions
+# write. Waiting past that delay avoids a test-only reboot race seen on the
+# API 36 16 KB image; a real armed app is already running and not stopped.
+sleep "$PACKAGE_STATE_FLUSH_SECONDS"
 "$ADB_BIN" -s "$DEVICE_SERIAL" shell cmd package wait-for-handler \
   --timeout 10000
+"$ADB_BIN" -s "$DEVICE_SERIAL" shell sync
 
 "$ADB_BIN" -s "$DEVICE_SERIAL" reboot
 "$ADB_BIN" -s "$DEVICE_SERIAL" wait-for-device

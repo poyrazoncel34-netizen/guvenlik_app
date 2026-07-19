@@ -20,6 +20,10 @@ void main() {
     expect(script, contains('--user current'));
     expect(script, contains('cmd package wait-for-handler'));
     expect(script, contains('--timeout 10000'));
+    expect(script, contains('PACKAGE_STATE_FLUSH_SECONDS'));
+    expect(script, contains('stopped=false'));
+    expect(script, contains('notLaunched=false'));
+    expect(script, contains('shell sync'));
     expect(script, contains('git status --porcelain'));
     expect(script, contains('PHASE3_EVIDENCE_OUTPUT'));
     expect(script, contains('write_phase3_emulator_evidence.py'));
