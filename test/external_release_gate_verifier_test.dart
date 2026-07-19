@@ -331,6 +331,24 @@ void main() {
     );
     expect(typedPassed.stdout, contains('MASTER_GO_NO_GO_PASS'));
 
+    final sbomFile = artifacts['sbom']!;
+    final sbomOriginal = sbomFile.readAsStringSync();
+    sbomFile.writeAsStringSync('$sbomOriginal\ntampered-after-provenance');
+    manifest.writeAsStringSync(jsonEncode(completeManifest(typed: true)));
+    final provenanceArtifactDriftResult = await Process.run('python3', <String>[
+      'scripts/verify_external_release_gates.py',
+      '--manifest',
+      manifest.path,
+      '--aab',
+      aab.path,
+    ]);
+    expect(provenanceArtifactDriftResult.exitCode, 1);
+    expect(
+      provenanceArtifactDriftResult.stderr,
+      contains('provenance artifact sbom hash mismatch'),
+    );
+    sbomFile.writeAsStringSync(sbomOriginal);
+
     manifest.writeAsStringSync(
       jsonEncode(completeManifest(typed: true, approvalsBound: false)),
     );
@@ -503,6 +521,57 @@ void main() {
       );
     }
 
+    final mutationFile = File('${directory.path}/mutationReport.json');
+    final mutationOriginal = mutationFile.readAsStringSync();
+    final mutationPayload =
+        jsonDecode(mutationOriginal) as Map<String, dynamic>;
+    ((mutationPayload['metrics'] as Map<String, dynamic>)['cases']
+            as Map<String, dynamic>)
+        .remove('disposeCancelsNative');
+    mutationFile.writeAsStringSync(jsonEncode(mutationPayload));
+    refreshEvidenceHash('G1', 'mutationReport', mutationFile);
+    manifest.writeAsStringSync(jsonEncode(completeManifest(typed: true)));
+    final mutationResult = await Process.run('python3', <String>[
+      'scripts/verify_external_release_gates.py',
+      '--manifest',
+      manifest.path,
+      '--aab',
+      aab.path,
+    ]);
+    expect(mutationResult.exitCode, 1);
+    expect(
+      mutationResult.stderr,
+      contains('mutationReport.cases key set mismatch'),
+    );
+    mutationFile.writeAsStringSync(mutationOriginal);
+    refreshEvidenceHash('G1', 'mutationReport', mutationFile);
+
+    final qualityFile = File('${directory.path}/qualityMatrix.json');
+    final qualityOriginal = qualityFile.readAsStringSync();
+    final qualityPayload = jsonDecode(qualityOriginal) as Map<String, dynamic>;
+    ((((qualityPayload['metrics'] as Map<String, dynamic>)['featureChecks']
+            as Map<String, dynamic>)))['panicHoldAccessibilityLifecycle'] =
+        'NOT_RUN';
+    qualityFile.writeAsStringSync(jsonEncode(qualityPayload));
+    refreshEvidenceHash('G5', 'qualityMatrix', qualityFile);
+    manifest.writeAsStringSync(jsonEncode(completeManifest(typed: true)));
+    final qualityResult = await Process.run('python3', <String>[
+      'scripts/verify_external_release_gates.py',
+      '--manifest',
+      manifest.path,
+      '--aab',
+      aab.path,
+    ]);
+    expect(qualityResult.exitCode, 1);
+    expect(
+      qualityResult.stderr,
+      contains(
+        'qualityMatrix.featureChecks.panicHoldAccessibilityLifecycle is not PASS',
+      ),
+    );
+    qualityFile.writeAsStringSync(qualityOriginal);
+    refreshEvidenceHash('G5', 'qualityMatrix', qualityFile);
+
     final licenseFile = File('${directory.path}/licensePolicyReport.json');
     final licenseOriginal = licenseFile.readAsStringSync();
     final licensePayload = jsonDecode(licenseOriginal) as Map<String, dynamic>;
@@ -550,6 +619,30 @@ void main() {
     platformFile.writeAsStringSync(platformOriginal);
     refreshEvidenceHash('G3', 'androidPlatformMatrix', platformFile);
 
+    final incompletePlatformPayload =
+        jsonDecode(platformOriginal) as Map<String, dynamic>;
+    ((incompletePlatformPayload['metrics']
+                as Map<String, dynamic>)['emulatorResults']
+            as Map<String, dynamic>)
+        .remove('36');
+    platformFile.writeAsStringSync(jsonEncode(incompletePlatformPayload));
+    refreshEvidenceHash('G3', 'androidPlatformMatrix', platformFile);
+    manifest.writeAsStringSync(jsonEncode(completeManifest(typed: true)));
+    final incompletePlatformResult = await Process.run('python3', <String>[
+      'scripts/verify_external_release_gates.py',
+      '--manifest',
+      manifest.path,
+      '--aab',
+      aab.path,
+    ]);
+    expect(incompletePlatformResult.exitCode, 1);
+    expect(
+      incompletePlatformResult.stderr,
+      contains('androidPlatformMatrix.emulatorResults key set mismatch'),
+    );
+    platformFile.writeAsStringSync(platformOriginal);
+    refreshEvidenceHash('G3', 'androidPlatformMatrix', platformFile);
+
     final physicalFile = File('${directory.path}/physicalDeviceMatrix.json');
     final physicalOriginal = physicalFile.readAsStringSync();
     final physicalPayload =
@@ -574,6 +667,33 @@ void main() {
       physicalResult.stderr,
       contains(
         'physicalDeviceMatrix.api29_boundary.fakeDeadlines is below 100',
+      ),
+    );
+    physicalFile.writeAsStringSync(physicalOriginal);
+    refreshEvidenceHash('G7', 'physicalDeviceMatrix', physicalFile);
+
+    final latePhysicalPayload =
+        jsonDecode(physicalOriginal) as Map<String, dynamic>;
+    ((((latePhysicalPayload['metrics'] as Map<String, dynamic>)['deviceResults']
+                    as List<dynamic>)
+                .first)
+            as Map<String, dynamic>)['panicBackupP99LateMs'] =
+        5001;
+    physicalFile.writeAsStringSync(jsonEncode(latePhysicalPayload));
+    refreshEvidenceHash('G7', 'physicalDeviceMatrix', physicalFile);
+    manifest.writeAsStringSync(jsonEncode(completeManifest(typed: true)));
+    final latePhysicalResult = await Process.run('python3', <String>[
+      'scripts/verify_external_release_gates.py',
+      '--manifest',
+      manifest.path,
+      '--aab',
+      aab.path,
+    ]);
+    expect(latePhysicalResult.exitCode, 1);
+    expect(
+      latePhysicalResult.stderr,
+      contains(
+        'physicalDeviceMatrix.api29_boundary.panicBackupP99LateMs exceeds 5000',
       ),
     );
     physicalFile.writeAsStringSync(physicalOriginal);
@@ -710,14 +830,32 @@ Map<String, Object?> _gateMetrics(String kind) => switch (kind) {
   'nativeKernelReport' => <String, Object?>{
     'nativeTests': 60,
     'modelOperations': 10000000,
+    'modelSeeds': 20,
+    'tracesPerSeed': 10000,
+    'operationsPerTrace': 50,
     'raceFamilies': 5,
     'interleavingsPerFamily': 1000,
+    'raceInterleavings': <String, int>{
+      'cancelVsReceiver': 1000,
+      'dartVsReceiver': 1000,
+      'exactVsInexact': 1000,
+      'resetVsExpiry': 1000,
+      'oldVsNewGeneration': 1000,
+    },
     'criticalSafetyViolations': 0,
   },
   'mutationReport' => <String, Object?>{
     'total': 6,
     'killed': 6,
     'baselinePassed': true,
+    'cases': <String, String>{
+      'cancelResultSwallowed': 'KILLED',
+      'staleGenerationAccepted': 'KILLED',
+      'pinLoadingTreatedAbsent': 'KILLED',
+      'logBeforeDispatch': 'KILLED',
+      'notificationOutcomeDiscarded': 'KILLED',
+      'disposeCancelsNative': 'KILLED',
+    },
   },
   'flutterSessionReport' => <String, Object?>{
     'dartTests': 688,
@@ -726,9 +864,36 @@ Map<String, Object?> _gateMetrics(String kind) => switch (kind) {
     'pinReadFailureProtected': true,
     'lifecycleCancelProtected': true,
     'falseCancelProtected': true,
+    'scenarios': <String, String>{
+      'cancelTimeoutReconciled': 'PASS',
+      'pinLoadingBlocked': 'PASS',
+      'pinReadFailureBlocked': 'PASS',
+      'disposeCannotCancel': 'PASS',
+      'fallbackBeforeBestEffortWork': 'PASS',
+      'falseArmAcknowledgementBlocked': 'PASS',
+      'staleRescheduleBlocked': 'PASS',
+      'contactSnapshotImmutable': 'PASS',
+      'armedSessionEntitlementIndependent': 'PASS',
+    },
   },
   'androidPlatformMatrix' => <String, Object?>{
     'apiLevels': <int>[29, 30, 31, 32, 33, 34, 35, 36],
+    'emulatorResults': <String, String>{
+      for (var api = 29; api <= 36; api++) '$api': 'PASS',
+    },
+    'scenarios': <String, String>{
+      'lockedBootCompleted': 'PASS',
+      'bootCompleted': 'PASS',
+      'packageReplaced': 'PASS',
+      'userUnlocked': 'PASS',
+      'doze': 'PASS',
+      'processDeath': 'PASS',
+      'permissionRevokeRegrant': 'PASS',
+      'telecomSubmittedUnconfirmed': 'PASS',
+      'notificationFailure': 'PASS',
+      'exactAlarmFailure': 'PASS',
+      'corruptSchemaFailClosed': 'PASS',
+    },
     'directBootReboot': true,
     'doze': true,
     'permissionRevokeRegrant': true,
@@ -758,6 +923,27 @@ Map<String, Object?> _gateMetrics(String kind) => switch (kind) {
     },
     'featureMatrixPassed': true,
     'migrationMatrixPassed': true,
+    'featureChecks': <String, String>{
+      'pinSetupUnlockReset': 'PASS',
+      'contactManagement': 'PASS',
+      'mapPermissionOfflineConsentWithdrawal': 'PASS',
+      'fakeCallImmediateScheduled': 'PASS',
+      'sirenAudioFocusBackground': 'PASS',
+      'panicHoldAccessibilityLifecycle': 'PASS',
+      'checkInStartConfirmStopExpiry': 'PASS',
+      'safeWalkStartStopExpiry': 'PASS',
+      'timelineExportDelete': 'PASS',
+      'freeProPaywall': 'PASS',
+    },
+    'migrationChecks': <String, String>{
+      'preferences': 'PASS',
+      'database': 'PASS',
+      'contact': 'PASS',
+      'pin': 'PASS',
+      'activeSession': 'PASS',
+      'corruptStateRecovery': 'PASS',
+      'lowDiskRecovery': 'PASS',
+    },
     'criticalCrashAnr': 0,
     'coldStartP95Ms': 4000,
     'armAckP95Ms': 500,
@@ -797,10 +983,47 @@ Map<String, Object?> _gateMetrics(String kind) => switch (kind) {
           'wrongTargets': 0,
           'pinBypasses': 0,
           'safetyCrashes': 0,
+          'testDimensions': <String, String>{
+            for (final dimension in <String>[
+              'foreground',
+              'background',
+              'locked',
+              'exactAlarmRevokeRegrant',
+              'notificationRevokeRegrant',
+              'callPermissionRevokeRegrant',
+              'defaultSim',
+              'askEveryTimeSim',
+              'noSim',
+              'airplaneMode',
+              'noService',
+              'ongoingCall',
+              'doze',
+              'processKill',
+              'reboot',
+            ])
+              dimension: 'PASS',
+          },
+          'panicBackupP99LateMs': 5000,
+          'panicBackupMaxLateMs': 10000,
+          'checkInFinalP99LateMs': 10000,
+          'checkInFinalMaxLateMs': 30000,
+          'safeWalkFinalP99LateMs': 10000,
+          'safeWalkFinalMaxLateMs': 30000,
+          'apiLevel': switch (profile) {
+            'api29_boundary' => 29,
+            'pixel_api36_16kb' => 36,
+            _ => 35,
+          },
+          'lowMemoryBoundary': profile == 'api29_boundary',
+          'kernel16k': profile == 'pixel_api36_16kb',
+          'compatModeOff': profile == 'pixel_api36_16kb',
+          'oemSkinVerified':
+              profile == 'samsung_oneui' || profile == 'xiaomi_hyperos',
         },
     ],
     'automaticRequestsObserved': 10,
     'manualDialObserved': 10,
+    'dualSimDeviceCovered': true,
     'criticalCrashAnr': 0,
   },
   'billingPlayMatrix' => <String, Object?>{

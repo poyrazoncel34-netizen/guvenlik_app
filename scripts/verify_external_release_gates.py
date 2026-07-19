@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import re
 import sys
 from pathlib import Path
@@ -70,6 +71,9 @@ def validate_provenance(
     provenance: object,
     candidate: dict[str, object],
     actual_aab_hash: str,
+    evidence_root: Path,
+    provenance_path: Path,
+    candidate_aab_path: Path,
     errors: list[str],
 ) -> None:
     require(isinstance(provenance, dict), "provenance payload must be an object", errors)
@@ -143,6 +147,8 @@ def validate_provenance(
             "provenance artifact set mismatch",
             errors,
         )
+        resolved_artifacts: dict[str, Path] = {}
+        seen_artifact_paths: set[Path] = set()
         for name, record in artifacts.items():
             require(isinstance(record, dict), f"provenance artifact {name} is malformed", errors)
             if isinstance(record, dict):
@@ -152,11 +158,82 @@ def validate_provenance(
                     f"provenance artifact {name} hash is invalid",
                     errors,
                 )
+                raw_path = record.get("path")
+                require(
+                    isinstance(raw_path, str) and bool(raw_path.strip()),
+                    f"provenance artifact {name} path is missing",
+                    errors,
+                )
+                if isinstance(raw_path, str) and raw_path.strip():
+                    declared_path = Path(raw_path)
+                    if declared_path.is_absolute():
+                        path_candidates = {declared_path.resolve()}
+                    else:
+                        path_candidates = {
+                            (Path.cwd() / declared_path).resolve(),
+                            (evidence_root / declared_path).resolve(),
+                            (provenance_path.parent / declared_path).resolve(),
+                        }
+                    existing_candidates = {
+                        path for path in path_candidates if path.is_file()
+                    }
+                    require(
+                        len(existing_candidates) <= 1,
+                        f"provenance artifact {name} path is ambiguous",
+                        errors,
+                    )
+                    artifact_path = (
+                        next(iter(existing_candidates))
+                        if existing_candidates
+                        else next(iter(path_candidates))
+                    )
+                    try:
+                        artifact_path.relative_to(evidence_root)
+                    except ValueError:
+                        errors.append(f"provenance artifact {name} escapes the evidence directory")
+                    else:
+                        require(
+                            artifact_path not in seen_artifact_paths,
+                            f"provenance artifact path reused: {raw_path}",
+                            errors,
+                        )
+                        seen_artifact_paths.add(artifact_path)
+                        resolved_artifacts[name] = artifact_path
+                        require(
+                            artifact_path.is_file(),
+                            f"provenance artifact {name} is missing",
+                            errors,
+                        )
+                        declared_size = record.get("sizeBytes")
+                        require(
+                            isinstance(declared_size, int)
+                            and not isinstance(declared_size, bool)
+                            and declared_size > 0,
+                            f"provenance artifact {name} sizeBytes is invalid",
+                            errors,
+                        )
+                        if artifact_path.is_file():
+                            require(
+                                artifact_path.stat().st_size == declared_size,
+                                f"provenance artifact {name} size mismatch",
+                                errors,
+                            )
+                            if SHA256_RE.fullmatch(artifact_hash):
+                                require(
+                                    sha256(artifact_path) == artifact_hash,
+                                    f"provenance artifact {name} hash mismatch",
+                                    errors,
+                                )
         aab_record = artifacts.get("aab")
         if isinstance(aab_record, dict):
             require(
                 str(aab_record.get("sha256", "")).lower() == actual_aab_hash,
                 "provenance aab artifact hash mismatch",
+                errors,
+            )
+            require(
+                resolved_artifacts.get("aab") == candidate_aab_path.resolve(),
+                "provenance aab artifact path does not match candidate AAB",
                 errors,
             )
 
@@ -237,7 +314,23 @@ def main() -> int:
                 except (OSError, json.JSONDecodeError) as exc:
                     errors.append(f"provenance cannot be parsed: {exc}")
                 else:
-                    validate_provenance(provenance_payload, candidate, actual_aab_hash, errors)
+                    evidence_root = Path(
+                        os.path.commonpath([manifest_dir, args.aab.resolve()])
+                    ).resolve()
+                    require(
+                        evidence_root != Path(evidence_root.anchor),
+                        "candidate evidence package has no bounded common root",
+                        errors,
+                    )
+                    validate_provenance(
+                        provenance_payload,
+                        candidate,
+                        actual_aab_hash,
+                        evidence_root,
+                        provenance_path,
+                        args.aab,
+                        errors,
+                    )
 
     gates = payload.get("gates")
     require(isinstance(gates, list), "gates must be an array", errors)

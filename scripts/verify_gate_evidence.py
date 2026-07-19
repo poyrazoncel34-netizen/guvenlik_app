@@ -102,6 +102,83 @@ ACCESSIBILITY_CHECKS = {
     "accessibilityScanner",
     "font200Percent",
 }
+MUTATION_CASES = {
+    "cancelResultSwallowed",
+    "staleGenerationAccepted",
+    "pinLoadingTreatedAbsent",
+    "logBeforeDispatch",
+    "notificationOutcomeDiscarded",
+    "disposeCancelsNative",
+}
+RACE_FAMILIES = {
+    "cancelVsReceiver",
+    "dartVsReceiver",
+    "exactVsInexact",
+    "resetVsExpiry",
+    "oldVsNewGeneration",
+}
+FLUTTER_SESSION_SCENARIOS = {
+    "cancelTimeoutReconciled",
+    "pinLoadingBlocked",
+    "pinReadFailureBlocked",
+    "disposeCannotCancel",
+    "fallbackBeforeBestEffortWork",
+    "falseArmAcknowledgementBlocked",
+    "staleRescheduleBlocked",
+    "contactSnapshotImmutable",
+    "armedSessionEntitlementIndependent",
+}
+ANDROID_PLATFORM_SCENARIOS = {
+    "lockedBootCompleted",
+    "bootCompleted",
+    "packageReplaced",
+    "userUnlocked",
+    "doze",
+    "processDeath",
+    "permissionRevokeRegrant",
+    "telecomSubmittedUnconfirmed",
+    "notificationFailure",
+    "exactAlarmFailure",
+    "corruptSchemaFailClosed",
+}
+QUALITY_FEATURE_CHECKS = {
+    "pinSetupUnlockReset",
+    "contactManagement",
+    "mapPermissionOfflineConsentWithdrawal",
+    "fakeCallImmediateScheduled",
+    "sirenAudioFocusBackground",
+    "panicHoldAccessibilityLifecycle",
+    "checkInStartConfirmStopExpiry",
+    "safeWalkStartStopExpiry",
+    "timelineExportDelete",
+    "freeProPaywall",
+}
+QUALITY_MIGRATION_CHECKS = {
+    "preferences",
+    "database",
+    "contact",
+    "pin",
+    "activeSession",
+    "corruptStateRecovery",
+    "lowDiskRecovery",
+}
+PHYSICAL_TEST_DIMENSIONS = {
+    "foreground",
+    "background",
+    "locked",
+    "exactAlarmRevokeRegrant",
+    "notificationRevokeRegrant",
+    "callPermissionRevokeRegrant",
+    "defaultSim",
+    "askEveryTimeSim",
+    "noSim",
+    "airplaneMode",
+    "noService",
+    "ongoingCall",
+    "doze",
+    "processKill",
+    "reboot",
+}
 SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 PLACEHOLDER_MARKERS = ("replace", "placeholder", "dry-run", "example")
 
@@ -172,6 +249,25 @@ def require_exact_pass_map(
         require(value.get(key) == "PASS", f"{label}.{key} is not PASS", errors)
 
 
+def require_exact_value_map(
+    value: object,
+    expected_keys: set[str],
+    expected_value: str,
+    label: str,
+    errors: list[str],
+) -> None:
+    require(isinstance(value, dict), f"{label} must be an object", errors)
+    if not isinstance(value, dict):
+        return
+    require(set(value) == expected_keys, f"{label} key set mismatch", errors)
+    for key in expected_keys:
+        require(
+            value.get(key) == expected_value,
+            f"{label}.{key} is not {expected_value}",
+            errors,
+        )
+
+
 def validate_metrics(
     kind: str,
     metrics: dict[str, object],
@@ -200,9 +296,32 @@ def validate_metrics(
 
     if kind == "nativeKernelReport":
         require(positive_int(metrics.get("nativeTests")), f"{kind}.nativeTests must be positive", errors)
-        require(positive_int(metrics.get("modelOperations"), 10_000_000), f"{kind}.modelOperations is below 10000000", errors)
-        require(positive_int(metrics.get("raceFamilies"), 5), f"{kind}.raceFamilies is below 5", errors)
+        seeds = metrics.get("modelSeeds")
+        traces = metrics.get("tracesPerSeed")
+        operations = metrics.get("operationsPerTrace")
+        require(positive_int(seeds, 20), f"{kind}.modelSeeds is below 20", errors)
+        require(positive_int(traces, 10_000), f"{kind}.tracesPerSeed is below 10000", errors)
+        require(positive_int(operations, 50), f"{kind}.operationsPerTrace is below 50", errors)
+        minimum_model_operations = 10_000_000
+        if positive_int(seeds) and positive_int(traces) and positive_int(operations):
+            minimum_model_operations = int(seeds) * int(traces) * int(operations)
+        require(
+            positive_int(metrics.get("modelOperations"), minimum_model_operations),
+            f"{kind}.modelOperations is below declared model volume",
+            errors,
+        )
+        require(metrics.get("raceFamilies") == len(RACE_FAMILIES), f"{kind}.raceFamilies must be 5", errors)
         require(positive_int(metrics.get("interleavingsPerFamily"), 1_000), f"{kind}.interleavingsPerFamily is below 1000", errors)
+        race_interleavings = metrics.get("raceInterleavings")
+        require(isinstance(race_interleavings, dict), f"{kind}.raceInterleavings must be an object", errors)
+        if isinstance(race_interleavings, dict):
+            require(set(race_interleavings) == RACE_FAMILIES, f"{kind}.raceInterleavings key set mismatch", errors)
+            for family in RACE_FAMILIES:
+                require(
+                    positive_int(race_interleavings.get(family), 1_000),
+                    f"{kind}.raceInterleavings.{family} is below 1000",
+                    errors,
+                )
         require_zero(metrics, "criticalSafetyViolations", kind, errors)
         return
 
@@ -212,6 +331,7 @@ def validate_metrics(
         require(positive_int(total, 6), f"{kind}.total is below 6", errors)
         require(killed == total, f"{kind}.killed must equal total", errors)
         require_true(metrics, "baselinePassed", kind, errors)
+        require_exact_value_map(metrics.get("cases"), MUTATION_CASES, "KILLED", f"{kind}.cases", errors)
         return
 
     if kind == "flutterSessionReport":
@@ -221,6 +341,7 @@ def validate_metrics(
         require(nonnegative_number(coverage) and float(coverage) >= 90.0, f"{kind}.minimumCriticalCoveragePercent is below 90", errors)
         for name in ("pinReadFailureProtected", "lifecycleCancelProtected", "falseCancelProtected"):
             require_true(metrics, name, kind, errors)
+        require_exact_pass_map(metrics.get("scenarios"), FLUTTER_SESSION_SCENARIOS, f"{kind}.scenarios", errors)
         return
 
     if kind == "androidPlatformMatrix":
@@ -231,6 +352,18 @@ def validate_metrics(
             and set(levels) == SUPPORTED_API_LEVELS
         )
         require(valid_levels, f"{kind}.apiLevels must cover API 29-36", errors)
+        require_exact_pass_map(
+            metrics.get("emulatorResults"),
+            {str(level) for level in SUPPORTED_API_LEVELS},
+            f"{kind}.emulatorResults",
+            errors,
+        )
+        require_exact_pass_map(
+            metrics.get("scenarios"),
+            ANDROID_PLATFORM_SCENARIOS,
+            f"{kind}.scenarios",
+            errors,
+        )
         for name in ("directBootReboot", "doze", "permissionRevokeRegrant", "telecomRequest", "playDeliveredCandidate"):
             require_true(metrics, name, kind, errors)
         require_zero(metrics, "criticalSafetyViolations", kind, errors)
@@ -253,6 +386,8 @@ def validate_metrics(
 
     if kind == "qualityMatrix":
         require_exact_pass_map(metrics.get("accessibility"), ACCESSIBILITY_CHECKS, f"{kind}.accessibility", errors)
+        require_exact_pass_map(metrics.get("featureChecks"), QUALITY_FEATURE_CHECKS, f"{kind}.featureChecks", errors)
+        require_exact_pass_map(metrics.get("migrationChecks"), QUALITY_MIGRATION_CHECKS, f"{kind}.migrationChecks", errors)
         for name in ("featureMatrixPassed", "migrationMatrixPassed"):
             require_true(metrics, name, kind, errors)
         require_zero(metrics, "criticalCrashAnr", kind, errors)
@@ -296,9 +431,67 @@ def validate_metrics(
                     require(positive_int(result.get(name), minimum), f"{kind}.{profile}.{name} is below {minimum}", errors)
                 for name in ("missedDeadlines", "confirmedCancelDispatches", "wrongTargets", "pinBypasses", "safetyCrashes"):
                     require(result.get(name) == 0, f"{kind}.{profile}.{name} must be zero", errors)
+                require_exact_pass_map(
+                    result.get("testDimensions"),
+                    PHYSICAL_TEST_DIMENSIONS,
+                    f"{kind}.{profile}.testDimensions",
+                    errors,
+                )
+                timing_limits = {
+                    "panicBackupP99LateMs": 5_000,
+                    "panicBackupMaxLateMs": 10_000,
+                    "checkInFinalP99LateMs": 10_000,
+                    "checkInFinalMaxLateMs": 30_000,
+                    "safeWalkFinalP99LateMs": 10_000,
+                    "safeWalkFinalMaxLateMs": 30_000,
+                }
+                for name, maximum in timing_limits.items():
+                    value = result.get(name)
+                    require(
+                        nonnegative_number(value) and float(value) <= maximum,
+                        f"{kind}.{profile}.{name} exceeds {maximum}",
+                        errors,
+                    )
+                timing_pairs = (
+                    ("panicBackupP99LateMs", "panicBackupMaxLateMs"),
+                    ("checkInFinalP99LateMs", "checkInFinalMaxLateMs"),
+                    ("safeWalkFinalP99LateMs", "safeWalkFinalMaxLateMs"),
+                )
+                for p99_name, max_name in timing_pairs:
+                    p99_value = result.get(p99_name)
+                    max_value = result.get(max_name)
+                    if nonnegative_number(p99_value) and nonnegative_number(max_value):
+                        require(
+                            float(p99_value) <= float(max_value),
+                            f"{kind}.{profile}.{p99_name} exceeds observed maximum",
+                            errors,
+                        )
+                api_level = result.get("apiLevel")
+                require(
+                    isinstance(api_level, int)
+                    and not isinstance(api_level, bool)
+                    and 29 <= api_level <= 36,
+                    f"{kind}.{profile}.apiLevel is outside API 29-36",
+                    errors,
+                )
+                if profile == "api29_boundary":
+                    require(api_level == 29, f"{kind}.{profile}.apiLevel must be 29", errors)
+                    require(result.get("lowMemoryBoundary") is True, f"{kind}.{profile} must be low-memory", errors)
+                elif profile == "pixel_api36_16kb":
+                    require(api_level == 36, f"{kind}.{profile}.apiLevel must be 36", errors)
+                    require(result.get("kernel16k") is True, f"{kind}.{profile} must use a 16 KB kernel", errors)
+                    require(result.get("compatModeOff") is True, f"{kind}.{profile} compat mode must be off", errors)
+                elif profile in {"samsung_oneui", "xiaomi_hyperos"}:
+                    require(
+                        isinstance(api_level, int) and api_level >= 34,
+                        f"{kind}.{profile}.apiLevel must be 34+",
+                        errors,
+                    )
+                    require(result.get("oemSkinVerified") is True, f"{kind}.{profile} OEM skin is not verified", errors)
             require(profiles == PHYSICAL_DEVICE_PROFILES, f"{kind} device profile set mismatch", errors)
         require(positive_int(metrics.get("automaticRequestsObserved"), 10), f"{kind}.automaticRequestsObserved is below 10", errors)
         require(positive_int(metrics.get("manualDialObserved"), 10), f"{kind}.manualDialObserved is below 10", errors)
+        require_true(metrics, "dualSimDeviceCovered", kind, errors)
         require_zero(metrics, "criticalCrashAnr", kind, errors)
         return
 
