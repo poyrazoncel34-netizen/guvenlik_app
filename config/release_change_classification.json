@@ -64,7 +64,7 @@
       "reason": "Android manifest, dependency, toolchain, and build configuration."
     },
     {
-      "pattern": "^(?:\\.github/|config/|release-evidence/|scripts/|docs/(?:qa/|release/|audit/|research/)|docs/(?:HANDOVER|release_risks)\\.md$|test/(?:critical_coverage_gate|external_release_gate_verifier|license_review_queue|release_|safety_mutation_runner_contract|sbom_|third_party_notices|store/|store_release_docs_test\\.dart$)|README\\.md$|SPEC\\.md$)",
+      "pattern": "^(?:\\.github/|config/|release-evidence/|scripts/|docs/(?:qa/|release/|audit/|research/)|docs/(?:HANDOVER|release_risks)\\.md$|test/(?:critical_coverage_gate|external_release_gate_verifier|license_review_assignment|license_review_queue|masvs_assessment_gate|release_|safety_mutation_runner_contract|sbom_|third_party_notices|store/|store_release_docs_test\\.dart$)|README\\.md$|SPEC\\.md$)",
       "category": "release",
       "commitGroup": "04-ci-evidence-security",
       "reason": "CI, evidence, security, audit, or release-governance source."

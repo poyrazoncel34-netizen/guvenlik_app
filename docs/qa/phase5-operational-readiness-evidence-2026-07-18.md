@@ -1,5 +1,11 @@
 # Release Hardening Evidence Ledger — 2026-07-18
 
+> **HISTORICAL SNAPSHOT / SUPERSEDED:** Bu dosyadaki 617/620/43/401 ve dirty
+> worktree sayıları yalnız 18 Temmuz 2026 yürütmesini anlatır; güncel release
+> kanıtı veya candidate PASS sonucu değildir. Güncel kapılar exact commit/AAB'ye
+> bağlı üretilen raporlardan ve `release-evidence/<versionCode>/gates.json`
+> manifestinden okunur.
+
 Status: **NO-GO / EXTERNAL_RELEASE_GATES_UNVERIFIED**
 
 This ledger replaces the earlier weighted `70%` assessment. That assessment
@@ -7,7 +13,7 @@ double-counted repository checks and understated safety/device uncertainty.
 KoruBeni now uses non-compensating gates: a green style, legal-copy, or unit
 test domain cannot offset an open safety or physical-device gate.
 
-## Current local evidence
+## Historical local evidence from this run
 
 | Evidence | Result | Boundary |
 | --- | --- | --- |

@@ -14,6 +14,8 @@ import re
 import sys
 from pathlib import Path
 
+from verify_masvs_assessment import validate_assessment
+
 
 EXPECTED_GATES = {f"G{i}" for i in range(11)}
 REQUIRED_PROVENANCE_ARTIFACTS = {
@@ -187,6 +189,12 @@ def main() -> int:
     tag = str(candidate.get("tag", ""))
     tag_object = str(candidate.get("tagObjectSha", ""))
     version_name = str(candidate.get("versionName", ""))
+    raw_version_code = candidate.get("versionCode")
+    version_code = (
+        raw_version_code
+        if isinstance(raw_version_code, int) and not isinstance(raw_version_code, bool)
+        else 0
+    )
     expected_aab_hash = str(candidate.get("aabSha256", "")).lower()
     upload_cert = str(candidate.get("uploadCertificateSha256", "")).lower()
     play_cert = str(candidate.get("playAppSigningCertificateSha256", "")).lower()
@@ -197,7 +205,7 @@ def main() -> int:
     require(bool(COMMIT_RE.fullmatch(tag_object)), "tagObjectSha must be 40 lowercase hex", errors)
     require(version_name == tag.removeprefix("v"), "versionName must match tag", errors)
     require(
-        isinstance(candidate.get("versionCode"), int) and candidate["versionCode"] > 0,
+        version_code > 0,
         "versionCode must be a positive integer",
         errors,
     )
@@ -234,6 +242,7 @@ def main() -> int:
     gates = payload.get("gates")
     require(isinstance(gates, list), "gates must be an array", errors)
     seen: set[str] = set()
+    g4_masvs_paths: list[Path] = []
     if isinstance(gates, list):
         for gate in gates:
             if not isinstance(gate, dict):
@@ -271,8 +280,24 @@ def main() -> int:
                 require(evidence_path.is_file(), f"{gate_id}:{rel_path} is missing", errors)
                 if evidence_path.is_file() and SHA256_RE.fullmatch(item_hash):
                     require(sha256(evidence_path) == item_hash, f"{gate_id}:{rel_path} hash mismatch", errors)
+                if gate_id == "G4" and item.get("kind") == "masvsAssessment":
+                    g4_masvs_paths.append(evidence_path)
 
     require(seen == EXPECTED_GATES, f"gate set mismatch: found {sorted(seen)}", errors)
+    require(
+        len(g4_masvs_paths) == 1,
+        "G4 requires one candidate-bound MASVS assessment",
+        errors,
+    )
+    if len(g4_masvs_paths) == 1 and g4_masvs_paths[0].is_file():
+        masvs_errors = validate_assessment(
+            g4_masvs_paths[0],
+            args.aab,
+            "com.poyrazoncel.korubeni",
+            version_name,
+            version_code,
+        )
+        errors.extend(f"G4 MASVS: {error}" for error in masvs_errors)
 
     findings = payload.get("openFindings")
     require(isinstance(findings, list), "openFindings must be an array", errors)

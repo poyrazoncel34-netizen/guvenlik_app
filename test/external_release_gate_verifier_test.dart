@@ -101,6 +101,16 @@ void main() {
       ..writeAsStringSync('candidate-bound witness');
     final aabHash = _sha256(aab);
     final witnessHash = _sha256(witness);
+    final masvsAssessment = File('${directory.path}/masvs-assessment.json')
+      ..writeAsStringSync(
+        jsonEncode(
+          _masvsAssessment(
+            aabHash: aabHash,
+            witnessHash: witnessHash,
+          ),
+        ),
+      );
+    final masvsHash = _sha256(masvsAssessment);
     final manifest = File('${directory.path}/gates.json');
     Map<String, dynamic> completeManifest() => <String, dynamic>{
       'schemaVersion': 2,
@@ -126,13 +136,22 @@ void main() {
             'id': 'G$index',
             'status': 'PASS',
             'owners': <String>['owner'],
-            'evidence': <Map<String, dynamic>>[
-              <String, dynamic>{
-                'path': 'witness.txt',
-                'sha256': witnessHash,
-                'candidateBound': true,
-              },
-            ],
+            'evidence': index == 4
+                ? <Map<String, dynamic>>[
+                    <String, dynamic>{
+                      'kind': 'masvsAssessment',
+                      'path': 'masvs-assessment.json',
+                      'sha256': masvsHash,
+                      'candidateBound': true,
+                    },
+                  ]
+                : <Map<String, dynamic>>[
+                    <String, dynamic>{
+                      'path': 'witness.txt',
+                      'sha256': witnessHash,
+                      'candidateBound': true,
+                    },
+                  ],
           },
       ],
       'openFindings': <Object>[],
@@ -174,6 +193,49 @@ void main() {
     expect(passed.exitCode, 0, reason: '${passed.stdout}\n${passed.stderr}');
     expect(passed.stdout, contains('MASTER_GO_NO_GO_PASS'));
 
+    final missingMasvs = completeManifest();
+    final g4 = (missingMasvs['gates'] as List<dynamic>)
+        .cast<Map<String, dynamic>>()
+        .singleWhere((gate) => gate['id'] == 'G4');
+    g4['evidence'] = <Map<String, dynamic>>[
+      <String, dynamic>{
+        'path': 'witness.txt',
+        'sha256': witnessHash,
+        'candidateBound': true,
+      },
+    ];
+    manifest.writeAsStringSync(jsonEncode(missingMasvs));
+    final missingMasvsResult = await Process.run('python3', <String>[
+      'scripts/verify_external_release_gates.py',
+      '--manifest',
+      manifest.path,
+      '--aab',
+      aab.path,
+    ]);
+    expect(missingMasvsResult.exitCode, 1);
+    expect(
+      missingMasvsResult.stderr,
+      contains('G4 requires one candidate-bound MASVS assessment'),
+    );
+
+    final malformedVersion = completeManifest();
+    (malformedVersion['candidate'] as Map<String, dynamic>)['versionCode'] =
+        null;
+    manifest.writeAsStringSync(jsonEncode(malformedVersion));
+    final malformedVersionResult = await Process.run('python3', <String>[
+      'scripts/verify_external_release_gates.py',
+      '--manifest',
+      manifest.path,
+      '--aab',
+      aab.path,
+    ]);
+    expect(malformedVersionResult.exitCode, 1);
+    expect(
+      malformedVersionResult.stderr,
+      contains('versionCode must be a positive integer'),
+    );
+    expect(malformedVersionResult.stderr, isNot(contains('Traceback')));
+
     final drifted = completeManifest();
     (drifted['candidate'] as Map<String, dynamic>)['gitTree'] = 'f' * 40;
     manifest.writeAsStringSync(jsonEncode(drifted));
@@ -187,6 +249,71 @@ void main() {
     expect(failed.exitCode, 1);
     expect(failed.stderr, contains('provenance gitTree mismatch'));
   });
+}
+
+Map<String, Object?> _masvsAssessment({
+  required String aabHash,
+  required String witnessHash,
+}) {
+  const controls = <String>[
+    'MASVS-STORAGE-1',
+    'MASVS-STORAGE-2',
+    'MASVS-CRYPTO-1',
+    'MASVS-CRYPTO-2',
+    'MASVS-AUTH-1',
+    'MASVS-AUTH-2',
+    'MASVS-AUTH-3',
+    'MASVS-NETWORK-1',
+    'MASVS-NETWORK-2',
+    'MASVS-PLATFORM-1',
+    'MASVS-PLATFORM-2',
+    'MASVS-PLATFORM-3',
+    'MASVS-CODE-1',
+    'MASVS-CODE-2',
+    'MASVS-CODE-3',
+    'MASVS-CODE-4',
+    'MASVS-RESILIENCE-1',
+    'MASVS-RESILIENCE-2',
+    'MASVS-RESILIENCE-3',
+    'MASVS-RESILIENCE-4',
+    'MASVS-PRIVACY-1',
+    'MASVS-PRIVACY-2',
+    'MASVS-PRIVACY-3',
+    'MASVS-PRIVACY-4',
+  ];
+  return <String, Object?>{
+    'schemaVersion': 1,
+    'framework': <String, Object?>{
+      'name': 'OWASP MASVS',
+      'sourceUrl': 'https://mas.owasp.org/MASVS/',
+      'referenceRevision': '2026-07-19',
+    },
+    'candidate': <String, Object?>{
+      'packageName': 'com.poyrazoncel.korubeni',
+      'versionName': '1.0.3',
+      'versionCode': 10003,
+      'aabSha256': aabHash,
+    },
+    'review': <String, Object?>{
+      'reviewedBy': 'independent-security-reviewer',
+      'reviewedAt': '2026-07-19T12:00:00Z',
+    },
+    'controls': <Object?>[
+      for (final id in controls)
+        <String, Object?>{
+          'id': id,
+          'status': 'PASS',
+          'rationale': 'Candidate-bound verification completed.',
+          'evidence': <Object?>[
+            <String, Object?>{
+              'path': 'witness.txt',
+              'sha256': witnessHash,
+              'candidateBound': true,
+            },
+          ],
+        },
+    ],
+  };
 }
 
 String _sha256(File file) {

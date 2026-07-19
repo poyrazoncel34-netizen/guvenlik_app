@@ -97,6 +97,25 @@ Queue'daki `registryReference` yalnız exact koordinata giden başlangıç
 noktasıdır; `primarySourceUrl`, SPDX kararı, reviewed bytes hash'i ve reviewer
 alanları insan tarafından tamamlanmadıkça kayıt `HUMAN_REVIEW_REQUIRED` kalır.
 
+Kuyruğu dört gerçek ve hesap verebilir reviewer arasında dengeli dağıtmak için
+stable kurum/ekip kimliklerini verin:
+
+```sh
+python3 scripts/prepare_license_review_assignments.py \
+  --queue build/release-evidence/license-review-queue.json \
+  --reviewer reviewer-a@organization \
+  --reviewer reviewer-b@organization \
+  --reviewer reviewer-c@organization \
+  --reviewer reviewer-d@organization \
+  --output build/release-evidence/license-review-assignments.json
+```
+
+Assignment çıktısı yalnız iş dağılımıdır; lisans incelemesi veya hukuk onayı
+değildir. Araç SPDX, primary-source URL, reviewed bytes hash'i ya da tamamlanmış
+durum üretmez. Placeholder reviewer kimliğiyle oluşturulan dry-run çıktısı
+release evidence'a alınmaz. Mevcut insan inceleme sayısı bu alanlar gerçek
+kişilerce tamamlanana kadar `0/400` kalır.
+
 All 400 records are complete only after generating the shipped notice:
 
 ```sh
