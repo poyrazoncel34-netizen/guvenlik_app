@@ -13,6 +13,7 @@ from pathlib import Path
 
 REQUIRED_ARTIFACTS = {
     "aab",
+    "androidReleaseSurface",
     "sbom",
     "mergedManifest",
     "r8Mapping",

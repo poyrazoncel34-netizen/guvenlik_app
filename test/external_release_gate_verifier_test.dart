@@ -41,6 +41,7 @@ void main() {
     final artifacts = <String, File>{
       'aab': aab,
       for (final name in <String>[
+        'androidReleaseSurface',
         'sbom',
         'mergedManifest',
         'r8Mapping',

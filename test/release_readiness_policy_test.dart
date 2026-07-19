@@ -78,6 +78,9 @@ void main() {
         final buildScript = File(
           'scripts/build_production.sh',
         ).readAsStringSync();
+        final androidSurfaceAudit = File(
+          'scripts/audit_android_release_surface.py',
+        ).readAsStringSync();
 
         expect(workflow, contains('EXPECTED_UPLOAD_CERT_SHA256'));
         expect(workflow, contains('Verify upload certificate identity'));
@@ -87,8 +90,12 @@ void main() {
         expect(workflow, contains('app:lintPlayRelease'));
         expect(workflow, contains('Unexpected ABI'));
         expect(workflow, contains('arm64-v8a only'));
-        expect(workflow, contains('Forbidden Play manifest surface'));
-        expect(buildScript, contains('ProxyAmazonBillingActivity'));
+        expect(workflow, contains('audit_android_release_surface.py'));
+        expect(workflow, contains('android-release-surface.json'));
+        expect(buildScript, contains('audit_android_release_surface.py'));
+        expect(androidSurfaceAudit, contains('ProxyAmazonBillingActivity'));
+        expect(androidSurfaceAudit, contains('permission allowlist mismatch'));
+        expect(androidSurfaceAudit, contains('unexpected exported component'));
         expect(workflow, contains('--target-platform android-arm64'));
         expect(
           workflow,

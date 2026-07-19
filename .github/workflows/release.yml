@@ -308,6 +308,7 @@ jobs:
           set -euo pipefail
           AAB="build/app/outputs/bundle/playRelease/app-play-release.aab"
           MERGED_MANIFEST="build/app/intermediates/merged_manifest/playRelease/processPlayReleaseMainManifest/AndroidManifest.xml"
+          ANDROID_SURFACE_REPORT="build/release-evidence/android-release-surface.json"
           MAPPING="build/app/outputs/mapping/playRelease/mapping.txt"
           LINT_REPORT="build/app/reports/lint-results-playRelease.xml"
           SBOM="build/release-evidence/sbom.cdx.json"
@@ -334,11 +335,12 @@ jobs:
             echo "::error title=Unexpected ABI::Play AAB must contain arm64-v8a only."
             exit 1
           fi
-          grep -q 'package="com.poyrazoncel.korubeni"' "$MERGED_MANIFEST"
-          if grep -Eq 'android\.permission\.(USE_FULL_SCREEN_INTENT|FOREGROUND_SERVICE|READ_PHONE_STATE|READ_CONTACTS|RECORD_AUDIO|SEND_SMS|ACCESS_BACKGROUND_LOCATION)|android:foregroundServiceType|com\.amazon|ProxyAmazonBillingActivity' "$MERGED_MANIFEST"; then
-            echo "::error title=Forbidden Play manifest surface::A forbidden permission, FGS, or Amazon billing component survived manifest merging."
-            exit 1
-          fi
+          python3 scripts/audit_android_release_surface.py \
+            --manifest "$MERGED_MANIFEST" \
+            --network-security-config android/app/src/main/res/xml/network_security_config.xml \
+            --data-extraction-rules android/app/src/main/res/xml/data_extraction_rules.xml \
+            --expected-package com.poyrazoncel.korubeni \
+            --output "$ANDROID_SURFACE_REPORT"
           ./scripts/verify_16kb_alignment.sh "$AAB"
 
           VERIFY_LOG="${RUNNER_TEMP}/korubeni-jarsigner-verify.log"
@@ -390,6 +392,7 @@ jobs:
             --repository "$GITHUB_REPOSITORY" \
             --workflow-run-url "https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" \
             --artifact "aab=$AAB" \
+            --artifact "androidReleaseSurface=build/release-evidence/android-release-surface.json" \
             --artifact "sbom=build/release-evidence/sbom.cdx.json" \
             --artifact "mergedManifest=build/release-evidence/merged-AndroidManifest.xml" \
             --artifact "r8Mapping=build/release-evidence/r8-mapping.txt" \
@@ -406,6 +409,7 @@ jobs:
             --artifact "thirdPartyNotices=build/release-evidence/THIRD_PARTY_NOTICES.txt"
           sha256sum \
             "$AAB" \
+            build/release-evidence/android-release-surface.json \
             build/release-evidence/sbom.cdx.json \
             build/release-evidence/critical-coverage.json \
             build/release-evidence/safety-mutations.json \

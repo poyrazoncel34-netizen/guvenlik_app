@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 const _artifactNames = <String>[
   'aab',
+  'androidReleaseSurface',
   'sbom',
   'mergedManifest',
   'r8Mapping',

@@ -46,6 +46,7 @@ FLAVOR="${FLAVOR:-smoke}"
 CAP_FLAVOR="$(tr '[:lower:]' '[:upper:]' <<< "${FLAVOR:0:1}")${FLAVOR:1}"
 AAB="build/app/outputs/bundle/${FLAVOR}Release/app-${FLAVOR}-release.aab"
 MERGED_MANIFEST="build/app/intermediates/merged_manifest/${FLAVOR}Release/process${CAP_FLAVOR}ReleaseMainManifest/AndroidManifest.xml"
+ANDROID_SURFACE_REPORT="build/release-evidence/android-release-surface.json"
 RC_KEY="NON_RELEASE_SMOKE_REVENUECAT_KEY"
 
 if [ "$FLAVOR" != "smoke" ]; then
@@ -103,9 +104,13 @@ for required_abi in arm64-v8a x86_64; do
 done
 grep -q 'package="com.poyrazoncel.korubeni.smoke"' "$MERGED_MANIFEST" \
   || fail "smoke manifest paket kimligi yanlis"
-if grep -Eq 'android\.permission\.(USE_FULL_SCREEN_INTENT|FOREGROUND_SERVICE|READ_PHONE_STATE|READ_CONTACTS|RECORD_AUDIO|SEND_SMS|ACCESS_BACKGROUND_LOCATION)|android:foregroundServiceType|com\.amazon|ProxyAmazonBillingActivity' "$MERGED_MANIFEST"; then
-  fail "yasakli izin, FGS veya Amazon billing bileseni birlesik manifestte kaldi"
-fi
+python3 scripts/audit_android_release_surface.py \
+  --manifest "$MERGED_MANIFEST" \
+  --network-security-config android/app/src/main/res/xml/network_security_config.xml \
+  --data-extraction-rules android/app/src/main/res/xml/data_extraction_rules.xml \
+  --expected-package com.poyrazoncel.korubeni.smoke \
+  --output "$ANDROID_SURFACE_REPORT" \
+  || fail "birlesik Android release yuzeyi guvenlik denetimini gecemedi"
 SIGNATURE_LOG="$(mktemp /tmp/korubeni_smoke_signature.XXXXXX.log)"
 if ! LC_ALL=C jarsigner -verify "$AAB" >"$SIGNATURE_LOG" 2>&1; then
   sed -n '1,80p' "$SIGNATURE_LOG"
@@ -118,7 +123,7 @@ if ! grep -q "jar verified\." "$SIGNATURE_LOG"; then
   fail "smoke AAB imzasiz veya dogrulanamadi"
 fi
 rm -f "$SIGNATURE_LOG"
-pass "AAB derlendi ve JAR imzasi dogrulandi: $AAB"
+pass "AAB, imza ve birlesik Android release yuzeyi dogrulandi: $AAB"
 
 run "Android lint + Kotlin unit + instrumentation derleme (build'den SONRA)"
 # Keep release lint tied to the deliberately non-uploadable smoke artifact,

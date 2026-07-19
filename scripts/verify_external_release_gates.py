@@ -18,6 +18,7 @@ from pathlib import Path
 EXPECTED_GATES = {f"G{i}" for i in range(11)}
 REQUIRED_PROVENANCE_ARTIFACTS = {
     "aab",
+    "androidReleaseSurface",
     "sbom",
     "mergedManifest",
     "r8Mapping",

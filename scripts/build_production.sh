@@ -60,6 +60,7 @@ echo "🤖 Android AAB build başlıyor..."
 echo "   Sensitive dart defines are set; values are redacted."
 AAB_PATH="build/app/outputs/bundle/playRelease/app-play-release.aab"
 MERGED_MANIFEST="build/app/intermediates/merged_manifest/playRelease/processPlayReleaseMainManifest/AndroidManifest.xml"
+ANDROID_SURFACE_REPORT="build/release-evidence/android-release-surface.json"
 SYMBOLS_DIR="build/app/debug-symbols"
 
 # Obfuscation + split debug info: Dart code is obfuscated for release,
@@ -88,10 +89,15 @@ grep -q 'package="com.poyrazoncel.korubeni"' "$MERGED_MANIFEST" || {
     echo "❌ Birleşik manifest beklenen Play paket kimliğini taşımıyor."
     exit 1
 }
-if grep -Eq 'android\.permission\.(USE_FULL_SCREEN_INTENT|FOREGROUND_SERVICE|READ_PHONE_STATE|READ_CONTACTS|RECORD_AUDIO|SEND_SMS|ACCESS_BACKGROUND_LOCATION)|android:foregroundServiceType|com\.amazon|ProxyAmazonBillingActivity' "$MERGED_MANIFEST"; then
-    echo "❌ Yasaklı izin, FGS veya Amazon billing bileşeni birleşik manifestte kaldı."
-    exit 1
-fi
+python3 scripts/audit_android_release_surface.py \
+    --manifest "$MERGED_MANIFEST" \
+    --network-security-config android/app/src/main/res/xml/network_security_config.xml \
+    --data-extraction-rules android/app/src/main/res/xml/data_extraction_rules.xml \
+    --expected-package com.poyrazoncel.korubeni \
+    --output "$ANDROID_SURFACE_REPORT" || {
+        echo "❌ Birleşik Android release yüzeyi güvenlik denetimini geçemedi."
+        exit 1
+    }
 
 SIGNATURE_LOG="$(mktemp /tmp/korubeni_aab_signature.XXXXXX.log)"
 trap 'rm -f "$SIGNATURE_LOG"' EXIT
