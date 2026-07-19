@@ -95,6 +95,18 @@ make_boot_eligible_after_instrumentation() {
   "$ADB_BIN" -s "$DEVICE_SERIAL" shell sync
 }
 
+read_avd_name() {
+  local property_name
+  property_name="$("$ADB_BIN" -s "$DEVICE_SERIAL" shell getprop ro.boot.qemu.avd_name | tr -d '\r')"
+  if [ -n "$property_name" ]; then
+    printf '%s\n' "$property_name"
+    return
+  fi
+  # API 29 does not publish ro.boot.qemu.avd_name. The emulator console is
+  # authoritative for the selected AVD and returns its name on the first line.
+  "$ADB_BIN" -s "$DEVICE_SERIAL" emu avd name | tr -d '\r' | sed -n '1p'
+}
+
 # A freshly installed package starts FLAG_STOPPED. Launching the real activity
 # once is an explicit user-equivalent start and makes BOOT_COMPLETED eligibility
 # testable; the probe then clears/arms only its own native prefs.
@@ -127,7 +139,7 @@ trap - EXIT
 "$ADB_BIN" -s "$DEVICE_SERIAL" shell pm path "$APP_PACKAGE" 2>&1 | \
   grep -q '^package:' && fail "app package cleanup failed"
 
-AVD_NAME="$("$ADB_BIN" -s "$DEVICE_SERIAL" shell getprop ro.boot.qemu.avd_name | tr -d '\r')"
+AVD_NAME="$(read_avd_name)"
 [ -n "$AVD_NAME" ] || fail "emulator AVD name is unavailable"
 API_LEVEL="$("$ADB_BIN" -s "$DEVICE_SERIAL" shell getprop ro.build.version.sdk | tr -d '\r')"
 ANDROID_RELEASE="$("$ADB_BIN" -s "$DEVICE_SERIAL" shell getprop ro.build.version.release | tr -d '\r')"

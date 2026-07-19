@@ -11,6 +11,7 @@ void main() {
   test('phase-3 reboot probe is emulator-only and exercises a real reboot', () {
     expect(script, contains('ro.kernel.qemu'));
     expect(script, contains('refusing non-emulator device'));
+    expect(script, contains('emu avd name'));
     expect(script, contains('reboot'));
     expect(script, contains('wait-for-device'));
     expect(script, contains('am wait-for-broadcast-idle'));
