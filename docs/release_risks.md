@@ -2,27 +2,34 @@
 
 ## OpenStreetMap Tiles
 
-The app currently uses `https://tile.openstreetmap.org/{z}/{x}/{y}.png`
-directly for the in-app map. Attribution is visible and a package user agent is
-set, but the current `TileLayer` has no repository evidence of a persistent
-HTTP cache that honours `Cache-Control`/`Expires`/`ETag` or retains tiles for at
-least seven days. OSMF requires that caching behavior and provides no SLA.
+The default map template is
+`https://tile.openstreetmap.org/{z}/{x}/{y}.png`. Attribution and a stable
+package/contact User-Agent are present. The exact public OSM endpoint is routed
+through an app-private persistent HTTP cache that honors
+`Cache-Control`/`Age`/`Expires`/`ETag`/`Last-Modified`, falls back to seven days
+when no usable lifetime is supplied, and is bounded to 128 MiB. Expired,
+orphaned, oversized, or body/metadata-mismatched entries are removed; concurrent
+requests for one tile are coalesced. The cache never prefetches.
 
-**Release status: `OSM_TILE_GATE_OPEN`.** Before the first production
-candidate, either add and test a compliant persistent HTTP cache, move to a
-provider whose contract/configuration is recorded in the candidate evidence,
-or remove the public network-tile path from the production flavor. A User-Agent
-and attribution alone do not close this gate.
+**Release status: `OSM_TILE_LOCAL_CONTROLS_PASS`,
+`NETWORK_CAPTURE_AND_COUNSEL_UNVERIFIED`.** Repository behavior tests close the
+missing-local-cache implementation gap. They do not prove the exact AAB's live
+request headers, provider-side retention, availability, or KVKK Article 9
+mechanism. A non-default `MAP_TILE_URL_TEMPLATE` deliberately bypasses this
+OSM-specific cache and requires a candidate-bound provider contract, cache, and
+network-capture review before release.
 
 Current mitigation:
 - OSM attribution is shown in the map UI.
 - `userAgentPackageName` includes a contact channel (`com.poyrazoncel.korubeni; +korubeni.destek@gmail.com`) per OSMF "highly recommended" guidance.
 - The app only requests tiles for the map viewport the user actively opens.
 - The app must not bulk download, scrape, pre-seed, cache as an offline archive, or package OpenStreetMap public tiles.
+- Provider HTTP lifetimes are honored; absent usable directives, cached tiles
+  remain reusable for seven days. Local app-data reset removes the cache.
 - Store/legal copy does not claim enterprise-grade map reliability.
 
-These mitigations reduce load and overclaim risk; they do not substitute for
-the missing persistent-cache proof. Source:
+These repository-local controls do not substitute for candidate network capture
+or counsel review. Source:
 https://operations.osmfoundation.org/policies/tiles/
 
 ## Manual Play Console Items

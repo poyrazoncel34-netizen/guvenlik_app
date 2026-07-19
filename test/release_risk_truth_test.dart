@@ -29,17 +29,16 @@ void main() {
     expect(risks, contains('NDK r28'));
     expect(risks, contains('10/10'));
     expect(risks, contains('NON_RELEASE_SMOKE'));
-    expect(
-      risks,
-      matches(RegExp(r'not production-candidate\s+evidence')),
-    );
+    expect(risks, matches(RegExp(r'not production-candidate\s+evidence')));
   });
 
-  test('public OSM tiles remain an explicit production blocker', () {
+  test('OSM local controls do not overclaim external release proof', () {
     final risks = File('docs/release_risks.md').readAsStringSync();
 
-    expect(risks, contains('OSM_TILE_GATE_OPEN'));
-    expect(risks, contains('persistent HTTP cache'));
+    expect(risks, contains('OSM_TILE_LOCAL_CONTROLS_PASS'));
+    expect(risks, contains('NETWORK_CAPTURE_AND_COUNSEL_UNVERIFIED'));
+    expect(risks, contains('128 MiB'));
+    expect(risks, isNot(contains('OSM_TILE_GATE_OPEN')));
     expect(risks, isNot(contains('Before a larger production launch')));
   });
 }

@@ -113,7 +113,7 @@ Be accurate and conservative in Play Console:
 - Do not claim local-only data is developer-collected or shared merely because it is stored on device.
 - Mention Google Play Billing and RevenueCat subscription processing for optional Pro entitlement verification.
 - Mention online map tile requests to the configured map provider, currently OpenStreetMap tile infrastructure, when maps are disclosed.
-- Map screens request only user-viewed online tiles. The app must not bulk download, scrape, pre-seed, archive, or package OpenStreetMap public tiles; production-scale usage should move to a provider with an appropriate quota/API-key agreement.
+- Map screens request only user-viewed online tiles. For the default public OSM endpoint, an app-private 128 MiB cache honors provider HTTP cache directives and uses a seven-day lifetime only when no usable directive exists. The app must not bulk download, scrape, pre-seed, create offline packs, or package public OSM tiles. A configured alternative provider requires its own contract/cache evidence.
 - No ads, Firebase Analytics, Crashlytics, Sentry, auth backend, cloud database, UGC, SMS sending, microphone, or audio recording is used in this release based on current repo checks.
 - Do not mark blanket encryption-in-transit for all local-only data. Provider-controlled flows such as map tiles, Google Play Billing, and RevenueCat have their own transport/security behavior.
 
@@ -172,5 +172,5 @@ KoruBeni does not create developer-operated user accounts and has no auth backen
 OSM map tile disclosure:
 
 ```text
-Online map screens may request OpenStreetMap/configured-provider tiles only for map areas the user actively views. KoruBeni does not bulk download, scrape, pre-seed, archive, package, or generate offline tile packs from public OSM tiles. Production-scale use should move to a proper tile provider with an appropriate quota/API-key agreement.
+Online map screens may request OpenStreetMap/configured-provider tiles only for map areas the user actively views. The default public OSM endpoint uses an app-private bounded persistent cache that honors HTTP cache directives and falls back to a seven-day lifetime when no usable directive is supplied. KoruBeni does not bulk download, scrape, pre-seed, package, or generate offline tile packs. A configured alternative provider must have its own candidate-bound contract, cache, and network-capture evidence.
 ```

@@ -121,7 +121,7 @@
 <body>
     <div class="container">
         <h1>KoruBeni KVKK Aydınlatma Metni</h1>
-        <p class="subtitle">Sürüm 3.3.0 &nbsp;|&nbsp; Son güncelleme: 18 Temmuz 2026 &nbsp;|&nbsp; 6698 Sayılı KVKK Md. 10 ve 10.03.2018 Tarihli Aydınlatma Tebliği Uyarınca</p>
+        <p class="subtitle">Sürüm 3.4.0 &nbsp;|&nbsp; Son güncelleme: 19 Temmuz 2026 &nbsp;|&nbsp; 6698 Sayılı KVKK Md. 10 ve 10.03.2018 Tarihli Aydınlatma Tebliği Uyarınca</p>
 
         <div class="warning-box">
             <strong>⚠️ ÖNEMLİ UYARI</strong><br>
@@ -196,6 +196,11 @@
                     <td>İsteğe bağlı KoruBeni Pro aboneliğinin doğrulanması ve yönetimi (RevenueCat/Google Play)</td>
                     <td>Md. 5/2-c: Sözleşmenin kurulması veya ifasıyla doğrudan doğruya ilgili olması</td>
                 </tr>
+                <tr>
+                    <td><strong>Harita request metası ve yerel karo cache'i (IP, User-Agent, z/x/y; karo/expiry/validator)</strong></td>
+                    <td>Kullanıcının açtığı haritayı göstermek ve gereksiz tekrar karo isteklerini önlemek</td>
+                    <td>Hizmetin sunulması/açık rıza ve KVKK Md. 9 şartı yayımdan önce hukuk incelemesinde kesinleştirilecektir</td>
+                </tr>
             </tbody>
         </table>
 
@@ -217,7 +222,7 @@
         <ul>
             <li><strong>Acil durum kişileri:</strong> Kullanıcının arm ettiği Panic/SOS, Check-In veya Safe Walk deadline'ında normalize hedef Android Telecom'a verilebilir. Bu yalnız doğrulanmamış request'tir; bağlantı sonucu bilinmez.</li>
             <li><strong>Harita servisi:</strong> Çevrimiçi harita görünümü karo servisine ağ isteği yapabilir; istek IP adresi, User-Agent ve görüntülenen alanı çıkarsatabilen tile koordinatlarını gösterebilir.</li>
-            <li><strong>OpenStreetMap:</strong> Yalnız kullanıcının aktif görüntülediği karolar istenir; public karolar toplu indirilmez, önceden yüklenmez, scrape edilmez, offline arşivlenmez veya paketlenmez.</li>
+            <li><strong>OpenStreetMap:</strong> Yalnız kullanıcının aktif görüntülediği karolar istenir; public karolar toplu indirilmez, önceden yüklenmez, scrape edilmez veya offline arşiv/paket haline getirilmez. Varsayılan endpoint karoları sağlayıcının HTTP cache talimatlarına göre uygulamaya özel sınırlı cache'te yeniden kullanılabilir.</li>
             <li><strong>Google Play Billing:</strong> İsteğe bağlı KoruBeni Pro abonelik satın alma, yenileme, iptal ve geri yükleme işlemleri Google Play üzerinden yönetilir.</li>
             <li><strong>RevenueCat:</strong> Güncel hukuki akış tamamlandıktan ve kullanıcı Pro/paywall/restore yoluna girdikten sonra lazy başlatılır; IP adresi, cihaz/app bilgisi, anonim abone kimliği, satın alma olayları ve entitlement metası RevenueCat ve alt işleyenleri tarafından Türkiye dışında işlenebilir. KVKK Madde 9 mekanizması ve sözleşme kanıtı yayın kapısında ayrıca doğrulanır. Ödeme kartı geliştirici tarafından saklanmaz.</li>
             <li><strong>Yetkili makamlar:</strong> Mahkeme kararı veya yasal zorunluluk halinde ilgili kurum ve kuruluşlara aktarılabilir.</li>
@@ -229,6 +234,7 @@
         <h2>5. Kişisel Verilerin Saklanma Süreleri</h2>
         <ul>
             <li><strong>Konum verisi:</strong> Acil durum paylaşımı sona erdiğinde cihaz belleğinden silinir; kalıcı olarak depolanmaz.</li>
+            <li><strong>Harita karoları ve cache metası:</strong> Sağlayıcının HTTP cache talimatı süresince; kullanılabilir talimat yoksa yedi gün uygulamaya özel alanda tutulur. Cache 128 MiB ile sınırlıdır; süresi dolan/bozuk kayıtlar başlangıçta, bütün cache uygulama verisi silme veya uninstall ile temizlenir.</li>
             <li><strong>Acil durum kişileri (ad + telefon):</strong> Kullanıcı uygulamadan silene kadar uygulamaya özel cihaz içi güvenli depoda saklanır.</li>
             <li><strong>Aktif safety session hedefi:</strong> Confirmed cancel/reset'e veya terminal sonrasında actionable fallback sona erene kadar device-protected app alanında tutulur. Fallback için erişim action, dismiss veya en geç 24 saatlik mantıksal TTL sonunda sona erer. Cihaz TTL boyunca kapalıysa fiziksel kayıt sonraki açılış/uzlaştırmada temizlenir; bildirim metni ve PendingIntent telefon numarasını taşımaz.</li>
             <li><strong>PIN kodu:</strong> Kullanıcı değiştirene veya silene kadar cihazın güvenli depolama alanında (Keychain/Keystore) şifreli olarak tutulur.</li>
@@ -269,7 +275,7 @@
 
         <h2>10. Politika Değişiklikleri</h2>
         <p>Bu aydınlatma metninde yapılacak önemli değişiklikler uygulama içi bildirim aracılığıyla kullanıcılara duyurulur. Güncel metne bu sayfadan ulaşabilirsiniz.</p>
-        <p><strong>Son güncelleme:</strong> 18 Temmuz 2026</p>
+        <p><strong>Son güncelleme:</strong> 19 Temmuz 2026</p>
 
         <footer>
             <p>&copy; 2026 KoruBeni — Poyraz Öncel. Tüm hakları saklıdır.</p>

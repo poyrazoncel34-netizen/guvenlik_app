@@ -295,6 +295,7 @@ Map tile provider / OpenStreetMap:
 - Online map display may request map tiles from the configured provider.
 - Provider: OpenStreetMap tile infrastructure / configured map tile provider.
 - Purpose: app functionality — online map display.
+- Default-provider tiles use an app-private bounded persistent cache according to HTTP cache directives, or seven days when no usable directive is supplied; app reset/uninstall removes the cache.
 ```
 
 **Data shared**
@@ -351,7 +352,7 @@ Subscription status, anonymous user ID, purchase events, app/device information,
 **OpenStreetMap disclosure**
 
 ```text
-Map screens may contact the configured map tile service, currently OpenStreetMap tile infrastructure, for online map display. No developer backend receives map data.
+Map screens may contact the configured map tile service, currently OpenStreetMap tile infrastructure, for online map display. Default-provider tiles use an app-private bounded cache according to provider HTTP cache directives, or seven days when no usable directive is supplied. The app does not create offline tile packs, and app-data reset/uninstall removes the cache. No developer backend receives map data.
 ```
 
 **Photos/images disclosure**

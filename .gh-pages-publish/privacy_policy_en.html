@@ -136,7 +136,7 @@
 <body>
     <div class="container">
         <h1>KoruBeni Privacy Policy</h1>
-        <p class="subtitle">Last updated: June 18, 2026 &mdash; Version 3.1.1</p>
+        <p class="subtitle">Last updated: July 19, 2026 &mdash; Version 3.4.0</p>
 
         <p>KoruBeni ("App", "we", "our") is a personal safety application designed to support its users. This privacy
             policy explains what data we collect, how we use it, and how we protect it.</p>
@@ -159,6 +159,7 @@
         <ul>
             <li><strong>Location data:</strong> Only when you actively start a location session or trigger an emergency</li>
             <li><strong>Device-side runtime state:</strong> Temporary technical state needed for app flows</li>
+            <li><strong>Map tile cache:</strong> Default OpenStreetMap tile bytes and validation metadata such as z/x/y, expiry, ETag, and Last-Modified may be kept in app-private local storage</li>
             <li><strong>Legal consent log:</strong> Timestamps and versions of your consent to KVKK and privacy policies, stored on-device only</li>
         </ul>
 
@@ -197,7 +198,7 @@
         <p>We do <strong>not sell</strong> your data to third parties. Safety data is not sent to a developer-operated backend. Subscription verification data may be processed by Google Play Billing and RevenueCat. Third-party network behavior is limited to online map tiles, Google Play Billing, and RevenueCat.</p>
         <ul>
             <li><strong>Emergency contacts:</strong> When an emergency is triggered, the Android call flow is started or the dialer is prepared for your selected contact</li>
-            <li><strong>Map providers:</strong> OpenStreetMap infrastructure may be contacted only for map tiles the user actively views. The app does not bulk download, pre-seed, scrape, archive, or package public OSM tiles.</li>
+            <li><strong>Map providers:</strong> OpenStreetMap infrastructure may be contacted only for map tiles the user actively views. The app does not bulk download, pre-seed, scrape, or create offline archives/packages from public OSM tiles.</li>
             <li><strong>RevenueCat:</strong> May process anonymous user ID, purchase events, device/app information, entitlement status, and related subscription verification data</li>
             <li><strong>Legal requirements:</strong> When required by law or court order</li>
         </ul>
@@ -223,6 +224,7 @@
         <ul>
             <li>Profile data: Until the user deletes it on the device</li>
             <li>Emergency contacts: Until the user deletes them on the device</li>
+            <li>Map tiles: Kept in an app-private local cache for the provider's HTTP cache lifetime, or seven days when no usable directive is supplied. The cache is limited to 128 MiB; expired/corrupt tiles are purged at startup and the whole cache is removed by app-data reset or uninstall.</li>
             <li>Armed safety target: Retained in device-protected app storage until confirmed cancel/reset or until an actionable fallback ends after terminal dispatch. Fallback access expires on action, dismiss, or a maximum logical 24-hour TTL; if the device is powered off, the physical record is purged at the next boot/reconciliation. The notification and PendingIntent do not carry the phone number.</li>
             <li>Location data: Used only during active emergency and sharing flows</li>
             <li>Fake call settings and avatar files: Until the user deletes app data on the device</li>
@@ -352,7 +354,7 @@
         </div>
 
         <footer>
-            <p>&copy; 2026 KoruBeni. All rights reserved. &mdash; Version 3.1.1</p>
+            <p>&copy; 2026 KoruBeni. All rights reserved. &mdash; Version 3.4.0</p>
         </footer>
     </div>
 </body>

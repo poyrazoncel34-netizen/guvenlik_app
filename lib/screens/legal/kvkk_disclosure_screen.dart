@@ -100,7 +100,7 @@ class _KvkkDisclosureScreenState extends State<KvkkDisclosureScreen> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    '${'legal_kvkk_madde10'.tr()} — ${LegalTexts.kvkkVersion} — ${LegalTexts.lastUpdated}',
+                    '${'legal_kvkk_madde10'.tr()} — ${LegalTexts.kvkkVersion} — ${LegalTexts.lastUpdatedKvkk}',
                     style: const TextStyle(
                       fontSize: 12,
                       color: AppColors.accent,

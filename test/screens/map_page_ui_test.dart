@@ -135,7 +135,9 @@ void main() {
       expect(docs, contains('must not bulk download'));
       expect(docs, contains('pre-seed'));
       expect(docs, contains('archive'));
-      expect(docs, contains('production-scale'));
+      expect(docs, contains('128 MiB'));
+      expect(docs, contains('candidate-bound'));
+      expect(docs, contains('NETWORK_CAPTURE_AND_COUNSEL_UNVERIFIED'));
     });
   });
 }

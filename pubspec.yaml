@@ -49,6 +49,8 @@ dependencies:
   audioplayers: ^6.5.1
   # Map & Location packages
   flutter_map: ^7.0.2
+  # Direct dependency for the policy-compliant persistent OSM tile cache.
+  http: ^1.6.0
   latlong2: ^0.9.1
   geolocator: ^13.0.2
   # Connectivity check

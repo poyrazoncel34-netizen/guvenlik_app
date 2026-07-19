@@ -194,6 +194,45 @@ void main() {
       },
     );
 
+    test(
+      'map cache retention is disclosed and published mirrors do not drift',
+      () {
+        final legal = File('lib/constants/legal_texts.dart').readAsStringSync();
+        final privacy = File('store/privacy_policy.html').readAsStringSync();
+        final privacyEn = File(
+          'store/privacy_policy_en.html',
+        ).readAsStringSync();
+        final disclosure = File(
+          'store/aydinlatma_metni.html',
+        ).readAsStringSync();
+
+        expect(legal, contains('Harita karoları'));
+        expect(legal, contains('Map tiles'));
+        expect(privacy, contains("Harita karo cache'i"));
+        expect(privacy, contains('128 MiB'));
+        expect(privacyEn, contains('Map tile cache'));
+        expect(privacyEn, contains('128 MiB'));
+        expect(disclosure, contains('Harita karoları ve cache metası'));
+        expect(disclosure, contains('yedi gün'));
+        expect(
+          File('.gh-pages-publish/privacy_policy.html').readAsStringSync(),
+          privacy,
+        );
+        expect(
+          File('.gh-pages-publish/index.html').readAsStringSync(),
+          privacy,
+        );
+        expect(
+          File('.gh-pages-publish/privacy_policy_en.html').readAsStringSync(),
+          privacyEn,
+        );
+        expect(
+          File('.gh-pages-publish/aydinlatma.html').readAsStringSync(),
+          disclosure,
+        );
+      },
+    );
+
     test('store listing says panic SOS is Pro-only', () {
       final listing = File('store/play_store_listing_tr.md').readAsStringSync();
       expect(listing, contains('Panik/SOS'));
@@ -370,20 +409,28 @@ void main() {
 
     test('canonical legal text versions stay pinned', () {
       expect(LegalTexts.termsVersion, '3.1.0');
-      expect(LegalTexts.kvkkVersion, '3.3.0');
+      expect(LegalTexts.kvkkVersion, '3.4.0');
       // Terms date is unchanged (content unchanged); KVKK/privacy carry their
       // own revision date after the first-responder claim removal.
       expect(LegalTexts.lastUpdated, '21 Mayıs 2026');
-      expect(LegalTexts.lastUpdatedKvkk, '18 Temmuz 2026');
+      expect(LegalTexts.lastUpdatedKvkk, '19 Temmuz 2026');
 
       final disclosure = File('store/aydinlatma_metni.html').readAsStringSync();
       final publishedDisclosure = File(
         '.gh-pages-publish/aydinlatma.html',
       ).readAsStringSync();
-      expect(disclosure, contains('Sürüm 3.3.0'));
-      expect(disclosure, contains('18 Temmuz 2026'));
-      expect(publishedDisclosure, contains('Sürüm 3.3.0'));
-      expect(publishedDisclosure, contains('18 Temmuz 2026'));
+      final disclosureScreen = File(
+        'lib/screens/legal/kvkk_disclosure_screen.dart',
+      ).readAsStringSync();
+      final consentScreen = File(
+        'lib/screens/legal/unified_consent_screen.dart',
+      ).readAsStringSync();
+      expect(disclosure, contains('Sürüm 3.4.0'));
+      expect(disclosure, contains('19 Temmuz 2026'));
+      expect(publishedDisclosure, contains('Sürüm 3.4.0'));
+      expect(disclosureScreen, contains('LegalTexts.lastUpdatedKvkk'));
+      expect(consentScreen, contains('LegalTexts.lastUpdatedKvkk'));
+      expect(publishedDisclosure, contains('19 Temmuz 2026'));
     });
 
     test('stale Firebase FCM and resource monitor claims are cleaned', () {

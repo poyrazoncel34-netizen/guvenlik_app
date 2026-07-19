@@ -10,7 +10,9 @@ import 'package:latlong2/latlong.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../core/app_colors.dart';
+import '../core/config/app_environment.dart';
 import '../core/di/service_locator.dart';
+import '../core/network/osm_tile_cache_client.dart';
 import '../core/services/connectivity_service.dart';
 import '../core/services/location_service.dart';
 import '../core/utils/map_utils.dart';
@@ -33,6 +35,7 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
 
   // Map controller
   final MapController _mapController = MapController();
+  late final NetworkTileProvider _osmTileProvider;
 
   // State
   LatLng? _currentLocation;
@@ -48,6 +51,8 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
+
+    _osmTileProvider = NetworkTileProvider(httpClient: OsmTileCacheClient());
 
     _pulseController = AnimationController(
       vsync: this,
@@ -74,6 +79,7 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
   @override
   void dispose() {
     _pulseController.dispose();
+    unawaited(_osmTileProvider.dispose());
     super.dispose();
   }
 
@@ -504,12 +510,13 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
         // the user actively views. Do not bulk download, pre-seed, scrape,
         // archive, or package public OSM tiles from this endpoint.
         TileLayer(
-          urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+          urlTemplate: AppEnvironment.mapTileUrlTemplate,
           userAgentPackageName: kOsmUserAgentPackageName,
+          tileProvider: _osmTileProvider,
           maxZoom: 19,
           errorTileCallback: (tile, error, stack) {
             // Silently ignore individual tile load failures (offline tolerance)
-            debugPrint('TileLayer error (ignored): $error');
+            debugPrint('MAP_TILE_LOAD_FAILED_REDACTED');
           },
         ),
 

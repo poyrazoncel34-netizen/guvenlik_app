@@ -47,4 +47,39 @@ void main() {
       );
     });
   });
+
+  group('AppEnvironment map tile URL policy', () {
+    test('accepts HTTPS templates with one z x and y placeholder', () {
+      expect(
+        AppEnvironment.isSafeMapTileUrlTemplate(
+          'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+        ),
+        isTrue,
+      );
+      expect(
+        AppEnvironment.isSafeMapTileUrlTemplate(
+          'https://tiles.example.test/styles/basic/{z}/{x}/{y}.png?key=public',
+        ),
+        isTrue,
+      );
+    });
+
+    test('rejects insecure malformed or credential-bearing templates', () {
+      for (final value in <String>[
+        '',
+        'http://tile.openstreetmap.org/{z}/{x}/{y}.png',
+        'https://tile.openstreetmap.org/{z}/{x}.png',
+        'https://tile.openstreetmap.org/{z}/{x}/{y}/{y}.png',
+        'https://user:pass@tiles.example.test/{z}/{x}/{y}.png',
+        'https://tiles.example.test/{z}/{x}/{y}.png#fragment',
+        'https://tiles.example.test/{z}/{x}/{y}.png with-space',
+      ]) {
+        expect(
+          AppEnvironment.isSafeMapTileUrlTemplate(value),
+          isFalse,
+          reason: value,
+        );
+      }
+    });
+  });
 }

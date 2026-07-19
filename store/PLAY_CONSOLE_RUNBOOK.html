@@ -96,7 +96,7 @@ imzalı Play AAB'sini üretir. Gerçek <code>REVENUECAT_ANDROID_API_KEY</code> G
 <tr><td><strong>REQUEST_IGNORE_BATTERY_OPTIMIZATIONS</strong></td><td><code>docs/play_console_declarations.md</code></td><td>Console isterse beyan et.</td></tr>
 <tr><td><strong>CALL_PHONE</strong></td><td><code>store/permissions_declaration_notes.md</code></td><td>Kullanıcının kurduğu Panik/SOS, Check-In ve Safe Walk; sonuç yalnız doğrulanmamış Telecom isteğidir, fallback kullanıcı dokunuşlu <code>ACTION_DIAL</code> bildirimidir.</td></tr>
 <tr><td><strong>USE_FULL_SCREEN_INTENT</strong></td><td><code>docs/play_console_declarations.md</code></td><td>Manifestte yoktur. KoruBeni alarm-saat/gelen çağrı uygulaması değildir; eski FSI Console taslağını kaldır. Acil uyarılar heads-up bildirime düşer.</td></tr>
-<tr><td><strong>Gizlilik politikası + veri silme URL</strong></td><td>gh-pages adayı (aydınlatma 3.3.0; canlı yayın henüz UNVERIFIED)</td><td>Canlı URL'yi tarayıcıda AÇIP doğrula, sonra Console'a yapıştır.</td></tr>
+<tr><td><strong>Gizlilik politikası + veri silme URL</strong></td><td>gh-pages adayı (aydınlatma 3.4.0; canlı yayın henüz UNVERIFIED)</td><td>Canlı URL'yi tarayıcıda AÇIP doğrula, sonra Console'a yapıştır.</td></tr>
 <tr><td><strong>App Access</strong></td><td><code>docs/play_console_declarations.md</code></td><td>Temel özellikler girişsiz; Pro için <strong>lisans tester e-postası</strong> ver. Global <code>FLAG_SECURE</code> yoktur; screenshot mümkündür, yalnız background recents privacy mask vardır.</td></tr>
 </table>
 <p><em>Not:</em> READ_CONTACTS beyanı GEREKMİYOR — manifest <code>tools:node="remove"</code> ile kaldırıyor; kişi seçimi native picker (<code>ACTION_PICK</code>) ile.</p>
@@ -131,7 +131,7 @@ imzalı Play AAB'sini üretir. Gerçek <code>REVENUECAT_ANDROID_API_KEY</code> G
 <div class="card">
 <ul>
 <li><strong>RevenueCat m.9 karar kaydı — ONAY BEKLİYOR:</strong> Öneri: yayın için <strong>(a) belgelenmiş risk kabulü</strong>
-(akış minimize: <code>collectDeviceIdentifiers()</code> çağrılmıyor, anonim abone kimliği, reklam kimliği yok; aydınlatma 3.3.0 aktarımı m.9 kapsamında bildiriyor)
+(akış minimize: <code>collectDeviceIdentifiers()</code> çağrılmıyor, anonim abone kimliği, reklam kimliği yok; aydınlatma 3.4.0 aktarımı m.9 kapsamında bildiriyor)
 + v1.1 yol haritasına <strong>(b) saf Play Billing'e geçiş değerlendirmesi</strong> (~1-2 hafta; "aktaran" sıfatını yapısal kaldırır).
 Onay şekli: <code>docs/audit/session-2026-07-06-uygulama.md</code>'deki bölüme "<strong>ONAYLANDI — tarih, isim</strong>" satırı.</li>
 <li><strong>Teknik borç:</strong> API 37'de orientation/resizability opt-out'u kalkıyor — adaptif layout işi v1.x planına girmeli.</li>

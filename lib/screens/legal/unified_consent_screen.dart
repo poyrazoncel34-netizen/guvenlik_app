@@ -410,7 +410,7 @@ class _UnifiedConsentScreenState extends State<UnifiedConsentScreen> {
                     const SizedBox(width: 6),
                     Expanded(
                       child: Text(
-                        '${'legal_kvkk_madde10'.tr()} — ${LegalTexts.kvkkVersion} — ${LegalTexts.lastUpdated}',
+                        '${'legal_kvkk_madde10'.tr()} — ${LegalTexts.kvkkVersion} — ${LegalTexts.lastUpdatedKvkk}',
                         style: const TextStyle(
                           fontSize: 11,
                           color: AppColors.accent,

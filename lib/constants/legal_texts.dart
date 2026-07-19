@@ -7,13 +7,13 @@
 class LegalTexts {
   // ── Sürüm Numaraları ──────────────────────────────────────────────────────
   static const String termsVersion = '3.1.0';
-  static const String kvkkVersion = '3.3.0';
+  static const String kvkkVersion = '3.4.0';
   static const String lastUpdated = '21 Mayıs 2026';
   static const String lastUpdatedEn = 'May 21, 2026';
   // KVKK/Gizlilik/Aydınlatma belgeleri kendi revizyon tarihini taşır;
   // Kullanım Şartları (termsVersion) içerik değişmediği için lastUpdated'ı korur.
-  static const String lastUpdatedKvkk = '18 Temmuz 2026';
-  static const String lastUpdatedKvkkEn = 'July 18, 2026';
+  static const String lastUpdatedKvkk = '19 Temmuz 2026';
+  static const String lastUpdatedKvkkEn = 'July 19, 2026';
 
   // ── Kullanım Sözleşmesi — Türkçe ─────────────────────────────────────────
   static const String termsOfServiceTr =
@@ -277,6 +277,7 @@ Uygulama tüm rehber listesini okumaz. Yalnızca kullanıcının sistem seçicis
 • Sahte çağrı avatarı  : Siz silene veya uygulama verisini temizleyene kadar
 • Acil durum kişileri  : Yalnızca seçtiğiniz veya girdiğiniz kişiler; siz silene kadar
 • Konum bilgisi        : Yalnızca aktif konum oturumu sırasında cihaz belleğinde geçici olarak tutulur; oturum bittiğinde silinir ve kalıcı olarak saklanmaz
+• Harita karoları      : Uygulamaya özel yerel cache'te sağlayıcının HTTP cache talimatları süresince; talimat yoksa yedi gün. Cache 128 MiB ile sınırlıdır; süresi dolan/bozuk karolar açılışta, tüm karolar cihaz verisi silindiğinde temizlenir
 • Rıza logları         : Uygulama kullanıldığı sürece; cihaz verisini silene kadar
 • Abonelik verisi      : Doğrulama amacıyla RevenueCat/Google Play tarafından kendi saklama politikaları süresince işlenir; geliştirici ayrıca saklamaz
 • PIN (şifreli)        : Siz değiştirene veya silene kadar
@@ -383,6 +384,7 @@ The app does not read the full contacts list. It stores only emergency contacts 
 • Fake call avatar         : Until you delete it or clear app data
 • Emergency contacts       : Only contacts you select or enter; until you delete them
 • Location data            : Held only in device memory while a location session is active; cleared when the session ends and never persisted
+• Map tiles                : In an app-private local cache for the provider's HTTP cache lifetime, or seven days when no usable directive is supplied. The cache is limited to 128 MiB; expired/corrupt tiles are purged at startup and all tiles are removed when app data is cleared
 • Consent logs             : While the app is in use; until device data deletion
 • Subscription data        : Processed by RevenueCat/Google Play under their own retention policies for verification; not additionally stored by the developer
 • PIN (encrypted)          : Until you change or delete it

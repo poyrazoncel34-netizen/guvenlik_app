@@ -77,7 +77,7 @@
 <body>
     <div class="container">
         <h1>KoruBeni Gizlilik Politikası</h1>
-        <p class="subtitle">Son güncelleme: 18 Haziran 2026</p>
+        <p class="subtitle">Son güncelleme: 19 Temmuz 2026 &mdash; Sürüm 3.4.0</p>
 
         <div style="background:#fde8e8; border:2px solid #e53e3e; border-radius:10px; padding:16px 20px; margin-bottom:24px;">
             <strong style="color:#c53030; font-size:15px;">&#9888;&#65039; ÖNEMLİ UYARI</strong><br>
@@ -101,6 +101,7 @@
         <ul>
             <li><strong>Konum verileri:</strong> Yalnızca kullanıcı konum oturumunu aktif ettiğinde veya acil durum tetiklendiğinde</li>
             <li><strong>Cihaz üzerinde tutulan teknik durum bilgisi:</strong> Uygulama içi çalışma için geçici durum verileri</li>
+            <li><strong>Harita karo cache'i:</strong> Varsayılan OpenStreetMap karoları ve z/x/y, sona erme zamanı, ETag/Last-Modified gibi doğrulama metası uygulamaya özel yerel alanda tutulabilir</li>
         </ul>
 
         <h3 style="font-size:16px; margin-top:16px; margin-bottom:8px;">c) Toplamadığımız Veriler</h3>
@@ -129,7 +130,7 @@
         <p>Verilerinizi üçüncü taraflara <strong>satmıyoruz</strong>. Güvenlik verileri geliştirici backend'ine veya bulut veritabanına aktarılmaz. Abonelik doğrulama verileri Google Play Billing ve RevenueCat tarafından işlenebilir. Üçüncü taraf ağ davranışı çevrimiçi harita karoları, Google Play Billing ve RevenueCat ile sınırlıdır.</p>
         <ul>
             <li><strong>Acil durum kişileri:</strong> Acil durum tetiklendiğinde, seçtiğiniz kişi için Android arama akışı başlatılır veya arama ekranı hazırlanır</li>
-            <li><strong>Harita servisleri:</strong> OpenStreetMap altyapısı yalnızca kullanıcının aktif olarak gördüğü harita karoları için kullanılabilir. Uygulama public OSM karolarını toplu indirmez, önceden yüklemez, scrape etmez, arşivlemez veya paketlemez.</li>
+            <li><strong>Harita servisleri:</strong> OpenStreetMap altyapısı yalnızca kullanıcının aktif olarak gördüğü harita karoları için kullanılabilir. Uygulama public OSM karolarını toplu indirmez, önceden yüklemez, scrape etmez veya offline arşiv/paket oluşturmaz.</li>
             <li><strong>RevenueCat:</strong> Pro abonelik durumunu doğrulamak için anonim kullanıcı kimliği, satın alma olayları, cihaz/uygulama bilgisi ve yetki durumu işlenebilir</li>
             <li><strong>Yasal zorunluluklar:</strong> Mahkeme kararı veya yasal zorunluluk halinde</li>
         </ul>
@@ -146,6 +147,7 @@
         <ul>
             <li>Profil bilgileri: Kullanıcı silene kadar cihazda kalır</li>
             <li>Konum verileri: Paylaşım süresi olduğunda uygulama içinde aktif kullanılmaz</li>
+            <li>Harita karoları: Uygulamaya özel yerel cache'te sağlayıcının HTTP cache talimatı süresince; kullanılabilir talimat yoksa yedi gün tutulur. Cache 128 MiB ile sınırlıdır; süresi dolan/bozuk karolar başlangıçta, bütün cache uygulama verisi silme veya uninstall ile temizlenir.</li>
             <li>Acil durum kişileri: Kullanıcı silene kadar cihazda kalır</li>
             <li>Aktif safety session hedefi: Confirmed cancel/reset'e veya terminal sonrasında actionable fallback sona erene kadar device-protected app alanında tutulur. Fallback erişimi action, dismiss veya en geç 24 saatlik mantıksal TTL sonunda biter; cihaz kapalıysa fiziksel kayıt sonraki açılış/uzlaştırmada temizlenir. Bildirim/PendingIntent telefon numarasını taşımaz.</li>
             <li>Sahte çağrı verileri: Kullanıcı silene kadar cihazda kalır</li>
@@ -293,7 +295,7 @@
         </div>
 
         <footer>
-            <p>&copy; 2026 KoruBeni -- Poyraz Öncel. Tüm hakları saklıdır. | KVKK Sürüm 3.1.1</p>
+            <p>&copy; 2026 KoruBeni -- Poyraz Öncel. Tüm hakları saklıdır. | KVKK Sürüm 3.4.0</p>
             <p style="margin-top: 8px;">
                 <a href="https://poyrazoncel34-netizen.github.io/guvenlik_app/aydinlatma">Aydınlatma Metni (KVKK)</a>
                 &nbsp;|&nbsp;

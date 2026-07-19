@@ -11,4 +11,4 @@
 **İngilizce:** https://poyrazoncel34-netizen.github.io/guvenlik_app/privacy_policy_en.html
 
 **Support Email:** korubeni.destek@gmail.com
-**Son Güncelleme:** 2026-02-26
+**Son Güncelleme:** 2026-07-19 — KVKK/Gizlilik Sürüm 3.4.0
