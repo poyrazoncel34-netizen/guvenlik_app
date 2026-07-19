@@ -1,27 +1,24 @@
-import 'dart:io';
-
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:guvenlik_app/core/services/emergency_platform_service.dart';
+import 'package:guvenlik_app/core/services/emergency_readiness_service.dart';
 
-/// System 3A: EmergencyReadinessService must exist with checkReadiness method.
 void main() {
-  test('EmergencyReadinessService should have checkReadiness method', () {
-    final file = File('lib/core/services/emergency_readiness_service.dart');
-    expect(
-      file.existsSync(),
-      isTrue,
-      reason: 'emergency_readiness_service.dart must exist',
-    );
+  TestWidgetsFlutterBinding.ensureInitialized();
 
-    final source = file.readAsStringSync();
-    expect(
-      source.contains('checkReadiness'),
-      isTrue,
-      reason: 'Must have checkReadiness method',
-    );
-    expect(
-      source.contains('getDeviceState'),
-      isTrue,
-      reason: 'Must use getDeviceState for battery optimization check',
-    );
-  });
+  test(
+    'readiness starts unknown and fail closed before the platform probe',
+    () {
+      const channel = MethodChannel('emergency_readiness_initial_state_test');
+      final platform = EmergencyPlatformService.forTesting(
+        methodChannel: channel,
+      );
+      final readiness = EmergencyReadinessService.forTesting(
+        platformService: platform,
+      );
+
+      expect(readiness.lastState, isNull);
+      expect(readiness.isReady, isFalse);
+    },
+  );
 }

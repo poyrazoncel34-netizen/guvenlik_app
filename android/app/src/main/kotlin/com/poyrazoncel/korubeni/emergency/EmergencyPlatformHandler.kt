@@ -1,6 +1,5 @@
 package com.poyrazoncel.korubeni.emergency
 
-import android.Manifest
 import android.app.Activity
 import android.app.AlarmManager
 import android.content.ComponentName
@@ -11,9 +10,6 @@ import android.os.Build
 import android.os.PowerManager
 import android.provider.Settings
 import android.telephony.TelephonyManager
-import androidx.core.content.ContextCompat
-import androidx.core.app.NotificationManagerCompat
-import android.content.pm.PackageManager
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 
@@ -183,9 +179,18 @@ class EmergencyPlatformHandler(
     private fun getDeviceState(): Map<String, Any?> {
         val powerManager = context.getSystemService(Context.POWER_SERVICE) as? PowerManager
         val telephonyManager = context.getSystemService(Context.TELEPHONY_SERVICE) as? TelephonyManager
-        val callGranted =
-            ContextCompat.checkSelfPermission(context, Manifest.permission.CALL_PHONE) ==
-                PackageManager.PERMISSION_GRANTED
+        val capabilities = AndroidEmergencyCapabilityProvider(context).snapshot(
+            ArmRequest(
+                protocolVersion = EMERGENCY_PROTOCOL_VERSION,
+                randomId = "readiness-probe",
+                kind = SessionKind.CHECK_IN,
+                mainDeadlineMs = System.currentTimeMillis() + 60_000L,
+                finalDeadlineMs = System.currentTimeMillis() + 120_000L,
+                target = "+905000000000",
+                entitlementDecision = EntitlementDecision.AUTHORIZED,
+                pinConfigured = true,
+            ),
+        )
 
         return mapOf(
             "manufacturer" to Build.MANUFACTURER,
@@ -204,10 +209,14 @@ class EmergencyPlatformHandler(
                 } else {
                     true
                 }),
-            "canScheduleExactAlarms" to canScheduleExactAlarms(),
-            "callPermissionGranted" to callGranted,
-            "notificationsEnabled" to
-                NotificationManagerCompat.from(context).areNotificationsEnabled(),
+            "supportedOs" to capabilities.supportedOs,
+            "telephonyCalling" to capabilities.telephonyCalling,
+            "telecomAvailable" to capabilities.telecomAvailable,
+            "dialHandlerAvailable" to capabilities.dialHandlerAvailable,
+            "canScheduleExactAlarms" to capabilities.exactAlarmGranted,
+            "callPermissionGranted" to capabilities.callPermissionGranted,
+            "notificationsEnabled" to capabilities.notificationsEnabled,
+            "alertChannelHigh" to capabilities.alertChannelHigh,
         )
     }
 

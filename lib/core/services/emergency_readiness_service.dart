@@ -6,71 +6,57 @@ import 'emergency_platform_service.dart';
 
 /// System 3A: Checks device readiness for emergency dispatch.
 /// Non-blocking — results cached for later query.
-class EmergencyReadinessService {
-  EmergencyReadinessService._();
+class EmergencyReadinessService extends ChangeNotifier {
+  EmergencyReadinessService._({
+    EmergencyPlatformService? platformService,
+    Duration timeout = const Duration(seconds: 3),
+  }) : _platformService = platformService ?? EmergencyPlatformService.instance,
+       _timeout = timeout;
+
+  factory EmergencyReadinessService.forTesting({
+    required EmergencyPlatformService platformService,
+    Duration timeout = const Duration(milliseconds: 100),
+  }) => EmergencyReadinessService._(
+    platformService: platformService,
+    timeout: timeout,
+  );
 
   static final EmergencyReadinessService instance =
       EmergencyReadinessService._();
 
-  ReadinessState? _lastState;
+  final EmergencyPlatformService _platformService;
+  final Duration _timeout;
+  int _latestProbeId = 0;
+  PlatformReadinessSnapshot? _lastState;
 
-  ReadinessState? get lastState => _lastState;
+  PlatformReadinessSnapshot? get lastState => _lastState;
 
   bool get isReady => _lastState?.criticalSafetyReady ?? false;
 
-  Future<ReadinessState> checkReadiness() async {
+  Future<PlatformReadinessSnapshot> checkReadiness() async {
+    final probeId = ++_latestProbeId;
+    PlatformReadinessSnapshot nextState;
     try {
-      final deviceState = await EmergencyPlatformService.instance
-          .getDeviceState()
-          .timeout(const Duration(seconds: 3));
-
-      _lastState = ReadinessState(
-        batteryOptimizationWhitelisted:
-            deviceState['batteryOptimizationsIgnored'] == true,
-        exactAlarmPermission: deviceState['canScheduleExactAlarms'] == true,
-        callPermission: deviceState['callPermissionGranted'] == true,
-        notificationPermission: deviceState['notificationsEnabled'] == true,
+      nextState = await _platformService.getPlatformReadiness().timeout(
+        _timeout,
       );
     } on TimeoutException {
       debugPrint('[EmergencyReadiness] checkReadiness timed out');
-      _lastState = const ReadinessState(
-        batteryOptimizationWhitelisted: false,
-        exactAlarmPermission: false,
-        callPermission: false,
-        notificationPermission: false,
+      nextState = const PlatformReadinessSnapshot.unavailable(
+        reasonCode: 'timeout',
       );
     } catch (e) {
       debugPrint('[EmergencyReadiness] checkReadiness failed: $e');
-      _lastState = const ReadinessState(
-        batteryOptimizationWhitelisted: false,
-        exactAlarmPermission: false,
-        callPermission: false,
-        notificationPermission: false,
+      nextState = const PlatformReadinessSnapshot.unavailable(
+        reasonCode: 'unexpectedError',
       );
     }
-
-    return _lastState!;
+    if (probeId != _latestProbeId) {
+      return _lastState ??
+          const PlatformReadinessSnapshot.unavailable(reasonCode: 'superseded');
+    }
+    _lastState = nextState;
+    notifyListeners();
+    return nextState;
   }
-}
-
-class ReadinessState {
-  final bool batteryOptimizationWhitelisted;
-  final bool exactAlarmPermission;
-  final bool callPermission;
-  final bool notificationPermission;
-
-  const ReadinessState({
-    required this.batteryOptimizationWhitelisted,
-    required this.exactAlarmPermission,
-    required this.callPermission,
-    required this.notificationPermission,
-  });
-
-  /// Required for a timed background alert to be both timely and visible.
-  bool get backgroundAlertReady =>
-      exactAlarmPermission && notificationPermission;
-
-  /// Direct-call permission is required for the hands-free request path. A
-  /// dialer fallback still exists, but it is intentionally not called ready.
-  bool get criticalSafetyReady => backgroundAlertReady && callPermission;
 }

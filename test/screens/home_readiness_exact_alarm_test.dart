@@ -16,7 +16,7 @@ void main() {
   });
 
   test(
-    'readiness card reads exactAlarmPermission from EmergencyReadinessService',
+    'readiness card reads typed platform readiness from the service',
     () {
       expect(
         source,
@@ -24,12 +24,20 @@ void main() {
         reason:
             'home_page must import/use EmergencyReadinessService to surface exact alarm state',
       );
+      expect(source, contains('backgroundAlertReady'));
+      expect(source, contains('criticalSafetyReady'));
+    },
+  );
+
+  test(
+    'readiness card never defaults an unchecked safety capability to true',
+    () {
       expect(
         source,
-        contains('exactAlarmPermission'),
-        reason:
-            'readiness card must check exactAlarmPermission to detect degraded state',
+        isNot(contains('lastState?.exactAlarmPermission ??\n        true')),
       );
+      expect(source, contains('criticalSafetyReady'));
+      expect(source, contains('backgroundAlertReady'));
     },
   );
 }

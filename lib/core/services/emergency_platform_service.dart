@@ -314,6 +314,29 @@ class EmergencyPlatformService {
     return _invokeMap('getDeviceState');
   }
 
+  /// Reads platform-only readiness as a strict typed snapshot.
+  ///
+  /// Every field is mandatory. A timeout, plugin error, missing key or wrong
+  /// wire type returns [PlatformReadinessSnapshot.unavailable] instead of
+  /// silently converting an unknown capability into a successful check.
+  Future<PlatformReadinessSnapshot> getPlatformReadiness() async {
+    if (!isSupported) {
+      return const PlatformReadinessSnapshot.unavailable(
+        reasonCode: 'unsupportedPlatform',
+      );
+    }
+    final invocation = await _invokeTypedMap('getDeviceState');
+    if (!invocation.completed) {
+      return PlatformReadinessSnapshot.unavailable(
+        reasonCode: invocation.reasonCode,
+      );
+    }
+    return PlatformReadinessSnapshot.fromMap(invocation.value) ??
+        const PlatformReadinessSnapshot.unavailable(
+          reasonCode: 'malformedResponse',
+        );
+  }
+
   Future<bool> canScheduleExactAlarms() async {
     if (!isSupported) {
       return false;
@@ -710,4 +733,89 @@ class _TypedInvocation {
   final bool completed;
   final Map<String, dynamic> value;
   final String reasonCode;
+}
+
+@immutable
+class PlatformReadinessSnapshot {
+  const PlatformReadinessSnapshot({
+    required this.supportedOs,
+    required this.telephonyCalling,
+    required this.telecomAvailable,
+    required this.dialHandlerAvailable,
+    required this.batteryOptimizationWhitelisted,
+    required this.exactAlarmPermission,
+    required this.callPermission,
+    required this.notificationPermission,
+    required this.alertChannelHigh,
+  }) : isKnown = true,
+       reasonCode = null;
+
+  const PlatformReadinessSnapshot.unavailable({this.reasonCode})
+    : isKnown = false,
+      supportedOs = false,
+      telephonyCalling = false,
+      telecomAvailable = false,
+      dialHandlerAvailable = false,
+      batteryOptimizationWhitelisted = false,
+      exactAlarmPermission = false,
+      callPermission = false,
+      notificationPermission = false,
+      alertChannelHigh = false;
+
+  final bool isKnown;
+  final String? reasonCode;
+  final bool supportedOs;
+  final bool telephonyCalling;
+  final bool telecomAvailable;
+  final bool dialHandlerAvailable;
+  final bool batteryOptimizationWhitelisted;
+  final bool exactAlarmPermission;
+  final bool callPermission;
+  final bool notificationPermission;
+  final bool alertChannelHigh;
+
+  bool get backgroundAlertReady =>
+      isKnown &&
+      exactAlarmPermission &&
+      notificationPermission &&
+      alertChannelHigh;
+
+  bool get automaticCallReady =>
+      isKnown &&
+      supportedOs &&
+      telephonyCalling &&
+      telecomAvailable &&
+      dialHandlerAvailable &&
+      callPermission;
+
+  bool get criticalSafetyReady => backgroundAlertReady && automaticCallReady;
+
+  static PlatformReadinessSnapshot? fromMap(Map<String, dynamic> map) {
+    const requiredBooleanKeys = <String>{
+      'supportedOs',
+      'telephonyCalling',
+      'telecomAvailable',
+      'dialHandlerAvailable',
+      'batteryOptimizationsIgnored',
+      'canScheduleExactAlarms',
+      'callPermissionGranted',
+      'notificationsEnabled',
+      'alertChannelHigh',
+    };
+    if (requiredBooleanKeys.any((key) => map[key] is! bool)) {
+      return null;
+    }
+    return PlatformReadinessSnapshot(
+      supportedOs: map['supportedOs'] as bool,
+      telephonyCalling: map['telephonyCalling'] as bool,
+      telecomAvailable: map['telecomAvailable'] as bool,
+      dialHandlerAvailable: map['dialHandlerAvailable'] as bool,
+      batteryOptimizationWhitelisted:
+          map['batteryOptimizationsIgnored'] as bool,
+      exactAlarmPermission: map['canScheduleExactAlarms'] as bool,
+      callPermission: map['callPermissionGranted'] as bool,
+      notificationPermission: map['notificationsEnabled'] as bool,
+      alertChannelHigh: map['alertChannelHigh'] as bool,
+    );
+  }
 }

@@ -52,6 +52,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
+    EmergencyReadinessService.instance.addListener(_onReadinessChanged);
     _headerController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 800),
@@ -117,8 +118,13 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         });
   }
 
+  void _onReadinessChanged() {
+    if (mounted) setState(() {});
+  }
+
   @override
   void dispose() {
+    EmergencyReadinessService.instance.removeListener(_onReadinessChanged);
     _connectivitySubscription?.cancel();
     _headerController.dispose();
     _cardsController.dispose();
@@ -312,17 +318,13 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   }
 
   Widget _buildReadinessCard(HomeProvider provider) {
-    final exactAlarmOk =
-        EmergencyReadinessService.instance.lastState?.exactAlarmPermission ??
-        true;
-    final callPermissionOk =
-        EmergencyReadinessService.instance.lastState?.callPermission ?? false;
+    final readiness = EmergencyReadinessService.instance.lastState;
+    final callPermissionOk = readiness?.callPermission ?? false;
     final allReady =
         provider.locationPermissionGranted &&
         provider.contactsPermissionGranted &&
         provider.emergencyContact != null &&
-        exactAlarmOk &&
-        callPermissionOk;
+        (readiness?.criticalSafetyReady ?? false);
     final title = allReady ? "ready".tr() : "setup_incomplete".tr();
     final subtitle = allReady
         ? "system_ready_desc".tr()
@@ -404,12 +406,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               ),
               _buildStatusChip(
                 label: "background_readiness".tr(),
-                isOk:
-                    EmergencyReadinessService
-                        .instance
-                        .lastState
-                        ?.exactAlarmPermission ??
-                    true,
+                isOk: readiness?.backgroundAlertReady ?? false,
                 onTap: () {
                   Navigator.push(
                     context,

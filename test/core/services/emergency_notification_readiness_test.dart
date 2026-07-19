@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:guvenlik_app/core/services/emergency_platform_service.dart';
 
 void main() {
   test('native device state exposes every critical notification capability', () {
@@ -13,15 +14,46 @@ void main() {
     expect(handler, isNot(contains('notificationPolicyAccessGranted')));
   });
 
-  test('Dart readiness keeps required and enhanced capabilities distinct', () {
-    final readiness = File(
-      'lib/core/services/emergency_readiness_service.dart',
-    ).readAsStringSync();
+  test('Dart readiness requires both notification delivery capabilities', () {
+    const base = PlatformReadinessSnapshot(
+      supportedOs: true,
+      telephonyCalling: true,
+      telecomAvailable: true,
+      dialHandlerAvailable: true,
+      batteryOptimizationWhitelisted: true,
+      exactAlarmPermission: true,
+      callPermission: true,
+      notificationPermission: true,
+      alertChannelHigh: true,
+    );
+    const notificationsDisabled = PlatformReadinessSnapshot(
+      supportedOs: true,
+      telephonyCalling: true,
+      telecomAvailable: true,
+      dialHandlerAvailable: true,
+      batteryOptimizationWhitelisted: true,
+      exactAlarmPermission: true,
+      callPermission: true,
+      notificationPermission: false,
+      alertChannelHigh: true,
+    );
+    const lowImportanceChannel = PlatformReadinessSnapshot(
+      supportedOs: true,
+      telephonyCalling: true,
+      telecomAvailable: true,
+      dialHandlerAvailable: true,
+      batteryOptimizationWhitelisted: true,
+      exactAlarmPermission: true,
+      callPermission: true,
+      notificationPermission: true,
+      alertChannelHigh: false,
+    );
 
-    expect(readiness, contains('notificationPermission'));
-    expect(readiness, isNot(contains('fullScreenIntentPermission')));
-    expect(readiness, isNot(contains('notificationPolicyAccess')));
-    expect(readiness, contains('backgroundAlertReady'));
+    expect(base.backgroundAlertReady, isTrue);
+    expect(notificationsDisabled.backgroundAlertReady, isFalse);
+    expect(lowImportanceChannel.backgroundAlertReady, isFalse);
+    expect(notificationsDisabled.criticalSafetyReady, isFalse);
+    expect(lowImportanceChannel.criticalSafetyReady, isFalse);
   });
 
   test('notification helper never claims DND bypass without policy access', () {
