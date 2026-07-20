@@ -13,6 +13,7 @@ import json
 import re
 import subprocess
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 
@@ -48,7 +49,12 @@ FORBIDDEN_TRACKED_SUFFIXES = (".jks", ".keystore")
 FORBIDDEN_TRACKED_NAMES = {"key.properties", "google-services.json", "GoogleService-Info.plist"}
 
 
-def fail(messages: list[str]) -> int:
+def fail(messages: list[str], output: Path | None = None) -> int:
+    if output is not None:
+        try:
+            output.unlink(missing_ok=True)
+        except OSError:
+            pass
     print("RELEASE_SECRET_SCAN_FAIL", file=sys.stderr)
     for message in messages[:50]:
         print(f"- {message}", file=sys.stderr)
@@ -63,8 +69,7 @@ def sha256_bytes(value: bytes) -> str:
 
 def tracked_paths(repo: Path) -> list[str]:
     result = subprocess.run(
-        ["git", "ls-files", "-z"],
-        cwd=repo,
+        ["git", "-C", str(repo), "ls-files", "-z"],
         check=False,
         capture_output=True,
     )
@@ -110,24 +115,93 @@ def is_safe_assigned_value(match: re.Match[str]) -> bool:
     return any(marker in value for marker in SAFE_VALUE_MARKERS)
 
 
+def tracked_source(repo: Path) -> tuple[dict[str, object], list[str]]:
+    commit = subprocess.run(
+        ["git", "-C", str(repo), "rev-parse", "HEAD"],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    tree = subprocess.run(
+        ["git", "-C", str(repo), "rev-parse", "HEAD^{tree}"],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    status = subprocess.run(
+        [
+            "git",
+            "-C",
+            str(repo),
+            "status",
+            "--porcelain=v1",
+            "--untracked-files=all",
+        ],
+        check=False,
+        capture_output=True,
+    )
+    if commit.returncode != 0 or tree.returncode != 0 or status.returncode != 0:
+        raise ValueError("candidate Git identity cannot be resolved")
+    commit_value = commit.stdout.strip()
+    tree_value = tree.stdout.strip()
+    if not re.fullmatch(r"[0-9a-f]{40}", commit_value) or not re.fullmatch(
+        r"[0-9a-f]{40}", tree_value
+    ):
+        raise ValueError("candidate Git identity is malformed")
+    return (
+        {
+            "gitCommit": commit_value,
+            "gitTree": tree_value,
+            "sourceWasDirty": bool(status.stdout),
+            "sourceStatusSha256": sha256_bytes(status.stdout),
+        },
+        tracked_paths(repo),
+    )
+
+
+def atomic_write(path: Path, payload: dict[str, object]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_suffix(path.suffix + ".tmp")
+    temporary.write_text(
+        json.dumps(payload, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    temporary.replace(path)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo", type=Path, default=Path("."))
     parser.add_argument("--classification", type=Path)
     parser.add_argument("--output", required=True, type=Path)
+    parser.add_argument("--require-clean", action="store_true")
     args = parser.parse_args()
     repo = args.repo.resolve()
+    output = args.output.resolve()
+    try:
+        output.unlink(missing_ok=True)
+    except OSError as exc:
+        return fail([f"stale output cannot be removed: {exc}"], output)
 
     try:
         if args.classification is None:
             mode = "tracked-candidate"
-            paths = tracked_paths(repo)
-            source_status_hash = None
+            source, paths = tracked_source(repo)
+            if args.require_clean and source["sourceWasDirty"]:
+                raise ValueError("candidate source is dirty")
         else:
+            if args.require_clean:
+                raise ValueError("require-clean is valid only for tracked candidates")
             mode = "classified-dirty-source"
             paths, source_status_hash = classified_paths(args.classification)
+            source = {
+                "gitCommit": None,
+                "gitTree": None,
+                "sourceWasDirty": True,
+                "sourceStatusSha256": source_status_hash,
+            }
     except ValueError as exc:
-        return fail([str(exc)])
+        return fail([str(exc)], output)
 
     findings: list[str] = []
     scanned: list[str] = []
@@ -175,14 +249,19 @@ def main() -> int:
                     findings.append(f"{relative}:{line_number}: {rule_name}")
 
     if findings:
-        return fail(findings)
+        return fail(findings, output)
     path_set_hash = sha256_bytes("\n".join(paths).encode("utf-8"))
     content_set_hash = sha256_bytes("\n".join(content_digests).encode("utf-8"))
     payload = {
-        "schemaVersion": 1,
+        "schemaVersion": 2,
         "status": "PASS",
+        "scannedAt": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "mode": mode,
-        "sourceStatusSha256": source_status_hash,
+        "source": source,
+        "scanner": {
+            "name": "scan_release_secrets.py",
+            "sha256": sha256_bytes(Path(__file__).resolve().read_bytes()),
+        },
         "pathSetSha256": path_set_hash,
         "contentSetSha256": content_set_hash,
         "inputPathCount": len(paths),
@@ -191,8 +270,10 @@ def main() -> int:
         "rules": [name for name, _ in RULES],
         "findingCount": 0,
     }
-    args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    try:
+        atomic_write(output, payload)
+    except OSError as exc:
+        return fail([f"report cannot be written: {exc}"], output)
     print("RELEASE_SECRET_SCAN_PASS")
     print(f"mode={mode} text={len(scanned)} binary={len(skipped_binary)} findings=0")
     return 0

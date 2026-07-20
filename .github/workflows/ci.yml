@@ -46,6 +46,13 @@ jobs:
       - name: Dependency vulnerability audit (OSV)
         run: ./scripts/audit_dependencies_osv.sh --output build/release-evidence/osv-audit.json
 
+      - name: Scan tracked candidate source for credentials
+        run: |
+          python3 scripts/scan_release_secrets.py \
+            --repo . \
+            --output build/release-evidence/secret-scan.json \
+            --require-clean
+
       - name: Android host unit tests
         working-directory: android
         run: ./gradlew app:testPlayDebugUnitTest --console=plain

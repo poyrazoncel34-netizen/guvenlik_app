@@ -239,7 +239,8 @@ jobs:
         run: |
           python3 scripts/scan_release_secrets.py \
             --repo . \
-            --output build/release-evidence/secret-scan.json
+            --output build/release-evidence/secret-scan.json \
+            --require-clean
 
       - name: Verify candidate SBOM licenses and third-party notices
         run: |

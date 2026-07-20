@@ -47,11 +47,14 @@ void main() {
     File('${temp.path}/$path').writeAsStringSync('value=$credential\n');
     writeClassification(path);
 
+    final staleOutput = File('${temp.path}/secret-scan.json')
+      ..writeAsStringSync('{"status":"PASS"}\n');
     final result = await scan();
 
     expect(result.exitCode, isNot(0));
     expect(result.stderr, contains('candidate.txt:1: aws-access-key'));
     expect(result.stderr, isNot(contains(credential)));
+    expect(staleOutput.existsSync(), isFalse);
   });
 
   test(
@@ -69,13 +72,38 @@ void main() {
       final report =
           jsonDecode(File('${temp.path}/secret-scan.json').readAsStringSync())
               as Map<String, dynamic>;
-    expect(report['status'], 'PASS');
-    expect(report['scannedTextFileCount'], 1);
-    expect(report['findingCount'], 0);
-    expect(
-      report['contentSetSha256'],
-      matches(RegExp(r'^[0-9a-f]{64}$')),
-    );
+      expect(report['schemaVersion'], 2);
+      expect(report['status'], 'PASS');
+      expect(report['scannedTextFileCount'], 1);
+      expect(report['findingCount'], 0);
+      expect(report['contentSetSha256'], matches(RegExp(r'^[0-9a-f]{64}$')));
+      expect(
+        (report['scanner'] as Map<String, dynamic>)['sha256'],
+        matches(RegExp(r'^[0-9a-f]{64}$')),
+      );
+    },
+  );
+
+  test(
+    'tracked candidate report binds the exact Git commit and tree',
+    () async {
+      final output = File('${temp.path}/tracked-secret-scan.json');
+      final result = await Process.run('python3', <String>[
+        'scripts/scan_release_secrets.py',
+        '--repo',
+        Directory.current.path,
+        '--output',
+        output.path,
+      ]);
+
+      expect(result.exitCode, 0, reason: '${result.stdout}\n${result.stderr}');
+      final report =
+          jsonDecode(output.readAsStringSync()) as Map<String, dynamic>;
+      final source = report['source'] as Map<String, dynamic>;
+      expect(source['gitCommit'], matches(RegExp(r'^[0-9a-f]{40}$')));
+      expect(source['gitTree'], matches(RegExp(r'^[0-9a-f]{40}$')));
+      expect(source['sourceStatusSha256'], matches(RegExp(r'^[0-9a-f]{64}$')));
+      expect(source['sourceWasDirty'], isA<bool>());
     },
   );
 
@@ -90,5 +118,7 @@ void main() {
       workflow,
       contains('secretScan=build/release-evidence/secret-scan.json'),
     );
+    expect(workflow, contains('scan_release_secrets.py \\'));
+    expect(workflow, contains('            --require-clean'));
   });
 }
