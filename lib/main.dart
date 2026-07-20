@@ -207,6 +207,12 @@ void main() async {
 // ANA UYGULAMA
 // ============================================================================
 
+/// Preserves Android accessibility scaling through the release acceptance
+/// boundary of 200%. Larger values are bounded until every screen has passed
+/// the corresponding reflow matrix on physical devices.
+TextScaler appTextScaler(TextScaler systemScaler) =>
+    systemScaler.clamp(minScaleFactor: 1.0, maxScaleFactor: 2.0);
+
 class KoruBeniApp extends StatelessWidget {
   const KoruBeniApp({super.key});
 
@@ -221,14 +227,11 @@ class KoruBeniApp extends StatelessWidget {
           title: 'KoruBeni',
           theme: AppTheme.lightTheme,
           builder: (context, child) {
-            // Clamp text scale factor for accessibility & layout stability
             final mediaQuery = MediaQuery.of(context);
-            final clampedTextScaler = mediaQuery.textScaler.clamp(
-              minScaleFactor: 1.0,
-              maxScaleFactor: 1.4,
-            );
             return MediaQuery(
-              data: mediaQuery.copyWith(textScaler: clampedTextScaler),
+              data: mediaQuery.copyWith(
+                textScaler: appTextScaler(mediaQuery.textScaler),
+              ),
               child: AppPrivacyShield(
                 child: Semantics(
                   label: 'app_semantics_label'.tr(),

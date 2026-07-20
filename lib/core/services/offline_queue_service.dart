@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math' show min, pow;
-import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 // Emergency repository removed (offline-first)
@@ -44,7 +43,7 @@ class OfflineQueueService {
   Future<void> enqueue(OfflineEvent event) async {
     final prefs = await SharedPreferences.getInstance();
     final queue = _loadQueue(prefs);
-    final payload = event.toJson();
+    final payload = _storagePayload(event);
     final encodedPayload = jsonEncode(payload);
     if (encodedPayload.length > _maxEventSize) {
       debugPrint('OfflineQueue: Event too large, dropped');
@@ -61,6 +60,19 @@ class OfflineQueueService {
     );
     debugPrint('OfflineQueue: Event queued (${queue.length} pending)');
   }
+
+  Map<String, dynamic> _storagePayload(OfflineEvent event) => <String, dynamic>{
+    // This build has no upload consumer. Persist only bounded operational
+    // metadata; user-authored title/description/data may contain PII and are
+    // deliberately excluded from SharedPreferences.
+    'type': event.type == 'emergency' ? 'emergency' : 'local',
+    'title': '',
+    'description': null,
+    'data': null,
+    'createdAt': event.createdAt.toIso8601String(),
+    'retryCount': event.retryCount,
+    'lastAttemptAt': event.lastAttemptAt?.toIso8601String(),
+  };
 
   /// Drain pending events through local processing only — there is no
   /// backend in this Play release.
@@ -111,7 +123,7 @@ class OfflineQueueService {
           await Future<void>.delayed(const Duration(milliseconds: 500));
         }
       } catch (e) {
-        debugPrint('OfflineQueue: Failed to process event: $e');
+        debugPrint('OfflineQueue: local event processing failed');
         failedEvents.add(eventMap);
         await Future<void>.delayed(const Duration(milliseconds: 500));
       }
@@ -159,34 +171,23 @@ class OfflineQueueService {
   /// Process a single event locally. There is no backend; this only logs
   /// the event for the local-only safety record.
   Future<bool> _processEvent(OfflineEvent event) async {
-    debugPrint('OfflineQueue: Processing ${event.type} - ${event.title}');
+    // Never interpolate event fields here. They may contain contact details,
+    // user-authored text or coordinates and logcat is not a private store.
+    debugPrint('OfflineQueue: processing local event');
 
     if (event.type == 'emergency') {
-      // Offline-first: Emergency events are recorded locally only.
-      debugPrint('OfflineQueue: Emergency event (local only, no backend)');
       try {
-        final data = event.data ?? {};
-        final message =
-            data['message'] as String? ??
-            event.description ??
-            'default_emergency_message'.tr();
-        final lat = (data['lat'] as num?)?.toDouble();
-        final lng = (data['lng'] as num?)?.toDouble();
-
-        // Log the emergency locally
-        debugPrint('Emergency queued: ${event.title}');
-        debugPrint(
-          'Location: ${lat != null && lng != null ? "$lat, $lng" : "N/A"}',
-        );
-        debugPrint('Message: $message');
-
+        // ActivityService owns the user-visible local history. This queue only
+        // drains its bounded legacy record and emits a non-sensitive code.
+        debugPrint('OfflineQueue: local event processed');
         return true;
-      } catch (e) {
-        debugPrint('OfflineQueue: Emergency local processing failed: $e');
+      } catch (_) {
+        debugPrint('OfflineQueue: local event processing failed');
         return false;
       }
     }
 
+    debugPrint('OfflineQueue: local event processed');
     return true;
   }
 
