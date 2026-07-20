@@ -12,7 +12,10 @@ import android.os.Build
 /** Clears the actionable fallback and its retained phone target on dismiss/TTL. */
 class EmergencyFallbackCleanupReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent?) {
-        EmergencyReceiverGuard.run("EmergencyFallbackCleanupReceiver") {
+        EmergencyReceiverGuard.run(
+            context,
+            NativeSafetyEventCode.FALLBACK_CLEANUP_RECEIVER_BOUNDARY_FAILURE,
+        ) {
             val token = SessionToken(
                 protocolVersion = intent?.getIntExtra(EXTRA_PROTOCOL_VERSION, -1) ?: -1,
                 randomId = intent?.getStringExtra(EXTRA_RANDOM_ID).orEmpty(),

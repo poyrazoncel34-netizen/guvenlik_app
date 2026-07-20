@@ -8,6 +8,7 @@ import '../di/service_locator.dart';
 import '../security/secure_storage.dart';
 import '../security/secure_storage_keys.dart';
 import 'contact_service.dart';
+import 'emergency_platform_service.dart';
 import 'local_database_service.dart';
 
 class UserDataExportService {
@@ -35,7 +36,9 @@ class UserDataExportService {
         'dataController':
             '${AppConstants.appName} — ${AppConstants.supportEmail}',
         'kvkkNote':
-            'Bu dışa aktarım KVKK Madde 11/ğ kapsamında veri portabilitesi hakkı çerçevesinde oluşturulmuştur.',
+            'Bu dosya, KoruBeni uygulamasının bu cihazda erişebildiği '
+            'verilerin kullanıcı tarafından başlatılan yerel bir kopyasıdır; '
+            'veri sorumlusuna yapılan hukuki başvuru yerine geçmez.',
       },
       'profile': await _profileData(prefs),
       'emergencyContacts': contacts.map((contact) => contact.toJson()).toList(),
@@ -49,6 +52,8 @@ class UserDataExportService {
       'fakeCall': await _fakeCallData(secure),
       'activityEvents': activityEvents,
       'offlineEvents': _offlineEvents(prefs),
+      'nativeSafetyDiagnostics': await EmergencyPlatformService.instance
+          .readNativeSafetyDiagnostics(),
       'consentState': await consentManager.exportConsentLog(),
     };
   }
@@ -89,7 +94,7 @@ class UserDataExportService {
   }
 
   // Medical-profile data was removed from the export; only non-sensitive
-  // identity fields remain in the KVKK Md.11 portability output.
+  // identity fields remain in the user-controlled local data copy.
   static Future<Map<String, dynamic>> _profileData(
     SharedPreferences prefs,
   ) async {

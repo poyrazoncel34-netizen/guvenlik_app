@@ -7,7 +7,10 @@ import android.util.Log
 
 class BootCompletedReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent?) {
-        EmergencyReceiverGuard.run("BootCompletedReceiver") {
+        EmergencyReceiverGuard.run(
+            context,
+            NativeSafetyEventCode.BOOT_RECEIVER_BOUNDARY_FAILURE,
+        ) {
             val action = intent?.action ?: return@run
             if (action !in SUPPORTED_ACTIONS) return@run
             Log.i("BootCompletedReceiver", "System restore event received; reconciling safety state")

@@ -69,6 +69,15 @@ class EmergencyPlatformHandler(
                         // after the authoritative device-protected wipe is
                         // durably acknowledged.
                         EmergencyPrefs.clear(context)
+                        if (!clearNativeSafetyDiagnostics()) {
+                            result.success(
+                                WipeResult(
+                                    WipeStatus.PENDING,
+                                    "nativeDiagnosticsWipeFailed",
+                                ).toMap(),
+                            )
+                            return
+                        }
                     }
                     result.success(wipe.toMap())
                 }
@@ -96,6 +105,13 @@ class EmergencyPlatformHandler(
                 }
                 "getDeviceState" -> {
                     result.success(getDeviceState())
+                }
+                "readNativeSafetyDiagnostics" -> {
+                    result.success(
+                        DeviceProtectedNativeSafetyEventRing(context)
+                            .read()
+                            .map(NativeSafetyEvent::toMap),
+                    )
                 }
                 "openManufacturerSettings" -> {
                     result.success(openManufacturerSettings())
@@ -218,6 +234,12 @@ class EmergencyPlatformHandler(
             "notificationsEnabled" to capabilities.notificationsEnabled,
             "alertChannelHigh" to capabilities.alertChannelHigh,
         )
+    }
+
+    private fun clearNativeSafetyDiagnostics(): Boolean = try {
+        DeviceProtectedNativeSafetyEventRing(context).clear()
+    } catch (_: RuntimeException) {
+        false
     }
 
     private fun openManufacturerSettings(): Boolean {

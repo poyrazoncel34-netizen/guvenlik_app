@@ -163,7 +163,7 @@ class ConsentManager {
     }
   }
 
-  // ── Dışa aktarım (KVKK Madde 11/ğ) ───────────────────────────────────────
+  // ── Kullanıcı kontrollü yerel veri kopyası ───────────────────────────────
   Future<Map<String, dynamic>> exportConsentLog() async {
     final logs = await getAllLogs();
     return {

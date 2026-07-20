@@ -1,6 +1,6 @@
 // ============================================================================
 // VERİ DIŞA AKTARMA EKRANI
-// KVKK Madde 11/ğ — Veri portabilitesi
+// Kullanıcı tarafından başlatılan yerel kişisel veri kopyası
 // ============================================================================
 
 import 'dart:convert';

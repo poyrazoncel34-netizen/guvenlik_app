@@ -15,7 +15,10 @@ import android.content.Intent
  */
 class ExactAlarmPermissionReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent?) {
-        EmergencyReceiverGuard.run("ExactAlarmPermissionReceiver") {
+        EmergencyReceiverGuard.run(
+            context,
+            NativeSafetyEventCode.EXACT_ALARM_PERMISSION_RECEIVER_BOUNDARY_FAILURE,
+        ) {
             if (
                 intent?.action !=
                 AlarmManager.ACTION_SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED

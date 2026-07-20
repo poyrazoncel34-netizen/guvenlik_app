@@ -129,10 +129,75 @@ void main() {
     expect(await unsupported.wipeEmergencySessions(), WipeResult.unknown);
     expect(await unsupported.consumePendingTrigger(), isNull);
     expect(await unsupported.getDeviceState(), isEmpty);
+    expect(await unsupported.readNativeSafetyDiagnostics(), isEmpty);
     expect(await unsupported.canScheduleExactAlarms(), isFalse);
     await unsupported.requestExactAlarmPermission();
     expect(await unsupported.openManufacturerSettings(), isFalse);
     await unsupported.dispose();
+  });
+
+  test(
+    'native diagnostics export accepts only bounded allowlisted code and time',
+    () async {
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, (call) async {
+            expect(call.method, 'readNativeSafetyDiagnostics');
+            return <Object?>[
+              <String, Object?>{
+                'code': 'boot_receiver_boundary_failure',
+                'occurredAtMs': 1234,
+                'injected': '+905551234567',
+              },
+              <String, Object?>{
+                'code': 'future_or_attacker_controlled_code',
+                'occurredAtMs': 1235,
+              },
+              <String, Object?>{
+                'code': 'clock_receiver_boundary_failure',
+                'occurredAtMs': 'not-a-number',
+              },
+              ...List<Object?>.generate(
+                70,
+                (index) => <String, Object?>{
+                  'code': 'panic_receiver_boundary_failure',
+                  'occurredAtMs': 2000 + index,
+                },
+              ),
+            ];
+          });
+
+      final events = await service.readNativeSafetyDiagnostics();
+
+      expect(events, hasLength(64));
+      expect(events.first, <String, Object?>{
+        'code': 'boot_receiver_boundary_failure',
+        'occurredAtMs': 1234,
+      });
+      expect(
+        events.first.keys,
+        unorderedEquals(<String>['code', 'occurredAtMs']),
+      );
+      expect(
+        events.any((event) => event.values.contains('+905551234567')),
+        isFalse,
+      );
+      expect(
+        events.any(
+          (event) => event['code'] == 'future_or_attacker_controlled_code',
+        ),
+        isFalse,
+      );
+    },
+  );
+
+  test('native diagnostics export fails closed on platform errors', () async {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(
+          channel,
+          (call) async => throw PlatformException(code: 'storageFailure'),
+        );
+
+    expect(await service.readNativeSafetyDiagnostics(), isEmpty);
   });
 
   test(

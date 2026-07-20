@@ -14,7 +14,10 @@ import android.content.Intent
  */
 class CountdownAlarmReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent?) {
-        EmergencyReceiverGuard.run("CountdownAlarmReceiver") {
+        EmergencyReceiverGuard.run(
+            context,
+            NativeSafetyEventCode.PANIC_RECEIVER_BOUNDARY_FAILURE,
+        ) {
             val token = AndroidEmergencySessionAlarmScheduler.tokenFromIntent(intent)
                 ?: return@run
             val dispatch = EmergencySessionRuntime.coordinator(context).claimAndDispatch(token)

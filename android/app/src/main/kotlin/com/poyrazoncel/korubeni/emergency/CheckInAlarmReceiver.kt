@@ -6,7 +6,10 @@ import android.content.Intent
 
 class CheckInAlarmReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent?) {
-        EmergencyReceiverGuard.run("CheckInAlarmReceiver") {
+        EmergencyReceiverGuard.run(
+            context,
+            NativeSafetyEventCode.LONG_SESSION_RECEIVER_BOUNDARY_FAILURE,
+        ) {
             val token = AndroidEmergencySessionAlarmScheduler.tokenFromIntent(intent)
                 ?: return@run
             val dispatch = EmergencySessionRuntime.coordinator(context).claimAndDispatch(token)

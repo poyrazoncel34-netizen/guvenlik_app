@@ -314,6 +314,58 @@ class EmergencyPlatformService {
     return _invokeMap('getDeviceState');
   }
 
+  /// Returns a bounded, allowlisted projection of native Direct Boot safety
+  /// failures for the user's explicit local-data export. Unknown codes,
+  /// malformed values and caller-controlled extra fields are discarded.
+  Future<List<Map<String, Object?>>> readNativeSafetyDiagnostics() async {
+    if (!isSupported) return const <Map<String, Object?>>[];
+    try {
+      final response = await _methodChannel
+          .invokeMethod<dynamic>('readNativeSafetyDiagnostics')
+          .timeout(_defaultTimeout);
+      if (response is! List) return const <Map<String, Object?>>[];
+      final normalized = <Map<String, Object?>>[];
+      for (final raw in response) {
+        if (normalized.length >= _maxNativeSafetyDiagnostics) break;
+        if (raw is! Map) continue;
+        final code = raw['code'];
+        final occurredAtMs = raw['occurredAtMs'];
+        if (code is! String ||
+            !_nativeSafetyDiagnosticCodes.contains(code) ||
+            occurredAtMs is! int ||
+            occurredAtMs <= 0) {
+          continue;
+        }
+        normalized.add(<String, Object?>{
+          'code': code,
+          'occurredAtMs': occurredAtMs,
+        });
+      }
+      return List<Map<String, Object?>>.unmodifiable(normalized);
+    } on TimeoutException {
+      debugPrint('[EmergencyPlatform] native diagnostics read timed out');
+      return const <Map<String, Object?>>[];
+    } on PlatformException catch (error) {
+      debugPrint(
+        '[EmergencyPlatform] native diagnostics read failed: ${error.code}',
+      );
+      return const <Map<String, Object?>>[];
+    } on Exception {
+      debugPrint('[EmergencyPlatform] native diagnostics read failed');
+      return const <Map<String, Object?>>[];
+    }
+  }
+
+  static const int _maxNativeSafetyDiagnostics = 64;
+  static const Set<String> _nativeSafetyDiagnosticCodes = <String>{
+    'boot_receiver_boundary_failure',
+    'clock_receiver_boundary_failure',
+    'exact_alarm_permission_receiver_boundary_failure',
+    'panic_receiver_boundary_failure',
+    'long_session_receiver_boundary_failure',
+    'fallback_cleanup_receiver_boundary_failure',
+  };
+
   /// Reads platform-only readiness as a strict typed snapshot.
   ///
   /// Every field is mandatory. A timeout, plugin error, missing key or wrong

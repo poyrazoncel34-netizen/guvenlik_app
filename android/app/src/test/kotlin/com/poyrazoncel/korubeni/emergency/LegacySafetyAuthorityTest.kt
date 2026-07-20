@@ -49,6 +49,10 @@ class LegacySafetyAuthorityTest {
             .putString(EmergencyPrefs.KEY_CHECK_IN_PRIMARY_NUMBER, "+905001234567")
             .putString(EmergencyPrefs.KEY_COUNTDOWN_PRIMARY_NUMBER, "+905009998877")
             .commit()
+        val diagnostics = DeviceProtectedNativeSafetyEventRing(context) { 99L }
+        assertTrue(
+            diagnostics.record(NativeSafetyEventCode.PANIC_RECEIVER_BOUNDARY_FAILURE),
+        )
         val result = RecordingResult()
 
         EmergencyPlatformHandler(activity).onMethodCall(
@@ -58,6 +62,7 @@ class LegacySafetyAuthorityTest {
 
         assertEquals("completed", (result.successValue as Map<*, *>)["type"])
         assertTrue(EmergencyPrefs.prefs(context).all.isEmpty())
+        assertTrue(diagnostics.read().isEmpty())
     }
 
     private class RecordingResult : MethodChannel.Result {

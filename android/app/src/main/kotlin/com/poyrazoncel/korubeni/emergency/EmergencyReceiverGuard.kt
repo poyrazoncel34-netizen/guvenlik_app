@@ -1,5 +1,6 @@
 package com.poyrazoncel.korubeni.emergency
 
+import android.content.Context
 import android.util.Log
 
 /**
@@ -11,11 +12,16 @@ import android.util.Log
  * No token, target, intent extras, or exception text is written to the log.
  */
 internal object EmergencyReceiverGuard {
-    fun run(receiverName: String, block: () -> Unit) {
+    fun run(
+        context: Context,
+        eventCode: NativeSafetyEventCode,
+        block: () -> Unit,
+    ) {
         try {
             block()
         } catch (_: RuntimeException) {
-            Log.e(TAG, "$receiverName failed at the Android receiver boundary")
+            NativeSafetyEventRecorder.record(context, eventCode)
+            Log.e(TAG, "${eventCode.wireValue} at Android receiver boundary")
         }
     }
 
