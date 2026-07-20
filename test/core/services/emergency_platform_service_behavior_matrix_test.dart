@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guvenlik_app/core/services/emergency_platform_service.dart';
@@ -269,17 +270,30 @@ void main() {
     expect(await arm(), isA<ArmUnknown>());
   });
 
-  test('typed invocation errors preserve uncertainty reason codes', () async {
+  test('typed invocation errors preserve uncertainty without leaking details', () async {
+    final messages = <String>[];
+    final originalDebugPrint = debugPrint;
+    debugPrint = (String? message, {int? wrapWidth}) {
+      if (message != null) messages.add(message);
+    };
+    addTearDown(() => debugPrint = originalDebugPrint);
+
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(channel, (call) async {
           if (call.method == 'armEmergencySession') {
-            throw PlatformException(code: 'denied');
+            throw PlatformException(
+              code: 'CANARY_PRIVATE_PLATFORM_CODE',
+              message: 'PIN=8642 phone=+905551112233',
+            );
           }
           return <String, Object?>{'type': 'absent'};
         });
     final platformFailure = await arm();
     expect(platformFailure, isA<ArmUnknown>());
-    expect((platformFailure as ArmUnknown).reasonCode, 'platform:denied');
+    expect((platformFailure as ArmUnknown).reasonCode, 'platformError');
+    expect(messages.join('\n'), isNot(contains('CANARY_PRIVATE_PLATFORM_CODE')));
+    expect(messages.join('\n'), isNot(contains('8642')));
+    expect(messages.join('\n'), isNot(contains('+905551112233')));
 
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(channel, (call) async {
@@ -290,7 +304,7 @@ void main() {
     expect(unexpectedFailure, isA<ArmUnknown>());
     // The Flutter test messenger transports handler exceptions as a platform
     // error envelope; the API must still preserve uncertainty.
-    expect((unexpectedFailure as ArmUnknown).reasonCode, 'platform:error');
+    expect((unexpectedFailure as ArmUnknown).reasonCode, 'platformError');
   });
 
   test('cancel response matrix rejects false cancellation', () async {

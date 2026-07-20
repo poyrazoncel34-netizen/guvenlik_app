@@ -189,8 +189,8 @@ class _CountdownScreenState extends State<CountdownScreen>
         pinConfigured: _pinState == PinState.configured,
         randomId: _dispatchId,
       );
-    } catch (error) {
-      debugPrint('CountdownScreen: Native session arm failed: $error');
+    } catch (_) {
+      debugPrint('CountdownScreen: Native session arm failed');
       result = const ArmUnknown('flutterArmException');
     }
     _armResult = result;
@@ -267,8 +267,8 @@ class _CountdownScreenState extends State<CountdownScreen>
     // Native dispatch and fallback must never wait on a plugin channel. The
     // wakelock is a best-effort execution aid, not safety authority.
     unawaited(
-      WakelockPlus.enable().catchError((Object error) {
-        debugPrint('CountdownScreen: WakelockPlus.enable failed: $error');
+      WakelockPlus.enable().catchError((Object _) {
+        debugPrint('CountdownScreen: WakelockPlus.enable failed');
       }),
     );
 
@@ -288,9 +288,9 @@ class _CountdownScreenState extends State<CountdownScreen>
 
     try {
       await _executeEmergency();
-    } catch (e) {
+    } catch (_) {
       // FAIL-SAFE: If ANY unhandled exception occurs, show blocking error with manual call option.
-      debugPrint('CountdownScreen: Emergency execution crashed: $e');
+      debugPrint('CountdownScreen: Emergency execution failed');
       unawaited(KoruBeniForegroundService.stop(owner: _foregroundOwner));
       if (mounted) {
         final primaryNumber = _emergencyContact?.phone ?? '';
@@ -396,8 +396,8 @@ class _CountdownScreenState extends State<CountdownScreen>
             ),
           ),
         );
-      } catch (e) {
-        debugPrint('CountdownScreen: Navigation failed: $e');
+      } catch (_) {
+        debugPrint('CountdownScreen: Navigation failed');
         _isNavigating = false;
         _handoffToEmergencyScreen = false;
         if (mounted) {
@@ -649,11 +649,11 @@ class _CountdownScreenState extends State<CountdownScreen>
         title: "countdown_cancelled_title".tr(),
         description: description,
       );
-    } catch (error) {
+    } catch (_) {
       // Native cancellation is already durably acknowledged. A local history
       // failure must not trap the user on an active-looking countdown or
       // weaken the cancellation result.
-      debugPrint('CountdownScreen: cancellation log failed: $error');
+      debugPrint('CountdownScreen: cancellation log failed');
     }
     // Native cancellation is already durable and ownership is released before
     // the notification plugin is awaited internally. A stalled plugin channel

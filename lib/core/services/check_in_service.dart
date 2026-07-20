@@ -570,8 +570,8 @@ class CheckInService extends ChangeNotifier {
           () => KoruBeniForegroundService.stop(owner: _foregroundOwner),
         );
       }
-    } catch (e) {
-      debugPrint('CheckInService emergency trigger failed: $e');
+    } catch (_) {
+      debugPrint('CheckInService emergency trigger failed');
     } finally {
       _emergencyInProgress = false;
     }
@@ -719,8 +719,8 @@ class CheckInService extends ChangeNotifier {
   Future<void> _bestEffort(Future<void> Function() operation) async {
     try {
       await operation();
-    } catch (error) {
-      debugPrint('CheckInService best-effort operation failed: $error');
+    } catch (_) {
+      debugPrint('CheckInService best-effort operation failed');
     }
   }
 

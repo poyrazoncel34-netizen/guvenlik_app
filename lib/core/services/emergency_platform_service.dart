@@ -345,10 +345,8 @@ class EmergencyPlatformService {
     } on TimeoutException {
       debugPrint('[EmergencyPlatform] native diagnostics read timed out');
       return const <Map<String, Object?>>[];
-    } on PlatformException catch (error) {
-      debugPrint(
-        '[EmergencyPlatform] native diagnostics read failed: ${error.code}',
-      );
+    } on PlatformException {
+      debugPrint('[EmergencyPlatform] native diagnostics read failed');
       return const <Map<String, Object?>>[];
     } on Exception {
       debugPrint('[EmergencyPlatform] native diagnostics read failed');
@@ -406,14 +404,10 @@ class EmergencyPlatformService {
           .timeout(_defaultTimeout);
     } on TimeoutException {
       debugPrint('[EmergencyPlatform] requestExactAlarmPermission timed out');
-    } on PlatformException catch (e) {
-      debugPrint(
-        '[EmergencyPlatform] requestExactAlarmPermission failed: ${e.code}',
-      );
-    } on Exception catch (e) {
-      debugPrint(
-        '[EmergencyPlatform] requestExactAlarmPermission unexpected error: $e',
-      );
+    } on PlatformException {
+      debugPrint('[EmergencyPlatform] requestExactAlarmPermission failed');
+    } on Exception {
+      debugPrint('[EmergencyPlatform] requestExactAlarmPermission failed');
     }
   }
 
@@ -706,11 +700,11 @@ class EmergencyPlatformService {
     } on TimeoutException {
       debugPrint('[EmergencyPlatform] $method timed out');
       return const _TypedInvocation.failed('timeout');
-    } on PlatformException catch (error) {
-      debugPrint('[EmergencyPlatform] $method failed: ${error.code}');
-      return _TypedInvocation.failed('platform:${error.code}');
-    } on Exception catch (error) {
-      debugPrint('[EmergencyPlatform] $method unexpected error: $error');
+    } on PlatformException {
+      debugPrint('[EmergencyPlatform] $method failed');
+      return const _TypedInvocation.failed('platformError');
+    } on Exception {
+      debugPrint('[EmergencyPlatform] $method failed');
       return const _TypedInvocation.failed('unexpectedError');
     }
   }
@@ -728,11 +722,11 @@ class EmergencyPlatformService {
     } on TimeoutException {
       debugPrint('[EmergencyPlatform] $method timed out');
       return const <String, dynamic>{};
-    } on PlatformException catch (e) {
-      debugPrint('[EmergencyPlatform] $method failed: ${e.code}');
+    } on PlatformException {
+      debugPrint('[EmergencyPlatform] $method failed');
       return const <String, dynamic>{};
-    } on Exception catch (e) {
-      debugPrint('[EmergencyPlatform] $method unexpected error: $e');
+    } on Exception {
+      debugPrint('[EmergencyPlatform] $method failed');
       return const <String, dynamic>{};
     }
   }
@@ -749,11 +743,11 @@ class EmergencyPlatformService {
     } on TimeoutException {
       debugPrint('[EmergencyPlatform] $method timed out');
       return false;
-    } on PlatformException catch (e) {
-      debugPrint('[EmergencyPlatform] $method failed: ${e.code}');
+    } on PlatformException {
+      debugPrint('[EmergencyPlatform] $method failed');
       return false;
-    } on Exception catch (e) {
-      debugPrint('[EmergencyPlatform] $method unexpected error: $e');
+    } on Exception {
+      debugPrint('[EmergencyPlatform] $method failed');
       return false;
     }
   }

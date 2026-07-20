@@ -65,7 +65,7 @@ void main() {
     });
 
     test('catch-all fail-safe: dispatch çökse bile diyalog gösterilir', () {
-      final catchIdx = makeCallBody.indexOf('catch (e)');
+      final catchIdx = makeCallBody.indexOf('catch (');
       expect(
         catchIdx,
         isNot(-1),
@@ -79,6 +79,13 @@ void main() {
         failSafeIdx,
         isNot(-1),
         reason: 'Beklenmeyen exception da bloklayıcı fail-safe ile bitmeli',
+      );
+      expect(
+        makeCallBody.contains(
+          r"debugPrint('CountdownScreen: Emergency execution crashed: $e')",
+        ),
+        isFalse,
+        reason: 'Raw exception details must not reach local debug output.',
       );
     });
   });
