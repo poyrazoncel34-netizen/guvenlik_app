@@ -19,6 +19,7 @@ const _artifactNames = <String>[
   'gradleVerification',
   'sourceProvenance',
   'secretScan',
+  'osvAudit',
   'thirdPartyNotices',
 ];
 

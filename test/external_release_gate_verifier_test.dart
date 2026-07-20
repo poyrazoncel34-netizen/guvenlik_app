@@ -114,6 +114,7 @@ void main() {
         'gradleVerification',
         'sourceProvenance',
         'secretScan',
+        'osvAudit',
         'thirdPartyNotices',
       ])
         name: File('${directory.path}/$name.txt')

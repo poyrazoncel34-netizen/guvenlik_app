@@ -44,7 +44,7 @@ jobs:
             --report build/coverage-evidence/critical-coverage.json
 
       - name: Dependency vulnerability audit (OSV)
-        run: ./scripts/audit_dependencies_osv.sh
+        run: ./scripts/audit_dependencies_osv.sh --output build/release-evidence/osv-audit.json
 
       - name: Android host unit tests
         working-directory: android

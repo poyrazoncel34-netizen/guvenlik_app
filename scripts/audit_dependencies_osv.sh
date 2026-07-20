@@ -14,6 +14,25 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 TMP_DIR="$(mktemp -d "${TMPDIR:-/tmp}/korubeni-osv-audit.XXXXXX")"
 trap 'rm -rf "$TMP_DIR"' EXIT
 
+OUTPUT=""
+while [ "$#" -gt 0 ]; do
+    case "$1" in
+        --output)
+            [ "$#" -ge 2 ] || { echo "Missing value for --output" >&2; exit 64; }
+            OUTPUT="$2"
+            shift 2
+            ;;
+        *)
+            echo "Unknown argument: $1" >&2
+            exit 64
+            ;;
+    esac
+done
+[ -n "$OUTPUT" ] || {
+    echo "Usage: ./scripts/audit_dependencies_osv.sh --output <path>" >&2
+    exit 64
+}
+
 query_osv() {
     local label="$1"
     local query_file="$2"
@@ -31,28 +50,6 @@ query_osv() {
         --output "$response_file" \
         'https://api.osv.dev/v1/querybatch'
 
-    ruby -rjson -e '
-      queries = JSON.parse(File.read(ARGV[0])).fetch("queries")
-      results = JSON.parse(File.read(ARGV[1])).fetch("results")
-      abort "OSV response count mismatch" unless results.length == queries.length
-
-      findings = []
-      results.each_with_index do |result, index|
-        next if result.fetch("vulns", []).empty?
-        package = queries[index].fetch("package")
-        coordinate = "#{package.fetch("ecosystem")}:#{package.fetch("name")}@#{queries[index].fetch("version")}"
-        ids = result.fetch("vulns").map { |vulnerability| vulnerability.fetch("id") }.uniq.sort
-        findings << "#{coordinate}: #{ids.join(",")}"
-      end
-
-      if findings.any?
-        warn "Known OSV vulnerabilities found:"
-        findings.each { |finding| warn "  #{finding}" }
-        exit 1
-      end
-
-      puts "PASS #{queries.length} exact package versions: no known OSV findings"
-    ' "$query_file" "$response_file"
 }
 
 PUB_DEPS="$TMP_DIR/pub-deps.json"
@@ -102,4 +99,14 @@ ruby -rjson -e '
 ' "$MAVEN_REPORT" > "$MAVEN_QUERY"
 query_osv maven "$MAVEN_QUERY"
 
-echo "Dependency audit complete. OSV coverage limitations still apply."
+python3 "$REPO_ROOT/scripts/generate_osv_evidence.py" \
+    --repo "$REPO_ROOT" \
+    --pub-query "$PUB_QUERY" \
+    --pub-response "$TMP_DIR/pub-response.json" \
+    --maven-query "$MAVEN_QUERY" \
+    --maven-response "$TMP_DIR/maven-response.json" \
+    --output "$OUTPUT" \
+    --require-clean
+
+echo "Dependency audit complete. Candidate-bound evidence: $OUTPUT"
+echo "OSV coverage limitations still apply."

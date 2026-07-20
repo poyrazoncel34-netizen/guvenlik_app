@@ -118,6 +118,9 @@ void main() {
         final scanner = File(
           'scripts/audit_dependencies_osv.sh',
         ).readAsStringSync();
+        final evidenceGenerator = File(
+          'scripts/generate_osv_evidence.py',
+        ).readAsStringSync();
 
         expect(ci, contains('./scripts/audit_dependencies_osv.sh'));
         expect(release, contains('./scripts/audit_dependencies_osv.sh'));
@@ -125,7 +128,10 @@ void main() {
         expect(scanner, contains('ecosystem: "Maven"'));
         expect(scanner, contains('https://api.osv.dev/v1/querybatch'));
         expect(scanner, contains('--fail'));
-        expect(scanner, contains('OSV response count mismatch'));
+        expect(evidenceGenerator, contains('OSV response count mismatch'));
+        expect(evidenceGenerator, contains('sourceStatusSha256'));
+        expect(evidenceGenerator, contains('pubspecLockSha256'));
+        expect(evidenceGenerator, contains('gradleLockSha256'));
         expect(scanner, isNot(contains('--insecure')));
       },
     );

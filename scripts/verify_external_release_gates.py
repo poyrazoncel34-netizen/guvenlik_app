@@ -44,6 +44,7 @@ REQUIRED_PROVENANCE_ARTIFACTS = {
     "gradleVerification",
     "sourceProvenance",
     "secretScan",
+    "osvAudit",
     "thirdPartyNotices",
 }
 SHA256_RE = re.compile(r"^[0-9a-f]{64}$")

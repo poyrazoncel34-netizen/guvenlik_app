@@ -233,7 +233,7 @@ jobs:
             --output build/release-evidence/safety-mutations.json
 
       - name: Dependency vulnerability audit (OSV)
-        run: ./scripts/audit_dependencies_osv.sh
+        run: ./scripts/audit_dependencies_osv.sh --output build/release-evidence/osv-audit.json
 
       - name: Scan tracked candidate source for credentials
         run: |
@@ -314,6 +314,7 @@ jobs:
           SBOM="build/release-evidence/sbom.cdx.json"
           CRITICAL_COVERAGE="build/release-evidence/critical-coverage.json"
           SAFETY_MUTATIONS="build/release-evidence/safety-mutations.json"
+          OSV_AUDIT="build/release-evidence/osv-audit.json"
           LCOV_REPORT="build/release-evidence/coverage.lcov"
           SOURCE_PROVENANCE="build/release-evidence/source-provenance.txt"
           GRADLE_VERIFICATION_METADATA="android/gradle/verification-metadata.xml"
@@ -325,6 +326,8 @@ jobs:
           [ -s "$CRITICAL_COVERAGE" ] || { echo "::error title=Critical coverage report missing::$CRITICAL_COVERAGE was not produced."; exit 1; }
           [ -s "$SAFETY_MUTATIONS" ] || { echo "::error title=Safety mutation report missing::$SAFETY_MUTATIONS was not produced."; exit 1; }
           grep -q '"status": "PASS"' "$SAFETY_MUTATIONS" || { echo "::error title=Safety mutation gate failed::All six mandatory mutants must be killed."; exit 1; }
+          [ -s "$OSV_AUDIT" ] || { echo "::error title=OSV evidence missing::$OSV_AUDIT was not produced."; exit 1; }
+          grep -q '"status": "PASS"' "$OSV_AUDIT" || { echo "::error title=OSV gate failed::Known findings or incomplete evidence block release."; exit 1; }
           [ -s "$LCOV_REPORT" ] || { echo "::error title=LCOV report missing::$LCOV_REPORT was not produced."; exit 1; }
           [ -s "$SOURCE_PROVENANCE" ] || { echo "::error title=Source provenance missing::$SOURCE_PROVENANCE was not produced before the build."; exit 1; }
           [ -s "$GRADLE_VERIFICATION_METADATA" ] || { echo "::error title=Gradle dependency verification missing::$GRADLE_VERIFICATION_METADATA is required for strict artifact checksum verification."; exit 1; }
@@ -406,6 +409,7 @@ jobs:
             --artifact "gradleVerification=build/release-evidence/gradle-verification-metadata.xml" \
             --artifact "sourceProvenance=build/release-evidence/source-provenance.txt" \
             --artifact "secretScan=build/release-evidence/secret-scan.json" \
+            --artifact "osvAudit=build/release-evidence/osv-audit.json" \
             --artifact "thirdPartyNotices=build/release-evidence/THIRD_PARTY_NOTICES.txt"
           sha256sum \
             "$AAB" \
@@ -424,6 +428,7 @@ jobs:
             build/release-evidence/gradle-verification-metadata.xml \
             build/release-evidence/source-provenance.txt \
             build/release-evidence/secret-scan.json \
+            build/release-evidence/osv-audit.json \
             build/release-evidence/THIRD_PARTY_NOTICES.txt \
             build/release-evidence/provenance-v2.json \
             > build/release-evidence/SHA256SUMS
