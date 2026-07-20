@@ -54,6 +54,49 @@ TAG_RE = re.compile(r"^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$")
 WORKFLOW_URL_RE = re.compile(
     r"^https://github\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+/actions/runs/[0-9]+$"
 )
+EXPECTED_MUTATION_IDS = {
+    "M01_CANCEL_RESULT_SWALLOWED",
+    "M02_STALE_GENERATION_ACCEPTED",
+    "M03_PIN_READ_FAILURE_AS_ABSENT",
+    "M04_LOG_BEFORE_DISPATCH",
+    "M05_NOTIFICATION_RESULT_IGNORED",
+    "M06_DISPOSE_NATIVE_CANCEL",
+}
+EXPECTED_CRITICAL_COVERAGE_PATHS = {
+    "lib/core/services/emergency_session_contract.dart",
+    "lib/core/services/emergency_platform_service.dart",
+    "lib/core/services/pin_verification_service.dart",
+    "lib/core/services/check_in_service.dart",
+}
+EXPECTED_ANDROID_PERMISSIONS = {
+    "android.permission.ACCESS_COARSE_LOCATION",
+    "android.permission.ACCESS_FINE_LOCATION",
+    "android.permission.ACCESS_NETWORK_STATE",
+    "android.permission.CALL_PHONE",
+    "android.permission.INTERNET",
+    "android.permission.POST_NOTIFICATIONS",
+    "android.permission.RECEIVE_BOOT_COMPLETED",
+    "android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS",
+    "android.permission.SCHEDULE_EXACT_ALARM",
+    "android.permission.VIBRATE",
+    "android.permission.WAKE_LOCK",
+    "com.android.vending.BILLING",
+    "com.poyrazoncel.korubeni.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION",
+}
+EXPECTED_SAFETY_COMPONENTS = {
+    "com.poyrazoncel.korubeni.emergency.EmergencyFallbackDialActivity",
+    "com.poyrazoncel.korubeni.emergency.CheckInAlarmReceiver",
+    "com.poyrazoncel.korubeni.emergency.CountdownAlarmReceiver",
+    "com.poyrazoncel.korubeni.emergency.BootCompletedReceiver",
+    "com.poyrazoncel.korubeni.emergency.ExactAlarmPermissionReceiver",
+    "com.poyrazoncel.korubeni.emergency.ClockChangeReceiver",
+    "com.poyrazoncel.korubeni.emergency.EmergencyFallbackCleanupReceiver",
+}
+EXPECTED_SURFACE_LIMITATIONS = {
+    "MERGED_MANIFEST_AND_SOURCE_RESOURCE_AUDIT_ONLY",
+    "NOT_RUNTIME_INTENT_FUZZING",
+    "NOT_PRODUCTION_AAB_UNLESS_RUN_BY_TAGGED_WORKFLOW",
+}
 
 
 def sha256(path: Path) -> str:
@@ -116,6 +159,331 @@ def validate_clean_source_binding(
     )
 
 
+def successful_command_record(value: object) -> bool:
+    return (
+        isinstance(value, dict)
+        and value.get("exitCode") == 0
+        and value.get("timedOut") is False
+        and bool(SHA256_RE.fullmatch(str(value.get("outputSha256", ""))))
+    )
+
+
+def validate_mutation_artifact(
+    payload: dict[str, object],
+    candidate: dict[str, object],
+    errors: list[str],
+) -> None:
+    require(payload.get("schemaVersion") == 1, "mutationReport schemaVersion must be 1", errors)
+    require(payload.get("status") == "PASS", "mutationReport is not PASS", errors)
+    require(
+        payload.get("sourceHead") == candidate.get("gitCommit"),
+        "mutationReport sourceHead mismatch",
+        errors,
+    )
+    require(payload.get("sourceWasDirty") is False, "mutationReport source is dirty", errors)
+    require(
+        payload.get("sourceStatusSha256") == EMPTY_SHA256,
+        "mutationReport clean source status hash mismatch",
+        errors,
+    )
+    require(
+        bool(SHA256_RE.fullmatch(str(payload.get("runnerSha256", "")))),
+        "mutationReport runner hash is invalid",
+        errors,
+    )
+    source_files = payload.get("sourceFiles")
+    require(
+        isinstance(source_files, dict) and bool(source_files),
+        "mutationReport sourceFiles are missing",
+        errors,
+    )
+    if isinstance(source_files, dict):
+        for path, digest in source_files.items():
+            require(
+                isinstance(path, str)
+                and bool(path)
+                and not Path(path).is_absolute()
+                and ".." not in Path(path).parts,
+                "mutationReport source file path is invalid",
+                errors,
+            )
+            require(
+                bool(SHA256_RE.fullmatch(str(digest))),
+                f"mutationReport source file hash is invalid: {path}",
+                errors,
+            )
+    require(
+        successful_command_record(payload.get("preparation")),
+        "mutationReport preparation did not pass",
+        errors,
+    )
+    baselines = payload.get("baselines")
+    require(isinstance(baselines, list), "mutationReport baselines are missing", errors)
+    if isinstance(baselines, list):
+        baseline_by_name = {
+            item.get("name"): item
+            for item in baselines
+            if isinstance(item, dict) and isinstance(item.get("name"), str)
+        }
+        require(
+            set(baseline_by_name) == {"flutter", "native"}
+            and len(baselines) == 2,
+            "mutationReport baseline set mismatch",
+            errors,
+        )
+        for name, record in baseline_by_name.items():
+            require(
+                successful_command_record(record),
+                f"mutationReport {name} baseline did not pass",
+                errors,
+            )
+    mutations = payload.get("mutations")
+    require(isinstance(mutations, list), "mutationReport mutations are missing", errors)
+    if isinstance(mutations, list):
+        by_id = {
+            item.get("id"): item
+            for item in mutations
+            if isinstance(item, dict) and isinstance(item.get("id"), str)
+        }
+        require(
+            set(by_id) == EXPECTED_MUTATION_IDS and len(mutations) == len(EXPECTED_MUTATION_IDS),
+            "mutationReport mutation set mismatch",
+            errors,
+        )
+        for mutation_id, record in by_id.items():
+            require(record.get("status") == "KILLED", f"mutationReport survivor: {mutation_id}", errors)
+            result = record.get("result")
+            killed_by_test = (
+                isinstance(result, dict)
+                and isinstance(result.get("exitCode"), int)
+                and not isinstance(result.get("exitCode"), bool)
+                and result.get("exitCode") not in {0, 124, 125}
+                and result.get("timedOut") is False
+                and bool(SHA256_RE.fullmatch(str(result.get("outputSha256", ""))))
+            )
+            require(killed_by_test, f"mutationReport invalid kill result: {mutation_id}", errors)
+
+
+def validate_critical_coverage_artifact(
+    payload: dict[str, object],
+    errors: list[str],
+) -> None:
+    require(payload.get("schemaVersion") == 1, "criticalCoverage schemaVersion must be 1", errors)
+    require(payload.get("result") == "PASS", "criticalCoverage is not PASS", errors)
+    require(
+        payload.get("minimumLineCoveragePercent") == 90,
+        "criticalCoverage minimum must be 90%",
+        errors,
+    )
+    files = payload.get("files")
+    require(isinstance(files, list), "criticalCoverage files are missing", errors)
+    if not isinstance(files, list):
+        return
+    by_path = {
+        item.get("path"): item
+        for item in files
+        if isinstance(item, dict) and isinstance(item.get("path"), str)
+    }
+    require(
+        set(by_path) == EXPECTED_CRITICAL_COVERAGE_PATHS
+        and len(files) == len(EXPECTED_CRITICAL_COVERAGE_PATHS),
+        "criticalCoverage file set mismatch",
+        errors,
+    )
+    for path, record in by_path.items():
+        found = record.get("linesFound")
+        hit = record.get("linesHit")
+        valid_counts = (
+            isinstance(found, int)
+            and not isinstance(found, bool)
+            and found > 0
+            and isinstance(hit, int)
+            and not isinstance(hit, bool)
+            and 0 <= hit <= found
+        )
+        require(valid_counts, f"criticalCoverage invalid line counts: {path}", errors)
+        if not valid_counts:
+            continue
+        require(hit * 100 >= found * 90, f"criticalCoverage file is below 90%: {path}", errors)
+        reported = record.get("lineCoveragePercent")
+        expected = round(hit * 100 / found, 2)
+        require(
+            isinstance(reported, (int, float))
+            and not isinstance(reported, bool)
+            and abs(float(reported) - expected) < 0.005,
+            f"criticalCoverage reported percentage mismatch: {path}",
+            errors,
+        )
+
+
+def validate_android_surface_artifact(
+    payload: dict[str, object],
+    errors: list[str],
+) -> None:
+    require(payload.get("schemaVersion") == 1, "androidReleaseSurface schemaVersion must be 1", errors)
+    require(payload.get("status") == "PASS", "androidReleaseSurface is not PASS", errors)
+    require(payload.get("candidateBound") is False, "androidReleaseSurface candidateBound contract changed", errors)
+    require(
+        payload.get("expectedPackage") == "com.poyrazoncel.korubeni",
+        "androidReleaseSurface package mismatch",
+        errors,
+    )
+    require(payload.get("minSdk") == 29, "androidReleaseSurface minSdk mismatch", errors)
+    require(payload.get("targetSdk") == 36, "androidReleaseSurface targetSdk mismatch", errors)
+    for field in ("manifestSha256", "networkSecurityConfigSha256", "dataExtractionRulesSha256"):
+        require(
+            bool(SHA256_RE.fullmatch(str(payload.get(field, "")))),
+            f"androidReleaseSurface {field} is invalid",
+            errors,
+        )
+    permissions = payload.get("permissions")
+    permission_set = set(permissions) if isinstance(permissions, list) and all(isinstance(item, str) for item in permissions) else set()
+    require(permission_set == EXPECTED_ANDROID_PERMISSIONS, "androidReleaseSurface permission set mismatch", errors)
+    require(
+        payload.get("permissionCount") == len(permission_set)
+        and isinstance(permissions, list)
+        and len(permissions) == len(permission_set),
+        "androidReleaseSurface permission count mismatch",
+        errors,
+    )
+    require(
+        payload.get("unprotectedExportedComponents") == [],
+        "androidReleaseSurface contains unprotected exported components",
+        errors,
+    )
+    components = payload.get("components")
+    require(isinstance(components, list) and bool(components), "androidReleaseSurface components are missing", errors)
+    if isinstance(components, list):
+        by_name = {
+            item.get("name"): item
+            for item in components
+            if isinstance(item, dict) and isinstance(item.get("name"), str)
+        }
+        require(
+            len(by_name) == len(components)
+            and payload.get("componentCount") == len(components),
+            "androidReleaseSurface component count mismatch",
+            errors,
+        )
+        safety_names = EXPECTED_SAFETY_COMPONENTS.intersection(by_name)
+        require(
+            safety_names == EXPECTED_SAFETY_COMPONENTS,
+            "androidReleaseSurface safety component set mismatch",
+            errors,
+        )
+        for name in safety_names:
+            record = by_name[name]
+            require(
+                record.get("exported") is False and record.get("directBootAware") is True,
+                f"androidReleaseSurface unsafe safety component: {name}",
+                errors,
+            )
+        allowed_exported = {
+            "com.poyrazoncel.korubeni.MainActivity",
+            "androidx.profileinstaller.ProfileInstallReceiver",
+        }
+        exported_names = {
+            name for name, record in by_name.items() if record.get("exported") is True
+        }
+        require(
+            exported_names.issubset(allowed_exported)
+            and "com.poyrazoncel.korubeni.MainActivity" in exported_names,
+            "androidReleaseSurface exported component allowlist mismatch",
+            errors,
+        )
+    limitations = payload.get("limitations")
+    limitation_set = set(limitations) if isinstance(limitations, list) and all(isinstance(item, str) for item in limitations) else set()
+    require(
+        limitation_set == EXPECTED_SURFACE_LIMITATIONS,
+        "androidReleaseSurface limitation set mismatch",
+        errors,
+    )
+
+
+def property_map(value: object) -> dict[str, str]:
+    if not isinstance(value, list):
+        return {}
+    result: dict[str, str] = {}
+    for item in value:
+        if not isinstance(item, dict):
+            continue
+        name = item.get("name")
+        property_value = item.get("value")
+        if isinstance(name, str) and isinstance(property_value, str) and name not in result:
+            result[name] = property_value
+    return result
+
+
+def validate_sbom_artifact(
+    payload: dict[str, object],
+    osv_audit: dict[str, object] | None,
+    errors: list[str],
+) -> None:
+    require(payload.get("bomFormat") == "CycloneDX", "sbom format must be CycloneDX", errors)
+    require(payload.get("specVersion") == "1.6", "sbom specVersion must be 1.6", errors)
+    require(payload.get("version") == 1, "sbom version must be 1", errors)
+    metadata = payload.get("metadata")
+    require(isinstance(metadata, dict), "sbom metadata is missing", errors)
+    metadata_properties = property_map(metadata.get("properties")) if isinstance(metadata, dict) else {}
+    require(
+        metadata_properties.get("korubeni:licenseEvidenceStatus") == "VERIFIED",
+        "sbom license evidence status is not VERIFIED",
+        errors,
+    )
+    require(
+        metadata_properties.get("korubeni:sourceOfTruth") == "pubspec.lock+android/app/gradle.lockfile",
+        "sbom source of truth mismatch",
+        errors,
+    )
+    components = payload.get("components")
+    require(isinstance(components, list) and bool(components), "sbom components are missing", errors)
+    if not isinstance(components, list):
+        return
+    seen: set[str] = set()
+    ecosystem_counts = {"Pub": 0, "Maven": 0}
+    for component in components:
+        require(isinstance(component, dict), "sbom component is malformed", errors)
+        if not isinstance(component, dict):
+            continue
+        purl = component.get("purl")
+        valid_purl = isinstance(purl, str) and purl.startswith("pkg:") and purl not in seen
+        require(valid_purl, f"sbom missing or duplicate purl: {purl}", errors)
+        if not valid_purl:
+            continue
+        seen.add(purl)
+        if purl.startswith("pkg:pub/"):
+            ecosystem_counts["Pub"] += 1
+        elif purl.startswith("pkg:maven/"):
+            ecosystem_counts["Maven"] += 1
+        else:
+            errors.append(f"sbom unsupported runtime purl: {purl}")
+        licenses = component.get("licenses")
+        license_id = None
+        if isinstance(licenses, list) and len(licenses) == 1 and isinstance(licenses[0], dict):
+            license_record = licenses[0].get("license")
+            if isinstance(license_record, dict):
+                license_id = license_record.get("id")
+        require(isinstance(license_id, str) and bool(license_id), f"sbom reviewed SPDX decision missing: {purl}", errors)
+        properties = property_map(component.get("properties"))
+        require(
+            properties.get("korubeni:licenseEvidenceUrl", "").startswith("https://")
+            and bool(SHA256_RE.fullmatch(properties.get("korubeni:licenseEvidenceSha256", "")))
+            and bool(properties.get("korubeni:licenseReviewedBy"))
+            and bool(re.fullmatch(r"\d{4}-\d{2}-\d{2}", properties.get("korubeni:licenseReviewedAt", ""))),
+            f"sbom reviewed license evidence is incomplete: {purl}",
+            errors,
+        )
+    if isinstance(osv_audit, dict):
+        ecosystems = osv_audit.get("ecosystems")
+        if isinstance(ecosystems, dict):
+            for name, count in ecosystem_counts.items():
+                record = ecosystems.get(name)
+                if isinstance(record, dict):
+                    require(
+                        record.get("queryCount") == count,
+                        f"sbom {name} component count does not match OSV query count",
+                        errors,
+                    )
 def validate_candidate_security_artifacts(
     artifacts: dict[str, Path],
     candidate: dict[str, object],
@@ -240,6 +608,22 @@ def validate_candidate_security_artifacts(
                         f"osvAudit {ecosystem} {field} is invalid",
                         errors,
                     )
+
+    mutation_report = read_json_artifact("mutationReport", artifacts, errors)
+    if mutation_report is not None:
+        validate_mutation_artifact(mutation_report, candidate, errors)
+
+    critical_coverage = read_json_artifact("criticalCoverage", artifacts, errors)
+    if critical_coverage is not None:
+        validate_critical_coverage_artifact(critical_coverage, errors)
+
+    android_surface = read_json_artifact("androidReleaseSurface", artifacts, errors)
+    if android_surface is not None:
+        validate_android_surface_artifact(android_surface, errors)
+
+    sbom = read_json_artifact("sbom", artifacts, errors)
+    if sbom is not None:
+        validate_sbom_artifact(sbom, osv_audit, errors)
 
 
 def validate_provenance(

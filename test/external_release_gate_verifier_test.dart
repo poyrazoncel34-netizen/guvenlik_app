@@ -123,6 +123,16 @@ void main() {
         name: File('${directory.path}/$name.txt')
           ..writeAsStringSync('evidence:$name'),
     };
+    artifacts['mutationReport']!.writeAsStringSync(
+      jsonEncode(_rawMutationReport(commit: 'b' * 40)),
+    );
+    artifacts['criticalCoverage']!.writeAsStringSync(
+      jsonEncode(_rawCriticalCoverage()),
+    );
+    artifacts['androidReleaseSurface']!.writeAsStringSync(
+      jsonEncode(_rawAndroidReleaseSurface()),
+    );
+    artifacts['sbom']!.writeAsStringSync(jsonEncode(_rawVerifiedSbom()));
     artifacts['secretScan']!.writeAsStringSync(
       jsonEncode(<String, Object?>{
         'schemaVersion': 2,
@@ -452,6 +462,104 @@ void main() {
 
     final restoredProvenance = await Process.run('python3', generatorArguments);
     expect(restoredProvenance.exitCode, 0);
+
+    final rawMutationFile = artifacts['mutationReport']!;
+    final rawMutationOriginal = rawMutationFile.readAsStringSync();
+    final replayedMutation =
+        jsonDecode(rawMutationOriginal) as Map<String, dynamic>;
+    replayedMutation['sourceHead'] = 'f' * 40;
+    rawMutationFile.writeAsStringSync(jsonEncode(replayedMutation));
+    expect((await Process.run('python3', generatorArguments)).exitCode, 0);
+    manifest.writeAsStringSync(jsonEncode(completeManifest(typed: true)));
+    final replayedMutationResult = await Process.run('python3', <String>[
+      'scripts/verify_external_release_gates.py',
+      '--manifest',
+      manifest.path,
+      '--aab',
+      aab.path,
+    ]);
+    expect(replayedMutationResult.exitCode, 1);
+    expect(
+      replayedMutationResult.stderr,
+      contains('mutationReport sourceHead mismatch'),
+    );
+    rawMutationFile.writeAsStringSync(rawMutationOriginal);
+
+    final rawCoverageFile = artifacts['criticalCoverage']!;
+    final rawCoverageOriginal = rawCoverageFile.readAsStringSync();
+    final forgedCoverage =
+        jsonDecode(rawCoverageOriginal) as Map<String, dynamic>;
+    final forgedCoverageRecord =
+        (forgedCoverage['files'] as List<dynamic>).first
+            as Map<String, dynamic>;
+    forgedCoverageRecord['linesHit'] = 89;
+    forgedCoverageRecord['linesFound'] = 100;
+    forgedCoverageRecord['lineCoveragePercent'] = 89.0;
+    rawCoverageFile.writeAsStringSync(jsonEncode(forgedCoverage));
+    expect((await Process.run('python3', generatorArguments)).exitCode, 0);
+    manifest.writeAsStringSync(jsonEncode(completeManifest(typed: true)));
+    final forgedCoverageResult = await Process.run('python3', <String>[
+      'scripts/verify_external_release_gates.py',
+      '--manifest',
+      manifest.path,
+      '--aab',
+      aab.path,
+    ]);
+    expect(forgedCoverageResult.exitCode, 1);
+    expect(
+      forgedCoverageResult.stderr,
+      contains('criticalCoverage file is below 90%'),
+    );
+    rawCoverageFile.writeAsStringSync(rawCoverageOriginal);
+
+    final surfaceFile = artifacts['androidReleaseSurface']!;
+    final surfaceOriginal = surfaceFile.readAsStringSync();
+    final forgedSurface = jsonDecode(surfaceOriginal) as Map<String, dynamic>;
+    (forgedSurface['components'] as List<dynamic>).removeLast();
+    forgedSurface['componentCount'] =
+        (forgedSurface['components'] as List<dynamic>).length;
+    surfaceFile.writeAsStringSync(jsonEncode(forgedSurface));
+    expect((await Process.run('python3', generatorArguments)).exitCode, 0);
+    manifest.writeAsStringSync(jsonEncode(completeManifest(typed: true)));
+    final forgedSurfaceResult = await Process.run('python3', <String>[
+      'scripts/verify_external_release_gates.py',
+      '--manifest',
+      manifest.path,
+      '--aab',
+      aab.path,
+    ]);
+    expect(forgedSurfaceResult.exitCode, 1);
+    expect(
+      forgedSurfaceResult.stderr,
+      contains('androidReleaseSurface safety component set mismatch'),
+    );
+    surfaceFile.writeAsStringSync(surfaceOriginal);
+
+    final verifiedSbomFile = artifacts['sbom']!;
+    final verifiedSbomOriginal = verifiedSbomFile.readAsStringSync();
+    final unverifiedSbom =
+        jsonDecode(verifiedSbomOriginal) as Map<String, dynamic>;
+    final sbomMetadata = unverifiedSbom['metadata'] as Map<String, dynamic>;
+    final sbomProperties = sbomMetadata['properties'] as List<dynamic>;
+    (sbomProperties.first as Map<String, dynamic>)['value'] = 'UNVERIFIED';
+    verifiedSbomFile.writeAsStringSync(jsonEncode(unverifiedSbom));
+    expect((await Process.run('python3', generatorArguments)).exitCode, 0);
+    manifest.writeAsStringSync(jsonEncode(completeManifest(typed: true)));
+    final unverifiedSbomResult = await Process.run('python3', <String>[
+      'scripts/verify_external_release_gates.py',
+      '--manifest',
+      manifest.path,
+      '--aab',
+      aab.path,
+    ]);
+    expect(unverifiedSbomResult.exitCode, 1);
+    expect(
+      unverifiedSbomResult.stderr,
+      contains('sbom license evidence status is not VERIFIED'),
+    );
+    verifiedSbomFile.writeAsStringSync(verifiedSbomOriginal);
+
+    expect((await Process.run('python3', generatorArguments)).exitCode, 0);
 
     final sbomFile = artifacts['sbom']!;
     final sbomOriginal = sbomFile.readAsStringSync();
@@ -1220,6 +1328,233 @@ Map<String, Object?> _gateMetrics(String kind) => switch (kind) {
     'safetyIncidents': 0,
   },
   _ => throw ArgumentError.value(kind, 'kind', 'unsupported evidence kind'),
+};
+
+Map<String, Object?> _rawMutationReport({required String commit}) {
+  const ids = <String>[
+    'M01_CANCEL_RESULT_SWALLOWED',
+    'M02_STALE_GENERATION_ACCEPTED',
+    'M03_PIN_READ_FAILURE_AS_ABSENT',
+    'M04_LOG_BEFORE_DISPATCH',
+    'M05_NOTIFICATION_RESULT_IGNORED',
+    'M06_DISPOSE_NATIVE_CANCEL',
+  ];
+  return <String, Object?>{
+    'schemaVersion': 1,
+    'sourceHead': commit,
+    'sourceStatusSha256': _emptySha256,
+    'sourceWasDirty': false,
+    'runnerSha256': 'a' * 64,
+    'sourceFiles': <String, String>{
+      'lib/core/services/emergency_platform_service.dart': 'b' * 64,
+      'android/app/src/main/kotlin/example.kt': 'c' * 64,
+    },
+    'preparation': <String, Object?>{
+      'exitCode': 0,
+      'timedOut': false,
+      'durationMs': 1,
+      'outputSha256': 'd' * 64,
+    },
+    'baselines': <Object?>[
+      for (final name in <String>['flutter', 'native'])
+        <String, Object?>{
+          'name': name,
+          'exitCode': 0,
+          'timedOut': false,
+          'durationMs': 1,
+          'outputSha256': 'e' * 64,
+        },
+    ],
+    'mutations': <Object?>[
+      for (final id in ids)
+        <String, Object?>{
+          'id': id,
+          'description': 'Release-blocking safety mutation.',
+          'target': 'lib/example.dart',
+          'status': 'KILLED',
+          'result': <String, Object?>{
+            'exitCode': 1,
+            'timedOut': false,
+            'durationMs': 1,
+            'outputSha256': 'f' * 64,
+          },
+        },
+    ],
+    'status': 'PASS',
+  };
+}
+
+Map<String, Object?> _rawCriticalCoverage() {
+  const paths = <String>[
+    'lib/core/services/emergency_session_contract.dart',
+    'lib/core/services/emergency_platform_service.dart',
+    'lib/core/services/pin_verification_service.dart',
+    'lib/core/services/check_in_service.dart',
+  ];
+  return <String, Object?>{
+    'schemaVersion': 1,
+    'minimumLineCoveragePercent': 90,
+    'result': 'PASS',
+    'files': <Object?>[
+      for (final path in paths)
+        <String, Object?>{
+          'path': path,
+          'linesFound': 100,
+          'linesHit': 95,
+          'lineCoveragePercent': 95.0,
+        },
+    ],
+  };
+}
+
+Map<String, Object?> _rawAndroidReleaseSurface() {
+  const safetyComponents = <String>[
+    'com.poyrazoncel.korubeni.emergency.EmergencyFallbackDialActivity',
+    'com.poyrazoncel.korubeni.emergency.CheckInAlarmReceiver',
+    'com.poyrazoncel.korubeni.emergency.CountdownAlarmReceiver',
+    'com.poyrazoncel.korubeni.emergency.BootCompletedReceiver',
+    'com.poyrazoncel.korubeni.emergency.ExactAlarmPermissionReceiver',
+    'com.poyrazoncel.korubeni.emergency.ClockChangeReceiver',
+    'com.poyrazoncel.korubeni.emergency.EmergencyFallbackCleanupReceiver',
+  ];
+  const permissions = <String>[
+    'android.permission.ACCESS_COARSE_LOCATION',
+    'android.permission.ACCESS_FINE_LOCATION',
+    'android.permission.ACCESS_NETWORK_STATE',
+    'android.permission.CALL_PHONE',
+    'android.permission.INTERNET',
+    'android.permission.POST_NOTIFICATIONS',
+    'android.permission.RECEIVE_BOOT_COMPLETED',
+    'android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS',
+    'android.permission.SCHEDULE_EXACT_ALARM',
+    'android.permission.VIBRATE',
+    'android.permission.WAKE_LOCK',
+    'com.android.vending.BILLING',
+    'com.poyrazoncel.korubeni.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION',
+  ];
+  final components = <Object?>[
+    <String, Object?>{
+      'type': 'activity',
+      'name': 'com.poyrazoncel.korubeni.MainActivity',
+      'exported': true,
+      'permission': null,
+      'directBootAware': false,
+    },
+    <String, Object?>{
+      'type': 'receiver',
+      'name': 'androidx.profileinstaller.ProfileInstallReceiver',
+      'exported': true,
+      'permission': 'android.permission.DUMP',
+      'directBootAware': false,
+    },
+    for (final name in safetyComponents)
+      <String, Object?>{
+        'type': name.endsWith('Activity') ? 'activity' : 'receiver',
+        'name': name,
+        'exported': false,
+        'permission': null,
+        'directBootAware': true,
+      },
+  ];
+  return <String, Object?>{
+    'schemaVersion': 1,
+    'status': 'PASS',
+    'candidateBound': false,
+    'expectedPackage': 'com.poyrazoncel.korubeni',
+    'manifestSha256': '1' * 64,
+    'networkSecurityConfigSha256': '2' * 64,
+    'dataExtractionRulesSha256': '3' * 64,
+    'minSdk': 29,
+    'targetSdk': 36,
+    'permissionCount': permissions.length,
+    'permissions': permissions,
+    'componentCount': components.length,
+    'components': components,
+    'unprotectedExportedComponents': <Object?>[],
+    'limitations': <String>[
+      'MERGED_MANIFEST_AND_SOURCE_RESOURCE_AUDIT_ONLY',
+      'NOT_RUNTIME_INTENT_FUZZING',
+      'NOT_PRODUCTION_AAB_UNLESS_RUN_BY_TAGGED_WORKFLOW',
+    ],
+  };
+}
+
+Map<String, Object?> _rawVerifiedSbom() => <String, Object?>{
+  'bomFormat': 'CycloneDX',
+  'specVersion': '1.6',
+  'version': 1,
+  'metadata': <String, Object?>{
+    'properties': <Object?>[
+      <String, Object?>{
+        'name': 'korubeni:licenseEvidenceStatus',
+        'value': 'VERIFIED',
+      },
+      <String, Object?>{
+        'name': 'korubeni:sourceOfTruth',
+        'value': 'pubspec.lock+android/app/gradle.lockfile',
+      },
+    ],
+  },
+  'components': <Object?>[
+    <String, Object?>{
+      'type': 'library',
+      'name': 'example',
+      'version': '1.0.0',
+      'purl': 'pkg:pub/example@1.0.0',
+      'licenses': <Object?>[
+        <String, Object?>{
+          'license': <String, String>{'id': 'MIT'},
+        },
+      ],
+      'properties': <Object?>[
+        <String, String>{
+          'name': 'korubeni:licenseEvidenceUrl',
+          'value': 'https://example.test/license',
+        },
+        <String, String>{
+          'name': 'korubeni:licenseEvidenceSha256',
+          'value': '4' * 64,
+        },
+        <String, String>{
+          'name': 'korubeni:licenseReviewedBy',
+          'value': 'independent-license-reviewer',
+        },
+        <String, String>{
+          'name': 'korubeni:licenseReviewedAt',
+          'value': '2026-07-18',
+        },
+      ],
+    },
+    <String, Object?>{
+      'type': 'library',
+      'name': 'example-android',
+      'version': '1.0.0',
+      'purl': 'pkg:maven/com.example/example@1.0.0',
+      'licenses': <Object?>[
+        <String, Object?>{
+          'license': <String, String>{'id': 'Apache-2.0'},
+        },
+      ],
+      'properties': <Object?>[
+        <String, String>{
+          'name': 'korubeni:licenseEvidenceUrl',
+          'value': 'https://example.test/android-license',
+        },
+        <String, String>{
+          'name': 'korubeni:licenseEvidenceSha256',
+          'value': '5' * 64,
+        },
+        <String, String>{
+          'name': 'korubeni:licenseReviewedBy',
+          'value': 'independent-license-reviewer',
+        },
+        <String, String>{
+          'name': 'korubeni:licenseReviewedAt',
+          'value': '2026-07-18',
+        },
+      ],
+    },
+  ],
 };
 
 Map<String, Object?> _masvsAssessment({
