@@ -12,30 +12,33 @@ import android.os.Build
 /** Clears the actionable fallback and its retained phone target on dismiss/TTL. */
 class EmergencyFallbackCleanupReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent?) {
-        val token = SessionToken(
-            protocolVersion = intent?.getIntExtra(EXTRA_PROTOCOL_VERSION, -1) ?: -1,
-            randomId = intent?.getStringExtra(EXTRA_RANDOM_ID).orEmpty(),
-            generation = intent?.getLongExtra(EXTRA_GENERATION, -1L) ?: -1L,
-            kind = SessionKind.fromWire(intent?.getStringExtra(EXTRA_KIND)) ?: return,
-        )
-        if (
-            token.protocolVersion != EMERGENCY_PROTOCOL_VERSION ||
-            token.randomId.isBlank() || token.generation <= 0L
-        ) return
+        EmergencyReceiverGuard.run("EmergencyFallbackCleanupReceiver") {
+            val token = SessionToken(
+                protocolVersion = intent?.getIntExtra(EXTRA_PROTOCOL_VERSION, -1) ?: -1,
+                randomId = intent?.getStringExtra(EXTRA_RANDOM_ID).orEmpty(),
+                generation = intent?.getLongExtra(EXTRA_GENERATION, -1L) ?: -1L,
+                kind = SessionKind.fromWire(intent?.getStringExtra(EXTRA_KIND)) ?: return@run,
+            )
+            if (
+                token.protocolVersion != EMERGENCY_PROTOCOL_VERSION ||
+                token.randomId.isBlank() || token.generation <= 0L
+            ) return@run
 
-        val notificationId = intent?.getIntExtra(EXTRA_NOTIFICATION_ID, -1) ?: -1
-        val expiresAtMs = intent?.getLongExtra(EXTRA_EXPIRES_AT_MS, -1L) ?: -1L
-        EmergencySessionRuntime.coordinator(context).expireFallback(token)
-        if (notificationId >= 0) {
-            val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager
-            manager?.cancel(notificationId)
+            val notificationId = intent?.getIntExtra(EXTRA_NOTIFICATION_ID, -1) ?: -1
+            val expiresAtMs = intent?.getLongExtra(EXTRA_EXPIRES_AT_MS, -1L) ?: -1L
+            EmergencySessionRuntime.coordinator(context).expireFallback(token)
+            if (notificationId >= 0) {
+                val manager = context.getSystemService(Context.NOTIFICATION_SERVICE)
+                    as? NotificationManager
+                manager?.cancel(notificationId)
+            }
+            EmergencyFallbackDialActivity.pendingIntent(
+                context,
+                token,
+                notificationId,
+                expiresAtMs,
+            ).cancel()
         }
-        EmergencyFallbackDialActivity.pendingIntent(
-            context,
-            token,
-            notificationId,
-            expiresAtMs,
-        ).cancel()
     }
 
     companion object {

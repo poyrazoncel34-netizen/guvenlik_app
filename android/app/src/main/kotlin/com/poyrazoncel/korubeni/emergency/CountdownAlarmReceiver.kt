@@ -14,25 +14,28 @@ import android.content.Intent
  */
 class CountdownAlarmReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent?) {
-        val token = AndroidEmergencySessionAlarmScheduler.tokenFromIntent(intent) ?: return
-        val dispatch = EmergencySessionRuntime.coordinator(context).claimAndDispatch(token)
-        if (DirectBootAccess.isUserUnlocked(context) && (
-                dispatch.callRequestOutcome != CallRequestOutcome.NOT_ATTEMPTED ||
-                    dispatch.fallbackOutcome != FallbackOutcome.NOT_ATTEMPTED
+        EmergencyReceiverGuard.run("CountdownAlarmReceiver") {
+            val token = AndroidEmergencySessionAlarmScheduler.tokenFromIntent(intent)
+                ?: return@run
+            val dispatch = EmergencySessionRuntime.coordinator(context).claimAndDispatch(token)
+            if (DirectBootAccess.isUserUnlocked(context) && (
+                    dispatch.callRequestOutcome != CallRequestOutcome.NOT_ATTEMPTED ||
+                        dispatch.fallbackOutcome != FallbackOutcome.NOT_ATTEMPTED
+                    )
+            ) {
+                EmergencyEventBus.emitOrPersist(
+                    context,
+                    mapOf(
+                        "type" to "emergencySessionDispatched",
+                        "timestamp" to System.currentTimeMillis(),
+                        "kind" to token.kind.wireValue,
+                        "randomId" to token.randomId,
+                        "generation" to token.generation,
+                        "callRequestOutcome" to dispatch.callRequestOutcome.wireValue,
+                        "fallbackOutcome" to dispatch.fallbackOutcome.wireValue,
+                    ),
                 )
-        ) {
-            EmergencyEventBus.emitOrPersist(
-                context,
-                mapOf(
-                    "type" to "emergencySessionDispatched",
-                    "timestamp" to System.currentTimeMillis(),
-                    "kind" to token.kind.wireValue,
-                    "randomId" to token.randomId,
-                    "generation" to token.generation,
-                    "callRequestOutcome" to dispatch.callRequestOutcome.wireValue,
-                    "fallbackOutcome" to dispatch.fallbackOutcome.wireValue,
-                ),
-            )
+            }
         }
     }
 }

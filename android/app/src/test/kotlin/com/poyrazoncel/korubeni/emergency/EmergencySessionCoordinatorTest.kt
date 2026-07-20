@@ -34,6 +34,23 @@ class EmergencySessionCoordinatorTest {
     }
 
     @Test
+    fun `capability provider exception returns typed unknown without arming`() {
+        val fixture = Fixture(
+            capabilityFailure = SecurityException("injected capability failure"),
+        )
+
+        val result = fixture.coordinator.arm(
+            validArmRequest(randomId = "capability-provider-failure"),
+        )
+
+        assertTrue(result is ArmResult.Unknown)
+        assertEquals("capabilityReadFailed", (result as ArmResult.Unknown).reasonCode)
+        assertEquals(null, fixture.store.current)
+        assertEquals(0, fixture.alarms.scheduleAttempts)
+        assertEquals(0, fixture.calls.targets.size)
+    }
+
+    @Test
     fun `alarm schedule and rollback cancel exceptions return a typed rejection`() {
         val fixture = Fixture(
             alarms = FakeAlarms(
@@ -267,6 +284,32 @@ class EmergencySessionCoordinatorTest {
     }
 
     @Test
+    fun `retry schedule exception preserves claimed state and allows caller retry`() {
+        val fixture = Fixture(
+            store = FakeStore(failWritesAt = setOf(5)),
+            alarms = FakeAlarms(throwOnScheduleAt = setOf(2)),
+            fallback = FakeFallback(outcome = FallbackOutcome.FAILED),
+            calls = FakeCalls(outcome = CallRequestOutcome.FAILED),
+        )
+        val armed = fixture.coordinator.arm(
+            validArmRequest(randomId = "retry-schedule-failure"),
+        ) as ArmResult.Armed
+        fixture.advanceToFinalDeadline()
+
+        val uncertain = fixture.coordinator.claimAndDispatch(armed.token)
+
+        assertEquals(LifecycleState.CLAIMED, uncertain.terminalState)
+        assertEquals(CallRequestOutcome.NOT_ATTEMPTED, uncertain.callRequestOutcome)
+        assertEquals(LifecycleState.CLAIMED, fixture.store.current?.lifecycleState)
+        assertEquals(2, fixture.alarms.scheduleAttempts)
+        assertEquals(1, fixture.alarms.scheduled.size)
+
+        val retried = fixture.coordinator.claimAndDispatch(armed.token)
+        assertEquals(LifecycleState.REQUEST_FAILED, retried.terminalState)
+        assertEquals(2, fixture.calls.targets.size)
+    }
+
+    @Test
     fun `submitted request plus terminal commit failure is not duplicated in process`() {
         val fixture = Fixture(
             store = FakeStore(failWritesAt = setOf(5)),
@@ -381,6 +424,36 @@ class EmergencySessionCoordinatorTest {
         assertEquals(CallRequestOutcome.SUBMITTED_UNCONFIRMED, result.callRequestOutcome)
         assertEquals(LifecycleState.REQUEST_SUBMITTED_UNCONFIRMED, result.terminalState)
         assertEquals(0, recoveredCalls.targets.size)
+    }
+
+    @Test
+    fun `boot reconciliation schedule exception preserves durable armed session`() {
+        val fixture = Fixture(alarms = FakeAlarms(throwOnScheduleAt = setOf(2)))
+        val armed = fixture.coordinator.arm(
+            validArmRequest(randomId = "boot-reconcile-schedule-failure"),
+        ) as ArmResult.Armed
+
+        fixture.coordinator.reconcileAfterBoot()
+
+        assertEquals(armed.token, fixture.store.current?.token)
+        assertEquals(LifecycleState.ARMED, fixture.store.current?.lifecycleState)
+        assertEquals(2, fixture.alarms.scheduleAttempts)
+        assertEquals(0, fixture.calls.targets.size)
+    }
+
+    @Test
+    fun `clock reconciliation schedule exception preserves durable armed session`() {
+        val fixture = Fixture(alarms = FakeAlarms(throwOnScheduleAt = setOf(2)))
+        val armed = fixture.coordinator.arm(
+            validArmRequest(randomId = "clock-reconcile-schedule-failure"),
+        ) as ArmResult.Armed
+
+        fixture.coordinator.reconcileAfterClockChange()
+
+        assertEquals(armed.token, fixture.store.current?.token)
+        assertEquals(LifecycleState.ARMED, fixture.store.current?.lifecycleState)
+        assertEquals(2, fixture.alarms.scheduleAttempts)
+        assertEquals(0, fixture.calls.targets.size)
     }
 
     @Test
@@ -693,6 +766,7 @@ class EmergencySessionCoordinatorTest {
         val fallback: FakeFallback = FakeFallback(),
         val calls: FakeCalls = FakeCalls(),
         capabilities: CapabilitySnapshot = readyCapabilities,
+        capabilityFailure: RuntimeException? = null,
     ) {
         private var currentNow = now
         val coordinator = EmergencySessionCoordinator(
@@ -701,6 +775,7 @@ class EmergencySessionCoordinatorTest {
             fallbackPoster = fallback,
             callRequester = calls,
             capabilityProvider = { request ->
+                capabilityFailure?.let { throw it }
                 capabilities.copy(
                     pinConfigured = request.pinConfigured,
                     callableTarget = EmergencyTargetValidator.isCallable(request.target),
@@ -729,7 +804,10 @@ class EmergencySessionCoordinatorTest {
         private var writes = 0
 
         override fun read(slot: SessionSlot): SessionRead =
-            current?.let { SessionRead.Present(it) } ?: SessionRead.Absent
+            current
+                ?.takeIf { it.token.slot == slot }
+                ?.let { SessionRead.Present(it) }
+                ?: SessionRead.Absent
 
         override fun write(envelope: EmergencySessionEnvelope): Boolean {
             writes += 1
@@ -749,13 +827,18 @@ class EmergencySessionCoordinatorTest {
     private class FakeAlarms(
         private val throwOnSchedule: Boolean = false,
         private val throwOnCancel: Boolean = false,
+        private val throwOnScheduleAt: Set<Int> = emptySet(),
     ) : EmergencySessionAlarmScheduler {
         val scheduled = mutableListOf<EmergencySessionEnvelope>()
         val cancelled = mutableListOf<SessionToken>()
         val cancelAttempts = mutableListOf<SessionToken>()
+        var scheduleAttempts = 0
 
         override fun schedule(envelope: EmergencySessionEnvelope): AlarmScheduleResult {
-            if (throwOnSchedule) throw IllegalStateException("injected schedule failure")
+            scheduleAttempts += 1
+            if (throwOnSchedule || scheduleAttempts in throwOnScheduleAt) {
+                throw IllegalStateException("injected schedule failure")
+            }
             scheduled += envelope
             return AlarmScheduleResult(exactAccepted = true, inexactAccepted = true)
         }

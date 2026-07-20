@@ -7,15 +7,20 @@ import android.util.Log
 
 class BootCompletedReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent?) {
-        val action = intent?.action ?: return
-        if (action !in SUPPORTED_ACTIONS) return
-        Log.i("BootCompletedReceiver", "System restore event received; reconciling safety state")
+        EmergencyReceiverGuard.run("BootCompletedReceiver") {
+            val action = intent?.action ?: return@run
+            if (action !in SUPPORTED_ACTIONS) return@run
+            Log.i("BootCompletedReceiver", "System restore event received; reconciling safety state")
 
-        val coordinator = EmergencySessionRuntime.coordinator(context)
-        if (action == Intent.ACTION_LOCKED_BOOT_COMPLETED || action == Intent.ACTION_BOOT_COMPLETED) {
-            coordinator.reconcileAfterBoot()
-        } else {
-            coordinator.reconcileCurrentBoot()
+            val coordinator = EmergencySessionRuntime.coordinator(context)
+            if (
+                action == Intent.ACTION_LOCKED_BOOT_COMPLETED ||
+                action == Intent.ACTION_BOOT_COMPLETED
+            ) {
+                coordinator.reconcileAfterBoot()
+            } else {
+                coordinator.reconcileCurrentBoot()
+            }
         }
     }
 

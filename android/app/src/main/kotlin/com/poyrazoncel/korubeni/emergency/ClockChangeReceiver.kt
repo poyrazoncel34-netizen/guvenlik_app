@@ -7,12 +7,14 @@ import android.content.Intent
 /** Keeps active safety timers duration-based when the wall clock changes. */
 class ClockChangeReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent?) {
-        if (intent?.action != Intent.ACTION_TIME_CHANGED &&
-            intent?.action != Intent.ACTION_TIMEZONE_CHANGED
-        ) {
-            return
-        }
+        EmergencyReceiverGuard.run("ClockChangeReceiver") {
+            if (intent?.action != Intent.ACTION_TIME_CHANGED &&
+                intent?.action != Intent.ACTION_TIMEZONE_CHANGED
+            ) {
+                return@run
+            }
 
-        EmergencySessionRuntime.coordinator(context).reconcileAfterClockChange()
+            EmergencySessionRuntime.coordinator(context).reconcileAfterClockChange()
+        }
     }
 }

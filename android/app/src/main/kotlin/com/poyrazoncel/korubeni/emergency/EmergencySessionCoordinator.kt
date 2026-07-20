@@ -41,7 +41,15 @@ class EmergencySessionCoordinator(
         val normalizedTarget = EmergencyTargetValidator.normalizedCallableOrNull(request.target)
             ?: return@synchronized ArmResult.Rejected("invalidTarget")
         val normalizedRequest = request.copy(target = normalizedTarget)
-        val capabilities = capabilityProvider.snapshot(normalizedRequest)
+        val capabilities = try {
+            capabilityProvider.snapshot(normalizedRequest)
+        } catch (_: RuntimeException) {
+            // Capability discovery crosses several Android system-service
+            // boundaries. A revoked permission, unavailable service, or OEM
+            // implementation failure is uncertainty, never permission to arm
+            // and never a reason to crash the safety flow.
+            return@synchronized ArmResult.Unknown("capabilityReadFailed")
+        }
         capabilities.rejectionReason()?.let {
             return@synchronized ArmResult.Rejected(it)
         }
@@ -117,11 +125,7 @@ class EmergencySessionCoordinator(
             return@synchronized ArmResult.Unknown("preparingCommitFailed")
         }
 
-        val schedule = try {
-            alarmScheduler.schedule(preparing)
-        } catch (_: RuntimeException) {
-            AlarmScheduleResult(exactAccepted = false, inexactAccepted = false)
-        }
+        val schedule = scheduleBestEffort(preparing)
         if (!schedule.exactAccepted) {
             cancelAlarmBestEffort(token)
             if (revisionFrom != null) {
@@ -342,7 +346,13 @@ class EmergencySessionCoordinator(
                         elapsedRealtimeDeadlineMs =
                             elapsedRealtimeMs() + DISPATCH_RETRY_DELAY_MS,
                     )
-                    alarmScheduler.schedule(retryEnvelope)
+                    val retrySchedule = scheduleBestEffort(retryEnvelope)
+                    if (!retrySchedule.exactAccepted && !retrySchedule.inexactAccepted) {
+                        // Do not let a failed attempt consume the one bounded
+                        // retry. A later receiver/reconciler invocation may try
+                        // dispatch again from the durable CLAIMED state.
+                        retryScheduledInProcess.remove(processKey)
+                    }
                 }
             }
             return@synchronized DispatchResult.notAttempted(
@@ -485,7 +495,7 @@ class EmergencySessionCoordinator(
                             )
                             if (store.write(rebased)) envelope = rebased
                         }
-                        alarmScheduler.schedule(envelope)
+                        scheduleBestEffort(envelope)
                     }
                 }
                 LifecycleState.CLAIMED -> claimAndDispatch(envelope.token)
@@ -525,7 +535,7 @@ class EmergencySessionCoordinator(
                 mainDeadlineMs = (finalDeadline - phaseLength).coerceAtLeast(wallClockMs()),
                 finalDeadlineMs = finalDeadline,
             )
-            if (store.write(rebased)) alarmScheduler.schedule(rebased)
+            if (store.write(rebased)) scheduleBestEffort(rebased)
         }
     }
 
@@ -577,6 +587,14 @@ class EmergencySessionCoordinator(
             // delivery is harmless and the caller must still receive the
             // typed result committed before this cleanup attempt.
         }
+    }
+
+    private fun scheduleBestEffort(
+        envelope: EmergencySessionEnvelope,
+    ): AlarmScheduleResult = try {
+        alarmScheduler.schedule(envelope)
+    } catch (_: RuntimeException) {
+        AlarmScheduleResult(exactAccepted = false, inexactAccepted = false)
     }
 
     companion object {
