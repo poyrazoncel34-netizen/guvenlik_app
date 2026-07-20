@@ -3,6 +3,9 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
+const _emptySha256 =
+    'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855';
+
 const _requiredEvidenceKinds = <String, Set<String>>{
   'G0': {'safetyCaseReview'},
   'G1': {'nativeKernelReport', 'mutationReport'},
@@ -120,6 +123,68 @@ void main() {
         name: File('${directory.path}/$name.txt')
           ..writeAsStringSync('evidence:$name'),
     };
+    artifacts['secretScan']!.writeAsStringSync(
+      jsonEncode(<String, Object?>{
+        'schemaVersion': 2,
+        'status': 'PASS',
+        'scannedAt': '2026-07-14T10:00:00Z',
+        'mode': 'tracked-candidate',
+        'source': <String, Object?>{
+          'gitCommit': 'b' * 40,
+          'gitTree': 'c' * 40,
+          'sourceWasDirty': false,
+          'sourceStatusSha256': _emptySha256,
+        },
+        'scanner': <String, Object?>{
+          'name': 'scan_release_secrets.py',
+          'sha256': '1' * 64,
+        },
+        'pathSetSha256': '2' * 64,
+        'contentSetSha256': '3' * 64,
+        'inputPathCount': 10,
+        'scannedTextFileCount': 8,
+        'skippedBinaryFileCount': 2,
+        'rules': <String>['private-key'],
+        'findingCount': 0,
+      }),
+    );
+    artifacts['osvAudit']!.writeAsStringSync(
+      jsonEncode(<String, Object?>{
+        'schemaVersion': 1,
+        'status': 'PASS',
+        'scannedAt': '2026-07-14T10:05:00Z',
+        'endpoint': 'https://api.osv.dev/v1/querybatch',
+        'interpretation': 'noKnownFindingsAtScanTime',
+        'source': <String, Object?>{
+          'gitCommit': 'b' * 40,
+          'gitTree': 'c' * 40,
+          'sourceWasDirty': false,
+          'sourceStatusSha256': _emptySha256,
+        },
+        'inputs': <String, Object?>{
+          'pubspecLockSha256': _sha256(artifacts['dependencyLockPub']!),
+          'gradleLockSha256': _sha256(artifacts['dependencyLockGradle']!),
+          'runnerSha256': '4' * 64,
+          'generatorSha256': '5' * 64,
+        },
+        'ecosystems': <String, Object?>{
+          'Pub': <String, Object?>{
+            'queryCount': 1,
+            'querySha256': '6' * 64,
+            'responseSha256': '7' * 64,
+            'findingCount': 0,
+          },
+          'Maven': <String, Object?>{
+            'queryCount': 1,
+            'querySha256': '8' * 64,
+            'responseSha256': '9' * 64,
+            'findingCount': 0,
+          },
+        },
+        'findingCount': 0,
+        'findings': <Object?>[],
+      }),
+    );
     final provenance = File('${directory.path}/provenance-v2.json');
     final generatorArguments = <String>[
       'scripts/generate_release_provenance.py',
@@ -331,6 +396,62 @@ void main() {
       reason: '${typedPassed.stdout}\n${typedPassed.stderr}',
     );
     expect(typedPassed.stdout, contains('MASTER_GO_NO_GO_PASS'));
+
+    final secretScanFile = artifacts['secretScan']!;
+    final secretScanOriginal = secretScanFile.readAsStringSync();
+    final replayedSecretScan =
+        jsonDecode(secretScanOriginal) as Map<String, dynamic>;
+    (replayedSecretScan['source'] as Map<String, dynamic>)['gitCommit'] =
+        'f' * 40;
+    secretScanFile.writeAsStringSync(jsonEncode(replayedSecretScan));
+    final replayedSecretProvenance = await Process.run(
+      'python3',
+      generatorArguments,
+    );
+    expect(replayedSecretProvenance.exitCode, 0);
+    manifest.writeAsStringSync(jsonEncode(completeManifest(typed: true)));
+    final replayedSecretResult = await Process.run('python3', <String>[
+      'scripts/verify_external_release_gates.py',
+      '--manifest',
+      manifest.path,
+      '--aab',
+      aab.path,
+    ]);
+    expect(replayedSecretResult.exitCode, 1);
+    expect(
+      replayedSecretResult.stderr,
+      contains('secretScan gitCommit mismatch'),
+    );
+    secretScanFile.writeAsStringSync(secretScanOriginal);
+
+    final osvAuditFile = artifacts['osvAudit']!;
+    final osvAuditOriginal = osvAuditFile.readAsStringSync();
+    final forgedOsvAudit = jsonDecode(osvAuditOriginal) as Map<String, dynamic>;
+    (forgedOsvAudit['inputs'] as Map<String, dynamic>)['pubspecLockSha256'] =
+        '0' * 64;
+    osvAuditFile.writeAsStringSync(jsonEncode(forgedOsvAudit));
+    final forgedOsvProvenance = await Process.run(
+      'python3',
+      generatorArguments,
+    );
+    expect(forgedOsvProvenance.exitCode, 0);
+    manifest.writeAsStringSync(jsonEncode(completeManifest(typed: true)));
+    final forgedOsvResult = await Process.run('python3', <String>[
+      'scripts/verify_external_release_gates.py',
+      '--manifest',
+      manifest.path,
+      '--aab',
+      aab.path,
+    ]);
+    expect(forgedOsvResult.exitCode, 1);
+    expect(
+      forgedOsvResult.stderr,
+      contains('osvAudit pubspec lock hash mismatch'),
+    );
+    osvAuditFile.writeAsStringSync(osvAuditOriginal);
+
+    final restoredProvenance = await Process.run('python3', generatorArguments);
+    expect(restoredProvenance.exitCode, 0);
 
     final sbomFile = artifacts['sbom']!;
     final sbomOriginal = sbomFile.readAsStringSync();

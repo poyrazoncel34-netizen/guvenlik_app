@@ -49,6 +49,7 @@ REQUIRED_PROVENANCE_ARTIFACTS = {
 }
 SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 COMMIT_RE = re.compile(r"^[0-9a-f]{40}$")
+EMPTY_SHA256 = hashlib.sha256(b"").hexdigest()
 TAG_RE = re.compile(r"^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$")
 WORKFLOW_URL_RE = re.compile(
     r"^https://github\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+/actions/runs/[0-9]+$"
@@ -66,6 +67,179 @@ def sha256(path: Path) -> str:
 def require(condition: bool, message: str, errors: list[str]) -> None:
     if not condition:
         errors.append(message)
+
+
+def read_json_artifact(
+    name: str,
+    artifacts: dict[str, Path],
+    errors: list[str],
+) -> dict[str, object] | None:
+    path = artifacts.get(name)
+    if path is None or not path.is_file():
+        return None
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+        errors.append(f"provenance artifact {name} cannot be parsed: {exc}")
+        return None
+    if not isinstance(payload, dict):
+        errors.append(f"provenance artifact {name} must be a JSON object")
+        return None
+    return payload
+
+
+def validate_clean_source_binding(
+    name: str,
+    payload: dict[str, object],
+    candidate: dict[str, object],
+    errors: list[str],
+) -> None:
+    source = payload.get("source")
+    require(isinstance(source, dict), f"{name} source is missing", errors)
+    if not isinstance(source, dict):
+        return
+    require(
+        source.get("gitCommit") == candidate.get("gitCommit"),
+        f"{name} gitCommit mismatch",
+        errors,
+    )
+    require(
+        source.get("gitTree") == candidate.get("gitTree"),
+        f"{name} gitTree mismatch",
+        errors,
+    )
+    require(source.get("sourceWasDirty") is False, f"{name} source is dirty", errors)
+    require(
+        source.get("sourceStatusSha256") == EMPTY_SHA256,
+        f"{name} clean source status hash mismatch",
+        errors,
+    )
+
+
+def validate_candidate_security_artifacts(
+    artifacts: dict[str, Path],
+    candidate: dict[str, object],
+    errors: list[str],
+) -> None:
+    secret_scan = read_json_artifact("secretScan", artifacts, errors)
+    if secret_scan is not None:
+        require(secret_scan.get("schemaVersion") == 2, "secretScan schemaVersion must be 2", errors)
+        require(secret_scan.get("status") == "PASS", "secretScan is not PASS", errors)
+        require(
+            secret_scan.get("mode") == "tracked-candidate",
+            "secretScan mode is not tracked-candidate",
+            errors,
+        )
+        require(parse_utc(secret_scan.get("scannedAt")) is not None, "secretScan scannedAt is invalid", errors)
+        require(secret_scan.get("findingCount") == 0, "secretScan contains findings", errors)
+        validate_clean_source_binding("secretScan", secret_scan, candidate, errors)
+        scanner = secret_scan.get("scanner")
+        require(isinstance(scanner, dict), "secretScan scanner identity is missing", errors)
+        if isinstance(scanner, dict):
+            require(
+                scanner.get("name") == "scan_release_secrets.py",
+                "secretScan scanner name mismatch",
+                errors,
+            )
+            require(
+                bool(SHA256_RE.fullmatch(str(scanner.get("sha256", "")))),
+                "secretScan scanner hash is invalid",
+                errors,
+            )
+        for field in ("pathSetSha256", "contentSetSha256"):
+            require(
+                bool(SHA256_RE.fullmatch(str(secret_scan.get(field, "")))),
+                f"secretScan {field} is invalid",
+                errors,
+            )
+        input_count = secret_scan.get("inputPathCount")
+        text_count = secret_scan.get("scannedTextFileCount")
+        binary_count = secret_scan.get("skippedBinaryFileCount")
+        counts_are_ints = all(
+            isinstance(value, int) and not isinstance(value, bool) and value >= 0
+            for value in (input_count, text_count, binary_count)
+        )
+        require(counts_are_ints, "secretScan file counts are invalid", errors)
+        if counts_are_ints:
+            require(input_count > 0, "secretScan scanned no files", errors)
+            require(
+                text_count + binary_count == input_count,
+                "secretScan file counts do not reconcile",
+                errors,
+            )
+
+    osv_audit = read_json_artifact("osvAudit", artifacts, errors)
+    if osv_audit is not None:
+        require(osv_audit.get("schemaVersion") == 1, "osvAudit schemaVersion must be 1", errors)
+        require(osv_audit.get("status") == "PASS", "osvAudit is not PASS", errors)
+        require(osv_audit.get("findingCount") == 0, "osvAudit contains findings", errors)
+        require(osv_audit.get("findings") == [], "osvAudit findings must be empty", errors)
+        require(
+            osv_audit.get("endpoint") == "https://api.osv.dev/v1/querybatch",
+            "osvAudit endpoint mismatch",
+            errors,
+        )
+        require(
+            osv_audit.get("interpretation") == "noKnownFindingsAtScanTime",
+            "osvAudit interpretation mismatch",
+            errors,
+        )
+        require(parse_utc(osv_audit.get("scannedAt")) is not None, "osvAudit scannedAt is invalid", errors)
+        validate_clean_source_binding("osvAudit", osv_audit, candidate, errors)
+        inputs = osv_audit.get("inputs")
+        require(isinstance(inputs, dict), "osvAudit inputs are missing", errors)
+        if isinstance(inputs, dict):
+            pub_lock = artifacts.get("dependencyLockPub")
+            gradle_lock = artifacts.get("dependencyLockGradle")
+            if pub_lock is not None and pub_lock.is_file():
+                require(
+                    inputs.get("pubspecLockSha256") == sha256(pub_lock),
+                    "osvAudit pubspec lock hash mismatch",
+                    errors,
+                )
+            if gradle_lock is not None and gradle_lock.is_file():
+                require(
+                    inputs.get("gradleLockSha256") == sha256(gradle_lock),
+                    "osvAudit Gradle lock hash mismatch",
+                    errors,
+                )
+            for field in ("runnerSha256", "generatorSha256"):
+                require(
+                    bool(SHA256_RE.fullmatch(str(inputs.get(field, "")))),
+                    f"osvAudit {field} is invalid",
+                    errors,
+                )
+        ecosystems = osv_audit.get("ecosystems")
+        require(
+            isinstance(ecosystems, dict) and set(ecosystems) == {"Pub", "Maven"},
+            "osvAudit ecosystem set mismatch",
+            errors,
+        )
+        if isinstance(ecosystems, dict):
+            for ecosystem in ("Pub", "Maven"):
+                record = ecosystems.get(ecosystem)
+                require(isinstance(record, dict), f"osvAudit {ecosystem} record is missing", errors)
+                if not isinstance(record, dict):
+                    continue
+                query_count = record.get("queryCount")
+                require(
+                    isinstance(query_count, int)
+                    and not isinstance(query_count, bool)
+                    and query_count > 0,
+                    f"osvAudit {ecosystem} queryCount is invalid",
+                    errors,
+                )
+                require(
+                    record.get("findingCount") == 0,
+                    f"osvAudit {ecosystem} contains findings",
+                    errors,
+                )
+                for field in ("querySha256", "responseSha256"):
+                    require(
+                        bool(SHA256_RE.fullmatch(str(record.get(field, "")))),
+                        f"osvAudit {ecosystem} {field} is invalid",
+                        errors,
+                    )
 
 
 def validate_provenance(
@@ -237,6 +411,7 @@ def validate_provenance(
                 "provenance aab artifact path does not match candidate AAB",
                 errors,
             )
+        validate_candidate_security_artifacts(resolved_artifacts, candidate, errors)
 
 
 def main() -> int:
