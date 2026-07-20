@@ -101,4 +101,22 @@ void main() {
       reason: 'corrupt data is preserved, never silently wiped',
     );
   });
+
+  test('strict startup probe rejects an unreadable canonical store', () async {
+    secure.failReads = true;
+
+    await expectLater(ContactService.warmUpRequired(), throwsA(isA<Object>()));
+    expect(secure.deleteCount, 0);
+  });
+
+  test('strict startup probe rejects corrupt canonical data', () async {
+    secure.store[SecureStorageKeys.emergencyContactsV1] = 'not-json-@@@';
+
+    await expectLater(ContactService.warmUpRequired(), throwsA(isA<Object>()));
+    expect(secure.deleteCount, 0);
+  });
+
+  test('strict startup probe accepts a readable empty store', () async {
+    await expectLater(ContactService.warmUpRequired(), completes);
+  });
 }

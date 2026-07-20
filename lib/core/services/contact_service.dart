@@ -47,9 +47,29 @@ class ContactService {
   /// failure here never blocks boot — lazy reads self-heal.
   static Future<void> warmUp() async {
     try {
-      await getContactRecords();
+      await warmUpRequired();
     } catch (_) {
       // Never block boot on a warm-up failure.
+    }
+  }
+
+  /// Strict startup probe used before the app may present a safety-ready home.
+  /// Unlike [warmUp], storage failures propagate to the critical bootstrap
+  /// coordinator, which shows the existing recovery state instead of silently
+  /// treating an unreadable contact store as an empty one.
+  static Future<void> warmUpRequired() async {
+    final contacts = await getContactRecords();
+    final canonical = await _secureStorage.read(
+      key: SecureStorageKeys.emergencyContactsV1,
+    );
+    if (canonical == null || canonical.isEmpty) {
+      if (contacts.isNotEmpty) {
+        throw StateError('CONTACT_CANONICAL_STORE_MISSING');
+      }
+      return;
+    }
+    if (_decodeEnvelope(canonical) == null) {
+      throw const FormatException('CONTACT_CANONICAL_STORE_CORRUPT');
     }
   }
 

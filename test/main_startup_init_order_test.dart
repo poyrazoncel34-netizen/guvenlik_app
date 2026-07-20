@@ -3,31 +3,24 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  test(
-    'main awaits service locator setup without eagerly starting billing',
-    () {
-      final source = File('lib/main.dart').readAsStringSync();
+  test('main awaits fail-closed critical bootstrap without eager billing', () {
+    final source = File('lib/main.dart').readAsStringSync();
 
-      final setupIdx = source.indexOf('await setupServiceLocator();');
+    final bootstrapIdx = source.indexOf('AppBootstrapService.production()');
 
-      expect(
-        setupIdx,
-        isNot(-1),
-        reason:
-            'setupServiceLocator must be awaited before dependent services.',
-      );
-      expect(
-        source,
-        isNot(contains('serviceLocator<RevenueCatService>().initialize()')),
-        reason:
-            'RevenueCat may not configure or contact its service before the '
-            'current Terms and KVKK acceptance is known.',
-      );
-      expect(
-        source.contains('setupServiceLocator(),'),
-        isFalse,
-        reason: 'setupServiceLocator must not be started inside Future.wait.',
-      );
-    },
-  );
+    expect(
+      bootstrapIdx,
+      isNot(-1),
+      reason: 'Critical bootstrap must complete before runApp.',
+    );
+    expect(source, contains('if (!criticalBootstrap.isReady)'));
+    expect(source, contains('ErrorWidget.builder('));
+    expect(
+      source,
+      isNot(contains('serviceLocator<RevenueCatService>().initialize()')),
+      reason:
+          'RevenueCat may not configure or contact its service before the '
+          'current Terms and KVKK acceptance is known.',
+    );
+  });
 }

@@ -6,7 +6,6 @@ import 'dart:ui';
 import 'package:flutter/foundation.dart' show kIsWeb, kReleaseMode;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'core/di/service_locator.dart';
 import 'package:provider/provider.dart';
 import 'core/app_theme.dart';
 import 'core/navigation/app_navigator.dart';
@@ -14,8 +13,6 @@ import 'presentation/providers/providers.dart';
 import 'screens/splash_screen.dart';
 import 'core/services/offline_queue_service.dart';
 import 'core/services/crash_log_service.dart';
-import 'core/services/data_migration_service.dart';
-import 'core/services/contact_service.dart';
 import 'core/services/medical_data_cleanup_service.dart';
 import 'core/services/foreground_service.dart';
 import 'core/services/haptic_service.dart';
@@ -26,6 +23,7 @@ import 'core/widgets/emergency_trigger_host.dart';
 import 'core/widgets/app_privacy_shield.dart';
 import 'core/services/local_logger_service.dart';
 import 'core/services/sensitive_temp_file_service.dart';
+import 'core/services/app_bootstrap_service.dart';
 import 'core/constants/feature_access_matrix.dart';
 import 'core/config/app_environment.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -105,18 +103,27 @@ void main() async {
     );
   };
 
-  // OPTIMIZED COLD START: Run independent services in parallel
-  // Web: Skip NotificationService & ForegroundService (platform plugins don't support web)
+  final criticalBootstrap = await AppBootstrapService.production()
+      .initializeCritical();
+  if (!criticalBootstrap.isReady) {
+    runApp(
+      ErrorWidget.builder(
+        FlutterErrorDetails(
+          exception: StateError(
+            'CRITICAL_BOOTSTRAP_${criticalBootstrap.reasonCode}',
+          ),
+        ),
+      ),
+    );
+    return;
+  }
+
+  // Best-effort services cannot change the critical bootstrap decision.
+  // Web skips platform notification plugins.
   try {
-    await setupServiceLocator();
-    // Warm the emergency-contact cache before the UI can trigger a panic
-    // (best-effort; ContactService.warmUp swallows failures so boot is
-    // never blocked, and lazy reads self-heal).
-    await ContactService.warmUp();
     FeatureAccessMatrix.debugPrintMatrix();
 
     final services = <Future<void>>[
-      DataMigrationService.migrate(),
       // KVKK Md.7 — purge orphaned medical-profile data from removed feature.
       // Best-effort (internally try/catch); runs concurrently so it never
       // blocks the emergency / notification startup path.
@@ -133,8 +140,8 @@ void main() async {
       services.add(KoruBeniForegroundService.configure());
     }
     await Future.wait(services);
-  } catch (e) {
-    // Non-fatal - app continues
+  } catch (_) {
+    // Non-critical initialization failures remain degraded local features.
   }
 
   // Error handling for Flutter errors — local device-only crash log.
