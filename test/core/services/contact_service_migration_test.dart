@@ -92,6 +92,79 @@ void main() {
   );
 
   test(
+    'mismatched canonical and lingering DB rows are merged before DB deletion',
+    () async {
+      secure.store[SecureStorageKeys.emergencyContactsV1] = canonicalEnvelope([
+        {'name': 'Ada', 'phone': '+905551112233', 'isPrimary': true},
+      ]);
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(AppConstants.prefContactsSecureMigratedV1, true);
+      await db.seedContact(name: 'Bora', phone: '+905554445566');
+
+      final read = await ContactService.getContactRecords();
+
+      expect(
+        read.map((contact) => contact.phone),
+        containsAll(['+905551112233', '+905554445566']),
+        reason: 'A non-duplicate DB contact must never be discarded as stale.',
+      );
+      expect(await db.contactRowCount(), 0);
+      final canonical =
+          jsonDecode(secure.store[SecureStorageKeys.emergencyContactsV1]!)
+              as Map<String, dynamic>;
+      final contacts = canonical['contacts'] as List<dynamic>;
+      expect(contacts, hasLength(2));
+    },
+  );
+
+  test(
+    'failed mismatched merge preserves both the old canonical and DB source',
+    () async {
+      final originalCanonical = canonicalEnvelope([
+        {'name': 'Ada', 'phone': '+905551112233', 'isPrimary': true},
+      ]);
+      secure.store[SecureStorageKeys.emergencyContactsV1] = originalCanonical;
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(AppConstants.prefContactsSecureMigratedV1, true);
+      await db.seedContact(name: 'Bora', phone: '+905554445566');
+      secure.dropWrites = true;
+
+      await ContactService.getContactRecords();
+
+      expect(await db.contactRowCount(), 1);
+      expect(
+        secure.store[SecureStorageKeys.emergencyContactsV1],
+        originalCanonical,
+      );
+    },
+  );
+
+  test(
+    'over-capacity merge preserves the DB source for explicit recovery',
+    () async {
+      final originalCanonical = canonicalEnvelope([
+        {'name': 'A', 'phone': '+905550000001', 'isPrimary': true},
+        {'name': 'B', 'phone': '+905550000002', 'isPrimary': false},
+        {'name': 'C', 'phone': '+905550000003', 'isPrimary': false},
+        {'name': 'D', 'phone': '+905550000004', 'isPrimary': false},
+        {'name': 'E', 'phone': '+905550000005', 'isPrimary': false},
+      ]);
+      secure.store[SecureStorageKeys.emergencyContactsV1] = originalCanonical;
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(AppConstants.prefContactsSecureMigratedV1, true);
+      await db.seedContact(name: 'F', phone: '+905550000006');
+
+      await ContactService.getContactRecords();
+
+      expect(await db.contactRowCount(), 1);
+      expect(
+        secure.store[SecureStorageKeys.emergencyContactsV1],
+        originalCanonical,
+      );
+    },
+  );
+
+  test(
     'verify-before-delete: lost write keeps DB rows intact (no loss)',
     () async {
       await db.seedContact(

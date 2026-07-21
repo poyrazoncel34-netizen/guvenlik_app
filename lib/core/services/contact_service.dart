@@ -319,8 +319,37 @@ class ContactService {
       return;
     }
 
-    // Canonical valid but DB rows linger (crash before clear): reconcile.
+    // Canonical valid but DB rows linger. They are a crash duplicate only when
+    // they match the verified canonical envelope. Distinct DB rows may be the
+    // only copy of a newer contact and must be merged before deletion.
     if (canonicalValid && dbRows.isNotEmpty) {
+      if (!_verifyMatches(canonical, dbRows)) {
+        final merged = _mergeCanonicalAndDatabase(canonicalDecoded, dbRows);
+        if (merged == null) {
+          // The union exceeds the supported contact envelope. Preserve both
+          // authorities for explicit recovery instead of dropping a contact.
+          return;
+        }
+        try {
+          await _writeCanonicalRaw(merged);
+        } on Exception {
+          return;
+        }
+
+        String? mergedReadBack;
+        try {
+          mergedReadBack = await _secureStorage.read(
+            key: SecureStorageKeys.emergencyContactsV1,
+          );
+        } on Exception {
+          return;
+        }
+        if (!_verifyMatches(mergedReadBack, merged)) {
+          // Do not delete the pre-existing canonical key here: a silently
+          // dropped write leaves the old valid envelope intact.
+          return;
+        }
+      }
       await _clearDbContacts();
       await _clearLegacyContactStorage();
       await _setMigrated(true);
@@ -464,6 +493,27 @@ class ContactService {
       out.add(contact.copyWith(phone: normalizedPhone));
     }
     return out;
+  }
+
+  static List<EmergencyContact>? _mergeCanonicalAndDatabase(
+    List<EmergencyContact> canonical,
+    List<EmergencyContact> database,
+  ) {
+    final merged = _normalizeList([...canonical, ...database]);
+    if (merged.length > AppConstants.maxEmergencyContacts) return null;
+
+    final selectedPrimary = _primaryOf(canonical) ?? _primaryOf(database);
+    return _orderedPrimaryFirst(
+      merged
+          .map(
+            (contact) => contact.copyWith(
+              isPrimary:
+                  selectedPrimary != null &&
+                  selectedPrimary.matchesPhone(contact.phone),
+            ),
+          )
+          .toList(growable: false),
+    );
   }
 
   static List<EmergencyContact> _orderedPrimaryFirst(
