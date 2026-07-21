@@ -28,6 +28,35 @@ class _FakeSecureStorage extends SecureStorage {
   Future<void> deleteAll() async => store.clear();
 }
 
+class _FaultingMedicalCleanupStore implements MedicalDataCleanupStore {
+  _FaultingMedicalCleanupStore({this.rejectedPreferenceKey});
+
+  final String? rejectedPreferenceKey;
+  final List<String> operations = [];
+  bool completionPublished = false;
+
+  @override
+  Future<bool> isCleanupDone() async => false;
+
+  @override
+  Future<bool> removePreference(String key) async {
+    operations.add('remove:$key');
+    return key != rejectedPreferenceKey;
+  }
+
+  @override
+  Future<void> deleteSecureMedicalProfile() async {
+    operations.add('secure');
+  }
+
+  @override
+  Future<bool> publishCleanupDone() async {
+    operations.add('publish');
+    completionPublished = true;
+    return true;
+  }
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -84,4 +113,26 @@ void main() {
     final prefs = await SharedPreferences.getInstance();
     expect(prefs.getBool(AppConstants.prefMedicalCleanupDone), isTrue);
   });
+
+  test(
+    'failed legacy-key deletion never publishes the completion marker',
+    () async {
+      final store = _FaultingMedicalCleanupStore(
+        // ignore: deprecated_member_use_from_same_package
+        rejectedPreferenceKey: AppConstants.prefAllergies,
+      );
+
+      await MedicalDataCleanupService.purgeIfNeeded(store: store);
+
+      // ignore: deprecated_member_use_from_same_package
+      const bloodTypeKey = AppConstants.prefBloodType;
+      // ignore: deprecated_member_use_from_same_package
+      const emergencyNotesKey = AppConstants.prefEmergencyNotes;
+      expect(store.completionPublished, isFalse);
+      expect(store.operations, contains('secure'));
+      expect(store.operations, contains('remove:$bloodTypeKey'));
+      expect(store.operations, contains('remove:$emergencyNotesKey'));
+      expect(store.operations, isNot(contains('publish')));
+    },
+  );
 }
