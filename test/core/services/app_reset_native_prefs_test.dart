@@ -27,6 +27,45 @@ class _FakeLocalDatabaseService extends LocalDatabaseService {
   Future<void> deleteDatabaseFile() async {}
 }
 
+class _FaultingLocalResetStore implements AppResetLocalDataStore {
+  _FaultingLocalResetStore({
+    this.preferencesCleared = true,
+    this.secureStorageThrows = false,
+    this.filesCleared = true,
+    this.onClearSecureStorage,
+  });
+
+  final bool preferencesCleared;
+  final bool secureStorageThrows;
+  final bool filesCleared;
+  final Future<void> Function()? onClearSecureStorage;
+  final List<String> operations = [];
+
+  @override
+  Future<bool> clearPreferences() async {
+    operations.add('preferences');
+    return preferencesCleared;
+  }
+
+  @override
+  Future<void> clearSecureStorage() async {
+    operations.add('secureStorage');
+    if (secureStorageThrows) throw StateError('PIN=8642 phone=+905551112233');
+    await onClearSecureStorage?.call();
+  }
+
+  @override
+  Future<void> deleteDatabase() async {
+    operations.add('database');
+  }
+
+  @override
+  Future<bool> clearLocalFiles() async {
+    operations.add('files');
+    return filesCleared;
+  }
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -62,7 +101,11 @@ void main() {
   test(
     'clearLocalData requires a completed typed native wipe (KVKK Md.7)',
     () async {
-      final result = await AppResetService.clearLocalData();
+      final result = await AppResetService.clearLocalData(
+        localStore: _FaultingLocalResetStore(
+          onClearSecureStorage: secure.deleteAll,
+        ),
+      );
       expect(result, WipeResult.completed);
       expect(
         invoked,
@@ -82,5 +125,42 @@ void main() {
     expect(result, WipeResult.unknown);
     expect(secure.deleteCalled, isFalse);
     expect((await SharedPreferences.getInstance()).getInt('seed'), 1);
+  });
+
+  test(
+    'any local deletion failure returns unknown after attempting all stores',
+    () async {
+      final localStore = _FaultingLocalResetStore(
+        preferencesCleared: false,
+        secureStorageThrows: true,
+        filesCleared: false,
+      );
+
+      final result = await AppResetService.clearLocalData(
+        localStore: localStore,
+      );
+
+      expect(result, WipeResult.unknown);
+      expect(
+        localStore.operations,
+        ['preferences', 'secureStorage', 'database', 'files'],
+        reason:
+            'Deletion is best-effort across every local store before retry.',
+      );
+    },
+  );
+
+  test('all acknowledged local deletions return completed', () async {
+    final localStore = _FaultingLocalResetStore();
+
+    final result = await AppResetService.clearLocalData(localStore: localStore);
+
+    expect(result, WipeResult.completed);
+    expect(localStore.operations, [
+      'preferences',
+      'secureStorage',
+      'database',
+      'files',
+    ]);
   });
 }
