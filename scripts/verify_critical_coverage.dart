@@ -7,6 +7,7 @@ const List<String> _criticalFiles = <String>[
   'lib/core/services/emergency_platform_service.dart',
   'lib/core/services/pin_verification_service.dart',
   'lib/core/services/check_in_service.dart',
+  'lib/core/services/contact_service.dart',
 ];
 
 Never _fail(String message) {

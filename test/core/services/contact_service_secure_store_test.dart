@@ -146,4 +146,85 @@ void main() {
     final read = await ContactService.getContactRecords();
     expect(read.map((c) => c.phone), ['+905554445566']);
   });
+
+  test(
+    'public compatibility APIs preserve explicit-primary call policy',
+    () async {
+      expect(normalizePhoneNumber('+90 (555) 111-22-33'), '+905551112233');
+      expect(normalizePhoneNumber('0555 444 55 66'), '05554445566');
+
+      await ContactService.saveContacts([
+        '+905551112233',
+        '+90 (555) 111-22-33',
+        'tel:+905557778899',
+      ]);
+
+      expect(await ContactService.getContacts(), ['+905551112233']);
+      expect(
+        await ContactService.getEmergencyNumber(),
+        isNull,
+        reason: 'List order is never implicit consent to call.',
+      );
+
+      await ContactService.savePrimaryEmergencyContact(
+        name: '',
+        phone: '+905551112233',
+      );
+      expect(await ContactService.getEmergencyNumber(), '+905551112233');
+
+      await ContactService.clearPrimaryEmergencyContact();
+      expect(await ContactService.getEmergencyNumber(), isNull);
+
+      await ContactService.saveEmergencyContact(['+905554445566']);
+      expect(await ContactService.getContacts(), ['+905554445566']);
+    },
+  );
+
+  test(
+    'legacy prefs numbers and explicit primary migrate without duplicates',
+    () async {
+      SharedPreferences.setMockInitialValues(<String, Object>{
+        'saved_contacts': <String>[
+          '+905551112233',
+          '+90 (555) 111-22-33',
+          '+905554445566',
+          'invalid',
+        ],
+        'emergency_contact_phone': '+905554445566',
+        'emergency_contact_name': 'Bora',
+      });
+      ContactService.resetCache();
+
+      final contacts = await ContactService.getContactRecords();
+
+      expect(contacts, hasLength(2));
+      expect(contacts.where((contact) => contact.isPrimary), hasLength(1));
+      expect(
+        contacts.singleWhere((contact) => contact.isPrimary).phone,
+        '+905554445566',
+      );
+      expect(envelopeContacts(), hasLength(2));
+    },
+  );
+
+  test(
+    'strict warm-up rejects contacts whose canonical write was lost',
+    () async {
+      await db.seedContact(
+        name: 'Ada',
+        phone: '+905551112233',
+        isPrimary: true,
+      );
+      secure.dropWrites = true;
+
+      await expectLater(
+        ContactService.warmUpRequired(),
+        throwsA(isA<StateError>()),
+      );
+      expect(await db.contactRowCount(), 1);
+
+      secure.failReads = true;
+      await ContactService.warmUp();
+    },
+  );
 }

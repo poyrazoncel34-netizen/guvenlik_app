@@ -8,6 +8,7 @@ const _criticalFiles = <String>[
   'lib/core/services/emergency_platform_service.dart',
   'lib/core/services/pin_verification_service.dart',
   'lib/core/services/check_in_service.dart',
+  'lib/core/services/contact_service.dart',
 ];
 
 Future<ProcessResult> _runGate(
@@ -61,7 +62,7 @@ void main() {
             )
             as Map<String, dynamic>;
     expect(report['result'], 'PASS');
-    expect(report['files'], hasLength(4));
+    expect(report['files'], hasLength(_criticalFiles.length));
   });
 
   test('fails when a critical file is below the threshold', () async {
