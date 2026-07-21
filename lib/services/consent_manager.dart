@@ -13,6 +13,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../core/constants/app_constants.dart';
 import '../core/security/secure_storage_keys.dart';
 import '../models/consent_record.dart';
 import '../constants/legal_texts.dart';
@@ -23,6 +24,32 @@ class ConsentStorageException implements Exception {
   final String message;
   @override
   String toString() => 'ConsentStorageException: $message';
+}
+
+/// Minimal durability boundary for publishing a legal-text acceptance.
+///
+/// Kept injectable so commit rejection can be exercised without pretending a
+/// SharedPreferences write succeeded. The final accepted marker is a publish
+/// marker and must always be the last write in the transaction.
+abstract interface class LegalAcceptanceStore {
+  Future<bool> setBool(String key, bool value);
+  Future<bool> setString(String key, String value);
+}
+
+class _SharedPreferencesLegalAcceptanceStore implements LegalAcceptanceStore {
+  const _SharedPreferencesLegalAcceptanceStore(this._preferences);
+
+  final SharedPreferences _preferences;
+
+  @override
+  Future<bool> setBool(String key, bool value) {
+    return _preferences.setBool(key, value);
+  }
+
+  @override
+  Future<bool> setString(String key, String value) {
+    return _preferences.setString(key, value);
+  }
 }
 
 class ConsentManager {
@@ -190,11 +217,59 @@ class ConsentManager {
         savedKvkk != LegalTexts.kvkkVersion;
   }
 
-  Future<void> markLegalVersionsAccepted() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('pref_terms_version', LegalTexts.termsVersion);
-    await prefs.setString('pref_kvkk_version', LegalTexts.kvkkVersion);
-    await prefs.setBool('pref_legal_disclaimer_accepted', true);
+  Future<void> markLegalVersionsAccepted({LegalAcceptanceStore? store}) async {
+    final acceptanceStore =
+        store ??
+        _SharedPreferencesLegalAcceptanceStore(
+          await SharedPreferences.getInstance(),
+        );
+
+    // Fail closed before changing either version. A crash or rejected write at
+    // any later step therefore cannot leave an old acceptance marker active.
+    await _requireLegalCommit(
+      acceptanceStore.setBool(AppConstants.prefLegalAcceptedV1, false),
+      'legal legacy marker clear did not commit',
+    );
+    await _requireLegalCommit(
+      acceptanceStore.setBool(AppConstants.prefLegalDisclaimerAccepted, false),
+      'legal publish marker clear did not commit',
+    );
+    await _requireLegalCommit(
+      acceptanceStore.setString(
+        AppConstants.prefTermsVersion,
+        LegalTexts.termsVersion,
+      ),
+      'terms version write did not commit',
+    );
+    await _requireLegalCommit(
+      acceptanceStore.setString(
+        AppConstants.prefKvkkVersion,
+        LegalTexts.kvkkVersion,
+      ),
+      'kvkk version write did not commit',
+    );
+    await _requireLegalCommit(
+      acceptanceStore.setBool(AppConstants.prefLegalDisclaimerAccepted, true),
+      'legal publish marker write did not commit',
+    );
+  }
+
+  Future<void> _requireLegalCommit(
+    Future<bool> commit,
+    String failureCode,
+  ) async {
+    late final bool didCommit;
+    try {
+      didCommit = await commit;
+    } catch (_) {
+      // Storage implementations may throw platform exceptions containing
+      // device/vendor details. Collapse them into the same bounded contract as
+      // an explicit commit rejection.
+      throw ConsentStorageException(failureCode);
+    }
+    if (!didCommit) {
+      throw ConsentStorageException(failureCode);
+    }
   }
 
   // ── Kayıt oluştur ─────────────────────────────────────────────────────────
