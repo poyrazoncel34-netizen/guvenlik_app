@@ -76,7 +76,7 @@
       "reason": "Candidate-facing legal, Play declaration, billing, QA, or store material."
     },
     {
-      "pattern": "^(?:lib/services/consent_manager\\.dart$|test/legal_.*_test\\.dart$)",
+      "pattern": "^(?:lib/services/consent_manager\\.dart$|test/(?:legal_.*_test\\.dart$|services/consent_manager_.*_test\\.dart$))",
       "category": "legal",
       "commitGroup": "05-legal-store",
       "reason": "Legal consent behavior and executable public-claim regression evidence."

@@ -9,6 +9,7 @@
 
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guvenlik_app/core/security/secure_storage_keys.dart';
@@ -126,5 +127,30 @@ void main() {
     // A fresh grant still persists via SharedPreferences despite the bad keystore.
     await cm.grantConsent(ConsentRecord.typeLocation);
     expect(cm.isGranted(ConsentRecord.typeLocation), isTrue);
+  });
+
+  test('legacy migration failure never logs secure-storage exception details',
+      () async {
+    SharedPreferences.setMockInitialValues({});
+    final messages = <String>[];
+    final originalDebugPrint = debugPrint;
+    debugPrint = (String? message, {int? wrapWidth}) {
+      if (message != null) messages.add(message);
+    };
+    addTearDown(() => debugPrint = originalDebugPrint);
+    mockSecureStorage((call) async {
+      throw PlatformException(
+        code: 'CANARY_PRIVATE_KEYSTORE_CODE',
+        message: 'PIN=8642 phone=+905551112233',
+      );
+    });
+
+    await ConsentManager().initialize();
+
+    final output = messages.join('\n');
+    expect(output, isNot(contains('CANARY_PRIVATE_KEYSTORE_CODE')));
+    expect(output, isNot(contains('8642')));
+    expect(output, isNot(contains('+905551112233')));
+    expect(output, contains('legacy consent migration deferred'));
   });
 }

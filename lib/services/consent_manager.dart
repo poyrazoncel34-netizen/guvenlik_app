@@ -71,11 +71,8 @@ class ConsentManager {
               record.timestamp.isAfter(existing.timestamp)) {
             latest[record.consentType] = record;
           }
-        } catch (e) {
+        } catch (_) {
           skipped++;
-          debugPrint(
-            '[ConsentManager] _loadConsentCache: skipping malformed entry: $e',
-          );
         }
       }
       if (skipped > 0) {
@@ -87,12 +84,12 @@ class ConsentManager {
       for (final entry in latest.entries) {
         _consentCache[entry.key] = entry.value.granted;
       }
-    } catch (e) {
+    } catch (_) {
       // Storage itself was unreadable (not a per-record parse skip). Flag it so
       // the consent UI can warn the user instead of silently showing every
       // consent as "off".
       _loadFailed = true;
-      debugPrint('[ConsentManager] _loadConsentCache hata: $e');
+      debugPrint('[ConsentManager] _loadConsentCache storage read failed');
     }
   }
 
@@ -143,11 +140,8 @@ class ConsentManager {
       for (final item in list) {
         try {
           records.add(ConsentRecord.fromJson(item as Map<String, dynamic>));
-        } catch (e) {
+        } catch (_) {
           skipped++;
-          debugPrint(
-            '[ConsentManager] getAllLogs: skipping malformed entry: $e',
-          );
         }
       }
       if (skipped > 0) {
@@ -157,8 +151,8 @@ class ConsentManager {
         );
       }
       return records;
-    } catch (e) {
-      debugPrint('[ConsentManager] getAllLogs hata: $e');
+    } catch (_) {
+      debugPrint('[ConsentManager] getAllLogs storage read failed');
       return [];
     }
   }
@@ -232,8 +226,8 @@ class ConsentManager {
       try {
         final decoded = jsonDecode(raw);
         if (decoded is List) list = decoded;
-      } on FormatException catch (e) {
-        debugPrint('[ConsentManager] _recordConsent: corrupt log reset: $e');
+      } on FormatException {
+        debugPrint('[ConsentManager] _recordConsent: corrupt log reset');
       }
     }
     list.add(record.toJson());
@@ -270,8 +264,8 @@ class ConsentManager {
         old != null && old.isNotEmpty ? old : '[]',
       );
       _legacyMigrationDone = true;
-    } on Exception catch (e) {
-      debugPrint('[ConsentManager] legacy consent migration deferred: $e');
+    } on Exception {
+      debugPrint('[ConsentManager] legacy consent migration deferred');
     }
   }
 
