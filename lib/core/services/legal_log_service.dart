@@ -17,6 +17,8 @@ class LegalLogService {
   static const String _logFileName = 'legal_logs.json';
   static const int _maxEntries = 500;
   static const int _retentionYears = 2;
+  static final RegExp _codePattern = RegExp(r'^[a-z][a-z0-9_]{0,63}$');
+  static const int _maxCheckboxes = 16;
 
   String? _cachedVersion;
 
@@ -30,21 +32,36 @@ class LegalLogService {
   }) async {
     try {
       final entry = <String, dynamic>{
-        'event': event,
+        'event': _safeCode(event, fallback: 'invalid_event'),
         'timestamp': DateTime.now().toIso8601String(),
         'app_version': await _getAppVersion(),
       };
-      if (feature != null) entry['feature'] = feature;
-      if (result != null) entry['result'] = result;
-      if (errorType != null) entry['error_type'] = errorType;
-      if (checkboxes != null) entry['checkboxes'] = checkboxes;
+      if (feature != null) {
+        entry['feature'] = _safeCode(feature, fallback: 'invalid_feature');
+      }
+      if (result != null) {
+        entry['result'] = _safeCode(result, fallback: 'invalid_result');
+      }
+      if (errorType != null) {
+        entry['error_type'] = _safeCode(
+          errorType,
+          fallback: 'invalid_error_type',
+        );
+      }
+      if (checkboxes != null) {
+        entry['checkboxes'] = checkboxes
+            .take(_maxCheckboxes)
+            .map((value) => _safeCode(value, fallback: 'invalid_checkbox'))
+            .toSet()
+            .toList(growable: false);
+      }
 
       final logs = await _loadLogs();
       logs.add(entry);
       _pruneEntries(logs);
       await _saveLogs(logs);
-    } catch (e) {
-      debugPrint('[LegalLogService] logEvent error: $e');
+    } catch (_) {
+      debugPrint('[LegalLogService] logEvent failed');
     }
   }
 
@@ -52,8 +69,8 @@ class LegalLogService {
   Future<List<Map<String, dynamic>>> getLogs() async {
     try {
       return await _loadLogs();
-    } catch (e) {
-      debugPrint('[LegalLogService] getLogs error: $e');
+    } catch (_) {
+      debugPrint('[LegalLogService] getLogs failed');
       return [];
     }
   }
@@ -65,8 +82,8 @@ class LegalLogService {
       if (await file.exists()) {
         await file.delete();
       }
-    } catch (e) {
-      debugPrint('[LegalLogService] deleteLogs error: $e');
+    } catch (_) {
+      debugPrint('[LegalLogService] deleteLogs failed');
     }
   }
 
@@ -93,18 +110,14 @@ class LegalLogService {
       throw const FormatException(
         'legal_logs file is valid JSON but the shape is unexpected',
       );
-    } on FormatException catch (e) {
+    } on FormatException {
       // Corrupted file (half-write, manual edit, schema drift). Rewrite it
       // with the empty container so the next logEvent() can append again.
-      debugPrint(
-        '[LegalLogService] _loadLogs: recovering from malformed file: $e',
-      );
+      debugPrint('[LegalLogService] _loadLogs: recovering from malformed file');
       await _recoverEmptyFile(file);
       return [];
-    } on TypeError catch (e) {
-      debugPrint(
-        '[LegalLogService] _loadLogs: recovering from type error: $e',
-      );
+    } on TypeError {
+      debugPrint('[LegalLogService] _loadLogs: recovering from type error');
       await _recoverEmptyFile(file);
       return [];
     }
@@ -121,8 +134,8 @@ class LegalLogService {
         flush: true,
       );
       debugPrint('[LegalLogService] _loadLogs: recovery wrote empty container');
-    } catch (e) {
-      debugPrint('[LegalLogService] _loadLogs: recovery write failed: $e');
+    } catch (_) {
+      debugPrint('[LegalLogService] _loadLogs: recovery write failed');
     }
   }
 
@@ -162,5 +175,9 @@ class LegalLogService {
   Future<String> _getAppVersion() async {
     _cachedVersion ??= (await PackageInfo.fromPlatform()).version;
     return _cachedVersion!;
+  }
+
+  static String _safeCode(String value, {required String fallback}) {
+    return _codePattern.hasMatch(value) ? value : fallback;
   }
 }

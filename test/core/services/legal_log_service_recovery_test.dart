@@ -15,6 +15,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guvenlik_app/core/services/legal_log_service.dart';
@@ -55,9 +56,7 @@ void main() {
     logFile = File('${tempDir.path}/legal_logs.json');
 
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(packageInfoChannel, (
-          MethodCall call,
-        ) async {
+        .setMockMethodCallHandler(packageInfoChannel, (MethodCall call) async {
           if (call.method == 'getAll') {
             return <String, dynamic>{
               'appName': 'KoruBeni',
@@ -169,5 +168,47 @@ void main() {
     final logs = await LegalLogService.instance.getLogs();
     expect(logs, hasLength(1));
     expect(logs.first['event'], equals('seeded'));
+  });
+
+  test('malformed-file recovery never logs file contents or PII', () async {
+    final messages = <String>[];
+    final originalDebugPrint = debugPrint;
+    debugPrint = (String? message, {int? wrapWidth}) {
+      if (message != null) messages.add(message);
+    };
+    addTearDown(() => debugPrint = originalDebugPrint);
+    await logFile.writeAsString(
+      '{CANARY_PRIVATE_JSON PIN=8642 phone=+905551112233',
+    );
+
+    await LegalLogService.instance.getLogs();
+
+    final output = messages.join('\n');
+    expect(output, isNot(contains('CANARY_PRIVATE_JSON')));
+    expect(output, isNot(contains('8642')));
+    expect(output, isNot(contains('+905551112233')));
+    expect(output, contains('recovering from malformed file'));
+  });
+
+  test('caller-controlled PII cannot enter the persistent legal log', () async {
+    await LegalLogService.instance.logEvent(
+      'CANARY_PRIVATE_EVENT',
+      feature: '+905551112233',
+      result: '40.987654, 29.123456',
+      errorType: 'PIN=8642',
+      checkboxes: <String>['private@example.com'],
+    );
+
+    final persisted = await logFile.readAsString();
+    for (final secret in <String>[
+      'CANARY_PRIVATE_EVENT',
+      '+905551112233',
+      '40.987654',
+      '29.123456',
+      '8642',
+      'private@example.com',
+    ]) {
+      expect(persisted, isNot(contains(secret)), reason: 'persisted $secret');
+    }
   });
 }
