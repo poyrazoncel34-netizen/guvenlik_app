@@ -48,6 +48,7 @@ https://operations.osmfoundation.org/policies/tiles/
 - Real-device QA is not complete. Emulator evidence is not accepted for production readiness.
 - Billing is not complete. Monthly purchase, annual purchase, restore, cancel/manage, no-offering, and network-failure fallback must be tested through Play test tracks and license testers.
 - Production is DO_NOT_CLAIM_READY until Play Console forms, billing tests, the declared API 29–36 physical-device/OEM matrix, screenshot PII review, and the mandatory KoruBeni 12-tester/14-day closed soak are complete for one immutable AAB.
+- The immutable-AAB requirement above is KoruBeni policy, not a Google rule, and the two must not be conflated. Google's closed-testing requirement for new personal developer accounts ties continuity to *tester opt-in* ("12 testers who have been opted-in for at least the last 14 days continuously", [Play Console Help 14151465](https://support.google.com/googleplay/android-developer/answer/14151465)); uploading a new build to the closed track does not reset that counter. KoruBeni adds the stricter "same AAB" condition on purpose, so that what ships is the artifact testers actually exercised. Operationally this means the 14-day clock may be started early and run in parallel with other release work; the freeze applies only from the moment the final production candidate is chosen.
 
 ## Android 15 / Android 16 / 16 KB Page Size Readiness
 
