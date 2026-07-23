@@ -84,6 +84,40 @@ dart scripts/verify_sbom_license_policy.dart \
   --policy config/dependency_license_policy.json
 ```
 
+Kuyruğu doldurmadan önce, çözümlenmiş artefaktların **kendi lisans baytlarını**
+çevrimdışı toplayın. Bu adım incelemenin mekanik yarısıdır (exact artefaktı bulmak,
+baytları okumak, hash'lemek); hesap verebilir yarısını yapmaz:
+
+```sh
+python3 scripts/harvest_license_evidence.py \
+  --sbom build/release-evidence/sbom.cdx.json \
+  --evidence config/dependency_license_evidence.json \
+  --output build/release-evidence/license-evidence-proposal.json \
+  --text-output-dir build/release-evidence/license-texts
+```
+
+Araç hiçbir koşulda SPDX kimliği tahmin etmez, `reviewedBy`/`reviewedAt` üretmez,
+ağdan indirme yapmaz ve `config/dependency_license_evidence.json` dosyasına yazmaz;
+`--output` o dosyayı gösterirse fail-closed çıkar. Çıktının kök anahtarı `entries`
+değil `candidates` olduğu için hiçbir kapı onu kanıt olarak kabul edemez. Bu
+sözleşmeler `test/license_evidence_harvest_test.dart` ile pinlenmiştir.
+
+Kayıtlar üç durumdan birini taşır:
+
+| Durum | Anlamı | Reviewer'ın işi |
+| --- | --- | --- |
+| `ALREADY_REVIEWED` | Hesap verebilir kanıt dosyasında zaten var | Yok |
+| `HUMAN_REVIEW_REQUIRED` | Exact baytlar toplandı ve hash'lendi | Metni oku, SPDX'e karar ver, adını/tarihini yaz |
+| `UNRESOLVED` | Artefakt UTF-8 lisans metni taşımıyor | Primary upstream metni kendin getir |
+
+Maven kayıtlarında `pomDeclaration`, yayımlanmış POM'un beyan ettiği ad/URL'dir —
+upstream hakkında bir olgudur, lisans kararı değildir. SPDX'i yine tam metinden
+doğrulayın.
+
+`--text-output-dir` çıktısı `build/` altında kalır. Bir kaydı kanıt hâline
+getirirken ilgili `<sha256>.txt` dosyasını `config/license-texts/` altına siz
+taşırsınız; böylece depoya yalnız gerçekten incelenmiş baytlar girer.
+
 İnsan inceleme kuyruğunu hiçbir lisansı tahmin etmeden üretmek için:
 
 ```sh
