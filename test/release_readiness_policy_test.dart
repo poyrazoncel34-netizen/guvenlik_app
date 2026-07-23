@@ -239,6 +239,61 @@ void main() {
       },
     );
 
+    test(
+      'every published legal mirror matches its store source byte-for-byte',
+      () {
+        // The GitHub Pages routes users and Play reviewers open are served from
+        // `.gh-pages-publish/`. If a `store/` legal file is updated (e.g. via
+        // scripts/bump_legal.sh) but its published mirror is not re-synced, the
+        // deployed site silently drifts -- the exact failure that left a stale
+        // KVKK privacy policy live. The `map cache` test above guards four of
+        // these mirrors; `kullanim_sartlari.html` and `data_deletion.html` were
+        // unguarded. This is the single authoritative parity guard for the full
+        // set, so no published mirror can drift from its source undetected.
+        const mirrors = <String, String>{
+          '.gh-pages-publish/privacy_policy.html': 'store/privacy_policy.html',
+          // index.html is the site root and must serve the privacy policy.
+          '.gh-pages-publish/index.html': 'store/privacy_policy.html',
+          '.gh-pages-publish/privacy_policy_en.html':
+              'store/privacy_policy_en.html',
+          '.gh-pages-publish/aydinlatma.html': 'store/aydinlatma_metni.html',
+          '.gh-pages-publish/kullanim_sartlari.html':
+              'store/kullanim_sartlari.html',
+          '.gh-pages-publish/data_deletion.html': 'store/data_deletion.html',
+        };
+
+        final drift = <String>[];
+        for (final entry in mirrors.entries) {
+          final published = File(entry.key);
+          final source = File(entry.value);
+          expect(
+            published.existsSync(),
+            isTrue,
+            reason: 'Published mirror ${entry.key} is missing.',
+          );
+          expect(
+            source.existsSync(),
+            isTrue,
+            reason: 'Store source ${entry.value} is missing.',
+          );
+          if (published.readAsBytesSync().toString() !=
+              source.readAsBytesSync().toString()) {
+            drift.add('${entry.key} != ${entry.value}');
+          }
+        }
+
+        expect(
+          drift,
+          isEmpty,
+          reason:
+              'Re-sync the published mirror from its store source before '
+              'release. Run scripts/sync_privacy_policy.sh; never hand-edit one '
+              'side. A deployed legal page that lags the in-app text is a '
+              'compliance drift, not a formatting nit.',
+        );
+      },
+    );
+
     test('store listing says panic SOS is Pro-only', () {
       final listing = File('store/play_store_listing_tr.md').readAsStringSync();
       expect(listing, contains('Panik/SOS'));
