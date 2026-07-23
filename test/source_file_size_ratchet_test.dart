@@ -19,15 +19,22 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   const limit = 800;
 
-  // Recorded 2026-07-23. Lower is always allowed; higher is not.
+  // Baseline recorded 2026-07-23 from the COMMITTED tree (git HEAD), which is
+  // what CI checks out. Do not record numbers measured against a dirty working
+  // tree: uncommitted work-in-progress can inflate a file well past its
+  // committed size, and baking those inflated numbers in here would
+  // pre-authorise exactly the growth this ratchet exists to catch.
+  //
+  // Consequence: while local WIP grows one of these files, this test goes red
+  // on the working tree. That is the ratchet reporting real drift, not a bug —
+  // trim the file or make updating this ledger a conscious part of the commit.
   const acceptedOversize = <String, int>{
     'lib/screens/home_page.dart': 1276,
-    'lib/screens/countdown_screen.dart': 1238,
+    'lib/screens/countdown_screen.dart': 1228,
     'lib/screens/contacts_page.dart': 1185,
-    'lib/core/services/check_in_service.dart': 956,
-    'lib/core/services/emergency_platform_service.dart': 931,
-    'lib/screens/map_page.dart': 913,
-    'lib/core/services/contact_service.dart': 886,
+    'lib/screens/map_page.dart': 885,
+    'lib/core/services/emergency_platform_service.dart': 867,
+    'lib/core/services/contact_service.dart': 810,
   };
 
   int lineCount(File file) => file.readAsLinesSync().length;
