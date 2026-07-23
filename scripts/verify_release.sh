@@ -13,7 +13,8 @@
 #     azaltır. Dış kapılar ayrıca kanıtlanır.
 #
 # Adim sirasi bilinclidir:
-#   analyze -> test -> (flutter) build AAB -> (gradle) lint+unit+androidTest build -> 16KB
+#   analyze -> test -> (flutter) build AAB -> (gradle) lint+unit+androidTest build
+#   -> 16KB -> etiketli-yayin blocker durumu (SBOM/lisans/notices)
 #   flutter build, gitignore'lu GeneratedPluginRegistrant'i YENILER; dogrudan
 #   gradlew release task'lari bayat registrant'la "package does not exist" ile
 #   patlar. Bu yuzden gradle lint HER ZAMAN flutter build'DEN SONRA kosar.
@@ -54,11 +55,22 @@ if [ "$FLAVOR" != "smoke" ]; then
   exit 1
 fi
 
+# Etiketli yayin kapisi (SBOM lisans kanidi + notices paritesi) uzun sureli
+# kirmizi kalabilir; varsayilan RAPOR modudur ki gunluk dogrulama dongusu
+# kullanilabilir kalsin. --strict-release-gates ile bloklayici hale gelir.
+STRICT_RELEASE_GATES=0
+for arg in "$@"; do
+  case "$arg" in
+    --strict-release-gates) STRICT_RELEASE_GATES=1 ;;
+    *) printf 'Bilinmeyen argüman: %s\n' "$arg" >&2; exit 2 ;;
+  esac
+done
+
 step=0
 pass() { printf '  \033[32m✓ PASS\033[0m  %s\n' "$1"; }
 run() {
   step=$((step + 1))
-  printf '\n\033[1m[%d/5] %s\033[0m\n' "$step" "$1"
+  printf '\n\033[1m[%d/6] %s\033[0m\n' "$step" "$1"
 }
 fail() {
   printf '\n\033[31m✗ FAIL\033[0m  %s\n' "$1" >&2
@@ -111,13 +123,20 @@ python3 scripts/audit_android_release_surface.py \
   --expected-package com.poyrazoncel.korubeni.smoke \
   --output "$ANDROID_SURFACE_REPORT" \
   || fail "birlesik Android release yuzeyi guvenlik denetimini gecemedi"
-SIGNATURE_LOG="$(mktemp /tmp/korubeni_smoke_signature.XXXXXX.log)"
-if ! LC_ALL=C jarsigner -verify "$AAB" >"$SIGNATURE_LOG" 2>&1; then
+SIGNATURE_LOG="$(mktemp /tmp/korubeni_smoke_signature.XXXXXX)"
+if LC_ALL=C jarsigner -verify -strict "$AAB" >"$SIGNATURE_LOG" 2>&1; then
+  SIGNATURE_STATUS=0
+else
+  # A command in an if-condition is exempt from errexit and the global ERR
+  # trap, so the complete strict bitmask can be evaluated below.
+  SIGNATURE_STATUS=$?
+fi
+if [[ "$SIGNATURE_STATUS" -ne 0 && "$SIGNATURE_STATUS" -ne 4 ]]; then
   sed -n '1,80p' "$SIGNATURE_LOG"
   rm -f "$SIGNATURE_LOG"
   fail "smoke AAB JAR imzasi dogrulanamadi"
 fi
-if ! grep -q "jar verified\." "$SIGNATURE_LOG"; then
+if ! grep -Eq '^jar verified([,.]|$)' "$SIGNATURE_LOG"; then
   sed -n '1,80p' "$SIGNATURE_LOG"
   rm -f "$SIGNATURE_LOG"
   fail "smoke AAB imzasiz veya dogrulanamadi"
@@ -141,9 +160,52 @@ run "16KB sayfa boyutu hizalamasi"
 ./scripts/verify_16kb_alignment.sh "$AAB" || fail "16KB hizalama basarisiz"
 pass "tum native kutuphaneler 16KB uyumlu"
 
+run "etiketli-yayin blocker durumu (SBOM lisans kanidi + notices paritesi)"
+# Bu kapi .github/workflows/release.yml icinde AAB derlemesinden ONCE kosar ve
+# etiketli yayinin ilk kirmizi noktasidir. Yerelde hic kosulmazsa "kod yesil"
+# sinyali, tag atildiginda CI'da kirmizi ile karsilasmayi gizler.
+RELEASE_GATE_LOG="$(mktemp)"
+RELEASE_GATE_STATUS=0
+{
+  dart scripts/generate_cyclonedx_sbom.dart \
+    --output build/release-evidence/sbom.cdx.json \
+    --license-evidence config/dependency_license_evidence.json &&
+  dart scripts/verify_sbom_license_policy.dart \
+    --sbom build/release-evidence/sbom.cdx.json \
+    --policy config/dependency_license_policy.json &&
+  python3 scripts/generate_third_party_notices.py \
+    --sbom build/release-evidence/sbom.cdx.json \
+    --evidence config/dependency_license_evidence.json \
+    --license-text-dir config/license-texts \
+    --output build/release-evidence/THIRD_PARTY_NOTICES.txt &&
+  cmp --silent \
+    assets/legal/THIRD_PARTY_NOTICES.txt \
+    build/release-evidence/THIRD_PARTY_NOTICES.txt
+} >"$RELEASE_GATE_LOG" 2>&1 || RELEASE_GATE_STATUS=$?
+
+if [ "$RELEASE_GATE_STATUS" -eq 0 ]; then
+  pass "etiketli yayin lisans/notices kapisi yesil"
+  TAGGED_RELEASE_STATE='TAGGED_RELEASE_GATES_LOCAL_PASS'
+else
+  sed -n '1,40p' "$RELEASE_GATE_LOG"
+  printf '  \033[33m! BLOCKED\033[0m  etiketli yayin lisans/notices kapisi kirmizi\n'
+  printf '    Bu kapi tag atildiginda CI de ayni sekilde kirmizi olur.\n'
+  printf '    Kanit toplama: scripts/harvest_license_evidence.py\n'
+  printf '    Inceleme sureci: docs/release/dependency_license_review.md\n'
+  TAGGED_RELEASE_STATE='TAGGED_RELEASE_BLOCKED'
+fi
+rm -f "$RELEASE_GATE_LOG"
+
 trap - ERR
-printf '\n\033[1;32m=== KOD/SMOKE DOGRULAMA YESIL — 5/5 kapi gecti ===\033[0m\n'
+printf '\n\033[1;32m=== KOD/SMOKE DOGRULAMA YESIL — 5/5 kod+smoke kapisi gecti ===\033[0m\n'
 printf 'LOCAL_CANDIDATE_PASS\n'
 printf 'EXTERNAL_RELEASE_GATES_UNVERIFIED\n'
+printf '%s\n' "$TAGGED_RELEASE_STATE"
 printf 'Not: bu AAB .smoke paket kimligiyle derlendi; gercek Play uygulamasina YUKLENEMEZ.\n'
 printf 'Gercek uretim AAB si yalniz production release zincirinden alinir.\n'
+if [ "$TAGGED_RELEASE_STATE" = 'TAGGED_RELEASE_BLOCKED' ]; then
+  printf 'Not: kod+smoke yesil olmasi etiketli yayinin hazir oldugu anlamina GELMEZ.\n'
+  if [ "$STRICT_RELEASE_GATES" -eq 1 ]; then
+    exit 1
+  fi
+fi
