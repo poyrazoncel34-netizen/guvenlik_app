@@ -15,12 +15,17 @@ TMP_DIR="$(mktemp -d "${TMPDIR:-/tmp}/korubeni-osv-audit.XXXXXX")"
 trap 'rm -rf "$TMP_DIR"' EXIT
 
 OUTPUT=""
+ALLOW_DIRTY_LOCAL=false
 while [ "$#" -gt 0 ]; do
     case "$1" in
         --output)
             [ "$#" -ge 2 ] || { echo "Missing value for --output" >&2; exit 64; }
             OUTPUT="$2"
             shift 2
+            ;;
+        --allow-dirty-local)
+            ALLOW_DIRTY_LOCAL=true
+            shift
             ;;
         *)
             echo "Unknown argument: $1" >&2
@@ -29,7 +34,7 @@ while [ "$#" -gt 0 ]; do
     esac
 done
 [ -n "$OUTPUT" ] || {
-    echo "Usage: ./scripts/audit_dependencies_osv.sh --output <path>" >&2
+    echo "Usage: ./scripts/audit_dependencies_osv.sh --output <path> [--allow-dirty-local]" >&2
     exit 64
 }
 
@@ -99,14 +104,23 @@ ruby -rjson -e '
 ' "$MAVEN_REPORT" > "$MAVEN_QUERY"
 query_osv maven "$MAVEN_QUERY"
 
-python3 "$REPO_ROOT/scripts/generate_osv_evidence.py" \
+GENERATOR_ARGS=(
+    python3 "$REPO_ROOT/scripts/generate_osv_evidence.py"
     --repo "$REPO_ROOT" \
     --pub-query "$PUB_QUERY" \
     --pub-response "$TMP_DIR/pub-response.json" \
     --maven-query "$MAVEN_QUERY" \
     --maven-response "$TMP_DIR/maven-response.json" \
-    --output "$OUTPUT" \
-    --require-clean
+    --output "$OUTPUT"
+)
+if ! $ALLOW_DIRTY_LOCAL; then
+    GENERATOR_ARGS+=(--require-clean)
+fi
+"${GENERATOR_ARGS[@]}"
 
-echo "Dependency audit complete. Candidate-bound evidence: $OUTPUT"
+if $ALLOW_DIRTY_LOCAL; then
+    echo "Dependency audit complete. LOCAL DIRTY-SOURCE evidence only: $OUTPUT"
+else
+    echo "Dependency audit complete. Candidate-bound evidence: $OUTPUT"
+fi
 echo "OSV coverage limitations still apply."

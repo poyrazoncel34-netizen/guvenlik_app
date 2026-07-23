@@ -17,6 +17,7 @@ import '../navigation/app_navigator.dart';
 import '../services/activity_service.dart';
 import '../services/call_service.dart';
 import '../services/check_in_expiry_coordinator.dart';
+import '../services/consent_gate_service.dart';
 import '../services/emergency_platform_service.dart';
 import '../services/emergency_session_contract.dart';
 import '../services/foreground_service.dart';
@@ -35,20 +36,26 @@ class CheckInService extends ChangeNotifier {
     this._sessionId, {
     EmergencyPlatformService? platform,
     ContactsRepository? contactsRepository,
+    bool Function()? contactsConsentAllowed,
     bool sideEffectsEnabled = true,
   }) : _platform = platform ?? EmergencyPlatformService.instance,
        _contactsRepositoryOverride = contactsRepository,
+       _contactsConsentAllowed =
+           contactsConsentAllowed ??
+           ConsentGateService.isEmergencyContactsAllowed,
        _sideEffectsEnabled = sideEffectsEnabled;
 
   factory CheckInService.forTesting({
     required String sessionId,
     required EmergencyPlatformService platform,
     required ContactsRepository contactsRepository,
+    required bool Function() contactsConsentAllowed,
     bool sideEffectsEnabled = false,
   }) => CheckInService._(
     sessionId,
     platform: platform,
     contactsRepository: contactsRepository,
+    contactsConsentAllowed: contactsConsentAllowed,
     sideEffectsEnabled: sideEffectsEnabled,
   );
 
@@ -65,6 +72,7 @@ class CheckInService extends ChangeNotifier {
   final String _sessionId;
   final EmergencyPlatformService _platform;
   final ContactsRepository? _contactsRepositoryOverride;
+  final bool Function() _contactsConsentAllowed;
   final bool _sideEffectsEnabled;
 
   ContactsRepository get _contactsRepository =>
@@ -97,7 +105,10 @@ class CheckInService extends ChangeNotifier {
   bool _isGracePeriod = false;
   bool _emergencyInProgress = false;
   bool _mutationInProgress = false;
+  bool _reconciliationPending = false;
+  bool _revisionDurationKnown = true;
   bool _nativeScheduleDegraded = false;
+  Future<void>? _restoreInFlight;
   SessionToken? _sessionToken;
   String? _armedTarget;
   ArmResult? _lastArmResult;
@@ -107,6 +118,7 @@ class CheckInService extends ChangeNotifier {
 
   bool get isActive => _isActive;
   bool get isGracePeriod => _isGracePeriod;
+  bool get reconciliationPending => _reconciliationPending;
   bool get nativeScheduleDegraded => _nativeScheduleDegraded;
   int get remainingSeconds => _remainingSeconds;
   int get totalSeconds => _totalSeconds;
@@ -115,12 +127,24 @@ class CheckInService extends ChangeNotifier {
   ArmResult? get lastArmResult => _lastArmResult;
   CancelResult? get lastCancelResult => _lastCancelResult;
 
-  Future<void> initialize() async {
-    await _restoreFromStorage();
+  Future<void> initialize() => _restoreSerialized();
+
+  Future<void> handleAppResumed() => _restoreSerialized();
+
+  Future<void> _restoreSerialized() {
+    final existing = _restoreInFlight;
+    if (existing != null) return existing;
+    final operation = _runRestore();
+    _restoreInFlight = operation;
+    return operation;
   }
 
-  Future<void> handleAppResumed() async {
-    await _restoreFromStorage();
+  Future<void> _runRestore() async {
+    try {
+      await _restoreFromStorage();
+    } finally {
+      _restoreInFlight = null;
+    }
   }
 
   /// Native-acknowledged arm. Dart becomes active only after [Armed].
@@ -129,6 +153,12 @@ class CheckInService extends ChangeNotifier {
     required EntitlementDecision entitlementDecision,
     required bool pinConfigured,
   }) async {
+    if (_restoreInFlight != null || _reconciliationPending) {
+      return _lastArmResult = ArmRejected(
+        'reconciliationPending',
+        rejectedToken: _sessionToken,
+      );
+    }
     if (_mutationInProgress) {
       return _lastArmResult = ArmRejected(
         'operationInProgress',
@@ -160,6 +190,9 @@ class CheckInService extends ChangeNotifier {
     }
     if (minutes <= 0) {
       return _lastArmResult = const ArmRejected('invalidDuration');
+    }
+    if (!_contactsConsentAllowed()) {
+      return _lastArmResult = const ArmRejected('contactConsentRequired');
     }
     final target = await _resolvePrimaryNumber();
     if (target.isEmpty) {
@@ -193,6 +226,8 @@ class CheckInService extends ChangeNotifier {
     _endAt = result.mainDeadline;
     _graceEndAt = result.finalDeadline;
     _nativeScheduleDegraded = false;
+    _reconciliationPending = false;
+    _revisionDurationKnown = true;
 
     // Native ARMED is authoritative. A projection write failure must not turn
     // a real armed session into a UI-level arm exception.
@@ -231,6 +266,12 @@ class CheckInService extends ChangeNotifier {
 
   /// Atomically revises the native generation; old alarms become stale.
   Future<ArmResult> confirmSafeSession() async {
+    if (_restoreInFlight != null || _reconciliationPending) {
+      return _lastArmResult = ArmRejected(
+        'reconciliationPending',
+        rejectedToken: _sessionToken,
+      );
+    }
     if (_mutationInProgress) {
       return _lastArmResult = ArmRejected(
         'operationInProgress',
@@ -252,6 +293,7 @@ class CheckInService extends ChangeNotifier {
         token == null ||
         target == null ||
         _totalSeconds <= 0 ||
+        !_revisionDurationKnown ||
         _emergencyInProgress) {
       return _lastArmResult = ArmRejected(
         'noRevisableSession',
@@ -339,49 +381,173 @@ class CheckInService extends ChangeNotifier {
       // safety authority. Do not silently re-arm it with fresh commercial or
       // contact decisions.
       await _clearLegacyKeys(prefs);
+      await _restoreDiscoveredNativeSession();
       return;
     }
 
+    Map<String, dynamic> state;
     try {
-      final state = jsonDecode(stateJson) as Map<String, dynamic>;
-      final token = SessionToken.fromMap(state['token']);
-      final totalSeconds = state['totalSeconds'] as int? ?? 0;
-      if (token == null || totalSeconds <= 0) {
-        await _clearPersistedState();
-        return;
-      }
-
-      final snapshot = await _platform.readEmergencySession(token);
-      if (!snapshot.isPresent ||
-          snapshot.lifecycleState == EmergencySessionLifecycle.cancelled ||
-          snapshot.lifecycleState.isTerminal) {
-        await _clearLocalProjection(stopForeground: true);
-        return;
-      }
-      if (snapshot.lifecycleState != EmergencySessionLifecycle.armed) {
-        // Claimed/preparing/unknown cannot be projected as an active, safely
-        // cancellable timer. Native remains authoritative and will reconcile.
-        _sessionToken = snapshot.token ?? token;
-        _emergencyInProgress =
-            snapshot.lifecycleState == EmergencySessionLifecycle.claimed;
-        _cancelTicker();
-        return;
-      }
-
-      _sessionToken = snapshot.token;
-      _armedTarget = snapshot.target;
-      _totalSeconds = totalSeconds;
-      _isActive = true;
-      _endAt = snapshot.mainDeadline;
-      _graceEndAt = snapshot.finalDeadline;
-      if (_endAt == null || _graceEndAt == null || _armedTarget == null) {
-        _cancelTicker();
-        return;
-      }
-      await _reconcileWithClock();
+      final decoded = jsonDecode(stateJson);
+      if (decoded is! Map) throw const FormatException('projectionNotMap');
+      state = decoded.map(
+        (Object? key, Object? value) => MapEntry(key.toString(), value),
+      );
     } catch (_) {
-      // Corrupt Dart projection must never synthesize a new native session.
+      // Never erase the only clue that a native authority may exist until a
+      // typed native read proves absence.
+      await _restoreDiscoveredNativeSession();
+      return;
+    }
+
+    final token = SessionToken.fromMap(state['token']);
+    final totalSeconds = wireInt(state['totalSeconds']) ?? 0;
+    if (token == null || totalSeconds <= 0 || token.kind != _sessionKind) {
+      await _restoreDiscoveredNativeSession();
+      return;
+    }
+
+    final snapshot = await _platform.readEmergencySession(token);
+    if (snapshot.status == SessionReadStatus.absent) {
+      await _clearLocalProjection(stopForeground: true);
+      return;
+    }
+    if (snapshot.status == SessionReadStatus.unknown ||
+        snapshot.status == SessionReadStatus.corrupted) {
+      await _preserveUncertainProjection(
+        state: state,
+        token: token,
+        totalSeconds: totalSeconds,
+      );
+      return;
+    }
+    if (snapshot.lifecycleState == EmergencySessionLifecycle.cancelled ||
+        snapshot.lifecycleState.isTerminal) {
+      await _clearLocalProjection(stopForeground: true);
+      return;
+    }
+    if (snapshot.lifecycleState != EmergencySessionLifecycle.armed) {
+      // CLAIMED/PREPARING remains visible as an unresolved native authority,
+      // but is not projected as a running timer.
+      _sessionToken = snapshot.token ?? token;
+      _emergencyInProgress =
+          snapshot.lifecycleState == EmergencySessionLifecycle.claimed;
+      _reconciliationPending = true;
+      _isActive = false;
+      _cancelTicker();
+      notifyListeners();
+      return;
+    }
+
+    await _projectArmedSnapshot(
+      snapshot,
+      totalSeconds: totalSeconds,
+      revisionDurationKnown: state['revisionDurationKnown'] != false,
+    );
+  }
+
+  EmergencySessionKind get _sessionKind => _isSafeWalk
+      ? EmergencySessionKind.safeWalk
+      : EmergencySessionKind.checkIn;
+
+  Future<void> _restoreDiscoveredNativeSession() async {
+    final snapshot = await _platform.discoverEmergencySession(_sessionKind);
+    if (snapshot.status == SessionReadStatus.absent) {
+      _reconciliationPending = false;
       await _clearPersistedState();
+      return;
+    }
+    if (snapshot.status == SessionReadStatus.unknown ||
+        snapshot.status == SessionReadStatus.corrupted) {
+      _reconciliationPending = true;
+      _cancelTicker();
+      notifyListeners();
+      return;
+    }
+    if (snapshot.lifecycleState == EmergencySessionLifecycle.cancelled ||
+        snapshot.lifecycleState.isTerminal) {
+      await _clearLocalProjection(stopForeground: true);
+      return;
+    }
+    if (snapshot.lifecycleState != EmergencySessionLifecycle.armed) {
+      _sessionToken = snapshot.token;
+      _emergencyInProgress =
+          snapshot.lifecycleState == EmergencySessionLifecycle.claimed;
+      _reconciliationPending = true;
+      _isActive = false;
+      _cancelTicker();
+      notifyListeners();
+      return;
+    }
+
+    final mainDeadline = snapshot.mainDeadline;
+    if (mainDeadline == null) {
+      _reconciliationPending = true;
+      return;
+    }
+    final conservativeDuration = mainDeadline
+        .difference(DateTime.now())
+        .inSeconds
+        .clamp(1, 24 * 60 * 60)
+        .toInt();
+    await _projectArmedSnapshot(
+      snapshot,
+      totalSeconds: conservativeDuration,
+      revisionDurationKnown: false,
+    );
+    await _bestEffort(_persistState);
+  }
+
+  Future<void> _projectArmedSnapshot(
+    SessionSnapshot snapshot, {
+    required int totalSeconds,
+    required bool revisionDurationKnown,
+  }) async {
+    final token = snapshot.token;
+    final mainDeadline = snapshot.mainDeadline;
+    final finalDeadline = snapshot.finalDeadline;
+    final target = snapshot.target;
+    if (token == null ||
+        token.kind != _sessionKind ||
+        mainDeadline == null ||
+        finalDeadline == null ||
+        target == null ||
+        target.isEmpty) {
+      _reconciliationPending = true;
+      _cancelTicker();
+      notifyListeners();
+      return;
+    }
+    _sessionToken = token;
+    _armedTarget = target;
+    _totalSeconds = totalSeconds;
+    _isActive = true;
+    _endAt = mainDeadline;
+    _graceEndAt = finalDeadline;
+    _reconciliationPending = false;
+    _revisionDurationKnown = revisionDurationKnown;
+    await _reconcileWithClock();
+  }
+
+  Future<void> _preserveUncertainProjection({
+    required Map<String, dynamic> state,
+    required SessionToken token,
+    required int totalSeconds,
+  }) async {
+    _sessionToken = token;
+    _totalSeconds = totalSeconds;
+    _revisionDurationKnown = state['revisionDurationKnown'] != false;
+    _reconciliationPending = true;
+    _endAt = DateTime.tryParse(state['endAt']?.toString() ?? '');
+    _graceEndAt = DateTime.tryParse(state['graceEndAt']?.toString() ?? '');
+    _isActive =
+        _endAt != null &&
+        _graceEndAt != null &&
+        !_graceEndAt!.isBefore(_endAt!);
+    if (_isActive) {
+      await _reconcileWithClock();
+    } else {
+      _cancelTicker();
+      notifyListeners();
     }
   }
 
@@ -634,8 +800,11 @@ class CheckInService extends ChangeNotifier {
       'endAt': _endAt?.toIso8601String(),
       'graceEndAt': _graceEndAt?.toIso8601String(),
       'token': _sessionToken?.toMap(),
+      'revisionDurationKnown': _revisionDurationKnown,
     };
-    await prefs.setString(_stateKey, jsonEncode(state));
+    if (!await prefs.setString(_stateKey, jsonEncode(state))) {
+      throw StateError('checkInProjectionWriteFailed');
+    }
   }
 
   Future<void> _clearPersistedState() async {
@@ -661,6 +830,8 @@ class CheckInService extends ChangeNotifier {
     _remainingSeconds = 0;
     _totalSeconds = 0;
     _nativeScheduleDegraded = false;
+    _reconciliationPending = false;
+    _revisionDurationKnown = true;
     _sessionToken = null;
     _armedTarget = null;
 
@@ -671,6 +842,50 @@ class CheckInService extends ChangeNotifier {
       );
     }
     notifyListeners();
+  }
+
+  /// Clears the Dart projection only after the native coordinator has already
+  /// returned WipeResult.completed. Unlike normal best-effort UI cleanup, this
+  /// boundary verifies that the persisted target/token projection is absent so
+  /// consent withdrawal cannot report completion while retaining contact PII.
+  Future<bool> clearAfterAuthoritativeNativeWipe() async {
+    _cancelTicker();
+    _isActive = false;
+    _isGracePeriod = false;
+    _graceEndAt = null;
+    _endAt = null;
+    _remainingSeconds = 0;
+    _totalSeconds = 0;
+    _nativeScheduleDegraded = false;
+    _reconciliationPending = false;
+    _revisionDurationKnown = true;
+    _emergencyInProgress = false;
+    _sessionToken = null;
+    _armedTarget = null;
+
+    var persistedProjectionCleared = true;
+    try {
+      await _clearPersistedState();
+      final prefs = await SharedPreferences.getInstance();
+      persistedProjectionCleared = !prefs.containsKey(_stateKey);
+      if (!_isSafeWalk) {
+        persistedProjectionCleared =
+            persistedProjectionCleared &&
+            !prefs.containsKey(_activeKey) &&
+            !prefs.containsKey(_totalSecondsKey) &&
+            !prefs.containsKey(_endAtKey) &&
+            !prefs.containsKey(_graceEndAtKey);
+      }
+    } catch (_) {
+      persistedProjectionCleared = false;
+    }
+    if (_sideEffectsEnabled) {
+      await _bestEffort(
+        () => KoruBeniForegroundService.stop(owner: _foregroundOwner),
+      );
+    }
+    notifyListeners();
+    return persistedProjectionCleared;
   }
 
   Future<void> handleNativeGraceStarted() async {

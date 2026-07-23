@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guvenlik_app/core/services/emergency_session_contract.dart';
 import 'package:guvenlik_app/core/services/revenue_cat_service.dart';
@@ -35,10 +37,35 @@ void main() {
       expect(resolvedForNewArm.canUsePaidSafetyFeature, isFalse);
     },
   );
+
+  test('older refresh cannot overwrite a newer verified revocation', () async {
+    final fake = _FakeRevenueCatService()..nextInfo = _verifiedProInfo();
+    final provider = SubscriptionProvider(revenueCatService: fake);
+    addTearDown(provider.dispose);
+    await provider.initialize();
+    expect(provider.isPro, isTrue);
+
+    final staleRefresh = Completer<CustomerInfo?>();
+    fake.customerInfoCompleter = staleRefresh;
+    final refreshFuture = provider.refresh();
+    await Future<void>.delayed(Duration.zero);
+
+    fake.restoreInfo = _verifiedFreeInfo();
+    await provider.restorePurchases();
+    expect(provider.accessStatus, SubscriptionAccessStatus.verifiedFree);
+
+    staleRefresh.complete(_verifiedProInfo());
+    await refreshFuture;
+
+    expect(provider.accessStatus, SubscriptionAccessStatus.verifiedFree);
+    expect(provider.entitlementDecision, EntitlementDecision.denied);
+  });
 }
 
 class _FakeRevenueCatService extends RevenueCatService {
   CustomerInfo? nextInfo;
+  CustomerInfo? restoreInfo;
+  Completer<CustomerInfo?>? customerInfoCompleter;
 
   @override
   bool get isConfigured => false;
@@ -47,10 +74,14 @@ class _FakeRevenueCatService extends RevenueCatService {
   Future<bool> ensureInitialized() async => true;
 
   @override
-  Future<CustomerInfo?> getCustomerInfo() async => nextInfo;
+  Future<CustomerInfo?> getCustomerInfo() async =>
+      customerInfoCompleter?.future ?? nextInfo;
 
   @override
   Future<Offerings?> getOfferings() async => null;
+
+  @override
+  Future<CustomerInfo> restorePurchases() async => restoreInfo!;
 
   @override
   Future<void> rememberVerifiedProInitializationHint() async {}
@@ -83,3 +114,15 @@ CustomerInfo _verifiedProInfo() {
     '2026-07-18T00:00:00Z',
   );
 }
+
+CustomerInfo _verifiedFreeInfo() => const CustomerInfo(
+  EntitlementInfos({}, {}, verification: VerificationResult.verified),
+  {},
+  [],
+  [],
+  [],
+  '2026-07-19T00:00:00Z',
+  'anonymous',
+  {},
+  '2026-07-19T00:00:00Z',
+);

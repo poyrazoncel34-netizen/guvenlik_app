@@ -7,12 +7,10 @@ void main() {
     GetIt.instance.reset();
   });
 
-  test('isEmergencyContactsAllowed returns true (fail-open) when '
-      'ConsentManager is not registered — emergency must never be blocked', () {
+  test('isEmergencyContactsAllowed returns false when the consent authority '
+      'is unavailable so a new safety arm cannot process contact data', () {
     // Do NOT register ConsentManager in GetIt.
-    // If the DI container fails to initialize, emergency calls
-    // must NOT be silently blocked in a life-critical app.
-    expect(ConsentGateService.isEmergencyContactsAllowed(), isTrue);
+    expect(ConsentGateService.isEmergencyContactsAllowed(), isFalse);
   });
 
   test(

@@ -39,6 +39,12 @@ class ContactService {
   /// Single-flight guard so concurrent warm-up + reads don't double-migrate.
   static Future<List<EmergencyContact>>? _inflight;
 
+  /// Serializes every read-modify-write contact transaction. Secure storage
+  /// has no compare-and-swap primitive; without this queue, two UI/provider
+  /// mutations can both read the same cache and the slower write can erase the
+  /// user's newer primary-contact choice.
+  static Future<void> _mutationTail = Future<void>.value();
+
   // ---------------------------------------------------------------------------
   // Warm-up / cache lifecycle
   // ---------------------------------------------------------------------------
@@ -121,7 +127,10 @@ class ContactService {
   // Writes (write-through: secure storage + cache updated atomically)
   // ---------------------------------------------------------------------------
 
-  static Future<void> saveContacts(List<String> numbers) async {
+  static Future<void> saveContacts(List<String> numbers) =>
+      _serializeMutation(() => _saveContactsUnlocked(numbers));
+
+  static Future<void> _saveContactsUnlocked(List<String> numbers) async {
     final existing = await getContactRecords();
     final contacts = <EmergencyContact>[];
 
@@ -145,10 +154,13 @@ class ContactService {
       );
     }
 
-    await saveContactRecords(contacts);
+    await _saveContactRecordsUnlocked(contacts);
   }
 
-  static Future<void> saveContactRecords(
+  static Future<void> saveContactRecords(List<EmergencyContact> contacts) =>
+      _serializeMutation(() => _saveContactRecordsUnlocked(contacts));
+
+  static Future<void> _saveContactRecordsUnlocked(
     List<EmergencyContact> contacts,
   ) async {
     final current = await getContactRecords();
@@ -187,12 +199,19 @@ class ContactService {
   static Future<void> savePrimaryEmergencyContact({
     required String name,
     required String phone,
+  }) => _serializeMutation(
+    () => _savePrimaryEmergencyContactUnlocked(name: name, phone: phone),
+  );
+
+  static Future<void> _savePrimaryEmergencyContactUnlocked({
+    required String name,
+    required String phone,
   }) async {
     final normalizedPhone =
         EmergencyNumberValidator.normalizedCallableTargetOrNull(phone);
     if (normalizedPhone == null) {
       if (phone.trim().isEmpty) {
-        await clearPrimaryEmergencyContact();
+        await _clearPrimaryEmergencyContactUnlocked();
       }
       return;
     }
@@ -232,7 +251,10 @@ class ContactService {
     await _persist(updated);
   }
 
-  static Future<void> clearPrimaryEmergencyContact() async {
+  static Future<void> clearPrimaryEmergencyContact() =>
+      _serializeMutation(_clearPrimaryEmergencyContactUnlocked);
+
+  static Future<void> _clearPrimaryEmergencyContactUnlocked() async {
     final current = await getContactRecords();
     final updated = current
         .map((contact) => contact.copyWith(isPrimary: false))
@@ -240,9 +262,63 @@ class ContactService {
     await _persist(updated);
   }
 
+  /// Deletes every emergency-contact copy after the native safety kernel has
+  /// acknowledged cancellation. Throws unless secure, DB and legacy stores all
+  /// confirm deletion; callers must keep withdrawal in a pending state then.
+  static Future<void> deleteAllContacts() =>
+      _serializeMutation(_deleteAllContactsUnlocked);
+
+  static Future<void> _deleteAllContactsUnlocked() async {
+    const secureKeys = <String>[
+      SecureStorageKeys.emergencyContactsV1,
+      SecureStorageKeys.contactsData,
+      SecureStorageKeys.emergencyContactPhone,
+      SecureStorageKeys.emergencyContactName,
+    ];
+    for (final key in secureKeys) {
+      await _secureStorage.delete(key: key);
+    }
+    for (final key in secureKeys) {
+      if (await _secureStorage.read(key: key) != null) {
+        throw StateError('CONTACT_SECURE_DELETE_NOT_ACKNOWLEDGED');
+      }
+    }
+
+    final db = await _databaseService.database;
+    await db.delete('contacts');
+    final remainingRows = await db.query('contacts', limit: 1);
+    if (remainingRows.isNotEmpty) {
+      throw StateError('CONTACT_DB_DELETE_NOT_ACKNOWLEDGED');
+    }
+
+    final prefs = await SharedPreferences.getInstance();
+    var preferencesDeleted = true;
+    for (final key in const <String>[
+      'saved_contacts',
+      'emergency_contact_phone',
+      'emergency_contact_name',
+    ]) {
+      await prefs.remove(key);
+      if (prefs.containsKey(key)) preferencesDeleted = false;
+    }
+    if (!await prefs.setBool(AppConstants.prefContactsSecureMigratedV1, true)) {
+      preferencesDeleted = false;
+    }
+    if (!preferencesDeleted) {
+      throw StateError('CONTACT_PREFS_DELETE_NOT_ACKNOWLEDGED');
+    }
+    _cache = const <EmergencyContact>[];
+  }
+
   // ---------------------------------------------------------------------------
   // Canonical store internals
   // ---------------------------------------------------------------------------
+
+  static Future<T> _serializeMutation<T>(Future<T> Function() operation) {
+    final result = _mutationTail.then<T>((_) => operation());
+    _mutationTail = result.then<void>((_) {}, onError: (_, _) {});
+    return result;
+  }
 
   static Future<List<EmergencyContact>> _ensureCanonical() {
     return _inflight ??= _loadCanonical().whenComplete(() => _inflight = null);

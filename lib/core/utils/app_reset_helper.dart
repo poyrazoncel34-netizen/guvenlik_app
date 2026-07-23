@@ -1,15 +1,12 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../screens/splash_screen.dart';
 import '../app_colors.dart';
-import '../di/service_locator.dart';
-import '../security/secure_storage.dart';
-import '../security/secure_storage_keys.dart';
 import '../services/app_reset_service.dart';
 import '../services/emergency_session_contract.dart';
+import '../services/pin_verification_service.dart';
+import '../widgets/safety_session_pin_gate.dart';
 
 class AppResetHelper {
   AppResetHelper._();
@@ -120,94 +117,18 @@ class AppResetHelper {
   }
 
   static Future<bool> _verifyPinIfConfigured(BuildContext context) async {
-    final currentPin = await _readConfiguredPin();
-    if (currentPin == null || currentPin.isEmpty) {
+    final state = await PinVerificationService.instance.loadState();
+    if (state == PinState.absent) {
       return true;
     }
-    if (!context.mounted) return false;
-
-    final controller = TextEditingController();
-    var errorVisible = false;
-    final verified = await showDialog<bool>(
-      context: context,
-      barrierDismissible: false,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          backgroundColor: AppColors.cardBg,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
-          ),
-          title: Text(
-            'reset_pin_verify_title'.tr(),
-            style: const TextStyle(
-              color: AppColors.textPrimary,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-          content: TextField(
-            controller: controller,
-            autofocus: true,
-            obscureText: true,
-            keyboardType: TextInputType.number,
-            inputFormatters: [
-              FilteringTextInputFormatter.digitsOnly,
-              LengthLimitingTextInputFormatter(4),
-            ],
-            decoration: InputDecoration(
-              hintText: 'reset_pin_verify_hint'.tr(),
-              errorText: errorVisible ? 'settings_pin_wrong'.tr() : null,
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext, false),
-              child: Text(
-                'settings_cancel'.tr(),
-                style: const TextStyle(color: AppColors.textSecondary),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                if (controller.text == currentPin) {
-                  Navigator.pop(dialogContext, true);
-                  return;
-                }
-                setState(() => errorVisible = true);
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.emergency,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: Text('reset_pin_verify_confirm'.tr()),
-            ),
-          ],
-        ),
-      ),
-    );
-    controller.dispose();
-    return verified == true;
-  }
-
-  static Future<String?> _readConfiguredPin() async {
-    final secureStorage = serviceLocator<SecureStorage>();
-    final securePin = await secureStorage.read(key: SecureStorageKeys.userPin);
-    if (securePin != null && securePin.isNotEmpty) {
-      return securePin;
+    if (state != PinState.configured || !context.mounted) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('pin_state_read_failed'.tr())));
+      }
+      return false;
     }
-
-    final prefs = await SharedPreferences.getInstance();
-    final legacyPin = prefs.getString(SecureStorageKeys.userPin);
-    if (legacyPin != null && legacyPin.isNotEmpty) {
-      await secureStorage.write(
-        key: SecureStorageKeys.userPin,
-        value: legacyPin,
-      );
-      await prefs.remove(SecureStorageKeys.userPin);
-      return legacyPin;
-    }
-    return null;
+    return SafetySessionPinGate.verify(context);
   }
 }

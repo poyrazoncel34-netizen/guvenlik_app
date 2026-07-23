@@ -69,6 +69,18 @@ class DeviceProtectedEmergencySessionStoreTest {
         assertEquals("", restored.envelope.target)
     }
 
+    @Test
+    fun `inexact only scheduling mode survives device protected round trip`() {
+        val store = DeviceProtectedEmergencySessionStore(context)
+        val degraded = armedEnvelope().copy(schedulingMode = SchedulingMode.INEXACT_ONLY)
+
+        assertTrue(store.write(degraded))
+
+        val restored = store.read(SessionSlot.LONG_RUNNING) as SessionRead.Present
+        assertEquals(SchedulingMode.INEXACT_ONLY, restored.envelope.schedulingMode)
+        assertEquals(degraded.token, restored.envelope.token)
+    }
+
     private fun armedEnvelope() = EmergencySessionEnvelope(
         token = SessionToken(
             protocolVersion = EMERGENCY_PROTOCOL_VERSION,

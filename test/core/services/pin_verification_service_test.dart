@@ -159,4 +159,55 @@ void main() {
       expect((await service.verify('48260')).matches, isFalse);
     },
   );
+
+  test(
+    'PIN change verifies current value and acknowledges durable write',
+    () async {
+      final storage = _FakeSecureStorage()
+        ..values[SecureStorageKeys.userPin] = '4826';
+      final service = PinVerificationService.forTesting(secureStorage: storage);
+
+      expect(
+        await service.changePin(currentCandidate: '4826', newCandidate: '6193'),
+        PinChangeOutcome.changed,
+      );
+      expect(storage.values[SecureStorageKeys.userPin], '6193');
+      expect((await service.verify('6193')).matches, isTrue);
+    },
+  );
+
+  test('wrong current candidate never mutates the configured PIN', () async {
+    final storage = _FakeSecureStorage()
+      ..values[SecureStorageKeys.userPin] = '4826';
+    final service = PinVerificationService.forTesting(secureStorage: storage);
+
+    expect(
+      await service.changePin(currentCandidate: '1111', newCandidate: '6193'),
+      PinChangeOutcome.currentMismatch,
+    );
+    expect(storage.values[SecureStorageKeys.userPin], '4826');
+  });
+
+  test('same candidate is rejected without rewriting the PIN', () async {
+    final storage = _FakeSecureStorage()
+      ..values[SecureStorageKeys.userPin] = '4826';
+    final service = PinVerificationService.forTesting(secureStorage: storage);
+
+    expect(
+      await service.changePin(currentCandidate: '4826', newCandidate: '4826'),
+      PinChangeOutcome.sameAsCurrent,
+    );
+  });
+
+  test('unacknowledged PIN replacement is reported as unknown', () async {
+    final storage = _NonPersistingSecureStorage()
+      ..values[SecureStorageKeys.userPin] = '4826';
+    final service = PinVerificationService.forTesting(secureStorage: storage);
+
+    expect(
+      await service.changePin(currentCandidate: '4826', newCandidate: '6193'),
+      PinChangeOutcome.unknown,
+    );
+    expect(storage.values[SecureStorageKeys.userPin], '4826');
+  });
 }

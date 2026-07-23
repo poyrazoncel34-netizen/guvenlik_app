@@ -139,10 +139,12 @@ void main() {
   CheckInService makeService({
     String sessionId = CheckInExpiryCoordinator.checkInSession,
     bool sideEffectsEnabled = false,
+    bool Function()? contactsConsentAllowed,
   }) => CheckInService.forTesting(
     sessionId: sessionId,
     platform: platform,
     contactsRepository: contacts,
+    contactsConsentAllowed: contactsConsentAllowed ?? () => true,
     sideEffectsEnabled: sideEffectsEnabled,
   );
 
@@ -215,6 +217,65 @@ void main() {
       // ignore: deprecated_member_use_from_same_package
       expect(await service.start(5), isFalse);
       expect(methodCalls, 1);
+    },
+  );
+
+  test(
+    'withdrawn contact consent blocks a new arm before native mutation',
+    () async {
+      service.dispose();
+      disposed = true;
+      service = makeService(contactsConsentAllowed: () => false);
+      disposed = false;
+      var methodCalls = 0;
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, (call) async {
+            methodCalls++;
+            return armedResponse(call);
+          });
+
+      final result = await service.startSession(
+        minutes: 5,
+        entitlementDecision: EntitlementDecision.authorized,
+        pinConfigured: true,
+      );
+
+      expect((result as ArmRejected).reasonCode, 'contactConsentRequired');
+      expect(methodCalls, 0);
+      expect(service.isActive, isFalse);
+    },
+  );
+
+  test(
+    'authoritative wipe clears persisted and in-memory projection',
+    () async {
+      final methods = <String>[];
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, (call) async {
+            methods.add(call.method);
+            if (call.method == 'armEmergencySession') {
+              return armedResponse(call);
+            }
+            return null;
+          });
+      expect(
+        await service.startSession(
+          minutes: 5,
+          entitlementDecision: EntitlementDecision.authorized,
+          pinConfigured: true,
+        ),
+        isA<Armed>(),
+      );
+      var prefs = await SharedPreferences.getInstance();
+      expect(prefs.containsKey('check_in_state_v2'), isTrue);
+
+      expect(await service.clearAfterAuthoritativeNativeWipe(), isTrue);
+
+      prefs = await SharedPreferences.getInstance();
+      expect(service.isActive, isFalse);
+      expect(service.sessionToken, isNull);
+      expect(prefs.containsKey('check_in_state_v2'), isFalse);
+      expect(methods, isNot(contains('cancelEmergencySession')));
     },
   );
 
@@ -356,6 +417,13 @@ void main() {
   );
 
   test('initialize clears legacy, corrupt and tokenless projections', () async {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, (call) async {
+          if (call.method == 'readEmergencySessionByKind') {
+            return <String, Object?>{'type': 'absent'};
+          }
+          return null;
+        });
     SharedPreferences.setMockInitialValues(<String, Object>{
       'check_in_active': true,
       'check_in_total_seconds': 30,
@@ -411,6 +479,177 @@ void main() {
       expect(service.isGracePeriod, isFalse);
       expect(service.remainingSeconds, greaterThan(0));
       expect(service.totalSeconds, 300);
+    },
+  );
+
+  test(
+    'missing Dart projection discovers and exposes a native ARMED session',
+    () async {
+      final now = DateTime.now();
+      SharedPreferences.setMockInitialValues(<String, Object>{});
+      final methods = <String>[];
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, (call) async {
+            methods.add(call.method);
+            if (call.method == 'readEmergencySessionByKind') {
+              return present(
+                mainDeadline: now.add(const Duration(minutes: 4)),
+                finalDeadline: now.add(const Duration(minutes: 5)),
+              );
+            }
+            return null;
+          });
+
+      await service.initialize();
+
+      expect(methods, <String>['readEmergencySessionByKind']);
+      expect(service.isActive, isTrue);
+      expect(service.sessionToken, fixedToken);
+      expect(service.remainingSeconds, greaterThan(0));
+    },
+  );
+
+  test(
+    'unknown native discovery blocks start and revision until reconciliation',
+    () async {
+      final methods = <String>[];
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, (call) async {
+            methods.add(call.method);
+            if (call.method == 'readEmergencySessionByKind') {
+              return <String, Object?>{
+                'type': 'unknown',
+                'reasonCode': 'nativeReadUnavailable',
+              };
+            }
+            return null;
+          });
+
+      await service.initialize();
+      expect(service.reconciliationPending, isTrue);
+      expect(service.isActive, isFalse);
+
+      final start = await service.startSession(
+        minutes: 5,
+        entitlementDecision: EntitlementDecision.authorized,
+        pinConfigured: true,
+      );
+      final revision = await service.confirmSafeSession();
+
+      expect((start as ArmRejected).reasonCode, 'reconciliationPending');
+      expect((revision as ArmRejected).reasonCode, 'reconciliationPending');
+      expect(methods, <String>['readEmergencySessionByKind']);
+    },
+  );
+
+  test(
+    'discovered claimed authority remains pending and cannot be re-armed',
+    () async {
+      final now = DateTime.now();
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, (call) async {
+            if (call.method == 'readEmergencySessionByKind') {
+              return present(
+                state: 'claimed',
+                mainDeadline: now.add(const Duration(minutes: 4)),
+                finalDeadline: now.add(const Duration(minutes: 5)),
+              );
+            }
+            fail('No native mutation is allowed while claim is unresolved');
+          });
+
+      await service.initialize();
+
+      expect(service.isActive, isFalse);
+      expect(service.sessionToken, fixedToken);
+      expect(service.reconciliationPending, isTrue);
+      final start = await service.startSession(
+        minutes: 5,
+        entitlementDecision: EntitlementDecision.authorized,
+        pinConfigured: true,
+      );
+      expect((start as ArmRejected).reasonCode, 'reconciliationPending');
+    },
+  );
+
+  test('discovered terminal authority clears every local projection', () async {
+    final now = DateTime.now();
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(
+          channel,
+          (call) async => present(
+            state: 'cancelled',
+            mainDeadline: now.subtract(const Duration(minutes: 2)),
+            finalDeadline: now.subtract(const Duration(minutes: 1)),
+          ),
+        );
+
+    await service.initialize();
+
+    expect(service.isActive, isFalse);
+    expect(service.sessionToken, isNull);
+    expect(service.reconciliationPending, isFalse);
+  });
+
+  test(
+    'unknown native read cannot activate an invalid persisted clock projection',
+    () async {
+      SharedPreferences.setMockInitialValues(<String, Object>{
+        'check_in_state_v2': jsonEncode(<String, Object?>{
+          'active': true,
+          'totalSeconds': 300,
+          'endAt': 'not-a-deadline',
+          'graceEndAt': 'also-not-a-deadline',
+          'token': fixedToken.toMap(),
+        }),
+      });
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(
+            channel,
+            (call) async => <String, Object?>{
+              'type': 'unknown',
+              'reasonCode': 'nativeReadUnavailable',
+            },
+          );
+
+      await service.initialize();
+
+      expect(service.isActive, isFalse);
+      expect(service.sessionToken, fixedToken);
+      expect(service.reconciliationPending, isTrue);
+    },
+  );
+
+  test('authoritative wipe stops best-effort foreground ownership', () async {
+    service.dispose();
+    disposed = true;
+    service = makeService(sideEffectsEnabled: true);
+    disposed = false;
+
+    expect(await service.clearAfterAuthoritativeNativeWipe(), isTrue);
+    expect(service.isActive, isFalse);
+    expect(service.sessionToken, isNull);
+  });
+
+  test(
+    'unknown native read preserves a cancellable local projection',
+    () async {
+      SharedPreferences.setMockInitialValues(<String, Object>{
+        'check_in_state_v2': jsonEncode(persistedProjection()),
+      });
+      final never = Completer<Object?>();
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, (call) async {
+            if (call.method == 'readEmergencySession') return never.future;
+            return null;
+          });
+
+      await service.initialize();
+
+      final prefs = await SharedPreferences.getInstance();
+      expect(service.isActive, isTrue);
+      expect(service.sessionToken, fixedToken);
+      expect(prefs.containsKey('check_in_state_v2'), isTrue);
     },
   );
 

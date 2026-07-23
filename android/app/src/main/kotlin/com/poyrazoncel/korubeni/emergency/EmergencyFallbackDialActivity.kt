@@ -24,11 +24,15 @@ class EmergencyFallbackDialActivity : Activity() {
                 .consumeFallbackTarget(it, expiresAtMs)
         }
         if (token != null && target != null && EmergencyTargetValidator.isCallable(target)) {
-            cleanupRetainedActions(token, notificationId, expiresAtMs)
             try {
                 startActivity(Intent(Intent.ACTION_DIAL, Uri.fromParts("tel", target, null)))
+                cleanupRetainedActions(token, notificationId, expiresAtMs)
             } catch (_: RuntimeException) {
-                // Requesting the dialer is best effort; never synthesize 112.
+                // Keep the already visible action usable if Android cannot
+                // resolve/open the dialer. The same token/target/TTL is restored
+                // only while no newer session has replaced it.
+                EmergencySessionRuntime.coordinator(this)
+                    .restoreConsumedFallbackTarget(token, expiresAtMs, target)
             }
         }
         finish()

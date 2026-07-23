@@ -9,19 +9,24 @@ import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../core/app_colors.dart';
 import '../core/constants/app_constants.dart';
-import '../core/di/service_locator.dart';
-import '../core/security/secure_storage.dart';
-import '../core/security/secure_storage_keys.dart';
 import '../core/services/app_reset_service.dart';
 import '../core/services/emergency_session_contract.dart';
 import '../core/services/pin_lockout_service.dart';
+import '../core/services/pin_verification_service.dart';
 import 'settings_legal/legal_settings_screen.dart';
 import 'splash_screen.dart';
 
 class AppUnlockScreen extends StatefulWidget {
   final VoidCallback onUnlocked;
+  final PinVerificationService? pinVerificationService;
+  final PinLockoutService? pinLockoutService;
 
-  const AppUnlockScreen({super.key, required this.onUnlocked});
+  const AppUnlockScreen({
+    super.key,
+    required this.onUnlocked,
+    this.pinVerificationService,
+    this.pinLockoutService,
+  });
 
   @override
   State<AppUnlockScreen> createState() => _AppUnlockScreenState();
@@ -29,34 +34,35 @@ class AppUnlockScreen extends StatefulWidget {
 
 class _AppUnlockScreenState extends State<AppUnlockScreen> {
   String _pin = '';
-  String? _correctPin;
   bool _loading = true;
+  bool _verificationInProgress = false;
+  bool _lockoutStateReadFailed = false;
+  bool _unlockAcknowledged = false;
+  PinState _pinState = PinState.loading;
 
   DateTime? _lockoutEndTime;
   StreamSubscription<int>? _lockoutSubscription;
   int _lockoutRemaining = 0;
 
-  late final SecureStorage _secureStorage = serviceLocator<SecureStorage>();
+  late final PinVerificationService _pinVerificationService;
+  late final PinLockoutService _pinLockoutService;
 
   @override
   void initState() {
     super.initState();
+    _pinVerificationService =
+        widget.pinVerificationService ?? PinVerificationService.instance;
+    _pinLockoutService = widget.pinLockoutService ?? PinLockoutService.instance;
     _initScreen();
   }
 
   Future<void> _initScreen() async {
-    await _loadPin();
+    final pinState = await _pinVerificationService.loadState();
     await _syncLockoutState();
     if (mounted) {
-      setState(() => _loading = false);
-    }
-  }
-
-  Future<void> _loadPin() async {
-    final value = await _secureStorage.read(key: SecureStorageKeys.userPin);
-    if (mounted) {
       setState(() {
-        _correctPin = value;
+        _pinState = pinState;
+        _loading = false;
       });
     }
   }
@@ -64,33 +70,53 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> {
   bool get _isLockedOut =>
       _lockoutEndTime != null && DateTime.now().isBefore(_lockoutEndTime!);
 
+  bool get _canAcceptPinInput =>
+      !_loading &&
+      !_verificationInProgress &&
+      !_lockoutStateReadFailed &&
+      _pinState == PinState.configured &&
+      !_isLockedOut;
+
   Future<void> _syncLockoutState() async {
-    final state = await PinLockoutService.instance.getState();
-    if (!mounted) return;
-    setState(() {
-      _lockoutEndTime = state.lockedUntil;
-      _lockoutRemaining = state.remainingSeconds;
-    });
-    if (state.isLocked) {
-      _startLockoutCountdown(state);
+    try {
+      final state = await _pinLockoutService.getState();
+      if (!mounted) return;
+      setState(() {
+        _lockoutEndTime = state.lockedUntil;
+        _lockoutRemaining = state.remainingSeconds;
+        _lockoutStateReadFailed = false;
+      });
+      if (state.isLocked) {
+        _startLockoutCountdown(state);
+      }
+    } catch (error) {
+      debugPrint('PinLockoutService.getState failed: $error');
+      if (!mounted) return;
+      setState(() => _lockoutStateReadFailed = true);
     }
   }
 
   void _startLockoutCountdown(PinLockoutState state) {
     _lockoutSubscription?.cancel();
-    _lockoutSubscription = PinLockoutService.instance
-        .countdownStream(state)
-        .listen((remaining) {
-          if (!mounted) {
-            return;
-          }
-          setState(() {
-            _lockoutRemaining = remaining;
-            if (remaining == 0) {
-              _lockoutEndTime = null;
-            }
-          });
-        });
+    _lockoutSubscription = _pinLockoutService.countdownStream(state).listen((
+      remaining,
+    ) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _lockoutRemaining = remaining;
+        if (remaining == 0) {
+          _lockoutEndTime = null;
+        }
+      });
+    }, onError: _handleLockoutCountdownError);
+  }
+
+  void _handleLockoutCountdownError(Object error, StackTrace stackTrace) {
+    debugPrint('PinLockoutService.countdownStream failed: $error');
+    if (!mounted) return;
+    setState(() => _lockoutStateReadFailed = true);
   }
 
   @override
@@ -100,7 +126,7 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> {
   }
 
   void _onPinKey(String key) {
-    if (_isLockedOut) return;
+    if (!_canAcceptPinInput) return;
 
     if (key == 'DEL') {
       setState(() {
@@ -111,48 +137,108 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> {
     if (_pin.length >= AppConstants.pinLength) return;
     setState(() => _pin += key);
 
-    if (_pin.length == AppConstants.pinLength && _correctPin != null) {
-      if (_pin == _correctPin) {
-        HapticFeedback.lightImpact();
-        PinLockoutService.instance.reset();
-        widget.onUnlocked();
-      } else {
-        HapticFeedback.vibrate();
-        setState(() => _pin = '');
-        PinLockoutService.instance.registerFailure().then((state) {
-          if (!mounted) return;
-          setState(() {
-            _lockoutEndTime = state.lockedUntil;
-            _lockoutRemaining = state.remainingSeconds;
-          });
-          if (state.isLocked) {
-            _startLockoutCountdown(state);
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  'brute_force_locked'.tr(
-                    namedArgs: {'seconds': '${state.remainingSeconds}'},
-                  ),
-                ),
-                backgroundColor: AppColors.emergency,
-                behavior: SnackBarBehavior.floating,
-                duration: const Duration(seconds: 3),
-              ),
-            );
-            return;
-          }
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('unlock_wrong_pin'.tr()),
-              backgroundColor: AppColors.emergency,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
-        }).catchError((Object error, StackTrace stack) {
-          debugPrint('PinLockoutService.registerFailure failed: $error');
-        });
-      }
+    if (_pin.length == AppConstants.pinLength) {
+      final candidate = _pin;
+      setState(() => _verificationInProgress = true);
+      unawaited(_verifyCandidate(candidate));
     }
+  }
+
+  Future<void> _verifyCandidate(String candidate) async {
+    final result = await _pinVerificationService.verify(candidate);
+    if (!mounted) return;
+
+    if (result.state != PinState.configured) {
+      setState(() {
+        _pin = '';
+        _pinState = result.state;
+        _verificationInProgress = false;
+      });
+      _showPinStateFailure(result.state);
+      return;
+    }
+
+    if (result.matches) {
+      if (_unlockAcknowledged) return;
+      _unlockAcknowledged = true;
+      try {
+        await _pinLockoutService.reset();
+      } catch (error) {
+        // A verified PIN is authoritative. A stale attempt counter must not
+        // turn a storage outage into an incorrect-PIN decision.
+        debugPrint('PinLockoutService.reset failed: $error');
+      }
+      if (!mounted) return;
+      unawaited(HapticFeedback.lightImpact());
+      widget.onUnlocked();
+      return;
+    }
+
+    unawaited(HapticFeedback.vibrate());
+    setState(() => _pin = '');
+    try {
+      final state = await _pinLockoutService.registerFailure();
+      if (!mounted) return;
+      setState(() {
+        _verificationInProgress = false;
+        _lockoutEndTime = state.lockedUntil;
+        _lockoutRemaining = state.remainingSeconds;
+      });
+      if (state.isLocked) {
+        _startLockoutCountdown(state);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'brute_force_locked'.tr(
+                namedArgs: {'seconds': '${state.remainingSeconds}'},
+              ),
+            ),
+            backgroundColor: AppColors.emergency,
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('unlock_wrong_pin'.tr()),
+          backgroundColor: AppColors.emergency,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } catch (error) {
+      debugPrint('PinLockoutService.registerFailure failed: $error');
+      if (!mounted) return;
+      setState(() {
+        _verificationInProgress = false;
+        _lockoutStateReadFailed = true;
+      });
+      _showPinStateFailure(PinState.readFailed);
+    }
+  }
+
+  void _showPinStateFailure(PinState state) {
+    final messageKey = state == PinState.absent
+        ? 'safety_session_pin_required'
+        : 'pin_state_read_failed';
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(messageKey.tr()),
+        backgroundColor: AppColors.emergency,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  String? get _persistentPinFailureMessageKey {
+    if (_lockoutStateReadFailed || _pinState == PinState.readFailed) {
+      return 'pin_state_read_failed';
+    }
+    if (_pinState == PinState.absent) {
+      return 'safety_session_pin_required';
+    }
+    return null;
   }
 
   @override
@@ -294,6 +380,19 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> {
                                   ),
                                 ),
                               ],
+                            ),
+                          ),
+                        ),
+                      if (_persistentPinFailureMessageKey != null)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 16),
+                          child: Text(
+                            _persistentPinFailureMessageKey!.tr(),
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              color: AppColors.emergency,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 14,
                             ),
                           ),
                         ),
@@ -467,7 +566,7 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: () => _onPinKey(key),
+        onTap: _canAcceptPinInput ? () => _onPinKey(key) : null,
         customBorder: const CircleBorder(),
         child: Container(
           decoration: BoxDecoration(

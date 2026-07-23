@@ -29,7 +29,10 @@ class EmergencyFallbackCleanupReceiver : BroadcastReceiver() {
 
             val notificationId = intent?.getIntExtra(EXTRA_NOTIFICATION_ID, -1) ?: -1
             val expiresAtMs = intent?.getLongExtra(EXTRA_EXPIRES_AT_MS, -1L) ?: -1L
-            EmergencySessionRuntime.coordinator(context).expireFallback(token)
+            val expired = EmergencySessionRuntime.coordinator(context).expireFallback(token)
+            // A stale generation may share the kind-level notification ID with
+            // a newer fallback. Never let its cleanup cancel the newer action.
+            if (!expired) return@run
             if (notificationId >= 0) {
                 val manager = context.getSystemService(Context.NOTIFICATION_SERVICE)
                     as? NotificationManager

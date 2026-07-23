@@ -133,6 +133,23 @@ class EmergencySessionCoordinatorTest {
     }
 
     @Test
+    fun `elapsed deadline still dispatches after wall clock rollback`() {
+        val fixture = Fixture()
+        val armed = fixture.coordinator.arm(
+            validArmRequest(randomId = "clock-rollback-deadline"),
+        ) as ArmResult.Armed
+
+        fixture.reachElapsedDeadlineWithWallClockRolledBack()
+        val result = fixture.coordinator.claimAndDispatch(armed.token)
+
+        assertEquals(
+            CallRequestOutcome.SUBMITTED_UNCONFIRMED,
+            result.callRequestOutcome,
+        )
+        assertEquals(1, fixture.calls.targets.size)
+    }
+
+    @Test
     fun `race loser reads durable terminal outcome without a second request`() {
         val fixture = Fixture()
         val armed = fixture.coordinator.arm(validArmRequest()) as ArmResult.Armed
@@ -330,6 +347,34 @@ class EmergencySessionCoordinatorTest {
     }
 
     @Test
+    fun `posted fallback remains actionable when terminal commit is uncertain`() {
+        val fixture = Fixture(
+            // preparing=1, armed=2, claimed=3, fallback outcome=4, terminal=5
+            store = FakeStore(failWritesAt = setOf(5)),
+            fallback = FakeFallback(outcome = FallbackOutcome.POSTED),
+            calls = FakeCalls(outcome = CallRequestOutcome.SUBMITTED_UNCONFIRMED),
+        )
+        val armed = fixture.coordinator.arm(
+            validArmRequest(randomId = "fallback-terminal-commit-failure"),
+        ) as ArmResult.Armed
+        fixture.advanceToFinalDeadline()
+
+        val uncertain = fixture.coordinator.claimAndDispatch(armed.token)
+        val retained = requireNotNull(fixture.store.current)
+
+        assertEquals(LifecycleState.CLAIMED, uncertain.terminalState)
+        assertEquals(LifecycleState.CLAIMED, retained.lifecycleState)
+        assertEquals(FallbackOutcome.POSTED, retained.fallbackOutcome)
+        assertEquals(
+            "+905001234567",
+            fixture.coordinator.consumeFallbackTarget(
+                armed.token,
+                retained.fallbackExpiresAtMs,
+            ),
+        )
+    }
+
+    @Test
     fun `process death after CLAIMED commit retries from durable state`() {
         val store = FakeStore(crashAfterWritesAt = setOf(3))
         val firstCalls = FakeCalls()
@@ -427,7 +472,7 @@ class EmergencySessionCoordinatorTest {
     }
 
     @Test
-    fun `boot reconciliation schedule exception preserves durable armed session`() {
+    fun `boot reconciliation schedule exception publishes manual recovery`() {
         val fixture = Fixture(alarms = FakeAlarms(throwOnScheduleAt = setOf(2)))
         val armed = fixture.coordinator.arm(
             validArmRequest(randomId = "boot-reconcile-schedule-failure"),
@@ -436,13 +481,63 @@ class EmergencySessionCoordinatorTest {
         fixture.coordinator.reconcileAfterBoot()
 
         assertEquals(armed.token, fixture.store.current?.token)
-        assertEquals(LifecycleState.ARMED, fixture.store.current?.lifecycleState)
+        assertEquals(
+            LifecycleState.MANUAL_ACTION_REQUIRED,
+            fixture.store.current?.lifecycleState,
+        )
+        assertEquals(SchedulingMode.NONE, fixture.store.current?.schedulingMode)
+        assertEquals(FallbackOutcome.POSTED, fixture.store.current?.fallbackOutcome)
         assertEquals(2, fixture.alarms.scheduleAttempts)
+        assertEquals(1, fixture.fallback.postAttempts)
         assertEquals(0, fixture.calls.targets.size)
     }
 
     @Test
-    fun `clock reconciliation schedule exception preserves durable armed session`() {
+    fun `boot reconciliation records inexact only recovery after exact access is revoked`() {
+        val fixture = Fixture(
+            alarms = FakeAlarms(
+                scheduleResults = listOf(
+                    AlarmScheduleResult(exactAccepted = true, inexactAccepted = true),
+                    AlarmScheduleResult(exactAccepted = false, inexactAccepted = true),
+                ),
+            ),
+        )
+        val armed = fixture.coordinator.arm(
+            validArmRequest(randomId = "boot-reconcile-exact-revoked"),
+        ) as ArmResult.Armed
+
+        fixture.coordinator.reconcileAfterBoot()
+
+        assertEquals(armed.token, fixture.store.current?.token)
+        assertEquals(LifecycleState.ARMED, fixture.store.current?.lifecycleState)
+        assertEquals(SchedulingMode.INEXACT_ONLY, fixture.store.current?.schedulingMode)
+        assertEquals(2, fixture.alarms.scheduleAttempts)
+        assertEquals(0, fixture.fallback.postAttempts)
+        assertEquals(0, fixture.calls.targets.size)
+    }
+
+    @Test
+    fun `boot rebase commit failure never schedules the stale elapsed deadline`() {
+        val fixture = Fixture(store = FakeStore(failWritesAt = setOf(3)))
+        val armed = fixture.coordinator.arm(
+            validArmRequest(randomId = "boot-rebase-commit-failure"),
+        ) as ArmResult.Armed
+
+        fixture.coordinator.reconcileAfterBoot()
+
+        assertEquals(armed.token, fixture.store.current?.token)
+        assertEquals(
+            LifecycleState.MANUAL_ACTION_REQUIRED,
+            fixture.store.current?.lifecycleState,
+        )
+        assertEquals(SchedulingMode.NONE, fixture.store.current?.schedulingMode)
+        assertEquals(1, fixture.alarms.scheduleAttempts)
+        assertEquals(1, fixture.fallback.postAttempts)
+        assertEquals(0, fixture.calls.targets.size)
+    }
+
+    @Test
+    fun `clock reconciliation schedule exception publishes manual recovery`() {
         val fixture = Fixture(alarms = FakeAlarms(throwOnScheduleAt = setOf(2)))
         val armed = fixture.coordinator.arm(
             validArmRequest(randomId = "clock-reconcile-schedule-failure"),
@@ -451,9 +546,79 @@ class EmergencySessionCoordinatorTest {
         fixture.coordinator.reconcileAfterClockChange()
 
         assertEquals(armed.token, fixture.store.current?.token)
-        assertEquals(LifecycleState.ARMED, fixture.store.current?.lifecycleState)
+        assertEquals(
+            LifecycleState.MANUAL_ACTION_REQUIRED,
+            fixture.store.current?.lifecycleState,
+        )
+        assertEquals(SchedulingMode.NONE, fixture.store.current?.schedulingMode)
+        assertEquals(FallbackOutcome.POSTED, fixture.store.current?.fallbackOutcome)
         assertEquals(2, fixture.alarms.scheduleAttempts)
+        assertEquals(1, fixture.fallback.postAttempts)
         assertEquals(0, fixture.calls.targets.size)
+    }
+
+    @Test
+    fun `boot recovery notification remains actionable across terminal commit failure`() {
+        val store = FakeStore(failWritesAt = setOf(5))
+        val fixture = Fixture(
+            store = store,
+            alarms = FakeAlarms(throwOnScheduleAt = setOf(2)),
+        )
+        val armed = fixture.coordinator.arm(
+            validArmRequest(randomId = "boot-recovery-crash-window"),
+        ) as ArmResult.Armed
+
+        fixture.coordinator.reconcileAfterBoot()
+        val target = fixture.coordinator.consumeFallbackTarget(
+            armed.token,
+            now + FALLBACK_TARGET_RETENTION_MS,
+        )
+
+        assertEquals(LifecycleState.MANUAL_ACTION_REQUIRED, store.current?.lifecycleState)
+        assertEquals("+905001234567", target)
+        assertEquals("", store.current?.target)
+    }
+
+    @Test
+    fun `failed dial launch can restore the same consumed fallback`() {
+        val fixture = Fixture()
+        val armed = fixture.coordinator.arm(
+            validArmRequest(randomId = "dial-launch-failed"),
+        ) as ArmResult.Armed
+        fixture.advanceToFinalDeadline()
+        fixture.coordinator.claimAndDispatch(armed.token)
+        val expiresAtMs = requireNotNull(fixture.store.current).fallbackExpiresAtMs
+        val target = requireNotNull(
+            fixture.coordinator.consumeFallbackTarget(armed.token, expiresAtMs),
+        )
+
+        assertTrue(
+            fixture.coordinator.restoreConsumedFallbackTarget(
+                armed.token,
+                expiresAtMs,
+                target,
+            ),
+        )
+        assertEquals(
+            target,
+            fixture.coordinator.consumeFallbackTarget(armed.token, expiresAtMs),
+        )
+    }
+
+    @Test
+    fun `boot reconciliation restores fallback cleanup for a terminal session`() {
+        val fixture = Fixture()
+        val armed = fixture.coordinator.arm(
+            validArmRequest(randomId = "terminal-fallback-reboot"),
+        ) as ArmResult.Armed
+        fixture.advanceToFinalDeadline()
+        fixture.coordinator.claimAndDispatch(armed.token)
+
+        fixture.coordinator.reconcileAfterBoot()
+
+        assertEquals(2, fixture.fallback.postAttempts)
+        assertEquals(FallbackOutcome.POSTED, fixture.store.current?.fallbackOutcome)
+        assertEquals("+905001234567", fixture.store.current?.target)
     }
 
     @Test
@@ -769,6 +934,7 @@ class EmergencySessionCoordinatorTest {
         capabilityFailure: RuntimeException? = null,
     ) {
         private var currentNow = now
+        private var currentElapsed = 50_000L
         val coordinator = EmergencySessionCoordinator(
             store = store,
             alarmScheduler = alarms,
@@ -783,15 +949,26 @@ class EmergencySessionCoordinatorTest {
                 )
             },
             wallClockMs = { currentNow },
-            elapsedRealtimeMs = { 50_000L },
+            elapsedRealtimeMs = { currentElapsed },
         )
 
         fun advanceToFinalDeadline() {
             currentNow = now + 120_000L
+            currentElapsed = requireNotNull(store.current).elapsedRealtimeDeadlineMs
         }
 
         fun advanceTo(value: Long) {
             currentNow = value
+            val envelope = store.current ?: return
+            val wallDelta = (value - now).coerceAtLeast(0L)
+            currentElapsed = 50_000L + wallDelta.coerceAtMost(
+                envelope.elapsedRealtimeDeadlineMs - 50_000L,
+            )
+        }
+
+        fun reachElapsedDeadlineWithWallClockRolledBack() {
+            currentElapsed = requireNotNull(store.current).elapsedRealtimeDeadlineMs
+            currentNow = now - 60_000L
         }
     }
 
@@ -828,6 +1005,7 @@ class EmergencySessionCoordinatorTest {
         private val throwOnSchedule: Boolean = false,
         private val throwOnCancel: Boolean = false,
         private val throwOnScheduleAt: Set<Int> = emptySet(),
+        private val scheduleResults: List<AlarmScheduleResult> = emptyList(),
     ) : EmergencySessionAlarmScheduler {
         val scheduled = mutableListOf<EmergencySessionEnvelope>()
         val cancelled = mutableListOf<SessionToken>()
@@ -840,7 +1018,8 @@ class EmergencySessionCoordinatorTest {
                 throw IllegalStateException("injected schedule failure")
             }
             scheduled += envelope
-            return AlarmScheduleResult(exactAccepted = true, inexactAccepted = true)
+            return scheduleResults.getOrNull(scheduleAttempts - 1)
+                ?: AlarmScheduleResult(exactAccepted = true, inexactAccepted = true)
         }
 
         override fun cancel(token: SessionToken) {

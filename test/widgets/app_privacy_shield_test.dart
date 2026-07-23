@@ -24,8 +24,14 @@ void main() {
   });
 
   testWidgets('mask overlay starts hidden while resumed', (tester) async {
+    final controller = AppPrivacyBarrierController.forTesting();
     await tester.pumpWidget(
-      const MaterialApp(home: AppPrivacyShield(child: Text('content'))),
+      MaterialApp(
+        home: AppPrivacyShield(
+          controller: controller,
+          child: const Text('content'),
+        ),
+      ),
     );
     await tester.pumpAndSettle();
     expect(
@@ -33,4 +39,42 @@ void main() {
       0.0,
     );
   });
+
+  testWidgets(
+    'resume keeps the background mask until reauthentication decision',
+    (tester) async {
+      final controller = AppPrivacyBarrierController.forTesting();
+      await tester.pumpWidget(
+        MaterialApp(
+          home: AppPrivacyShield(
+            controller: controller,
+            child: const Text('sensitive'),
+          ),
+        ),
+      );
+
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+      await tester.pump();
+      expect(
+        tester.widget<AnimatedOpacity>(find.byType(AnimatedOpacity)).opacity,
+        1.0,
+      );
+
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await tester.pump();
+      expect(
+        tester.widget<AnimatedOpacity>(find.byType(AnimatedOpacity)).opacity,
+        1.0,
+        reason:
+            'PIN-route scheduling must happen before sensitive pixels return.',
+      );
+
+      controller.reveal();
+      await tester.pump();
+      expect(
+        tester.widget<AnimatedOpacity>(find.byType(AnimatedOpacity)).opacity,
+        0.0,
+      );
+    },
+  );
 }

@@ -202,4 +202,16 @@ void main() {
     );
     expect(provenance, contains('"osvAudit"'));
   });
+
+  test('dirty OSV evidence requires an explicit local-only opt-in', () {
+    final runner = File(
+      'scripts/audit_dependencies_osv.sh',
+    ).readAsStringSync();
+    final workflow = File('.github/workflows/release.yml').readAsStringSync();
+
+    expect(runner, contains('ALLOW_DIRTY_LOCAL=false'));
+    expect(runner, contains('--allow-dirty-local'));
+    expect(runner, contains('GENERATOR_ARGS+=(--require-clean)'));
+    expect(workflow, isNot(contains('--allow-dirty-local')));
+  });
 }

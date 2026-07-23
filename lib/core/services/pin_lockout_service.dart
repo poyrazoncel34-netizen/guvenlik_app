@@ -26,14 +26,22 @@ class PinLockoutState {
 }
 
 class PinLockoutService {
-  PinLockoutService._();
+  PinLockoutService._({SecureStorage? secureStorage})
+    : _injectedStorage = secureStorage;
+
+  factory PinLockoutService.forTesting({required SecureStorage secureStorage}) {
+    return PinLockoutService._(secureStorage: secureStorage);
+  }
 
   static final PinLockoutService instance = PinLockoutService._();
 
   static const String _failedAttemptsKey = 'pin_lockout_failed_attempts';
   static const String _lockedUntilKey = 'pin_lockout_until_ms';
 
-  final SecureStorage _secureStorage = serviceLocator<SecureStorage>();
+  final SecureStorage? _injectedStorage;
+
+  SecureStorage get _secureStorage =>
+      _injectedStorage ?? serviceLocator<SecureStorage>();
 
   Future<PinLockoutState> getState() async {
     final failedRaw = await _secureStorage.read(key: _failedAttemptsKey);

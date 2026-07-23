@@ -59,6 +59,22 @@ TEST_APK_SHA256="$(shasum -a 256 "$TEST_APK" | awk '{print $1}')"
 "$ADB_BIN" -s "$DEVICE_SERIAL" install -r -t "$APP_APK"
 "$ADB_BIN" -s "$DEVICE_SERIAL" install -r -t "$TEST_APK"
 
+PROBE_API_LEVEL="$("$ADB_BIN" -s "$DEVICE_SERIAL" shell getprop ro.build.version.sdk | tr -d '\r')"
+EXACT_REVOCATION_TESTS_PASSED=0
+
+grant_probe_readiness() {
+  "$ADB_BIN" -s "$DEVICE_SERIAL" shell pm grant \
+    "$APP_PACKAGE" android.permission.CALL_PHONE
+  if [ "$PROBE_API_LEVEL" -ge 33 ]; then
+    "$ADB_BIN" -s "$DEVICE_SERIAL" shell pm grant \
+      "$APP_PACKAGE" android.permission.POST_NOTIFICATIONS
+  fi
+  if [ "$PROBE_API_LEVEL" -ge 31 ]; then
+    "$ADB_BIN" -s "$DEVICE_SERIAL" shell appops set \
+      "$APP_PACKAGE" SCHEDULE_EXACT_ALARM allow
+  fi
+}
+
 run_probe() {
   local mode="$1"
   local method="$2"
@@ -73,10 +89,18 @@ run_probe() {
 
 make_boot_eligible_after_instrumentation() {
   # AndroidJUnitRunner force-stops its target. Re-launching the real Activity
-  # is the portable API 29-36, user-equivalent way to clear FLAG_STOPPED;
-  # API 34 and below do not expose API 36's shell-only unstop command.
+  # is the portable API 29-36, user-equivalent way to clear FLAG_STOPPED.
+  # Newer emulator images also expose a shell-only `unstop` command. Use it
+  # when available to make this test harness deterministic after instrumentation;
+  # the production path still relies on the user's real launch state.
+  local package_help
+  package_help="$("$ADB_BIN" -s "$DEVICE_SERIAL" shell cmd package help 2>&1 || true)"
   "$ADB_BIN" -s "$DEVICE_SERIAL" shell am start -W \
     -n "$APP_PACKAGE/.MainActivity" >/dev/null
+  if [[ "$package_help" == *$'\n  unstop '* ]]; then
+    "$ADB_BIN" -s "$DEVICE_SERIAL" shell cmd package unstop \
+      --user 0 "$APP_PACKAGE"
+  fi
   "$ADB_BIN" -s "$DEVICE_SERIAL" shell input keyevent KEYCODE_HOME >/dev/null
 
   local package_state
@@ -90,13 +114,54 @@ make_boot_eligible_after_instrumentation() {
   # write. Waiting past that delay avoids a test-only reboot race seen on the
   # API 36 16 KB image; a real armed app is already running and not stopped.
   sleep "$PACKAGE_STATE_FLUSH_SECONDS"
-  local package_help
-  package_help="$("$ADB_BIN" -s "$DEVICE_SERIAL" shell cmd package help 2>&1 || true)"
   if [[ "$package_help" == *"wait-for-handler"* ]]; then
     "$ADB_BIN" -s "$DEVICE_SERIAL" shell cmd package wait-for-handler \
       --timeout 10000
   fi
   "$ADB_BIN" -s "$DEVICE_SERIAL" shell sync
+
+  # The delayed PackageManager write is the state that survives reboot. Verify
+  # after the flush as well, otherwise a pre-flush check can give a false PASS.
+  package_state="$("$ADB_BIN" -s "$DEVICE_SERIAL" shell dumpsys package "$APP_PACKAGE")"
+  [[ "$package_state" == *"stopped=false"* ]] || \
+    fail "target package became stopped while flushing package state"
+  [[ "$package_state" == *"notLaunched=false"* ]] || \
+    fail "target package lost BOOT_COMPLETED eligibility while flushing state"
+}
+
+reboot_and_wait_for_receivers() {
+  # The API 36 broadcast queue can remain busy long after sys.boot_completed.
+  # Starting instrumentation before our manifest receiver runs force-stops the
+  # target package and makes ActivityManager skip its queued boot delivery.
+  # Clear the local log and wait for the receiver's post-reconciliation marker
+  # so the verification process cannot create that false failure.
+  "$ADB_BIN" -s "$DEVICE_SERIAL" logcat -c
+  "$ADB_BIN" -s "$DEVICE_SERIAL" reboot
+  "$ADB_BIN" -s "$DEVICE_SERIAL" wait-for-device
+
+  BOOT_COMPLETED=""
+  for _ in $(seq 1 90); do
+    BOOT_COMPLETED="$("$ADB_BIN" -s "$DEVICE_SERIAL" shell getprop sys.boot_completed | tr -d '\r')"
+    [ "$BOOT_COMPLETED" = "1" ] && break
+    sleep 2
+  done
+  [ "$BOOT_COMPLETED" = "1" ] || fail "emulator did not finish boot within 180 seconds"
+
+  "$ADB_BIN" -s "$DEVICE_SERIAL" shell input keyevent 82 >/dev/null 2>&1 || true
+  "$ADB_BIN" -s "$DEVICE_SERIAL" shell am wait-for-broadcast-idle >/dev/null 2>&1 || true
+
+  local receiver_completed=""
+  for _ in $(seq 1 90); do
+    receiver_completed="$(
+      "$ADB_BIN" -s "$DEVICE_SERIAL" logcat -d -s BootCompletedReceiver:I '*:S' 2>/dev/null || true
+    )"
+    if [[ "$receiver_completed" == *"Safety state reconciliation completed"* ]]; then
+      break
+    fi
+    sleep 2
+  done
+  [[ "$receiver_completed" == *"Safety state reconciliation completed"* ]] || \
+    fail "manifest boot receiver did not complete within 180 seconds"
 }
 
 read_avd_name() {
@@ -116,25 +181,26 @@ read_avd_name() {
 # testable; the probe then clears/arms only its own native prefs.
 "$ADB_BIN" -s "$DEVICE_SERIAL" shell am start -W \
   -n "$APP_PACKAGE/.MainActivity" >/dev/null
+grant_probe_readiness
 run_probe arm armTypedSessionForRealReboot
 
 make_boot_eligible_after_instrumentation
-
-"$ADB_BIN" -s "$DEVICE_SERIAL" reboot
-"$ADB_BIN" -s "$DEVICE_SERIAL" wait-for-device
-
-BOOT_COMPLETED=""
-for _ in $(seq 1 90); do
-  BOOT_COMPLETED="$("$ADB_BIN" -s "$DEVICE_SERIAL" shell getprop sys.boot_completed | tr -d '\r')"
-  [ "$BOOT_COMPLETED" = "1" ] && break
-  sleep 2
-done
-[ "$BOOT_COMPLETED" = "1" ] || fail "emulator did not finish boot within 180 seconds"
-
-"$ADB_BIN" -s "$DEVICE_SERIAL" shell input keyevent 82 >/dev/null 2>&1 || true
-"$ADB_BIN" -s "$DEVICE_SERIAL" shell am wait-for-broadcast-idle
-
+reboot_and_wait_for_receivers
 run_probe verify verifyManifestBootReceiverRestoredTypedSession
+
+if [ "$PROBE_API_LEVEL" -ge 31 ]; then
+  "$ADB_BIN" -s "$DEVICE_SERIAL" shell am start -W \
+    -n "$APP_PACKAGE/.MainActivity" >/dev/null
+  grant_probe_readiness
+  run_probe armExactRevoked armTypedSessionForExactRevocationReboot
+  "$ADB_BIN" -s "$DEVICE_SERIAL" shell appops set \
+    "$APP_PACKAGE" SCHEDULE_EXACT_ALARM deny
+  run_probe assertExactRevoked assertExactAlarmAccessWasActuallyRevoked
+  make_boot_eligible_after_instrumentation
+  reboot_and_wait_for_receivers
+  run_probe verifyExactRevoked verifyExactRevocationRestoredInexactBackup
+  EXACT_REVOCATION_TESTS_PASSED=3
+fi
 
 cleanup
 trap - EXIT
@@ -169,6 +235,7 @@ python3 "$EVIDENCE_WRITER" \
   --model "$MODEL" \
   --build-fingerprint "$BUILD_FINGERPRINT" \
   --page-size-bytes "$PAGE_SIZE_BYTES" \
+  --exact-revocation-tests-passed "$EXACT_REVOCATION_TESTS_PASSED" \
   --started-at-utc "$STARTED_AT_UTC" \
   --finished-at-utc "$FINISHED_AT_UTC"
 

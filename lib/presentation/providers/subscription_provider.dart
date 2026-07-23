@@ -28,6 +28,7 @@ class SubscriptionProvider extends ChangeNotifier {
   Offerings? _offerings;
   CustomerInfo? _customerInfo;
   String? _errorMessage;
+  int _customerInfoEpoch = 0;
 
   // ---------------------------------------------------------------------------
   // Getters
@@ -74,6 +75,7 @@ class SubscriptionProvider extends ChangeNotifier {
   }
 
   Future<void> _initializeOnce() async {
+    final requestEpoch = _customerInfoEpoch;
     _setLoading(true);
     _setAccess(_access.markLoading());
     try {
@@ -89,14 +91,14 @@ class SubscriptionProvider extends ChangeNotifier {
       final info = results[0] as CustomerInfo?;
       final offs = results[1] as Offerings?;
       if (info != null) {
-        _applyCustomerInfo(info);
+        _applyCustomerInfoIfCurrent(info, requestEpoch);
       } else {
-        _setAccess(_access.markUnavailable());
+        _markUnavailableIfCurrent(requestEpoch);
       }
       _offerings = offs;
       _errorMessage = _offeringErrorKey();
     } catch (e) {
-      _setAccess(_access.markUnavailable());
+      _markUnavailableIfCurrent(requestEpoch);
       _errorMessage = 'subscription_error_plans_unavailable';
     } finally {
       _setLoading(false);
@@ -119,11 +121,12 @@ class SubscriptionProvider extends ChangeNotifier {
   /// Returns null on success, or an error message string on failure.
   /// Callers should show appropriate UI for [RevenueCatPurchaseException.isCancelled].
   Future<String?> purchasePackage(Package package) async {
+    final requestEpoch = _customerInfoEpoch;
     _setLoading(true);
     _errorMessage = null;
     try {
       final info = await _rcService.purchasePackage(package);
-      _applyCustomerInfo(info);
+      _applyCustomerInfoIfCurrent(info, requestEpoch);
       if (!isPro) {
         _errorMessage = 'subscription_error_entitlement';
         return _errorMessage;
@@ -151,11 +154,12 @@ class SubscriptionProvider extends ChangeNotifier {
 
   /// Returns null on success, or an error message string on failure.
   Future<String?> restorePurchases() async {
+    final requestEpoch = _customerInfoEpoch;
     _setLoading(true);
     _errorMessage = null;
     try {
       final info = await _rcService.restorePurchases();
-      _applyCustomerInfo(info);
+      _applyCustomerInfoIfCurrent(info, requestEpoch);
       return null;
     } on RevenueCatPurchaseException catch (e) {
       _errorMessage = e.isOffline
@@ -185,15 +189,16 @@ class SubscriptionProvider extends ChangeNotifier {
   }
 
   Future<void> _refreshOnce() async {
+    final requestEpoch = _customerInfoEpoch;
     try {
       final info = await _rcService.getCustomerInfo();
       if (info != null) {
-        _applyCustomerInfo(info);
+        _applyCustomerInfoIfCurrent(info, requestEpoch);
       } else {
-        _setAccess(_access.markUnavailable());
+        _markUnavailableIfCurrent(requestEpoch);
       }
     } catch (_) {
-      _setAccess(_access.markUnavailable());
+      _markUnavailableIfCurrent(requestEpoch);
     }
   }
 
@@ -235,6 +240,7 @@ class SubscriptionProvider extends ChangeNotifier {
   }
 
   void _applyCustomerInfo(CustomerInfo info) {
+    _customerInfoEpoch += 1;
     final decision = _rcService.evaluateEntitlement(info);
     switch (decision) {
       case EntitlementDecision.authorized:
@@ -249,6 +255,18 @@ class SubscriptionProvider extends ChangeNotifier {
         // `canUsePaidSafetyFeature` remains false, so no new arm is authorized.
         _setAccess(_access.markUnavailable());
     }
+  }
+
+  bool _applyCustomerInfoIfCurrent(CustomerInfo info, int requestEpoch) {
+    if (requestEpoch != _customerInfoEpoch) return false;
+    _applyCustomerInfo(info);
+    return true;
+  }
+
+  void _markUnavailableIfCurrent(int requestEpoch) {
+    if (requestEpoch != _customerInfoEpoch) return;
+    _customerInfoEpoch += 1;
+    _setAccess(_access.markUnavailable());
   }
 
   void _setAccess(SubscriptionAccessState value) {

@@ -49,6 +49,19 @@ def positive_int(name: str):
     return parse
 
 
+def non_negative_int(name: str):
+    def parse(value: str) -> int:
+        try:
+            parsed = int(value)
+        except ValueError as exc:
+            raise argparse.ArgumentTypeError(f"{name} must be an integer") from exc
+        if parsed < 0:
+            raise argparse.ArgumentTypeError(f"{name} must be non-negative")
+        return parsed
+
+    return parse
+
+
 def utc_timestamp(name: str):
     def parse(value: str) -> str:
         try:
@@ -99,6 +112,11 @@ def parser() -> argparse.ArgumentParser:
         "--page-size-bytes", required=True, type=positive_int("page-size-bytes")
     )
     result.add_argument(
+        "--exact-revocation-tests-passed",
+        required=True,
+        type=non_negative_int("exact-revocation-tests-passed"),
+    )
+    result.add_argument(
         "--started-at-utc", required=True, type=utc_timestamp("started-at-utc")
     )
     result.add_argument(
@@ -109,6 +127,17 @@ def parser() -> argparse.ArgumentParser:
 
 def main() -> int:
     args = parser().parse_args()
+    expected_exact_revocation_count = 3 if args.api_level >= 31 else 0
+    if args.exact_revocation_tests_passed != expected_exact_revocation_count:
+        raise SystemExit(
+            "exact-revocation-tests-passed must be "
+            f"{expected_exact_revocation_count} for API {args.api_level}"
+        )
+    started = datetime.fromisoformat(args.started_at_utc.replace("Z", "+00:00"))
+    finished = datetime.fromisoformat(args.finished_at_utc.replace("Z", "+00:00"))
+    if finished < started:
+        raise SystemExit("finished-at-utc must not precede started-at-utc")
+
     payload = {
         "schemaVersion": 1,
         "evidenceType": "android_direct_boot_reboot_probe",
@@ -144,6 +173,12 @@ def main() -> int:
             "realReboot": True,
             "bootCompletedObserved": True,
             "typedSessionRestored": True,
+            "exactPermissionRevocationRebootTested": (
+                args.exact_revocation_tests_passed > 0
+            ),
+            "exactPermissionRevocationInstrumentationTestsPassed": (
+                args.exact_revocation_tests_passed
+            ),
             "packagesRemoved": True,
         },
         "limitations": [

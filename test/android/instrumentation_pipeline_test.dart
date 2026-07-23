@@ -28,6 +28,13 @@ void main() {
 
       expect(workflow, contains('api-level: [29, 30, 31, 32, 33, 34, 35, 36]'));
       expect(workflow, contains('app:connectedPlayDebugAndroidTest'));
+      expect(workflow, contains('phase3_emulator_reboot_probe.sh'));
+      expect(workflow, contains('PHASE3_CONFIRM_EPHEMERAL_AVD=1'));
+      expect(workflow, contains('PHASE3_EVIDENCE_OUTPUT='));
+      expect(
+        workflow,
+        matches(RegExp(r'actions/upload-artifact@[0-9a-f]{40} # v4')),
+      );
       expect(workflow, isNot(contains('PHYSICAL_DEVICE_PASS')));
     },
   );

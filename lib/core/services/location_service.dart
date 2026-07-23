@@ -4,8 +4,10 @@
 
 import 'dart:async';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
+import 'consent_gate_service.dart';
 
 /// Konum servisi sonuç durumları
 enum LocationStatus {
@@ -13,6 +15,7 @@ enum LocationStatus {
   serviceDisabled,
   permissionDenied,
   permissionDeniedForever,
+  consentDenied,
   error,
 }
 
@@ -32,14 +35,47 @@ class LocationService {
   // Singleton instance
   static final LocationService _instance = LocationService._internal();
   factory LocationService() => _instance;
-  LocationService._internal();
+  LocationService._internal()
+    : _consentAllowed = ConsentGateService.isLocationAllowed;
+
+  @visibleForTesting
+  LocationService.forTesting({required bool Function() consentAllowed})
+    : _consentAllowed = consentAllowed;
+
+  final bool Function() _consentAllowed;
 
   // Neutral map viewport center. This is never presented as the user's location.
   static const LatLng fallbackMapCenter = LatLng(39.0, 35.0);
 
   // Cache for last known position
   LatLng? _lastKnownPosition;
-  LatLng? get lastKnownPosition => _lastKnownPosition;
+  LatLng? get lastKnownPosition {
+    if (!_isConsentAllowed()) return null;
+    return _lastKnownPosition;
+  }
+
+  bool _isConsentAllowed() {
+    try {
+      final allowed = _consentAllowed();
+      if (!allowed) _lastKnownPosition = null;
+      return allowed;
+    } catch (_) {
+      _lastKnownPosition = null;
+      return false;
+    }
+  }
+
+  LocationResult _consentDeniedResult() {
+    _lastKnownPosition = null;
+    return LocationResult(
+      status: LocationStatus.consentDenied,
+      errorMessage: 'consent_gate_blocked'.tr(),
+    );
+  }
+
+  void clearCachedLocation() {
+    _lastKnownPosition = null;
+  }
 
   /// Konum servisinin aktif olup olmadığını kontrol eder
   Future<bool> isLocationServiceEnabled() async {
@@ -48,16 +84,19 @@ class LocationService {
 
   /// Konum izni durumunu kontrol eder
   Future<LocationPermission> checkPermission() async {
+    if (!_isConsentAllowed()) return LocationPermission.denied;
     return await Geolocator.checkPermission();
   }
 
   /// Konum izni ister
   Future<LocationPermission> requestPermission() async {
+    if (!_isConsentAllowed()) return LocationPermission.denied;
     return await Geolocator.requestPermission();
   }
 
   /// İzinleri kontrol edip gerekirse ister
   Future<LocationResult> _handlePermissions() async {
+    if (!_isConsentAllowed()) return _consentDeniedResult();
     // Konum servisi aktif mi?
     bool serviceEnabled = await isLocationServiceEnabled();
     if (!serviceEnabled) {
@@ -94,6 +133,7 @@ class LocationService {
 
   /// Mevcut konumu alır
   Future<LocationResult> getCurrentLocation({bool highAccuracy = true}) async {
+    if (!_isConsentAllowed()) return _consentDeniedResult();
     try {
       // İzinleri kontrol et
       final permissionResult = await _handlePermissions();
@@ -137,6 +177,7 @@ class LocationService {
 
   /// Son bilinen konumu alır (daha hızlı, ama eski olabilir)
   Future<LocationResult> getLastKnownLocation() async {
+    if (!_isConsentAllowed()) return _consentDeniedResult();
     try {
       // İzinleri kontrol et
       final permissionResult = await _handlePermissions();
@@ -169,18 +210,10 @@ class LocationService {
     bool highAccuracy = true,
     int distanceFilter = 10, // metre
   }) {
-    try {
-      return Geolocator.getPositionStream(
-        locationSettings: LocationSettings(
-          accuracy: highAccuracy
-              ? LocationAccuracy.high
-              : LocationAccuracy.medium,
-          distanceFilter: distanceFilter,
-        ),
-      );
-    } catch (e) {
-      return null;
-    }
+    // Live location sharing is outside the first-release product contract.
+    // Keeping this legacy compatibility method inert guarantees that consent
+    // withdrawal cannot leave an ownerless native GPS stream running.
+    return null;
   }
 
   /// İki nokta arasındaki mesafeyi hesaplar (metre)

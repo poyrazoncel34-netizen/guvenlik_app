@@ -348,8 +348,19 @@ jobs:
           ./scripts/verify_16kb_alignment.sh "$AAB"
 
           VERIFY_LOG="${RUNNER_TEMP}/korubeni-jarsigner-verify.log"
-          LC_ALL=C jarsigner -verify "$AAB" >"$VERIFY_LOG" 2>&1
-          if ! grep -q "jar verified\." "$VERIFY_LOG"; then
+          if LC_ALL=C jarsigner -verify -strict "$AAB" >"$VERIFY_LOG" 2>&1; then
+            SIGNATURE_STATUS=0
+          else
+            SIGNATURE_STATUS=$?
+          fi
+          # Strict bit 4 is the expected self-signed upload certificate warning.
+          # Unsigned entries (bit 16) and every other strict warning remain fatal.
+          if [[ "$SIGNATURE_STATUS" -ne 0 && "$SIGNATURE_STATUS" -ne 4 ]]; then
+            sed -n '1,80p' "$VERIFY_LOG"
+            echo "::error title=AAB signature invalid::jarsigner strict verification failed with status ${SIGNATURE_STATUS}."
+            exit 1
+          fi
+          if ! grep -Eq '^jar verified([,.]|$)' "$VERIFY_LOG"; then
             sed -n '1,80p' "$VERIFY_LOG"
             echo "::error title=AAB signature missing::jarsigner did not verify the app bundle."
             exit 1

@@ -110,6 +110,7 @@ void main() {
       sessionId: CheckInExpiryCoordinator.checkInSession,
       platform: platform,
       contactsRepository: contacts,
+      contactsConsentAllowed: () => true,
     );
     serviceDisposed = false;
   });

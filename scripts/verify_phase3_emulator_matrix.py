@@ -153,6 +153,19 @@ def validate_evidence(
         1,
         f"{label}.execution",
     )
+    exact_revocation_expected = api_level >= 31
+    require_exact(
+        execution,
+        "exactPermissionRevocationRebootTested",
+        exact_revocation_expected,
+        f"{label}.execution",
+    )
+    require_exact(
+        execution,
+        "exactPermissionRevocationInstrumentationTestsPassed",
+        3 if exact_revocation_expected else 0,
+        f"{label}.execution",
+    )
     started_value = execution.get("startedAtUtc")
     finished_value = execution.get("finishedAtUtc")
     started = parse_utc(started_value, f"{label}.execution.startedAtUtc")
@@ -288,6 +301,7 @@ def main() -> int:
                 "realRebootPerProfile": True,
                 "bootCompletedObservedPerProfile": True,
                 "typedSessionRestoredPerProfile": True,
+                "exactPermissionRevocationRebootTestedOnApi31Plus": True,
                 "api36Real16KbKernel": True,
             },
             "inputs": [

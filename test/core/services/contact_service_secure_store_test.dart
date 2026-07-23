@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -146,6 +147,73 @@ void main() {
     final read = await ContactService.getContactRecords();
     expect(read.map((c) => c.phone), ['+905554445566']);
   });
+
+  test(
+    'overlapping contact mutations are serialized without lost updates',
+    () async {
+      await ContactService.saveContactRecords(const [
+        EmergencyContact(name: 'Ada', phone: '+905551112233'),
+        EmergencyContact(name: 'Bora', phone: '+905554445566'),
+      ]);
+      await ContactService.savePrimaryEmergencyContact(
+        name: 'Ada',
+        phone: '+905551112233',
+      );
+      final blockedWrite = Completer<void>();
+      secure.blockNextWrite = blockedWrite;
+
+      final clear = ContactService.clearPrimaryEmergencyContact();
+      while (secure.blockNextWrite != null) {
+        await Future<void>.delayed(Duration.zero);
+      }
+      final selectBora = ContactService.savePrimaryEmergencyContact(
+        name: 'Bora',
+        phone: '+905554445566',
+      );
+      await Future<void>.delayed(Duration.zero);
+      blockedWrite.complete();
+      await Future.wait(<Future<void>>[clear, selectBora]);
+
+      expect(
+        (await ContactService.getEmergencyContact())?.phone,
+        '+905554445566',
+      );
+    },
+  );
+
+  test(
+    'deleteAllContacts verifies secure, database and legacy deletion',
+    () async {
+      SharedPreferences.setMockInitialValues(<String, Object>{
+        'saved_contacts': <String>['+905551112233'],
+        'emergency_contact_phone': '+905551112233',
+        'emergency_contact_name': 'Ada',
+      });
+      secure.store[SecureStorageKeys.contactsData] = 'legacy';
+      secure.store[SecureStorageKeys.emergencyContactPhone] = '+905551112233';
+      secure.store[SecureStorageKeys.emergencyContactName] = 'Ada';
+      await db.seedContact(
+        name: 'Ada',
+        phone: '+905551112233',
+        isPrimary: true,
+      );
+      await ContactService.savePrimaryEmergencyContact(
+        name: 'Ada',
+        phone: '+905551112233',
+      );
+
+      await ContactService.deleteAllContacts();
+
+      expect(secure.store, isEmpty);
+      expect(await db.contactRowCount(), 0);
+      expect(await ContactService.getContactRecords(), isEmpty);
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.containsKey('saved_contacts'), isFalse);
+      expect(prefs.containsKey('emergency_contact_phone'), isFalse);
+      expect(prefs.containsKey('emergency_contact_name'), isFalse);
+      expect(prefs.getBool(AppConstants.prefContactsSecureMigratedV1), isTrue);
+    },
+  );
 
   test(
     'public compatibility APIs preserve explicit-primary call policy',

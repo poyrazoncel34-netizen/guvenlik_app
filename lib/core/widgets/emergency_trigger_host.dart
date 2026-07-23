@@ -56,7 +56,7 @@ class _EmergencyTriggerHostState extends State<EmergencyTriggerHost>
       CheckInService.safeWalk.handleAppResumed();
       _consumePendingTrigger();
       // Re-auth after prolonged background
-      AppLifecycleHandler.instance.onResumed();
+      unawaited(AppLifecycleHandler.instance.onResumed());
       return;
     }
 
@@ -65,7 +65,12 @@ class _EmergencyTriggerHostState extends State<EmergencyTriggerHost>
         state == AppLifecycleState.paused ||
         state == AppLifecycleState.detached) {
       _stopForegroundTriggers();
-      // Record background start time
+    }
+    if (state == AppLifecycleState.hidden ||
+        state == AppLifecycleState.paused ||
+        state == AppLifecycleState.detached) {
+      // Transient inactive states (permission dialogs, incoming calls) are
+      // still visible and must not restart the authentication timer.
       AppLifecycleHandler.instance.onPaused();
     }
   }
@@ -180,9 +185,8 @@ class _EmergencyTriggerHostState extends State<EmergencyTriggerHost>
       await HapticFeedback.heavyImpact();
       await navigator.push(
         MaterialPageRoute(
-          builder: (_) => CountdownScreen(
-            entitlementDecision: access.entitlementDecision,
-          ),
+          builder: (_) =>
+              CountdownScreen(entitlementDecision: access.entitlementDecision),
         ),
       );
     } finally {

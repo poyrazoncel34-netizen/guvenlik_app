@@ -14,6 +14,7 @@ import '../core/config/app_environment.dart';
 import '../core/di/service_locator.dart';
 import '../core/network/osm_tile_cache_client.dart';
 import '../core/services/connectivity_service.dart';
+import '../core/services/consent_gate_service.dart';
 import '../core/services/location_service.dart';
 import '../core/utils/map_utils.dart';
 import '../core/utils/permission_helper.dart';
@@ -69,11 +70,28 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
   @override
   void didUpdateWidget(covariant MapPage oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (widget.isActive && !ConsentGateService.isLocationAllowed()) {
+      _clearLocationProjection();
+      return;
+    }
     if (!oldWidget.isActive &&
         widget.isActive &&
-        !_hasRequestedInitialLocation) {
+        (!_hasRequestedInitialLocation || _currentLocation == null)) {
       _initLocation();
     }
+  }
+
+  void _clearLocationProjection() {
+    serviceLocator<LocationService>().clearCachedLocation();
+    _hasRequestedInitialLocation = false;
+    if (!mounted) return;
+    setState(() {
+      _currentLocation = null;
+      _isLoading = false;
+      _locationStatus = LocationStatus.consentDenied;
+      _usingFallbackLocation = true;
+      _fallbackCheckedAt = DateTime.now();
+    });
   }
 
   @override
@@ -199,6 +217,10 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
   }
 
   Future<bool> _ensureLocationPermission() async {
+    if (!ConsentGateService.isLocationAllowed()) {
+      _clearLocationProjection();
+      return false;
+    }
     final granted = await PermissionHelper.requestLocationPermission(context);
     if (!mounted) return false;
     if (granted) return true;
@@ -246,6 +268,12 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
           Navigator.pop(context);
           _locationRepository.openAppSettings();
         };
+        break;
+      case LocationStatus.consentDenied:
+        title = 'legal_consent_location'.tr();
+        message = 'consent_gate_blocked'.tr();
+        buttonText = 'map_cancel'.tr();
+        onPressed = () => Navigator.pop(context);
         break;
       default:
         title = "map_location_failed".tr();

@@ -105,7 +105,9 @@ def main() -> int:
             "assignmentCount": len(items),
             "items": items,
         }
-        for reviewer, items in zip(args.reviewer, buckets, strict=True)
+        # ``buckets`` is created with exactly one entry per validated reviewer.
+        # Plain zip keeps this evidence helper compatible with system Python 3.9.
+        for reviewer, items in zip(args.reviewer, buckets)
     ]
     counts = [len(items) for items in buckets]
     if counts and max(counts) - min(counts) > 1:

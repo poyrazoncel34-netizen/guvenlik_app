@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/services.dart';
 import 'package:guvenlik_app/core/security/secure_storage.dart';
 import 'package:guvenlik_app/core/services/local_database_service.dart';
@@ -15,6 +17,7 @@ class FakeSecureStorage extends SecureStorage {
   /// When true, [write] is a no-op (value never persisted) — simulates a write
   /// that "succeeded" but did not land, so verify-before-delete must catch it.
   bool dropWrites = false;
+  Completer<void>? blockNextWrite;
 
   int writeCount = 0;
   int deleteCount = 0;
@@ -22,6 +25,9 @@ class FakeSecureStorage extends SecureStorage {
   @override
   Future<void> write({required String key, required String value}) async {
     writeCount++;
+    final blocker = blockNextWrite;
+    blockNextWrite = null;
+    await blocker?.future;
     if (failWrites) {
       throw PlatformException(code: 'write_fail');
     }

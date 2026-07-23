@@ -15,10 +15,17 @@ void main() {
     expect(script, contains('reboot'));
     expect(script, contains('wait-for-device'));
     expect(script, contains('am wait-for-broadcast-idle'));
+    expect(script, contains('logcat -c'));
+    expect(script, contains('Safety state reconciliation completed'));
+    expect(
+      script,
+      contains('manifest boot receiver did not complete within 180 seconds'),
+    );
     expect(script, contains('phase3Probe'));
     expect(script, contains('OK (1 test)'));
     expect(script, contains('make_boot_eligible_after_instrumentation'));
-    expect(script, isNot(contains('cmd package unstop')));
+    expect(script, contains('cmd package unstop'));
+    expect(script, contains(r"*$'\n  unstop '*"));
     expect(script, contains('input keyevent KEYCODE_HOME'));
     expect(script, contains('cmd package wait-for-handler'));
     expect(script, contains('--timeout 10000'));
@@ -28,10 +35,19 @@ void main() {
     expect(script, contains('PACKAGE_STATE_FLUSH_SECONDS'));
     expect(script, contains('stopped=false'));
     expect(script, contains('notLaunched=false'));
+    expect(
+      script,
+      contains('target package became stopped while flushing package state'),
+    );
     expect(script, contains('shell sync'));
     expect(script, contains('git status --porcelain'));
     expect(script, contains('PHASE3_EVIDENCE_OUTPUT'));
     expect(script, contains('write_phase3_emulator_evidence.py'));
+    expect(script, contains('grant_probe_readiness'));
+    expect(script, contains('SCHEDULE_EXACT_ALARM allow'));
+    expect(script, contains('SCHEDULE_EXACT_ALARM deny'));
+    expect(script, contains('assertExactAlarmAccessWasActuallyRevoked'));
+    expect(script, contains('verifyExactRevocationRestoredInexactBackup'));
   });
 
   test('reboot probe persists a bounded emulator-only typed session', () {
@@ -42,7 +58,9 @@ void main() {
     expect(probe, contains('target = "0000000"'));
     expect(probe, isNot(contains('+90')));
     expect(probe, contains('now + 1_800_000L'));
-    expect(probe, contains('EmergencySessionEnvelope('));
+    expect(probe, contains('EmergencySessionRuntime.coordinator(context).arm('));
+    expect(probe, contains('ArmRequest('));
+    expect(probe, contains('SchedulingMode.INEXACT_ONLY'));
     expect(probe, contains('DeviceProtectedEmergencySessionStore(context)'));
     expect(
       probe,
@@ -91,6 +109,8 @@ void main() {
         'google/sdk_gphone64_arm64/test:userdebug/test-keys',
         '--page-size-bytes',
         '4096',
+        '--exact-revocation-tests-passed',
+        '3',
         '--started-at-utc',
         '2026-07-19T10:00:00Z',
         '--finished-at-utc',
@@ -108,6 +128,15 @@ void main() {
       expect((payload['device'] as Map)['apiLevel'], 36);
       expect((payload['device'] as Map)['pageSizeBytes'], 4096);
       expect((payload['execution'] as Map)['realReboot'], isTrue);
+      expect(
+        (payload['execution'] as Map)['exactPermissionRevocationRebootTested'],
+        isTrue,
+      );
+      expect(
+        (payload['execution']
+            as Map)['exactPermissionRevocationInstrumentationTestsPassed'],
+        3,
+      );
       expect((payload['execution'] as Map)['packagesRemoved'], isTrue);
       expect(payload['limitations'], contains('NOT_PHYSICAL_DEVICE_EVIDENCE'));
       expect(payload['limitations'], contains('NOT_PRODUCTION_AAB_EVIDENCE'));
@@ -150,6 +179,8 @@ void main() {
       'test/fingerprint',
       '--page-size-bytes',
       '4096',
+      '--exact-revocation-tests-passed',
+      '0',
       '--started-at-utc',
       '2026-07-19T10:00:00Z',
       '--finished-at-utc',
@@ -158,5 +189,53 @@ void main() {
 
     expect(result.exitCode, isNot(0));
     expect(result.stderr, contains('git-commit'));
+  });
+
+  test('phase-3 evidence rejects missing exact-revocation coverage', () async {
+    final temp = await Directory.systemTemp.createTemp(
+      'phase3-missing-exact-evidence-',
+    );
+    addTearDown(() => temp.delete(recursive: true));
+
+    final result = await Process.run('python3', [
+      'scripts/write_phase3_emulator_evidence.py',
+      '--output',
+      '${temp.path}/evidence.json',
+      '--git-commit',
+      '1' * 40,
+      '--git-tree',
+      '2' * 40,
+      '--app-apk-sha256',
+      '3' * 64,
+      '--test-apk-sha256',
+      '4' * 64,
+      '--serial',
+      'emulator-5554',
+      '--avd-name',
+      'test',
+      '--api-level',
+      '36',
+      '--android-release',
+      '16',
+      '--abi',
+      'arm64-v8a',
+      '--manufacturer',
+      'Google',
+      '--model',
+      'test',
+      '--build-fingerprint',
+      'test/fingerprint',
+      '--page-size-bytes',
+      '16384',
+      '--exact-revocation-tests-passed',
+      '0',
+      '--started-at-utc',
+      '2026-07-19T10:00:00Z',
+      '--finished-at-utc',
+      '2026-07-19T10:03:00Z',
+    ]);
+
+    expect(result.exitCode, isNot(0));
+    expect(result.stderr, contains('must be 3 for API 36'));
   });
 }

@@ -5,12 +5,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import '../di/service_locator.dart';
-import '../security/secure_storage.dart';
-import '../security/secure_storage_keys.dart';
 import '../app_colors.dart';
 import '../services/activity_service.dart';
+import '../services/pin_verification_service.dart';
 import 'validators.dart';
 import '../../domain/models/activity_event.dart';
 
@@ -120,43 +117,6 @@ abstract class PinSettingsHelper {
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: () async {
-                      final secureStorage = serviceLocator<SecureStorage>();
-                      final prefs = await SharedPreferences.getInstance();
-                      String? currentPin = await secureStorage.read(
-                        key: SecureStorageKeys.userPin,
-                      );
-                      if (currentPin == null || currentPin.isEmpty) {
-                        final legacy = prefs.getString(
-                          SecureStorageKeys.userPin,
-                        );
-                        if (legacy != null && legacy.isNotEmpty) {
-                          await secureStorage.write(
-                            key: SecureStorageKeys.userPin,
-                            value: legacy,
-                          );
-                          await prefs.remove(SecureStorageKeys.userPin);
-                          currentPin = legacy;
-                        }
-                      }
-                      if (!ctx.mounted) return;
-                      if (currentPin == null || currentPin.isEmpty) {
-                        ScaffoldMessenger.of(ctx).showSnackBar(
-                          SnackBar(
-                            content: Text("settings_pin_not_found".tr()),
-                            backgroundColor: AppColors.warning,
-                          ),
-                        );
-                        return;
-                      }
-                      if (oldController.text != currentPin) {
-                        ScaffoldMessenger.of(ctx).showSnackBar(
-                          SnackBar(
-                            content: Text("settings_pin_wrong".tr()),
-                            backgroundColor: AppColors.emergency,
-                          ),
-                        );
-                        return;
-                      }
                       if (newController.text.length != 4) {
                         ScaffoldMessenger.of(ctx).showSnackBar(
                           SnackBar(
@@ -175,20 +135,31 @@ abstract class PinSettingsHelper {
                         );
                         return;
                       }
-                      if (newController.text == currentPin) {
+                      final outcome = await PinVerificationService.instance
+                          .changePin(
+                            currentCandidate: oldController.text,
+                            newCandidate: newController.text,
+                          );
+                      if (!ctx.mounted) return;
+                      if (outcome != PinChangeOutcome.changed) {
+                        final messageKey = switch (outcome) {
+                          PinChangeOutcome.currentMismatch =>
+                            'settings_pin_wrong',
+                          PinChangeOutcome.sameAsCurrent =>
+                            'settings_pin_same_as_old',
+                          PinChangeOutcome.absent => 'settings_pin_not_found',
+                          PinChangeOutcome.readFailed ||
+                          PinChangeOutcome.unknown => 'pin_state_read_failed',
+                          PinChangeOutcome.changed => 'settings_pin_updated',
+                        };
                         ScaffoldMessenger.of(ctx).showSnackBar(
                           SnackBar(
-                            content: Text("settings_pin_same_as_old".tr()),
+                            content: Text(messageKey.tr()),
                             backgroundColor: AppColors.warning,
                           ),
                         );
                         return;
                       }
-                      await secureStorage.write(
-                        key: SecureStorageKeys.userPin,
-                        value: newController.text,
-                      );
-                      await prefs.remove(SecureStorageKeys.userPin);
                       await ActivityService.logEvent(
                         type: ActivityType.pinChanged,
                         title: "activity_pin_changed_title".tr(),

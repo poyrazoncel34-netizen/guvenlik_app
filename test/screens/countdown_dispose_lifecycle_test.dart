@@ -87,6 +87,7 @@ Future<void> _pumpCountdown(
   bool asPushedRoute = false,
   bool isTestMode = false,
   SecureStorage? pinStorage,
+  bool contactsConsentAllowed = true,
 }) async {
   final pin = PinVerificationService.forTesting(
     secureStorage: pinStorage ?? _PinStorage(),
@@ -96,6 +97,7 @@ Future<void> _pumpCountdown(
     entitlementDecision: entitlementDecision,
     pinVerificationService: pin,
     emergencyPlatformService: platform,
+    emergencyContactsConsentAllowed: () => contactsConsentAllowed,
   );
   await tester.pumpWidget(
     EasyLocalization(
@@ -402,6 +404,47 @@ void main() {
     expect((tester.widget<Text>(countdownNumber)).data, '10');
     expect(methods, isNot(contains('armEmergencySession')));
   });
+
+  testWidgets(
+    'withdrawn contact consent never arms native or starts countdown',
+    (tester) async {
+      const channel = MethodChannel('countdown-contact-consent-rejected-test');
+      final methods = <String>[];
+      tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(channel, (
+        call,
+      ) async {
+        methods.add(call.method);
+        throw PlatformException(
+          code: 'unexpected_method',
+          message: call.method,
+        );
+      });
+      addTearDown(
+        () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+          channel,
+          null,
+        ),
+      );
+      final platform = EmergencyPlatformService.forTesting(
+        methodChannel: channel,
+        defaultTimeout: const Duration(milliseconds: 100),
+      );
+
+      await _pumpCountdown(
+        tester,
+        platform: platform,
+        contactsConsentAllowed: false,
+      );
+      final countdownNumber = find.byWidgetPredicate(
+        (widget) => widget is Text && (widget.style?.fontSize ?? 0) >= 50,
+      );
+      await tester.pump(const Duration(seconds: 2));
+
+      expect((tester.widget<Text>(countdownNumber)).data, '10');
+      expect(methods, isNot(contains('armEmergencySession')));
+      expect(methods, isNot(contains('dispatchEmergencySession')));
+    },
+  );
 
   testWidgets('test mode advances locally without native safety state', (
     tester,

@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 
@@ -45,6 +46,32 @@ const _approvalRoles = <String>{
 };
 
 void main() {
+  test('master verifier rejects a plain-text candidate as a non-AAB', () async {
+    final directory = await Directory.systemTemp.createTemp(
+      'korubeni-non-aab-',
+    );
+    addTearDown(() => directory.delete(recursive: true));
+    final manifest = File('${directory.path}/gates.json')
+      ..writeAsStringSync('{}');
+    final candidate = File('${directory.path}/candidate.aab')
+      ..writeAsStringSync('not an Android App Bundle');
+
+    final result = await Process.run('python3', <String>[
+      'scripts/verify_external_release_gates.py',
+      '--manifest',
+      manifest.path,
+      '--aab',
+      candidate.path,
+    ]);
+
+    expect(result.exitCode, 1);
+    expect(
+      result.stderr,
+      contains('candidate AAB is not a ZIP archive'),
+      reason: '${result.stdout}\n${result.stderr}',
+    );
+  });
+
   test('external gate template is fail-closed and complete', () {
     final payload =
         jsonDecode(
@@ -93,921 +120,990 @@ void main() {
     );
   });
 
-  test('master verifier binds all gates to provenance schema v2', () async {
-    final directory = await Directory.systemTemp.createTemp(
-      'korubeni-external-gates-v2-',
-    );
-    addTearDown(() => directory.delete(recursive: true));
-    final aab = File('${directory.path}/candidate.aab')
-      ..writeAsStringSync('immutable candidate');
-    final artifacts = <String, File>{
-      'aab': aab,
-      for (final name in <String>[
-        'androidReleaseSurface',
-        'sbom',
-        'mergedManifest',
-        'r8Mapping',
-        'dartSymbolsIndex',
-        'nativeSymbolsIndex',
-        'criticalCoverage',
-        'mutationReport',
-        'lintReport',
-        'dependencyLockPub',
-        'dependencyLockGradle',
-        'gradleVerification',
-        'sourceProvenance',
-        'secretScan',
-        'osvAudit',
-        'thirdPartyNotices',
-      ])
-        name: File('${directory.path}/$name.txt')
-          ..writeAsStringSync('evidence:$name'),
-    };
-    artifacts['mutationReport']!.writeAsStringSync(
-      jsonEncode(_rawMutationReport(commit: 'b' * 40)),
-    );
-    artifacts['criticalCoverage']!.writeAsStringSync(
-      jsonEncode(_rawCriticalCoverage()),
-    );
-    artifacts['androidReleaseSurface']!.writeAsStringSync(
-      jsonEncode(_rawAndroidReleaseSurface()),
-    );
-    artifacts['sbom']!.writeAsStringSync(jsonEncode(_rawVerifiedSbom()));
-    artifacts['secretScan']!.writeAsStringSync(
-      jsonEncode(<String, Object?>{
-        'schemaVersion': 2,
-        'status': 'PASS',
-        'scannedAt': '2026-07-14T10:00:00Z',
-        'mode': 'tracked-candidate',
-        'source': <String, Object?>{
-          'gitCommit': 'b' * 40,
-          'gitTree': 'c' * 40,
-          'sourceWasDirty': false,
-          'sourceStatusSha256': _emptySha256,
-        },
-        'scanner': <String, Object?>{
-          'name': 'scan_release_secrets.py',
-          'sha256': '1' * 64,
-        },
-        'pathSetSha256': '2' * 64,
-        'contentSetSha256': '3' * 64,
-        'inputPathCount': 10,
-        'scannedTextFileCount': 8,
-        'skippedBinaryFileCount': 2,
-        'rules': <String>['private-key'],
-        'findingCount': 0,
-      }),
-    );
-    artifacts['osvAudit']!.writeAsStringSync(
-      jsonEncode(<String, Object?>{
-        'schemaVersion': 1,
-        'status': 'PASS',
-        'scannedAt': '2026-07-14T10:05:00Z',
-        'endpoint': 'https://api.osv.dev/v1/querybatch',
-        'interpretation': 'noKnownFindingsAtScanTime',
-        'source': <String, Object?>{
-          'gitCommit': 'b' * 40,
-          'gitTree': 'c' * 40,
-          'sourceWasDirty': false,
-          'sourceStatusSha256': _emptySha256,
-        },
-        'inputs': <String, Object?>{
-          'pubspecLockSha256': _sha256(artifacts['dependencyLockPub']!),
-          'gradleLockSha256': _sha256(artifacts['dependencyLockGradle']!),
-          'runnerSha256': '4' * 64,
-          'generatorSha256': '5' * 64,
-        },
-        'ecosystems': <String, Object?>{
-          'Pub': <String, Object?>{
-            'queryCount': 1,
-            'querySha256': '6' * 64,
-            'responseSha256': '7' * 64,
-            'findingCount': 0,
-          },
-          'Maven': <String, Object?>{
-            'queryCount': 1,
-            'querySha256': '8' * 64,
-            'responseSha256': '9' * 64,
-            'findingCount': 0,
-          },
-        },
-        'findingCount': 0,
-        'findings': <Object?>[],
-      }),
-    );
-    final provenance = File('${directory.path}/provenance-v2.json');
-    final generatorArguments = <String>[
-      'scripts/generate_release_provenance.py',
-      '--output',
-      provenance.path,
-      '--tag',
-      'v1.0.3',
-      '--tag-object',
-      'a' * 40,
-      '--commit',
-      'b' * 40,
-      '--tree',
-      'c' * 40,
-      '--version-name',
-      '1.0.3',
-      '--version-code',
-      '10003',
-      '--upload-cert',
-      'd' * 64,
-      '--play-app-signing-cert',
-      'e' * 64,
-      '--repository',
-      'owner/korubeni',
-      '--workflow-run-url',
-      'https://github.com/owner/korubeni/actions/runs/123',
-      for (final entry in artifacts.entries) ...<String>[
-        '--artifact',
-        '${entry.key}=${entry.value.path}',
-      ],
-    ];
-    final generated = await Process.run('python3', generatorArguments);
-    expect(
-      generated.exitCode,
-      0,
-      reason: '${generated.stdout}\n${generated.stderr}',
-    );
-
-    final witness = File('${directory.path}/witness.txt')
-      ..writeAsStringSync('candidate-bound witness');
-    final aabHash = _sha256(aab);
-    final witnessHash = _sha256(witness);
-    final masvsAssessment = File('${directory.path}/masvs-assessment.json')
-      ..writeAsStringSync(
-        jsonEncode(
-          _masvsAssessment(aabHash: aabHash, witnessHash: witnessHash),
-        ),
+  test(
+    'master verifier rejects a signed candidate without native libraries',
+    () async {
+      final directory = await Directory.systemTemp.createTemp(
+        'korubeni-no-native-aab-',
       );
-    final masvsHash = _sha256(masvsAssessment);
-    final typedEvidence = <String, List<Map<String, dynamic>>>{};
-    for (final gateEntry in _requiredEvidenceKinds.entries) {
-      final items = <Map<String, dynamic>>[];
-      for (final kind in gateEntry.value) {
-        if (kind == 'masvsAssessment') {
+      addTearDown(() => directory.delete(recursive: true));
+      final candidate = await _createSignedTestAab(directory, nativeAbi: null);
+      final manifest = File('${directory.path}/gates.json')
+        ..writeAsStringSync('{}');
+
+      final result = await Process.run('python3', <String>[
+        'scripts/verify_external_release_gates.py',
+        '--manifest',
+        manifest.path,
+        '--aab',
+        candidate.aab.path,
+      ]);
+
+      expect(result.exitCode, 1);
+      expect(result.stderr, contains('contains no native libraries'));
+    },
+    timeout: const Timeout(Duration(minutes: 1)),
+  );
+
+  test(
+    'master verifier rejects x86_64 from the Play candidate',
+    () async {
+      final directory = await Directory.systemTemp.createTemp(
+        'korubeni-x86-aab-',
+      );
+      addTearDown(() => directory.delete(recursive: true));
+      final candidate = await _createSignedTestAab(
+        directory,
+        nativeAbi: 'x86_64',
+      );
+      final manifest = File('${directory.path}/gates.json')
+        ..writeAsStringSync('{}');
+
+      final result = await Process.run('python3', <String>[
+        'scripts/verify_external_release_gates.py',
+        '--manifest',
+        manifest.path,
+        '--aab',
+        candidate.aab.path,
+      ]);
+
+      expect(result.exitCode, 1);
+      expect(result.stderr, contains('ABI set must be arm64-v8a only'));
+    },
+    timeout: const Timeout(Duration(minutes: 1)),
+  );
+
+  test(
+    'master verifier binds all gates to provenance schema v2',
+    () async {
+      final directory = await Directory.systemTemp.createTemp(
+        'korubeni-external-gates-v2-',
+      );
+      addTearDown(() => directory.delete(recursive: true));
+      final signedCandidate = await _createSignedTestAab(directory);
+      final aab = signedCandidate.aab;
+      final uploadCertificateSha256 = signedCandidate.fingerprint;
+      final artifacts = <String, File>{
+        'aab': aab,
+        for (final name in <String>[
+          'androidReleaseSurface',
+          'sbom',
+          'mergedManifest',
+          'r8Mapping',
+          'dartSymbolsIndex',
+          'nativeSymbolsIndex',
+          'criticalCoverage',
+          'mutationReport',
+          'lintReport',
+          'dependencyLockPub',
+          'dependencyLockGradle',
+          'gradleVerification',
+          'sourceProvenance',
+          'secretScan',
+          'osvAudit',
+          'thirdPartyNotices',
+        ])
+          name: File('${directory.path}/$name.txt')
+            ..writeAsStringSync('evidence:$name'),
+      };
+      artifacts['mutationReport']!.writeAsStringSync(
+        jsonEncode(_rawMutationReport(commit: 'b' * 40)),
+      );
+      artifacts['criticalCoverage']!.writeAsStringSync(
+        jsonEncode(_rawCriticalCoverage()),
+      );
+      artifacts['androidReleaseSurface']!.writeAsStringSync(
+        jsonEncode(_rawAndroidReleaseSurface()),
+      );
+      artifacts['sbom']!.writeAsStringSync(jsonEncode(_rawVerifiedSbom()));
+      artifacts['secretScan']!.writeAsStringSync(
+        jsonEncode(<String, Object?>{
+          'schemaVersion': 2,
+          'status': 'PASS',
+          'scannedAt': '2026-07-14T10:00:00Z',
+          'mode': 'tracked-candidate',
+          'source': <String, Object?>{
+            'gitCommit': 'b' * 40,
+            'gitTree': 'c' * 40,
+            'sourceWasDirty': false,
+            'sourceStatusSha256': _emptySha256,
+          },
+          'scanner': <String, Object?>{
+            'name': 'scan_release_secrets.py',
+            'sha256': '1' * 64,
+          },
+          'pathSetSha256': '2' * 64,
+          'contentSetSha256': '3' * 64,
+          'inputPathCount': 10,
+          'scannedTextFileCount': 8,
+          'skippedBinaryFileCount': 2,
+          'rules': <String>['private-key'],
+          'findingCount': 0,
+        }),
+      );
+      artifacts['osvAudit']!.writeAsStringSync(
+        jsonEncode(<String, Object?>{
+          'schemaVersion': 1,
+          'status': 'PASS',
+          'scannedAt': '2026-07-14T10:05:00Z',
+          'endpoint': 'https://api.osv.dev/v1/querybatch',
+          'interpretation': 'noKnownFindingsAtScanTime',
+          'source': <String, Object?>{
+            'gitCommit': 'b' * 40,
+            'gitTree': 'c' * 40,
+            'sourceWasDirty': false,
+            'sourceStatusSha256': _emptySha256,
+          },
+          'inputs': <String, Object?>{
+            'pubspecLockSha256': _sha256(artifacts['dependencyLockPub']!),
+            'gradleLockSha256': _sha256(artifacts['dependencyLockGradle']!),
+            'runnerSha256': '4' * 64,
+            'generatorSha256': '5' * 64,
+          },
+          'ecosystems': <String, Object?>{
+            'Pub': <String, Object?>{
+              'queryCount': 1,
+              'querySha256': '6' * 64,
+              'responseSha256': '7' * 64,
+              'findingCount': 0,
+            },
+            'Maven': <String, Object?>{
+              'queryCount': 1,
+              'querySha256': '8' * 64,
+              'responseSha256': '9' * 64,
+              'findingCount': 0,
+            },
+          },
+          'findingCount': 0,
+          'findings': <Object?>[],
+        }),
+      );
+      final provenance = File('${directory.path}/provenance-v2.json');
+      final generatorArguments = <String>[
+        'scripts/generate_release_provenance.py',
+        '--output',
+        provenance.path,
+        '--tag',
+        'v1.0.3',
+        '--tag-object',
+        'a' * 40,
+        '--commit',
+        'b' * 40,
+        '--tree',
+        'c' * 40,
+        '--version-name',
+        '1.0.3',
+        '--version-code',
+        '10003',
+        '--upload-cert',
+        uploadCertificateSha256,
+        '--play-app-signing-cert',
+        'e' * 64,
+        '--repository',
+        'owner/korubeni',
+        '--workflow-run-url',
+        'https://github.com/owner/korubeni/actions/runs/123',
+        for (final entry in artifacts.entries) ...<String>[
+          '--artifact',
+          '${entry.key}=${entry.value.path}',
+        ],
+      ];
+      final generated = await Process.run('python3', generatorArguments);
+      expect(
+        generated.exitCode,
+        0,
+        reason: '${generated.stdout}\n${generated.stderr}',
+      );
+
+      final witness = File('${directory.path}/witness.txt')
+        ..writeAsStringSync('candidate-bound witness');
+      final aabHash = _sha256(aab);
+      final witnessHash = _sha256(witness);
+      final masvsAssessment = File('${directory.path}/masvs-assessment.json')
+        ..writeAsStringSync(
+          jsonEncode(
+            _masvsAssessment(aabHash: aabHash, witnessHash: witnessHash),
+          ),
+        );
+      final masvsHash = _sha256(masvsAssessment);
+      final typedEvidence = <String, List<Map<String, dynamic>>>{};
+      for (final gateEntry in _requiredEvidenceKinds.entries) {
+        final items = <Map<String, dynamic>>[];
+        for (final kind in gateEntry.value) {
+          if (kind == 'masvsAssessment') {
+            items.add(<String, dynamic>{
+              'kind': kind,
+              'path': 'masvs-assessment.json',
+              'sha256': masvsHash,
+              'candidateBound': true,
+            });
+            continue;
+          }
+          final rawArtifact = File('${directory.path}/$kind.raw.json')
+            ..writeAsStringSync(
+              jsonEncode(<String, Object?>{
+                'candidateAabSha256': aabHash,
+                'kind': kind,
+                'result': 'PASS',
+              }),
+            );
+          final evidenceFile = File('${directory.path}/$kind.json')
+            ..writeAsStringSync(
+              jsonEncode(
+                _gateEvidence(
+                  gateId: gateEntry.key,
+                  kind: kind,
+                  aabHash: aabHash,
+                  artifactPath: '$kind.raw.json',
+                  artifactSha256: _sha256(rawArtifact),
+                ),
+              ),
+            );
           items.add(<String, dynamic>{
             'kind': kind,
-            'path': 'masvs-assessment.json',
-            'sha256': masvsHash,
+            'path': '$kind.json',
+            'sha256': _sha256(evidenceFile),
             'candidateBound': true,
           });
-          continue;
         }
-        final rawArtifact = File('${directory.path}/$kind.raw.json')
-          ..writeAsStringSync(
-            jsonEncode(<String, Object?>{
-              'candidateAabSha256': aabHash,
-              'kind': kind,
-              'result': 'PASS',
-            }),
-          );
-        final evidenceFile = File('${directory.path}/$kind.json')
-          ..writeAsStringSync(
-            jsonEncode(
-              _gateEvidence(
-                gateId: gateEntry.key,
-                kind: kind,
-                aabHash: aabHash,
-                artifactPath: '$kind.raw.json',
-                artifactSha256: _sha256(rawArtifact),
-              ),
-            ),
-          );
-        items.add(<String, dynamic>{
-          'kind': kind,
-          'path': '$kind.json',
-          'sha256': _sha256(evidenceFile),
-          'candidateBound': true,
-        });
+        typedEvidence[gateEntry.key] = items;
       }
-      typedEvidence[gateEntry.key] = items;
-    }
-    final approvalEvidence = <String, File>{
-      for (final role in _approvalRoles)
-        role: File('${directory.path}/approval-$role.json')
-          ..writeAsStringSync(
-            jsonEncode(<String, Object?>{
+      final approvalEvidence = <String, File>{
+        for (final role in _approvalRoles)
+          role: File('${directory.path}/approval-$role.json')
+            ..writeAsStringSync(
+              jsonEncode(<String, Object?>{
+                'role': role,
+                'decision': 'APPROVE',
+                'signer': '$role-reviewer',
+                'signedAt': '2026-07-18T12:00:00Z',
+                'candidateAabSha256': aabHash,
+                'versionCode': 10003,
+              }),
+            ),
+      };
+      final manifest = File('${directory.path}/gates.json');
+      Map<String, dynamic> completeManifest({
+        bool typed = false,
+        bool approvalsBound = true,
+      }) => <String, dynamic>{
+        'schemaVersion': 2,
+        'candidate': <String, dynamic>{
+          'gitCommit': 'b' * 40,
+          'gitTree': 'c' * 40,
+          'tag': 'v1.0.3',
+          'tagObjectSha': 'a' * 40,
+          'versionName': '1.0.3',
+          'versionCode': 10003,
+          'aabSha256': aabHash,
+          'uploadCertificateSha256': uploadCertificateSha256,
+          'playAppSigningCertificateSha256': 'e' * 64,
+          'workflowRunUrl':
+              'https://github.com/owner/korubeni/actions/runs/123',
+          'provenance': <String, dynamic>{
+            'path': 'provenance-v2.json',
+            'sha256': _sha256(provenance),
+          },
+        },
+        'gates': <Map<String, dynamic>>[
+          for (var index = 0; index <= 10; index++)
+            <String, dynamic>{
+              'id': 'G$index',
+              'status': 'PASS',
+              'owners': _requiredGateOwners['G$index']!.toList(),
+              'requiredEvidenceKinds': _requiredEvidenceKinds['G$index']!
+                  .toList(),
+              'evidence': typed
+                  ? typedEvidence['G$index']!
+                  : index == 4
+                  ? <Map<String, dynamic>>[
+                      <String, dynamic>{
+                        'kind': 'masvsAssessment',
+                        'path': 'masvs-assessment.json',
+                        'sha256': masvsHash,
+                        'candidateBound': true,
+                      },
+                    ]
+                  : <Map<String, dynamic>>[
+                      <String, dynamic>{
+                        'path': 'witness.txt',
+                        'sha256': witnessHash,
+                        'candidateBound': true,
+                      },
+                    ],
+            },
+        ],
+        'openFindings': <Object>[],
+        'closedSoak': <String, dynamic>{
+          'status': 'PASS',
+          'days': 14,
+          'testers': 12,
+          'safetyIncidents': 0,
+          'aabSha256': aabHash,
+        },
+        'hotfixDrill': <String, dynamic>{
+          'status': 'PASS',
+          'durationMinutes': 90,
+          'reservedVersionCode': 10004,
+          'aabSha256': aabHash,
+        },
+        'approvals': <Map<String, dynamic>>[
+          for (final role in _approvalRoles)
+            <String, dynamic>{
               'role': role,
               'decision': 'APPROVE',
               'signer': '$role-reviewer',
               'signedAt': '2026-07-18T12:00:00Z',
               'candidateAabSha256': aabHash,
               'versionCode': 10003,
-            }),
-          ),
-    };
-    final manifest = File('${directory.path}/gates.json');
-    Map<String, dynamic> completeManifest({
-      bool typed = false,
-      bool approvalsBound = true,
-    }) => <String, dynamic>{
-      'schemaVersion': 2,
-      'candidate': <String, dynamic>{
-        'gitCommit': 'b' * 40,
-        'gitTree': 'c' * 40,
-        'tag': 'v1.0.3',
-        'tagObjectSha': 'a' * 40,
-        'versionName': '1.0.3',
-        'versionCode': 10003,
-        'aabSha256': aabHash,
-        'uploadCertificateSha256': 'd' * 64,
-        'playAppSigningCertificateSha256': 'e' * 64,
-        'workflowRunUrl': 'https://github.com/owner/korubeni/actions/runs/123',
-        'provenance': <String, dynamic>{
-          'path': 'provenance-v2.json',
-          'sha256': _sha256(provenance),
-        },
-      },
-      'gates': <Map<String, dynamic>>[
-        for (var index = 0; index <= 10; index++)
-          <String, dynamic>{
-            'id': 'G$index',
-            'status': 'PASS',
-            'owners': _requiredGateOwners['G$index']!.toList(),
-            'requiredEvidenceKinds': _requiredEvidenceKinds['G$index']!
-                .toList(),
-            'evidence': typed
-                ? typedEvidence['G$index']!
-                : index == 4
-                ? <Map<String, dynamic>>[
-                    <String, dynamic>{
-                      'kind': 'masvsAssessment',
-                      'path': 'masvs-assessment.json',
-                      'sha256': masvsHash,
-                      'candidateBound': true,
-                    },
-                  ]
-                : <Map<String, dynamic>>[
-                    <String, dynamic>{
-                      'path': 'witness.txt',
-                      'sha256': witnessHash,
-                      'candidateBound': true,
-                    },
-                  ],
-          },
-      ],
-      'openFindings': <Object>[],
-      'closedSoak': <String, dynamic>{
-        'status': 'PASS',
-        'days': 14,
-        'testers': 12,
-        'safetyIncidents': 0,
-        'aabSha256': aabHash,
-      },
-      'hotfixDrill': <String, dynamic>{
-        'status': 'PASS',
-        'durationMinutes': 90,
-        'reservedVersionCode': 10004,
-        'aabSha256': aabHash,
-      },
-      'approvals': <Map<String, dynamic>>[
-        for (final role in _approvalRoles)
-          <String, dynamic>{
-            'role': role,
-            'decision': 'APPROVE',
-            'signer': '$role-reviewer',
-            'signedAt': '2026-07-18T12:00:00Z',
-            'candidateAabSha256': aabHash,
-            'versionCode': 10003,
-            if (approvalsBound) ...<String, dynamic>{
-              'evidencePath': 'approval-$role.json',
-              'evidenceSha256': _sha256(approvalEvidence[role]!),
-              'evidenceCandidateBound': true,
+              if (approvalsBound) ...<String, dynamic>{
+                'evidencePath': 'approval-$role.json',
+                'evidenceSha256': _sha256(approvalEvidence[role]!),
+                'evidenceCandidateBound': true,
+              },
             },
-          },
-      ],
-    };
-    manifest.writeAsStringSync(jsonEncode(completeManifest()));
+        ],
+      };
+      manifest.writeAsStringSync(jsonEncode(completeManifest()));
 
-    final passed = await Process.run('python3', <String>[
-      'scripts/verify_external_release_gates.py',
-      '--manifest',
-      manifest.path,
-      '--aab',
-      aab.path,
-    ]);
-    expect(passed.exitCode, 1);
-    expect(passed.stderr, contains('G0 evidence kind set mismatch'));
+      final passed = await Process.run('python3', <String>[
+        'scripts/verify_external_release_gates.py',
+        '--manifest',
+        manifest.path,
+        '--aab',
+        aab.path,
+      ]);
+      expect(passed.exitCode, 1);
+      expect(passed.stderr, contains('G0 evidence kind set mismatch'));
 
-    manifest.writeAsStringSync(jsonEncode(completeManifest(typed: true)));
-    final typedPassed = await Process.run('python3', <String>[
-      'scripts/verify_external_release_gates.py',
-      '--manifest',
-      manifest.path,
-      '--aab',
-      aab.path,
-    ]);
-    expect(
-      typedPassed.exitCode,
-      0,
-      reason: '${typedPassed.stdout}\n${typedPassed.stderr}',
-    );
-    expect(typedPassed.stdout, contains('MASTER_GO_NO_GO_PASS'));
-
-    final secretScanFile = artifacts['secretScan']!;
-    final secretScanOriginal = secretScanFile.readAsStringSync();
-    final replayedSecretScan =
-        jsonDecode(secretScanOriginal) as Map<String, dynamic>;
-    (replayedSecretScan['source'] as Map<String, dynamic>)['gitCommit'] =
-        'f' * 40;
-    secretScanFile.writeAsStringSync(jsonEncode(replayedSecretScan));
-    final replayedSecretProvenance = await Process.run(
-      'python3',
-      generatorArguments,
-    );
-    expect(replayedSecretProvenance.exitCode, 0);
-    manifest.writeAsStringSync(jsonEncode(completeManifest(typed: true)));
-    final replayedSecretResult = await Process.run('python3', <String>[
-      'scripts/verify_external_release_gates.py',
-      '--manifest',
-      manifest.path,
-      '--aab',
-      aab.path,
-    ]);
-    expect(replayedSecretResult.exitCode, 1);
-    expect(
-      replayedSecretResult.stderr,
-      contains('secretScan gitCommit mismatch'),
-    );
-    secretScanFile.writeAsStringSync(secretScanOriginal);
-
-    final osvAuditFile = artifacts['osvAudit']!;
-    final osvAuditOriginal = osvAuditFile.readAsStringSync();
-    final forgedOsvAudit = jsonDecode(osvAuditOriginal) as Map<String, dynamic>;
-    (forgedOsvAudit['inputs'] as Map<String, dynamic>)['pubspecLockSha256'] =
-        '0' * 64;
-    osvAuditFile.writeAsStringSync(jsonEncode(forgedOsvAudit));
-    final forgedOsvProvenance = await Process.run(
-      'python3',
-      generatorArguments,
-    );
-    expect(forgedOsvProvenance.exitCode, 0);
-    manifest.writeAsStringSync(jsonEncode(completeManifest(typed: true)));
-    final forgedOsvResult = await Process.run('python3', <String>[
-      'scripts/verify_external_release_gates.py',
-      '--manifest',
-      manifest.path,
-      '--aab',
-      aab.path,
-    ]);
-    expect(forgedOsvResult.exitCode, 1);
-    expect(
-      forgedOsvResult.stderr,
-      contains('osvAudit pubspec lock hash mismatch'),
-    );
-    osvAuditFile.writeAsStringSync(osvAuditOriginal);
-
-    final restoredProvenance = await Process.run('python3', generatorArguments);
-    expect(restoredProvenance.exitCode, 0);
-
-    final rawMutationFile = artifacts['mutationReport']!;
-    final rawMutationOriginal = rawMutationFile.readAsStringSync();
-    final replayedMutation =
-        jsonDecode(rawMutationOriginal) as Map<String, dynamic>;
-    replayedMutation['sourceHead'] = 'f' * 40;
-    rawMutationFile.writeAsStringSync(jsonEncode(replayedMutation));
-    expect((await Process.run('python3', generatorArguments)).exitCode, 0);
-    manifest.writeAsStringSync(jsonEncode(completeManifest(typed: true)));
-    final replayedMutationResult = await Process.run('python3', <String>[
-      'scripts/verify_external_release_gates.py',
-      '--manifest',
-      manifest.path,
-      '--aab',
-      aab.path,
-    ]);
-    expect(replayedMutationResult.exitCode, 1);
-    expect(
-      replayedMutationResult.stderr,
-      contains('mutationReport sourceHead mismatch'),
-    );
-    rawMutationFile.writeAsStringSync(rawMutationOriginal);
-
-    final rawCoverageFile = artifacts['criticalCoverage']!;
-    final rawCoverageOriginal = rawCoverageFile.readAsStringSync();
-    final forgedCoverage =
-        jsonDecode(rawCoverageOriginal) as Map<String, dynamic>;
-    final forgedCoverageRecord =
-        (forgedCoverage['files'] as List<dynamic>).first
-            as Map<String, dynamic>;
-    forgedCoverageRecord['linesHit'] = 89;
-    forgedCoverageRecord['linesFound'] = 100;
-    forgedCoverageRecord['lineCoveragePercent'] = 89.0;
-    rawCoverageFile.writeAsStringSync(jsonEncode(forgedCoverage));
-    expect((await Process.run('python3', generatorArguments)).exitCode, 0);
-    manifest.writeAsStringSync(jsonEncode(completeManifest(typed: true)));
-    final forgedCoverageResult = await Process.run('python3', <String>[
-      'scripts/verify_external_release_gates.py',
-      '--manifest',
-      manifest.path,
-      '--aab',
-      aab.path,
-    ]);
-    expect(forgedCoverageResult.exitCode, 1);
-    expect(
-      forgedCoverageResult.stderr,
-      contains('criticalCoverage file is below 90%'),
-    );
-    rawCoverageFile.writeAsStringSync(rawCoverageOriginal);
-
-    final surfaceFile = artifacts['androidReleaseSurface']!;
-    final surfaceOriginal = surfaceFile.readAsStringSync();
-    final forgedSurface = jsonDecode(surfaceOriginal) as Map<String, dynamic>;
-    (forgedSurface['components'] as List<dynamic>).removeLast();
-    forgedSurface['componentCount'] =
-        (forgedSurface['components'] as List<dynamic>).length;
-    surfaceFile.writeAsStringSync(jsonEncode(forgedSurface));
-    expect((await Process.run('python3', generatorArguments)).exitCode, 0);
-    manifest.writeAsStringSync(jsonEncode(completeManifest(typed: true)));
-    final forgedSurfaceResult = await Process.run('python3', <String>[
-      'scripts/verify_external_release_gates.py',
-      '--manifest',
-      manifest.path,
-      '--aab',
-      aab.path,
-    ]);
-    expect(forgedSurfaceResult.exitCode, 1);
-    expect(
-      forgedSurfaceResult.stderr,
-      contains('androidReleaseSurface safety component set mismatch'),
-    );
-    surfaceFile.writeAsStringSync(surfaceOriginal);
-
-    final verifiedSbomFile = artifacts['sbom']!;
-    final verifiedSbomOriginal = verifiedSbomFile.readAsStringSync();
-    final unverifiedSbom =
-        jsonDecode(verifiedSbomOriginal) as Map<String, dynamic>;
-    final sbomMetadata = unverifiedSbom['metadata'] as Map<String, dynamic>;
-    final sbomProperties = sbomMetadata['properties'] as List<dynamic>;
-    (sbomProperties.first as Map<String, dynamic>)['value'] = 'UNVERIFIED';
-    verifiedSbomFile.writeAsStringSync(jsonEncode(unverifiedSbom));
-    expect((await Process.run('python3', generatorArguments)).exitCode, 0);
-    manifest.writeAsStringSync(jsonEncode(completeManifest(typed: true)));
-    final unverifiedSbomResult = await Process.run('python3', <String>[
-      'scripts/verify_external_release_gates.py',
-      '--manifest',
-      manifest.path,
-      '--aab',
-      aab.path,
-    ]);
-    expect(unverifiedSbomResult.exitCode, 1);
-    expect(
-      unverifiedSbomResult.stderr,
-      contains('sbom license evidence status is not VERIFIED'),
-    );
-    verifiedSbomFile.writeAsStringSync(verifiedSbomOriginal);
-
-    expect((await Process.run('python3', generatorArguments)).exitCode, 0);
-
-    final sbomFile = artifacts['sbom']!;
-    final sbomOriginal = sbomFile.readAsStringSync();
-    sbomFile.writeAsStringSync('$sbomOriginal\ntampered-after-provenance');
-    manifest.writeAsStringSync(jsonEncode(completeManifest(typed: true)));
-    final provenanceArtifactDriftResult = await Process.run('python3', <String>[
-      'scripts/verify_external_release_gates.py',
-      '--manifest',
-      manifest.path,
-      '--aab',
-      aab.path,
-    ]);
-    expect(provenanceArtifactDriftResult.exitCode, 1);
-    expect(
-      provenanceArtifactDriftResult.stderr,
-      contains('provenance artifact sbom hash mismatch'),
-    );
-    sbomFile.writeAsStringSync(sbomOriginal);
-
-    manifest.writeAsStringSync(
-      jsonEncode(completeManifest(typed: true, approvalsBound: false)),
-    );
-    final unboundApprovalsResult = await Process.run('python3', <String>[
-      'scripts/verify_external_release_gates.py',
-      '--manifest',
-      manifest.path,
-      '--aab',
-      aab.path,
-    ]);
-    expect(unboundApprovalsResult.exitCode, 1);
-    expect(
-      unboundApprovalsResult.stderr,
-      contains('approval evidencePath is required'),
-    );
-
-    final productApprovalFile = approvalEvidence['product']!;
-    final productApprovalOriginal = productApprovalFile.readAsStringSync();
-    final earlyApprovalPayload =
-        jsonDecode(productApprovalOriginal) as Map<String, dynamic>;
-    earlyApprovalPayload['signedAt'] = '2026-07-14T12:00:00Z';
-    productApprovalFile.writeAsStringSync(jsonEncode(earlyApprovalPayload));
-    final earlyApprovalManifest = completeManifest(typed: true);
-    ((earlyApprovalManifest['approvals'] as List<dynamic>)
-            .cast<Map<String, dynamic>>()
-            .singleWhere(
-              (approval) => approval['role'] == 'product',
-            ))['signedAt'] =
-        '2026-07-14T12:00:00Z';
-    manifest.writeAsStringSync(jsonEncode(earlyApprovalManifest));
-    final earlyApprovalResult = await Process.run('python3', <String>[
-      'scripts/verify_external_release_gates.py',
-      '--manifest',
-      manifest.path,
-      '--aab',
-      aab.path,
-    ]);
-    expect(earlyApprovalResult.exitCode, 1);
-    expect(
-      earlyApprovalResult.stderr,
-      contains('product approval predates closed soak completion'),
-    );
-    productApprovalFile.writeAsStringSync(productApprovalOriginal);
-
-    final kernelRawFile = File('${directory.path}/nativeKernelReport.raw.json');
-    final kernelRawOriginal = kernelRawFile.readAsStringSync();
-    kernelRawFile.writeAsStringSync('$kernelRawOriginal\ntampered');
-    manifest.writeAsStringSync(jsonEncode(completeManifest(typed: true)));
-    final rawArtifactDriftResult = await Process.run('python3', <String>[
-      'scripts/verify_external_release_gates.py',
-      '--manifest',
-      manifest.path,
-      '--aab',
-      aab.path,
-    ]);
-    expect(rawArtifactDriftResult.exitCode, 1);
-    expect(
-      rawArtifactDriftResult.stderr,
-      contains('artifact nativeKernelReport.raw.json hash mismatch'),
-    );
-    kernelRawFile.writeAsStringSync(kernelRawOriginal);
-
-    final approvalDrift = completeManifest(typed: true);
-    ((approvalDrift['approvals'] as List<dynamic>).first
-            as Map<String, dynamic>)['candidateAabSha256'] =
-        'f' * 64;
-    manifest.writeAsStringSync(jsonEncode(approvalDrift));
-    final approvalDriftResult = await Process.run('python3', <String>[
-      'scripts/verify_external_release_gates.py',
-      '--manifest',
-      manifest.path,
-      '--aab',
-      aab.path,
-    ]);
-    expect(approvalDriftResult.exitCode, 1);
-    expect(
-      approvalDriftResult.stderr,
-      contains('approval used a different AAB'),
-    );
-
-    final slowHotfix = completeManifest(typed: true);
-    (slowHotfix['hotfixDrill'] as Map<String, dynamic>)['durationMinutes'] =
-        121;
-    manifest.writeAsStringSync(jsonEncode(slowHotfix));
-    final slowHotfixResult = await Process.run('python3', <String>[
-      'scripts/verify_external_release_gates.py',
-      '--manifest',
-      manifest.path,
-      '--aab',
-      aab.path,
-    ]);
-    expect(slowHotfixResult.exitCode, 1);
-    expect(
-      slowHotfixResult.stderr,
-      contains('hotfix drill duration must be 1..120 minutes'),
-    );
-
-    final hotfixReportDrift = completeManifest(typed: true);
-    (hotfixReportDrift['hotfixDrill']
-            as Map<String, dynamic>)['durationMinutes'] =
-        60;
-    manifest.writeAsStringSync(jsonEncode(hotfixReportDrift));
-    final hotfixReportDriftResult = await Process.run('python3', <String>[
-      'scripts/verify_external_release_gates.py',
-      '--manifest',
-      manifest.path,
-      '--aab',
-      aab.path,
-    ]);
-    expect(hotfixReportDriftResult.exitCode, 1);
-    expect(
-      hotfixReportDriftResult.stderr,
-      contains('hotfix drill duration does not match typed report'),
-    );
-
-    final soakSummaryDrift = completeManifest(typed: true);
-    (soakSummaryDrift['closedSoak'] as Map<String, dynamic>)['testers'] = 13;
-    manifest.writeAsStringSync(jsonEncode(soakSummaryDrift));
-    final soakSummaryDriftResult = await Process.run('python3', <String>[
-      'scripts/verify_external_release_gates.py',
-      '--manifest',
-      manifest.path,
-      '--aab',
-      aab.path,
-    ]);
-    expect(soakSummaryDriftResult.exitCode, 1);
-    expect(
-      soakSummaryDriftResult.stderr,
-      contains('closed soak testers do not match typed report'),
-    );
-
-    final ownerDrift = completeManifest(typed: true);
-    ((ownerDrift['gates'] as List<dynamic>).first
-        as Map<String, dynamic>)['owners'] = <String>[
-      'self-approved',
-    ];
-    manifest.writeAsStringSync(jsonEncode(ownerDrift));
-    final ownerDriftResult = await Process.run('python3', <String>[
-      'scripts/verify_external_release_gates.py',
-      '--manifest',
-      manifest.path,
-      '--aab',
-      aab.path,
-    ]);
-    expect(ownerDriftResult.exitCode, 1);
-    expect(ownerDriftResult.stderr, contains('G0 owner set mismatch'));
-
-    final malformedOwner = completeManifest(typed: true);
-    ((malformedOwner['gates'] as List<dynamic>).first
-        as Map<String, dynamic>)['owners'] = <Object?>[
-      <String, Object?>{},
-    ];
-    manifest.writeAsStringSync(jsonEncode(malformedOwner));
-    final malformedOwnerResult = await Process.run('python3', <String>[
-      'scripts/verify_external_release_gates.py',
-      '--manifest',
-      manifest.path,
-      '--aab',
-      aab.path,
-    ]);
-    expect(malformedOwnerResult.exitCode, 1);
-    expect(malformedOwnerResult.stderr, contains('G0 owner set mismatch'));
-    expect(malformedOwnerResult.stderr, isNot(contains('Traceback')));
-
-    void refreshEvidenceHash(String gateId, String kind, File file) {
-      typedEvidence[gateId]!.singleWhere(
-        (item) => item['kind'] == kind,
-      )['sha256'] = _sha256(
-        file,
+      manifest.writeAsStringSync(jsonEncode(completeManifest(typed: true)));
+      final typedPassed = await Process.run('python3', <String>[
+        'scripts/verify_external_release_gates.py',
+        '--manifest',
+        manifest.path,
+        '--aab',
+        aab.path,
+      ]);
+      expect(
+        typedPassed.exitCode,
+        0,
+        reason: '${typedPassed.stdout}\n${typedPassed.stderr}',
       );
-    }
+      expect(typedPassed.stdout, contains('MASTER_GO_NO_GO_PASS'));
 
-    final mutationFile = File('${directory.path}/mutationReport.json');
-    final mutationOriginal = mutationFile.readAsStringSync();
-    final mutationPayload =
-        jsonDecode(mutationOriginal) as Map<String, dynamic>;
-    ((mutationPayload['metrics'] as Map<String, dynamic>)['cases']
-            as Map<String, dynamic>)
-        .remove('disposeCancelsNative');
-    mutationFile.writeAsStringSync(jsonEncode(mutationPayload));
-    refreshEvidenceHash('G1', 'mutationReport', mutationFile);
-    manifest.writeAsStringSync(jsonEncode(completeManifest(typed: true)));
-    final mutationResult = await Process.run('python3', <String>[
-      'scripts/verify_external_release_gates.py',
-      '--manifest',
-      manifest.path,
-      '--aab',
-      aab.path,
-    ]);
-    expect(mutationResult.exitCode, 1);
-    expect(
-      mutationResult.stderr,
-      contains('mutationReport.cases key set mismatch'),
-    );
-    mutationFile.writeAsStringSync(mutationOriginal);
-    refreshEvidenceHash('G1', 'mutationReport', mutationFile);
+      final secretScanFile = artifacts['secretScan']!;
+      final secretScanOriginal = secretScanFile.readAsStringSync();
+      final replayedSecretScan =
+          jsonDecode(secretScanOriginal) as Map<String, dynamic>;
+      (replayedSecretScan['source'] as Map<String, dynamic>)['gitCommit'] =
+          'f' * 40;
+      secretScanFile.writeAsStringSync(jsonEncode(replayedSecretScan));
+      final replayedSecretProvenance = await Process.run(
+        'python3',
+        generatorArguments,
+      );
+      expect(replayedSecretProvenance.exitCode, 0);
+      manifest.writeAsStringSync(jsonEncode(completeManifest(typed: true)));
+      final replayedSecretResult = await Process.run('python3', <String>[
+        'scripts/verify_external_release_gates.py',
+        '--manifest',
+        manifest.path,
+        '--aab',
+        aab.path,
+      ]);
+      expect(replayedSecretResult.exitCode, 1);
+      expect(
+        replayedSecretResult.stderr,
+        contains('secretScan gitCommit mismatch'),
+      );
+      secretScanFile.writeAsStringSync(secretScanOriginal);
 
-    final qualityFile = File('${directory.path}/qualityMatrix.json');
-    final qualityOriginal = qualityFile.readAsStringSync();
-    final qualityPayload = jsonDecode(qualityOriginal) as Map<String, dynamic>;
-    ((((qualityPayload['metrics'] as Map<String, dynamic>)['featureChecks']
-            as Map<String, dynamic>)))['panicHoldAccessibilityLifecycle'] =
-        'NOT_RUN';
-    qualityFile.writeAsStringSync(jsonEncode(qualityPayload));
-    refreshEvidenceHash('G5', 'qualityMatrix', qualityFile);
-    manifest.writeAsStringSync(jsonEncode(completeManifest(typed: true)));
-    final qualityResult = await Process.run('python3', <String>[
-      'scripts/verify_external_release_gates.py',
-      '--manifest',
-      manifest.path,
-      '--aab',
-      aab.path,
-    ]);
-    expect(qualityResult.exitCode, 1);
-    expect(
-      qualityResult.stderr,
-      contains(
-        'qualityMatrix.featureChecks.panicHoldAccessibilityLifecycle is not PASS',
-      ),
-    );
-    qualityFile.writeAsStringSync(qualityOriginal);
-    refreshEvidenceHash('G5', 'qualityMatrix', qualityFile);
+      final osvAuditFile = artifacts['osvAudit']!;
+      final osvAuditOriginal = osvAuditFile.readAsStringSync();
+      final forgedOsvAudit =
+          jsonDecode(osvAuditOriginal) as Map<String, dynamic>;
+      (forgedOsvAudit['inputs'] as Map<String, dynamic>)['pubspecLockSha256'] =
+          '0' * 64;
+      osvAuditFile.writeAsStringSync(jsonEncode(forgedOsvAudit));
+      final forgedOsvProvenance = await Process.run(
+        'python3',
+        generatorArguments,
+      );
+      expect(forgedOsvProvenance.exitCode, 0);
+      manifest.writeAsStringSync(jsonEncode(completeManifest(typed: true)));
+      final forgedOsvResult = await Process.run('python3', <String>[
+        'scripts/verify_external_release_gates.py',
+        '--manifest',
+        manifest.path,
+        '--aab',
+        aab.path,
+      ]);
+      expect(forgedOsvResult.exitCode, 1);
+      expect(
+        forgedOsvResult.stderr,
+        contains('osvAudit pubspec lock hash mismatch'),
+      );
+      osvAuditFile.writeAsStringSync(osvAuditOriginal);
 
-    final licenseFile = File('${directory.path}/licensePolicyReport.json');
-    final licenseOriginal = licenseFile.readAsStringSync();
-    final licensePayload = jsonDecode(licenseOriginal) as Map<String, dynamic>;
-    (licensePayload['metrics'] as Map<String, dynamic>)['reviewed'] = 399;
-    licenseFile.writeAsStringSync(jsonEncode(licensePayload));
-    refreshEvidenceHash('G4', 'licensePolicyReport', licenseFile);
-    manifest.writeAsStringSync(jsonEncode(completeManifest(typed: true)));
-    final licenseResult = await Process.run('python3', <String>[
-      'scripts/verify_external_release_gates.py',
-      '--manifest',
-      manifest.path,
-      '--aab',
-      aab.path,
-    ]);
-    expect(licenseResult.exitCode, 1);
-    expect(
-      licenseResult.stderr,
-      contains('licensePolicyReport.reviewed must equal components'),
-    );
-    licenseFile.writeAsStringSync(licenseOriginal);
-    refreshEvidenceHash('G4', 'licensePolicyReport', licenseFile);
+      final restoredProvenance = await Process.run(
+        'python3',
+        generatorArguments,
+      );
+      expect(restoredProvenance.exitCode, 0);
 
-    final platformFile = File('${directory.path}/androidPlatformMatrix.json');
-    final platformOriginal = platformFile.readAsStringSync();
-    final platformPayload =
-        jsonDecode(platformOriginal) as Map<String, dynamic>;
-    (platformPayload['metrics'] as Map<String, dynamic>)['apiLevels'] =
-        <Object?>[<String, Object?>{}];
-    platformFile.writeAsStringSync(jsonEncode(platformPayload));
-    refreshEvidenceHash('G3', 'androidPlatformMatrix', platformFile);
-    manifest.writeAsStringSync(jsonEncode(completeManifest(typed: true)));
-    final platformResult = await Process.run('python3', <String>[
-      'scripts/verify_external_release_gates.py',
-      '--manifest',
-      manifest.path,
-      '--aab',
-      aab.path,
-    ]);
-    expect(platformResult.exitCode, 1);
-    expect(
-      platformResult.stderr,
-      contains('androidPlatformMatrix.apiLevels must cover API 29-36'),
-    );
-    expect(platformResult.stderr, isNot(contains('Traceback')));
-    platformFile.writeAsStringSync(platformOriginal);
-    refreshEvidenceHash('G3', 'androidPlatformMatrix', platformFile);
+      final rawMutationFile = artifacts['mutationReport']!;
+      final rawMutationOriginal = rawMutationFile.readAsStringSync();
+      final replayedMutation =
+          jsonDecode(rawMutationOriginal) as Map<String, dynamic>;
+      replayedMutation['sourceHead'] = 'f' * 40;
+      rawMutationFile.writeAsStringSync(jsonEncode(replayedMutation));
+      expect((await Process.run('python3', generatorArguments)).exitCode, 0);
+      manifest.writeAsStringSync(jsonEncode(completeManifest(typed: true)));
+      final replayedMutationResult = await Process.run('python3', <String>[
+        'scripts/verify_external_release_gates.py',
+        '--manifest',
+        manifest.path,
+        '--aab',
+        aab.path,
+      ]);
+      expect(replayedMutationResult.exitCode, 1);
+      expect(
+        replayedMutationResult.stderr,
+        contains('mutationReport sourceHead mismatch'),
+      );
+      rawMutationFile.writeAsStringSync(rawMutationOriginal);
 
-    final incompletePlatformPayload =
-        jsonDecode(platformOriginal) as Map<String, dynamic>;
-    ((incompletePlatformPayload['metrics']
-                as Map<String, dynamic>)['emulatorResults']
-            as Map<String, dynamic>)
-        .remove('36');
-    platformFile.writeAsStringSync(jsonEncode(incompletePlatformPayload));
-    refreshEvidenceHash('G3', 'androidPlatformMatrix', platformFile);
-    manifest.writeAsStringSync(jsonEncode(completeManifest(typed: true)));
-    final incompletePlatformResult = await Process.run('python3', <String>[
-      'scripts/verify_external_release_gates.py',
-      '--manifest',
-      manifest.path,
-      '--aab',
-      aab.path,
-    ]);
-    expect(incompletePlatformResult.exitCode, 1);
-    expect(
-      incompletePlatformResult.stderr,
-      contains('androidPlatformMatrix.emulatorResults key set mismatch'),
-    );
-    platformFile.writeAsStringSync(platformOriginal);
-    refreshEvidenceHash('G3', 'androidPlatformMatrix', platformFile);
+      final rawCoverageFile = artifacts['criticalCoverage']!;
+      final rawCoverageOriginal = rawCoverageFile.readAsStringSync();
+      final forgedCoverage =
+          jsonDecode(rawCoverageOriginal) as Map<String, dynamic>;
+      final forgedCoverageRecord =
+          (forgedCoverage['files'] as List<dynamic>).first
+              as Map<String, dynamic>;
+      forgedCoverageRecord['linesHit'] = 89;
+      forgedCoverageRecord['linesFound'] = 100;
+      forgedCoverageRecord['lineCoveragePercent'] = 89.0;
+      rawCoverageFile.writeAsStringSync(jsonEncode(forgedCoverage));
+      expect((await Process.run('python3', generatorArguments)).exitCode, 0);
+      manifest.writeAsStringSync(jsonEncode(completeManifest(typed: true)));
+      final forgedCoverageResult = await Process.run('python3', <String>[
+        'scripts/verify_external_release_gates.py',
+        '--manifest',
+        manifest.path,
+        '--aab',
+        aab.path,
+      ]);
+      expect(forgedCoverageResult.exitCode, 1);
+      expect(
+        forgedCoverageResult.stderr,
+        contains('criticalCoverage file is below 90%'),
+      );
+      rawCoverageFile.writeAsStringSync(rawCoverageOriginal);
 
-    final physicalFile = File('${directory.path}/physicalDeviceMatrix.json');
-    final physicalOriginal = physicalFile.readAsStringSync();
-    final physicalPayload =
-        jsonDecode(physicalOriginal) as Map<String, dynamic>;
-    ((((physicalPayload['metrics'] as Map<String, dynamic>)['deviceResults']
-                    as List<dynamic>)
-                .first)
-            as Map<String, dynamic>)['fakeDeadlines'] =
-        99;
-    physicalFile.writeAsStringSync(jsonEncode(physicalPayload));
-    refreshEvidenceHash('G7', 'physicalDeviceMatrix', physicalFile);
-    manifest.writeAsStringSync(jsonEncode(completeManifest(typed: true)));
-    final physicalResult = await Process.run('python3', <String>[
-      'scripts/verify_external_release_gates.py',
-      '--manifest',
-      manifest.path,
-      '--aab',
-      aab.path,
-    ]);
-    expect(physicalResult.exitCode, 1);
-    expect(
-      physicalResult.stderr,
-      contains(
-        'physicalDeviceMatrix.api29_boundary.fakeDeadlines is below 100',
-      ),
-    );
-    physicalFile.writeAsStringSync(physicalOriginal);
-    refreshEvidenceHash('G7', 'physicalDeviceMatrix', physicalFile);
+      final surfaceFile = artifacts['androidReleaseSurface']!;
+      final surfaceOriginal = surfaceFile.readAsStringSync();
+      final forgedSurface = jsonDecode(surfaceOriginal) as Map<String, dynamic>;
+      (forgedSurface['components'] as List<dynamic>).removeLast();
+      forgedSurface['componentCount'] =
+          (forgedSurface['components'] as List<dynamic>).length;
+      surfaceFile.writeAsStringSync(jsonEncode(forgedSurface));
+      expect((await Process.run('python3', generatorArguments)).exitCode, 0);
+      manifest.writeAsStringSync(jsonEncode(completeManifest(typed: true)));
+      final forgedSurfaceResult = await Process.run('python3', <String>[
+        'scripts/verify_external_release_gates.py',
+        '--manifest',
+        manifest.path,
+        '--aab',
+        aab.path,
+      ]);
+      expect(forgedSurfaceResult.exitCode, 1);
+      expect(
+        forgedSurfaceResult.stderr,
+        contains('androidReleaseSurface safety component set mismatch'),
+      );
+      surfaceFile.writeAsStringSync(surfaceOriginal);
 
-    final latePhysicalPayload =
-        jsonDecode(physicalOriginal) as Map<String, dynamic>;
-    ((((latePhysicalPayload['metrics'] as Map<String, dynamic>)['deviceResults']
-                    as List<dynamic>)
-                .first)
-            as Map<String, dynamic>)['panicBackupP99LateMs'] =
-        5001;
-    physicalFile.writeAsStringSync(jsonEncode(latePhysicalPayload));
-    refreshEvidenceHash('G7', 'physicalDeviceMatrix', physicalFile);
-    manifest.writeAsStringSync(jsonEncode(completeManifest(typed: true)));
-    final latePhysicalResult = await Process.run('python3', <String>[
-      'scripts/verify_external_release_gates.py',
-      '--manifest',
-      manifest.path,
-      '--aab',
-      aab.path,
-    ]);
-    expect(latePhysicalResult.exitCode, 1);
-    expect(
-      latePhysicalResult.stderr,
-      contains(
-        'physicalDeviceMatrix.api29_boundary.panicBackupP99LateMs exceeds 5000',
-      ),
-    );
-    physicalFile.writeAsStringSync(physicalOriginal);
-    refreshEvidenceHash('G7', 'physicalDeviceMatrix', physicalFile);
+      final verifiedSbomFile = artifacts['sbom']!;
+      final verifiedSbomOriginal = verifiedSbomFile.readAsStringSync();
+      final unverifiedSbom =
+          jsonDecode(verifiedSbomOriginal) as Map<String, dynamic>;
+      final sbomMetadata = unverifiedSbom['metadata'] as Map<String, dynamic>;
+      final sbomProperties = sbomMetadata['properties'] as List<dynamic>;
+      (sbomProperties.first as Map<String, dynamic>)['value'] = 'UNVERIFIED';
+      verifiedSbomFile.writeAsStringSync(jsonEncode(unverifiedSbom));
+      expect((await Process.run('python3', generatorArguments)).exitCode, 0);
+      manifest.writeAsStringSync(jsonEncode(completeManifest(typed: true)));
+      final unverifiedSbomResult = await Process.run('python3', <String>[
+        'scripts/verify_external_release_gates.py',
+        '--manifest',
+        manifest.path,
+        '--aab',
+        aab.path,
+      ]);
+      expect(unverifiedSbomResult.exitCode, 1);
+      expect(
+        unverifiedSbomResult.stderr,
+        contains('sbom license evidence status is not VERIFIED'),
+      );
+      verifiedSbomFile.writeAsStringSync(verifiedSbomOriginal);
 
-    final soakFile = File('${directory.path}/closedSoakReport.json');
-    final soakOriginal = soakFile.readAsStringSync();
-    final soakPayload = jsonDecode(soakOriginal) as Map<String, dynamic>;
-    (soakPayload['metrics'] as Map<String, dynamic>)['finishedAt'] =
-        '2026-07-14T23:59:59Z';
-    soakFile.writeAsStringSync(jsonEncode(soakPayload));
-    refreshEvidenceHash('G9', 'closedSoakReport', soakFile);
-    manifest.writeAsStringSync(jsonEncode(completeManifest(typed: true)));
-    final soakResult = await Process.run('python3', <String>[
-      'scripts/verify_external_release_gates.py',
-      '--manifest',
-      manifest.path,
-      '--aab',
-      aab.path,
-    ]);
-    expect(soakResult.exitCode, 1);
-    expect(
-      soakResult.stderr,
-      contains('closedSoakReport duration is below 14 days'),
-    );
-    soakFile.writeAsStringSync(soakOriginal);
-    refreshEvidenceHash('G9', 'closedSoakReport', soakFile);
+      expect((await Process.run('python3', generatorArguments)).exitCode, 0);
 
-    final missingMasvs = completeManifest(typed: true);
-    final g4 = (missingMasvs['gates'] as List<dynamic>)
-        .cast<Map<String, dynamic>>()
-        .singleWhere((gate) => gate['id'] == 'G4');
-    g4['evidence'] = <Map<String, dynamic>>[
-      <String, dynamic>{
-        'path': 'witness.txt',
-        'sha256': witnessHash,
-        'candidateBound': true,
-      },
-    ];
-    manifest.writeAsStringSync(jsonEncode(missingMasvs));
-    final missingMasvsResult = await Process.run('python3', <String>[
-      'scripts/verify_external_release_gates.py',
-      '--manifest',
-      manifest.path,
-      '--aab',
-      aab.path,
-    ]);
-    expect(missingMasvsResult.exitCode, 1);
-    expect(
-      missingMasvsResult.stderr,
-      contains('G4 requires one candidate-bound MASVS assessment'),
-    );
+      final sbomFile = artifacts['sbom']!;
+      final sbomOriginal = sbomFile.readAsStringSync();
+      sbomFile.writeAsStringSync('$sbomOriginal\ntampered-after-provenance');
+      manifest.writeAsStringSync(jsonEncode(completeManifest(typed: true)));
+      final provenanceArtifactDriftResult =
+          await Process.run('python3', <String>[
+            'scripts/verify_external_release_gates.py',
+            '--manifest',
+            manifest.path,
+            '--aab',
+            aab.path,
+          ]);
+      expect(provenanceArtifactDriftResult.exitCode, 1);
+      expect(
+        provenanceArtifactDriftResult.stderr,
+        contains('provenance artifact sbom hash mismatch'),
+      );
+      sbomFile.writeAsStringSync(sbomOriginal);
 
-    final malformedVersion = completeManifest(typed: true);
-    (malformedVersion['candidate'] as Map<String, dynamic>)['versionCode'] =
-        null;
-    manifest.writeAsStringSync(jsonEncode(malformedVersion));
-    final malformedVersionResult = await Process.run('python3', <String>[
-      'scripts/verify_external_release_gates.py',
-      '--manifest',
-      manifest.path,
-      '--aab',
-      aab.path,
-    ]);
-    expect(malformedVersionResult.exitCode, 1);
-    expect(
-      malformedVersionResult.stderr,
-      contains('versionCode must be a positive integer'),
-    );
-    expect(malformedVersionResult.stderr, isNot(contains('Traceback')));
+      manifest.writeAsStringSync(
+        jsonEncode(completeManifest(typed: true, approvalsBound: false)),
+      );
+      final unboundApprovalsResult = await Process.run('python3', <String>[
+        'scripts/verify_external_release_gates.py',
+        '--manifest',
+        manifest.path,
+        '--aab',
+        aab.path,
+      ]);
+      expect(unboundApprovalsResult.exitCode, 1);
+      expect(
+        unboundApprovalsResult.stderr,
+        contains('approval evidencePath is required'),
+      );
 
-    final drifted = completeManifest(typed: true);
-    (drifted['candidate'] as Map<String, dynamic>)['gitTree'] = 'f' * 40;
-    manifest.writeAsStringSync(jsonEncode(drifted));
-    final failed = await Process.run('python3', <String>[
-      'scripts/verify_external_release_gates.py',
-      '--manifest',
-      manifest.path,
-      '--aab',
-      aab.path,
-    ]);
-    expect(failed.exitCode, 1);
-    expect(failed.stderr, contains('provenance gitTree mismatch'));
-  });
+      final productApprovalFile = approvalEvidence['product']!;
+      final productApprovalOriginal = productApprovalFile.readAsStringSync();
+      final earlyApprovalPayload =
+          jsonDecode(productApprovalOriginal) as Map<String, dynamic>;
+      earlyApprovalPayload['signedAt'] = '2026-07-14T12:00:00Z';
+      productApprovalFile.writeAsStringSync(jsonEncode(earlyApprovalPayload));
+      final earlyApprovalManifest = completeManifest(typed: true);
+      ((earlyApprovalManifest['approvals'] as List<dynamic>)
+              .cast<Map<String, dynamic>>()
+              .singleWhere(
+                (approval) => approval['role'] == 'product',
+              ))['signedAt'] =
+          '2026-07-14T12:00:00Z';
+      manifest.writeAsStringSync(jsonEncode(earlyApprovalManifest));
+      final earlyApprovalResult = await Process.run('python3', <String>[
+        'scripts/verify_external_release_gates.py',
+        '--manifest',
+        manifest.path,
+        '--aab',
+        aab.path,
+      ]);
+      expect(earlyApprovalResult.exitCode, 1);
+      expect(
+        earlyApprovalResult.stderr,
+        contains('product approval predates closed soak completion'),
+      );
+      productApprovalFile.writeAsStringSync(productApprovalOriginal);
+
+      final kernelRawFile = File(
+        '${directory.path}/nativeKernelReport.raw.json',
+      );
+      final kernelRawOriginal = kernelRawFile.readAsStringSync();
+      kernelRawFile.writeAsStringSync('$kernelRawOriginal\ntampered');
+      manifest.writeAsStringSync(jsonEncode(completeManifest(typed: true)));
+      final rawArtifactDriftResult = await Process.run('python3', <String>[
+        'scripts/verify_external_release_gates.py',
+        '--manifest',
+        manifest.path,
+        '--aab',
+        aab.path,
+      ]);
+      expect(rawArtifactDriftResult.exitCode, 1);
+      expect(
+        rawArtifactDriftResult.stderr,
+        contains('artifact nativeKernelReport.raw.json hash mismatch'),
+      );
+      kernelRawFile.writeAsStringSync(kernelRawOriginal);
+
+      final approvalDrift = completeManifest(typed: true);
+      ((approvalDrift['approvals'] as List<dynamic>).first
+              as Map<String, dynamic>)['candidateAabSha256'] =
+          'f' * 64;
+      manifest.writeAsStringSync(jsonEncode(approvalDrift));
+      final approvalDriftResult = await Process.run('python3', <String>[
+        'scripts/verify_external_release_gates.py',
+        '--manifest',
+        manifest.path,
+        '--aab',
+        aab.path,
+      ]);
+      expect(approvalDriftResult.exitCode, 1);
+      expect(
+        approvalDriftResult.stderr,
+        contains('approval used a different AAB'),
+      );
+
+      final slowHotfix = completeManifest(typed: true);
+      (slowHotfix['hotfixDrill'] as Map<String, dynamic>)['durationMinutes'] =
+          121;
+      manifest.writeAsStringSync(jsonEncode(slowHotfix));
+      final slowHotfixResult = await Process.run('python3', <String>[
+        'scripts/verify_external_release_gates.py',
+        '--manifest',
+        manifest.path,
+        '--aab',
+        aab.path,
+      ]);
+      expect(slowHotfixResult.exitCode, 1);
+      expect(
+        slowHotfixResult.stderr,
+        contains('hotfix drill duration must be 1..120 minutes'),
+      );
+
+      final hotfixReportDrift = completeManifest(typed: true);
+      (hotfixReportDrift['hotfixDrill']
+              as Map<String, dynamic>)['durationMinutes'] =
+          60;
+      manifest.writeAsStringSync(jsonEncode(hotfixReportDrift));
+      final hotfixReportDriftResult = await Process.run('python3', <String>[
+        'scripts/verify_external_release_gates.py',
+        '--manifest',
+        manifest.path,
+        '--aab',
+        aab.path,
+      ]);
+      expect(hotfixReportDriftResult.exitCode, 1);
+      expect(
+        hotfixReportDriftResult.stderr,
+        contains('hotfix drill duration does not match typed report'),
+      );
+
+      final soakSummaryDrift = completeManifest(typed: true);
+      (soakSummaryDrift['closedSoak'] as Map<String, dynamic>)['testers'] = 13;
+      manifest.writeAsStringSync(jsonEncode(soakSummaryDrift));
+      final soakSummaryDriftResult = await Process.run('python3', <String>[
+        'scripts/verify_external_release_gates.py',
+        '--manifest',
+        manifest.path,
+        '--aab',
+        aab.path,
+      ]);
+      expect(soakSummaryDriftResult.exitCode, 1);
+      expect(
+        soakSummaryDriftResult.stderr,
+        contains('closed soak testers do not match typed report'),
+      );
+
+      final ownerDrift = completeManifest(typed: true);
+      ((ownerDrift['gates'] as List<dynamic>).first
+          as Map<String, dynamic>)['owners'] = <String>[
+        'self-approved',
+      ];
+      manifest.writeAsStringSync(jsonEncode(ownerDrift));
+      final ownerDriftResult = await Process.run('python3', <String>[
+        'scripts/verify_external_release_gates.py',
+        '--manifest',
+        manifest.path,
+        '--aab',
+        aab.path,
+      ]);
+      expect(ownerDriftResult.exitCode, 1);
+      expect(ownerDriftResult.stderr, contains('G0 owner set mismatch'));
+
+      final malformedOwner = completeManifest(typed: true);
+      ((malformedOwner['gates'] as List<dynamic>).first
+          as Map<String, dynamic>)['owners'] = <Object?>[
+        <String, Object?>{},
+      ];
+      manifest.writeAsStringSync(jsonEncode(malformedOwner));
+      final malformedOwnerResult = await Process.run('python3', <String>[
+        'scripts/verify_external_release_gates.py',
+        '--manifest',
+        manifest.path,
+        '--aab',
+        aab.path,
+      ]);
+      expect(malformedOwnerResult.exitCode, 1);
+      expect(malformedOwnerResult.stderr, contains('G0 owner set mismatch'));
+      expect(malformedOwnerResult.stderr, isNot(contains('Traceback')));
+
+      void refreshEvidenceHash(String gateId, String kind, File file) {
+        typedEvidence[gateId]!.singleWhere(
+          (item) => item['kind'] == kind,
+        )['sha256'] = _sha256(
+          file,
+        );
+      }
+
+      final mutationFile = File('${directory.path}/mutationReport.json');
+      final mutationOriginal = mutationFile.readAsStringSync();
+      final mutationPayload =
+          jsonDecode(mutationOriginal) as Map<String, dynamic>;
+      ((mutationPayload['metrics'] as Map<String, dynamic>)['cases']
+              as Map<String, dynamic>)
+          .remove('disposeCancelsNative');
+      mutationFile.writeAsStringSync(jsonEncode(mutationPayload));
+      refreshEvidenceHash('G1', 'mutationReport', mutationFile);
+      manifest.writeAsStringSync(jsonEncode(completeManifest(typed: true)));
+      final mutationResult = await Process.run('python3', <String>[
+        'scripts/verify_external_release_gates.py',
+        '--manifest',
+        manifest.path,
+        '--aab',
+        aab.path,
+      ]);
+      expect(mutationResult.exitCode, 1);
+      expect(
+        mutationResult.stderr,
+        contains('mutationReport.cases key set mismatch'),
+      );
+      mutationFile.writeAsStringSync(mutationOriginal);
+      refreshEvidenceHash('G1', 'mutationReport', mutationFile);
+
+      final qualityFile = File('${directory.path}/qualityMatrix.json');
+      final qualityOriginal = qualityFile.readAsStringSync();
+      final qualityPayload =
+          jsonDecode(qualityOriginal) as Map<String, dynamic>;
+      ((((qualityPayload['metrics'] as Map<String, dynamic>)['featureChecks']
+              as Map<String, dynamic>)))['panicHoldAccessibilityLifecycle'] =
+          'NOT_RUN';
+      qualityFile.writeAsStringSync(jsonEncode(qualityPayload));
+      refreshEvidenceHash('G5', 'qualityMatrix', qualityFile);
+      manifest.writeAsStringSync(jsonEncode(completeManifest(typed: true)));
+      final qualityResult = await Process.run('python3', <String>[
+        'scripts/verify_external_release_gates.py',
+        '--manifest',
+        manifest.path,
+        '--aab',
+        aab.path,
+      ]);
+      expect(qualityResult.exitCode, 1);
+      expect(
+        qualityResult.stderr,
+        contains(
+          'qualityMatrix.featureChecks.panicHoldAccessibilityLifecycle is not PASS',
+        ),
+      );
+      qualityFile.writeAsStringSync(qualityOriginal);
+      refreshEvidenceHash('G5', 'qualityMatrix', qualityFile);
+
+      final licenseFile = File('${directory.path}/licensePolicyReport.json');
+      final licenseOriginal = licenseFile.readAsStringSync();
+      final licensePayload =
+          jsonDecode(licenseOriginal) as Map<String, dynamic>;
+      (licensePayload['metrics'] as Map<String, dynamic>)['reviewed'] = 399;
+      licenseFile.writeAsStringSync(jsonEncode(licensePayload));
+      refreshEvidenceHash('G4', 'licensePolicyReport', licenseFile);
+      manifest.writeAsStringSync(jsonEncode(completeManifest(typed: true)));
+      final licenseResult = await Process.run('python3', <String>[
+        'scripts/verify_external_release_gates.py',
+        '--manifest',
+        manifest.path,
+        '--aab',
+        aab.path,
+      ]);
+      expect(licenseResult.exitCode, 1);
+      expect(
+        licenseResult.stderr,
+        contains('licensePolicyReport.reviewed must equal components'),
+      );
+      licenseFile.writeAsStringSync(licenseOriginal);
+      refreshEvidenceHash('G4', 'licensePolicyReport', licenseFile);
+
+      final platformFile = File('${directory.path}/androidPlatformMatrix.json');
+      final platformOriginal = platformFile.readAsStringSync();
+      final platformPayload =
+          jsonDecode(platformOriginal) as Map<String, dynamic>;
+      (platformPayload['metrics'] as Map<String, dynamic>)['apiLevels'] =
+          <Object?>[<String, Object?>{}];
+      platformFile.writeAsStringSync(jsonEncode(platformPayload));
+      refreshEvidenceHash('G3', 'androidPlatformMatrix', platformFile);
+      manifest.writeAsStringSync(jsonEncode(completeManifest(typed: true)));
+      final platformResult = await Process.run('python3', <String>[
+        'scripts/verify_external_release_gates.py',
+        '--manifest',
+        manifest.path,
+        '--aab',
+        aab.path,
+      ]);
+      expect(platformResult.exitCode, 1);
+      expect(
+        platformResult.stderr,
+        contains('androidPlatformMatrix.apiLevels must cover API 29-36'),
+      );
+      expect(platformResult.stderr, isNot(contains('Traceback')));
+      platformFile.writeAsStringSync(platformOriginal);
+      refreshEvidenceHash('G3', 'androidPlatformMatrix', platformFile);
+
+      final incompletePlatformPayload =
+          jsonDecode(platformOriginal) as Map<String, dynamic>;
+      ((incompletePlatformPayload['metrics']
+                  as Map<String, dynamic>)['emulatorResults']
+              as Map<String, dynamic>)
+          .remove('36');
+      platformFile.writeAsStringSync(jsonEncode(incompletePlatformPayload));
+      refreshEvidenceHash('G3', 'androidPlatformMatrix', platformFile);
+      manifest.writeAsStringSync(jsonEncode(completeManifest(typed: true)));
+      final incompletePlatformResult = await Process.run('python3', <String>[
+        'scripts/verify_external_release_gates.py',
+        '--manifest',
+        manifest.path,
+        '--aab',
+        aab.path,
+      ]);
+      expect(incompletePlatformResult.exitCode, 1);
+      expect(
+        incompletePlatformResult.stderr,
+        contains('androidPlatformMatrix.emulatorResults key set mismatch'),
+      );
+      platformFile.writeAsStringSync(platformOriginal);
+      refreshEvidenceHash('G3', 'androidPlatformMatrix', platformFile);
+
+      final physicalFile = File('${directory.path}/physicalDeviceMatrix.json');
+      final physicalOriginal = physicalFile.readAsStringSync();
+      final physicalPayload =
+          jsonDecode(physicalOriginal) as Map<String, dynamic>;
+      ((((physicalPayload['metrics'] as Map<String, dynamic>)['deviceResults']
+                      as List<dynamic>)
+                  .first)
+              as Map<String, dynamic>)['fakeDeadlines'] =
+          99;
+      physicalFile.writeAsStringSync(jsonEncode(physicalPayload));
+      refreshEvidenceHash('G7', 'physicalDeviceMatrix', physicalFile);
+      manifest.writeAsStringSync(jsonEncode(completeManifest(typed: true)));
+      final physicalResult = await Process.run('python3', <String>[
+        'scripts/verify_external_release_gates.py',
+        '--manifest',
+        manifest.path,
+        '--aab',
+        aab.path,
+      ]);
+      expect(physicalResult.exitCode, 1);
+      expect(
+        physicalResult.stderr,
+        contains(
+          'physicalDeviceMatrix.api29_boundary.fakeDeadlines is below 100',
+        ),
+      );
+      physicalFile.writeAsStringSync(physicalOriginal);
+      refreshEvidenceHash('G7', 'physicalDeviceMatrix', physicalFile);
+
+      final latePhysicalPayload =
+          jsonDecode(physicalOriginal) as Map<String, dynamic>;
+      ((((latePhysicalPayload['metrics']
+                          as Map<String, dynamic>)['deviceResults']
+                      as List<dynamic>)
+                  .first)
+              as Map<String, dynamic>)['panicBackupP99LateMs'] =
+          5001;
+      physicalFile.writeAsStringSync(jsonEncode(latePhysicalPayload));
+      refreshEvidenceHash('G7', 'physicalDeviceMatrix', physicalFile);
+      manifest.writeAsStringSync(jsonEncode(completeManifest(typed: true)));
+      final latePhysicalResult = await Process.run('python3', <String>[
+        'scripts/verify_external_release_gates.py',
+        '--manifest',
+        manifest.path,
+        '--aab',
+        aab.path,
+      ]);
+      expect(latePhysicalResult.exitCode, 1);
+      expect(
+        latePhysicalResult.stderr,
+        contains(
+          'physicalDeviceMatrix.api29_boundary.panicBackupP99LateMs exceeds 5000',
+        ),
+      );
+      physicalFile.writeAsStringSync(physicalOriginal);
+      refreshEvidenceHash('G7', 'physicalDeviceMatrix', physicalFile);
+
+      final soakFile = File('${directory.path}/closedSoakReport.json');
+      final soakOriginal = soakFile.readAsStringSync();
+      final soakPayload = jsonDecode(soakOriginal) as Map<String, dynamic>;
+      (soakPayload['metrics'] as Map<String, dynamic>)['finishedAt'] =
+          '2026-07-14T23:59:59Z';
+      soakFile.writeAsStringSync(jsonEncode(soakPayload));
+      refreshEvidenceHash('G9', 'closedSoakReport', soakFile);
+      manifest.writeAsStringSync(jsonEncode(completeManifest(typed: true)));
+      final soakResult = await Process.run('python3', <String>[
+        'scripts/verify_external_release_gates.py',
+        '--manifest',
+        manifest.path,
+        '--aab',
+        aab.path,
+      ]);
+      expect(soakResult.exitCode, 1);
+      expect(
+        soakResult.stderr,
+        contains('closedSoakReport duration is below 14 days'),
+      );
+      soakFile.writeAsStringSync(soakOriginal);
+      refreshEvidenceHash('G9', 'closedSoakReport', soakFile);
+
+      final missingMasvs = completeManifest(typed: true);
+      final g4 = (missingMasvs['gates'] as List<dynamic>)
+          .cast<Map<String, dynamic>>()
+          .singleWhere((gate) => gate['id'] == 'G4');
+      g4['evidence'] = <Map<String, dynamic>>[
+        <String, dynamic>{
+          'path': 'witness.txt',
+          'sha256': witnessHash,
+          'candidateBound': true,
+        },
+      ];
+      manifest.writeAsStringSync(jsonEncode(missingMasvs));
+      final missingMasvsResult = await Process.run('python3', <String>[
+        'scripts/verify_external_release_gates.py',
+        '--manifest',
+        manifest.path,
+        '--aab',
+        aab.path,
+      ]);
+      expect(missingMasvsResult.exitCode, 1);
+      expect(
+        missingMasvsResult.stderr,
+        contains('G4 requires one candidate-bound MASVS assessment'),
+      );
+
+      final malformedVersion = completeManifest(typed: true);
+      (malformedVersion['candidate'] as Map<String, dynamic>)['versionCode'] =
+          null;
+      manifest.writeAsStringSync(jsonEncode(malformedVersion));
+      final malformedVersionResult = await Process.run('python3', <String>[
+        'scripts/verify_external_release_gates.py',
+        '--manifest',
+        manifest.path,
+        '--aab',
+        aab.path,
+      ]);
+      expect(malformedVersionResult.exitCode, 1);
+      expect(
+        malformedVersionResult.stderr,
+        contains('versionCode must be a positive integer'),
+      );
+      expect(malformedVersionResult.stderr, isNot(contains('Traceback')));
+
+      final drifted = completeManifest(typed: true);
+      (drifted['candidate'] as Map<String, dynamic>)['gitTree'] = 'f' * 40;
+      manifest.writeAsStringSync(jsonEncode(drifted));
+      final failed = await Process.run('python3', <String>[
+        'scripts/verify_external_release_gates.py',
+        '--manifest',
+        manifest.path,
+        '--aab',
+        aab.path,
+      ]);
+      expect(failed.exitCode, 1);
+      expect(failed.stderr, contains('provenance gitTree mismatch'));
+    },
+    timeout: const Timeout(Duration(minutes: 2)),
+  );
 }
 
 Map<String, Object?> _gateEvidence({
@@ -1620,6 +1716,103 @@ Map<String, Object?> _masvsAssessment({
         },
     ],
   };
+}
+
+Future<({File aab, String fingerprint})> _createSignedTestAab(
+  Directory directory, {
+  String? nativeAbi = 'arm64-v8a',
+}) async {
+  const fixtureCredential = 'korubeni-test-only-password';
+  final payload = Directory('${directory.path}/aab-payload');
+  File('${payload.path}/BundleConfig.pb')
+    ..createSync(recursive: true)
+    ..writeAsBytesSync(<int>[1]);
+  File('${payload.path}/base/manifest/AndroidManifest.xml')
+    ..createSync(recursive: true)
+    ..writeAsBytesSync(<int>[1]);
+  File('${payload.path}/base/resources.pb')
+    ..createSync(recursive: true)
+    ..writeAsBytesSync(<int>[1]);
+  if (nativeAbi != null) {
+    final elfBytes = Uint8List(120);
+    elfBytes.setRange(0, 6, <int>[0x7f, 0x45, 0x4c, 0x46, 2, 1]);
+    final elfData = ByteData.sublistView(elfBytes);
+    elfData.setUint64(32, 64, Endian.little);
+    elfData.setUint16(54, 56, Endian.little);
+    elfData.setUint16(56, 1, Endian.little);
+    elfData.setUint32(64, 1, Endian.little);
+    elfData.setUint64(112, 0x4000, Endian.little);
+    File('${payload.path}/base/lib/$nativeAbi/libfixture.so')
+      ..createSync(recursive: true)
+      ..writeAsBytesSync(elfBytes);
+  }
+  final keyStore = File('${directory.path}/test-upload.jks');
+  final generatedKey = await Process.run('keytool', <String>[
+    '-genkeypair',
+    '-alias',
+    'upload',
+    '-keyalg',
+    'RSA',
+    '-keysize',
+    '2048',
+    '-validity',
+    '3650',
+    '-dname',
+    'CN=KoruBeni Test Upload',
+    '-keystore',
+    keyStore.path,
+    '-storepass',
+    fixtureCredential,
+    '-keypass',
+    fixtureCredential,
+    '-noprompt',
+  ]);
+  if (generatedKey.exitCode != 0) {
+    throw StateError('keytool failed: ${generatedKey.stderr}');
+  }
+
+  final aab = File('${directory.path}/candidate.aab');
+  final archived = await Process.run('jar', <String>[
+    '--create',
+    '--file',
+    aab.path,
+    '-C',
+    payload.path,
+    '.',
+  ]);
+  if (archived.exitCode != 0) {
+    throw StateError('jar failed: ${archived.stderr}');
+  }
+  final signed = await Process.run('jarsigner', <String>[
+    '-keystore',
+    keyStore.path,
+    '-storepass',
+    fixtureCredential,
+    '-keypass',
+    fixtureCredential,
+    aab.path,
+    'upload',
+  ]);
+  if (signed.exitCode != 0) {
+    throw StateError('jarsigner failed: ${signed.stderr}');
+  }
+  final certificate = await Process.run('keytool', <String>[
+    '-printcert',
+    '-jarfile',
+    aab.path,
+  ]);
+  if (certificate.exitCode != 0) {
+    throw StateError('keytool printcert failed: ${certificate.stderr}');
+  }
+  final match = RegExp(
+    r'^\s*SHA256:\s*((?:[0-9A-Fa-f]{2}:){31}[0-9A-Fa-f]{2})\s*$',
+    multiLine: true,
+  ).firstMatch(certificate.stdout.toString());
+  if (match == null) throw StateError('signed test AAB fingerprint missing');
+  return (
+    aab: aab,
+    fingerprint: match.group(1)!.replaceAll(':', '').toLowerCase(),
+  );
 }
 
 String _sha256(File file) {

@@ -5,6 +5,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
+import '../../models/consent_record.dart';
+import '../services/consent_gate_service.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../app_colors.dart';
 import '../services/app_settings_service.dart';
@@ -22,6 +24,12 @@ class PermissionHelper {
   /// Play Store: Prominent Disclosure - Native izin istemeden önce açık bilgilendirme.
   /// Returns true if permission was granted.
   static Future<bool> requestLocationPermission(BuildContext context) async {
+    if (!ConsentGateService.requireConsent(
+      context,
+      ConsentRecord.typeLocation,
+    )) {
+      return false;
+    }
     final serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
       if (!context.mounted) return false;

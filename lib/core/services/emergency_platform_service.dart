@@ -211,6 +211,34 @@ class EmergencyPlatformService {
     return _parseSnapshot(invocation.value, requestedToken: token);
   }
 
+  /// Finds the durable native session for [kind] when Flutter's projection is
+  /// missing. This does not create or revise a session; it only reads the
+  /// device-protected native authority.
+  Future<SessionSnapshot> discoverEmergencySession(
+    EmergencySessionKind kind,
+  ) async {
+    if (!isSupported) {
+      return const SessionSnapshot(
+        status: SessionReadStatus.unknown,
+        reasonCode: 'unsupportedPlatform',
+      );
+    }
+    final invocation = await _invokeTypedMap(
+      'readEmergencySessionByKind',
+      arguments: <String, Object?>{
+        'protocolVersion': emergencyProtocolVersion,
+        'kind': kind.wireName,
+      },
+    );
+    if (!invocation.completed) {
+      return SessionSnapshot(
+        status: SessionReadStatus.unknown,
+        reasonCode: invocation.reasonCode,
+      );
+    }
+    return _parseDiscoveredSnapshot(invocation.value, requestedKind: kind);
+  }
+
   Future<DispatchResult> dispatchEmergencySession({
     required SessionToken token,
     required String source,
@@ -605,6 +633,42 @@ class EmergencyPlatformService {
       fallbackOutcome: fallbackOutcome,
       reasonCode: map['reasonCode']?.toString(),
     );
+  }
+
+  SessionSnapshot _parseDiscoveredSnapshot(
+    Map<String, dynamic> map, {
+    required EmergencySessionKind requestedKind,
+  }) {
+    final type = map['type']?.toString();
+    if (type == 'absent') {
+      return SessionSnapshot(
+        status: SessionReadStatus.absent,
+        lifecycleState: EmergencySessionLifecycle.absent,
+        reasonCode: map['reasonCode']?.toString(),
+      );
+    }
+    if (type == 'corrupted') {
+      return SessionSnapshot(
+        status: SessionReadStatus.corrupted,
+        lifecycleState: EmergencySessionLifecycle.corrupted,
+        reasonCode: map['reasonCode']?.toString(),
+      );
+    }
+    if (type != 'present') {
+      return SessionSnapshot(
+        status: SessionReadStatus.unknown,
+        reasonCode: map['reasonCode']?.toString() ?? 'malformedResponse',
+      );
+    }
+    final session = wireMap(map['session']);
+    final token = SessionToken.fromMap(session?['token']);
+    if (token == null || token.kind != requestedKind) {
+      return const SessionSnapshot(
+        status: SessionReadStatus.unknown,
+        reasonCode: 'invalidDiscoveredToken',
+      );
+    }
+    return _parseSnapshot(map, requestedToken: token);
   }
 
   DispatchResult _parseDispatchResult(

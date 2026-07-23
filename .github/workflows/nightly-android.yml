@@ -52,4 +52,22 @@ jobs:
           arch: x86_64
           profile: pixel_6
           disable-animations: true
-          script: cd android && ./gradlew app:connectedPlayDebugAndroidTest --console=plain
+          script: |
+            set -euo pipefail
+            cd android
+            ./gradlew app:connectedPlayDebugAndroidTest --console=plain
+            cd ..
+            export ANDROID_SERIAL
+            ANDROID_SERIAL="$(adb devices | awk 'NR == 2 { print $1 }')"
+            export ADB_BIN
+            ADB_BIN="$(command -v adb)"
+            export PHASE3_CONFIRM_EPHEMERAL_AVD=1
+            export PHASE3_EVIDENCE_OUTPUT="build/release-evidence/phase3-api${{ matrix.api-level }}-4kb.json"
+            ./scripts/phase3_emulator_reboot_probe.sh
+
+      - name: Upload emulator-only Direct Boot evidence
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: phase3-emulator-api${{ matrix.api-level }}-4kb
+          path: build/release-evidence/phase3-api${{ matrix.api-level }}-4kb.json
+          if-no-files-found: error

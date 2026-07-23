@@ -12,6 +12,9 @@ import '../../core/constants/app_constants.dart';
 import '../../services/consent_manager.dart';
 import '../../models/consent_record.dart';
 import '../../core/di/service_locator.dart';
+import '../../core/services/emergency_contact_consent_withdrawal_service.dart';
+import '../../core/services/emergency_session_contract.dart';
+import '../../core/services/location_service.dart';
 
 class ConsentManagementScreen extends StatefulWidget {
   const ConsentManagementScreen({super.key});
@@ -77,6 +80,7 @@ class _ConsentManagementScreenState extends State<ConsentManagementScreen> {
       final locale = context.locale.languageCode;
       if (newValue) {
         await _cm.grantConsent(type, locale: locale);
+        await _updatePrefs(type, true);
       } else {
         // Geri çekme onay dialog'u
         final confirmed = await _showRevokeConfirmation(type);
@@ -84,10 +88,27 @@ class _ConsentManagementScreenState extends State<ConsentManagementScreen> {
           setState(() => _loading = false);
           return;
         }
-        await _cm.revokeConsent(type, locale: locale);
-        await _updatePrefs(type, false);
+        if (type == ConsentRecord.typeEmergencyContacts) {
+          final result = await EmergencyContactConsentWithdrawalService(
+            consentManager: _cm,
+          ).withdraw(locale: locale);
+          _loadStatus();
+          if (result != WipeResult.completed) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('data_delete_pending'.tr())),
+              );
+            }
+            return;
+          }
+        } else {
+          await _cm.revokeConsent(type, locale: locale);
+          await _updatePrefs(type, false);
+          if (type == ConsentRecord.typeLocation) {
+            serviceLocator<LocationService>().clearCachedLocation();
+          }
+        }
       }
-      if (newValue) await _updatePrefs(type, true);
       _loadStatus();
     } on Exception catch (e) {
       // Storage write failed (e.g. keystore error). Tell the user the change

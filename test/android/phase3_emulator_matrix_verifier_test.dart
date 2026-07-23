@@ -16,7 +16,9 @@ Map<String, Object?> _evidence({
   required int pageSizeBytes,
   String commit = _commitA,
   bool restored = true,
+  int? exactRevocationTestsPassed,
 }) {
+  final exactRevocationExpected = apiLevel >= 31;
   return <String, Object?>{
     'schemaVersion': 1,
     'evidenceType': 'android_direct_boot_reboot_probe',
@@ -52,6 +54,9 @@ Map<String, Object?> _evidence({
       'realReboot': true,
       'bootCompletedObserved': true,
       'typedSessionRestored': restored,
+      'exactPermissionRevocationRebootTested': exactRevocationExpected,
+      'exactPermissionRevocationInstrumentationTestsPassed':
+          exactRevocationTestsPassed ?? (exactRevocationExpected ? 3 : 0),
       'packagesRemoved': true,
     },
     'limitations': <String>[
@@ -137,6 +142,11 @@ void main() {
       'api36-16kb',
     ]);
     expect((payload['inputs'] as List), hasLength(4));
+    expect(
+      (payload['coverage']
+          as Map)['exactPermissionRevocationRebootTestedOnApi31Plus'],
+      isTrue,
+    );
   });
 
   test('missing 16 KB proof fails closed and deletes stale PASS', () async {
@@ -239,5 +249,47 @@ void main() {
 
     expect(result.exitCode, isNot(0));
     expect(result.stderr, contains('typedSessionRestored must be true'));
+  });
+
+  test('missing API31+ exact-revocation proof fails closed', () async {
+    final temp = await Directory.systemTemp.createTemp('phase3-matrix-exact-');
+    addTearDown(() => temp.delete(recursive: true));
+    final inputs = <File>[
+      await _writeEvidence(
+        temp,
+        'api29',
+        _evidence(apiLevel: 29, pageSizeBytes: 4096),
+      ),
+      await _writeEvidence(
+        temp,
+        'api34',
+        _evidence(
+          apiLevel: 34,
+          pageSizeBytes: 4096,
+          exactRevocationTestsPassed: 0,
+        ),
+      ),
+      await _writeEvidence(
+        temp,
+        'api36',
+        _evidence(apiLevel: 36, pageSizeBytes: 4096),
+      ),
+      await _writeEvidence(
+        temp,
+        'api36-16kb',
+        _evidence(apiLevel: 36, pageSizeBytes: 16384),
+      ),
+    ];
+
+    final result = await _runVerifier(
+      output: File('${temp.path}/matrix.json'),
+      evidence: inputs,
+    );
+
+    expect(result.exitCode, isNot(0));
+    expect(
+      result.stderr,
+      contains('exactPermissionRevocationInstrumentationTestsPassed'),
+    );
   });
 }

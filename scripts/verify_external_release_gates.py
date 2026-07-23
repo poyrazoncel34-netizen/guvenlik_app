@@ -12,7 +12,11 @@ import hashlib
 import json
 import os
 import re
+import shutil
+import stat
+import subprocess
 import sys
+import zipfile
 from pathlib import Path
 
 from verify_gate_evidence import (
@@ -97,6 +101,17 @@ EXPECTED_SURFACE_LIMITATIONS = {
     "NOT_RUNTIME_INTENT_FUZZING",
     "NOT_PRODUCTION_AAB_UNLESS_RUN_BY_TAGGED_WORKFLOW",
 }
+REQUIRED_AAB_ENTRIES = {
+    "BundleConfig.pb",
+    "base/manifest/AndroidManifest.xml",
+    "base/resources.pb",
+}
+MAX_AAB_FILE_BYTES = 512 * 1024 * 1024
+MAX_AAB_UNCOMPRESSED_BYTES = 1024 * 1024 * 1024
+CERTIFICATE_SHA256_RE = re.compile(
+    r"(?m)^\s*SHA256:\s*((?:[0-9A-Fa-f]{2}:){31}[0-9A-Fa-f]{2})\s*$"
+)
+NATIVE_LIBRARY_RE = re.compile(r"^[^/]+/lib/([^/]+)/.+\.so$")
 
 
 def sha256(path: Path) -> str:
@@ -110,6 +125,158 @@ def sha256(path: Path) -> str:
 def require(condition: bool, message: str, errors: list[str]) -> None:
     if not condition:
         errors.append(message)
+
+
+def safe_aab_member_name(name: str, is_directory: bool) -> bool:
+    if not name or "\x00" in name or "\\" in name or name.startswith("/"):
+        return False
+    candidate = name[:-1] if is_directory and name.endswith("/") else name
+    if not candidate or re.match(r"^[A-Za-z]:", candidate):
+        return False
+    return all(part not in {"", ".", ".."} for part in candidate.split("/"))
+
+
+def validate_candidate_aab(path: Path, errors: list[str]) -> str | None:
+    """Validate the upload artifact itself and return its signer fingerprint.
+
+    Upload keys use self-signed certificates, so jarsigner's strict exit bit 4
+    (certificate chain not trusted) is expected. Every other strict warning bit,
+    including bit 16 for unsigned entries, remains fatal.
+    """
+
+    try:
+        file_size = path.stat().st_size
+    except OSError as exc:
+        errors.append(f"candidate AAB cannot be inspected: {exc}")
+        return None
+    if file_size <= 0 or file_size > MAX_AAB_FILE_BYTES:
+        errors.append("candidate AAB file size is outside the allowed range")
+        return None
+    if not zipfile.is_zipfile(path):
+        errors.append("candidate AAB is not a ZIP archive")
+        return None
+
+    try:
+        with zipfile.ZipFile(path) as archive:
+            members = archive.infolist()
+            names: set[str] = set()
+            native_abis: set[str] = set()
+            native_library_count = 0
+            total_uncompressed = 0
+            for member in members:
+                if member.filename in names:
+                    errors.append(f"candidate AAB contains duplicate ZIP entry: {member.filename}")
+                names.add(member.filename)
+                if not safe_aab_member_name(member.filename, member.is_dir()):
+                    errors.append(f"candidate AAB contains unsafe ZIP entry: {member.filename}")
+                unix_mode = (member.external_attr >> 16) & 0xFFFF
+                if stat.S_IFMT(unix_mode) == stat.S_IFLNK:
+                    errors.append(f"candidate AAB contains symbolic-link entry: {member.filename}")
+                if member.flag_bits & 0x1:
+                    errors.append(f"candidate AAB contains encrypted ZIP entry: {member.filename}")
+                total_uncompressed += member.file_size
+                native_match = NATIVE_LIBRARY_RE.fullmatch(member.filename)
+                if native_match:
+                    native_library_count += 1
+                    native_abis.add(native_match.group(1))
+            if total_uncompressed > MAX_AAB_UNCOMPRESSED_BYTES:
+                errors.append("candidate AAB uncompressed size exceeds the allowed limit")
+            missing_entries = REQUIRED_AAB_ENTRIES - names
+            if missing_entries:
+                errors.append(
+                    "candidate AAB is missing required entries: "
+                    + ", ".join(sorted(missing_entries))
+                )
+            for required_name in REQUIRED_AAB_ENTRIES.intersection(names):
+                if archive.getinfo(required_name).file_size <= 0:
+                    errors.append(f"candidate AAB required entry is empty: {required_name}")
+            if native_library_count == 0:
+                errors.append("candidate AAB contains no native libraries")
+            if native_abis != {"arm64-v8a"}:
+                errors.append(
+                    "candidate AAB native ABI set must be arm64-v8a only"
+                )
+    except (OSError, zipfile.BadZipFile, zipfile.LargeZipFile) as exc:
+        errors.append(f"candidate AAB ZIP cannot be inspected: {exc}")
+        return None
+
+    if errors:
+        return None
+
+    alignment_verifier = Path(__file__).resolve().with_name("verify_16kb_alignment.sh")
+    if not alignment_verifier.is_file() or not os.access(alignment_verifier, os.X_OK):
+        errors.append("16 KB alignment verifier is missing or not executable")
+        return None
+    try:
+        alignment = subprocess.run(
+            [str(alignment_verifier), str(path.resolve())],
+            capture_output=True,
+            check=False,
+            text=True,
+            timeout=120,
+        )
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        errors.append(f"candidate AAB 16 KB verification could not run: {exc}")
+        return None
+    if alignment.returncode != 0:
+        errors.append(
+            "candidate AAB 16 KB verification failed "
+            f"(verifier exit {alignment.returncode})"
+        )
+        return None
+
+    jarsigner = shutil.which("jarsigner")
+    if jarsigner is None:
+        errors.append("jarsigner is required for strict candidate AAB verification")
+        return None
+    command_environment = os.environ.copy()
+    command_environment.update({"LANG": "C", "LC_ALL": "C"})
+    try:
+        verified = subprocess.run(
+            [jarsigner, "-verify", "-strict", str(path.resolve())],
+            capture_output=True,
+            check=False,
+            text=True,
+            timeout=120,
+            env=command_environment,
+        )
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        errors.append(f"candidate AAB strict signature verification could not run: {exc}")
+        return None
+    if verified.returncode not in {0, 4}:
+        errors.append(
+            "candidate AAB strict signature verification failed "
+            f"(jarsigner exit {verified.returncode})"
+        )
+        return None
+
+    keytool = shutil.which("keytool")
+    if keytool is None:
+        errors.append("keytool is required to identify the candidate AAB signer")
+        return None
+    try:
+        certificate = subprocess.run(
+            [keytool, "-printcert", "-jarfile", str(path.resolve())],
+            capture_output=True,
+            check=False,
+            text=True,
+            timeout=120,
+            env=command_environment,
+        )
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        errors.append(f"candidate AAB signer certificate could not be read: {exc}")
+        return None
+    if certificate.returncode != 0:
+        errors.append("candidate AAB signer certificate could not be read")
+        return None
+    fingerprints = {
+        match.replace(":", "").lower()
+        for match in CERTIFICATE_SHA256_RE.findall(certificate.stdout)
+    }
+    if len(fingerprints) != 1:
+        errors.append("candidate AAB must have exactly one identifiable signer certificate")
+        return None
+    return fingerprints.pop()
 
 
 def read_json_artifact(
@@ -810,6 +977,11 @@ def main() -> int:
     if errors:
         return fail(errors)
 
+    # Validate the artifact before trusting any manifest field. This prevents a
+    # synthetic evidence package from blessing an arbitrary text file that only
+    # happens to have a matching SHA-256 value.
+    actual_upload_signer = validate_candidate_aab(args.aab, errors)
+
     try:
         payload = json.loads(args.manifest.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
@@ -849,6 +1021,12 @@ def main() -> int:
     require(bool(SHA256_RE.fullmatch(expected_aab_hash)), "aabSha256 is invalid", errors)
     require(bool(SHA256_RE.fullmatch(upload_cert)), "upload certificate SHA-256 is invalid", errors)
     require(bool(SHA256_RE.fullmatch(play_cert)), "Play app-signing certificate SHA-256 is invalid", errors)
+    if actual_upload_signer is not None:
+        require(
+            actual_upload_signer == upload_cert,
+            "candidate AAB signer does not match upload certificate SHA-256",
+            errors,
+        )
     require(bool(WORKFLOW_URL_RE.fullmatch(workflow_run_url)), "workflowRunUrl is invalid", errors)
     actual_aab_hash = sha256(args.aab)
     require(actual_aab_hash == expected_aab_hash, "AAB SHA-256 does not match manifest", errors)

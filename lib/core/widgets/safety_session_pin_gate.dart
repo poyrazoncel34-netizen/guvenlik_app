@@ -51,7 +51,7 @@ class _SafetyPinDialog extends StatefulWidget {
 
 class _SafetyPinDialogState extends State<_SafetyPinDialog> {
   final TextEditingController _controller = TextEditingController();
-  bool _errorVisible = false;
+  String? _errorMessageKey;
   bool _verificationInProgress = false;
 
   @override
@@ -67,7 +67,7 @@ class _SafetyPinDialogState extends State<_SafetyPinDialog> {
     }
     setState(() {
       _verificationInProgress = true;
-      _errorVisible = false;
+      _errorMessageKey = null;
     });
     final result = await widget.service.verify(_controller.text);
     if (!mounted) return;
@@ -78,7 +78,9 @@ class _SafetyPinDialogState extends State<_SafetyPinDialog> {
     _controller.clear();
     setState(() {
       _verificationInProgress = false;
-      _errorVisible = true;
+      _errorMessageKey = result.state == PinState.configured
+          ? 'settings_pin_wrong'
+          : 'pin_state_read_failed';
     });
   }
 
@@ -108,7 +110,7 @@ class _SafetyPinDialogState extends State<_SafetyPinDialog> {
         ],
         decoration: InputDecoration(
           hintText: 'reset_pin_verify_hint'.tr(),
-          errorText: _errorVisible ? 'settings_pin_wrong'.tr() : null,
+          errorText: _errorMessageKey?.tr(),
         ),
       ),
       actions: [

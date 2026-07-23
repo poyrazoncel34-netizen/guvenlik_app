@@ -71,7 +71,10 @@ def inspect_ecosystem(
 
     coordinates: list[str] = []
     findings: list[dict[str, Any]] = []
-    for index, (query, result) in enumerate(zip(queries, results, strict=True)):
+    # Length equality is checked above. Avoid zip(strict=True) so the release
+    # verifier also runs on macOS' system Python 3.9 instead of failing before
+    # it can evaluate the OSV evidence.
+    for index, (query, result) in enumerate(zip(queries, results)):
         if not isinstance(query, dict) or not isinstance(result, dict):
             raise ValueError(f"invalid {ecosystem} entry at index {index}")
         package = query.get("package")

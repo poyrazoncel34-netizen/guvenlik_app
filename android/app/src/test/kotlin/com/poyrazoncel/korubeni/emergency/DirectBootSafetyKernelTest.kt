@@ -1,6 +1,8 @@
 package com.poyrazoncel.korubeni.emergency
 
 import android.Manifest
+import android.app.Notification
+import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
 import android.os.UserManager
@@ -96,5 +98,49 @@ class DirectBootSafetyKernelTest {
         assertEquals(EmergencyFallbackDialActivity::class.java.name, saved.component?.className)
         assertTrue(saved.action != Intent.ACTION_DIAL)
         assertFalse(saved.hasExtra("target"))
+    }
+
+    @Test
+    fun `stale fallback cleanup cannot cancel a newer generation notification`() {
+        val now = System.currentTimeMillis()
+        val oldToken = SessionToken(
+            EMERGENCY_PROTOCOL_VERSION,
+            "fallback-generation",
+            1L,
+            SessionKind.CHECK_IN,
+        )
+        val currentToken = oldToken.copy(generation = 2L)
+        val notificationId = EmergencyNotificationHelper.CHECK_IN_NOTIFICATION_ID
+        val notificationManager =
+            context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.notify(notificationId, Notification())
+        assertTrue(
+            DeviceProtectedEmergencySessionStore(context).write(
+                EmergencySessionEnvelope(
+                    token = currentToken,
+                    lifecycleState = LifecycleState.MANUAL_ACTION_REQUIRED,
+                    target = "+905001234567",
+                    mainDeadlineMs = now - 120_000L,
+                    finalDeadlineMs = now - 60_000L,
+                    elapsedRealtimeDeadlineMs = 1L,
+                    schedulingMode = SchedulingMode.EXACT_AND_INEXACT,
+                    fallbackOutcome = FallbackOutcome.POSTED,
+                    fallbackExpiresAtMs = now + 60_000L,
+                ),
+            ),
+        )
+        val staleCleanup = EmergencyFallbackCleanupReceiver.pendingIntent(
+            context,
+            oldToken,
+            notificationId,
+            now + 60_000L,
+        )
+
+        EmergencyFallbackCleanupReceiver().onReceive(
+            context,
+            Shadows.shadowOf(staleCleanup).savedIntent,
+        )
+
+        assertTrue(Shadows.shadowOf(notificationManager).getNotification(notificationId) != null)
     }
 }

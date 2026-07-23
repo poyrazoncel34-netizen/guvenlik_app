@@ -24,6 +24,7 @@ class BootCompletedReceiver : BroadcastReceiver() {
             } else {
                 coordinator.reconcileCurrentBoot()
             }
+            Log.i("BootCompletedReceiver", "Safety state reconciliation completed")
         }
     }
 

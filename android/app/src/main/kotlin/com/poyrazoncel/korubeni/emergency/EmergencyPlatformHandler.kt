@@ -42,6 +42,9 @@ class EmergencyPlatformHandler(
                 "readEmergencySession" -> {
                     result.success(readEmergencySession(call))
                 }
+                "readEmergencySessionByKind" -> {
+                    result.success(readEmergencySessionByKind(call))
+                }
                 "dispatchEmergencySession" -> {
                     val token = tokenFromCall(call)
                     if (token == null) {
@@ -163,6 +166,27 @@ class EmergencyPlatformHandler(
             ?: return mapOf("type" to "corrupted", "reasonCode" to "invalidToken")
         val read = EmergencySessionRuntime.coordinator(context).read(token.kind)
         if (read is ReadSessionResult.Present && read.envelope.token != token) {
+            return ReadSessionResult.Absent.toMap()
+        }
+        return read.toMap()
+    }
+
+    /**
+     * Recovers the native authority when Flutter's best-effort projection was
+     * never written (for example, process death immediately after native ARM).
+     * The caller still has to prove protocol and requested kind.  A different
+     * long-running kind shares the same native slot but is never projected as
+     * the requested controller.
+     */
+    private fun readEmergencySessionByKind(call: MethodCall): Map<String, Any?> {
+        val protocol = call.argument<Number>("protocolVersion")?.toInt() ?: -1
+        if (protocol != EMERGENCY_PROTOCOL_VERSION) {
+            return mapOf("type" to "corrupted", "reasonCode" to "unsupportedProtocol")
+        }
+        val kind = SessionKind.fromWire(call.argument<String>("kind"))
+            ?: return mapOf("type" to "corrupted", "reasonCode" to "invalidKind")
+        val read = EmergencySessionRuntime.coordinator(context).read(kind)
+        if (read is ReadSessionResult.Present && read.envelope.token.kind != kind) {
             return ReadSessionResult.Absent.toMap()
         }
         return read.toMap()

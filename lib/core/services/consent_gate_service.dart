@@ -37,14 +37,15 @@ class ConsentGateService {
     return _isGranted(ConsentRecord.typeLocation);
   }
 
-  /// Acil durum kişileri verisi işleme için rıza kontrolü
+  /// Emergency-contact data processing gate. A missing/unreadable authority is
+  /// not consent and therefore fails closed for every *new* safety arm. Native
+  /// sessions that were already armed continue independently from Flutter.
   static bool isEmergencyContactsAllowed() {
     try {
       final cm = serviceLocator<ConsentManager>();
       return cm.isGranted(ConsentRecord.typeEmergencyContacts);
     } catch (_) {
-      // Emergency call flow must not be blocked by DI/bootstrap failure.
-      return true;
+      return false;
     }
   }
 

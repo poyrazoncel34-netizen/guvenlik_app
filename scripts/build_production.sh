@@ -99,14 +99,24 @@ python3 scripts/audit_android_release_surface.py \
         exit 1
     }
 
-SIGNATURE_LOG="$(mktemp /tmp/korubeni_aab_signature.XXXXXX.log)"
+SIGNATURE_LOG="$(mktemp /tmp/korubeni_aab_signature.XXXXXX)"
 trap 'rm -f "$SIGNATURE_LOG"' EXIT
-if ! LC_ALL=C jarsigner -verify "$AAB_PATH" >"$SIGNATURE_LOG" 2>&1; then
+if LC_ALL=C jarsigner -verify -strict "$AAB_PATH" >"$SIGNATURE_LOG" 2>&1; then
+    SIGNATURE_STATUS=0
+else
+    # Keep errexit enabled globally while still capturing jarsigner's strict
+    # bitmask (4 is the expected self-signed upload-certificate warning).
+    SIGNATURE_STATUS=$?
+fi
+# Android upload keys are commonly self-signed. jarsigner strict bit 4 means
+# only "certificate chain not trusted"; every other bit (especially 16 for an
+# unsigned entry) is a hard failure.
+if [[ "$SIGNATURE_STATUS" -ne 0 && "$SIGNATURE_STATUS" -ne 4 ]]; then
     echo "❌ AAB JAR imza doğrulaması başarısız."
     sed -n '1,80p' "$SIGNATURE_LOG"
     exit 1
 fi
-if ! grep -q "jar verified\." "$SIGNATURE_LOG"; then
+if ! grep -Eq '^jar verified([,.]|$)' "$SIGNATURE_LOG"; then
     echo "❌ AAB imzalı olarak doğrulanamadı."
     sed -n '1,80p' "$SIGNATURE_LOG"
     exit 1

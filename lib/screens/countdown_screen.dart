@@ -10,6 +10,7 @@ import 'package:easy_localization/easy_localization.dart';
 import '../core/di/service_locator.dart';
 import '../core/app_colors.dart';
 import '../core/services/contact_service.dart';
+import '../core/services/consent_gate_service.dart';
 import '../domain/repositories/contacts_repository.dart';
 import '../core/services/activity_service.dart';
 import '../core/services/call_service.dart';
@@ -34,6 +35,7 @@ class CountdownScreen extends StatefulWidget {
   final EntitlementDecision entitlementDecision;
   final PinVerificationService? pinVerificationService;
   final EmergencyPlatformService? emergencyPlatformService;
+  final bool Function()? emergencyContactsConsentAllowed;
 
   const CountdownScreen({
     super.key,
@@ -41,6 +43,7 @@ class CountdownScreen extends StatefulWidget {
     this.entitlementDecision = EntitlementDecision.unknown,
     this.pinVerificationService,
     this.emergencyPlatformService,
+    this.emergencyContactsConsentAllowed,
   });
 
   @override
@@ -65,6 +68,9 @@ class _CountdownScreenState extends State<CountdownScreen>
       widget.pinVerificationService ?? PinVerificationService.instance;
   late final EmergencyPlatformService _emergencyPlatformService =
       widget.emergencyPlatformService ?? EmergencyPlatformService.instance;
+  late final bool Function() _emergencyContactsConsentAllowed =
+      widget.emergencyContactsConsentAllowed ??
+      ConsentGateService.isEmergencyContactsAllowed;
   late final EmergencyDispatchPipeline _dispatchPipeline =
       EmergencyDispatchPipeline(
         onBestEffortError: (error, _) {
@@ -154,6 +160,9 @@ class _CountdownScreenState extends State<CountdownScreen>
         _pinState == PinState.readFailed ? 'pinReadFailed' : 'pinNotConfigured',
       );
     }
+    if (!_emergencyContactsConsentAllowed()) {
+      return _recordRejectedArm('contactConsentRequired');
+    }
 
     ArmResult result;
     try {
@@ -241,6 +250,7 @@ class _CountdownScreenState extends State<CountdownScreen>
       'pinReadFailed' => 'pin_state_read_failed',
       'targetNotCallable' ||
       'callableTargetMissing' => 'timer_emergency_contact_required',
+      'contactConsentRequired' => 'consent_gate_blocked',
       _ => 'safety_session_not_ready',
     };
   }

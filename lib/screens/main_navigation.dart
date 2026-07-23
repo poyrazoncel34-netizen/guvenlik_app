@@ -9,15 +9,15 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/app_colors.dart';
 import '../core/constants/app_constants.dart';
-import '../core/di/service_locator.dart';
-import '../core/security/secure_storage.dart';
-import '../core/security/secure_storage_keys.dart';
+import '../core/services/emergency_session_contract.dart';
+import '../core/services/pin_verification_service.dart';
 import '../core/utils/permission_helper.dart';
 // Firebase and notification services removed (offline-first)
 import '../widgets/connectivity_banner.dart';
 import 'home_page.dart';
 import 'contacts_page.dart';
 import 'map_page.dart';
+import 'app_unlock_screen.dart';
 import 'pin_setup_screen.dart';
 import 'settings_page.dart';
 
@@ -47,41 +47,35 @@ class _MainNavigationState extends State<MainNavigation> {
   Future<void> _ensurePinSetup() async {
     if (!mounted || _pinPromptVisible) return;
 
-    final hasPin = await _hasConfiguredPin();
-    if (!mounted || hasPin) return;
+    final pinState = await PinVerificationService.instance.loadState();
+    if (!mounted || pinState == PinState.configured) return;
 
     _pinPromptVisible = true;
-    await Navigator.of(context).push(
-      MaterialPageRoute(
-        fullscreenDialog: true,
-        builder: (_) => const PinSetupScreen(requiredSetup: true),
-      ),
-    );
-    _pinPromptVisible = false;
+    try {
+      if (pinState == PinState.absent) {
+        await Navigator.of(context).push(
+          MaterialPageRoute(
+            fullscreenDialog: true,
+            builder: (_) => const PinSetupScreen(requiredSetup: true),
+          ),
+        );
+      } else {
+        await Navigator.of(context).push(
+          MaterialPageRoute(
+            fullscreenDialog: true,
+            builder: (routeContext) =>
+                AppUnlockScreen(onUnlocked: () => Navigator.pop(routeContext)),
+          ),
+        );
+      }
+    } finally {
+      _pinPromptVisible = false;
+    }
   }
 
   Future<void> _runStartupChecks() async {
     await _ensurePinSetup();
     await _ensureNotificationPermission();
-  }
-
-  Future<bool> _hasConfiguredPin() async {
-    final secureStorage = serviceLocator<SecureStorage>();
-    final securePin = await secureStorage.read(key: SecureStorageKeys.userPin);
-    if (securePin != null && securePin.isNotEmpty) {
-      return true;
-    }
-
-    final prefs = await SharedPreferences.getInstance();
-    final legacyPin = prefs.getString(SecureStorageKeys.userPin);
-    if (legacyPin == null || legacyPin.isEmpty) {
-      return false;
-    }
-
-    await secureStorage.write(key: SecureStorageKeys.userPin, value: legacyPin);
-    await prefs.remove(SecureStorageKeys.userPin);
-    await prefs.setBool(AppConstants.prefPinSetupDone, true);
-    return true;
   }
 
   Future<void> _ensureNotificationPermission() async {

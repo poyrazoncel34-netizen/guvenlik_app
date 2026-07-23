@@ -12,6 +12,15 @@ class PinVerificationResult {
   final bool matches;
 }
 
+enum PinChangeOutcome {
+  changed,
+  currentMismatch,
+  sameAsCurrent,
+  absent,
+  readFailed,
+  unknown,
+}
+
 /// Verifies the safety PIN without ever exposing the configured PIN to a
 /// widget. Only the non-secret [PinState] is cached.
 class PinVerificationService {
@@ -122,6 +131,45 @@ class PinVerificationService {
         state: _state = PinState.readFailed,
         matches: false,
       );
+    }
+  }
+
+  /// Replaces a PIN only after the current candidate is verified. The stored
+  /// PIN never crosses this service boundary. [unknown] means a write was
+  /// attempted but could not be read back, so callers must not claim success.
+  Future<PinChangeOutcome> changePin({
+    required String currentCandidate,
+    required String newCandidate,
+  }) async {
+    final current = await verify(currentCandidate);
+    if (current.state == PinState.absent) return PinChangeOutcome.absent;
+    if (current.state != PinState.configured) {
+      return PinChangeOutcome.readFailed;
+    }
+    if (!current.matches) return PinChangeOutcome.currentMismatch;
+    if (_constantTimeEquals(currentCandidate, newCandidate)) {
+      return PinChangeOutcome.sameAsCurrent;
+    }
+
+    try {
+      await _storage
+          .write(key: SecureStorageKeys.userPin, value: newCandidate)
+          .timeout(_operationTimeout);
+      final acknowledged = await _storage
+          .read(key: SecureStorageKeys.userPin)
+          .timeout(_operationTimeout);
+      if (acknowledged == null ||
+          !_constantTimeEquals(acknowledged, newCandidate)) {
+        return PinChangeOutcome.unknown;
+      }
+      final preferences = await _preferencesLoader().timeout(_operationTimeout);
+      await preferences
+          .remove(SecureStorageKeys.userPin)
+          .timeout(_operationTimeout);
+      _state = PinState.configured;
+      return PinChangeOutcome.changed;
+    } catch (_) {
+      return PinChangeOutcome.unknown;
     }
   }
 

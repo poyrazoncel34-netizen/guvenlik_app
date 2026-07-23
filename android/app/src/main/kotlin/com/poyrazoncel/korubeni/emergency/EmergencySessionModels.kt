@@ -77,6 +77,7 @@ enum class EntitlementDecision(val wireValue: String) {
 enum class SchedulingMode(val wireValue: String) {
     EXACT_AND_INEXACT("exactAndInexact"),
     EXACT_ONLY("exactOnly"),
+    INEXACT_ONLY("inexactOnly"),
     NONE("none"),
 }
 

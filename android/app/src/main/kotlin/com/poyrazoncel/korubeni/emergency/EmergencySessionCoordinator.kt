@@ -241,7 +241,16 @@ class EmergencySessionCoordinator(
         if (current.lifecycleState !in setOf(LifecycleState.ARMED, LifecycleState.CLAIMED)) {
             return@synchronized DispatchResult.notAttempted(token, current.lifecycleState)
         }
-        if (current.lifecycleState == LifecycleState.ARMED && wallClockMs() < current.finalDeadlineMs) {
+        // Alarms are scheduled against elapsed realtime.  Using wall time here
+        // re-opened the session after a user/NTP clock rollback: the elapsed
+        // alarm fired, but the claim was rejected forever because no second
+        // delivery was scheduled.  The envelope's elapsed deadline is the
+        // authoritative same-boot claim boundary; boot reconciliation derives
+        // a fresh elapsed deadline from wall time after a reboot.
+        if (
+            current.lifecycleState == LifecycleState.ARMED &&
+            elapsedRealtimeMs() < current.elapsedRealtimeDeadlineMs
+        ) {
             return@synchronized DispatchResult.notAttempted(token, LifecycleState.ARMED)
         }
 
@@ -399,12 +408,17 @@ class EmergencySessionCoordinator(
             ?: return@synchronized false
         val publishedCrashWindow = current.lifecycleState == LifecycleState.CLAIMED &&
             EmergencyTargetValidator.isCallable(current.target)
+        val recoveryPublishedCrashWindow =
+            current.lifecycleState == LifecycleState.ARMED &&
+                current.schedulingMode == SchedulingMode.NONE &&
+                EmergencyTargetValidator.isCallable(current.target)
         if (
             current.token != token ||
             (
                 current.fallbackOutcome !in
                     setOf(FallbackOutcome.POSTED, FallbackOutcome.EXPIRED) &&
-                    !publishedCrashWindow
+                    !publishedCrashWindow &&
+                    !recoveryPublishedCrashWindow
                 )
         ) {
             return@synchronized false
@@ -414,6 +428,11 @@ class EmergencySessionCoordinator(
         }
         store.write(
             current.copy(
+                lifecycleState = if (recoveryPublishedCrashWindow) {
+                    LifecycleState.REQUEST_FAILED
+                } else {
+                    current.lifecycleState
+                },
                 target = "",
                 fallbackOutcome = FallbackOutcome.EXPIRED,
                 fallbackExpiresAtMs = 0L,
@@ -432,15 +451,33 @@ class EmergencySessionCoordinator(
         val terminalPosted = current.lifecycleState.isTerminal &&
             current.fallbackOutcome == FallbackOutcome.POSTED &&
             current.fallbackExpiresAtMs == intendedExpiryMs
+        // The fallback outcome is committed before Telecom. If the process or
+        // terminal write fails afterwards, CLAIMED + POSTED is still durable
+        // authorization for the exact immutable token/expiry action. Rejecting
+        // it would turn an already visible safety notification into a dead tap.
+        val claimedPosted = current.lifecycleState == LifecycleState.CLAIMED &&
+            current.fallbackOutcome == FallbackOutcome.POSTED &&
+            current.fallbackExpiresAtMs == intendedExpiryMs
         // If the process died after publishing the immutable notification but
         // before recording POSTED, CLAIMED is the only admissible recovery
         // state. The PendingIntent's embedded expiry remains authoritative.
         val publishedCrashWindow = current.lifecycleState == LifecycleState.CLAIMED &&
             current.fallbackOutcome == FallbackOutcome.NOT_ATTEMPTED
+        // Boot/clock reconciliation first commits ARMED+NONE before posting an
+        // immediate recovery action. If the process dies after Notification
+        // Manager accepts it but before the terminal commit, that durable NONE
+        // marker authorizes only the exact token/expiry embedded in the action.
+        val recoveryPublishedCrashWindow =
+            current.lifecycleState == LifecycleState.ARMED &&
+                current.schedulingMode == SchedulingMode.NONE &&
+                current.fallbackOutcome == FallbackOutcome.NOT_ATTEMPTED
         if (
             current.token != token || intendedExpiryMs <= now ||
             intendedExpiryMs > now + FALLBACK_TARGET_RETENTION_MS ||
-            (!terminalPosted && !publishedCrashWindow) ||
+            (
+                !terminalPosted && !claimedPosted && !publishedCrashWindow &&
+                    !recoveryPublishedCrashWindow
+                ) ||
             !EmergencyTargetValidator.isCallable(current.target)
         ) {
             if (
@@ -461,7 +498,7 @@ class EmergencySessionCoordinator(
         val target = current.target
         val consumed = store.write(
             current.copy(
-                lifecycleState = if (publishedCrashWindow) {
+                lifecycleState = if (publishedCrashWindow || recoveryPublishedCrashWindow) {
                     LifecycleState.MANUAL_ACTION_REQUIRED
                 } else {
                     current.lifecycleState
@@ -472,6 +509,40 @@ class EmergencySessionCoordinator(
             ),
         )
         if (consumed) target else null
+    }
+
+    /** Restores the same immutable fallback when ACTION_DIAL could not open. */
+    fun restoreConsumedFallbackTarget(
+        token: SessionToken,
+        intendedExpiryMs: Long,
+        target: String,
+    ): Boolean = synchronized(PROCESS_LOCK) {
+        val normalized = EmergencyTargetValidator.normalizedCallableOrNull(target)
+            ?: return@synchronized false
+        val current = (store.read(token.slot) as? SessionRead.Present)?.envelope
+            ?: return@synchronized false
+        val now = wallClockMs()
+        if (
+            current.token != token ||
+            !current.lifecycleState.isTerminal ||
+            current.lifecycleState in setOf(
+                LifecycleState.CANCELLED,
+                LifecycleState.CORRUPTED,
+            ) ||
+            current.target.isNotBlank() ||
+            current.fallbackOutcome != FallbackOutcome.EXPIRED ||
+            intendedExpiryMs <= now ||
+            intendedExpiryMs > now + FALLBACK_TARGET_RETENTION_MS
+        ) {
+            return@synchronized false
+        }
+        store.write(
+            current.copy(
+                target = normalized,
+                fallbackOutcome = FallbackOutcome.POSTED,
+                fallbackExpiresAtMs = intendedExpiryMs,
+            ),
+        )
     }
 
     /** Re-arms future alarms or dispatches elapsed ARMED/CLAIMED sessions. */
@@ -493,9 +564,18 @@ class EmergencySessionCoordinator(
                                 elapsedRealtimeDeadlineMs = elapsedRealtimeMs() +
                                     (envelope.finalDeadlineMs - wallClockMs()).coerceAtLeast(0L),
                             )
-                            if (store.write(rebased)) envelope = rebased
+                            if (!store.write(rebased)) {
+                                publishSchedulingRecovery(rebased)
+                                return@forEach
+                            }
+                            envelope = rebased
                         }
-                        scheduleBestEffort(envelope)
+                        val schedule = scheduleBestEffort(envelope)
+                        if (!schedule.exactAccepted && !schedule.inexactAccepted) {
+                            publishSchedulingRecovery(envelope)
+                        } else {
+                            persistSchedulingMode(envelope, schedule)
+                        }
                     }
                 }
                 LifecycleState.CLAIMED -> claimAndDispatch(envelope.token)
@@ -511,8 +591,35 @@ class EmergencySessionCoordinator(
                     )
                     cancelAlarmBestEffort(envelope.token)
                 }
-                else -> Unit
+                else -> reconcilePostedFallback(envelope)
             }
+        }
+    }
+
+    private fun reconcilePostedFallback(envelope: EmergencySessionEnvelope) {
+        if (
+            envelope.fallbackOutcome != FallbackOutcome.POSTED ||
+            !EmergencyTargetValidator.isCallable(envelope.target)
+        ) {
+            return
+        }
+        if (envelope.fallbackExpiresAtMs <= wallClockMs()) {
+            expireFallback(envelope.token)
+            return
+        }
+        val reposted = try {
+            fallbackPoster.post(envelope)
+        } catch (_: RuntimeException) {
+            FallbackOutcome.FAILED
+        }
+        if (reposted != FallbackOutcome.POSTED) {
+            store.write(
+                envelope.copy(
+                    target = "",
+                    fallbackOutcome = FallbackOutcome.FAILED,
+                    fallbackExpiresAtMs = 0L,
+                ),
+            )
         }
     }
 
@@ -535,8 +642,63 @@ class EmergencySessionCoordinator(
                 mainDeadlineMs = (finalDeadline - phaseLength).coerceAtLeast(wallClockMs()),
                 finalDeadlineMs = finalDeadline,
             )
-            if (store.write(rebased)) scheduleBestEffort(rebased)
+            if (store.write(rebased)) {
+                val schedule = scheduleBestEffort(rebased)
+                if (!schedule.exactAccepted && !schedule.inexactAccepted) {
+                    publishSchedulingRecovery(rebased)
+                } else {
+                    persistSchedulingMode(rebased, schedule)
+                }
+            }
         }
+    }
+
+    private fun persistSchedulingMode(
+        envelope: EmergencySessionEnvelope,
+        schedule: AlarmScheduleResult,
+    ) {
+        val mode = when {
+            schedule.exactAccepted && schedule.inexactAccepted ->
+                SchedulingMode.EXACT_AND_INEXACT
+            schedule.exactAccepted -> SchedulingMode.EXACT_ONLY
+            schedule.inexactAccepted -> SchedulingMode.INEXACT_ONLY
+            else -> SchedulingMode.NONE
+        }
+        if (envelope.schedulingMode != mode) {
+            store.write(envelope.copy(schedulingMode = mode))
+        }
+    }
+
+    /**
+     * A future ARMED session must never remain apparently protected with zero
+     * AlarmManager delivery paths. Preserve an actionable, user-driven dial
+     * path without submitting an early Telecom request.
+     */
+    private fun publishSchedulingRecovery(envelope: EmergencySessionEnvelope) {
+        val stranded = envelope.copy(schedulingMode = SchedulingMode.NONE)
+        if (!store.write(stranded)) return
+
+        val intendedExpiry = wallClockMs() + FALLBACK_TARGET_RETENTION_MS
+        val fallbackCandidate = stranded.copy(fallbackExpiresAtMs = intendedExpiry)
+        val outcome = try {
+            fallbackPoster.post(fallbackCandidate)
+        } catch (_: RuntimeException) {
+            FallbackOutcome.FAILED
+        }
+        val posted = outcome == FallbackOutcome.POSTED
+        store.write(
+            fallbackCandidate.copy(
+                lifecycleState = if (posted) {
+                    LifecycleState.MANUAL_ACTION_REQUIRED
+                } else {
+                    LifecycleState.REQUEST_FAILED
+                },
+                target = if (posted) stranded.target else "",
+                callRequestOutcome = CallRequestOutcome.NOT_ATTEMPTED,
+                fallbackOutcome = outcome,
+                fallbackExpiresAtMs = if (posted) intendedExpiry else 0L,
+            ),
+        )
     }
 
     fun wipe(): WipeResult = synchronized(PROCESS_LOCK) {
