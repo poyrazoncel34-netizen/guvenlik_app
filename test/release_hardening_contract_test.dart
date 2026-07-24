@@ -66,6 +66,26 @@ void main() {
     expect(verifier, isNot(contains('deterministik cevabıdır')));
   });
 
+  test('strict verifier resolves dependencies cold before claiming green', () {
+    // 2026-07-24 regresyonu: verification-metadata.xml'de
+    // ui-unit-android-1.7.0.module girdisi eksikti. Yerel dogrulama zinciri
+    // 6/6 yesil verdi ama CI'in 4 job'u ayni commit'te kirmiziydi. Sebep
+    // yapisal: Gradle surum cakismasini descriptor cache'inden cozer ve
+    // KAYBEDEN adayin .module dosyasini indirmedigi icin dogrulama yerelde hic
+    // tetiklenmez. --refresh-dependencies bu farki kapatir; bayrak dusurulurse
+    // kapi sessizce yalanci-yesile doner, o yuzden pinlenir.
+    final verifier = File('scripts/verify_release.sh').readAsStringSync();
+
+    expect(verifier, contains('checkPlayDebugAarMetadata'));
+    expect(verifier, contains('--refresh-dependencies'));
+
+    // Dogrulanamayan kapi yesil sayilamaz (fail-closed).
+    expect(verifier, contains('dogrulanamayan kapi yesil sayilmaz'));
+
+    // Adim sayaci sabit olmamali: kapi eklendiginde sessizce yanlis sayar.
+    expect(verifier, isNot(contains(r'[%d/6]')));
+  });
+
   test('fallback notifications and PendingIntents do not carry phone PII', () {
     final copy = File(
       'android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/NativeNotificationText.kt',
