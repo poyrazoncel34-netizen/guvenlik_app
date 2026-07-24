@@ -86,6 +86,55 @@ void main() {
     expect(verifier, isNot(contains(r'[%d/6]')));
   });
 
+  test('platform-classified artifacts are verified for CI and dev hosts', () {
+    // 2026-07-24, ikinci regresyon: aapt2'nin YALNIZ -osx.jar girdisi vardi,
+    // cunku verification-metadata.xml bir macOS makinesinde uretilmisti. CI
+    // ubuntu'dur ve -linux.jar ister; o girdi olmadan
+    // :audioplayers_android:compileDebugLibraryResources kirilir.
+    //
+    // Bu, soguk cozum kapisinin (verify_release.sh --strict-release-gates)
+    // YAPISAL OLARAK yakalayamayacagi bir siniftir: --refresh-dependencies bile
+    // macOS'ta linux siniflandirmali artefakti cozmez, cunku siniflandirmayi
+    // host OS belirler. Statik kontrol tek dogru arac.
+    final metadata = File(
+      'android/gradle/verification-metadata.xml',
+    ).readAsStringSync();
+
+    final classified = RegExp(r'name="([^"]+)-(linux|osx|windows)\.jar"');
+    final families = <String, Set<String>>{};
+    for (final match in classified.allMatches(metadata)) {
+      families.putIfAbsent(match.group(1)!, () => <String>{})
+        ..add(match.group(2)!);
+    }
+
+    // En az bir platform-siniflandirmali aile bulunmali; regex sessizce
+    // eslesmeyi birakirsa test yalanci-yesile donmemeli.
+    expect(
+      families,
+      isNotEmpty,
+      reason:
+          'platform-siniflandirmali artefakt bulunamadi; regex bozulmus olabilir',
+    );
+
+    final missing = <String>[];
+    families.forEach((base, platforms) {
+      for (final required in const ['linux', 'osx']) {
+        if (!platforms.contains(required)) {
+          missing.add('$base -> $required eksik');
+        }
+      }
+    });
+
+    expect(
+      missing,
+      isEmpty,
+      reason:
+          'CI ubuntu, gelistirici makinesi macOS. Her iki siniflandirma da '
+          'kayitli olmali. Eksik girdiyi ELLE yazma; Gradle yazicisini o '
+          'siniflandirmayi cozmeye zorlayip urettir.',
+    );
+  });
+
   test('fallback notifications and PendingIntents do not carry phone PII', () {
     final copy = File(
       'android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/NativeNotificationText.kt',
