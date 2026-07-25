@@ -11,6 +11,10 @@ Required upload files:
 - `final/03_settings_legal.png`
 - `final/04_map.png`
 
+Release builds set FLAG_SECURE, so `adb shell screencap` returns a black frame
+against them. Capture store screenshots from a DEBUG build
+(`scripts/capture_screenshots.sh`), which is exempt by design.
+
 Before Play upload, manually verify:
 
 - no real names

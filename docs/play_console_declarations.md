@@ -75,11 +75,15 @@ KoruBeni is a personal safety app. CALL_PHONE is used only for a Panic/SOS, Chec
 
 ## `FLAG_SECURE`
 
-Status: NOT DECLARED; reviewer copy must describe the actual recents privacy mask.
+Status: NOT DECLARED (no Console form exists for it); reviewer copy must
+describe the actual behaviour.
 
 ```text
-KoruBeni does not set Android FLAG_SECURE globally. Ordinary screenshots remain possible. When the app moves to the background, an in-app privacy mask obscures sensitive content in the recent-apps preview; this is not an OS-level screenshot prohibition.
+KoruBeni sets Android FLAG_SECURE on its window in release builds, so screenshots, screen recording and the recent-apps thumbnail are blocked throughout the app. This is a duress-model control: the app holds a local safety PIN and emergency contact numbers, and screen-capturing software is the realistic way both leave the device. The in-app privacy mask remains as a defence in depth. Debug builds do not set the flag, which is how store screenshots are produced.
 ```
+
+Reviewer note: a reviewer recording their screen will capture a black frame.
+That is the intended behaviour, not a rendering defect.
 
 ## Target Audience
 

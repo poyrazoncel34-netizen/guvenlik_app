@@ -8,9 +8,11 @@ import android.content.Intent
 import android.media.AudioManager
 import android.net.Uri
 import android.os.Build
+import android.os.Bundle
 import android.provider.ContactsContract
 import android.provider.Settings
 import android.view.KeyEvent
+import android.view.WindowManager
 import com.poyrazoncel.korubeni.emergency.EmergencyChannels
 import com.poyrazoncel.korubeni.emergency.EmergencyEventStreamHandler
 import com.poyrazoncel.korubeni.emergency.EmergencyPlatformHandler
@@ -31,6 +33,26 @@ class MainActivity : FlutterFragmentActivity() {
     private val volumeDetector = VolumeButtonDetector()
     private lateinit var emergencyPlatformHandler: EmergencyPlatformHandler
     private var pendingContactPickResult: MethodChannel.Result? = null
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        // FLAG_SECURE blocks screenshots, screen recording and the recents
+        // thumbnail for the whole app. Under the duress model the screens that
+        // matter are the PIN pad, the emergency contact list and the safety
+        // timeline — and screen-capturing stalkerware is precisely the threat
+        // that harvests a PIN as it is typed. It is applied window-wide rather
+        // than per screen because a per-screen list is one forgotten route
+        // away from leaking the thing it was meant to protect.
+        //
+        // Debug builds are exempt so `scripts/capture_screenshots.sh` can still
+        // produce the store assets; the shipped release build is protected.
+        if (!BuildConfig.DEBUG) {
+            window.setFlags(
+                WindowManager.LayoutParams.FLAG_SECURE,
+                WindowManager.LayoutParams.FLAG_SECURE,
+            )
+        }
+        super.onCreate(savedInstanceState)
+    }
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
