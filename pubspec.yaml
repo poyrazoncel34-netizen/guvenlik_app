@@ -146,7 +146,11 @@ flutter:
   # the material Icons class.
   uses-material-design: true
   assets:
-    - assets/translations/
+    # Only the shipped locale is bundled. `supportedLocales` is tr_TR only
+    # (main.dart) and androidResources.localeFilters is ["tr"], so en-US.json
+    # was 63 KB of never-loaded payload. It stays in the repository as the
+    # parity reference that translations_key_parity_test.dart reads from disk.
+    - assets/translations/tr-TR.json
     - assets/sounds/ringtone.wav
     - assets/sounds/siren.wav
     - assets/legal/THIRD_PARTY_NOTICES.txt

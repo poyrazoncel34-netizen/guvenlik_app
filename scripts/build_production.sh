@@ -58,6 +58,39 @@ echo ""
 # Android AAB Build
 echo "🤖 Android AAB build başlıyor..."
 echo "   Sensitive dart defines are set; values are redacted."
+# versionCode/versionName: CI ile AYNI formulden turetilir
+# (.github/workflows/release.yml "Extract version from tag").
+# Bu script bunu vermezse Flutter pubspec'teki `1.0.0+1` ile derler ve
+# versionCode 1 uretir; Play'e yuklenince "versionCode daha yuksek olmali"
+# duvarina cikilir ve o kod kalici olarak yanar. Bu yuzden surum artik
+# zorunlu bir girdidir, varsayilan degildir.
+RELEASE_TAG="${RELEASE_TAG:-${1:-}}"
+if [ -z "$RELEASE_TAG" ]; then
+    RELEASE_TAG="$(git describe --tags --exact-match 2>/dev/null || true)"
+fi
+if [ -z "$RELEASE_TAG" ]; then
+    echo "❌ Surum belirlenemedi."
+    echo "   Bu script yuklenebilir bir artefakt uretecekse surum acik olmalidir."
+    echo "   Kullanim:  RELEASE_TAG=v1.0.3 ./scripts/build_production.sh"
+    echo "   veya HEAD'i imzali bir surum etiketine tasiyin."
+    echo "   (Surumsuz derleme versionCode 1 uretir ve o kodu kalici yakar.)"
+    exit 1
+fi
+if [[ ! "$RELEASE_TAG" =~ ^v([0-9]|[1-9][0-9]*)\.([0-9]|[1-9][0-9]*)\.([0-9]|[1-9][0-9]*)$ ]]; then
+    echo "❌ Gecersiz surum etiketi: $RELEASE_TAG (beklenen: vMAJOR.MINOR.PATCH)"
+    exit 1
+fi
+VERSION_NAME="${RELEASE_TAG#v}"
+VERSION_MAJOR="${BASH_REMATCH[1]}"
+VERSION_MINOR="${BASH_REMATCH[2]}"
+VERSION_PATCH="${BASH_REMATCH[3]}"
+if [ "$VERSION_MINOR" -gt 99 ] || [ "$VERSION_PATCH" -gt 99 ]; then
+    echo "❌ MINOR ve PATCH 99'u asamaz (versionCode formulu bozulur)."
+    exit 1
+fi
+VERSION_CODE=$((VERSION_MAJOR * 10000 + VERSION_MINOR * 100 + VERSION_PATCH))
+echo "   Surum: $VERSION_NAME (versionCode $VERSION_CODE)"
+
 AAB_PATH="build/app/outputs/bundle/playRelease/app-play-release.aab"
 MERGED_MANIFEST="build/app/intermediates/merged_manifest/playRelease/processPlayReleaseMainManifest/AndroidManifest.xml"
 ANDROID_SURFACE_REPORT="build/release-evidence/android-release-surface.json"
@@ -72,6 +105,8 @@ mkdir -p "$SYMBOLS_DIR"
 flutter build appbundle --release \
   --flavor play \
   --target-platform android-arm64 \
+  --build-name="$VERSION_NAME" \
+  --build-number="$VERSION_CODE" \
   --obfuscate \
   --split-debug-info="$SYMBOLS_DIR" \
   --dart-define=ENV=production \

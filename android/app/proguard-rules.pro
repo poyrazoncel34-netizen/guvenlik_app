@@ -73,11 +73,12 @@
 # ── AlarmManager / PendingIntent receiver class names ────────────────────────
 # CheckInAlarmReceiver's class name is baked into the PendingIntent at
 # scheduling time and must match exactly when the alarm fires after reboot.
+# Only classes that actually exist are listed: a keep rule for a deleted class
+# reads as protection that is not there.
 # Already covered by the korubeni.** wildcard, but called out explicitly
 # so this critical class is never accidentally removed by future rule changes.
 -keep class com.poyrazoncel.korubeni.emergency.CheckInAlarmReceiver { *; }
 -keep class com.poyrazoncel.korubeni.emergency.BootCompletedReceiver { *; }
--keep class com.poyrazoncel.korubeni.emergency.CheckInScheduler { *; }
 
 # MethodChannel handlers must not be obfuscated
 -keep class * implements io.flutter.plugin.common.MethodChannel$MethodCallHandler {

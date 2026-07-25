@@ -58,10 +58,10 @@
       "reason": "Reproducible build wrapper/lock output or generated store media."
     },
     {
-      "pattern": "^(?:android/(?:\\.gitignore$|app/build\\.gradle\\.kts$|app/src/main/AndroidManifest\\.xml$|app/src/main/res/xml/|build\\.gradle\\.kts$|fastlane/|gradle/)|pubspec\\.(?:yaml|lock)$)",
+      "pattern": "^(?:android/(?:\\.gitignore$|app/build\\.gradle\\.kts$|app/proguard-rules\\.pro$|app/src/main/AndroidManifest\\.xml$|app/src/main/res/xml/|build\\.gradle\\.kts$|fastlane/|gradle/)|pubspec\\.(?:yaml|lock)$)",
       "category": "release",
       "commitGroup": "03-android-build-dependency",
-      "reason": "Android manifest, dependency, toolchain, and build configuration."
+      "reason": "Android manifest, R8 keep rules, dependency, toolchain, and build configuration."
     },
     {
       "pattern": "^(?:\\.github/|config/|release-evidence/|scripts/|docs/(?:qa/|release/|audit/|research/)|docs/(?:HANDOVER|release_risks)\\.md$|test/(?:critical_coverage_gate|external_release_gate_verifier|license_|masvs_assessment_gate|osv_evidence_gate|release/|release_|safety_mutation_runner_contract|sbom_|source_file_size_ratchet|third_party_notices|store/|store_release_docs_test\\.dart$)|README\\.md$|SPEC\\.md$)",

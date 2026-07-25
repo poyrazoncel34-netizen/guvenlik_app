@@ -26,11 +26,24 @@ This checklist prepares operator actions only. No dashboard item is marked done 
 
 ## Build Artifact Reference
 
-Production build command must use Play flavor, production env, release signing, and the RevenueCat `goog_` Android public SDK key (`test_`/`sk_` keys are forbidden):
+Production builds go through the hardened script, never a hand-typed Flutter
+command. The script enforces Play flavor, production env, release signing, the
+RevenueCat `goog_` Android public SDK key (`test_`/`sk_` are forbidden), and an
+explicit release version:
 
 ```text
-flutter build appbundle --release --flavor play --target-platform android-arm64 --dart-define=ENV=production --dart-define=REVENUECAT_ANDROID_API_KEY=...
+RELEASE_TAG=v1.0.3 REVENUECAT_ANDROID_API_KEY=... ./scripts/build_production.sh
 ```
+
+`versionCode` is derived from the tag with the same formula CI uses
+(`MAJOR*10000 + MINOR*100 + PATCH`, so `v1.0.3` -> `10003`). A build produced
+without an explicit version carries `versionCode 1` from `pubspec.yaml`; Play
+rejects it and the code is burned permanently, so the script now refuses to
+build instead. Codes 10000/10001/10002 are already consumed by the existing
+`v1.0.0`/`v1.0.1`/`v1.0.2` tags.
+
+The artifact this script produces is for operator verification. The AAB that is
+actually published comes from the signed-tag CI release workflow.
 
 Expected AAB path:
 
