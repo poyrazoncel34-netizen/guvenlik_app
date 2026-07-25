@@ -12,6 +12,7 @@ import '../core/app_colors.dart';
 import '../core/services/contact_service.dart';
 import '../domain/repositories/contacts_repository.dart';
 import '../core/services/activity_service.dart';
+import '../core/services/countdown_clock.dart';
 import '../core/services/call_service.dart';
 import '../core/services/android_intent_service.dart';
 import '../core/services/pin_lockout_service.dart';
@@ -50,6 +51,8 @@ class CountdownScreen extends StatefulWidget {
 class _CountdownScreenState extends State<CountdownScreen>
     with TickerProviderStateMixin {
   int _countdown = 10;
+
+  DateTime? _armedDeadline; // absolute; see [CountdownClock]
   Timer? _timer;
   String _pin = "";
   PinState _pinState = PinState.loading;
@@ -180,6 +183,7 @@ class _CountdownScreenState extends State<CountdownScreen>
       // Dart and native race against the same 10-second deadline. Whichever
       // claims first performs the request; the loser reads the durable result.
       final deadline = DateTime.now().add(const Duration(seconds: 10));
+      _armedDeadline = deadline;
       result = await _emergencyPlatformService.armEmergencySession(
         kind: EmergencySessionKind.panic,
         mainDeadline: deadline,
@@ -224,7 +228,7 @@ class _CountdownScreenState extends State<CountdownScreen>
       if (!mounted) return;
       await _showBlockingFailure(
         title: 'emergency_total_failure_title'.tr(),
-        body: _blockedArmMessageKey(armResult).tr(),
+        body: PanicArmPolicy.blockedMessageKey(armResult).tr(),
         phoneNumber: '',
       );
       return;
@@ -232,31 +236,27 @@ class _CountdownScreenState extends State<CountdownScreen>
     _startDartCountdownTimer();
   }
 
-  String _blockedArmMessageKey(ArmResult result) {
-    if (result is! ArmRejected) return 'safety_session_not_ready';
-    return switch (result.reasonCode) {
-      'entitlementDenied' ||
-      'entitlementUnknown' => 'safety_session_entitlement_unverified',
-      'pinNotConfigured' => 'safety_session_pin_required',
-      'pinReadFailed' => 'pin_state_read_failed',
-      'targetNotCallable' ||
-      'callableTargetMissing' => 'timer_emergency_contact_required',
-      _ => 'safety_session_not_ready',
-    };
-  }
-
   void _startDartCountdownTimer() {
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (_countdown > 1) {
-        setState(() => _countdown--);
+    // Test mode has no armed session, so it keeps the plain tick behaviour.
+    final deadline = _armedDeadline;
+    // Real session polls the deadline; test mode keeps whole-second ticks.
+    final period = deadline == null
+        ? const Duration(seconds: 1)
+        : const Duration(milliseconds: 200);
+    _timer = Timer.periodic(period, (timer) {
+      final left = deadline == null
+          ? _countdown - 1
+          : CountdownClock.secondsUntil(deadline);
+      if (left > 0) {
+        if (left == _countdown) return;
+        setState(() => _countdown = left);
         HapticService.countdownTick(secondsRemaining: _countdown);
-        // ── Tick bounce animation ──
-        _tickBounceController.forward(from: 0);
-      } else {
-        if (mounted) setState(() => _countdown = 0);
-        timer.cancel();
-        unawaited(_makeEmergencyCall());
+        _tickBounceController.forward(from: 0); // ── Tick bounce ──
+        return;
       }
+      if (mounted) setState(() => _countdown = 0);
+      timer.cancel();
+      unawaited(_makeEmergencyCall());
     });
   }
 

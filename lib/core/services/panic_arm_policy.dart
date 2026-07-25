@@ -19,6 +19,22 @@ abstract final class PanicArmPolicy {
     'alertChannelNotHigh',
   };
 
+  /// Translation key explaining a blocked arm. Lives here, next to the
+  /// disposition mapping it mirrors: two switches over the same reason codes
+  /// in two files drift apart silently.
+  static String blockedMessageKey(ArmResult result) {
+    if (result is! ArmRejected) return 'safety_session_not_ready';
+    return switch (result.reasonCode) {
+      'entitlementDenied' ||
+      'entitlementUnknown' => 'safety_session_entitlement_unverified',
+      'pinNotConfigured' => 'safety_session_pin_required',
+      'pinReadFailed' => 'pin_state_read_failed',
+      'targetNotCallable' ||
+      'callableTargetMissing' => 'timer_emergency_contact_required',
+      _ => 'safety_session_not_ready',
+    };
+  }
+
   static PanicArmDisposition dispositionFor(ArmResult result) {
     if (result is Armed) {
       return PanicArmDisposition.nativeProtectedCountdown;
