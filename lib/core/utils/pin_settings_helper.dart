@@ -5,12 +5,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import '../di/service_locator.dart';
-import '../security/secure_storage.dart';
-import '../security/secure_storage_keys.dart';
 import '../app_colors.dart';
 import '../services/activity_service.dart';
+import '../services/emergency_session_contract.dart';
+import '../services/pin_verification_service.dart';
 import 'validators.dart';
 import '../../domain/models/activity_event.dart';
 
@@ -120,26 +118,14 @@ abstract class PinSettingsHelper {
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: () async {
-                      final secureStorage = serviceLocator<SecureStorage>();
-                      final prefs = await SharedPreferences.getInstance();
-                      String? currentPin = await secureStorage.read(
-                        key: SecureStorageKeys.userPin,
-                      );
-                      if (currentPin == null || currentPin.isEmpty) {
-                        final legacy = prefs.getString(
-                          SecureStorageKeys.userPin,
-                        );
-                        if (legacy != null && legacy.isNotEmpty) {
-                          await secureStorage.write(
-                            key: SecureStorageKeys.userPin,
-                            value: legacy,
-                          );
-                          await prefs.remove(SecureStorageKeys.userPin);
-                          currentPin = legacy;
-                        }
-                      }
+                      // The configured PIN is never read into this closure.
+                      // PinVerificationService owns the constant-time
+                      // comparison and the one-way legacy migration, so there
+                      // is a single verification path in the app.
+                      final currentCheck = await PinVerificationService.instance
+                          .verify(oldController.text);
                       if (!ctx.mounted) return;
-                      if (currentPin == null || currentPin.isEmpty) {
+                      if (currentCheck.state == PinState.absent) {
                         ScaffoldMessenger.of(ctx).showSnackBar(
                           SnackBar(
                             content: Text("settings_pin_not_found".tr()),
@@ -148,7 +134,17 @@ abstract class PinSettingsHelper {
                         );
                         return;
                       }
-                      if (oldController.text != currentPin) {
+                      if (currentCheck.state == PinState.readFailed) {
+                        // A storage failure must not read as a wrong PIN.
+                        ScaffoldMessenger.of(ctx).showSnackBar(
+                          SnackBar(
+                            content: Text("pin_state_read_failed".tr()),
+                            backgroundColor: AppColors.emergency,
+                          ),
+                        );
+                        return;
+                      }
+                      if (!currentCheck.matches) {
                         ScaffoldMessenger.of(ctx).showSnackBar(
                           SnackBar(
                             content: Text("settings_pin_wrong".tr()),
@@ -175,7 +171,10 @@ abstract class PinSettingsHelper {
                         );
                         return;
                       }
-                      if (newController.text == currentPin) {
+                      final reuseCheck = await PinVerificationService.instance
+                          .verify(newController.text);
+                      if (!ctx.mounted) return;
+                      if (reuseCheck.matches) {
                         ScaffoldMessenger.of(ctx).showSnackBar(
                           SnackBar(
                             content: Text("settings_pin_same_as_old".tr()),
@@ -184,11 +183,20 @@ abstract class PinSettingsHelper {
                         );
                         return;
                       }
-                      await secureStorage.write(
-                        key: SecureStorageKeys.userPin,
-                        value: newController.text,
-                      );
-                      await prefs.remove(SecureStorageKeys.userPin);
+                      final saved = await PinVerificationService.instance
+                          .writePin(newController.text);
+                      if (!ctx.mounted) return;
+                      if (!saved) {
+                        // The old PIN still works; saying "updated" here would
+                        // send the user away with the wrong PIN in mind.
+                        ScaffoldMessenger.of(ctx).showSnackBar(
+                          SnackBar(
+                            content: Text("pin_setup_save_failed".tr()),
+                            backgroundColor: AppColors.emergency,
+                          ),
+                        );
+                        return;
+                      }
                       await ActivityService.logEvent(
                         type: ActivityType.pinChanged,
                         title: "activity_pin_changed_title".tr(),

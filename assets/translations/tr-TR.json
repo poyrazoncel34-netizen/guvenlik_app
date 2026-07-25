@@ -612,6 +612,7 @@
   "forgot_pin_reset_hint": "Onaylamak için SIFIRLA yazın",
   "forgot_pin_reset_token": "SIFIRLA",
   "forgot_pin_reset_button": "Sıfırla",
+  "forgot_pin_blocked_active_session": "Aktif bir güvenlik oturumu varken uygulama sıfırlanamaz. Önce PIN ile girip oturumu durdurun.",
   "pin_setup_save_failed": "PIN kaydedilemedi. Cihaz depolaması yanıt vermedi; lütfen tekrar deneyin.",
   "emergency_failover_called": "İlk kişi ulaşılamadı, {number} aranıyor...",
   "offline_info_title": "Çevrimdışı Mod",

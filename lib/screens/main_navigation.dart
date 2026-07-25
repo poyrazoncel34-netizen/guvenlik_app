@@ -9,9 +9,6 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/app_colors.dart';
 import '../core/constants/app_constants.dart';
-import '../core/di/service_locator.dart';
-import '../core/security/secure_storage.dart';
-import '../core/security/secure_storage_keys.dart';
 import '../core/utils/permission_helper.dart';
 // Firebase and notification services removed (offline-first)
 import '../widgets/connectivity_banner.dart';
@@ -20,6 +17,8 @@ import 'contacts_page.dart';
 import 'map_page.dart';
 import 'pin_setup_screen.dart';
 import 'settings_page.dart';
+import '../core/services/emergency_session_contract.dart';
+import '../core/services/pin_verification_service.dart';
 
 class MainNavigation extends StatefulWidget {
   const MainNavigation({super.key});
@@ -65,23 +64,17 @@ class _MainNavigationState extends State<MainNavigation> {
     await _ensureNotificationPermission();
   }
 
+  /// Same single verification path as SplashScreen: one owner for the legacy
+  /// migration and the hashed storage format, and one meaning for a read
+  /// failure (locked, not absent).
   Future<bool> _hasConfiguredPin() async {
-    final secureStorage = serviceLocator<SecureStorage>();
-    final securePin = await secureStorage.read(key: SecureStorageKeys.userPin);
-    if (securePin != null && securePin.isNotEmpty) {
+    final state = await PinVerificationService.instance.loadState();
+    if (state == PinState.configured) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(AppConstants.prefPinSetupDone, true);
       return true;
     }
-
-    final prefs = await SharedPreferences.getInstance();
-    final legacyPin = prefs.getString(SecureStorageKeys.userPin);
-    if (legacyPin == null || legacyPin.isEmpty) {
-      return false;
-    }
-
-    await secureStorage.write(key: SecureStorageKeys.userPin, value: legacyPin);
-    await prefs.remove(SecureStorageKeys.userPin);
-    await prefs.setBool(AppConstants.prefPinSetupDone, true);
-    return true;
+    return state != PinState.absent;
   }
 
   Future<void> _ensureNotificationPermission() async {

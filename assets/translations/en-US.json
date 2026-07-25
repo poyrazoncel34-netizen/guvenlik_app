@@ -612,6 +612,7 @@
   "forgot_pin_reset_hint": "Type RESET to confirm",
   "forgot_pin_reset_token": "RESET",
   "forgot_pin_reset_button": "Reset",
+  "forgot_pin_blocked_active_session": "The app cannot be reset while a safety session is active. Unlock with your PIN and stop the session first.",
   "pin_setup_save_failed": "The PIN could not be saved. Device storage did not respond; please try again.",
   "emergency_failover_called": "Primary contact unreachable, calling {number}...",
   "offline_info_title": "Offline Mode",

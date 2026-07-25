@@ -9,12 +9,11 @@ import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../core/app_colors.dart';
 import '../core/constants/app_constants.dart';
-import '../core/di/service_locator.dart';
-import '../core/security/secure_storage.dart';
-import '../core/security/secure_storage_keys.dart';
 import '../core/services/app_reset_service.dart';
 import '../core/services/emergency_session_contract.dart';
 import '../core/services/pin_lockout_service.dart';
+import '../core/services/pin_verification_service.dart';
+import '../core/services/safety_session_activity_probe.dart';
 import 'settings_legal/legal_settings_screen.dart';
 import 'splash_screen.dart';
 
@@ -29,14 +28,13 @@ class AppUnlockScreen extends StatefulWidget {
 
 class _AppUnlockScreenState extends State<AppUnlockScreen> {
   String _pin = '';
-  String? _correctPin;
+  PinState _pinState = PinState.loading;
+  bool _verifying = false;
   bool _loading = true;
 
   DateTime? _lockoutEndTime;
   StreamSubscription<int>? _lockoutSubscription;
   int _lockoutRemaining = 0;
-
-  late final SecureStorage _secureStorage = serviceLocator<SecureStorage>();
 
   @override
   void initState() {
@@ -45,18 +43,21 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> {
   }
 
   Future<void> _initScreen() async {
-    await _loadPin();
+    await _loadPinState();
     await _syncLockoutState();
     if (mounted) {
       setState(() => _loading = false);
     }
   }
 
-  Future<void> _loadPin() async {
-    final value = await _secureStorage.read(key: SecureStorageKeys.userPin);
+  /// Loads only the non-secret [PinState]. The configured PIN is never copied
+  /// into widget state: verification goes through [PinVerificationService],
+  /// which owns the constant-time comparison.
+  Future<void> _loadPinState() async {
+    final state = await PinVerificationService.instance.loadState();
     if (mounted) {
       setState(() {
-        _correctPin = value;
+        _pinState = state;
       });
     }
   }
@@ -111,10 +112,38 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> {
     if (_pin.length >= AppConstants.pinLength) return;
     setState(() => _pin += key);
 
-    if (_pin.length == AppConstants.pinLength && _correctPin != null) {
-      if (_pin == _correctPin) {
+    if (_pin.length == AppConstants.pinLength &&
+        _pinState != PinState.absent) {
+      unawaited(_submitPin());
+    }
+  }
+
+  Future<void> _submitPin() async {
+    if (_verifying) return;
+    _verifying = true;
+    try {
+      final candidate = _pin;
+      final result = await PinVerificationService.instance.verify(candidate);
+      if (!mounted) return;
+      setState(() => _pinState = result.state);
+
+      if (result.state == PinState.readFailed) {
+        // A storage failure is not a wrong PIN. Never consume a lockout
+        // attempt for it and never let it read as "no PIN configured".
+        setState(() => _pin = '');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('pin_state_read_failed'.tr()),
+            backgroundColor: AppColors.emergency,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        return;
+      }
+
+      if (result.matches) {
         HapticFeedback.lightImpact();
-        PinLockoutService.instance.reset();
+        unawaited(PinLockoutService.instance.reset());
         widget.onUnlocked();
       } else {
         HapticFeedback.vibrate();
@@ -152,6 +181,8 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> {
           debugPrint('PinLockoutService.registerFailure failed: $error');
         });
       }
+    } finally {
+      _verifying = false;
     }
   }
 
@@ -300,7 +331,7 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> {
                       _buildNumPad(),
                       const SizedBox(height: 8),
                       TextButton(
-                        onPressed: _isLockedOut ? null : _showForgotPinDialog,
+                        onPressed: _showForgotPinDialog,
                         child: Text(
                           'forgot_pin_title'.tr(),
                           style: TextStyle(
@@ -323,6 +354,25 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> {
   }
 
   Future<void> _showForgotPinDialog() async {
+    // Duress guard: this dialog runs BEFORE authentication and its confirm
+    // action cancels every PREPARING/ARMED native session before deleting
+    // local data. An attacker holding the device must not be able to silence
+    // a running Check-In / Safe Walk without the PIN. Fail-closed: an
+    // unreadable projection counts as "a session may be live".
+    if (await SafetySessionActivityProbe.instance.hasActiveSession()) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('forgot_pin_blocked_active_session'.tr()),
+          backgroundColor: AppColors.emergency,
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 5),
+        ),
+      );
+      return;
+    }
+    if (!mounted) return;
+
     final confirmController = TextEditingController();
     final resetToken = 'forgot_pin_reset_token'.tr();
     await showDialog<void>(
