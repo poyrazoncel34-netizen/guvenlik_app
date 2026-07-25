@@ -103,8 +103,9 @@ void main() {
     final classified = RegExp(r'name="([^"]+)-(linux|osx|windows)\.jar"');
     final families = <String, Set<String>>{};
     for (final match in classified.allMatches(metadata)) {
-      families.putIfAbsent(match.group(1)!, () => <String>{})
-        ..add(match.group(2)!);
+      families
+          .putIfAbsent(match.group(1)!, () => <String>{})
+          .add(match.group(2)!);
     }
 
     // En az bir platform-siniflandirmali aile bulunmali; regex sessizce
