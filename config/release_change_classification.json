@@ -64,7 +64,7 @@
       "reason": "Android manifest, R8 keep rules, dependency, toolchain, and build configuration."
     },
     {
-      "pattern": "^(?:\\.github/|config/|release-evidence/|scripts/|docs/(?:qa/|release/|audit/|research/)|docs/(?:HANDOVER|release_risks)\\.md$|test/(?:critical_coverage_gate|external_release_gate_verifier|license_|masvs_assessment_gate|osv_evidence_gate|release/|release_|safety_mutation_runner_contract|sbom_|source_file_size_ratchet|third_party_notices|store/|store_release_docs_test\\.dart$)|README\\.md$|SPEC\\.md$)",
+      "pattern": "^(?:\\.github/|config/|release-evidence/|scripts/|docs/(?:qa/|release/|audit/|research/|design/)|docs/(?:HANDOVER|release_risks)\\.md$|test/(?:critical_coverage_gate|external_release_gate_verifier|license_|masvs_assessment_gate|osv_evidence_gate|release/|release_|safety_mutation_runner_contract|sbom_|source_file_size_ratchet|third_party_notices|store/|store_release_docs_test\\.dart$)|README\\.md$|SPEC\\.md$)",
       "category": "release",
       "commitGroup": "04-ci-evidence-security",
       "reason": "CI, evidence, security, audit, or release-governance source."
