@@ -13,6 +13,7 @@ import 'package:share_plus/share_plus.dart';
 import '../core/app_colors.dart';
 import '../core/services/sensitive_temp_file_service.dart';
 import '../core/services/user_data_export_service.dart';
+import '../core/widgets/sensitive_action_pin_gate.dart';
 
 /// Section keys used for content lookup (locale-independent).
 /// Must match the keys passed from settings_page (e.g. settings_about_app).
@@ -280,6 +281,10 @@ class _DataExportButtonState extends State<_DataExportButton> {
 
   Future<void> _exportData() async {
     if (_exporting) return;
+    // Same disclosure as DataExportScreen, so the same gate. Two export
+    // entry points with different rules is how one of them ends up unguarded.
+    if (!await SensitiveActionPinGate.ensure(context)) return;
+    if (!mounted) return;
     setState(() => _exporting = true);
     File? exportFile;
     try {

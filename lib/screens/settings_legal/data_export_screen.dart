@@ -13,6 +13,7 @@ import 'dart:io';
 import '../../core/app_colors.dart';
 import '../../core/services/user_data_export_service.dart';
 import '../../core/services/sensitive_temp_file_service.dart';
+import '../../core/widgets/sensitive_action_pin_gate.dart';
 
 class DataExportScreen extends StatefulWidget {
   const DataExportScreen({super.key});
@@ -26,6 +27,12 @@ class _DataExportScreenState extends State<DataExportScreen> {
 
   Future<void> _exportData() async {
     if (_exporting) return;
+    // The export payload is the whole local record: every emergency contact
+    // with its phone number, the profile e-mail, the fake-call number, the
+    // consent log and the activity history. Handing that to a user-chosen
+    // app is a disclosure, so it is gated like one.
+    if (!await SensitiveActionPinGate.ensure(context)) return;
+    if (!mounted) return;
     setState(() => _exporting = true);
     HapticFeedback.mediumImpact();
     File? exportFile;
