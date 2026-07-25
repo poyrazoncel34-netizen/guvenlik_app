@@ -33,6 +33,30 @@ class PinLockoutService {
   static const String _failedAttemptsKey = 'pin_lockout_failed_attempts';
   static const String _lockedUntilKey = 'pin_lockout_until_ms';
 
+  /// First lockout length, applied at the 5th consecutive failure.
+  static const int baseLockoutSeconds = 30;
+
+  /// Hard ceiling for the exponential backoff.
+  ///
+  /// Uncapped doubling reached 8.5 hours at 15 failures and ~11 days at 20,
+  /// which locks a panicking owner out of their own safety app, and past ~44
+  /// failures the computed duration overflowed into the past and disabled the
+  /// lockout entirely. A capped window keeps brute force impractical
+  /// (9,984 admissible 4-digit PINs at one attempt per 15 minutes) while
+  /// remaining survivable for the legitimate user.
+  static const int maxLockoutSeconds = 15 * 60;
+
+  /// Pure, testable backoff: 30s, 60s, 120s ... capped at [maxLockoutSeconds].
+  static int lockoutSecondsFor(int failedAttempts) {
+    if (failedAttempts < 5) return 0;
+    final exponent = failedAttempts - 5;
+    // Stop doubling before the value can leave the int range; the cap applies
+    // long before this bound, so the clamp is a safety net, not the policy.
+    if (exponent >= 32) return maxLockoutSeconds;
+    final seconds = baseLockoutSeconds * pow(2, exponent).toInt();
+    return seconds > maxLockoutSeconds ? maxLockoutSeconds : seconds;
+  }
+
   final SecureStorage _secureStorage = serviceLocator<SecureStorage>();
 
   Future<PinLockoutState> getState() async {
@@ -60,8 +84,7 @@ class PinLockoutService {
 
     DateTime? lockedUntil;
     if (failedAttempts >= 5) {
-      final exponent = failedAttempts - 5;
-      final seconds = 30 * pow(2, exponent).toInt();
+      final seconds = lockoutSecondsFor(failedAttempts);
       lockedUntil = DateTime.now().add(Duration(seconds: seconds));
       await _secureStorage.write(
         key: _lockedUntilKey,
