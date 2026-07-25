@@ -613,6 +613,7 @@
   "forgot_pin_reset_token": "SIFIRLA",
   "forgot_pin_reset_button": "Sıfırla",
   "forgot_pin_blocked_active_session": "Aktif bir güvenlik oturumu varken uygulama sıfırlanamaz. Önce PIN ile girip oturumu durdurun.",
+  "subscription_entitlement_unverified": "Abonelik durumu doğrulanamadı. Bağlantınızı kontrol edip tekrar deneyin; aboneliğiniz varsa \"Satın Alımları Geri Yükle\" seçeneğini kullanın.",
   "pin_setup_save_failed": "PIN kaydedilemedi. Cihaz depolaması yanıt vermedi; lütfen tekrar deneyin.",
   "emergency_failover_called": "İlk kişi ulaşılamadı, {number} aranıyor...",
   "offline_info_title": "Çevrimdışı Mod",

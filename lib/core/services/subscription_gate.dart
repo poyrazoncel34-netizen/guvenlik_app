@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -50,8 +51,27 @@ class SubscriptionGate {
     // CustomerInfo response that verified "free" may route to the paywall.
     if (access.shouldShowPaywall) {
       await showPaywall(context, lockedFeature: feature);
+      return false;
     }
+
+    // Neither verified-Pro nor verified-free: the entitlement could not be
+    // resolved at all (first launch offline, store/RevenueCat unreachable).
+    // The authorization decision stays fail-closed, but a safety control must
+    // never read as "broken button" — an unexplained no-op is indistinguishable
+    // from a crash to someone who is about to need it.
+    showEntitlementUnverified(context);
     return false;
+  }
+
+  /// Visible, non-silent rejection for an unresolved entitlement.
+  static void showEntitlementUnverified(BuildContext context) {
+    ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+      SnackBar(
+        content: Text('subscription_entitlement_unverified'.tr()),
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 5),
+      ),
+    );
   }
 
   static Future<void> showPaywall(
