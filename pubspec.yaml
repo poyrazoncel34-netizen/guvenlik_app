@@ -72,6 +72,9 @@ dependencies:
   purchases_ui_flutter: ^10.4.2
   # Root/jailbreak detection
   safe_device: ^1.3.10
+  # Already resolved transitively; declared directly because PinHasher depends
+  # on it for the PBKDF2-HMAC-SHA256 derivation of the stored PIN record.
+  crypto: ^3.0.6
 
 dev_dependencies:
   flutter_test:

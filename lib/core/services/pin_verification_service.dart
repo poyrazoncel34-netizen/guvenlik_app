@@ -1,6 +1,7 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../di/service_locator.dart';
+import '../security/pin_hasher.dart';
 import '../security/secure_storage.dart';
 import '../security/secure_storage_keys.dart';
 import 'emergency_session_contract.dart';
@@ -70,9 +71,14 @@ class PinVerificationService {
       }
 
       // One-way migration. Do not report configured until the secure write is
-      // acknowledged; otherwise a later verification can silently fail.
+      // acknowledged; otherwise a later verification can silently fail. The
+      // legacy plaintext is hashed on the way in, so it never lands in secure
+      // storage in readable form.
       await _storage
-          .write(key: SecureStorageKeys.userPin, value: legacyPin)
+          .write(
+            key: SecureStorageKeys.userPin,
+            value: PinHasher.encode(legacyPin),
+          )
           .timeout(_operationTimeout);
       await preferences
           .remove(SecureStorageKeys.userPin)
@@ -80,6 +86,26 @@ class PinVerificationService {
       return _state = PinState.configured;
     } catch (_) {
       return _state = PinState.readFailed;
+    }
+  }
+
+  /// The ONLY way a PIN enters storage. Callers pass the PIN the user typed;
+  /// what lands on disk is a salted hash they cannot reverse.
+  Future<bool> writePin(String pin) async {
+    if (pin.isEmpty) return false;
+    try {
+      await _storage
+          .write(key: SecureStorageKeys.userPin, value: PinHasher.encode(pin))
+          .timeout(_operationTimeout);
+      final preferences = await _preferencesLoader().timeout(_operationTimeout);
+      // A legacy plaintext copy in SharedPreferences must not outlive the
+      // hashed record.
+      await preferences.remove(SecureStorageKeys.userPin);
+      _state = PinState.configured;
+      return true;
+    } catch (_) {
+      _state = PinState.readFailed;
+      return false;
     }
   }
 
@@ -108,14 +134,14 @@ class PinVerificationService {
         }
         return PinVerificationResult(
           state: PinState.configured,
-          matches: _constantTimeEquals(candidate, migratedPin),
+          matches: await _matchesStoredRecord(migratedPin, candidate),
         );
       }
 
       _state = PinState.configured;
       return PinVerificationResult(
         state: PinState.configured,
-        matches: _constantTimeEquals(candidate, configuredPin),
+        matches: await _matchesStoredRecord(configuredPin, candidate),
       );
     } catch (_) {
       return PinVerificationResult(
@@ -123,6 +149,31 @@ class PinVerificationService {
         matches: false,
       );
     }
+  }
+
+  /// Accepts both the hashed record and a raw PIN written by a pre-hash
+  /// build. A correct legacy PIN is upgraded in place, so the plaintext copy
+  /// disappears on first successful unlock without ever asking the user to
+  /// re-enrol. A failed upgrade write does not fail the unlock: the user is
+  /// already authenticated and the next attempt retries.
+  Future<bool> _matchesStoredRecord(String stored, String candidate) async {
+    if (PinHasher.isLegacyPlaintext(stored)) {
+      final matches = _constantTimeEquals(candidate, stored);
+      if (matches) {
+        try {
+          await _storage
+              .write(
+                key: SecureStorageKeys.userPin,
+                value: PinHasher.encode(candidate),
+              )
+              .timeout(_operationTimeout);
+        } catch (_) {
+          // Keep the legacy record; the upgrade retries on the next unlock.
+        }
+      }
+      return matches;
+    }
+    return PinHasher.matches(stored: stored, candidate: candidate);
   }
 
   bool _constantTimeEquals(String left, String right) {

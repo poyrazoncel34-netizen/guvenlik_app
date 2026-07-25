@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guvenlik_app/core/security/secure_storage.dart';
+import 'package:guvenlik_app/core/security/pin_hasher.dart';
 import 'package:guvenlik_app/core/security/secure_storage_keys.dart';
 import 'package:guvenlik_app/core/services/emergency_session_contract.dart';
 import 'package:guvenlik_app/core/services/pin_verification_service.dart';
@@ -104,7 +105,13 @@ void main() {
     final service = PinVerificationService.forTesting(secureStorage: storage);
 
     expect(await service.loadState(), PinState.configured);
-    expect(storage.values[SecureStorageKeys.userPin], '2468');
+    // The migrated record must be verifiable but NOT readable: this test used
+    // to assert the raw '2468' landed in secure storage, which is exactly the
+    // plaintext-at-rest behaviour that was removed.
+    final migrated = storage.values[SecureStorageKeys.userPin]!;
+    expect(migrated, isNot('2468'));
+    expect(PinHasher.isLegacyPlaintext(migrated), isFalse);
+    expect((await service.verify('2468')).matches, isTrue);
     final preferences = await SharedPreferences.getInstance();
     expect(preferences.containsKey(SecureStorageKeys.userPin), isFalse);
   });

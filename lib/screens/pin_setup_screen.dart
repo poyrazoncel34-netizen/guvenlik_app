@@ -8,11 +8,9 @@ import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/app_colors.dart';
 import '../core/constants/app_constants.dart';
-import '../core/di/service_locator.dart';
-import '../core/security/secure_storage.dart';
-import '../core/security/secure_storage_keys.dart';
 import '../core/utils/validators.dart';
 import 'settings_legal/legal_settings_screen.dart';
+import '../core/services/pin_verification_service.dart';
 
 class PinSetupScreen extends StatefulWidget {
   final bool requiredSetup;
@@ -94,8 +92,21 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
     }
 
     // Save PIN
-    final secureStorage = serviceLocator<SecureStorage>();
-    await secureStorage.write(key: SecureStorageKeys.userPin, value: _pin);
+    // Storage format is owned by PinVerificationService: what lands on disk
+    // is a salted hash, never the digits the user typed.
+    final saved = await PinVerificationService.instance.writePin(_pin);
+    if (!saved) {
+      // Never report a lock the device does not actually have: the user would
+      // walk away believing the app is protected.
+      if (!mounted) return;
+      setState(() {
+        _errorMessage = 'pin_setup_save_failed'.tr();
+        _pin = '';
+        _confirmPin = '';
+        _isConfirming = false;
+      });
+      return;
+    }
 
     // Mark PIN setup as done
     final prefs = await SharedPreferences.getInstance();
