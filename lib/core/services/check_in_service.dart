@@ -15,12 +15,14 @@ import '../../screens/emergency_call_screen.dart';
 import '../di/service_locator.dart';
 import '../navigation/app_navigator.dart';
 import '../services/activity_service.dart';
+import '../services/android_intent_service.dart';
 import '../services/call_service.dart';
 import '../services/check_in_expiry_coordinator.dart';
 import '../services/emergency_platform_service.dart';
 import '../services/emergency_session_contract.dart';
 import '../services/foreground_service.dart';
 import '../services/haptic_service.dart';
+import '../services/local_logger_service.dart';
 import '../services/notification_service.dart';
 import '../utils/emergency_number_validator.dart';
 
@@ -518,7 +520,11 @@ class CheckInService extends ChangeNotifier {
       if (dispatch.isUnknown) {
         // Unknown is neither success nor failure. Keep native/Dart projection
         // intact for same-token reconciliation and never show a false terminal
-        // state.
+        // state. It must still leave a trace: an unlogged unknown dispatch is
+        // indistinguishable from a session that silently never expired.
+        await LocalLoggerService.instance.warningCode(
+          LocalWarningCode.safetySessionDispatchUnknown,
+        );
         return;
       }
       if (dispatch.wasCancelled) {
@@ -527,9 +533,25 @@ class CheckInService extends ChangeNotifier {
       }
 
       final primaryNumber = _armedTarget ?? '';
-      final callResult = dispatch.requestWasSubmitted
+      // Parity with the panic path (countdown_screen `_executeEmergency`): a
+      // rejected automatic request must still leave the user one tap from the
+      // call. Without this, a CALL_PHONE revocation after arming ends as a
+      // dead "failed" screen for Check-In / Safe Walk while panic degrades to
+      // the dialer.
+      var callResult = dispatch.requestWasSubmitted
           ? EmergencyCallResult.requested(primaryNumber)
           : EmergencyCallResult.failed(primaryNumber);
+      if (!dispatch.requestWasSubmitted && primaryNumber.isNotEmpty) {
+        final dialerOpened = await AndroidIntentService.openDialer(
+          primaryNumber,
+        );
+        if (dialerOpened) {
+          callResult = EmergencyCallResult.dialer(primaryNumber);
+          await LocalLoggerService.instance.warningCode(
+            LocalWarningCode.safetySessionDialerFallback,
+          );
+        }
+      }
 
       await _clearLocalProjection(stopForeground: !callResult.isSuccess);
 

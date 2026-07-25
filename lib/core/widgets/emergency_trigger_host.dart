@@ -122,7 +122,14 @@ class _EmergencyTriggerHostState extends State<EmergencyTriggerHost>
               await _handleCheckInExpired(sessionId: sessionId);
               return;
             }
-            if (type == 'safetyClockChanged') {
+            if (type == 'safetyClockChanged' ||
+                type == 'emergencySessionDispatched') {
+              // `emergencySessionDispatched` is what the alarm receivers
+              // actually emit (CountdownAlarmReceiver / CheckInAlarmReceiver).
+              // Native has already claimed, posted the fallback and asked
+              // Telecom; Dart's job is to stop showing a session that has
+              // finished. Reuse the resume reconciliation instead of a second
+              // interpretation of native state.
               await Future.wait([
                 CheckInService.instance.handleAppResumed(),
                 CheckInService.safeWalk.handleAppResumed(),
@@ -151,6 +158,16 @@ class _EmergencyTriggerHostState extends State<EmergencyTriggerHost>
     }
     if (type == 'checkInExpired') {
       await _handleCheckInExpired(sessionId: sessionId);
+      return;
+    }
+    if (type == 'emergencySessionDispatched') {
+      // A dispatch that happened while Flutter was dead. Consuming this
+      // payload without acting on it left the local projection claiming a
+      // session was still running after the call had already been placed.
+      await Future.wait([
+        CheckInService.instance.handleAppResumed(),
+        CheckInService.safeWalk.handleAppResumed(),
+      ]);
     }
   }
 

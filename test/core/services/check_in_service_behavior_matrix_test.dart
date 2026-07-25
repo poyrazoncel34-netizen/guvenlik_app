@@ -526,6 +526,65 @@ void main() {
   );
 
   test(
+    'a rejected automatic request degrades to the dialer, like panic does',
+    () async {
+      // The host VM is not Android, so `AndroidIntentService.openDialer`
+      // takes its documented url_launcher fallback instead of the platform
+      // channel. Asserting on that fallback still proves the call site runs.
+      const intentChannel = MethodChannel('plugins.flutter.io/url_launcher');
+      final now = DateTime.now();
+      SharedPreferences.setMockInitialValues(<String, Object>{
+        'check_in_state_v2': jsonEncode(persistedProjection()),
+      });
+      final dialerRequests = <String>[];
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(intentChannel, (call) async {
+            if (call.method == 'launch') {
+              final arguments = call.arguments as Map<Object?, Object?>;
+              dialerRequests.add('${arguments['url']}');
+              return true;
+            }
+            if (call.method == 'canLaunch') return true;
+            return null;
+          });
+      addTearDown(() {
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(intentChannel, null);
+      });
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, (call) async {
+            if (call.method == 'readEmergencySession') {
+              return present(
+                mainDeadline: now.subtract(const Duration(minutes: 2)),
+                finalDeadline: now.subtract(const Duration(minutes: 1)),
+              );
+            }
+            if (call.method == 'dispatchEmergencySession') {
+              // Native refused to submit the Telecom request, e.g. CALL_PHONE
+              // was revoked after the session was armed.
+              return dispatch(
+                callOutcome: 'failed',
+                fallbackOutcome: 'posted',
+                terminalState: 'manualActionRequired',
+              );
+            }
+            return null;
+          });
+
+      await service.initialize();
+
+      expect(
+        dialerRequests,
+        <String>['tel:+905551112233'],
+        reason:
+            'Without this the user is left on a dead failure screen while '
+            'the panic path opens the dialer for the same native outcome.',
+      );
+      expect(service.isActive, isFalse);
+    },
+  );
+
+  test(
     'concurrent expiry callbacks produce one Dart dispatch request',
     () async {
       final pendingDispatch = Completer<Object?>();

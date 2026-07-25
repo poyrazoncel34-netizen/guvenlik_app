@@ -29,7 +29,9 @@ enum LocalErrorCode {
 enum LocalWarningCode {
   revenueCatLegalAcceptanceRequired('revenuecat_legal_acceptance_required'),
   revenueCatDisabledInSmoke('revenuecat_disabled_in_smoke'),
-  revenueCatApiKeyMissing('revenuecat_api_key_missing');
+  revenueCatApiKeyMissing('revenuecat_api_key_missing'),
+  safetySessionDispatchUnknown('safety_session_dispatch_unknown'),
+  safetySessionDialerFallback('safety_session_dialer_fallback');
 
   const LocalWarningCode(this.wireCode);
   final String wireCode;
