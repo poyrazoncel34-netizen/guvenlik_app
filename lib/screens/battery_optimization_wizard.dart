@@ -15,6 +15,7 @@ import 'package:easy_localization/easy_localization.dart';
 import '../core/app_colors.dart';
 import '../core/services/battery_optimization_service.dart';
 import '../core/utils/permission_helper.dart';
+import 'oem_background_guide_screen.dart';
 
 /// Key for battery optimization wizard seen flag
 const String _kBatteryWizardSeenKey = 'battery_optimization_wizard_seen';
@@ -256,6 +257,40 @@ class _BatteryOptimizationWizardState extends State<BatteryOptimizationWizard>
                       backgroundColor: AppColors.primary,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 18),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                // Brand-specific: hand off to the per-vendor step guide. The
+                // generic exemption request above does not reach the OEM
+                // autostart/protected-app screens that actually kill the app.
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      HapticFeedback.lightImpact();
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const OemBackgroundGuideScreen(),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.phonelink_setup_rounded, size: 20),
+                    label: Text(
+                      'battery_wizard_oem_btn'.tr(),
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.info,
+                      side: BorderSide(
+                        color: AppColors.info.withValues(alpha: 0.5),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14),
                       ),

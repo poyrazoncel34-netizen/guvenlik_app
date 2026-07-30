@@ -195,6 +195,13 @@ class MainActivity : FlutterFragmentActivity() {
                                     startActivity(intent)
                                     result.success(true)
                                 }
+                                "getDeviceManufacturer" -> {
+                                    // Build.MANUFACTURER needs no permission and
+                                    // identifies no user. The OEM background guide
+                                    // uses it to pick which settings screens exist
+                                    // on this device.
+                                    result.success(Build.MANUFACTURER)
+                                }
                                 "openNotificationSettings" -> {
                                     // Android 8.0+ supports the dedicated app-notification
                                     // settings screen; older versions fall back to the

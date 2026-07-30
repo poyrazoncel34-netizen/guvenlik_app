@@ -21,6 +21,7 @@ import 'settings_detail_page.dart';
 import '../presentation/providers/settings_provider.dart';
 import '../presentation/providers/subscription_provider.dart';
 import 'battery_optimization_wizard.dart';
+import 'oem_background_guide_screen.dart';
 import 'settings_legal/legal_settings_screen.dart';
 import 'subscription/paywall_screen.dart';
 import 'subscription/subscription_management_screen.dart';
@@ -151,6 +152,20 @@ class _SettingsPageState extends State<SettingsPage> {
                       context,
                       MaterialPageRoute(
                         builder: (_) => const BatteryOptimizationWizard(),
+                      ),
+                    );
+                  },
+                ),
+                _buildNavigationTile(
+                  icon: Icons.phonelink_setup_rounded,
+                  iconColor: AppColors.info,
+                  title: "settings_oem_guide_title".tr(),
+                  subtitle: "settings_oem_guide_subtitle".tr(),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const OemBackgroundGuideScreen(),
                       ),
                     );
                   },
