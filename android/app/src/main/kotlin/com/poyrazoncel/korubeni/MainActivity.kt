@@ -54,8 +54,12 @@ class MainActivity : FlutterFragmentActivity() {
                 WindowManager.LayoutParams.FLAG_SECURE,
             )
         }
-        super.onCreate(savedInstanceState)
+        // Recorded BEFORE super.onCreate(): super configures the Flutter engine
+        // and Dart starts running from there, so writing afterwards races the
+        // trigger host's first read. Dart startup is slower in practice, but a
+        // panic press must not depend on that.
         recordQuickPanicRequest(intent)
+        super.onCreate(savedInstanceState)
     }
 
     override fun onNewIntent(intent: Intent) {

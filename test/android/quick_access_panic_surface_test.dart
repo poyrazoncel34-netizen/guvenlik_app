@@ -93,6 +93,56 @@ void main() {
     });
   });
 
+  group('cold-start ordering', () {
+    test('the request is recorded before the Flutter engine is configured', () {
+      final activity = File(
+        'android/app/src/main/kotlin/com/poyrazoncel/korubeni/MainActivity.kt',
+      ).readAsStringSync();
+      final record = activity.indexOf('recordQuickPanicRequest(intent)');
+      final superOnCreate = activity.indexOf('super.onCreate(savedInstanceState)');
+
+      expect(record, isNot(-1));
+      expect(superOnCreate, isNot(-1));
+      expect(
+        record < superOnCreate,
+        isTrue,
+        reason:
+            'super.onCreate configures the engine and Dart starts from there, '
+            'so a later write races the trigger host reading it.',
+      );
+    });
+
+    test('a tap on a running app is recorded through onNewIntent', () {
+      final activity = File(
+        'android/app/src/main/kotlin/com/poyrazoncel/korubeni/MainActivity.kt',
+      ).readAsStringSync();
+      expect(activity, contains('override fun onNewIntent(intent: Intent)'));
+      expect(activity, contains('setIntent(intent)'));
+    });
+
+    test('an unrecognised source label is rejected', () {
+      final activity = File(
+        'android/app/src/main/kotlin/com/poyrazoncel/korubeni/MainActivity.kt',
+      ).readAsStringSync();
+      expect(
+        activity,
+        contains('source != PanicRequestStore.SOURCE_WIDGET'),
+        reason: 'Intent extras are untrusted input, even from our own surfaces.',
+      );
+    });
+
+    test('the host also consumes on resume, not only on init', () {
+      // Covers the onNewIntent case, where initState has long since run.
+      final consumeCount =
+          host.split('_consumeQuickPanicRequest()').length - 1;
+      expect(
+        consumeCount,
+        greaterThanOrEqualTo(3),
+        reason: 'declaration + init call + resume call',
+      );
+    });
+  });
+
   group('manifest surface', () {
     test('the widget provider is not exported', () {
       final start = manifest.indexOf('.quickaccess.PanicWidgetProvider');

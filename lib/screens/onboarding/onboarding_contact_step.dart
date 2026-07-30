@@ -160,6 +160,7 @@ class _OnboardingContactStepState extends State<OnboardingContactStep> {
     if (_loading) {
       return const Center(child: CircularProgressIndicator());
     }
+    final failureKey = _failureKey;
     return Semantics(
       label: 'semantics_onboarding_contact_step'.tr(),
       child: SingleChildScrollView(
@@ -170,12 +171,14 @@ class _OnboardingContactStepState extends State<OnboardingContactStep> {
             _header(),
             const SizedBox(height: 24),
             if (_hasContact) _savedCard() else ..._form(),
-            if (_failureKey != null) ...[
+            // Local copy so the null check promotes: a field cannot, and `!` on
+            // a field is exactly the pattern this repo avoids.
+            if (failureKey != null) ...[
               const SizedBox(height: 16),
               _noticeCard(
                 icon: Icons.error_outline_rounded,
                 color: AppColors.warning,
-                text: _failureKey!.tr(),
+                text: failureKey.tr(),
               ),
             ],
           ],
