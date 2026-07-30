@@ -8,6 +8,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../core/app_colors.dart';
+import '../core/motion.dart';
 import '../core/services/onboarding_contact_gate_service.dart';
 import 'main_navigation.dart';
 import 'onboarding/onboarding_contact_step.dart';
@@ -112,7 +113,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return FadeTransition(opacity: animation, child: child);
         },
-        transitionDuration: const Duration(milliseconds: 500),
+        transitionDuration: Motion.slow,
       ),
       (_) => false,
     );
@@ -281,7 +282,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                     children: List.generate(
                       _pages.length,
                       (i) => AnimatedContainer(
-                        duration: const Duration(milliseconds: 300),
+                        duration: Motion.base,
                         curve: Curves.easeOutCubic,
                         margin: const EdgeInsets.symmetric(horizontal: 4),
                         width: _currentPage == i ? 28 : 8,

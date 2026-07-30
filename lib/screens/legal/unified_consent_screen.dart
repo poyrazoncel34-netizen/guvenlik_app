@@ -9,6 +9,7 @@ import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/app_colors.dart';
+import '../../core/motion.dart';
 import '../../core/constants/app_constants.dart';
 import '../../constants/legal_texts.dart';
 import '../../services/consent_manager.dart';
@@ -94,7 +95,7 @@ class _UnifiedConsentScreenState extends State<UnifiedConsentScreen> {
             pageBuilder: (context, animation, _) => const OnboardingScreen(),
             transitionsBuilder: (context, animation, _, child) =>
                 FadeTransition(opacity: animation, child: child),
-            transitionDuration: const Duration(milliseconds: 400),
+            transitionDuration: Motion.slow,
           ),
         ),
       );

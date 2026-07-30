@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:provider/provider.dart';
 import '../core/app_colors.dart';
+import '../core/motion.dart';
 import '../core/services/activity_service.dart';
 import '../core/services/check_in_expiry_coordinator.dart';
 import '../core/services/check_in_service.dart';
@@ -404,10 +405,10 @@ class _SafeWalkScreenState extends State<SafeWalkScreen> {
               },
               child: AnimatedScale(
                 scale: isSelected ? 1.08 : 1.0,
-                duration: const Duration(milliseconds: 200),
-                curve: Curves.easeOutBack,
+                duration: Motion.base,
+                curve: Motion.enter,
                 child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
+                  duration: Motion.base,
                   padding: const EdgeInsets.symmetric(
                     horizontal: 24,
                     vertical: 14,

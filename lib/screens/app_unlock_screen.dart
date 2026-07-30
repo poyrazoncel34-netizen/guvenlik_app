@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../core/app_colors.dart';
+import '../core/motion.dart';
 import '../core/constants/app_constants.dart';
 import '../core/services/app_reset_service.dart';
 import '../core/services/emergency_session_contract.dart';
@@ -469,7 +470,7 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> {
                           pageBuilder: (_, _, _) => const SplashScreen(),
                           transitionsBuilder: (_, a, _, child) =>
                               FadeTransition(opacity: a, child: child),
-                          transitionDuration: const Duration(milliseconds: 400),
+                          transitionDuration: Motion.slow,
                         ),
                         (_) => false,
                       );

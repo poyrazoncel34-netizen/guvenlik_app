@@ -11,6 +11,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../core/app_colors.dart';
+import '../core/motion.dart';
 import '../core/constants/app_constants.dart';
 import '../core/services/legal_log_service.dart';
 import 'onboarding_screen.dart';
@@ -82,7 +83,7 @@ class _LegalDisclaimerScreenState extends State<LegalDisclaimerScreen> {
             const OnboardingScreen(),
         transitionsBuilder: (context, animation, secondaryAnimation, child) =>
             FadeTransition(opacity: animation, child: child),
-        transitionDuration: const Duration(milliseconds: 400),
+        transitionDuration: Motion.slow,
       ),
     );
   }
@@ -312,7 +313,7 @@ class _LegalDisclaimerScreenState extends State<LegalDisclaimerScreen> {
                   // ── Devam Et butonu ──
                   AnimatedOpacity(
                     opacity: _allAccepted ? 1.0 : 0.4,
-                    duration: const Duration(milliseconds: 200),
+                    duration: Motion.base,
                     child: SizedBox(
                       height: 52,
                       child: ElevatedButton(

@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../core/app_colors.dart';
 import '../core/services/connectivity_service.dart';
+import '../core/motion.dart';
 
 class ConnectivityBanner extends StatefulWidget {
   const ConnectivityBanner({super.key});
@@ -66,7 +67,7 @@ class _ConnectivityBannerState extends State<ConnectivityBanner>
       child: GestureDetector(
         onTap: _showOfflineInfoDialog,
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 300),
+          duration: Motion.base,
           width: double.infinity,
           padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 16),
           decoration: BoxDecoration(

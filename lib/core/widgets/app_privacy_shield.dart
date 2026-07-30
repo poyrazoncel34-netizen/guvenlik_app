@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../motion.dart';
 
 /// Whether the privacy mask should cover the app for a given lifecycle state.
 ///
@@ -54,7 +55,7 @@ class _AppPrivacyShieldState extends State<AppPrivacyShield>
           ignoring: !_masked,
           child: AnimatedOpacity(
             opacity: _masked ? 1 : 0,
-            duration: const Duration(milliseconds: 120),
+            duration: Motion.fast,
             child: const ColoredBox(color: Colors.black),
           ),
         ),

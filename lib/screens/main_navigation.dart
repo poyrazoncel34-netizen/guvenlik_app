@@ -8,6 +8,8 @@ import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/app_colors.dart';
+import '../core/motion.dart';
+import '../core/services/reduced_motion_policy.dart';
 import '../core/constants/app_constants.dart';
 import '../core/utils/permission_helper.dart';
 // Firebase and notification services removed (offline-first)
@@ -27,18 +29,82 @@ class MainNavigation extends StatefulWidget {
   State<MainNavigation> createState() => _MainNavigationState();
 }
 
-class _MainNavigationState extends State<MainNavigation> {
+class _MainNavigationState extends State<MainNavigation>
+    with SingleTickerProviderStateMixin {
   int _selectedIndex = 0;
+
+  /// Tab requested but not yet shown: the swap happens at the fade trough, so
+  /// the old page is never seen dissolving into the new one.
+  int? _pendingIndex;
+
   bool _pinPromptVisible = false;
   bool _notificationPromptVisible = false;
+
+  /// Drives one whole tab change across [Motion.base].
+  late final AnimationController _tabFadeController;
+
+  /// V-shaped: full opacity -> 0 at the midpoint -> full opacity. Tabs used to
+  /// snap with no transition at all, which is the cheapest-feeling moment in
+  /// the app. A fade-through is the Material answer and, unlike a slide, it
+  /// implies no spatial relationship between four unrelated destinations.
+  late final Animation<double> _tabFade;
 
   @override
   void initState() {
     super.initState();
+    _tabFadeController = AnimationController(
+      vsync: this,
+      duration: Motion.base,
+      value: 1,
+    );
+    _tabFade = TweenSequence<double>(<TweenSequenceItem<double>>[
+      TweenSequenceItem(
+        tween: Tween<double>(
+          begin: 1,
+          end: 0,
+        ).chain(CurveTween(curve: Motion.exit)),
+        weight: 1,
+      ),
+      TweenSequenceItem(
+        tween: Tween<double>(
+          begin: 0,
+          end: 1,
+        ).chain(CurveTween(curve: Motion.enter)),
+        weight: 1,
+      ),
+    ]).animate(_tabFadeController);
+    _tabFadeController.addListener(_swapAtTrough);
     // Firebase services removed (offline-first)
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _runStartupChecks();
     });
+  }
+
+  @override
+  void dispose() {
+    _tabFadeController.removeListener(_swapAtTrough);
+    _tabFadeController.dispose();
+    super.dispose();
+  }
+
+  void _swapAtTrough() {
+    final pending = _pendingIndex;
+    if (pending == null || _tabFadeController.value < 0.5) return;
+    _pendingIndex = null;
+    setState(() => _selectedIndex = pending);
+  }
+
+  void _selectTab(int index) {
+    if (index == _selectedIndex || _pendingIndex != null) return;
+    HapticFeedback.lightImpact();
+    // Reduce-motion gets the instant swap, which is what this used to be for
+    // everyone. The haptic above is unaffected.
+    if (ReducedMotionPolicy.isReduced(context)) {
+      setState(() => _selectedIndex = index);
+      return;
+    }
+    _pendingIndex = index;
+    _tabFadeController.forward(from: 0);
   }
 
   // Firebase services removed (offline-first architecture)
@@ -115,14 +181,21 @@ class _MainNavigationState extends State<MainNavigation> {
     return Scaffold(
       body: Stack(
         children: [
-          IndexedStack(
-            index: _selectedIndex,
-            children: [
-              const HomePage(),
-              MapPage(isActive: _selectedIndex == 1),
-              const ContactsPage(),
-              const SettingsPage(),
-            ],
+          // IndexedStack is kept on purpose: every page stays in the tree, so
+          // the crossfade costs no page state and MapPage's isActive contract
+          // is unchanged -- it still flips exactly once per tab change, now at
+          // the trough instead of on the tap.
+          FadeTransition(
+            opacity: _tabFade,
+            child: IndexedStack(
+              index: _selectedIndex,
+              children: [
+                const HomePage(),
+                MapPage(isActive: _selectedIndex == 1),
+                const ContactsPage(),
+                const SettingsPage(),
+              ],
+            ),
           ),
           // Offline mode banner at top
           const Positioned(
@@ -201,14 +274,11 @@ class _MainNavigationState extends State<MainNavigation> {
         selected: isSelected,
         container: true,
         child: GestureDetector(
-          onTap: () {
-            HapticFeedback.lightImpact();
-            setState(() => _selectedIndex = index);
-          },
+          onTap: () => _selectTab(index),
           behavior: HitTestBehavior.opaque,
           child: ExcludeSemantics(
             child: AnimatedContainer(
-              duration: const Duration(milliseconds: 250),
+              duration: Motion.base,
               curve: Curves.easeOutCubic,
               padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
               decoration: BoxDecoration(
@@ -223,10 +293,10 @@ class _MainNavigationState extends State<MainNavigation> {
                   // ── Animated icon with scale ──
                   AnimatedScale(
                     scale: isSelected ? 1.15 : 1.0,
-                    duration: const Duration(milliseconds: 200),
-                    curve: Curves.easeOutBack,
+                    duration: Motion.base,
+                    curve: Motion.enter,
                     child: AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 200),
+                      duration: Motion.base,
                       transitionBuilder: (child, animation) {
                         return ScaleTransition(scale: animation, child: child);
                       },
@@ -243,7 +313,7 @@ class _MainNavigationState extends State<MainNavigation> {
                   const SizedBox(height: 4),
                   // ── Animated text ──
                   AnimatedDefaultTextStyle(
-                    duration: const Duration(milliseconds: 200),
+                    duration: Motion.base,
                     style: TextStyle(
                       fontSize: isSelected ? 12.5 : 12,
                       fontWeight: isSelected
@@ -259,7 +329,7 @@ class _MainNavigationState extends State<MainNavigation> {
                   const SizedBox(height: 3),
                   // ── Animated pill indicator ──
                   AnimatedContainer(
-                    duration: const Duration(milliseconds: 300),
+                    duration: Motion.base,
                     curve: Curves.easeOutCubic,
                     width: isSelected ? 20 : 0,
                     height: 3,

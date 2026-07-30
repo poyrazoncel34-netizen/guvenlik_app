@@ -9,6 +9,7 @@ import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../core/di/service_locator.dart';
 import '../core/app_colors.dart';
+import '../core/motion.dart';
 import '../core/services/contact_service.dart';
 import '../domain/repositories/contacts_repository.dart';
 import '../core/services/activity_service.dart';
@@ -99,8 +100,7 @@ class _CountdownScreenState extends State<CountdownScreen>
       vsync: this,
       duration: const Duration(milliseconds: 300),
     );
-    // ~2.8s breath; 800ms read as a flash. Pulse started in
-    // didChangeDependencies, once MediaQuery is readable.
+    // ~2.8s breath; 800ms read as a flash. Pulse started once MediaQuery is.
     _glowController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1400),
@@ -1018,8 +1018,8 @@ class _CountdownScreenState extends State<CountdownScreen>
                                 children: List.generate(4, (index) {
                                   final isFilled = index < _pin.length;
                                   return AnimatedContainer(
-                                    duration: const Duration(milliseconds: 150),
-                                    curve: Curves.easeOutBack,
+                                    duration: Motion.fast,
+                                    curve: Motion.enter,
                                     margin: const EdgeInsets.symmetric(
                                       horizontal: 10,
                                     ),

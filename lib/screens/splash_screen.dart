@@ -9,6 +9,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../constants/legal_texts.dart';
 import '../core/app_colors.dart';
+import '../core/motion.dart';
 import '../core/constants/app_constants.dart';
 import '../core/navigation/app_navigator.dart';
 import '../presentation/providers/subscription_provider.dart';
@@ -54,7 +55,7 @@ class _SplashScreenState extends State<SplashScreen>
       duration: const Duration(milliseconds: 900),
     );
     _logoScale = Tween<double>(begin: 0.5, end: 1.0).animate(
-      CurvedAnimation(parent: _logoController, curve: Curves.elasticOut),
+      CurvedAnimation(parent: _logoController, curve: Motion.enter),
     );
     _logoFade = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
@@ -225,7 +226,7 @@ class _SplashScreenState extends State<SplashScreen>
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return FadeTransition(opacity: animation, child: child);
         },
-        transitionDuration: const Duration(milliseconds: 500),
+        transitionDuration: Motion.slow,
       ),
     );
   }

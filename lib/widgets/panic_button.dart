@@ -20,6 +20,7 @@ import '../core/utils/emergency_number_validator.dart';
 import '../core/utils/panic_hold_gate.dart';
 import '../screens/contacts_page.dart';
 import '../screens/countdown_screen.dart';
+import '../core/motion.dart';
 
 class PanicButton extends StatefulWidget {
   const PanicButton({super.key});
@@ -414,7 +415,7 @@ class _PanicButtonState extends State<PanicButton>
 
               // Main button with gradient
               AnimatedContainer(
-                duration: const Duration(milliseconds: 150),
+                duration: Motion.fast,
                 curve: Curves.easeOut,
                 width: buttonSize,
                 height: buttonSize,
@@ -449,7 +450,7 @@ class _PanicButtonState extends State<PanicButton>
                   children: [
                     // Icon
                     AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 200),
+                      duration: Motion.base,
                       transitionBuilder: (child, animation) {
                         return ScaleTransition(scale: animation, child: child);
                       },
@@ -464,7 +465,7 @@ class _PanicButtonState extends State<PanicButton>
 
                     // Text
                     AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 200),
+                      duration: Motion.base,
                       child: SizedBox(
                         width: buttonSize * 0.82,
                         child: Column(
