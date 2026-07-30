@@ -117,8 +117,10 @@ void main() {
         '_requireEmergencyContactConsent()',
         pickerStart,
       );
+      // The channel call moved into NativeContactPickerService; the ordering
+      // guarantee did not move -- the gate still runs before the picker opens.
       final pickerOpen = source.indexOf(
-        "_contactsPickerChannel.invokeMethod",
+        'NativeContactPickerService.pickPhoneContact()',
         pickerStart,
       );
       expect(pickerStart, isNot(-1));
@@ -133,6 +135,33 @@ void main() {
       );
     },
   );
+
+  test('onboarding contact step gates the picker on contact-data consent', () {
+    final source = File(
+      'lib/screens/onboarding/onboarding_contact_step.dart',
+    ).readAsStringSync();
+
+    // The step can be reached with the optional emergency-contacts consent
+    // declined, so it must ask for consent rather than write without it.
+    expect(source, contains('needsContactDataConsent'));
+    expect(
+      source,
+      contains('onPressed: _needsConsent || _saving ? null : _pickFromDevice'),
+      reason:
+          'A missing contact-data consent must disable import, not open the '
+          'system picker.',
+    );
+    expect(
+      source,
+      contains('onPressed: _needsConsent || _saving ? null : _save'),
+      reason: 'The same gate must block the manual save path.',
+    );
+    expect(
+      source,
+      contains('EmergencyContactConsentDialog.show'),
+      reason: 'Per-person KVKK confirmation still precedes the write.',
+    );
+  });
 
   test('data_deletion_screen.dart is NOT consent-gated', () {
     // KVKK Article 11: users must always be able to delete their data,

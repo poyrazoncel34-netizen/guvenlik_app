@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:guvenlik_app/screens/contacts_page.dart';
+import 'package:guvenlik_app/core/services/native_contact_picker_service.dart';
 
 /// S10: "Rehberden Seç" must work WITHOUT READ_CONTACTS. The native picker uses
 /// Intent.ACTION_PICK on the phone data URI (temporary per-row grant), replacing
@@ -10,6 +10,7 @@ void main() {
   group('native contact picker source contract', () {
     late String mainActivity;
     late String contactsPage;
+    late String pickerService;
     late String manifest;
 
     setUpAll(() {
@@ -17,6 +18,11 @@ void main() {
         'android/app/src/main/kotlin/com/poyrazoncel/korubeni/MainActivity.kt',
       ).readAsStringSync();
       contactsPage = File('lib/screens/contacts_page.dart').readAsStringSync();
+      // The channel moved out of the screen into a single access path so
+      // onboarding could reuse it; the guarantees below did not move.
+      pickerService = File(
+        'lib/core/services/native_contact_picker_service.dart',
+      ).readAsStringSync();
       manifest = File(
         'android/app/src/main/AndroidManifest.xml',
       ).readAsStringSync();
@@ -48,11 +54,40 @@ void main() {
       expect(mainActivity.contains('requestPermissions'), isFalse);
     });
 
-    test('contacts_page calls the channel and dropped the old package', () {
-      expect(contactsPage, contains("'pickPhoneContact'"));
-      expect(contactsPage, contains('_contactsPickerChannel'));
+    test('the picker service owns the channel and dropped the old package', () {
+      expect(pickerService, contains("'pickPhoneContact'"));
+      expect(
+        pickerService,
+        contains('com.poyrazoncel.korubeni/contacts_picker'),
+      );
+      expect(pickerService.contains('fluttercontactpicker_plus'), isFalse);
+      expect(pickerService.contains('FlutterContactPicker'), isFalse);
+    });
+
+    test('contacts_page reaches the picker only through that service', () {
+      expect(
+        contactsPage,
+        contains('NativeContactPickerService.pickPhoneContact()'),
+      );
+      expect(
+        contactsPage.contains('com.poyrazoncel.korubeni/contacts_picker'),
+        isFalse,
+        reason:
+            'A second channel to one platform capability is the anti-pattern.',
+      );
       expect(contactsPage.contains('fluttercontactpicker_plus'), isFalse);
       expect(contactsPage.contains('FlutterContactPicker'), isFalse);
+    });
+
+    test('onboarding reuses the same picker service', () {
+      final step = File(
+        'lib/screens/onboarding/onboarding_contact_step.dart',
+      ).readAsStringSync();
+      expect(step, contains('NativeContactPickerService.pickPhoneContact()'));
+      expect(
+        step.contains('com.poyrazoncel.korubeni/contacts_picker'),
+        isFalse,
+      );
     });
 
     test('manifest keeps READ_CONTACTS stripped (tools:node=remove)', () {

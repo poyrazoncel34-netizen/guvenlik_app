@@ -12,6 +12,7 @@ import 'package:easy_localization/easy_localization.dart';
 import '../core/app_colors.dart';
 import '../core/constants/app_constants.dart';
 import '../core/services/consent_gate_service.dart';
+import '../core/services/native_contact_picker_service.dart';
 import '../core/services/subscription_gate.dart';
 import '../core/utils/emergency_number_validator.dart';
 import '../models/consent_record.dart';
@@ -33,30 +34,6 @@ String? manualContactPhoneError(String raw) {
     return 'contacts_manual_invalid_phone';
   }
   return null;
-}
-
-/// Native single-contact picker channel. Uses Intent.ACTION_PICK on the phone
-/// data URI, which grants the app temporary read access to just the picked row
-/// — no contacts permission and no broad address-book access.
-const MethodChannel _contactsPickerChannel = MethodChannel(
-  'com.poyrazoncel.korubeni/contacts_picker',
-);
-
-/// A phone contact returned by the native picker.
-class PickedPhoneContact {
-  const PickedPhoneContact({required this.name, required this.number});
-  final String name;
-  final String number;
-}
-
-/// Parses the {name, number} map returned by [_contactsPickerChannel]. Returns
-/// null when the user cancelled or no usable number came back.
-PickedPhoneContact? parsePickedPhoneContact(Map<dynamic, dynamic>? raw) {
-  if (raw == null) return null;
-  final number = (raw['number'] as String?)?.trim() ?? '';
-  if (number.isEmpty) return null;
-  final name = (raw['name'] as String?)?.trim() ?? '';
-  return PickedPhoneContact(name: name, number: number);
 }
 
 class ContactsPage extends StatefulWidget {
@@ -1018,68 +995,59 @@ class _ContactsPageState extends State<ContactsPage> {
       return;
     }
 
-    try {
-      // Permissionless native picker (ACTION_PICK on the phone data URI).
-      final result = await _contactsPickerChannel.invokeMethod<dynamic>(
-        'pickPhoneContact',
-      );
-      if (!mounted) return;
-
-      final picked = parsePickedPhoneContact(result is Map ? result : null);
-      if (picked == null) {
-        // User cancelled, or the picked contact had no usable number.
-        return;
-      }
-
-      final name = picked.name.isNotEmpty
-          ? picked.name
-          : "contacts_unknown".tr();
-      final phone = EmergencyNumberValidator.normalizedCallableTargetOrNull(
-        picked.number,
-      );
-      if (phone == null) {
-        _showSnack(
-          "contacts_no_phone".tr(),
-          backgroundColor: AppColors.warning,
-        );
-        return;
-      }
-
-      // KVKK: Kişi ekleme öncesi rıza onayı
-      final consentGiven = await EmergencyContactConsentDialog.show(
-        context: context,
-        contactName: name,
-      );
-      if (!consentGiven || !mounted) return;
-
-      final provider = context.read<ContactsProvider>();
-      final added = await provider.addContact(name: name, phone: phone);
-      if (!added) {
-        _showSnack(
-          provider.isAtLimit
-              ? "contacts_max_reached".tr()
-              : "contacts_already_in_list".tr(),
-          backgroundColor: AppColors.warning,
-        );
-        return;
-      }
-
-      await _refreshHomeProvider();
-      _showSnack("contacts_added".tr(namedArgs: {"name": name}));
-      HapticFeedback.mediumImpact();
-    } on PlatformException catch (e) {
-      debugPrint('Contact picker channel error: ${e.code}');
+    // Permissionless native picker (ACTION_PICK on the phone data URI), reached
+    // through the single access path in NativeContactPickerService.
+    final result = await NativeContactPickerService.pickPhoneContact();
+    if (!mounted) return;
+    if (result.isUnavailable) {
       _showSnack(
         "contacts_picker_failed".tr(),
         backgroundColor: AppColors.warning,
       );
-    } on MissingPluginException catch (e) {
-      debugPrint('Contact picker channel missing: ${e.message}');
-      _showSnack(
-        "contacts_picker_failed".tr(),
-        backgroundColor: AppColors.warning,
-      );
+      return;
     }
+    final picked = result.contact;
+    if (picked == null) {
+      // User cancelled, or the picked contact had no usable number.
+      return;
+    }
+
+    final name = picked.name.isNotEmpty
+        ? picked.name
+        : "contacts_unknown".tr();
+    final phone = EmergencyNumberValidator.normalizedCallableTargetOrNull(
+      picked.number,
+    );
+    if (phone == null) {
+      _showSnack(
+        "contacts_no_phone".tr(),
+        backgroundColor: AppColors.warning,
+      );
+      return;
+    }
+
+    // KVKK: Kişi ekleme öncesi rıza onayı
+    final consentGiven = await EmergencyContactConsentDialog.show(
+      context: context,
+      contactName: name,
+    );
+    if (!consentGiven || !mounted) return;
+
+    final provider = context.read<ContactsProvider>();
+    final added = await provider.addContact(name: name, phone: phone);
+    if (!added) {
+      _showSnack(
+        provider.isAtLimit
+            ? "contacts_max_reached".tr()
+            : "contacts_already_in_list".tr(),
+        backgroundColor: AppColors.warning,
+      );
+      return;
+    }
+
+    await _refreshHomeProvider();
+    _showSnack("contacts_added".tr(namedArgs: {"name": name}));
+    HapticFeedback.mediumImpact();
   }
 
   void _showEmergencyPicker(BuildContext context) {

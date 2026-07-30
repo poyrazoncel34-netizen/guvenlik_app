@@ -5,12 +5,20 @@ void main() {
   group('ContactsPage._pickContactFromDevice', () {
     test('uses the permissionless native picker (no READ_CONTACTS)', () {
       final source = File('lib/screens/contacts_page.dart').readAsStringSync();
+      // The ACTION_PICK channel moved into NativeContactPickerService so
+      // onboarding could reuse one access path; the contract is unchanged.
       expect(
         source,
-        contains("_contactsPickerChannel.invokeMethod"),
+        contains('NativeContactPickerService.pickPhoneContact()'),
         reason:
             'Release contract: pick via the native ACTION_PICK channel, which '
             'needs no READ_CONTACTS permission.',
+      );
+      expect(
+        File(
+          'lib/core/services/native_contact_picker_service.dart',
+        ).readAsStringSync(),
+        contains("channel.invokeMethod<dynamic>('pickPhoneContact')"),
       );
       expect(
         source.contains('fluttercontactpicker_plus'),
@@ -61,16 +69,25 @@ void main() {
     });
   });
 
-  group('ContactsPage._pickContactFromDevice catch block', () {
+  group('ContactsPage._pickContactFromDevice failure path', () {
     test('handles channel PlatformException without crashing', () {
-      final source = File('lib/screens/contacts_page.dart').readAsStringSync();
+      final service = File(
+        'lib/core/services/native_contact_picker_service.dart',
+      ).readAsStringSync();
       expect(
-        source.contains('on PlatformException'),
+        service.contains('on PlatformException'),
         isTrue,
         reason:
-            '_pickContactFromDevice must catch channel PlatformExceptions and '
-            'surface a friendly failure instead of crashing.',
+            'The picker service must catch channel PlatformExceptions and '
+            'report them as unavailable instead of crashing.',
       );
+      expect(
+        service.contains('on MissingPluginException'),
+        isTrue,
+        reason: 'A build without the channel must degrade, not throw.',
+      );
+
+      final source = File('lib/screens/contacts_page.dart').readAsStringSync();
       expect(
         source.contains('contacts_picker_failed'),
         isTrue,
@@ -80,14 +97,25 @@ void main() {
 
     test('treats picker cancel as a handled no-op', () {
       final source = File('lib/screens/contacts_page.dart').readAsStringSync();
-      // Cancel / no-number now comes back as a null parse result, not an
-      // exception — the method returns quietly.
-      expect(source.contains('parsePickedPhoneContact'), isTrue);
+      // Cancel / no-number comes back as a typed cancelled outcome, not an
+      // exception — the method returns quietly. An unavailable picker is a
+      // distinct outcome and is the only one that surfaces a failure.
       expect(
         source.contains('if (picked == null)'),
         isTrue,
         reason: 'A cancelled pick must be a quiet early return, not a failure.',
       );
+      expect(
+        source.contains('if (result.isUnavailable)'),
+        isTrue,
+        reason: 'Cancel and unavailable must not collapse into one outcome.',
+      );
+
+      final service = File(
+        'lib/core/services/native_contact_picker_service.dart',
+      ).readAsStringSync();
+      expect(service.contains('parsePickedPhoneContact'), isTrue);
+      expect(service.contains('ContactPickStatus.cancelled'), isTrue);
     });
   });
 

@@ -2,13 +2,15 @@
 // ONBOARDING - Parallax efekti + animated dots + pulse glow
 // ============================================================================
 
+import 'dart:async';
+
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../core/app_colors.dart';
-import '../core/constants/app_constants.dart';
+import '../core/services/onboarding_contact_gate_service.dart';
 import 'main_navigation.dart';
+import 'onboarding/onboarding_contact_step.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -21,6 +23,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     with TickerProviderStateMixin {
   final PageController _pageController = PageController();
   int _currentPage = 0;
+  bool _contactGateSatisfied = false;
   late AnimationController _iconPulseController;
   late AnimationController _fadeController;
 
@@ -49,7 +52,20 @@ class _OnboardingScreenState extends State<OnboardingScreen>
       body: 'onboarding_4_body'.tr(),
       color: AppColors.success,
     ),
+    // Gate page. Kept last so every informational page is still reachable, and
+    // so 'Skip' has somewhere to land that is not "done".
+    _OnboardingPage(
+      icon: Icons.contact_phone_rounded,
+      title: 'onboarding_contact_title'.tr(),
+      body: 'onboarding_contact_body'.tr(),
+      color: AppColors.primary,
+      isContactStep: true,
+    ),
   ];
+
+  int get _contactStepIndex => _pages.length - 1;
+
+  bool get _isOnContactStep => _currentPage == _contactStepIndex;
 
   @override
   void initState() {
@@ -65,11 +81,30 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     )..forward();
   }
 
+  /// Jumps to the gate page instead of completing. 'Skip' used to call
+  /// [_finish] directly, which is precisely how an install reached the home
+  /// screen with no reachable contact.
+  void _skipToContactStep() {
+    HapticFeedback.selectionClick();
+    _pageController.animateToPage(
+      _contactStepIndex,
+      duration: const Duration(milliseconds: 400),
+      curve: Curves.easeOutCubic,
+    );
+  }
+
   Future<void> _finish() async {
-    HapticFeedback.mediumImpact();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(AppConstants.prefOnboardingDone, true);
+    // The service refuses to write prefOnboardingDone without a callable
+    // primary contact, so a stale _contactGateSatisfied cannot let an
+    // unconfigured install through.
+    final completed = await OnboardingContactGateService.completeOnboarding();
     if (!mounted) return;
+    if (!completed) {
+      setState(() => _contactGateSatisfied = false);
+      _pageController.jumpToPage(_contactStepIndex);
+      return;
+    }
+    HapticFeedback.mediumImpact();
     Navigator.of(context).pushAndRemoveUntil(
       PageRouteBuilder(
         pageBuilder: (context, animation, secondaryAnimation) =>
@@ -115,13 +150,9 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                   child: Align(
                     alignment: Alignment.centerRight,
                     child: TextButton(
-                      onPressed: _currentPage == _pages.length - 1
-                          ? null
-                          : _finish,
+                      onPressed: _isOnContactStep ? null : _skipToContactStep,
                       child: Text(
-                        _currentPage == _pages.length - 1
-                            ? ''
-                            : 'btn_skip'.tr(),
+                        _isOnContactStep ? '' : 'btn_skip'.tr(),
                         style: const TextStyle(
                           color: AppColors.textSecondary,
                           fontSize: 16,
@@ -140,6 +171,20 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                     itemCount: _pages.length,
                     itemBuilder: (context, i) {
                       final p = _pages[i];
+                      if (p.isContactStep) {
+                        // A text form under a parallax transform is unusable;
+                        // the gate page renders straight.
+                        return OnboardingContactStep(
+                          onGateChanged: (satisfied) {
+                            if (!mounted || satisfied == _contactGateSatisfied) {
+                              return;
+                            }
+                            setState(
+                              () => _contactGateSatisfied = satisfied,
+                            );
+                          },
+                        );
+                      }
                       return AnimatedBuilder(
                         animation: _pageController,
                         builder: (context, child) {
@@ -271,19 +316,23 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                           : 'semantics_start_app'.tr(),
                       button: true,
                       child: ElevatedButton(
-                        onPressed: () {
-                          if (_currentPage < _pages.length - 1) {
-                            _pageController.nextPage(
-                              duration: const Duration(milliseconds: 400),
-                              curve: Curves.easeOutCubic,
-                            );
-                          } else {
-                            _finish();
-                          }
-                        },
+                        onPressed: _isOnContactStep && !_contactGateSatisfied
+                            ? null
+                            : () {
+                                if (!_isOnContactStep) {
+                                  _pageController.nextPage(
+                                    duration: const Duration(milliseconds: 400),
+                                    curve: Curves.easeOutCubic,
+                                  );
+                                  return;
+                                }
+                                unawaited(_finish());
+                              },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: _pages[_currentPage].color,
                           foregroundColor: Colors.white,
+                          disabledBackgroundColor: AppColors.border,
+                          disabledForegroundColor: AppColors.textSecondary,
                           padding: const EdgeInsets.symmetric(vertical: 18),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(14),
@@ -294,9 +343,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                           ),
                         ),
                         child: Text(
-                          _currentPage < _pages.length - 1
-                              ? 'btn_next'.tr()
-                              : 'btn_start'.tr(),
+                          _isOnContactStep ? 'btn_start'.tr() : 'btn_next'.tr(),
                           style: const TextStyle(
                             fontSize: 17,
                             fontWeight: FontWeight.w700,
@@ -306,6 +353,18 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                     ),
                   ),
                 ),
+                if (_isOnContactStep && !_contactGateSatisfied)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
+                    child: Text(
+                      'onboarding_contact_required_hint'.tr(),
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),
@@ -320,10 +379,15 @@ class _OnboardingPage {
   final String title;
   final String body;
   final Color color;
+
+  /// Marks the page that carries the emergency-contact gate.
+  final bool isContactStep;
+
   const _OnboardingPage({
     required this.icon,
     required this.title,
     required this.body,
     required this.color,
+    this.isContactStep = false,
   });
 }
