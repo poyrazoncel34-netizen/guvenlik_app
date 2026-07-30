@@ -20,7 +20,9 @@ import '../core/services/offline_queue_service.dart';
 import '../domain/models/activity_event.dart';
 import 'emergency_call_screen.dart';
 import '../core/services/foreground_service.dart';
+import '../core/services/countdown_announcement.dart';
 import '../core/services/haptic_service.dart';
+import '../core/services/reduced_motion_policy.dart';
 import '../core/services/notification_service.dart';
 import '../core/services/emergency_dispatch_pipeline.dart';
 import '../core/services/emergency_platform_service.dart';
@@ -74,6 +76,7 @@ class _CountdownScreenState extends State<CountdownScreen>
           debugPrint('CountdownScreen best-effort operation failed: $error');
         },
       );
+  bool _reduceMotion = false;
   bool _handoffToEmergencyScreen = false;
   bool _isNavigating = false;
   bool _emergencyDispatched = false;
@@ -96,13 +99,22 @@ class _CountdownScreenState extends State<CountdownScreen>
       vsync: this,
       duration: const Duration(milliseconds: 300),
     );
+    // ~2.8s breath; 800ms read as a flash. Pulse started in
+    // didChangeDependencies, once MediaQuery is readable.
     _glowController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 800),
-    )..repeat(reverse: true);
+      duration: const Duration(milliseconds: 1400),
+    );
 
     _bootstrapAndStartCountdown();
     unawaited(KoruBeniForegroundService.start(owner: _foregroundOwner));
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _reduceMotion = ReducedMotionPolicy.isReduced(context);
+    ReducedMotionPolicy.pulse(_glowController, reduced: _reduceMotion);
   }
 
   Future<void> _bootstrapAndStartCountdown() async {
@@ -123,8 +135,9 @@ class _CountdownScreenState extends State<CountdownScreen>
       await _startCountdown();
       return;
     }
-    // Allow the first frame to build before any platform request.
-    await Future.delayed(const Duration(milliseconds: 300));
+    // Wait for the frame that is actually pending, not a fixed 300ms: the
+    // deadline is set at arm time, so that delay pushed every dial 300ms later.
+    await WidgetsBinding.instance.endOfFrame;
     if (!mounted) return;
     await _startCountdown();
   }
@@ -251,7 +264,11 @@ class _CountdownScreenState extends State<CountdownScreen>
         if (left == _countdown) return;
         setState(() => _countdown = left);
         HapticService.countdownTick(secondsRemaining: _countdown);
-        _tickBounceController.forward(from: 0); // ── Tick bounce ──
+        // ── Tick bounce ── decoration; number + haptic carry the second.
+        ReducedMotionPolicy.playOnce(
+          _tickBounceController,
+          reduced: _reduceMotion,
+        );
         return;
       }
       if (mounted) setState(() => _countdown = 0);
@@ -722,7 +739,7 @@ class _CountdownScreenState extends State<CountdownScreen>
       });
     }
     if (!mounted) return;
-    _shakeController.forward(from: 0);
+    ReducedMotionPolicy.playOnce(_shakeController, reduced: _reduceMotion);
     HapticFeedback.vibrate();
     setState(() {
       _pin = '';
@@ -760,9 +777,11 @@ class _CountdownScreenState extends State<CountdownScreen>
             animation: _glowController,
             builder: (context, child) {
               // ── Pulsating background glow in last 5 seconds ──
-              final glowAlpha = isUrgent
-                  ? (0.03 + _glowController.value * 0.08)
-                  : 0.0;
+              final glowPulse = ReducedMotionPolicy.pulseValue(
+                _glowController,
+                reduced: _reduceMotion,
+              );
+              final glowAlpha = isUrgent ? (0.03 + glowPulse * 0.08) : 0.0;
               return Container(
                 decoration: BoxDecoration(
                   gradient: RadialGradient(
@@ -888,7 +907,7 @@ class _CountdownScreenState extends State<CountdownScreen>
                               Semantics(
                                 liveRegion: true,
                                 container: true,
-                                label: _liveCountdownAnnouncement(_countdown),
+                                label: CountdownAnnouncement.labelFor(_countdown),
                                 child: ExcludeSemantics(
                                   child: AnimatedBuilder(
                                     animation: _tickBounceController,
@@ -1047,25 +1066,6 @@ class _CountdownScreenState extends State<CountdownScreen>
   /// not announce — sparse schedule (10, 8, 5, 4, 3, 2, 1) keeps
   /// TalkBack from spamming every second while still giving the user
   /// enough warning to enter PIN before dispatch.
-  String _liveCountdownAnnouncement(int seconds) {
-    final bucket = _liveCountdownBucket(seconds);
-    if (bucket == null) return '';
-    return 'countdown_seconds_remaining'.tr(namedArgs: {'seconds': '$bucket'});
-  }
-
-  /// Sparse-announcement bucket — every value in [seconds] maps to a
-  /// stable bucket label so the Semantics.label only changes (and
-  /// therefore TalkBack only announces) at these moments:
-  ///   10 → "10", 9 → "10", 8 → "8", 7→"8", 6→"8", 5 → "5",
-  ///   4 → "4", 3 → "3", 2 → "2", 1 → "1", 0 → null (silent).
-  static int? _liveCountdownBucket(int seconds) {
-    if (seconds >= 10) return 10;
-    if (seconds >= 8) return 8;
-    if (seconds >= 5) return 5;
-    if (seconds >= 1) return seconds;
-    return null;
-  }
-
   Widget _buildNumberPad() {
     return GridView.builder(
       shrinkWrap: true,

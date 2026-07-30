@@ -194,12 +194,22 @@ class _EmergencyTriggerHostState extends State<EmergencyTriggerHost>
 
     _countdownOpen = true;
     try {
-      await HapticFeedback.heavyImpact();
+      // Parity with the panic button: the acknowledgement haptic is fired, not
+      // awaited, and the route carries no transition. Awaiting the vibration
+      // channel and then paying a 300ms MaterialPageRoute transition delayed
+      // arming on the volume-trigger path only — the same session, slower.
+      unawaited(
+        HapticFeedback.heavyImpact().catchError((Object _) {
+          debugPrint('EmergencyTriggerHost: acknowledgement haptic failed');
+        }),
+      );
       await navigator.push(
-        MaterialPageRoute(
-          builder: (_) => CountdownScreen(
+        PageRouteBuilder(
+          pageBuilder: (_, _, _) => CountdownScreen(
             entitlementDecision: access.entitlementDecision,
           ),
+          transitionDuration: Duration.zero,
+          reverseTransitionDuration: Duration.zero,
         ),
       );
     } finally {

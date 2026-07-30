@@ -11,6 +11,7 @@ import 'package:provider/provider.dart';
 import '../core/app_colors.dart';
 import '../core/constants/app_constants.dart';
 import '../core/services/emergency_session_contract.dart';
+import '../core/services/reduced_motion_policy.dart';
 import '../core/services/subscription_gate.dart';
 import '../core/widgets/feature_warning_dialog.dart';
 import '../presentation/providers/subscription_provider.dart';
@@ -33,6 +34,7 @@ class _PanicButtonState extends State<PanicButton>
   late AnimationController _armedPulseController;
   late AnimationController _progressController;
   bool _isArmed = false;
+  bool _reduceMotion = false;
   bool _countdownOpening = false;
   Timer? _hapticTimer;
   int _holdSeconds = 0;
@@ -52,9 +54,12 @@ class _PanicButtonState extends State<PanicButton>
     )..repeat(reverse: true);
 
     // Armed pulse animation (when pressed/holding)
+    // 400ms out-and-back was a 0.8s blink under the finger, at the moment the
+    // user most needs to read the button. 1200ms matches _breathController's
+    // resting rhythm, so arming reads as "faster breathing", not as an alarm.
     _armedPulseController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 400),
+      duration: const Duration(milliseconds: 1200),
     );
 
     // Progress ring animation (fills while holding)
@@ -62,6 +67,15 @@ class _PanicButtonState extends State<PanicButton>
       vsync: this,
       duration: const Duration(seconds: 3),
     );
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _reduceMotion = ReducedMotionPolicy.isReduced(context);
+    if (_isArmed) {
+      ReducedMotionPolicy.pulse(_armedPulseController, reduced: _reduceMotion);
+    }
   }
 
   @override
@@ -115,8 +129,9 @@ class _PanicButtonState extends State<PanicButton>
       );
     });
 
-    // Start armed pulse
-    _armedPulseController.repeat(reverse: true);
+    // Start armed pulse (parked at a visible position under reduce-motion; the
+    // 500ms haptic below is the channel that does not depend on sight).
+    ReducedMotionPolicy.pulse(_armedPulseController, reduced: _reduceMotion);
 
     // Start progress ring
     _progressController.forward(from: PanicHoldGate.progress(elapsed));
@@ -214,30 +229,16 @@ class _PanicButtonState extends State<PanicButton>
     if (!mounted) return;
 
     _countdownOpening = true;
+    // No transition on the dispatch path. The 300ms fade+slide was 300ms of
+    // screen time before the countdown could arm, and a decorative one at that:
+    // the user has already committed by completing the hold gesture.
     Navigator.push(
       context,
       PageRouteBuilder(
         pageBuilder: (context, animation, secondaryAnimation) =>
             CountdownScreen(entitlementDecision: entitlementDecision),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          return FadeTransition(
-            opacity: animation,
-            child: SlideTransition(
-              position:
-                  Tween<Offset>(
-                    begin: const Offset(0, 0.1),
-                    end: Offset.zero,
-                  ).animate(
-                    CurvedAnimation(
-                      parent: animation,
-                      curve: Curves.easeOutCubic,
-                    ),
-                  ),
-              child: child,
-            ),
-          );
-        },
-        transitionDuration: const Duration(milliseconds: 300),
+        transitionDuration: Duration.zero,
+        reverseTransitionDuration: Duration.zero,
       ),
     ).whenComplete(() => _countdownOpening = false);
   }
@@ -622,7 +623,10 @@ class _PanicButtonState extends State<PanicButton>
       AnimatedBuilder(
         animation: _armedPulseController,
         builder: (context, child) {
-          final value = _armedPulseController.value;
+          final value = ReducedMotionPolicy.pulseValue(
+            _armedPulseController,
+            reduced: _reduceMotion,
+          );
           final ringSize = (250 + (value * 30)) * scale;
           return Container(
             width: ringSize,
