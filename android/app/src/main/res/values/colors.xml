@@ -2,4 +2,15 @@
 <resources>
     <color name="ic_launcher_background">#0A1B2A</color>
     <color name="launch_background">#0A1B2A</color>
+    <!--
+      Mirrors of lib/core/app_colors.dart for the home-screen widget, which is
+      drawn by the launcher and cannot read Flutter theme values. Same hex
+      values on purpose: these are not new brand colors.
+        panic_widget_accent  = AppColors.emergency    (#FF4D4D)
+        panic_widget_surface = AppColors.background   (#0A1B2A)
+        panic_widget_text    = AppColors.textPrimary  (#F3F7FF)
+    -->
+    <color name="panic_widget_accent">#FF4D4D</color>
+    <color name="panic_widget_surface">#0A1B2A</color>
+    <color name="panic_widget_text">#F3F7FF</color>
 </resources>

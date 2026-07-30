@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="panic_widget_label">KoruBeni panic</string>
+    <string name="panic_widget_description">Opens the app on the panic countdown screen.</string>
+    <string name="panic_widget_action">PANIC</string>
+    <string name="panic_tile_label">KoruBeni panic</string>
+</resources>

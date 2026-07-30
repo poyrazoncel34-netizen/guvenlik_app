@@ -16,6 +16,8 @@ import android.view.WindowManager
 import com.poyrazoncel.korubeni.emergency.EmergencyChannels
 import com.poyrazoncel.korubeni.emergency.EmergencyEventStreamHandler
 import com.poyrazoncel.korubeni.emergency.EmergencyPlatformHandler
+import com.poyrazoncel.korubeni.quickaccess.PanicLaunch
+import com.poyrazoncel.korubeni.quickaccess.PanicRequestStore
 import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.EventChannel
@@ -27,6 +29,7 @@ class MainActivity : FlutterFragmentActivity() {
         private const val SETTINGS_CHANNEL = "com.poyrazoncel.korubeni/settings"
         private const val AUDIO_CONTROL_CHANNEL = "com.poyrazoncel.korubeni/audio_control"
         private const val CONTACTS_PICKER_CHANNEL = "com.poyrazoncel.korubeni/contacts_picker"
+        private const val QUICK_PANIC_CHANNEL = "com.poyrazoncel.korubeni/quick_panic"
         private const val CONTACT_PICK_REQUEST_CODE = 7341
     }
 
@@ -52,6 +55,40 @@ class MainActivity : FlutterFragmentActivity() {
             )
         }
         super.onCreate(savedInstanceState)
+        recordQuickPanicRequest(intent)
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        // launchMode is singleTop, so a tap while the app is already running
+        // arrives here rather than through onCreate.
+        setIntent(intent)
+        recordQuickPanicRequest(intent)
+    }
+
+    /**
+     * Persists a request that arrived from the widget or the Quick Settings
+     * tile. The Flutter engine may not be attached yet, so the request is
+     * durable rather than delivered straight to Dart; the trigger host consumes
+     * it and replays it into the single existing arm path.
+     *
+     * The extra carries a source label only -- no target, no deadline, no
+     * entitlement claim. An intent forged by another app could set it, and the
+     * worst it achieves is opening this app's own subscription-gated countdown,
+     * which then still resolves its own contact and its own entitlement.
+     */
+    private fun recordQuickPanicRequest(intent: Intent?) {
+        val source = intent?.getStringExtra(PanicLaunch.EXTRA_PANIC_SOURCE) ?: return
+        if (source != PanicRequestStore.SOURCE_WIDGET &&
+            source != PanicRequestStore.SOURCE_TILE
+        ) {
+            return
+        }
+        try {
+            PanicRequestStore.submit(applicationContext, source)
+        } catch (_: Exception) {
+            android.util.Log.e("MainActivity", "QUICK_PANIC_PERSIST_FAILED")
+        }
     }
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
@@ -247,6 +284,30 @@ class MainActivity : FlutterFragmentActivity() {
                 android.util.Log.d("MainActivity", "Contacts picker channel configured")
             } catch (_: Exception) {
                 android.util.Log.e("MainActivity", "CONTACTS_PICKER_CHANNEL_CONFIG_FAILED")
+            }
+
+            // Quick-access hand-off. Read-and-clear only; the widget and the
+            // tile cannot arm anything through this channel.
+            try {
+                MethodChannel(messenger, QUICK_PANIC_CHANNEL)
+                    .setMethodCallHandler { call, result ->
+                        try {
+                            when (call.method) {
+                                "consumePanicRequest" -> {
+                                    result.success(
+                                        PanicRequestStore.consume(applicationContext),
+                                    )
+                                }
+                                else -> result.notImplemented()
+                            }
+                        } catch (_: Exception) {
+                            android.util.Log.e("MainActivity", "QUICK_PANIC_ERROR")
+                            result.error("ERROR", "Quick panic request failed", null)
+                        }
+                    }
+                android.util.Log.d("MainActivity", "Quick panic channel configured")
+            } catch (_: Exception) {
+                android.util.Log.e("MainActivity", "QUICK_PANIC_CHANNEL_CONFIG_FAILED")
             }
 
             android.util.Log.i("MainActivity", "All platform channels configured successfully")

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  One tap target covering the whole widget: in a panic the user should not have
+  to hit a small button. The click PendingIntent is attached to the root in
+  PanicWidgetProvider.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/panic_widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/panic_widget_background"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:padding="8dp"
+    android:contentDescription="@string/panic_widget_description">
+
+    <ImageView
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:src="@drawable/ic_panic_widget"
+        android:importantForAccessibility="no" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:text="@string/panic_widget_action"
+        android:textColor="@color/panic_widget_text"
+        android:textSize="14sp"
+        android:textStyle="bold" />
+</LinearLayout>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  System-rendered labels only. In-app copy lives in assets/translations/*.json
+  (easy_localization); the launcher widget picker and the Quick Settings tile
+  editor are drawn by the OS and can only read Android resources.
+
+  Default locale is Turkish, matching the app's primary market. values-en holds
+  the English variants.
+
+  No claim of contacting emergency services: the tile opens the app's own
+  countdown, which calls the user's own primary contact.
+-->
+<resources>
+    <string name="panic_widget_label">KoruBeni panik</string>
+    <string name="panic_widget_description">Uygulamayi panik geri sayimi ekraninda acar.</string>
+    <string name="panic_widget_action">PANIK</string>
+    <string name="panic_tile_label">KoruBeni panik</string>
+</resources>

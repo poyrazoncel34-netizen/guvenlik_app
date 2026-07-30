@@ -158,6 +158,40 @@
             android:enabled="true"
             android:directBootAware="true"
             android:exported="false" />
+        <!-- Quick-access surfaces. Neither arms a session nor dials: both record
+             an intent-only request and launch MainActivity, which replays it into
+             the single existing arm path (SubscriptionGate -> CountdownScreen ->
+             PanicArmPolicy). No new uses-permission is required for either. -->
+        <receiver
+            android:name=".quickaccess.PanicWidgetProvider"
+            android:enabled="true"
+            android:exported="false"
+            android:label="@string/panic_widget_label">
+            <!-- exported="false" is correct for an AppWidgetProvider on API 31+:
+                 AppWidgetService delivers APPWIDGET_UPDATE to an explicit
+                 component, so the receiver needs no external visibility. -->
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/panic_widget_info" />
+        </receiver>
+        <!-- The QS tile MUST be exported and MUST be guarded by
+             BIND_QUICK_SETTINGS_TILE: SystemUI binds it, and that signature-level
+             permission is what restricts the binder to the system. This is the
+             one exported component added here, and scripts/audit_android_release_surface.py
+             allows it only with exactly that permission and filter. -->
+        <service
+            android:name=".quickaccess.PanicTileService"
+            android:exported="true"
+            android:icon="@drawable/ic_panic_tile"
+            android:label="@string/panic_tile_label"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+        </service>
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data

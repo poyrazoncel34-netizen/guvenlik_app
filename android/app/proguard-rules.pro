@@ -79,6 +79,13 @@
 # so this critical class is never accidentally removed by future rule changes.
 -keep class com.poyrazoncel.korubeni.emergency.CheckInAlarmReceiver { *; }
 -keep class com.poyrazoncel.korubeni.emergency.BootCompletedReceiver { *; }
+# Quick-access surfaces: the widget provider's name is baked into its
+# PendingIntent and its manifest meta-data, and SystemUI binds the tile service
+# by the name in the manifest. Covered by the korubeni.** wildcard and by the
+# Service/BroadcastReceiver rules above; listed explicitly for the same reason
+# the alarm receivers are.
+-keep class com.poyrazoncel.korubeni.quickaccess.PanicWidgetProvider { *; }
+-keep class com.poyrazoncel.korubeni.quickaccess.PanicTileService { *; }
 
 # MethodChannel handlers must not be obfuscated
 -keep class * implements io.flutter.plugin.common.MethodChannel$MethodCallHandler {

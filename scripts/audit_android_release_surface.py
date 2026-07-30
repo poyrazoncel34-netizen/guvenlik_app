@@ -61,6 +61,13 @@ REQUIRED_BACKUP_DOMAINS = {
 }
 LAUNCHER_ACTIVITY = "com.poyrazoncel.korubeni.MainActivity"
 PROFILE_RECEIVER = "androidx.profileinstaller.ProfileInstallReceiver"
+# A Quick Settings tile cannot be exported=false: SystemUI binds it. What makes
+# that safe is the signature-level BIND_QUICK_SETTINGS_TILE guard, which limits
+# the binder to the system. Allowed here by exact name, exact permission and
+# exact intent filter -- not by relaxing the exported rule for services.
+QS_TILE_SERVICE = "com.poyrazoncel.korubeni.quickaccess.PanicTileService"
+QS_TILE_PERMISSION = "android.permission.BIND_QUICK_SETTINGS_TILE"
+QS_TILE_ACTION = "android.service.quicksettings.action.QS_TILE"
 
 
 def attr(element: ET.Element, name: str) -> str | None:
@@ -90,6 +97,14 @@ def parse_xml(path: Path, label: str, errors: list[str]) -> ET.Element | None:
 
 def is_true(value: str | None) -> bool:
     return value == "true"
+
+
+def qs_tile_filter_present(component: ET.Element) -> bool:
+    for intent_filter in component.findall("intent-filter"):
+        actions = {attr(item, "name") for item in intent_filter.findall("action")}
+        if QS_TILE_ACTION in actions:
+            return True
+    return False
 
 
 def launcher_filter_present(component: ET.Element) -> bool:
@@ -230,7 +245,13 @@ def audit_manifest(
                     and name == PROFILE_RECEIVER
                     and permission == "android.permission.DUMP"
                 )
-                if not launcher_ok and not profile_ok:
+                qs_tile_ok = (
+                    tag == "service"
+                    and name == QS_TILE_SERVICE
+                    and permission == QS_TILE_PERMISSION
+                    and qs_tile_filter_present(component)
+                )
+                if not launcher_ok and not profile_ok and not qs_tile_ok:
                     errors.append(f"unexpected exported component: {tag}:{name}")
                     if not permission:
                         unprotected_exported.append(name)

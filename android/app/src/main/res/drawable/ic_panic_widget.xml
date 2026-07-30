@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Widget variant of ic_panic_tile with the accent baked in. RemoteViews cannot
+  use AppCompat's app:tint, and android:tint on an ImageView inside a widget
+  layout is a lint error, so the color lives in the drawable.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="@color/panic_widget_accent"
+        android:pathData="M12,2L1,21h22L12,2zM13,18h-2v-2h2v2zM13,14h-2V9h2v5z" />
+</vector>

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  updatePeriodMillis="0": the widget shows no live data, so there is nothing to
+  poll. A periodic update would wake the device for no reason, which is the
+  opposite of what this app needs from the battery.
+-->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:description="@string/panic_widget_description"
+    android:initialLayout="@layout/panic_widget"
+    android:minHeight="40dp"
+    android:minWidth="40dp"
+    android:previewLayout="@layout/panic_widget"
+    android:resizeMode="none"
+    android:targetCellHeight="1"
+    android:targetCellWidth="1"
+    android:updatePeriodMillis="0"
+    android:widgetCategory="home_screen" />

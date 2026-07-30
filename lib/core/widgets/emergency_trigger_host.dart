@@ -13,6 +13,7 @@ import '../services/check_in_expiry_coordinator.dart';
 import '../services/check_in_service.dart';
 import '../services/emergency_platform_service.dart';
 import '../services/emergency_readiness_service.dart';
+import '../services/quick_panic_request_service.dart';
 import '../services/volume_trigger_service.dart';
 
 class EmergencyTriggerHost extends StatefulWidget {
@@ -44,7 +45,17 @@ class _EmergencyTriggerHostState extends State<EmergencyTriggerHost>
     CheckInService.safeWalk.initialize();
     unawaited(EmergencyReadinessService.instance.checkReadiness());
     _bindPlatformEvents();
+    _consumeQuickPanicRequest();
     _startForegroundTriggers();
+  }
+
+  /// A widget or Quick Settings tap that happened before Flutter was attached.
+  /// Routed through [_openCountdown], the same entry the volume trigger uses,
+  /// so entitlement and the arm boundary are resolved in exactly one place.
+  Future<void> _consumeQuickPanicRequest() async {
+    final source = await QuickPanicRequestService.consume();
+    if (source == null || !mounted) return;
+    await _openCountdown();
   }
 
   @override
@@ -55,6 +66,7 @@ class _EmergencyTriggerHostState extends State<EmergencyTriggerHost>
       CheckInService.instance.handleAppResumed();
       CheckInService.safeWalk.handleAppResumed();
       _consumePendingTrigger();
+      _consumeQuickPanicRequest();
       // Re-auth after prolonged background
       AppLifecycleHandler.instance.onResumed();
       return;
