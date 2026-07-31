@@ -49,24 +49,14 @@ void main(List<String> arguments) {
         'license': <String, Object?>{'id': evidence.spdxId},
       },
     ];
-    final properties = (component['properties'] as List<Object?>);
-    properties.addAll(<Object?>[
-      <String, Object?>{
-        'name': 'korubeni:licenseEvidenceUrl',
-        'value': evidence.sourceUrl,
-      },
-      <String, Object?>{
-        'name': 'korubeni:licenseEvidenceSha256',
-        'value': evidence.sha256,
-      },
-      <String, Object?>{
-        'name': 'korubeni:licenseReviewedBy',
-        'value': evidence.reviewedBy,
-      },
-      <String, Object?>{
-        'name': 'korubeni:licenseReviewedAt',
-        'value': evidence.reviewedAt,
-      },
+    // Component properties are built as List<Map<String, String>>; adding
+    // Map<String, Object?> entries throws at runtime once evidence is present.
+    final properties = (component['properties'] as List<Map<String, String>>);
+    properties.addAll(<Map<String, String>>[
+      {'name': 'korubeni:licenseEvidenceUrl', 'value': evidence.sourceUrl},
+      {'name': 'korubeni:licenseEvidenceSha256', 'value': evidence.sha256},
+      {'name': 'korubeni:licenseReviewedBy', 'value': evidence.reviewedBy},
+      {'name': 'korubeni:licenseReviewedAt', 'value': evidence.reviewedAt},
     ]);
   }
   final licensesComplete = licenseEvidence.length == components.length;

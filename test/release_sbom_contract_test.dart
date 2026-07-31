@@ -67,6 +67,56 @@ void main() {
     );
   });
 
+  test('SBOM built with real evidence marks every component reviewed', () async {
+    // The generator only touches the evidence branch when --license-evidence is
+    // passed, so the no-evidence test above cannot catch a fault in it.
+    final temp = await Directory.systemTemp.createTemp('korubeni-sbom-evidence.');
+    addTearDown(() => temp.delete(recursive: true));
+    final output = File('${temp.path}/sbom.cdx.json');
+    sbom.main([
+      '--output',
+      output.path,
+      '--license-evidence',
+      'config/dependency_license_evidence.json',
+    ]);
+
+    final json = jsonDecode(output.readAsStringSync()) as Map<String, dynamic>;
+    final metadata = json['metadata'] as Map<String, dynamic>;
+    final metadataProperties = (metadata['properties'] as List).cast<Map>();
+    expect(
+      metadataProperties.singleWhere(
+        (property) => property['name'] == 'korubeni:licenseEvidenceStatus',
+      )['value'],
+      'VERIFIED',
+    );
+
+    final components = (json['components'] as List)
+        .cast<Map<String, dynamic>>();
+    for (final component in components) {
+      final licenses = component['licenses'] as List;
+      final license = (licenses.single as Map)['license'] as Map;
+      expect(
+        '${license['id']}'.isNotEmpty,
+        isTrue,
+        reason: 'missing SPDX id for ${component['purl']}',
+      );
+      final names = (component['properties'] as List)
+          .cast<Map>()
+          .map((property) => property['name'])
+          .toSet();
+      expect(
+        names,
+        containsAll(<String>[
+          'korubeni:licenseEvidenceUrl',
+          'korubeni:licenseEvidenceSha256',
+          'korubeni:licenseReviewedBy',
+          'korubeni:licenseReviewedAt',
+        ]),
+        reason: 'missing evidence properties for ${component['purl']}',
+      );
+    }
+  });
+
   test(
     'Gradle dependency verification metadata is non-empty and checksummed',
     () {

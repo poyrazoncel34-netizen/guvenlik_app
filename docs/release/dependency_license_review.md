@@ -1,6 +1,6 @@
 # Dependency Licence Evidence Review
 
-Status: **REQUIRED / INCOMPLETE**
+Status: **COMPLETE** (400/400 components reviewed, 2026-07-31)
 
 This runbook closes the licence half of the release supply-chain gate. It does
 not turn an automated package classifier into legal advice. The tagged release
@@ -22,9 +22,16 @@ reviewed evidence and the policy verifier passes.
 - Integrity of downloaded Gradle artifacts:
   `android/gradle/verification-metadata.xml`.
 
-The current generated inventory contains 400 Pub/Maven components. The
-evidence file is intentionally empty, so the tagged release currently fails
-closed with `UNVERIFIED`. Do not change that status by adding guessed licences,
+The current generated inventory contains 400 Pub/Maven components, and all 400
+now carry reviewed evidence, so the SBOM reports `VERIFIED` and the tagged
+release gate passes. Seven Google-distributed components resolve to the Android
+Software Development Kit License Agreement, which has no SPDX-listed identifier;
+they are recorded as `LicenseRef-Android-SDK-License` and carry exact-purl
+waivers in `config/dependency_license_policy.json` that expire 2027-07-31.
+
+This status is only as good as the evidence behind it. A dependency bump adds
+components with no evidence and takes the SBOM straight back to `UNVERIFIED` —
+that is the gate working. Do not restore it by adding guessed licences,
 package-name-only records, or a blanket waiver.
 
 ## Required evidence per component

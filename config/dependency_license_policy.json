@@ -18,5 +18,55 @@
     "GPL-3.0-only",
     "GPL-3.0-or-later"
   ],
-  "waivers": []
+  "waivers": [
+    {
+      "purl": "pkg:maven/com.android.billingclient/billing@8.3.0",
+      "spdxId": "LicenseRef-Android-SDK-License",
+      "expiresOn": "2027-07-31",
+      "approvedBy": "korubenidestek@gmail.com",
+      "rationale": "Google Play Billing Library is the only in-app purchase mechanism Play policy permits for selling subscriptions in a Play-distributed app; there is no substitutable dependency. Distributed under the Android Software Development Kit License Agreement (https://developer.android.com/studio/terms), which permits redistribution of the SDK inside a compiled application binary and imposes no copyleft or source-disclosure obligation on KoruBeni's own code. No SPDX-listed identifier exists for that agreement, so it is recorded as LicenseRef-Android-SDK-License and waived per exact purl rather than by widening allowedSpdxIds."
+    },
+    {
+      "purl": "pkg:maven/com.google.android.gms/play-services-location@21.2.0",
+      "spdxId": "LicenseRef-Android-SDK-License",
+      "expiresOn": "2027-07-31",
+      "approvedBy": "korubenidestek@gmail.com",
+      "rationale": "Fused location provider backing the emergency location share and Safe Walk flows; the offline emergency call path does not depend on it, but location sharing does. Distributed under the Android Software Development Kit License Agreement (https://developer.android.com/studio/terms), which permits redistribution of the SDK inside a compiled application binary and imposes no copyleft or source-disclosure obligation on KoruBeni's own code. No SPDX-listed identifier exists for that agreement, so it is recorded as LicenseRef-Android-SDK-License and waived per exact purl rather than by widening allowedSpdxIds."
+    },
+    {
+      "purl": "pkg:maven/com.google.android.gms/play-services-base@18.5.0",
+      "spdxId": "LicenseRef-Android-SDK-License",
+      "expiresOn": "2027-07-31",
+      "approvedBy": "korubenidestek@gmail.com",
+      "rationale": "Required transitive dependency of play-services-location and the Play Billing stack; not selected directly by KoruBeni. Distributed under the Android Software Development Kit License Agreement (https://developer.android.com/studio/terms), which permits redistribution of the SDK inside a compiled application binary and imposes no copyleft or source-disclosure obligation on KoruBeni's own code. No SPDX-listed identifier exists for that agreement, so it is recorded as LicenseRef-Android-SDK-License and waived per exact purl rather than by widening allowedSpdxIds."
+    },
+    {
+      "purl": "pkg:maven/com.google.android.gms/play-services-basement@18.9.0",
+      "spdxId": "LicenseRef-Android-SDK-License",
+      "expiresOn": "2027-07-31",
+      "approvedBy": "korubenidestek@gmail.com",
+      "rationale": "Required transitive dependency of play-services-location and the Play Billing stack; not selected directly by KoruBeni. Distributed under the Android Software Development Kit License Agreement (https://developer.android.com/studio/terms), which permits redistribution of the SDK inside a compiled application binary and imposes no copyleft or source-disclosure obligation on KoruBeni's own code. No SPDX-listed identifier exists for that agreement, so it is recorded as LicenseRef-Android-SDK-License and waived per exact purl rather than by widening allowedSpdxIds."
+    },
+    {
+      "purl": "pkg:maven/com.google.android.gms/play-services-tasks@18.2.0",
+      "spdxId": "LicenseRef-Android-SDK-License",
+      "expiresOn": "2027-07-31",
+      "approvedBy": "korubenidestek@gmail.com",
+      "rationale": "Required transitive dependency providing the GMS Task API used by play-services-location; not selected directly by KoruBeni. Distributed under the Android Software Development Kit License Agreement (https://developer.android.com/studio/terms), which permits redistribution of the SDK inside a compiled application binary and imposes no copyleft or source-disclosure obligation on KoruBeni's own code. No SPDX-listed identifier exists for that agreement, so it is recorded as LicenseRef-Android-SDK-License and waived per exact purl rather than by widening allowedSpdxIds."
+    },
+    {
+      "purl": "pkg:maven/com.google.android.gms/play-services-ads-identifier@17.0.1",
+      "spdxId": "LicenseRef-Android-SDK-License",
+      "expiresOn": "2027-07-31",
+      "approvedBy": "korubenidestek@gmail.com",
+      "rationale": "Transitive dependency of the Play Billing / GMS stack; not referenced from KoruBeni code. Verified against the merged release manifest surface: it injects no com.google.android.gms.permission.AD_ID and the app ships 13 permissions with no advertising identifier, so no Play Data Safety advertising disclosure follows from its presence. Distributed under the Android Software Development Kit License Agreement (https://developer.android.com/studio/terms), which permits redistribution of the SDK inside a compiled application binary and imposes no copyleft or source-disclosure obligation on KoruBeni's own code. No SPDX-listed identifier exists for that agreement, so it is recorded as LicenseRef-Android-SDK-License and waived per exact purl rather than by widening allowedSpdxIds."
+    },
+    {
+      "purl": "pkg:maven/com.google.android.gms/play-services-auth-blockstore@16.4.0",
+      "spdxId": "LicenseRef-Android-SDK-License",
+      "expiresOn": "2027-07-31",
+      "approvedBy": "korubenidestek@gmail.com",
+      "rationale": "Transitive dependency of the Play Billing stack; not referenced from KoruBeni code. Distributed under the Android Software Development Kit License Agreement (https://developer.android.com/studio/terms), which permits redistribution of the SDK inside a compiled application binary and imposes no copyleft or source-disclosure obligation on KoruBeni's own code. No SPDX-listed identifier exists for that agreement, so it is recorded as LicenseRef-Android-SDK-License and waived per exact purl rather than by widening allowedSpdxIds."
+    }
+  ]
 }

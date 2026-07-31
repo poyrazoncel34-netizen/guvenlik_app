@@ -1,4 +1,2805 @@
 {
-  "schemaVersion": 1,
-  "entries": {}
+  "entries": {
+    "pkg:maven/androidx.activity/activity-compose@1.12.2": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.activity/activity-ktx@1.12.2": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.activity/activity@1.12.2": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.annotation/annotation-experimental@1.4.1": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.annotation/annotation-jvm@1.9.1": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.annotation/annotation@1.9.1": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.appcompat/appcompat-resources@1.6.1": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.appcompat/appcompat@1.6.1": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.arch.core/core-common@2.2.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.arch.core/core-runtime@2.2.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.autofill/autofill@1.0.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.browser/browser@1.9.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.cardview/cardview@1.0.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.collection/collection-jvm@1.5.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.collection/collection-ktx@1.5.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.collection/collection@1.5.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.compose.animation/animation-android@1.7.2": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.compose.animation/animation-core-android@1.7.2": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.compose.animation/animation-core@1.7.2": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.compose.animation/animation@1.7.2": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.compose.foundation/foundation-android@1.7.2": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.compose.foundation/foundation-layout-android@1.7.2": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.compose.foundation/foundation-layout@1.7.2": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.compose.foundation/foundation@1.7.2": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.compose.material/material-android@1.7.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.compose.material/material-icons-core-android@1.7.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.compose.material/material-icons-core@1.7.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.compose.material/material-ripple-android@1.7.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.compose.material/material-ripple@1.7.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.compose.material/material@1.7.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.compose.material3.adaptive/adaptive-android@1.0.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.compose.material3.adaptive/adaptive@1.0.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.compose.material3/material3-android@1.3.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.compose.material3/material3@1.3.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.compose.runtime/runtime-android@1.9.2": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.compose.runtime/runtime-annotation-android@1.9.2": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.compose.runtime/runtime-annotation@1.9.2": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.compose.runtime/runtime-saveable-android@1.9.2": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.compose.runtime/runtime-saveable@1.9.2": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.compose.runtime/runtime@1.9.2": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.compose.ui/ui-android@1.9.2": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.compose.ui/ui-geometry-android@1.9.2": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.compose.ui/ui-geometry@1.9.2": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.compose.ui/ui-graphics-android@1.9.2": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.compose.ui/ui-graphics@1.9.2": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.compose.ui/ui-text-android@1.9.2": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.compose.ui/ui-text-google-fonts@1.9.2": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.compose.ui/ui-text@1.9.2": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.compose.ui/ui-tooling-preview-android@1.9.2": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.compose.ui/ui-tooling-preview@1.9.2": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.compose.ui/ui-unit-android@1.9.2": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.compose.ui/ui-unit@1.9.2": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.compose.ui/ui-util-android@1.9.2": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.compose.ui/ui-util@1.9.2": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.compose.ui/ui@1.9.2": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.compose/compose-bom@2024.09.00": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.concurrent/concurrent-futures@1.1.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.constraintlayout/constraintlayout-compose-android@1.1.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.constraintlayout/constraintlayout-compose@1.1.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.constraintlayout/constraintlayout-core@1.1.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.constraintlayout/constraintlayout@2.1.4": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.coordinatorlayout/coordinatorlayout@1.1.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.core/core-ktx@1.17.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.core/core-viewtree@1.0.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.core/core@1.17.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.cursoradapter/cursoradapter@1.0.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.customview/customview-poolingcontainer@1.0.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.customview/customview@1.1.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.datastore/datastore-android@1.2.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.datastore/datastore-core-android@1.2.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.datastore/datastore-core-okio-jvm@1.2.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.datastore/datastore-core-okio@1.2.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.datastore/datastore-core@1.2.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.datastore/datastore-preferences-android@1.2.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.datastore/datastore-preferences-core-android@1.2.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.datastore/datastore-preferences-core@1.2.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.datastore/datastore-preferences-external-protobuf@1.2.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "6e5e117324afd944dcf67f36cf329843bc1a92229a8cd9bb573d7a83130fea7d",
+      "sourceUrl": "https://raw.githubusercontent.com/protocolbuffers/protobuf/v3.25.5/LICENSE",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:maven/androidx.datastore/datastore-preferences-proto@1.2.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.datastore/datastore-preferences@1.2.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.datastore/datastore@1.2.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.documentfile/documentfile@1.0.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.drawerlayout/drawerlayout@1.1.1": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.dynamicanimation/dynamicanimation@1.0.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.emoji2/emoji2-views-helper@1.4.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.emoji2/emoji2@1.4.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.exifinterface/exifinterface@1.4.2": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.fragment/fragment-ktx@1.7.1": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.fragment/fragment@1.7.1": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.graphics/graphics-path@1.0.1": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.interpolator/interpolator@1.0.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.legacy/legacy-support-core-utils@1.0.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.lifecycle/lifecycle-common-java8@2.9.4": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.lifecycle/lifecycle-common-jvm@2.9.4": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.lifecycle/lifecycle-common@2.9.4": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.lifecycle/lifecycle-livedata-core-ktx@2.9.4": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.lifecycle/lifecycle-livedata-core@2.9.4": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.lifecycle/lifecycle-livedata@2.9.4": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.lifecycle/lifecycle-process@2.9.4": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.lifecycle/lifecycle-runtime-android@2.9.4": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.lifecycle/lifecycle-runtime-compose-android@2.9.4": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.lifecycle/lifecycle-runtime-compose@2.9.4": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.lifecycle/lifecycle-runtime-ktx-android@2.9.4": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.lifecycle/lifecycle-runtime-ktx@2.9.4": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.lifecycle/lifecycle-runtime@2.9.4": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.lifecycle/lifecycle-viewmodel-android@2.9.4": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.lifecycle/lifecycle-viewmodel-compose-android@2.9.4": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.lifecycle/lifecycle-viewmodel-compose@2.9.4": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.lifecycle/lifecycle-viewmodel-ktx@2.9.4": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.lifecycle/lifecycle-viewmodel-savedstate-android@2.9.4": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.lifecycle/lifecycle-viewmodel-savedstate@2.9.4": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.lifecycle/lifecycle-viewmodel@2.9.4": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.loader/loader@1.0.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.localbroadcastmanager/localbroadcastmanager@1.0.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.media/media@1.1.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.navigationevent/navigationevent-android@1.0.1": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.navigationevent/navigationevent-compose-android@1.0.1": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.navigationevent/navigationevent-compose@1.0.1": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.navigationevent/navigationevent@1.0.1": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.preference/preference@1.2.1": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.print/print@1.0.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.profileinstaller/profileinstaller@1.4.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.recyclerview/recyclerview@1.1.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.resourceinspection/resourceinspection-annotation@1.0.1": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.savedstate/savedstate-android@1.3.3": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.savedstate/savedstate-compose-android@1.3.3": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.savedstate/savedstate-compose@1.3.3": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.savedstate/savedstate-ktx@1.3.3": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.savedstate/savedstate@1.3.3": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.slidingpanelayout/slidingpanelayout@1.2.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.startup/startup-runtime@1.1.1": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.tracing/tracing@1.2.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.transition/transition@1.4.1": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.vectordrawable/vectordrawable-animated@1.1.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.vectordrawable/vectordrawable@1.1.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.versionedparcelable/versionedparcelable@1.1.1": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.viewpager/viewpager@1.0.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.viewpager2/viewpager2@1.0.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.window.extensions.core/core@1.0.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.window/window-core-android@1.3.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.window/window-core@1.3.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.window/window-java@1.3.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/androidx.window/window@1.3.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/com.android.billingclient/billing@8.3.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "dbc9a2bf6bd6a56deb379bfe339c5cee7efab7432cd2f46ce93b97b9a2a4874c",
+      "sourceUrl": "https://developer.android.com/studio/terms",
+      "spdxId": "LicenseRef-Android-SDK-License"
+    },
+    "pkg:maven/com.caverock/androidsvg-aar@1.4": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/com.getkeepsafe.relinker/relinker@1.4.5": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/com.google.accompanist/accompanist-drawablepainter@0.30.1": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/com.google.android.datatransport/transport-api@3.0.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/com.google.android.datatransport/transport-backend-cct@3.1.8": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/com.google.android.datatransport/transport-runtime@3.1.8": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/com.google.android.gms/play-services-ads-identifier@17.0.1": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "dbc9a2bf6bd6a56deb379bfe339c5cee7efab7432cd2f46ce93b97b9a2a4874c",
+      "sourceUrl": "https://developer.android.com/studio/terms",
+      "spdxId": "LicenseRef-Android-SDK-License"
+    },
+    "pkg:maven/com.google.android.gms/play-services-auth-blockstore@16.4.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "dbc9a2bf6bd6a56deb379bfe339c5cee7efab7432cd2f46ce93b97b9a2a4874c",
+      "sourceUrl": "https://developer.android.com/studio/terms",
+      "spdxId": "LicenseRef-Android-SDK-License"
+    },
+    "pkg:maven/com.google.android.gms/play-services-base@18.5.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "dbc9a2bf6bd6a56deb379bfe339c5cee7efab7432cd2f46ce93b97b9a2a4874c",
+      "sourceUrl": "https://developer.android.com/studio/terms",
+      "spdxId": "LicenseRef-Android-SDK-License"
+    },
+    "pkg:maven/com.google.android.gms/play-services-basement@18.9.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "dbc9a2bf6bd6a56deb379bfe339c5cee7efab7432cd2f46ce93b97b9a2a4874c",
+      "sourceUrl": "https://developer.android.com/studio/terms",
+      "spdxId": "LicenseRef-Android-SDK-License"
+    },
+    "pkg:maven/com.google.android.gms/play-services-location@21.2.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "dbc9a2bf6bd6a56deb379bfe339c5cee7efab7432cd2f46ce93b97b9a2a4874c",
+      "sourceUrl": "https://developer.android.com/studio/terms",
+      "spdxId": "LicenseRef-Android-SDK-License"
+    },
+    "pkg:maven/com.google.android.gms/play-services-tasks@18.2.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "dbc9a2bf6bd6a56deb379bfe339c5cee7efab7432cd2f46ce93b97b9a2a4874c",
+      "sourceUrl": "https://developer.android.com/studio/terms",
+      "spdxId": "LicenseRef-Android-SDK-License"
+    },
+    "pkg:maven/com.google.android.material/material@1.9.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/com.google.code.findbugs/jsr305@3.0.2": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/com.google.code.gson/gson@2.12.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/com.google.crypto.tink/tink-android@1.19.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/com.google.errorprone/error_prone_annotations@2.36.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/com.google.firebase/firebase-encoders-json@18.0.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/com.google.firebase/firebase-encoders-proto@16.0.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/com.google.firebase/firebase-encoders@17.0.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/com.google.guava/listenablefuture@1.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/com.revenuecat.purchases/purchases-hybrid-common-ui@18.22.1": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "77e57f8a31eb21899940135b8f3acba2b0fc1825cc07db66e7b63b2f936f35ff",
+      "sourceUrl": "https://raw.githubusercontent.com/RevenueCat/purchases-hybrid-common/18.22.1/LICENSE",
+      "spdxId": "MIT"
+    },
+    "pkg:maven/com.revenuecat.purchases/purchases-hybrid-common@18.22.1": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "77e57f8a31eb21899940135b8f3acba2b0fc1825cc07db66e7b63b2f936f35ff",
+      "sourceUrl": "https://raw.githubusercontent.com/RevenueCat/purchases-hybrid-common/18.22.1/LICENSE",
+      "spdxId": "MIT"
+    },
+    "pkg:maven/com.revenuecat.purchases/purchases-ui@10.14.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "9faf71b90e66087e350718c8b2f9390589603eea7a32bb8dfe6ba19a6a9b8fb1",
+      "sourceUrl": "https://raw.githubusercontent.com/RevenueCat/purchases-android/10.14.0/LICENSE",
+      "spdxId": "MIT"
+    },
+    "pkg:maven/com.revenuecat.purchases/purchases@10.14.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "9faf71b90e66087e350718c8b2f9390589603eea7a32bb8dfe6ba19a6a9b8fb1",
+      "sourceUrl": "https://raw.githubusercontent.com/RevenueCat/purchases-android/10.14.0/LICENSE",
+      "spdxId": "MIT"
+    },
+    "pkg:maven/com.scottyab/rootbeer-lib@0.1.1": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/com.squareup.okhttp3/okhttp@4.11.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/com.squareup.okio/okio-jvm@3.9.1": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/com.squareup.okio/okio@3.9.1": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/dev.drewhamilton.poko/poko-annotations-jvm@0.17.2": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/dev.drewhamilton.poko/poko-annotations@0.17.2": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/io.coil-kt/coil-base@2.4.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/io.coil-kt/coil-compose-base@2.4.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/io.coil-kt/coil-compose@2.4.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/io.coil-kt/coil-svg@2.4.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/io.coil-kt/coil@2.4.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/io.flutter/arm64_v8a_release@1.0.0-587c18f873b8ab57330422bce09047420d9c7f42": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "66f37204b91a314563d3261efdd4b1858a49684ed99c267e0ee4ad5f00f74ea0",
+      "sourceUrl": "https://github.com/flutter/flutter/blob/587c18f873b8ab57330422bce09047420d9c7f42/engine/src/flutter/sky/packages/sky_engine/LICENSE",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:maven/io.flutter/armeabi_v7a_release@1.0.0-587c18f873b8ab57330422bce09047420d9c7f42": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "66f37204b91a314563d3261efdd4b1858a49684ed99c267e0ee4ad5f00f74ea0",
+      "sourceUrl": "https://github.com/flutter/flutter/blob/587c18f873b8ab57330422bce09047420d9c7f42/engine/src/flutter/sky/packages/sky_engine/LICENSE",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:maven/io.flutter/flutter_embedding_release@1.0.0-587c18f873b8ab57330422bce09047420d9c7f42": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "66f37204b91a314563d3261efdd4b1858a49684ed99c267e0ee4ad5f00f74ea0",
+      "sourceUrl": "https://github.com/flutter/flutter/blob/587c18f873b8ab57330422bce09047420d9c7f42/engine/src/flutter/sky/packages/sky_engine/LICENSE",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:maven/io.flutter/x86_64_release@1.0.0-587c18f873b8ab57330422bce09047420d9c7f42": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "66f37204b91a314563d3261efdd4b1858a49684ed99c267e0ee4ad5f00f74ea0",
+      "sourceUrl": "https://github.com/flutter/flutter/blob/587c18f873b8ab57330422bce09047420d9c7f42/engine/src/flutter/sky/packages/sky_engine/LICENSE",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:maven/javax.inject/javax.inject@1": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/org.commonmark/commonmark-ext-gfm-strikethrough@0.21.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "11cfcf6da0142fb1971c1f40f5924ddded14454e2793d7f1dd87c9f4abe42dfd",
+      "sourceUrl": "https://repo1.maven.org/maven2/org/commonmark/commonmark-ext-gfm-strikethrough/0.21.0/commonmark-ext-gfm-strikethrough-0.21.0.jar",
+      "spdxId": "BSD-2-Clause"
+    },
+    "pkg:maven/org.commonmark/commonmark@0.21.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "11cfcf6da0142fb1971c1f40f5924ddded14454e2793d7f1dd87c9f4abe42dfd",
+      "sourceUrl": "https://repo1.maven.org/maven2/org/commonmark/commonmark/0.21.0/commonmark-0.21.0.jar",
+      "spdxId": "BSD-2-Clause"
+    },
+    "pkg:maven/org.jetbrains.kotlin/kotlin-android-extensions-runtime@2.0.21": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/org.jetbrains.kotlin/kotlin-parcelize-runtime@2.0.21": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/org.jetbrains.kotlin/kotlin-stdlib-common@2.2.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/org.jetbrains.kotlin/kotlin-stdlib-jdk7@1.8.22": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/org.jetbrains.kotlin/kotlin-stdlib-jdk8@1.8.21": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/org.jetbrains.kotlin/kotlin-stdlib@2.2.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/org.jetbrains.kotlinx/kotlinx-coroutines-android@1.9.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/org.jetbrains.kotlinx/kotlinx-coroutines-bom@1.9.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/org.jetbrains.kotlinx/kotlinx-coroutines-core-jvm@1.9.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/org.jetbrains.kotlinx/kotlinx-coroutines-core@1.9.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/org.jetbrains.kotlinx/kotlinx-serialization-bom@1.7.3": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/org.jetbrains.kotlinx/kotlinx-serialization-core-jvm@1.7.3": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/org.jetbrains.kotlinx/kotlinx-serialization-core@1.7.3": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/org.jetbrains.kotlinx/kotlinx-serialization-json-jvm@1.7.3": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/org.jetbrains.kotlinx/kotlinx-serialization-json@1.7.3": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/org.jetbrains/annotations@23.0.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:maven/org.jspecify/jspecify@1.0.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "sourceUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:pub/_fe_analyzer_shared@91.0.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "efa31b5ac790016736fa9761642b0af16d37cd4fb483de2905adb5258cb89722",
+      "sourceUrl": "https://pub.dev/packages/_fe_analyzer_shared/versions/91.0.0/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/analyzer@8.4.1": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "7e124af6a556f045cb3a20cafbdaa31602ac2c82cbcb3c3b15faaaf514b06028",
+      "sourceUrl": "https://pub.dev/packages/analyzer/versions/8.4.1/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/archive@4.0.7": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "32f97d332eae7453ec4079858e6f1d74be85beeb6d3881068b47d02a379cccea",
+      "sourceUrl": "https://pub.dev/packages/archive/versions/4.0.7/license",
+      "spdxId": "MIT"
+    },
+    "pkg:pub/args@2.7.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "dfb09c74e29386cd3e2719f32d4995d59526179753931d31840757c77fbf2791",
+      "sourceUrl": "https://pub.dev/packages/args/versions/2.7.0/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/async@2.13.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "ff15faa32a2e638107b7789592b14426162a75ba620044ee2340a20ec6ce5e73",
+      "sourceUrl": "https://pub.dev/packages/async/versions/2.13.0/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/audioplayers@6.5.1": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "d6c0bdbc83e6bb5f02eed5caf25e6edf174cb56d0ecd6fe19a2cd05b62bbda41",
+      "sourceUrl": "https://pub.dev/packages/audioplayers/versions/6.5.1/license",
+      "spdxId": "MIT"
+    },
+    "pkg:pub/audioplayers_android@5.2.1": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "d6c0bdbc83e6bb5f02eed5caf25e6edf174cb56d0ecd6fe19a2cd05b62bbda41",
+      "sourceUrl": "https://pub.dev/packages/audioplayers_android/versions/5.2.1/license",
+      "spdxId": "MIT"
+    },
+    "pkg:pub/audioplayers_darwin@6.3.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "d6c0bdbc83e6bb5f02eed5caf25e6edf174cb56d0ecd6fe19a2cd05b62bbda41",
+      "sourceUrl": "https://pub.dev/packages/audioplayers_darwin/versions/6.3.0/license",
+      "spdxId": "MIT"
+    },
+    "pkg:pub/audioplayers_linux@4.2.1": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "d6c0bdbc83e6bb5f02eed5caf25e6edf174cb56d0ecd6fe19a2cd05b62bbda41",
+      "sourceUrl": "https://pub.dev/packages/audioplayers_linux/versions/4.2.1/license",
+      "spdxId": "MIT"
+    },
+    "pkg:pub/audioplayers_platform_interface@7.1.1": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "d6c0bdbc83e6bb5f02eed5caf25e6edf174cb56d0ecd6fe19a2cd05b62bbda41",
+      "sourceUrl": "https://pub.dev/packages/audioplayers_platform_interface/versions/7.1.1/license",
+      "spdxId": "MIT"
+    },
+    "pkg:pub/audioplayers_web@5.1.1": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "d6c0bdbc83e6bb5f02eed5caf25e6edf174cb56d0ecd6fe19a2cd05b62bbda41",
+      "sourceUrl": "https://pub.dev/packages/audioplayers_web/versions/5.1.1/license",
+      "spdxId": "MIT"
+    },
+    "pkg:pub/audioplayers_windows@4.2.1": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "d6c0bdbc83e6bb5f02eed5caf25e6edf174cb56d0ecd6fe19a2cd05b62bbda41",
+      "sourceUrl": "https://pub.dev/packages/audioplayers_windows/versions/4.2.1/license",
+      "spdxId": "MIT"
+    },
+    "pkg:pub/battery_plus@6.2.3": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "3b38d48befd0af70b892e13d10c9e34679416c24a9277f962629951c64d71f4c",
+      "sourceUrl": "https://pub.dev/packages/battery_plus/versions/6.2.3/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/battery_plus_platform_interface@2.0.1": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "3b38d48befd0af70b892e13d10c9e34679416c24a9277f962629951c64d71f4c",
+      "sourceUrl": "https://pub.dev/packages/battery_plus_platform_interface/versions/2.0.1/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/boolean_selector@2.1.2": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "b71519245009a3b8f126196a5408ec031e216e8e0d985085958c6543f82a8a2a",
+      "sourceUrl": "https://pub.dev/packages/boolean_selector/versions/2.1.2/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/characters@1.4.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "0371d1da6a57fb791db29d29b95333429205f51f3cb2eb3a0c12d91838a38744",
+      "sourceUrl": "https://pub.dev/packages/characters/versions/1.4.0/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/checked_yaml@2.0.4": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "4771d808721f4d5f02318ab857c92f5a5dce87b14ae1c3770fe21ca7fd4a9280",
+      "sourceUrl": "https://pub.dev/packages/checked_yaml/versions/2.0.4/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/cli_config@0.2.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "605bcf409f2347e3bcc9905ab70a2f3218e841bae372b0cbfbf305a222f74222",
+      "sourceUrl": "https://pub.dev/packages/cli_config/versions/0.2.0/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/cli_util@0.4.2": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "ff15faa32a2e638107b7789592b14426162a75ba620044ee2340a20ec6ce5e73",
+      "sourceUrl": "https://pub.dev/packages/cli_util/versions/0.4.2/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/clock@1.1.2": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd",
+      "sourceUrl": "https://pub.dev/packages/clock/versions/1.1.2/license",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:pub/code_assets@1.0.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "21ae23b0b9ff67a2dc75ab085d1e8db8ac548c5faf370af17f28dd2ef3b52b7b",
+      "sourceUrl": "https://pub.dev/packages/code_assets/versions/1.0.0/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/collection@1.19.1": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "ff15faa32a2e638107b7789592b14426162a75ba620044ee2340a20ec6ce5e73",
+      "sourceUrl": "https://pub.dev/packages/collection/versions/1.19.1/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/connectivity_plus@6.1.5": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "3b38d48befd0af70b892e13d10c9e34679416c24a9277f962629951c64d71f4c",
+      "sourceUrl": "https://pub.dev/packages/connectivity_plus/versions/6.1.5/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/connectivity_plus_platform_interface@2.0.1": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "1f17ed03a3106daaf13e9d70869cb0735481ae553f029d08787b06380a64bc98",
+      "sourceUrl": "https://pub.dev/packages/connectivity_plus_platform_interface/versions/2.0.1/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/convert@3.1.2": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "ad6a71997da90924b2cfb1fb47ec46537f70faf469efe016168794ae45ed6888",
+      "sourceUrl": "https://pub.dev/packages/convert/versions/3.1.2/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/coverage@1.15.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "3c32b53167c7dae9190c38dab5dd9fe1789c53623ebc7d1babcb29914c5b3f16",
+      "sourceUrl": "https://pub.dev/packages/coverage/versions/1.15.0/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/cross_file@0.3.5+2": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "420f7739f169097f0aad1242045169cd643c8f1d94e62866fad265ae4c369b7d",
+      "sourceUrl": "https://pub.dev/packages/cross_file/versions/0.3.5+2/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/crypto@3.0.7": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "ad6a71997da90924b2cfb1fb47ec46537f70faf469efe016168794ae45ed6888",
+      "sourceUrl": "https://pub.dev/packages/crypto/versions/3.0.7/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/cupertino_icons@1.0.8": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "310d6ab6483280280c9db122bded0a63c09558bc5743720f61dbcbb494db370a",
+      "sourceUrl": "https://pub.dev/packages/cupertino_icons/versions/1.0.8/license",
+      "spdxId": "MIT"
+    },
+    "pkg:pub/dart_earcut@1.2.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "d35e19b2acb17cf18613e0e2b7dbaf311ac2e22898d192996ff8be7114230864",
+      "sourceUrl": "https://pub.dev/packages/dart_earcut/versions/1.2.0/license",
+      "spdxId": "MIT"
+    },
+    "pkg:pub/dbus@0.7.11": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "1f256ecad192880510e84ad60474eab7589218784b9a50bc7ceee34c2b91f1d5",
+      "sourceUrl": "https://pub.dev/packages/dbus/versions/0.7.11/license",
+      "spdxId": "MPL-2.0"
+    },
+    "pkg:pub/device_info_plus@11.5.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "3b38d48befd0af70b892e13d10c9e34679416c24a9277f962629951c64d71f4c",
+      "sourceUrl": "https://pub.dev/packages/device_info_plus/versions/11.5.0/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/device_info_plus_platform_interface@7.0.3": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "3b38d48befd0af70b892e13d10c9e34679416c24a9277f962629951c64d71f4c",
+      "sourceUrl": "https://pub.dev/packages/device_info_plus_platform_interface/versions/7.0.3/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/easy_localization@3.0.8": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "08b3d75b37035234019f060d0893078ae06c38e7dfb087f1803503a50dff41cd",
+      "sourceUrl": "https://pub.dev/packages/easy_localization/versions/3.0.8/license",
+      "spdxId": "MIT"
+    },
+    "pkg:pub/easy_logger@0.0.2": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "1cce04406e18f987dc2ce23609e2df3291ce0cd7542a379ef840220745893aba",
+      "sourceUrl": "https://pub.dev/packages/easy_logger/versions/0.0.2/license",
+      "spdxId": "MIT"
+    },
+    "pkg:pub/equatable@2.0.8": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "07720a43bdabe44206067a2bffd1089dcdc4cc5b0b7f8169308c2f8ba6ad0c86",
+      "sourceUrl": "https://pub.dev/packages/equatable/versions/2.0.8/license",
+      "spdxId": "MIT"
+    },
+    "pkg:pub/fake_async@1.3.3": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd",
+      "sourceUrl": "https://pub.dev/packages/fake_async/versions/1.3.3/license",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:pub/ffi@2.1.5": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "0371d1da6a57fb791db29d29b95333429205f51f3cb2eb3a0c12d91838a38744",
+      "sourceUrl": "https://pub.dev/packages/ffi/versions/2.1.5/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/file@7.0.1": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "f6df86b1412172537273e8e80ee2fb8a66aa7307ce0b39ea5ddab47ca41b8c49",
+      "sourceUrl": "https://pub.dev/packages/file/versions/7.0.1/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/file_selector_linux@0.9.4": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "420f7739f169097f0aad1242045169cd643c8f1d94e62866fad265ae4c369b7d",
+      "sourceUrl": "https://pub.dev/packages/file_selector_linux/versions/0.9.4/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/file_selector_macos@0.9.5": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "420f7739f169097f0aad1242045169cd643c8f1d94e62866fad265ae4c369b7d",
+      "sourceUrl": "https://pub.dev/packages/file_selector_macos/versions/0.9.5/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/file_selector_platform_interface@2.7.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "420f7739f169097f0aad1242045169cd643c8f1d94e62866fad265ae4c369b7d",
+      "sourceUrl": "https://pub.dev/packages/file_selector_platform_interface/versions/2.7.0/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/file_selector_windows@0.9.3+5": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "420f7739f169097f0aad1242045169cd643c8f1d94e62866fad265ae4c369b7d",
+      "sourceUrl": "https://pub.dev/packages/file_selector_windows/versions/0.9.3+5/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/fixnum@1.1.1": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "ff0b91d4f3c32b25cb6ec84985e8da89b0ba2a2b2f7eef353cda5e5423a20390",
+      "sourceUrl": "https://pub.dev/packages/fixnum/versions/1.1.1/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/flutter@0.0.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "a598db94b6290ffbe10b5ecf911057b6a943351c727fdda9e5f2891d68700a20",
+      "sourceUrl": "https://github.com/flutter/flutter/blob/587c18f873b8ab57330422bce09047420d9c7f42/packages/flutter/LICENSE",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/flutter_launcher_icons@0.13.1": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "02c454256448927423b4c0e517a083cadf78a8d9467a9d31ad3b4f4ff48ff7ca",
+      "sourceUrl": "https://pub.dev/packages/flutter_launcher_icons/versions/0.13.1/license",
+      "spdxId": "MIT"
+    },
+    "pkg:pub/flutter_lints@6.0.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "89519eca6f7b9529b35bdddd623a58c3af06a88c458dbd6531ddb4675acf75a9",
+      "sourceUrl": "https://pub.dev/packages/flutter_lints/versions/6.0.0/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/flutter_local_notifications@19.5.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "d6885e4633e08ec3a52cd90299b97831444d487f16721e5d092289bcfedfc511",
+      "sourceUrl": "https://pub.dev/packages/flutter_local_notifications/versions/19.5.0/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/flutter_local_notifications_linux@6.0.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "d6885e4633e08ec3a52cd90299b97831444d487f16721e5d092289bcfedfc511",
+      "sourceUrl": "https://pub.dev/packages/flutter_local_notifications_linux/versions/6.0.0/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/flutter_local_notifications_platform_interface@9.1.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "2d77e2f3421858873865cf0bb0afd2fcf6f5ad8df9bdab10a7d7503bcf8a1c44",
+      "sourceUrl": "https://pub.dev/packages/flutter_local_notifications_platform_interface/versions/9.1.0/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/flutter_local_notifications_windows@1.0.3": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "bfe6db9a3430334378d729fb52a0d29972383a41e09a1d2e41f73890dcf508ca",
+      "sourceUrl": "https://pub.dev/packages/flutter_local_notifications_windows/versions/1.0.3/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/flutter_localizations@0.0.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "a598db94b6290ffbe10b5ecf911057b6a943351c727fdda9e5f2891d68700a20",
+      "sourceUrl": "https://github.com/flutter/flutter/blob/587c18f873b8ab57330422bce09047420d9c7f42/packages/flutter_localizations/LICENSE",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/flutter_map@7.0.2": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "a317f7d6c21750859eb82b0f4aaafc773912ca76410ccf0c8fc9421d15a4a645",
+      "sourceUrl": "https://pub.dev/packages/flutter_map/versions/7.0.2/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/flutter_plugin_android_lifecycle@2.0.33": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "420f7739f169097f0aad1242045169cd643c8f1d94e62866fad265ae4c369b7d",
+      "sourceUrl": "https://pub.dev/packages/flutter_plugin_android_lifecycle/versions/2.0.33/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/flutter_secure_storage@10.0.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "55dafb084270616f95b9bea53654adda8bdcad95c022a83c4cf8769073f829fa",
+      "sourceUrl": "https://pub.dev/packages/flutter_secure_storage/versions/10.0.0/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/flutter_secure_storage_darwin@0.2.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "3754c516086c62307896512b68024837bee5d2bea42a55cfd03f7448b92b06c8",
+      "sourceUrl": "https://pub.dev/packages/flutter_secure_storage_darwin/versions/0.2.0/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/flutter_secure_storage_linux@3.0.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "55dafb084270616f95b9bea53654adda8bdcad95c022a83c4cf8769073f829fa",
+      "sourceUrl": "https://pub.dev/packages/flutter_secure_storage_linux/versions/3.0.0/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/flutter_secure_storage_platform_interface@2.0.1": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "55dafb084270616f95b9bea53654adda8bdcad95c022a83c4cf8769073f829fa",
+      "sourceUrl": "https://pub.dev/packages/flutter_secure_storage_platform_interface/versions/2.0.1/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/flutter_secure_storage_web@2.1.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "55dafb084270616f95b9bea53654adda8bdcad95c022a83c4cf8769073f829fa",
+      "sourceUrl": "https://pub.dev/packages/flutter_secure_storage_web/versions/2.1.0/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/flutter_secure_storage_windows@4.1.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "55dafb084270616f95b9bea53654adda8bdcad95c022a83c4cf8769073f829fa",
+      "sourceUrl": "https://pub.dev/packages/flutter_secure_storage_windows/versions/4.1.0/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/flutter_test@0.0.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "a598db94b6290ffbe10b5ecf911057b6a943351c727fdda9e5f2891d68700a20",
+      "sourceUrl": "https://github.com/flutter/flutter/blob/587c18f873b8ab57330422bce09047420d9c7f42/packages/flutter_test/LICENSE",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/flutter_web_plugins@0.0.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "a598db94b6290ffbe10b5ecf911057b6a943351c727fdda9e5f2891d68700a20",
+      "sourceUrl": "https://github.com/flutter/flutter/blob/587c18f873b8ab57330422bce09047420d9c7f42/packages/flutter_web_plugins/LICENSE",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/frontend_server_client@4.0.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "f3fedf65adeec4d6ccb2abf053ebc0f07603d402db3d3c5651322b50502e1071",
+      "sourceUrl": "https://pub.dev/packages/frontend_server_client/versions/4.0.0/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/geolocator@13.0.4": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "9a4d631b14df96d4886d95164878aa3c3d06ea0843a5da771fe2536f8dc5c844",
+      "sourceUrl": "https://pub.dev/packages/geolocator/versions/13.0.4/license",
+      "spdxId": "MIT"
+    },
+    "pkg:pub/geolocator_android@4.6.2": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "9a4d631b14df96d4886d95164878aa3c3d06ea0843a5da771fe2536f8dc5c844",
+      "sourceUrl": "https://pub.dev/packages/geolocator_android/versions/4.6.2/license",
+      "spdxId": "MIT"
+    },
+    "pkg:pub/geolocator_apple@2.3.13": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "9a4d631b14df96d4886d95164878aa3c3d06ea0843a5da771fe2536f8dc5c844",
+      "sourceUrl": "https://pub.dev/packages/geolocator_apple/versions/2.3.13/license",
+      "spdxId": "MIT"
+    },
+    "pkg:pub/geolocator_platform_interface@4.2.6": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "9a4d631b14df96d4886d95164878aa3c3d06ea0843a5da771fe2536f8dc5c844",
+      "sourceUrl": "https://pub.dev/packages/geolocator_platform_interface/versions/4.2.6/license",
+      "spdxId": "MIT"
+    },
+    "pkg:pub/geolocator_web@4.1.3": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "9a4d631b14df96d4886d95164878aa3c3d06ea0843a5da771fe2536f8dc5c844",
+      "sourceUrl": "https://pub.dev/packages/geolocator_web/versions/4.1.3/license",
+      "spdxId": "MIT"
+    },
+    "pkg:pub/geolocator_windows@0.2.5": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "9a4d631b14df96d4886d95164878aa3c3d06ea0843a5da771fe2536f8dc5c844",
+      "sourceUrl": "https://pub.dev/packages/geolocator_windows/versions/0.2.5/license",
+      "spdxId": "MIT"
+    },
+    "pkg:pub/get_it@7.7.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "460d44fd0a79778594da1234555f07ee665ed43cbb1bd1160920b48bac4d4f22",
+      "sourceUrl": "https://pub.dev/packages/get_it/versions/7.7.0/license",
+      "spdxId": "MIT"
+    },
+    "pkg:pub/glob@2.1.3": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "3c32b53167c7dae9190c38dab5dd9fe1789c53623ebc7d1babcb29914c5b3f16",
+      "sourceUrl": "https://pub.dev/packages/glob/versions/2.1.3/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/hooks@1.0.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "21ae23b0b9ff67a2dc75ab085d1e8db8ac548c5faf370af17f28dd2ef3b52b7b",
+      "sourceUrl": "https://pub.dev/packages/hooks/versions/1.0.0/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/http@1.6.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "3c32b53167c7dae9190c38dab5dd9fe1789c53623ebc7d1babcb29914c5b3f16",
+      "sourceUrl": "https://pub.dev/packages/http/versions/1.6.0/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/http_multi_server@3.2.2": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "ff0b91d4f3c32b25cb6ec84985e8da89b0ba2a2b2f7eef353cda5e5423a20390",
+      "sourceUrl": "https://pub.dev/packages/http_multi_server/versions/3.2.2/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/http_parser@4.1.2": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "3c32b53167c7dae9190c38dab5dd9fe1789c53623ebc7d1babcb29914c5b3f16",
+      "sourceUrl": "https://pub.dev/packages/http_parser/versions/4.1.2/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/image@4.7.2": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "f3c17da84e0780e1c334325c73098257c32221d62498ed55ef3c1361904925aa",
+      "sourceUrl": "https://pub.dev/packages/image/versions/4.7.2/license",
+      "spdxId": "MIT"
+    },
+    "pkg:pub/image_picker@1.2.1": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "8e22fae63e4e8ac897f0cb3018ed94ed730b3e5da5d42c6856a26ba524f0fd88",
+      "sourceUrl": "https://pub.dev/packages/image_picker/versions/1.2.1/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/image_picker_android@0.8.13+13": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "8e22fae63e4e8ac897f0cb3018ed94ed730b3e5da5d42c6856a26ba524f0fd88",
+      "sourceUrl": "https://pub.dev/packages/image_picker_android/versions/0.8.13+13/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/image_picker_for_web@3.1.1": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "420f7739f169097f0aad1242045169cd643c8f1d94e62866fad265ae4c369b7d",
+      "sourceUrl": "https://pub.dev/packages/image_picker_for_web/versions/3.1.1/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/image_picker_ios@0.8.13+6": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "8e22fae63e4e8ac897f0cb3018ed94ed730b3e5da5d42c6856a26ba524f0fd88",
+      "sourceUrl": "https://pub.dev/packages/image_picker_ios/versions/0.8.13+6/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/image_picker_linux@0.2.2": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "89519eca6f7b9529b35bdddd623a58c3af06a88c458dbd6531ddb4675acf75a9",
+      "sourceUrl": "https://pub.dev/packages/image_picker_linux/versions/0.2.2/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/image_picker_macos@0.2.2+1": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "420f7739f169097f0aad1242045169cd643c8f1d94e62866fad265ae4c369b7d",
+      "sourceUrl": "https://pub.dev/packages/image_picker_macos/versions/0.2.2+1/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/image_picker_platform_interface@2.11.1": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "420f7739f169097f0aad1242045169cd643c8f1d94e62866fad265ae4c369b7d",
+      "sourceUrl": "https://pub.dev/packages/image_picker_platform_interface/versions/2.11.1/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/image_picker_windows@0.2.2": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "89519eca6f7b9529b35bdddd623a58c3af06a88c458dbd6531ddb4675acf75a9",
+      "sourceUrl": "https://pub.dev/packages/image_picker_windows/versions/0.2.2/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/intl@0.20.2": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "7e124af6a556f045cb3a20cafbdaa31602ac2c82cbcb3c3b15faaaf514b06028",
+      "sourceUrl": "https://pub.dev/packages/intl/versions/0.20.2/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/io@1.0.5": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "ea97a7558a7bd7cee4e2355f7529e3cbebb0dcbb546ddb9a90f10c9eb6b08da5",
+      "sourceUrl": "https://pub.dev/packages/io/versions/1.0.5/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/js@0.7.2": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "efa4eaf6fdec22a36a61395ea70843db9ae815760bf663e068012c92b93c0184",
+      "sourceUrl": "https://pub.dev/packages/js/versions/0.7.2/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/json_annotation@4.10.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "143839f62c9b7f88143ea9f688361c27050888acde7696b34e04414bd254fafc",
+      "sourceUrl": "https://pub.dev/packages/json_annotation/versions/4.10.0/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/latlong2@0.9.1": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "c2b50389479ffb8aa257d67f8bfcd2beb38097ac697a4241c040433bf86ea275",
+      "sourceUrl": "https://pub.dev/packages/latlong2/versions/0.9.1/license",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:pub/leak_tracker@11.0.2": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "08a004aa8956c3cf3b24f7f69c966247233953e18e6afaa61191ea47b7eb70f6",
+      "sourceUrl": "https://pub.dev/packages/leak_tracker/versions/11.0.2/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/leak_tracker_flutter_testing@3.0.10": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "08a004aa8956c3cf3b24f7f69c966247233953e18e6afaa61191ea47b7eb70f6",
+      "sourceUrl": "https://pub.dev/packages/leak_tracker_flutter_testing/versions/3.0.10/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/leak_tracker_testing@3.0.2": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "08a004aa8956c3cf3b24f7f69c966247233953e18e6afaa61191ea47b7eb70f6",
+      "sourceUrl": "https://pub.dev/packages/leak_tracker_testing/versions/3.0.2/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/lints@6.1.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "421fe78c3b5df297f8b4ab2c74f2450a274ee6d245a113091f6b9f90570af193",
+      "sourceUrl": "https://pub.dev/packages/lints/versions/6.1.0/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/lists@1.0.1": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "d449f7017176ab183441747e1f72a5451580bc7a943cc9adfe4ffd8be7578dcf",
+      "sourceUrl": "https://pub.dev/packages/lists/versions/1.0.1/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/logger@2.6.2": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "bea3c025a4d1ec393c6b458d0118374d4faf9a2ebc9d48f642394a32c0b625a0",
+      "sourceUrl": "https://pub.dev/packages/logger/versions/2.6.2/license",
+      "spdxId": "MIT"
+    },
+    "pkg:pub/logging@1.3.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "dfb09c74e29386cd3e2719f32d4995d59526179753931d31840757c77fbf2791",
+      "sourceUrl": "https://pub.dev/packages/logging/versions/1.3.0/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/matcher@0.12.17": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "3c32b53167c7dae9190c38dab5dd9fe1789c53623ebc7d1babcb29914c5b3f16",
+      "sourceUrl": "https://pub.dev/packages/matcher/versions/0.12.17/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/material_color_utilities@0.11.1": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "d103f246ef4c18dab8af0c1dcf6a8af884e5cff554da7261a48ac43c17d98f2e",
+      "sourceUrl": "https://pub.dev/packages/material_color_utilities/versions/0.11.1/license",
+      "spdxId": "Apache-2.0"
+    },
+    "pkg:pub/meta@1.17.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "b71519245009a3b8f126196a5408ec031e216e8e0d985085958c6543f82a8a2a",
+      "sourceUrl": "https://pub.dev/packages/meta/versions/1.17.0/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/mgrs_dart@2.0.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "9398bfd7c8d915bb66a3f04f0f2621fea1ed3c1c45728154001596854bd7dc84",
+      "sourceUrl": "https://pub.dev/packages/mgrs_dart/versions/2.0.0/license",
+      "spdxId": "MIT"
+    },
+    "pkg:pub/mime@2.0.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "ff15faa32a2e638107b7789592b14426162a75ba620044ee2340a20ec6ce5e73",
+      "sourceUrl": "https://pub.dev/packages/mime/versions/2.0.0/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/mocktail@0.3.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "d645e8e319c38a49dfd7b85a6d66604cce8005b5b9193f1aa04d2b8325fb6b48",
+      "sourceUrl": "https://pub.dev/packages/mocktail/versions/0.3.0/license",
+      "spdxId": "MIT"
+    },
+    "pkg:pub/native_toolchain_c@0.17.4": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "aa81abb1ac43e40d2f5a606385edd37e974a5858d4109f7f439dd43d964487a7",
+      "sourceUrl": "https://pub.dev/packages/native_toolchain_c/versions/0.17.4/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/nested@1.0.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "fccaeae95a39c93176de9321c734c90d8e36f465c48fcf278840844d8eab1af4",
+      "sourceUrl": "https://pub.dev/packages/nested/versions/1.0.0/license",
+      "spdxId": "MIT"
+    },
+    "pkg:pub/nm@0.5.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "fab3dd6bdab226f1c08630b1dd917e11fcb4ec5e1e020e2c16f83a0a13863e85",
+      "sourceUrl": "https://pub.dev/packages/nm/versions/0.5.0/license",
+      "spdxId": "MPL-2.0"
+    },
+    "pkg:pub/node_preamble@2.0.2": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "41997ee02074e3796e539b81b4501ed7d8bc1a620d11ef32cf56494e778461a9",
+      "sourceUrl": "https://pub.dev/packages/node_preamble/versions/2.0.2/license",
+      "spdxId": "MIT"
+    },
+    "pkg:pub/objective_c@9.2.5": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "1cda25a8de6880c5338de0b4a06ee89e8537c213eb1379c16a4c035bfd198b5c",
+      "sourceUrl": "https://pub.dev/packages/objective_c/versions/9.2.5/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/package_config@2.2.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "0371d1da6a57fb791db29d29b95333429205f51f3cb2eb3a0c12d91838a38744",
+      "sourceUrl": "https://pub.dev/packages/package_config/versions/2.2.0/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/package_info_plus@8.3.1": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "3b38d48befd0af70b892e13d10c9e34679416c24a9277f962629951c64d71f4c",
+      "sourceUrl": "https://pub.dev/packages/package_info_plus/versions/8.3.1/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/package_info_plus_platform_interface@3.2.1": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "3b38d48befd0af70b892e13d10c9e34679416c24a9277f962629951c64d71f4c",
+      "sourceUrl": "https://pub.dev/packages/package_info_plus_platform_interface/versions/3.2.1/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/path@1.9.1": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "3c32b53167c7dae9190c38dab5dd9fe1789c53623ebc7d1babcb29914c5b3f16",
+      "sourceUrl": "https://pub.dev/packages/path/versions/1.9.1/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/path_provider@2.1.5": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "89519eca6f7b9529b35bdddd623a58c3af06a88c458dbd6531ddb4675acf75a9",
+      "sourceUrl": "https://pub.dev/packages/path_provider/versions/2.1.5/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/path_provider_android@2.2.22": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "420f7739f169097f0aad1242045169cd643c8f1d94e62866fad265ae4c369b7d",
+      "sourceUrl": "https://pub.dev/packages/path_provider_android/versions/2.2.22/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/path_provider_foundation@2.6.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "420f7739f169097f0aad1242045169cd643c8f1d94e62866fad265ae4c369b7d",
+      "sourceUrl": "https://pub.dev/packages/path_provider_foundation/versions/2.6.0/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/path_provider_linux@2.2.1": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "89519eca6f7b9529b35bdddd623a58c3af06a88c458dbd6531ddb4675acf75a9",
+      "sourceUrl": "https://pub.dev/packages/path_provider_linux/versions/2.2.1/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/path_provider_platform_interface@2.1.2": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "89519eca6f7b9529b35bdddd623a58c3af06a88c458dbd6531ddb4675acf75a9",
+      "sourceUrl": "https://pub.dev/packages/path_provider_platform_interface/versions/2.1.2/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/path_provider_windows@2.3.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "89519eca6f7b9529b35bdddd623a58c3af06a88c458dbd6531ddb4675acf75a9",
+      "sourceUrl": "https://pub.dev/packages/path_provider_windows/versions/2.3.0/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/permission_handler@11.4.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "65a603f544989f5cff639d5c55f56e781796e5e1b2f8546a7cb4cb26763133f3",
+      "sourceUrl": "https://pub.dev/packages/permission_handler/versions/11.4.0/license",
+      "spdxId": "MIT"
+    },
+    "pkg:pub/permission_handler_android@12.1.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "65a603f544989f5cff639d5c55f56e781796e5e1b2f8546a7cb4cb26763133f3",
+      "sourceUrl": "https://pub.dev/packages/permission_handler_android/versions/12.1.0/license",
+      "spdxId": "MIT"
+    },
+    "pkg:pub/permission_handler_apple@9.4.7": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "65a603f544989f5cff639d5c55f56e781796e5e1b2f8546a7cb4cb26763133f3",
+      "sourceUrl": "https://pub.dev/packages/permission_handler_apple/versions/9.4.7/license",
+      "spdxId": "MIT"
+    },
+    "pkg:pub/permission_handler_html@0.1.3+5": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "65a603f544989f5cff639d5c55f56e781796e5e1b2f8546a7cb4cb26763133f3",
+      "sourceUrl": "https://pub.dev/packages/permission_handler_html/versions/0.1.3+5/license",
+      "spdxId": "MIT"
+    },
+    "pkg:pub/permission_handler_platform_interface@4.3.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "65a603f544989f5cff639d5c55f56e781796e5e1b2f8546a7cb4cb26763133f3",
+      "sourceUrl": "https://pub.dev/packages/permission_handler_platform_interface/versions/4.3.0/license",
+      "spdxId": "MIT"
+    },
+    "pkg:pub/permission_handler_windows@0.2.1": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "65a603f544989f5cff639d5c55f56e781796e5e1b2f8546a7cb4cb26763133f3",
+      "sourceUrl": "https://pub.dev/packages/permission_handler_windows/versions/0.2.1/license",
+      "spdxId": "MIT"
+    },
+    "pkg:pub/petitparser@7.0.1": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "d2e8ffdbe89acbc10d5d1f2b03e7dbddf0a9f1742e809176682b62ef3d573b3e",
+      "sourceUrl": "https://pub.dev/packages/petitparser/versions/7.0.1/license",
+      "spdxId": "MIT"
+    },
+    "pkg:pub/platform@3.1.6": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "143839f62c9b7f88143ea9f688361c27050888acde7696b34e04414bd254fafc",
+      "sourceUrl": "https://pub.dev/packages/platform/versions/3.1.6/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/plugin_platform_interface@2.1.8": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "89519eca6f7b9529b35bdddd623a58c3af06a88c458dbd6531ddb4675acf75a9",
+      "sourceUrl": "https://pub.dev/packages/plugin_platform_interface/versions/2.1.8/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/polylabel@1.0.1": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "042c85c8eb7d1394d731ead78a329cb436850b8e442f754c894c5a39ff286f07",
+      "sourceUrl": "https://pub.dev/packages/polylabel/versions/1.0.1/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/pool@1.5.2": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "3c32b53167c7dae9190c38dab5dd9fe1789c53623ebc7d1babcb29914c5b3f16",
+      "sourceUrl": "https://pub.dev/packages/pool/versions/1.5.2/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/posix@6.0.3": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "aaf6271abd048deb3125828613f1797b7556472de6c7acd7103bd43e9cb6a84b",
+      "sourceUrl": "https://pub.dev/packages/posix/versions/6.0.3/license",
+      "spdxId": "MIT"
+    },
+    "pkg:pub/proj4dart@2.1.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "202d620b6a44e6a20a175636a081c6c4a453e54a916d856912a911940750ee7a",
+      "sourceUrl": "https://pub.dev/packages/proj4dart/versions/2.1.0/license",
+      "spdxId": "MIT"
+    },
+    "pkg:pub/provider@6.1.5+1": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "fccaeae95a39c93176de9321c734c90d8e36f465c48fcf278840844d8eab1af4",
+      "sourceUrl": "https://pub.dev/packages/provider/versions/6.1.5+1/license",
+      "spdxId": "MIT"
+    },
+    "pkg:pub/pub_semver@2.2.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "3c32b53167c7dae9190c38dab5dd9fe1789c53623ebc7d1babcb29914c5b3f16",
+      "sourceUrl": "https://pub.dev/packages/pub_semver/versions/2.2.0/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/purchases_flutter@10.4.2": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "4c5dce77537bec0162efb23461ee88047d1be4db7f6c2e0737f67a7e5366c46e",
+      "sourceUrl": "https://pub.dev/packages/purchases_flutter/versions/10.4.2/license",
+      "spdxId": "MIT"
+    },
+    "pkg:pub/purchases_ui_flutter@10.4.2": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "4c5dce77537bec0162efb23461ee88047d1be4db7f6c2e0737f67a7e5366c46e",
+      "sourceUrl": "https://pub.dev/packages/purchases_ui_flutter/versions/10.4.2/license",
+      "spdxId": "MIT"
+    },
+    "pkg:pub/safe_device@1.3.10": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "7fd454eeae07e295ad73c5c04fb34cf8e1187c07acd792cb58a240febb6068b3",
+      "sourceUrl": "https://pub.dev/packages/safe_device/versions/1.3.10/license",
+      "spdxId": "MIT"
+    },
+    "pkg:pub/share_plus@12.0.1": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "eb9741a672906ebd01fd9b3bef38f6c82eff250e91149cf404539ee7981079fd",
+      "sourceUrl": "https://pub.dev/packages/share_plus/versions/12.0.1/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/share_plus_platform_interface@6.1.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "3b38d48befd0af70b892e13d10c9e34679416c24a9277f962629951c64d71f4c",
+      "sourceUrl": "https://pub.dev/packages/share_plus_platform_interface/versions/6.1.0/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/shared_preferences@2.5.4": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "420f7739f169097f0aad1242045169cd643c8f1d94e62866fad265ae4c369b7d",
+      "sourceUrl": "https://pub.dev/packages/shared_preferences/versions/2.5.4/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/shared_preferences_android@2.4.20": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "420f7739f169097f0aad1242045169cd643c8f1d94e62866fad265ae4c369b7d",
+      "sourceUrl": "https://pub.dev/packages/shared_preferences_android/versions/2.4.20/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/shared_preferences_foundation@2.5.6": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "420f7739f169097f0aad1242045169cd643c8f1d94e62866fad265ae4c369b7d",
+      "sourceUrl": "https://pub.dev/packages/shared_preferences_foundation/versions/2.5.6/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/shared_preferences_linux@2.4.1": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "89519eca6f7b9529b35bdddd623a58c3af06a88c458dbd6531ddb4675acf75a9",
+      "sourceUrl": "https://pub.dev/packages/shared_preferences_linux/versions/2.4.1/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/shared_preferences_platform_interface@2.4.1": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "89519eca6f7b9529b35bdddd623a58c3af06a88c458dbd6531ddb4675acf75a9",
+      "sourceUrl": "https://pub.dev/packages/shared_preferences_platform_interface/versions/2.4.1/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/shared_preferences_web@2.4.3": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "89519eca6f7b9529b35bdddd623a58c3af06a88c458dbd6531ddb4675acf75a9",
+      "sourceUrl": "https://pub.dev/packages/shared_preferences_web/versions/2.4.3/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/shared_preferences_windows@2.4.1": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "89519eca6f7b9529b35bdddd623a58c3af06a88c458dbd6531ddb4675acf75a9",
+      "sourceUrl": "https://pub.dev/packages/shared_preferences_windows/versions/2.4.1/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/shelf@1.4.2": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "ff0b91d4f3c32b25cb6ec84985e8da89b0ba2a2b2f7eef353cda5e5423a20390",
+      "sourceUrl": "https://pub.dev/packages/shelf/versions/1.4.2/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/shelf_packages_handler@3.0.2": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "b71519245009a3b8f126196a5408ec031e216e8e0d985085958c6543f82a8a2a",
+      "sourceUrl": "https://pub.dev/packages/shelf_packages_handler/versions/3.0.2/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/shelf_static@1.1.3": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "ad6a71997da90924b2cfb1fb47ec46537f70faf469efe016168794ae45ed6888",
+      "sourceUrl": "https://pub.dev/packages/shelf_static/versions/1.1.3/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/shelf_web_socket@3.0.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "ff0b91d4f3c32b25cb6ec84985e8da89b0ba2a2b2f7eef353cda5e5423a20390",
+      "sourceUrl": "https://pub.dev/packages/shelf_web_socket/versions/3.0.0/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/sky_engine@0.0.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "66f37204b91a314563d3261efdd4b1858a49684ed99c267e0ee4ad5f00f74ea0",
+      "sourceUrl": "https://github.com/flutter/flutter/blob/587c18f873b8ab57330422bce09047420d9c7f42/engine/src/flutter/sky/packages/sky_engine/LICENSE",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/source_map_stack_trace@2.1.2": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "ad6a71997da90924b2cfb1fb47ec46537f70faf469efe016168794ae45ed6888",
+      "sourceUrl": "https://pub.dev/packages/source_map_stack_trace/versions/2.1.2/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/source_maps@0.10.13": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "ff0b91d4f3c32b25cb6ec84985e8da89b0ba2a2b2f7eef353cda5e5423a20390",
+      "sourceUrl": "https://pub.dev/packages/source_maps/versions/0.10.13/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/source_span@1.10.1": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "3c32b53167c7dae9190c38dab5dd9fe1789c53623ebc7d1babcb29914c5b3f16",
+      "sourceUrl": "https://pub.dev/packages/source_span/versions/1.10.1/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/sqflite@2.4.2": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "c81f9454cf3107c116bc3c1fd22b7d751523a2b11e17cf90c0db3327d3c9e0da",
+      "sourceUrl": "https://pub.dev/packages/sqflite/versions/2.4.2/license",
+      "spdxId": "BSD-2-Clause"
+    },
+    "pkg:pub/sqflite_android@2.4.2+2": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "c81f9454cf3107c116bc3c1fd22b7d751523a2b11e17cf90c0db3327d3c9e0da",
+      "sourceUrl": "https://pub.dev/packages/sqflite_android/versions/2.4.2+2/license",
+      "spdxId": "BSD-2-Clause"
+    },
+    "pkg:pub/sqflite_common@2.5.6": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "c81f9454cf3107c116bc3c1fd22b7d751523a2b11e17cf90c0db3327d3c9e0da",
+      "sourceUrl": "https://pub.dev/packages/sqflite_common/versions/2.5.6/license",
+      "spdxId": "BSD-2-Clause"
+    },
+    "pkg:pub/sqflite_common_ffi@2.4.0+3": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "c81f9454cf3107c116bc3c1fd22b7d751523a2b11e17cf90c0db3327d3c9e0da",
+      "sourceUrl": "https://pub.dev/packages/sqflite_common_ffi/versions/2.4.0+3/license",
+      "spdxId": "BSD-2-Clause"
+    },
+    "pkg:pub/sqflite_darwin@2.4.2": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "c81f9454cf3107c116bc3c1fd22b7d751523a2b11e17cf90c0db3327d3c9e0da",
+      "sourceUrl": "https://pub.dev/packages/sqflite_darwin/versions/2.4.2/license",
+      "spdxId": "BSD-2-Clause"
+    },
+    "pkg:pub/sqflite_platform_interface@2.4.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "c81f9454cf3107c116bc3c1fd22b7d751523a2b11e17cf90c0db3327d3c9e0da",
+      "sourceUrl": "https://pub.dev/packages/sqflite_platform_interface/versions/2.4.0/license",
+      "spdxId": "BSD-2-Clause"
+    },
+    "pkg:pub/sqlite3@3.1.7": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "67e5d73a3a0c6e41f33d688a672b1161bf7f16e04da9ae48a7a14f1ba7436a4d",
+      "sourceUrl": "https://pub.dev/packages/sqlite3/versions/3.1.7/license",
+      "spdxId": "MIT"
+    },
+    "pkg:pub/stack_trace@1.12.1": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "ff0b91d4f3c32b25cb6ec84985e8da89b0ba2a2b2f7eef353cda5e5423a20390",
+      "sourceUrl": "https://pub.dev/packages/stack_trace/versions/1.12.1/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/stream_channel@2.1.4": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "ff15faa32a2e638107b7789592b14426162a75ba620044ee2340a20ec6ce5e73",
+      "sourceUrl": "https://pub.dev/packages/stream_channel/versions/2.1.4/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/string_scanner@1.4.1": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "3c32b53167c7dae9190c38dab5dd9fe1789c53623ebc7d1babcb29914c5b3f16",
+      "sourceUrl": "https://pub.dev/packages/string_scanner/versions/1.4.1/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/synchronized@3.4.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "6d07c6bb60afb906049d507e19fcc4c6b59e35c0dd0f8a7302e87b3fb0576900",
+      "sourceUrl": "https://pub.dev/packages/synchronized/versions/3.4.0/license",
+      "spdxId": "MIT"
+    },
+    "pkg:pub/term_glyph@1.2.2": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "ea97a7558a7bd7cee4e2355f7529e3cbebb0dcbb546ddb9a90f10c9eb6b08da5",
+      "sourceUrl": "https://pub.dev/packages/term_glyph/versions/1.2.2/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/test@1.26.3": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "3c32b53167c7dae9190c38dab5dd9fe1789c53623ebc7d1babcb29914c5b3f16",
+      "sourceUrl": "https://pub.dev/packages/test/versions/1.26.3/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/test_api@0.7.7": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "ff1b9f0df9036c04be424b1e3ce12789bea880ad5ffc3a48e069ae2d40a087a4",
+      "sourceUrl": "https://pub.dev/packages/test_api/versions/0.7.7/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/test_core@0.6.12": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "ff1b9f0df9036c04be424b1e3ce12789bea880ad5ffc3a48e069ae2d40a087a4",
+      "sourceUrl": "https://pub.dev/packages/test_core/versions/0.6.12/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/timezone@0.10.1": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "d8f160d6dcdd4ec77522646d04c139d89d55910d6852792d2b441625763c012f",
+      "sourceUrl": "https://pub.dev/packages/timezone/versions/0.10.1/license",
+      "spdxId": "BSD-2-Clause"
+    },
+    "pkg:pub/typed_data@1.4.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "ff15faa32a2e638107b7789592b14426162a75ba620044ee2340a20ec6ce5e73",
+      "sourceUrl": "https://pub.dev/packages/typed_data/versions/1.4.0/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/unicode@0.3.1": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "d449f7017176ab183441747e1f72a5451580bc7a943cc9adfe4ffd8be7578dcf",
+      "sourceUrl": "https://pub.dev/packages/unicode/versions/0.3.1/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/upower@0.7.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "fab3dd6bdab226f1c08630b1dd917e11fcb4ec5e1e020e2c16f83a0a13863e85",
+      "sourceUrl": "https://pub.dev/packages/upower/versions/0.7.0/license",
+      "spdxId": "MPL-2.0"
+    },
+    "pkg:pub/url_launcher@6.3.2": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "89519eca6f7b9529b35bdddd623a58c3af06a88c458dbd6531ddb4675acf75a9",
+      "sourceUrl": "https://pub.dev/packages/url_launcher/versions/6.3.2/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/url_launcher_android@6.3.28": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "420f7739f169097f0aad1242045169cd643c8f1d94e62866fad265ae4c369b7d",
+      "sourceUrl": "https://pub.dev/packages/url_launcher_android/versions/6.3.28/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/url_launcher_ios@6.3.6": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "420f7739f169097f0aad1242045169cd643c8f1d94e62866fad265ae4c369b7d",
+      "sourceUrl": "https://pub.dev/packages/url_launcher_ios/versions/6.3.6/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/url_launcher_linux@3.2.2": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "420f7739f169097f0aad1242045169cd643c8f1d94e62866fad265ae4c369b7d",
+      "sourceUrl": "https://pub.dev/packages/url_launcher_linux/versions/3.2.2/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/url_launcher_macos@3.2.5": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "420f7739f169097f0aad1242045169cd643c8f1d94e62866fad265ae4c369b7d",
+      "sourceUrl": "https://pub.dev/packages/url_launcher_macos/versions/3.2.5/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/url_launcher_platform_interface@2.3.2": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "89519eca6f7b9529b35bdddd623a58c3af06a88c458dbd6531ddb4675acf75a9",
+      "sourceUrl": "https://pub.dev/packages/url_launcher_platform_interface/versions/2.3.2/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/url_launcher_web@2.4.2": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "701685f06531252f28c562b28066133393fbd9bdfb27dec7237e8c09391964df",
+      "sourceUrl": "https://pub.dev/packages/url_launcher_web/versions/2.4.2/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/url_launcher_windows@3.1.5": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "420f7739f169097f0aad1242045169cd643c8f1d94e62866fad265ae4c369b7d",
+      "sourceUrl": "https://pub.dev/packages/url_launcher_windows/versions/3.1.5/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/uuid@4.5.2": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "ad3e5523e51004e94ba9ce728805b1b4242dbccdb65e62b523800e35a8a7cfdc",
+      "sourceUrl": "https://pub.dev/packages/uuid/versions/4.5.2/license",
+      "spdxId": "MIT"
+    },
+    "pkg:pub/vector_math@2.2.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "b5d856a1e27e9ebea4957fc3526f1c65782a04894b113c6b3b0fb1321dbdec55",
+      "sourceUrl": "https://pub.dev/packages/vector_math/versions/2.2.0/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/vibration@2.1.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "53268b7d76fa07ee0cecf8226d3f510458b4ca3549acabe3f30c3a6c38f5532c",
+      "sourceUrl": "https://pub.dev/packages/vibration/versions/2.1.0/license",
+      "spdxId": "BSD-2-Clause"
+    },
+    "pkg:pub/vibration_platform_interface@0.0.3": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "53268b7d76fa07ee0cecf8226d3f510458b4ca3549acabe3f30c3a6c38f5532c",
+      "sourceUrl": "https://pub.dev/packages/vibration_platform_interface/versions/0.0.3/license",
+      "spdxId": "BSD-2-Clause"
+    },
+    "pkg:pub/vm_service@15.0.2": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "ad6a71997da90924b2cfb1fb47ec46537f70faf469efe016168794ae45ed6888",
+      "sourceUrl": "https://pub.dev/packages/vm_service/versions/15.0.2/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/wakelock_plus@1.3.3": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "ebff92b2e4105e903605f70bac0030c20b7a1d9d43fd73f8b8aed08ab070fcb9",
+      "sourceUrl": "https://pub.dev/packages/wakelock_plus/versions/1.3.3/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/wakelock_plus_platform_interface@1.3.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "1a95201dd1f509289fbbf929f72be2a25fd73c799697e30f5e7782a9cabf5102",
+      "sourceUrl": "https://pub.dev/packages/wakelock_plus_platform_interface/versions/1.3.0/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/watcher@1.2.1": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "3c32b53167c7dae9190c38dab5dd9fe1789c53623ebc7d1babcb29914c5b3f16",
+      "sourceUrl": "https://pub.dev/packages/watcher/versions/1.2.1/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/web@1.1.1": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "aa913ff50d7542eb8cc35b9f48a80928ac6819ba9057f85d424655e3e8dc271c",
+      "sourceUrl": "https://pub.dev/packages/web/versions/1.1.1/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/web_socket@1.0.1": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "cbe822ef3446af4366b2b82c48b0979d0b12865edfe74c22b9aa617fc362d6e0",
+      "sourceUrl": "https://pub.dev/packages/web_socket/versions/1.0.1/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/web_socket_channel@3.0.3": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "a4b5d7d31626e90b77e8696f1c47643aa31f52e17c1907c1ab60b068110e6e10",
+      "sourceUrl": "https://pub.dev/packages/web_socket_channel/versions/3.0.3/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/webkit_inspection_protocol@1.2.1": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "eb9a6b9672316612439514f10b5d3b24bcd140313c96a73c370bb7b07897a8cd",
+      "sourceUrl": "https://pub.dev/packages/webkit_inspection_protocol/versions/1.2.1/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/win32@5.15.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "87ef8bccdd619f2345ba5b9026cf1d6cccb305e36ab83849a8a3af9293abde7e",
+      "sourceUrl": "https://pub.dev/packages/win32/versions/5.15.0/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/win32_registry@2.1.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "8564d1c5caab56132f0e6bc39cea532c723956e8c389d9be867388ee0b2fcb06",
+      "sourceUrl": "https://pub.dev/packages/win32_registry/versions/2.1.0/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/wkt_parser@2.0.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "9398bfd7c8d915bb66a3f04f0f2621fea1ed3c1c45728154001596854bd7dc84",
+      "sourceUrl": "https://pub.dev/packages/wkt_parser/versions/2.0.0/license",
+      "spdxId": "MIT"
+    },
+    "pkg:pub/xdg_directories@1.1.0": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "89519eca6f7b9529b35bdddd623a58c3af06a88c458dbd6531ddb4675acf75a9",
+      "sourceUrl": "https://pub.dev/packages/xdg_directories/versions/1.1.0/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/xml@6.6.1": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "1f18a2e5a5c57381d93efa92df86477eb1205689b345417c90fcfdc09fa4fa1f",
+      "sourceUrl": "https://pub.dev/packages/xml/versions/6.6.1/license",
+      "spdxId": "MIT"
+    },
+    "pkg:pub/yaml@3.1.3": {
+      "reviewedAt": "2026-07-31",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "d47b93335401b052d79a2f5a3710e4cf7b5aed782faedf84d40fbdd6eb934ec7",
+      "sourceUrl": "https://pub.dev/packages/yaml/versions/3.1.3/license",
+      "spdxId": "MIT"
+    }
+  },
+  "schemaVersion": 1
 }

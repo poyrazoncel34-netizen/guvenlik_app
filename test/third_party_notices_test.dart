@@ -103,11 +103,26 @@ void main() {
     expect(notices, contains(licenseText.trim()));
   });
 
-  test('tracked asset is explicitly non-candidate until review completes', () {
+  test('tracked asset is the candidate-bound generated notice document', () {
     final notices = File(
       'assets/legal/THIRD_PARTY_NOTICES.txt',
     ).readAsStringSync();
 
-    expect(notices, contains('NOT A PRODUCTION CANDIDATE'));
+    // Until the dependency review completed this asset was a placeholder that
+    // kept the tagged release closed. It is now the generated document, so the
+    // invariant flips: the placeholder must be gone and the candidate binding
+    // (SBOM hash + per-notice SPDX decision and reviewed-bytes hash) present.
+    // Byte-for-byte parity with a fresh generator run is enforced separately by
+    // scripts/verify_release.sh and .github/workflows/release.yml.
+    expect(notices, isNot(contains('NOT A PRODUCTION CANDIDATE')));
+    expect(notices, startsWith('KoruBeni THIRD-PARTY SOFTWARE NOTICES'));
+    expect(
+      notices,
+      contains('generated only from accountable human-reviewed licence bytes'),
+    );
+    expect(notices, matches(RegExp(r'Candidate SBOM SHA-256: [0-9a-f]{64}')));
+    expect(notices, matches(RegExp(r'\nComponents: [1-9]\d*\n')));
+    expect(notices, contains('SPDX decision: '));
+    expect(notices, matches(RegExp(r'Reviewed bytes SHA-256: [0-9a-f]{64}')));
   });
 }
