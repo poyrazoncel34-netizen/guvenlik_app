@@ -132,3 +132,51 @@ aynı kararı görmeli. Yani:
 
 Bu, tek bir dosyalık bir yama değil; üç katmanlı bir sözleşme değişikliği.
 Yayın öncesi kapsamda yapılıp yapılmayacağı ayrı bir karar.
+
+---
+
+## Düzeltme (ikinci deneme) — kaynakta çözüldü
+
+Onaylanan yaklaşım: toleransı `bool` seviyesinde değil, **`EntitlementDecision`'ın
+kaynağında** çöz. `SubscriptionAccessState.entitlementDecision` artık mağaza yanıtı
+`unknown` iken tolerans penceresini de hesaba katıyor ve `authorized` dönüyor.
+
+Bunun sonucu, ilk denemede eksik kalan üç katmanın **tek noktadan** düzelmesi:
+
+| Katman | Aldığı değer |
+|---|---|
+| `panic_button.dart:206-219` ikinci kapı | `authorized` → geçiyor |
+| `CountdownScreen(entitlementDecision:)` | `authorized` |
+| native `EmergencySessionModels.kt` `rejectionReason()` | wire'da `"authorized"` |
+
+**Native kod, wire protokolü ve enum değişmedi.** `EntitlementDecision`'a yeni bir değer
+eklemek (`graceAuthorized`) gerekmedi; o yol `fromWire`, kalıcı oturum geri okuması ve
+Kotlin tarafını da değiştirmeyi gerektirirdi.
+
+Mağazanın gerçekten ne dediği kayboldu mu? Hayır: ham değer
+`verifiedEntitlementDecision` olarak ayrı duruyor ve `unknown` demeye devam ediyor.
+
+### Güvenlik incelemesinin diğer bulguları da kapatıldı
+
+- **B (CRITICAL)** — `withRestoredProAnchor` artık tek başına `lastVerifiedPro`
+  ÜRETMİYOR. Anchor yalnızca, sadece doğrulanmış Pro'da yazılan
+  `priorProInitializationHintKey` ile birlikte geçerli. Bu kurcalamayı imkânsız kılmaz
+  — sunucusuz bir mimaride kılınamaz — ama tek bir tamsayı yazmayı yetersiz kılar ve
+  pencere yine kendiliğinden doluyor.
+- **C (MEDIUM)** — `_applyCustomerInfo` awaitable yapıldı; `verifiedFree` yanıtında
+  anchor silme artık **await ediliyor** (SDK callback'i hariç, orada await edilecek bir
+  yer yok). Süreç ölümü bayat anchor'ı diriltemiyor.
+- **D (MEDIUM)** — `ensureOfflineGraceLoaded()` kendi 400 ms bütçesine alındı; ağ
+  bütçesinden ayrı, çünkü ağ zaten başarısızken atlanmamalı.
+- **E (LOW)** — anchor okuma/yazma hataları artık ayrı `LocalErrorCode` değerlerinde.
+
+### Bilinçli kapsam kararı
+
+Tolerans **tüm Pro özelliklerini** kapsıyor, sadece paniği değil: `entitlementDecision`
+tek kaynak olduğu için Safe Walk ve check-in de aynı pencereden yararlanıyor. Bunlar da
+güvenlik özellikleri ve sinyalsizken tutarsız bir uygulama sunmak istemedik.
+
+### Hâlâ cihazda doğrulanmadı
+
+Yukarıdaki cihaz tablosu boş kalmaya devam ediyor. Düzeltme birim testleriyle kanıtlı
+ama gerçek cihazda gerçek Pro satın almayla ölçülmedi.

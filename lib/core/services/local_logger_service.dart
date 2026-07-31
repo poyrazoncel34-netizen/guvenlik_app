@@ -17,6 +17,8 @@ enum LocalErrorCode {
   revenueCatLegalStateReadFailed('revenuecat_legal_state_read_failed'),
   revenueCatPriorProHintReadFailed('revenuecat_prior_pro_hint_read_failed'),
   revenueCatPriorProHintWriteFailed('revenuecat_prior_pro_hint_write_failed'),
+  revenueCatProAnchorReadFailed('revenuecat_pro_anchor_read_failed'),
+  revenueCatProAnchorWriteFailed('revenuecat_pro_anchor_write_failed'),
   revenueCatCustomerInfoFailed('revenuecat_customer_info_failed'),
   revenueCatOfferingsFailed('revenuecat_offerings_failed'),
   revenueCatPurchaseFailed('revenuecat_purchase_failed'),

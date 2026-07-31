@@ -35,6 +35,9 @@ class SubscriptionProvider extends ChangeNotifier {
   bool get isPro => _access.canUsePaidSafetyFeature;
   bool get isLoading => _isLoading;
   SubscriptionAccessState get access => _access;
+
+  bool _offlineGraceLoaded = false;
+  Future<void>? _offlineGraceFuture;
   SubscriptionAccessStatus get accessStatus => _access.status;
   EntitlementDecision get entitlementDecision => _access.entitlementDecision;
   Offerings? get offerings => _offerings;
@@ -89,7 +92,7 @@ class SubscriptionProvider extends ChangeNotifier {
       final info = results[0] as CustomerInfo?;
       final offs = results[1] as Offerings?;
       if (info != null) {
-        _applyCustomerInfo(info);
+        await _applyCustomerInfo(info);
       } else {
         _setAccess(_access.markUnavailable());
       }
@@ -123,7 +126,7 @@ class SubscriptionProvider extends ChangeNotifier {
     _errorMessage = null;
     try {
       final info = await _rcService.purchasePackage(package);
-      _applyCustomerInfo(info);
+      await _applyCustomerInfo(info);
       if (!isPro) {
         _errorMessage = 'subscription_error_entitlement';
         return _errorMessage;
@@ -155,7 +158,7 @@ class SubscriptionProvider extends ChangeNotifier {
     _errorMessage = null;
     try {
       final info = await _rcService.restorePurchases();
-      _applyCustomerInfo(info);
+      await _applyCustomerInfo(info);
       return null;
     } on RevenueCatPurchaseException catch (e) {
       _errorMessage = e.isOffline
@@ -188,7 +191,7 @@ class SubscriptionProvider extends ChangeNotifier {
     try {
       final info = await _rcService.getCustomerInfo();
       if (info != null) {
-        _applyCustomerInfo(info);
+        await _applyCustomerInfo(info);
       } else {
         _setAccess(_access.markUnavailable());
       }
@@ -197,11 +200,45 @@ class SubscriptionProvider extends ChangeNotifier {
     }
   }
 
+  /// Loads the persisted offline-grace anchor exactly once.
+  ///
+  /// Deliberately outside the network path and its timeout: after a cold start
+  /// with no signal the network call is precisely what fails, and the anchor is
+  /// the only thing that can still authorize the press. Local read only.
+  Future<void> ensureOfflineGraceLoaded() {
+    if (kIsWeb || _offlineGraceLoaded) return Future<void>.value();
+    return _offlineGraceFuture ??= _loadOfflineGraceOnce().whenComplete(() {
+      _offlineGraceFuture = null;
+    });
+  }
+
+  Future<void> _loadOfflineGraceOnce() async {
+    _offlineGraceLoaded = true;
+    // Resolve defensively: this runs on the panic press, so a missing
+    // registration degrades to "no anchor" instead of throwing into it.
+    final service =
+        _injectedRevenueCatService ??
+        (serviceLocator.isRegistered<RevenueCatService>()
+            ? serviceLocator<RevenueCatService>()
+            : null);
+    if (service == null) return;
+    final results = await Future.wait(<Future<Object?>>[
+      service.readLastVerifiedProAt(),
+      service.hasPriorProInitializationHint(),
+    ]);
+    if (_disposed) return;
+    final anchor = results[0] as DateTime?;
+    final corroborated = results[1] as bool? ?? false;
+    if (anchor == null || !corroborated) return;
+    _setAccess(_access.withRestoredProAnchor(anchor, corroborated: true));
+  }
+
   /// Waits for the first entitlement decision. Loading/network failure is
   /// returned explicitly; it is never silently converted to verified-free.
   /// Every already-initialized new-arm decision refreshes CustomerInfo so an
   /// old in-process Pro fact cannot silently authorize another session.
   Future<SubscriptionAccessState> resolveAccess() async {
+    await ensureOfflineGraceLoaded();
     if (_access.status == SubscriptionAccessStatus.uninitialized) {
       await initialize();
     } else if (_access.status == SubscriptionAccessStatus.loading) {
@@ -234,16 +271,22 @@ class SubscriptionProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void _applyCustomerInfo(CustomerInfo info) {
+  Future<void> _applyCustomerInfo(CustomerInfo info) async {
     final decision = _rcService.evaluateEntitlement(info);
     switch (decision) {
       case EntitlementDecision.authorized:
         _customerInfo = info;
-        _setAccess(_access.markVerified(isPro: true));
+        final verifiedAt = DateTime.now();
+        _setAccess(_access.markVerified(isPro: true, at: verifiedAt));
         unawaited(_rcService.rememberVerifiedProInitializationHint());
+        unawaited(_rcService.rememberVerifiedProAt(verifiedAt));
       case EntitlementDecision.denied:
         _customerInfo = info;
         _setAccess(_access.markVerified(isPro: false));
+        // Awaited, unlike the Pro side: a process death between this in-memory
+        // downgrade and the erase would resurrect the anchor on the next cold
+        // start, handing offline authorization back to a lapsed subscriber.
+        await _rcService.clearLastVerifiedProAt();
       case EntitlementDecision.unknown:
         // Preserve lastVerifiedPro only as an already-armed in-process lease.
         // `canUsePaidSafetyFeature` remains false, so no new arm is authorized.
@@ -260,7 +303,9 @@ class SubscriptionProvider extends ChangeNotifier {
     if (_customerInfoUpdateListener != null || !_rcService.isConfigured) return;
     void listener(CustomerInfo info) {
       if (_disposed) return;
-      _applyCustomerInfo(info);
+      // SDK callback: nothing to await into, so the erase is best-effort here.
+      // The awaited paths above cover every decision the app itself requests.
+      unawaited(_applyCustomerInfo(info));
     }
 
     try {

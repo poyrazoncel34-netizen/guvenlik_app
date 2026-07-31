@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../constants/feature_access_matrix.dart';
+import 'subscription_access_state.dart';
 import '../../presentation/providers/subscription_provider.dart';
 import '../../screens/subscription/paywall_screen.dart';
 
@@ -36,6 +39,21 @@ class SubscriptionGate {
 
   static bool canUseProFeature({required bool isPro}) => isPro;
 
+  /// How long a panic press may wait on entitlement resolution before deciding
+  /// from the last known state instead.
+  ///
+  /// Without it the wait is unbounded: the store call has no app-level limit,
+  /// and on weak signal (one bar, captive portal) it is slow rather than
+  /// failing fast. An unbounded wait in front of a panic button is a delayed
+  /// emergency call, which this project treats as CRITICAL.
+  static const Duration entitlementResolveTimeout = Duration(
+    milliseconds: 1800,
+  );
+
+  /// Bound for the purely local anchor read. Separate from the network budget
+  /// above because it must NOT be skipped when the network is what is failing.
+  static const Duration offlineAnchorLoadTimeout = Duration(milliseconds: 400);
+
   static Future<bool> ensureAccess(
     BuildContext context,
     PremiumFeature feature,
@@ -43,7 +61,25 @@ class SubscriptionGate {
     if (isFreeFeature(feature)) return true;
 
     final provider = context.read<SubscriptionProvider>();
-    final access = await provider.resolveAccess();
+    // Local anchor first, on its own short budget: on a cold start with no
+    // signal this is the only thing that can still authorize the press.
+    try {
+      await provider.ensureOfflineGraceLoaded().timeout(
+        offlineAnchorLoadTimeout,
+      );
+    } on TimeoutException {
+      // Degrades to "no anchor"; never blocks the press.
+    }
+    SubscriptionAccessState access;
+    try {
+      access = await provider.resolveAccess().timeout(
+        entitlementResolveTimeout,
+      );
+    } on TimeoutException {
+      // A slow store answer is treated as unresolved, which is exactly what the
+      // grace window inside `entitlementDecision` is for.
+      access = provider.access;
+    }
     if (!context.mounted) return false;
     if (access.canUsePaidSafetyFeature) return true;
 

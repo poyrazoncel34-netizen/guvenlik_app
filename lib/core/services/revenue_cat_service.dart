@@ -33,6 +33,12 @@ class RevenueCatService {
   static const String priorProInitializationHintKey =
       'revenuecat_prior_verified_pro_hint_v1';
 
+  /// Moment of the last verified-Pro answer, as milliseconds since epoch.
+  /// Only meaningful together with [priorProInitializationHintKey]; on its own
+  /// it is not treated as evidence of anything.
+  static const String lastVerifiedProAtKey =
+      'revenuecat_last_verified_pro_at_v1';
+
   bool _isConfigured = false;
   Future<bool>? _initializationFuture;
 
@@ -152,6 +158,42 @@ class RevenueCatService {
       await prefs.setBool(priorProInitializationHintKey, true);
     } catch (_) {
       _logSanitizedFailure(LocalErrorCode.revenueCatPriorProHintWriteFailed);
+    }
+  }
+
+  /// Reads the persisted grace anchor. A future timestamp means a rolled-back
+  /// clock or a tampered store and is discarded rather than trusted.
+  Future<DateTime?> readLastVerifiedProAt() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final millis = prefs.getInt(lastVerifiedProAtKey);
+      if (millis == null || millis <= 0) return null;
+      final moment = DateTime.fromMillisecondsSinceEpoch(millis);
+      return moment.isAfter(DateTime.now()) ? null : moment;
+    } on Exception {
+      _logSanitizedFailure(LocalErrorCode.revenueCatProAnchorReadFailed);
+      return null;
+    }
+  }
+
+  Future<void> rememberVerifiedProAt(DateTime when) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt(lastVerifiedProAtKey, when.millisecondsSinceEpoch);
+    } on Exception {
+      _logSanitizedFailure(LocalErrorCode.revenueCatProAnchorWriteFailed);
+    }
+  }
+
+  /// Awaited by callers on a verified-free answer: if the process dies between
+  /// the in-memory downgrade and this write, a stale anchor would survive.
+  Future<void> clearLastVerifiedProAt() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(lastVerifiedProAtKey);
+      await prefs.remove(priorProInitializationHintKey);
+    } on Exception {
+      _logSanitizedFailure(LocalErrorCode.revenueCatProAnchorWriteFailed);
     }
   }
 
