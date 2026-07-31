@@ -33,13 +33,6 @@ class RevenueCatService {
   static const String priorProInitializationHintKey =
       'revenuecat_prior_verified_pro_hint_v1';
 
-  /// Local-only moment of the last Trusted-Entitlements verified-Pro answer,
-  /// stored as milliseconds since epoch. Not entitlement proof on its own: it
-  /// only bounds how long an *unresolved* entitlement may fall back on the last
-  /// verified answer (see SubscriptionAccessState.offlineGracePeriod).
-  static const String lastVerifiedProAtKey =
-      'revenuecat_last_verified_pro_at_v1';
-
   bool _isConfigured = false;
   Future<bool>? _initializationFuture;
 
@@ -158,41 +151,6 @@ class RevenueCatService {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool(priorProInitializationHintKey, true);
     } catch (_) {
-      _logSanitizedFailure(LocalErrorCode.revenueCatPriorProHintWriteFailed);
-    }
-  }
-
-  /// Reads the persisted grace anchor. A value in the future means a rolled-back
-  /// clock or a tampered store and is discarded rather than trusted.
-  Future<DateTime?> readLastVerifiedProAt() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final millis = prefs.getInt(lastVerifiedProAtKey);
-      if (millis == null || millis <= 0) return null;
-      final moment = DateTime.fromMillisecondsSinceEpoch(millis);
-      return moment.isAfter(DateTime.now()) ? null : moment;
-    } on Exception {
-      _logSanitizedFailure(LocalErrorCode.revenueCatPriorProHintReadFailed);
-      return null;
-    }
-  }
-
-  Future<void> rememberVerifiedProAt(DateTime when) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setInt(lastVerifiedProAtKey, when.millisecondsSinceEpoch);
-    } on Exception {
-      _logSanitizedFailure(LocalErrorCode.revenueCatPriorProHintWriteFailed);
-    }
-  }
-
-  /// A verified *free* answer retires the grace anchor: a lapsed subscriber must
-  /// not keep arming paid safety sessions offline.
-  Future<void> clearLastVerifiedProAt() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.remove(lastVerifiedProAtKey);
-    } on Exception {
       _logSanitizedFailure(LocalErrorCode.revenueCatPriorProHintWriteFailed);
     }
   }

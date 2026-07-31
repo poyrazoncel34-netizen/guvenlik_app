@@ -35,9 +35,6 @@ class SubscriptionProvider extends ChangeNotifier {
   bool get isPro => _access.canUsePaidSafetyFeature;
   bool get isLoading => _isLoading;
   SubscriptionAccessState get access => _access;
-
-  bool _offlineGraceLoaded = false;
-  Future<void>? _offlineGraceFuture;
   SubscriptionAccessStatus get accessStatus => _access.status;
   EntitlementDecision get entitlementDecision => _access.entitlementDecision;
   Offerings? get offerings => _offerings;
@@ -200,40 +197,11 @@ class SubscriptionProvider extends ChangeNotifier {
     }
   }
 
-  /// Loads the persisted offline-grace anchor exactly once.
-  ///
-  /// Kept out of [resolveAccess]'s network path on purpose: after a cold start
-  /// with no signal the network call is precisely what fails, and the anchor is
-  /// the only thing that can still authorize the press. Local read, no network.
-  Future<void> ensureOfflineGraceLoaded() {
-    if (kIsWeb || _offlineGraceLoaded) return Future<void>.value();
-    return _offlineGraceFuture ??= _loadOfflineGraceOnce().whenComplete(() {
-      _offlineGraceFuture = null;
-    });
-  }
-
-  Future<void> _loadOfflineGraceOnce() async {
-    _offlineGraceLoaded = true;
-    // Resolve defensively: this runs on the panic press, and a missing
-    // registration must degrade to "no anchor" rather than throw into the
-    // emergency path.
-    final service =
-        _injectedRevenueCatService ??
-        (serviceLocator.isRegistered<RevenueCatService>()
-            ? serviceLocator<RevenueCatService>()
-            : null);
-    if (service == null) return;
-    final anchor = await service.readLastVerifiedProAt();
-    if (anchor == null || _disposed) return;
-    _setAccess(_access.withRestoredProAnchor(anchor));
-  }
-
   /// Waits for the first entitlement decision. Loading/network failure is
   /// returned explicitly; it is never silently converted to verified-free.
   /// Every already-initialized new-arm decision refreshes CustomerInfo so an
   /// old in-process Pro fact cannot silently authorize another session.
   Future<SubscriptionAccessState> resolveAccess() async {
-    await ensureOfflineGraceLoaded();
     if (_access.status == SubscriptionAccessStatus.uninitialized) {
       await initialize();
     } else if (_access.status == SubscriptionAccessStatus.loading) {
@@ -271,14 +239,11 @@ class SubscriptionProvider extends ChangeNotifier {
     switch (decision) {
       case EntitlementDecision.authorized:
         _customerInfo = info;
-        final verifiedAt = DateTime.now();
-        _setAccess(_access.markVerified(isPro: true, at: verifiedAt));
+        _setAccess(_access.markVerified(isPro: true));
         unawaited(_rcService.rememberVerifiedProInitializationHint());
-        unawaited(_rcService.rememberVerifiedProAt(verifiedAt));
       case EntitlementDecision.denied:
         _customerInfo = info;
         _setAccess(_access.markVerified(isPro: false));
-        unawaited(_rcService.clearLastVerifiedProAt());
       case EntitlementDecision.unknown:
         // Preserve lastVerifiedPro only as an already-armed in-process lease.
         // `canUsePaidSafetyFeature` remains false, so no new arm is authorized.

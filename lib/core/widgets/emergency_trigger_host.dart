@@ -11,7 +11,6 @@ import '../navigation/app_navigator.dart';
 import '../services/app_lifecycle_handler.dart';
 import '../services/check_in_expiry_coordinator.dart';
 import '../services/check_in_service.dart';
-import '../services/subscription_gate.dart';
 import '../services/emergency_platform_service.dart';
 import '../services/emergency_readiness_service.dart';
 import '../services/quick_panic_request_service.dart';
@@ -105,12 +104,9 @@ class _EmergencyTriggerHostState extends State<EmergencyTriggerHost>
         await VolumeTriggerService.instance.setEnabled(false);
         return;
       }
-      if (!SubscriptionGate.canArmSafetySession(access)) {
+      if (!access.canUsePaidSafetyFeature) {
         // Unknown is not free and does not authorize a new safety session, but
         // it also must not erase the user's preference as if access were denied.
-        // A previously verified Pro inside the offline grace window does arm --
-        // otherwise a signal drop silently disables the volume trigger while the
-        // setting still reads "on".
         return;
       }
       VolumeTriggerService.instance.startListening(
@@ -201,7 +197,7 @@ class _EmergencyTriggerHostState extends State<EmergencyTriggerHost>
 
     final subscription = context.read<SubscriptionProvider>();
     final access = await subscription.resolveAccess();
-    if (!mounted || !SubscriptionGate.canArmSafetySession(access)) return;
+    if (!mounted || !access.canUsePaidSafetyFeature) return;
 
     final navigator = rootNavigatorKey.currentState;
     if (navigator == null) {

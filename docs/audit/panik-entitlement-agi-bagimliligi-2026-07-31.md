@@ -78,3 +78,57 @@ Sonuç geldiğinde bu bölüm doldurulacak.
 | Uçak modu: basıştan tepkiye süre | _(doldurulacak)_ |
 | Zayıf sinyal: basıştan tepkiye süre | _(doldurulacak)_ |
 | Ses tuşu tetikleyicisi çalıştı mı? | _(doldurulacak)_ |
+
+---
+
+## Denenen düzeltme GERİ ALINDI (2026-07-31)
+
+`614bcda` ile 7 günlük çevrimdışı tolerans penceresi + 1800 ms timeout denendi ve
+`d.` güvenlik incelemesi sonrası **geri alındı**. Sebep: düzeltme yanlış katmanda
+duruyordu ve iki çağrı yerini kötüleştiriyordu.
+
+### Neden çalışmadı
+
+`SubscriptionGate.ensureAccess` yalnızca **bir bool** döndürüyor. Ama gerçek arm
+yetkisi başka bir yerde, bağımsız olarak ikinci kez sorgulanıyor:
+
+- `lib/widgets/panic_button.dart:206-219` — `ensureAccess` döndükten sonra
+  `provider.entitlementDecision` **yeniden okunuyor** ve `authorized` olması
+  şart koşuluyor. Tolerans yolunda `allowed == true` ama karar hâlâ `unknown`,
+  dolayısıyla fonksiyon yine erken dönüyor. **Buton yine kurulmuyordu.**
+- `lib/screens/countdown_screen.dart` — `entitlementDecision` parametresi ham
+  hâliyle geçiyor ve native alarm planlaması `authorized` istiyor.
+- `android/.../EmergencySessionModels.kt` — native katman da aynı kuralı
+  bağımsız uyguluyor (`entitlementUnknown` reddi).
+
+### Neden GERİLEME yarattı
+
+`emergency_trigger_host.dart:107` ve `:200` önceden entitlement çözülemeyince
+sessizce hiçbir şey yapmıyordu. Değişiklikten sonra `CountdownScreen` açılıyor,
+orada arm reddediliyor ve kullanıcı **manuel arama düğmesi olmayan** bir
+"tam başarısızlık" diyaloğuyla baş başa kalıyordu. Sessiz hiçbir şey yapmamak,
+çıkışsız bir hata diyaloğundan iyidir.
+
+### İkinci bulgu: anchor kimliği doğrulanmamış
+
+`withRestoredProAnchor`, yalnızca SharedPreferences'taki bir tamsayının
+varlığından `lastVerifiedPro = true` **üretiyordu**. Hiç satın alma yapmamış
+bir kullanıcı, tek bir int yazarak tolerans yoluna girebilirdi. Saat kontrolü
+bunu engellemez: hem yazma hem okuma aynı güvenilmeyen cihaz saatini kullanıyor.
+
+### Gerçek düzeltme neyi gerektirir
+
+Tolerans kararı `bool` seviyesinde değil, **`EntitlementDecision` seviyesinde**
+verilmeli ve üç katmanın (Dart gate, `CountdownScreen`, native Kotlin) hepsi
+aynı kararı görmeli. Yani:
+
+1. Tolerans içindeyken `entitlementDecision`'ın `authorized` dönmesi (ya da
+   native sözleşmeye yeni bir "graceAuthorized" durumu eklenmesi).
+2. `EmergencySessionModels.kt` içindeki `rejectionReason()` sözleşmesinin
+   buna göre güncellenmesi — bu bir native sözleşme değişikliğidir.
+3. Anchor'ın tek başına `lastVerifiedPro` üretmemesi.
+4. `test/screens/safety_session_callsite_contract_test.dart` bu ikinci kapıyı
+   zaten pinliyor; değişiklik o sözleşmeyi bilinçli olarak güncellemeli.
+
+Bu, tek bir dosyalık bir yama değil; üç katmanlı bir sözleşme değişikliği.
+Yayın öncesi kapsamda yapılıp yapılmayacağı ayrı bir karar.
