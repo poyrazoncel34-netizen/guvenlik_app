@@ -54,6 +54,23 @@ class _FakeRevenueCatService extends RevenueCatService {
 
   @override
   Future<void> rememberVerifiedProInitializationHint() async {}
+
+  // Offline-grace anchor, kept in memory so the fake never touches
+  // SharedPreferences (no binding in a plain `test`).
+  DateTime? storedProAt;
+
+  @override
+  Future<DateTime?> readLastVerifiedProAt() async => storedProAt;
+
+  @override
+  Future<void> rememberVerifiedProAt(DateTime when) async {
+    storedProAt = when;
+  }
+
+  @override
+  Future<void> clearLastVerifiedProAt() async {
+    storedProAt = null;
+  }
 }
 
 CustomerInfo _verifiedProInfo() {

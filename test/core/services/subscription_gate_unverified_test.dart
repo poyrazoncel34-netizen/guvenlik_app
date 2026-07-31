@@ -83,6 +83,54 @@ void main() {
     expect(find.byType(SnackBar), findsNothing);
   });
 
+  testWidgets(
+    'a paying Pro inside the offline grace window arms, silently',
+    (tester) async {
+      // Phone lost signal; the store answered nothing. The last verified answer
+      // was Pro and it is 2 days old, so the press must go through.
+      final allowed = await _tapGuardedAction(
+        tester,
+        SubscriptionAccessState(
+          status: SubscriptionAccessStatus.unavailable,
+          lastVerifiedPro: true,
+          lastVerifiedProAt: DateTime.now().subtract(const Duration(days: 2)),
+        ),
+      );
+
+      expect(
+        allowed,
+        isTrue,
+        reason:
+            'Refusing a paying user because the phone has no signal fails at '
+            'exactly the moment the panic button exists for.',
+      );
+      expect(
+        find.byType(SnackBar),
+        findsNothing,
+        reason: 'The grace path is not an error the user has to read.',
+      );
+    },
+  );
+
+  testWidgets('an expired grace anchor is refused VISIBLY again', (
+    tester,
+  ) async {
+    final allowed = await _tapGuardedAction(
+      tester,
+      SubscriptionAccessState(
+        status: SubscriptionAccessStatus.unavailable,
+        lastVerifiedPro: true,
+        lastVerifiedProAt: DateTime.now().subtract(
+          SubscriptionAccessState.offlineGracePeriod +
+              const Duration(days: 1),
+        ),
+      ),
+    );
+
+    expect(allowed, isFalse);
+    expect(find.byType(SnackBar), findsOneWidget);
+  });
+
   test('verified-free stays a paywall case, not an error case', () {
     const state = SubscriptionAccessState(
       status: SubscriptionAccessStatus.verifiedFree,
