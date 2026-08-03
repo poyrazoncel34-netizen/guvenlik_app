@@ -143,6 +143,25 @@ void main() {
       expect(restored.entitlementDecision, EntitlementDecision.authorized);
     });
 
+    test('a late anchor read cannot resurrect a cleared timestamp', () {
+      // A verified-free answer clears the anchor. If the persisted read is
+      // still in flight and lands afterwards, it must change nothing -- not
+      // even the timestamp on its own.
+      final free = const SubscriptionAccessState.uninitialized().markVerified(
+        isPro: false,
+      );
+      expect(free.lastVerifiedProAt, isNull);
+
+      final late = free.withRestoredProAnchor(
+        DateTime.now().subtract(const Duration(hours: 1)),
+        corroborated: true,
+      );
+
+      expect(late.lastVerifiedProAt, isNull, reason: 'anchor stays cleared');
+      expect(late.lastVerifiedPro, isFalse);
+      expect(late.entitlementDecision, EntitlementDecision.denied);
+    });
+
     test('a restored anchor never overrides a resolved answer', () {
       final free = const SubscriptionAccessState.uninitialized().markVerified(
         isPro: false,

@@ -132,11 +132,19 @@ class SubscriptionAccessState {
     DateTime? at, {
     required bool corroborated,
   }) {
-    final usable = at != null && corroborated;
+    // Already resolved in-process, either way: the persisted anchor is stale by
+    // definition and must not be patched back in field by field. Restoring only
+    // `lastVerifiedProAt` after a verified-free answer (possible when a slow
+    // anchor read lands after the answer) would leave the state internally
+    // inconsistent -- `lastVerifiedPro == false` alongside a live anchor --
+    // which today is harmless only because two downstream guards happen to
+    // catch it. Enforce the invariant here instead of relying on that.
+    if (lastVerifiedPro != null) return this;
+    if (at == null || !corroborated) return this;
     return SubscriptionAccessState(
       status: status,
-      lastVerifiedPro: lastVerifiedPro ?? (usable ? true : null),
-      lastVerifiedProAt: lastVerifiedProAt ?? (usable ? at : null),
+      lastVerifiedPro: true,
+      lastVerifiedProAt: at,
     );
   }
 }
