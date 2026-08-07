@@ -298,7 +298,7 @@ class _CountdownScreenState extends State<CountdownScreen>
             backgroundColor: AppColors.success,
           ),
         );
-        Navigator.pop(context);
+        Navigator.pop(context, true);
       }
       return;
     }

@@ -41,8 +41,11 @@ Use timed check-in sessions that start a follow-up flow when the timer expires.
 ◉ Safety History
 View local in-app safety events on your device.
 
-◉ Volume Trigger and Test Mode
-Use advanced safety automations and test the flow without placing a real call.
+◉ Test Mode (free)
+Rehearse the whole flow end to end without placing a real call.
+
+◉ Volume Trigger
+Use advanced safety automations as a Pro user.
 
 KoruBeni Pro is optional. Purchases, renewals, cancellations, and restore operations are managed through Google Play.
 

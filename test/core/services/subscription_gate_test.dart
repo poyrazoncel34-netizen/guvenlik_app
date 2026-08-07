@@ -3,8 +3,8 @@ import 'package:guvenlik_app/core/services/subscription_gate.dart';
 
 void main() {
   group('SubscriptionGate policy', () {
-    test('location, fakeCall, siren, contacts, emergencyContactAdd and '
-        'emergencyContactSelect are free', () {
+    test('location, fakeCall, siren, contacts, contact add/select, testMode '
+        'and timeline are free', () {
       expect(
         SubscriptionGate.freeFeatures,
         equals({
@@ -14,6 +14,9 @@ void main() {
           PremiumFeature.contacts,
           PremiumFeature.emergencyContactAdd,
           PremiumFeature.emergencyContactSelect,
+          // Rehearsal and the user's own local record: deliberately free.
+          PremiumFeature.testMode,
+          PremiumFeature.timeline,
         }),
       );
 
@@ -36,10 +39,8 @@ void main() {
         containsAll([
           PremiumFeature.panic,
           PremiumFeature.safeWalk,
-          PremiumFeature.timeline,
           PremiumFeature.checkIn,
           PremiumFeature.volumeTrigger,
-          PremiumFeature.testMode,
           PremiumFeature.advancedAutomation,
         ]),
       );
@@ -57,6 +58,16 @@ void main() {
       expect(
         proFeatures,
         isNot(contains(PremiumFeature.emergencyContactSelect)),
+      );
+      expect(
+        proFeatures,
+        isNot(contains(PremiumFeature.testMode)),
+        reason: 'test mode is the free rehearsal of the panic flow',
+      );
+      expect(
+        proFeatures,
+        isNot(contains(PremiumFeature.timeline)),
+        reason: "the timeline is the user's own local record",
       );
 
       for (final feature in proFeatures) {

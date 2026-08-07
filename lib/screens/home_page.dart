@@ -29,7 +29,9 @@ import 'check_in_screen.dart';
 import 'battery_optimization_wizard.dart';
 import '../core/services/emergency_readiness_service.dart';
 import '../core/services/notification_service.dart';
+import '../core/services/rehearsal_record_service.dart';
 import '../core/widgets/exact_alarm_permission_guard.dart';
+import '../core/widgets/readiness_card.dart';
 import '../core/utils/permission_helper.dart';
 
 class HomePage extends StatefulWidget {
@@ -49,10 +51,16 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   final List<Animation<Offset>> _cardSlideAnimations = [];
   static const int _totalCards = 7;
 
+  /// Last completed Test Mode rehearsal. `null` until loaded, and `null` also
+  /// means "never rehearsed" — the card treats both as "not yet", which is the
+  /// honest reading before the async load lands.
+  DateTime? _lastRehearsalAt;
+
   @override
   void initState() {
     super.initState();
     EmergencyReadinessService.instance.addListener(_onReadinessChanged);
+    unawaited(_loadLastRehearsal());
     _headerController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 800),
@@ -120,6 +128,19 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
   void _onReadinessChanged() {
     if (mounted) setState(() {});
+  }
+
+  Future<void> _loadLastRehearsal() async {
+    final recorded = await RehearsalRecordService.lastRehearsalAt();
+    if (!mounted) return;
+    setState(() => _lastRehearsalAt = recorded);
+  }
+
+  void _openBatteryWizard() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const BatteryOptimizationWizard()),
+    );
   }
 
   @override
@@ -197,17 +218,30 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                       SizedBox(height: shortScreen ? 4 : 6),
                       _buildEmergencyContactChip(provider),
                       SizedBox(height: spacing),
-                      _buildReadinessCard(provider),
+                      ReadinessCard(
+                        locationGranted: provider.locationPermissionGranted,
+                        contactsGranted: provider.contactsPermissionGranted,
+                        hasEmergencyContact: provider.emergencyContact != null,
+                        readiness:
+                            EmergencyReadinessService.instance.lastState,
+                        lastRehearsalAt: _lastRehearsalAt,
+                        onFixEmergencyContact: _navigateToContacts,
+                        onFixCallPermission: _requestCallPhonePermission,
+                        onFixBackground: _openBatteryWizard,
+                        onFixLocation: _requestLocationPermission,
+                        onFixContacts: _requestContactsPermission,
+                        onRunRehearsal: _startTestMode,
+                      ),
                       if (!provider.onboardingDismissed) ...[
                         SizedBox(height: shortScreen ? 10 : 16),
-                        _buildOnboardingCard(provider, isPro),
+                        _buildOnboardingCard(provider),
                       ],
                       SizedBox(height: sectionSpacing),
                       const Center(child: PanicButton()),
-                      if (isPro) ...[
-                        SizedBox(height: sectionSpacing),
-                        _buildTestModeButton(),
-                      ],
+                      // Free users too: a locked SOS with no way to rehearse
+                      // asks for trust the app has not earned yet.
+                      SizedBox(height: sectionSpacing),
+                      _buildTestModeButton(),
                       SizedBox(height: largeSectionSpacing),
                       _buildQuickActions(isPro),
                       SizedBox(height: largeSectionSpacing),
@@ -310,172 +344,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               Icons.arrow_forward_ios_rounded,
               size: 14,
               color: AppColors.textSecondary,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildReadinessCard(HomeProvider provider) {
-    final readiness = EmergencyReadinessService.instance.lastState;
-    final callPermissionOk = readiness?.callPermission ?? false;
-    final allReady =
-        provider.locationPermissionGranted &&
-        provider.contactsPermissionGranted &&
-        provider.emergencyContact != null &&
-        (readiness?.criticalSafetyReady ?? false);
-    final title = allReady ? "ready".tr() : "setup_incomplete".tr();
-    final subtitle = allReady
-        ? "system_ready_desc".tr()
-        : "setup_incomplete_desc".tr();
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.cardBg,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: (allReady ? AppColors.success : AppColors.warning)
-                      .withValues(alpha: 0.15),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  allReady
-                      ? Icons.check_circle_rounded
-                      : Icons.error_outline_rounded,
-                  color: allReady ? AppColors.success : AppColors.warning,
-                  size: 18,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      subtitle,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              _buildStatusChip(
-                label: "location".tr(),
-                isOk: provider.locationPermissionGranted,
-                onTap: _requestLocationPermission,
-              ),
-              _buildStatusChip(
-                label: "contacts".tr(),
-                isOk: provider.contactsPermissionGranted,
-                onTap: _requestContactsPermission,
-              ),
-              _buildStatusChip(
-                label: "emergency_contact".tr(),
-                isOk: provider.emergencyContact != null,
-                onTap: _navigateToContacts,
-              ),
-              _buildStatusChip(
-                label: "background_readiness".tr(),
-                isOk: readiness?.backgroundAlertReady ?? false,
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const BatteryOptimizationWizard(),
-                    ),
-                  );
-                },
-              ),
-              _buildStatusChip(
-                label: "phone_call_permission".tr(),
-                isOk: callPermissionOk,
-                onTap: _requestCallPhonePermission,
-              ),
-            ],
-          ),
-          if (!callPermissionOk) ...[
-            const SizedBox(height: 8),
-            Text(
-              "call_permission_fallback_note".tr(),
-              style: const TextStyle(
-                fontSize: 11,
-                height: 1.35,
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatusChip({
-    required String label,
-    required bool isOk,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(999),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color: (isOk ? AppColors.success : AppColors.warning).withValues(
-            alpha: 0.12,
-          ),
-          borderRadius: BorderRadius.circular(999),
-          border: Border.all(
-            color: (isOk ? AppColors.success : AppColors.warning).withValues(
-              alpha: 0.3,
-            ),
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              isOk ? Icons.check_circle_rounded : Icons.error_outline_rounded,
-              size: 14,
-              color: isOk ? AppColors.success : AppColors.warning,
-            ),
-            const SizedBox(width: 6),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: isOk ? AppColors.success : AppColors.warning,
-              ),
             ),
           ],
         ),
@@ -619,7 +487,17 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 color: AppColors.textPrimary,
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 6),
+            Text(
+              'fake_call_delay_subtitle'.tr(),
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 12,
+                height: 1.35,
+                color: AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 12),
             _buildFakeCallOption('fake_call_delay_now'.tr(), Duration.zero),
             _buildFakeCallOption(
               'fake_call_delay_1min'.tr(),
@@ -628,6 +506,17 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             _buildFakeCallOption(
               'fake_call_delay_3min'.tr(),
               const Duration(minutes: 3),
+            ),
+            // Longer horizons exist for the everyday reasons people actually
+            // reach for this — leaving a meeting, a bad date, a pushy seller.
+            // Three minutes is too short to cover any of them.
+            _buildFakeCallOption(
+              'fake_call_delay_10min'.tr(),
+              const Duration(minutes: 10),
+            ),
+            _buildFakeCallOption(
+              'fake_call_delay_15min'.tr(),
+              const Duration(minutes: 15),
             ),
             const SizedBox(height: 12),
           ],
@@ -725,7 +614,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     ScaffoldMessenger.of(context).showSnackBar(snackbar);
   }
 
-  Widget _buildOnboardingCard(HomeProvider provider, bool isPro) {
+  Widget _buildOnboardingCard(HomeProvider provider) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -740,7 +629,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             children: [
               Expanded(
                 child: Text(
-                  isPro ? "get_ready_in_3_steps".tr() : "home_ready_title".tr(),
+                  "get_ready_in_3_steps".tr(),
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w800,
@@ -771,13 +660,12 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             subtitle: "location_permission_required_desc".tr(),
             onTap: _requestLocationPermission,
           ),
-          if (isPro)
-            _buildOnboardingStep(
-              index: "3",
-              title: "run_test_mode".tr(),
-              subtitle: "try_flow_without_real_call".tr(),
-              onTap: _startTestMode,
-            ),
+          _buildOnboardingStep(
+            index: "3",
+            title: "run_test_mode".tr(),
+            subtitle: "try_flow_without_real_call".tr(),
+            onTap: _startTestMode,
+          ),
         ],
       ),
     );
@@ -877,12 +765,20 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     );
     if (!allowed || !mounted) return;
 
-    Navigator.push(
+    // `true` only when the rehearsal countdown actually reached the end. A
+    // cancelled test is not evidence the setup works, so it must not be
+    // recorded as one.
+    final completed = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
         builder: (_) => const CountdownScreen(isTestMode: true),
       ),
     );
+    if (completed == true) {
+      await RehearsalRecordService.recordCompletedRehearsal();
+    }
+    if (!mounted) return;
+    await _loadLastRehearsal();
   }
 
   Future<void> _navigateToContacts() async {

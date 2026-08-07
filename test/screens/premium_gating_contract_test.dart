@@ -44,14 +44,19 @@ void main() {
       expect(home, contains('PremiumFeature.checkIn'));
     });
 
-    test('test mode is hidden for free users and gated for Pro users', () {
+    test('test mode is reachable by free users, not hidden behind isPro', () {
       expect(home, contains('context.watch<SubscriptionProvider>().isPro'));
+      // Test mode is the rehearsal of the panic flow: it dials nothing and
+      // sends nothing. Hiding it from free users made the locked SOS button
+      // unprovable, so the entry point must NOT sit inside an isPro branch.
       expect(
         RegExp(
           r'if\s*\(isPro\)[\s\S]{0,160}_buildTestModeButton\(\)',
         ).hasMatch(home),
-        isTrue,
+        isFalse,
+        reason: 'test mode entry must not be gated on isPro',
       );
+      expect(home, contains('_buildTestModeButton()'));
       expect(home, contains('PremiumFeature.testMode'));
       expect(home, contains('CountdownScreen(isTestMode: true)'));
     });

@@ -126,9 +126,14 @@ void main() {
     });
 
     test('the readiness card still tracks the emergency contact row', () {
-      expect(home.contains('"emergency_contact".tr()'), isTrue);
+      // The card lives in its own widget now; home_page passes the state in.
+      final card = File(
+        'lib/core/widgets/readiness_card.dart',
+      ).readAsStringSync();
+      expect(card.contains("'emergency_contact'.tr()"), isTrue);
+      expect(card.contains('isOk: hasEmergencyContact'), isTrue);
       expect(
-        home.contains('isOk: provider.emergencyContact != null'),
+        home.contains('hasEmergencyContact: provider.emergencyContact != null'),
         isTrue,
       );
     });

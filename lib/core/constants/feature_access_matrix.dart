@@ -75,6 +75,25 @@ class FeatureAccessMatrix {
       titleKey: 'premium_feature_emergency_contact_select',
       verificationLabel: 'Emergency contact primary selection',
     ),
+    // Free on purpose: test mode IS the demonstration of the panic flow. It
+    // dials nothing and sends nothing, so paywalling it only forced a trust
+    // product to be bought on faith. It is also the only way a user can find
+    // out their setup is broken before they need it.
+    PremiumFeature.testMode: FeatureAccessEntry(
+      feature: PremiumFeature.testMode,
+      access: FeatureAccessLevel.free,
+      titleKey: 'test_mode_no_real_call',
+      verificationLabel: 'Test mode rehearsal (no real call)',
+    ),
+    // Free on purpose: this is the user's own local record of their own
+    // events, and the plan-note it carries is the only repeatable non-emergency
+    // reason to open the app at all.
+    PremiumFeature.timeline: FeatureAccessEntry(
+      feature: PremiumFeature.timeline,
+      access: FeatureAccessLevel.free,
+      titleKey: 'timeline',
+      verificationLabel: 'Activity timeline / safety history / plan note',
+    ),
     PremiumFeature.panic: FeatureAccessEntry(
       feature: PremiumFeature.panic,
       access: FeatureAccessLevel.pro,
@@ -93,23 +112,11 @@ class FeatureAccessMatrix {
       titleKey: 'check_in',
       verificationLabel: 'Check-in',
     ),
-    PremiumFeature.timeline: FeatureAccessEntry(
-      feature: PremiumFeature.timeline,
-      access: FeatureAccessLevel.pro,
-      titleKey: 'timeline',
-      verificationLabel: 'Activity timeline / safety history',
-    ),
     PremiumFeature.volumeTrigger: FeatureAccessEntry(
       feature: PremiumFeature.volumeTrigger,
       access: FeatureAccessLevel.pro,
       titleKey: 'premium_feature_volume_trigger',
       verificationLabel: 'Volume trigger',
-    ),
-    PremiumFeature.testMode: FeatureAccessEntry(
-      feature: PremiumFeature.testMode,
-      access: FeatureAccessLevel.pro,
-      titleKey: 'test_mode_no_real_call',
-      verificationLabel: 'Test mode',
     ),
     PremiumFeature.advancedAutomation: FeatureAccessEntry(
       feature: PremiumFeature.advancedAutomation,
@@ -123,7 +130,6 @@ class FeatureAccessMatrix {
     'subscription_value_panic',
     'subscription_value_walk',
     'subscription_value_checkin',
-    'subscription_value_history',
     'subscription_value_volume_trigger',
     'subscription_value_automation',
   ];

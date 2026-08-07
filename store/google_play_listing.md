@@ -12,9 +12,9 @@ KoruBeni, konum oturumu ve cihaz içi sahte çağrı sunan; isteğe bağlı Pro 
 
 ⚠️ ÖNEMLİ: Bu uygulama profesyonel güvenlik hizmeti yerine geçmez. Acil durumlarda her zaman 112'yi arayın.
 
-Ücretsiz kullanımda konum oturumu, sahte çağrı, siren ve acil kişi yönetimi açıktır.
+Ücretsiz kullanımda konum oturumu, sahte çağrı, siren, acil kişi yönetimi, güvenlik geçmişi ve gerçek arama yapmayan test modu açıktır.
 
-Panik/SOS, güvenli yürüyüş/check-in, güvenlik geçmişi, ses tuşu tetikleyici ve test modu KoruBeni Pro ile açılır.
+Panik/SOS, güvenli yürüyüş/check-in ve ses tuşu tetikleyici KoruBeni Pro ile açılır.
 
 📍 KONUM OTURUMU
 Konum alınabilirse haritada gösterilir; alınamazsa açıkça "konum alınamadı" durumu gösterilir.

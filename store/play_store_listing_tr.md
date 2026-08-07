@@ -7,7 +7,7 @@ Panik/SOS Pro; konum, sahte çağrı ve siren ücretsiz.
 **Full Description (4000 karakter):**
 KoruBeni, konum durumunuzu görmenize, cihaz içi sahte çağrı simülasyonu çalıştırmanıza ve Pro abonelikle ek kişisel güvenlik araçlarını kullanmanıza yardımcı olan bir Android uygulamasıdır.
 
-KoruBeni ücretsiz temel güvenlik araçları sunar. Panik/SOS, güvenli yürüyüş, check-in ve gelişmiş güvenlik otomasyonları KoruBeni Pro ile kullanılabilir.
+KoruBeni ücretsiz temel güvenlik araçları sunar; güvenlik geçmişi ve gerçek arama yapmayan test modu da ücretsizdir. Panik/SOS, güvenli yürüyüş, check-in ve gelişmiş güvenlik otomasyonları KoruBeni Pro ile kullanılabilir.
 
 ⚠️ ÖNEMLİ: KoruBeni resmi bir acil servis değildir ve 112'nin yerine geçmez. Gerçek bir acil durumda lütfen önce 112'yi arayın. KoruBeni yalnızca tamamlayıcı bir araçtır ve fiziksel koruma sağlamaz.
 
@@ -39,8 +39,11 @@ Belirlediğiniz süre sonunda kontrol akışı başlatan yardımcı check-in otu
 ◉ Güvenlik Geçmişi
 Uygulama içi güvenlik olaylarınızı cihazda yerel olarak görün.
 
-◉ Ses Tuşu Tetikleyici ve Test Modu
-Pro kullanıcılar için gelişmiş güvenlik otomasyonlarını ve gerçek arama yapmadan test akışını kullanın.
+◉ Test Modu (ücretsiz)
+Akışı gerçek arama yapmadan baştan sona prova edin.
+
+◉ Ses Tuşu Tetikleyici
+Pro kullanıcılar için gelişmiş güvenlik otomasyonlarını kullanın.
 
 KoruBeni Pro isteğe bağlı bir aboneliktir. Satın alma, yenileme, iptal ve geri yükleme işlemleri Google Play üzerinden yönetilir.
 

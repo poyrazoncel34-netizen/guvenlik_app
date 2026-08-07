@@ -29,29 +29,32 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   late AnimationController _fadeController;
 
   List<_OnboardingPage> get _pages => [
+    // Order is deliberate: the differentiator no competitor can copy (local
+    // PIN, no biometrics) comes first, and the Pro mention comes last. Opening
+    // on "Pro panic flow" priced the product before it meant anything.
     _OnboardingPage(
-      icon: Icons.vibration_rounded,
+      icon: Icons.lock_rounded,
       title: 'onboarding_1_title'.tr(),
       body: 'onboarding_1_body'.tr(),
-      color: AppColors.emergency,
-    ),
-    _OnboardingPage(
-      icon: Icons.timer_rounded,
-      title: 'onboarding_2_title'.tr(),
-      body: 'onboarding_2_body'.tr(),
-      color: AppColors.warning,
+      color: AppColors.success,
     ),
     _OnboardingPage(
       icon: Icons.call_rounded,
-      title: 'onboarding_3_title'.tr(),
-      body: 'onboarding_3_body'.tr(),
+      title: 'onboarding_2_title'.tr(),
+      body: 'onboarding_2_body'.tr(),
       color: AppColors.accent,
     ),
     _OnboardingPage(
-      icon: Icons.lock_rounded,
+      icon: Icons.location_on_rounded,
+      title: 'onboarding_3_title'.tr(),
+      body: 'onboarding_3_body'.tr(),
+      color: AppColors.primary,
+    ),
+    _OnboardingPage(
+      icon: Icons.vibration_rounded,
       title: 'onboarding_4_title'.tr(),
       body: 'onboarding_4_body'.tr(),
-      color: AppColors.success,
+      color: AppColors.emergency,
     ),
     // Gate page. Kept last so every informational page is still reachable, and
     // so 'Skip' has somewhere to land that is not "done".
