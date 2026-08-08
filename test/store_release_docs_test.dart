@@ -4,7 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('store release documentation gates', () {
-    const trShort = 'Panik/SOS Pro; konum, sahte çağrı ve siren ücretsiz.';
+    const trShort = 'Panik butonu, sahte çağrı, siren. Hesap yok, verileriniz cihazınızda kalır.';
 
     test('short descriptions are consistent and within Play limits', () {
       expect(trShort.runes.length <= 80, isTrue);

@@ -1,20 +1,20 @@
 # Google Play Store Listing — KoruBeni
 
-## Uygulama Adı
-KoruBeni — Kişisel Güvenlik
+## Uygulama Adı (29/30)
+KoruBeni: Panik Butonu, Siren
 
-## Kısa Açıklama (80 karakter)
-Panik/SOS Pro; konum, sahte çağrı ve siren ücretsiz.
+## Kısa Açıklama (75/80 karakter)
+Panik butonu, sahte çağrı, siren. Hesap yok, verileriniz cihazınızda kalır.
 
 ## Uzun Açıklama
 
-KoruBeni, konum oturumu ve cihaz içi sahte çağrı sunan; isteğe bağlı Pro abonelikle ek kişisel güvenlik araçları açan bir Android uygulamasıdır.
+Panik butonu, sahte çağrı ve siren tek uygulamada. KoruBeni, acil bir durumda güvendiğiniz tek kişiye ulaşmayı önceden planlamanızı ve bu akışın provasını yapmanızı sağlayan bir kişisel güvenlik uygulamasıdır. Hesap gerekmez, verileriniz cihazınızda kalır.
 
 ⚠️ ÖNEMLİ: Bu uygulama profesyonel güvenlik hizmeti yerine geçmez. Acil durumlarda her zaman 112'yi arayın.
 
-Ücretsiz kullanımda konum oturumu, sahte çağrı, siren, acil kişi yönetimi, güvenlik geçmişi ve gerçek arama yapmayan test modu açıktır.
+Ücretsiz: panik akışının Test Modu provası (gerçek arama yapılmaz), konum oturumu, sahte çağrı, siren, acil kişi yönetimi, plan notu ve güvenlik geçmişi.
 
-Panik/SOS, güvenli yürüyüş/check-in ve ses tuşu tetikleyici KoruBeni Pro ile açılır.
+KoruBeni Pro ile açılır: gerçek arama başlatan Panik/SOS akışı, güvenli yürüyüş/check-in ve ses tuşu tetikleyici.
 
 📍 KONUM OTURUMU
 Konum alınabilirse haritada gösterilir; alınamazsa açıkça "konum alınamadı" durumu gösterilir.

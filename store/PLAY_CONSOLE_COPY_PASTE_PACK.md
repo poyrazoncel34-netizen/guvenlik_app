@@ -67,13 +67,13 @@ Screenshots: upload from store/screenshots/android/final/ only after manual PII 
 **Title**
 
 ```text
-KoruBeni - Kişisel Güvenlik
+KoruBeni: Panik Butonu, Siren
 ```
 
 **Short description**
 
 ```text
-Panik/SOS Pro; konum, sahte çağrı ve siren ücretsiz.
+Panik butonu, sahte çağrı, siren. Hesap yok, verileriniz cihazınızda kalır.
 ```
 
 **Full description**

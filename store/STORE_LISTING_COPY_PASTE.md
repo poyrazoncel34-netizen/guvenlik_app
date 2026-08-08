@@ -16,12 +16,12 @@ https://poyrazoncel34-netizen.github.io/guvenlik_app/privacy_policy.html
 
 **App title:**
 ```
-KoruBeni - Kişisel Güvenlik
+KoruBeni: Panik Butonu, Siren
 ```
 
 **Short description (80 karakter):**
 ```
-Panik/SOS Pro; konum, sahte çağrı ve siren ücretsiz.
+Panik butonu, sahte çağrı, siren. Hesap yok, verileriniz cihazınızda kalır.
 ```
 
 **Full description:** [play_store_listing_tr.md](play_store_listing_tr.md) içindeki "Full Description" bölümünü kopyalayın.

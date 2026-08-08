@@ -79,7 +79,7 @@ Every row below remains open until the named owner saves the required external e
 | Item | Status | Notes |
 | --- | --- | --- |
 | Store listings source of truth | CODE_DONE | First Play release is Turkish-only. Public listing source is `store/play_store_listing_tr.md`; `store/play_store_listing_en.md` is internal reference only and must not be pasted into Play Console for this release. |
-| TR short description | CODE_DONE | `Panik/SOS Pro; konum, sahte çağrı ve siren ücretsiz.` |
+| TR short description | CODE_DONE | `Panik butonu, sahte çağrı, siren. Hesap yok, verileriniz cihazınızda kalır.` |
 | EN short description | N/A_FOR_FIRST_RELEASE | Do not create an English Play listing until English runtime support is restored and tested. |
 | Play store icon | NEEDS_OPERATOR_ACTION | Must be 512x512 PNG. Candidate asset: `store/assets/play_icon_512.png`; verify in Play Console. |
 | Feature graphic | NEEDS_OPERATOR_ACTION | Prepare or verify 1024x500 feature graphic in Play Console. |

@@ -2,9 +2,9 @@
 
 First Google Play release is Turkish-only. Do not paste this file into Play Console and do not create an English localization entry until the English runtime path is re-enabled and passes real-device QA.
 
-**App Title:** KoruBeni - Personal Safety
-**Short Description (80 characters):**
-Panic/SOS requires Pro; location, fake call, and siren are free.
+**App Title (29/30):** KoruBeni: Panic Button, Siren
+**Short Description (75/80 characters):**
+Panic button, fake call, siren. No account. Your data stays on your device.
 
 **Full Description (4000 characters):**
 KoruBeni is an Android personal safety app that helps you view location status, run an on-device fake call simulation, and use additional safety tools with an optional Pro subscription.

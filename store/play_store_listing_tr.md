@@ -1,13 +1,15 @@
 # Play Store Listing (TR)
 
-**App Title:** KoruBeni - Kişisel Güvenlik
-**Short Description (80 karakter):**
-Panik/SOS Pro; konum, sahte çağrı ve siren ücretsiz.
+**App Title (29/30):** KoruBeni: Panik Butonu, Siren
+**Short Description (75/80 karakter):**
+Panik butonu, sahte çağrı, siren. Hesap yok, verileriniz cihazınızda kalır.
 
 **Full Description (4000 karakter):**
-KoruBeni, konum durumunuzu görmenize, cihaz içi sahte çağrı simülasyonu çalıştırmanıza ve Pro abonelikle ek kişisel güvenlik araçlarını kullanmanıza yardımcı olan bir Android uygulamasıdır.
+Panik butonu, sahte çağrı ve siren tek uygulamada. KoruBeni, acil bir durumda güvendiğiniz tek kişiye ulaşmayı önceden planlamanızı ve bu akışın provasını yapmanızı sağlayan bir kişisel güvenlik uygulamasıdır.
 
-KoruBeni ücretsiz temel güvenlik araçları sunar; güvenlik geçmişi ve gerçek arama yapmayan test modu da ücretsizdir. Panik/SOS, güvenli yürüyüş, check-in ve gelişmiş güvenlik otomasyonları KoruBeni Pro ile kullanılabilir.
+Hesap açmanız gerekmez, kayıt olmanız gerekmez. Verileriniz cihazınızda kalır. Parmak izi ve yüz tanıma kasıtlı olarak kapalıdır: parmağınız zorla bastırılabilir, PIN'iniz söylenmek zorunda değildir.
+
+Panik akışının tamamını, gerçek arama yapmayan Test Modu ile ücretsiz prova edebilirsiniz. Kurulumunuzun çalıştığını ihtiyacınız olmadan önce görürsünüz.
 
 ⚠️ ÖNEMLİ: KoruBeni resmi bir acil servis değildir ve 112'nin yerine geçmez. Gerçek bir acil durumda lütfen önce 112'yi arayın. KoruBeni yalnızca tamamlayıcı bir araçtır ve fiziksel koruma sağlamaz.
 
@@ -25,10 +27,16 @@ Yüksek sesli alarm ile çevrenizdeki insanların dikkatini çekin.
 ◉ Acil Kişiler
 Rehberinizden güvenilir kişileri yerel olarak kaydedin ve yönetin.
 
+◉ Test Modu
+Panik akışını baştan sona prova edin. Gerçek arama yapılmaz, kimseye mesaj gitmez.
+
+◉ Plan ve Geçmiş
+Gideceğiniz yeri ve dönüş planınızı not edin, isterseniz paylaşım ekranından güvendiğiniz birine gönderin. Uygulama içi olaylarınız cihazda yerel olarak birikir.
+
 ★ KORUBENİ PRO İLE AÇILAN ÖZELLİKLER ★
 
 ◉ Panik/SOS Butonu
-KoruBeni Pro ile uzun basarak panik akışını başlatın. 10 saniyelik geri sayım ile yanlışlıkla tetiklemeyi önleyin. Bu özellik ücretsiz planda çalışmaz.
+Uzun basarak panik akışını başlatın. 10 saniyelik geri sayım yanlışlıkla tetiklemeyi önler; PIN ile iptal edebilirsiniz. Akışın provası Test Modu ile ücretsizdir; gerçek arama başlatan panik akışı KoruBeni Pro ile açılır.
 
 ◉ Güvenli Yürüyüş
 Gece veya güvensiz ortamlarda yardımcı check-in oturumu başlatın. Arka plan davranışı Android ayarlarına bağlıdır.
@@ -36,14 +44,8 @@ Gece veya güvensiz ortamlarda yardımcı check-in oturumu başlatın. Arka plan
 ◉ Check-in
 Belirlediğiniz süre sonunda kontrol akışı başlatan yardımcı check-in oturumları kullanın.
 
-◉ Güvenlik Geçmişi
-Uygulama içi güvenlik olaylarınızı cihazda yerel olarak görün.
-
-◉ Test Modu (ücretsiz)
-Akışı gerçek arama yapmadan baştan sona prova edin.
-
 ◉ Ses Tuşu Tetikleyici
-Pro kullanıcılar için gelişmiş güvenlik otomasyonlarını kullanın.
+Gelişmiş güvenlik otomasyonlarını kullanın.
 
 KoruBeni Pro isteğe bağlı bir aboneliktir. Satın alma, yenileme, iptal ve geri yükleme işlemleri Google Play üzerinden yönetilir.
 
@@ -62,11 +64,12 @@ KoruBeni Pro isteğe bağlı bir aboneliktir. Satın alma, yenileme, iptal ve ge
 • Pro abonelik için Google Play Billing aracılığıyla yalnızca satın alma geçmişi tutulur.
 • Harita ve Play Billing sağlayıcılarının kendi teknik ağ davranışları olabilir.
 
-KoruBeni — Ücretsiz konum oturumu ve sahte çağrı; Pro ile ek güvenlik araçları.
+Kurulumunuzu bugün yapın ve Test Modu ile provasını çalıştırın — 60 saniye sürer.
 
-**Category:** Tools / Safety
+**Category:** Lifestyle (birincil öneri — Tools kategorisi asiri kalabalik)
 **Content Rating:** 18+ intended audience / Play Console formuna göre tamamlanacak
 **Contact Email:** korubeni.destek@gmail.com
 **Privacy Policy URL:** https://poyrazoncel34-netizen.github.io/guvenlik_app/privacy_policy.html
 
-**Tags:** güvenlik, acil durum, panik butonu KoruBeni Pro, konum oturumu, kadın güvenliği, SOS Pro, acil yardım, sahte arama, kişisel güvenlik
+**Hedef anahtar kelimeler (Play'de serbest metin tag alani yoktur; bu liste uzun aciklamadaki dogal yogunlugu yonlendirir):**
+panik butonu, acil durum butonu, kadın güvenliği, kişisel güvenlik, sahte arama, sahte çağrı, siren, acil yardım, güvenli yürüyüş, gece güvenliği

@@ -66,7 +66,7 @@
 
 | Alan | Değer |
 |---|---|
-| App name | `KoruBeni - Kişisel Güvenlik` |
+| App name | `KoruBeni: Panik Butonu, Siren` |
 | Default language | `Türkçe (tr-TR)` |
 | App or game | App |
 | Free or paid | **Free** (Pro, uygulama-içi abonelik) |
@@ -80,12 +80,12 @@
 
 **App name (paste):**
 ```text
-KoruBeni - Kişisel Güvenlik
+KoruBeni: Panik Butonu, Siren
 ```
 
 **Short description (80 karakter) (paste):**
 ```text
-Panik/SOS Pro; konum, sahte çağrı ve siren ücretsiz.
+Panik butonu, sahte çağrı, siren. Hesap yok, verileriniz cihazınızda kalır.
 ```
 
 **Full description:** [store/play_store_listing_tr.md](../store/play_store_listing_tr.md) içindeki
