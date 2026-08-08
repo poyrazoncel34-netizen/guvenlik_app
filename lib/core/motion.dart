@@ -10,9 +10,16 @@
 // number instead of choosing between existing ones, which is how the twenty
 // happened.
 //
-// Division of labour: this file answers "how long". [ReducedMotionPolicy]
-// answers "at all?" — it reads the platform reduce-motion preference and parks
-// or suppresses animations. Neither one overrides the other; a screen asks both.
+// Division of labour: this file answers "how long" and, for the springs below,
+// "how it settles". [ReducedMotionPolicy] answers "at all?" — it reads the
+// platform reduce-motion preference and parks or suppresses animations. Neither
+// one overrides the other; a screen asks both.
+//
+// Durations and springs are not interchangeable. A duration is right when the
+// app decides the motion (a screen arriving). A spring is right when the USER
+// decides it — anything released, dragged or interrupted — because a spring
+// starts from wherever the value currently is instead of cutting to a new
+// timeline. A hard cut at the end of a gesture is what reads as "frozen".
 //
 // NOT covered here, on purpose:
 //   * Ambient pulses (a splash logo, the countdown's urgent glow, the panic
@@ -56,4 +63,23 @@ abstract final class Motion {
   /// Continuous, non-directional motion (breathing, shimmer). Symmetric so it
   /// has no beginning or end to notice.
   static const Curve ambient = Curves.easeInOut;
+
+  // ── Springs ──────────────────────────────────────────────────────────────
+  //
+  // Parameterised the way Apple's designers do it (damping ratio + response in
+  // seconds) rather than by raw stiffness, then converted: for a unit mass a
+  // response T means stiffness = (2*pi/T)^2.
+  //
+  // Deliberately only ONE spring here, critically damped. Overshoot is the
+  // right answer when a gesture carried momentum, and the wrong answer on every
+  // control this app owns — a bouncy safety button reads as playful. Add a
+  // bouncy rung only when there is a flick to justify it.
+
+  /// Critically damped, ~0.4s response. Matches Apple's "move / reposition"
+  /// spring. No overshoot: the value settles onto the target and stops.
+  static final SpringDescription settle = SpringDescription.withDampingRatio(
+    mass: 1,
+    stiffness: 247, // (2*pi/0.4)^2, rounded
+    ratio: 1,
+  );
 }

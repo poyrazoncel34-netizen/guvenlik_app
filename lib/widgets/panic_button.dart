@@ -5,6 +5,7 @@
 import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:flutter/physics.dart';
 import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:provider/provider.dart';
@@ -164,7 +165,7 @@ class _PanicButtonState extends State<PanicButton>
     final elapsed = _holdStopwatch?.elapsed ?? Duration.zero;
     final completed =
         _pointerDown && _isArmed && PanicHoldGate.isComplete(elapsed);
-    _resetPress();
+    _resetPress(completed: completed);
 
     if (!completed) return;
 
@@ -173,10 +174,10 @@ class _PanicButtonState extends State<PanicButton>
   }
 
   void _onPressCancel() {
-    _resetPress();
+    _resetPress(completed: false);
   }
 
-  void _resetPress() {
+  void _resetPress({required bool completed}) {
     _pointerDown = false;
     _pressEpoch++;
     _holdStopwatch?.stop();
@@ -186,11 +187,32 @@ class _PanicButtonState extends State<PanicButton>
     }
     _armedPulseController.stop();
     _armedPulseController.reset();
-    _progressController.stop();
-    _progressController.reset();
+    _releaseProgressRing(completed: completed);
     _hapticTimer?.cancel();
     _holdTimer?.cancel();
     _holdSeconds = 0;
+  }
+
+  /// Unwinds the hold ring when the finger leaves the button.
+  ///
+  /// An abandoned hold used to cut the ring to zero in one frame, which reads
+  /// as the button freezing rather than responding — on the one control the
+  /// user has to trust. A critically damped spring runs it back from wherever
+  /// it actually is, with no overshoot.
+  ///
+  /// Never on a completed hold: the countdown owns the screen from that point
+  /// and the dispatch path carries no motion (Motion.dispatch is zero, pinned
+  /// by dispatch_path_latency_contract_test). The animation is fire-and-forget
+  /// either way, so it can never delay arming.
+  void _releaseProgressRing({required bool completed}) {
+    if (completed || _reduceMotion || _progressController.value == 0) {
+      _progressController.stop();
+      _progressController.reset();
+      return;
+    }
+    _progressController.animateWith(
+      SpringSimulation(Motion.settle, _progressController.value, 0, 0),
+    );
   }
 
   Future<void> _openCountdownScreen() async {
