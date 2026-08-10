@@ -192,7 +192,22 @@ class _SafetyTimelineScreenState extends State<SafetyTimelineScreen> {
     }
   }
 
-  Future<void> _deleteEntry(String id) async {
+  /// Deletes an entry from whichever store actually holds it.
+  ///
+  /// This list merges two stores: user notes in SharedPreferences and recorded
+  /// safety events in sqflite. Deletion only ever touched the notes, so "Sil"
+  /// on a recorded event silently did nothing -- the row reappeared on the very
+  /// next reload. A delete action that leaves the data readable is not deletion
+  /// under Silme Yonetmeligi Md. 8/1 ("hicbir sekilde erisilemez ve tekrar
+  /// kullanilamaz hale getirilmesi"), and the app's own policy promises the
+  /// KVKK Md. 11/f right. Both stores are cleared here.
+  Future<void> _deleteEntry(String id, {String? kind}) async {
+    if (id.isEmpty) return;
+    if (kind == 'activity') {
+      await ActivityService.deleteEvent(id);
+      await _loadEntries();
+      return;
+    }
     final prefs = await SharedPreferences.getInstance();
     final raw = prefs.getStringList(_storageKey) ?? [];
     raw.removeWhere((e) {
@@ -204,6 +219,10 @@ class _SafetyTimelineScreenState extends State<SafetyTimelineScreen> {
       }
     });
     await prefs.setStringList(_storageKey, raw);
+    // A note also writes a mirrored activity row when it is created, so the
+    // note's own id may exist in both stores. Clearing both keeps one delete
+    // from leaving a duplicate behind.
+    await ActivityService.deleteEvent(id);
     await _loadEntries();
   }
 
@@ -518,7 +537,12 @@ class _SafetyTimelineScreenState extends State<SafetyTimelineScreen> {
                   color: AppColors.cardBg,
                   onSelected: (value) {
                     if (value == 'share') _shareEntry(entry);
-                    if (value == 'delete') _deleteEntry(entry['id'] ?? '');
+                    if (value == 'delete') {
+                      _deleteEntry(
+                        entry['id'] ?? '',
+                        kind: entry['_kind'],
+                      );
+                    }
                   },
                   itemBuilder: (context) => [
                     PopupMenuItem(

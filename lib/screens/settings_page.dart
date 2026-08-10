@@ -2,6 +2,8 @@
 // AYARLAR SAYFASI
 // ============================================================================
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart'
@@ -12,6 +14,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../core/app_colors.dart';
+import '../core/utils/permission_helper.dart';
 import '../core/constants/app_constants.dart';
 import '../core/services/subscription_gate.dart';
 import '../core/utils/app_reset_helper.dart';
@@ -118,13 +121,19 @@ class _SettingsPageState extends State<SettingsPage> {
             _buildSectionTitle("settings_security".tr()),
             const SizedBox(height: 14),
             _buildSettingsCard([
-              _buildSwitchTile(
+              // A local switch could sit ON while Android's own permission was
+              // denied, so the app promised notifications it could not deliver
+              // -- and emergency alerts are the thing being promised. Android
+              // owns this decision, so the row now opens the system screen
+              // instead of holding a second, disagreeing copy of the answer.
+              _buildNavigationTile(
                 icon: Icons.notifications_rounded,
                 iconColor: AppColors.warning,
                 title: "settings_notifications_title".tr(),
                 subtitle: "settings_notifications_subtitle".tr(),
-                value: provider.notificationsEnabled,
-                onChanged: provider.setNotifications,
+                onTap: () => unawaited(
+                  PermissionHelper.openNotificationSettings(),
+                ),
               ),
               _buildDivider(),
               _buildNavigationTile(

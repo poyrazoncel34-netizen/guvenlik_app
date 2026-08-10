@@ -67,6 +67,21 @@ class ActivityService {
     );
   }
 
+  /// Deletes ONE recorded event.
+  ///
+  /// The Safety History merges user notes (SharedPreferences) with recorded
+  /// events (sqflite). Its delete action only ever reached the notes, so
+  /// "Sil" on a recorded event removed nothing and the row came straight back
+  /// on reload. That contradicts both the app's own privacy policy (KVKK Md.
+  /// 11/f is promised in legal_texts) and the regulation's definition of
+  /// deletion: data must become "hicbir sekilde erisilemez ve tekrar
+  /// kullanilamaz" (Silme Yonetmeligi Md. 8/1).
+  static Future<void> deleteEvent(String id) async {
+    if (id.isEmpty) return;
+    final db = await serviceLocator<LocalDatabaseService>().database;
+    await db.delete('activity_events', where: 'id = ?', whereArgs: [id]);
+  }
+
   static Future<void> clearAll() async {
     final db = await serviceLocator<LocalDatabaseService>().database;
     await db.delete('activity_events');
