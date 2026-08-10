@@ -78,14 +78,29 @@ void main() {
     test(
       'location requests use prominent disclosure helper before native prompt',
       () {
+        // The disclosure call moved into LocationConsentGate so the same
+        // choke point also enforces withdrawn in-app consent, and so
+        // map_page.dart stops growing against its size ratchet. The Play
+        // requirement is unchanged: prominent disclosure still runs before the
+        // native prompt, one layer down.
         expect(
           source,
-          contains("import '../core/utils/permission_helper.dart';"),
+          contains("import '../core/services/location_consent_gate.dart';"),
         );
         expect(source, contains('Future<bool> _ensureLocationPermission()'));
         expect(
           source,
+          contains('LocationConsentGate.ensureAllowed(context)'),
+        );
+        final gate = File(
+          'lib/core/services/location_consent_gate.dart',
+        ).readAsStringSync();
+        expect(
+          gate,
           contains('PermissionHelper.requestLocationPermission(context)'),
+          reason:
+              'The prominent-disclosure helper must still be what asks for the '
+              'OS permission; only its call site moved.',
         );
         expect(
           source.indexOf('_ensureLocationPermission()') <

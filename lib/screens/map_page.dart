@@ -14,9 +14,9 @@ import '../core/config/app_environment.dart';
 import '../core/di/service_locator.dart';
 import '../core/network/osm_tile_cache_client.dart';
 import '../core/services/connectivity_service.dart';
+import '../core/services/location_consent_gate.dart';
 import '../core/services/location_service.dart';
 import '../core/utils/map_utils.dart';
-import '../core/utils/permission_helper.dart';
 import '../domain/repositories/location_repository.dart';
 
 class MapPage extends StatefulWidget {
@@ -199,10 +199,9 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
   }
 
   Future<bool> _ensureLocationPermission() async {
-    final granted = await PermissionHelper.requestLocationPermission(context);
+    final granted = await LocationConsentGate.ensureAllowed(context);
     if (!mounted) return false;
     if (granted) return true;
-
     setState(() {
       _isLoading = false;
       _locationStatus = LocationStatus.permissionDenied;

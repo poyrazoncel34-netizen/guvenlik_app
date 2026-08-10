@@ -1,15 +1,12 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../screens/splash_screen.dart';
 import '../app_colors.dart';
-import '../di/service_locator.dart';
-import '../security/secure_storage.dart';
-import '../security/secure_storage_keys.dart';
 import '../services/app_reset_service.dart';
 import '../services/emergency_session_contract.dart';
+import '../services/pin_verification_service.dart';
 
 class AppResetHelper {
   AppResetHelper._();
@@ -120,14 +117,23 @@ class AppResetHelper {
   }
 
   static Future<bool> _verifyPinIfConfigured(BuildContext context) async {
-    final currentPin = await _readConfiguredPin();
-    if (currentPin == null || currentPin.isEmpty) {
+    // PinVerificationService owns the stored record's format. What is on disk is
+    // a salted PBKDF2 hash, so comparing it literally against the four digits the
+    // user typed can never match -- that is what silently blocked this dialog.
+    final pinState = await PinVerificationService.instance.loadState();
+    if (pinState == PinState.absent) {
       return true;
+    }
+    // A PIN that exists but cannot be read must not open a destructive wipe.
+    // Fail closed; Android Settings can still clear the app's data.
+    if (pinState != PinState.configured) {
+      return false;
     }
     if (!context.mounted) return false;
 
     final controller = TextEditingController();
     var errorVisible = false;
+    var verifying = false;
     final verified = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
@@ -167,8 +173,17 @@ class AppResetHelper {
               ),
             ),
             ElevatedButton(
-              onPressed: () {
-                if (controller.text == currentPin) {
+              onPressed: () async {
+                // PBKDF2 verification is not instant; a second tap while the
+                // first is in flight would pop the dialog twice.
+                if (verifying) return;
+                verifying = true;
+                final result = await PinVerificationService.instance.verify(
+                  controller.text,
+                );
+                verifying = false;
+                if (!dialogContext.mounted) return;
+                if (result.matches) {
                   Navigator.pop(dialogContext, true);
                   return;
                 }
@@ -189,25 +204,5 @@ class AppResetHelper {
     );
     controller.dispose();
     return verified == true;
-  }
-
-  static Future<String?> _readConfiguredPin() async {
-    final secureStorage = serviceLocator<SecureStorage>();
-    final securePin = await secureStorage.read(key: SecureStorageKeys.userPin);
-    if (securePin != null && securePin.isNotEmpty) {
-      return securePin;
-    }
-
-    final prefs = await SharedPreferences.getInstance();
-    final legacyPin = prefs.getString(SecureStorageKeys.userPin);
-    if (legacyPin != null && legacyPin.isNotEmpty) {
-      await secureStorage.write(
-        key: SecureStorageKeys.userPin,
-        value: legacyPin,
-      );
-      await prefs.remove(SecureStorageKeys.userPin);
-      return legacyPin;
-    }
-    return null;
   }
 }

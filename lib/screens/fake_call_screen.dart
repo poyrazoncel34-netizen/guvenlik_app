@@ -53,7 +53,11 @@ class _FakeCallScreenState extends State<FakeCallScreen>
       duration: const Duration(milliseconds: 1300),
     )..repeat(reverse: true);
     _loadSavedSettings();
-    _startRingtone();
+    // The ringtone used to start here, before either gate below had run. A
+    // scheduled fake call could therefore play audio on a device whose owner
+    // had already withdrawn fake-call consent -- the sound is the feature, so
+    // playing it first made the gate cosmetic. It now starts only after both
+    // the first-use warning and the consent gate have passed.
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
       // Show the first-use warning FIRST — accepting it grants fake-call consent
@@ -68,9 +72,11 @@ class _FakeCallScreenState extends State<FakeCallScreen>
         context,
         ConsentRecord.typeFakeCall,
       )) {
-        unawaited(_stopRingtone());
         Navigator.of(context).maybePop();
+        return;
       }
+      if (!mounted) return;
+      _startRingtone();
     });
   }
 

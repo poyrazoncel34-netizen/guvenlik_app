@@ -14,6 +14,8 @@ import '../services/check_in_service.dart';
 import '../services/emergency_platform_service.dart';
 import '../services/emergency_readiness_service.dart';
 import '../services/quick_panic_request_service.dart';
+import '../services/subscription_access_state.dart';
+import '../services/subscription_gate.dart';
 import '../services/volume_trigger_service.dart';
 
 class EmergencyTriggerHost extends StatefulWidget {
@@ -98,7 +100,7 @@ class _EmergencyTriggerHostState extends State<EmergencyTriggerHost>
         prefs.getBool(AppConstants.prefVolumeTrigger) ?? false;
     if (volumeEnabled) {
       final subscription = context.read<SubscriptionProvider>();
-      final access = await subscription.resolveAccess();
+      final access = await _resolveAccessBounded(subscription);
       if (!mounted) return;
       if (access.shouldShowPaywall) {
         await VolumeTriggerService.instance.setEnabled(false);
@@ -190,18 +192,57 @@ class _EmergencyTriggerHostState extends State<EmergencyTriggerHost>
     await _controllerFor(sessionId).handleNativeExpired();
   }
 
+  /// Entitlement resolution on a budget, mirroring [SubscriptionGate].
+  ///
+  /// The quick-access surfaces (widget, tile, volume keys) used to await
+  /// `resolveAccess()` with no limit. That call can reach the store, and on a
+  /// captive portal or one bar of signal it is slow rather than failing fast --
+  /// an unbounded wait in front of a panic press is a delayed emergency call.
+  /// The panic button never had this problem because it goes through
+  /// SubscriptionGate; these entries bypassed it. Same budget, same fallback to
+  /// the last known state, so all panic entries now decide within the same
+  /// worst case.
+  Future<SubscriptionAccessState> _resolveAccessBounded(
+    SubscriptionProvider subscription,
+  ) async {
+    try {
+      await subscription.ensureOfflineGraceLoaded().timeout(
+        SubscriptionGate.offlineAnchorLoadTimeout,
+      );
+    } on TimeoutException {
+      // Degrades to "no anchor"; never blocks the press.
+    }
+    try {
+      return await subscription.resolveAccess().timeout(
+        SubscriptionGate.entitlementResolveTimeout,
+      );
+    } on TimeoutException {
+      // A slow store answer is unresolved, which is what the grace window
+      // inside entitlementDecision exists for.
+      return subscription.access;
+    }
+  }
+
   Future<void> _openCountdown() async {
     if (_countdownOpen) {
       return;
     }
 
     final subscription = context.read<SubscriptionProvider>();
-    final access = await subscription.resolveAccess();
+    final access = await _resolveAccessBounded(subscription);
     if (!mounted || !access.canUsePaidSafetyFeature) return;
 
-    final navigator = rootNavigatorKey.currentState;
+    var navigator = rootNavigatorKey.currentState;
     if (navigator == null) {
-      return;
+      // Cold start: the request can arrive before the root navigator is
+      // mounted. Dropping it here silently discarded the press, which on this
+      // path is the whole feature. Retry once on the next frame.
+      await WidgetsBinding.instance.endOfFrame;
+      if (!mounted) return;
+      navigator = rootNavigatorKey.currentState;
+      if (navigator == null) {
+        return;
+      }
     }
 
     _countdownOpen = true;

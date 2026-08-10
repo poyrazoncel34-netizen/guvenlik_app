@@ -97,7 +97,7 @@ imzalı Play AAB'sini üretir. Gerçek <code>REVENUECAT_ANDROID_API_KEY</code> G
 <tr><td><strong>CALL_PHONE</strong></td><td><code>store/permissions_declaration_notes.md</code></td><td>Kullanıcının kurduğu Panik/SOS, Check-In ve Safe Walk; sonuç yalnız doğrulanmamış Telecom isteğidir, fallback kullanıcı dokunuşlu <code>ACTION_DIAL</code> bildirimidir.</td></tr>
 <tr><td><strong>USE_FULL_SCREEN_INTENT</strong></td><td><code>docs/play_console_declarations.md</code></td><td>Manifestte yoktur. KoruBeni alarm-saat/gelen çağrı uygulaması değildir; eski FSI Console taslağını kaldır. Acil uyarılar heads-up bildirime düşer.</td></tr>
 <tr><td><strong>Gizlilik politikası + veri silme URL</strong></td><td>gh-pages adayı (aydınlatma 3.4.0; canlı yayın henüz UNVERIFIED)</td><td>Canlı URL'yi tarayıcıda AÇIP doğrula, sonra Console'a yapıştır.</td></tr>
-<tr><td><strong>App Access</strong></td><td><code>docs/play_console_declarations.md</code></td><td>Temel özellikler girişsiz; Pro için <strong>lisans tester e-postası</strong> ver. Global <code>FLAG_SECURE</code> yoktur; screenshot mümkündür, yalnız background recents privacy mask vardır.</td></tr>
+<tr><td><strong>App Access</strong></td><td><code>docs/play_console_declarations.md</code></td><td>Temel özellikler girişsiz; Pro için <strong>lisans tester e-postası</strong> ver. Release build’de pencere geneli <code>FLAG_SECURE</code> <strong>uygulanır</strong> (MainActivity.onCreate, debug haric): screenshot ve ekran kaydı engellenir, recents küçük resmi maskelenir. İncelemeci ekran görüntüsü alamazsa bu beklenen davranıştır.</td></tr>
 </table>
 <p><em>Not:</em> READ_CONTACTS beyanı GEREKMİYOR — manifest <code>tools:node="remove"</code> ile kaldırıyor; kişi seçimi native picker (<code>ACTION_PICK</code>) ile.</p>
 </div>
@@ -124,7 +124,7 @@ imzalı Play AAB'sini üretir. Gerçek <code>REVENUECAT_ANDROID_API_KEY</code> G
 <div class="card warn">
 <strong>Emülatör kanıtının sınırı (2026-07-06 smoke):</strong> Android 16'da çökmesiz açılış + tam servis init CONFIRMED.
 <strong>Kanıtlanamayanlar</strong> (gerçek cihaz işi): Doze yarışı, OEM arka plan katili, gerçek satın alma/restore, göz-ile UI doğrulaması
-(Global FLAG_SECURE yoktur; screenshot kararması görülürse cihaz/emülatör veya privacy-mask zamanlaması ayrıca incelenir).
+(Release'de pencere geneli FLAG_SECURE uygulanir; screenshot kararmasi BEKLENEN davranistir, hata degildir.)
 </div>
 
 <h2>5. Açık kararlar (yalnızca operatör kapatabilir)</h2>
@@ -181,8 +181,8 @@ const QS = [
   o:["Android 16'da açılışı","Doze yarışı, gerçek satın alma/restore ve göz-ile UI doğrulamasını","Servis init sırasını"],a:1,
   e:"Açılış + servis init CONFIRMED; Doze/billing/görsel doğrulama yalnızca gerçek cihazda (en az bir Xiaomi dahil) yapılabilir."},
  {q:"12. App Access / incelemeci notlarında ne mutlaka yer almalı?",
-  o:["Sadece 'giriş gerekmez' cümlesi","Girişsiz temel erişim + Pro için lisans tester e-postası + global FLAG_SECURE olmadığı/yalnız recents maskesi bulunduğu notu","İncelemecilere özel PIN'siz build sözü"],a:1,
-  e:"Girişsiz temel akış, Pro lisans tester'ı ve gerçek screenshot davranışı birlikte yazılır: global FLAG_SECURE yoktur; yalnız background recents privacy maskesi vardır."}
+  o:["Sadece 'giriş gerekmez' cümlesi","Girissiz temel erisim + Pro icin lisans tester e-postasi + release'de global FLAG_SECURE uygulandigi notu","İncelemecilere özel PIN'siz build sözü"],a:1,
+  e:"Girissiz temel akis, Pro lisans tester'i ve gercek screenshot davranisi birlikte yazilir: release build'de global FLAG_SECURE uygulanir, bu yuzden screenshot/ekran kaydi engellidir."}
 ];
 const qdiv=document.getElementById('quiz');
 QS.forEach((it,i)=>{

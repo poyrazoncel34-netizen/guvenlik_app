@@ -143,9 +143,11 @@ void main() {
       expect(result, WipeResult.unknown);
       expect(
         localStore.operations,
-        ['preferences', 'secureStorage', 'database', 'files'],
+        ['preferences', 'database', 'files', 'secureStorage'],
         reason:
-            'Deletion is best-effort across every local store before retry.',
+            'Deletion is best-effort across every local store before retry, '
+            'and the credential store is always last: the PIN is what keeps '
+            'the other boundaries unreadable if one of them fails.',
       );
     },
   );
@@ -158,9 +160,35 @@ void main() {
     expect(result, WipeResult.completed);
     expect(localStore.operations, [
       'preferences',
-      'secureStorage',
       'database',
       'files',
+      'secureStorage',
     ]);
+  });
+
+  test('the PIN outlives every boundary that failed to delete', () async {
+    // The regression this pins: secure storage used to be cleared second, so a
+    // database or file-system failure left real user data on disk with the PIN
+    // -- the only thing guarding it -- already gone.
+    final localStore = _FaultingLocalResetStore(
+      preferencesCleared: false,
+      filesCleared: false,
+    );
+
+    final result = await AppResetService.clearLocalData(localStore: localStore);
+
+    expect(result, WipeResult.unknown);
+    expect(
+      localStore.operations.last,
+      'secureStorage',
+      reason:
+          'Every failed boundary above must still be covered by the PIN, so '
+          'the credential store may only be cleared once they are done.',
+    );
+    expect(
+      localStore.operations.indexOf('secureStorage'),
+      greaterThan(localStore.operations.indexOf('database')),
+      reason: 'A surviving database must never outlive its PIN.',
+    );
   });
 }

@@ -63,8 +63,27 @@ class AppResetService {
 
     // A partial wipe is still useful, so attempt every independent local
     // boundary. Never turn an exception or a rejected commit into success.
+    //
+    // ORDER MATTERS, and it is not the order the boundaries are declared in.
+    // Secure storage holds the PIN, and the PIN is what keeps every other
+    // boundary unreadable. Deleting it first means a later failure -- a locked
+    // database file, an undeletable cache directory -- leaves real user data on
+    // disk with nothing in front of it. So the credential store goes LAST: if
+    // anything above it fails, what survives is still behind the PIN.
     try {
       if (!await store.clearPreferences()) allDeleted = false;
+    } catch (_) {
+      allDeleted = false;
+    }
+
+    try {
+      await store.deleteDatabase();
+    } catch (_) {
+      allDeleted = false;
+    }
+
+    try {
+      if (!await store.clearLocalFiles()) allDeleted = false;
     } catch (_) {
       allDeleted = false;
     }
@@ -80,18 +99,6 @@ class AppResetService {
       // The emergency-contact cache mirrors secure storage. Invalidate it only
       // after that authority acknowledges deletion.
       ContactService.resetCache();
-    }
-
-    try {
-      await store.deleteDatabase();
-    } catch (_) {
-      allDeleted = false;
-    }
-
-    try {
-      if (!await store.clearLocalFiles()) allDeleted = false;
-    } catch (_) {
-      allDeleted = false;
     }
 
     return allDeleted ? WipeResult.completed : WipeResult.unknown;

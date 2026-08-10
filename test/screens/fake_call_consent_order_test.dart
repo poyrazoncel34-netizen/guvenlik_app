@@ -18,4 +18,27 @@ void main() {
           'consent gate',
     );
   });
+
+  test('the ringtone only starts after the consent gate passes', () {
+    final src = File('lib/screens/fake_call_screen.dart').readAsStringSync();
+    final gateIdx = src.indexOf('ConsentGateService.requireConsent');
+    // The first _startRingtone() call in initState used to run before any
+    // gate, so a scheduled fake call played audio on a device whose owner had
+    // withdrawn fake-call consent. The sound IS the feature; playing it first
+    // made the gate cosmetic.
+    final initState = src.substring(
+      src.indexOf('void initState()'),
+      src.indexOf('Future<void> _checkFirstUseWarning()'),
+    );
+    final ringIdx = initState.indexOf('_startRingtone();');
+    expect(ringIdx, isNot(-1));
+    expect(
+      initState.indexOf('ConsentGateService.requireConsent') < ringIdx,
+      isTrue,
+      reason:
+          'Withdrawn consent must mean silence, not a ringtone that is '
+          'stopped a moment later.',
+    );
+    expect(gateIdx, isNot(-1));
+  });
 }
