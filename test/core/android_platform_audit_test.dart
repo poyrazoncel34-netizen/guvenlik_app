@@ -88,9 +88,16 @@ void main() {
       final scheduler = content.substring(
         content.indexOf('class AndroidEmergencySessionAlarmScheduler'),
       );
+      // Presence is not order. This used to assert only that the string
+      // appeared somewhere in the class, which a permission check placed AFTER
+      // the schedule call would also satisfy.
+      final guardIndex = scheduler.indexOf('canScheduleExactAlarms');
+      final exactIndex = scheduler.indexOf('setExactAndAllowWhileIdle');
+      expect(guardIndex, isNot(-1));
+      expect(exactIndex, isNot(-1));
       expect(
-        scheduler,
-        contains('canScheduleExactAlarms'),
+        guardIndex < exactIndex,
+        isTrue,
         reason:
             'scheduleAlarm must check canScheduleExactAlarms before calling '
             'setExactAndAllowWhileIdle to avoid SecurityException on API 34+',
@@ -110,12 +117,29 @@ void main() {
         expect(file.existsSync(), isTrue);
         final content = file.readAsStringSync();
 
+        // Comments were not stripped here, so the sentence explaining the
+        // rule satisfied the rule. Assert on code, and on the actual
+        // permission CHECK rather than a mention of the constant.
+        final code = content
+            .split('\n')
+            .where((line) {
+              final t = line.trimLeft();
+              return !t.startsWith('//') && !t.startsWith('*') &&
+                  !t.startsWith('/*');
+            })
+            .join('\n');
         expect(
-          content,
-          contains('POST_NOTIFICATIONS'),
+          code,
+          contains('checkSelfPermission'),
           reason:
-              'Must check POST_NOTIFICATIONS permission before notify() '
+              'Must CHECK the POST_NOTIFICATIONS permission before notify() '
               'on Android 13+ to avoid silently dropping emergency alerts',
+        );
+        expect(code, contains('Manifest.permission.POST_NOTIFICATIONS'));
+        expect(
+          code,
+          contains('PackageManager.PERMISSION_GRANTED'),
+          reason: 'A permission query whose result is ignored is not a check.',
         );
       },
     );

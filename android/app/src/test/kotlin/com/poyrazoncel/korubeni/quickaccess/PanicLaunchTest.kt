@@ -3,6 +3,7 @@ package com.poyrazoncel.korubeni.quickaccess
 import android.content.Intent
 import com.poyrazoncel.korubeni.MainActivity
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -17,10 +18,19 @@ class PanicLaunchTest {
     private val context = RuntimeEnvironment.getApplication()
 
     @Test
-    fun `intent targets the launcher activity, not a dial or a service`() {
+    fun `intent targets the non-exported trampoline, not the exported launcher`() {
         val intent = PanicLaunch.intent(context, PanicRequestStore.SOURCE_TILE)
 
-        assertEquals(MainActivity::class.java.name, intent.component?.className)
+        // This assertion used to require MainActivity. That was the bug: the
+        // launcher activity is exported, so any installed app could send the
+        // same intent and start a real, PIN-gated countdown. Only a
+        // PendingIntent created inside this app can reach a non-exported
+        // component, so the request is recorded there instead.
+        assertEquals(
+            QuickPanicTrampolineActivity::class.java.name,
+            intent.component?.className,
+        )
+        assertNotEquals(MainActivity::class.java.name, intent.component?.className)
         // A quick-access surface opens the app; it never places a call itself.
         assertEquals(Intent.ACTION_MAIN, intent.action)
     }

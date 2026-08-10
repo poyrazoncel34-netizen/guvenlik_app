@@ -48,6 +48,60 @@ void main() {
     audit = File('scripts/audit_android_release_surface.py').readAsStringSync();
   });
 
+  group('a foreign app cannot forge a panic request', () {
+    // MainActivity is the exported launcher component. It used to accept a
+    // PANIC_SOURCE extra from ANY caller, so a third-party app could start a
+    // real, PIN-gated countdown the user never asked for. It could not choose
+    // the number, but it could force an unwanted emergency call.
+    //
+    // Measured on an API 37 device before the fix: Activity.launchedFromUid
+    // returns -1 inside MainActivity.onCreate both before and after
+    // super.onCreate(), so a UID check there is NOT a usable defence. The only
+    // thing the platform enforces for us is component export.
+
+    test('the launcher activity no longer reads a panic extra', () {
+      final main = kotlin('../MainActivity.kt');
+      expect(
+        codeOnly(main).contains('EXTRA_PANIC_SOURCE'),
+        isFalse,
+        reason:
+            'Any app can send an intent to an exported launcher activity. The '
+            'request must arrive on a component only this app can reach.',
+      );
+    });
+
+    test('both surfaces launch the non-exported trampoline', () {
+      expect(
+        codeOnly(launch),
+        contains('QuickPanicTrampolineActivity::class.java'),
+        reason:
+            'A PendingIntent built inside this app can target a non-exported '
+            'component; a foreign app cannot.',
+      );
+      expect(
+        codeOnly(launch).contains('MainActivity::class.java'),
+        isFalse,
+        reason: 'Pointing the quick-access intent back at the exported '
+            'launcher would reopen the hole.',
+      );
+    });
+
+    test('the trampoline is declared not exported', () {
+      final declaration = manifest.substring(
+        manifest.indexOf('.quickaccess.QuickPanicTrampolineActivity'),
+      );
+      final end = declaration.indexOf('/>');
+      expect(end, isNot(-1));
+      expect(
+        declaration.substring(0, end),
+        contains('android:exported="false"'),
+        reason:
+            'This single attribute is what the system enforces. Verified on '
+            'device: a shell-uid start is refused with "not exported".',
+      );
+    });
+  });
+
   group('no second dispatch path', () {
     test('neither surface dials, arms, or resolves a contact', () {
       for (final raw in <String>[tile, widget, launch, store]) {
@@ -66,9 +120,39 @@ void main() {
       expect(
         host,
         contains('await _openCountdown()'),
+        reason: 'A parallel entry would duplicate the arm boundary.',
+      );
+    });
+
+    test('the quick-access entry resolves entitlement on a bounded budget', () {
+      // This assertion used to live only in the reason string above, which
+      // claimed _openCountdown "already resolves entitlement via
+      // SubscriptionGate". It did not: it awaited resolveAccess() with no
+      // limit, so a captive portal could stall a panic press indefinitely on
+      // the one path the panic button's own gate does not cover. The test
+      // passed the whole time because it only looked for a method call.
+      expect(
+        host,
+        contains('SubscriptionGate.entitlementResolveTimeout'),
         reason:
-            '_openCountdown already resolves entitlement via SubscriptionGate; '
-            'a parallel entry would duplicate the arm boundary.',
+            'Every panic entry must decide within the same worst case as the '
+            'panic button, not wait on the store forever.',
+      );
+      expect(
+        host,
+        contains('SubscriptionGate.offlineAnchorLoadTimeout'),
+        reason:
+            'The local anchor is the only thing that can authorize a press on '
+            'a cold start with no signal; it needs its own short budget.',
+      );
+      expect(
+        RegExp(
+          r'resolveAccess\(\)(?!\s*\.timeout)',
+        ).hasMatch(codeOnly(host)),
+        isFalse,
+        reason:
+            'An unbounded resolveAccess() anywhere in this host reopens the '
+            'hole. Resolution belongs in _resolveAccessBounded.',
       );
     });
 
@@ -94,39 +178,46 @@ void main() {
   });
 
   group('cold-start ordering', () {
-    test('the request is recorded before the Flutter engine is configured', () {
-      final activity = File(
-        'android/app/src/main/kotlin/com/poyrazoncel/korubeni/MainActivity.kt',
-      ).readAsStringSync();
-      final record = activity.indexOf('recordQuickPanicRequest(intent)');
-      final superOnCreate = activity.indexOf('super.onCreate(savedInstanceState)');
+    test('the request is recorded before MainActivity is started', () {
+      // The write used to sit in MainActivity ahead of super.onCreate() for
+      // exactly this reason. It now lives in the trampoline, which runs and
+      // finishes before MainActivity exists at all -- a strictly earlier point,
+      // so the ordering guarantee is stronger, not weaker.
+      final trampoline = kotlin('QuickPanicTrampolineActivity.kt');
+      final submit = trampoline.indexOf('PanicRequestStore.submit(');
+      final startMain = trampoline.indexOf('startActivity(');
 
-      expect(record, isNot(-1));
-      expect(superOnCreate, isNot(-1));
+      expect(submit, isNot(-1));
+      expect(startMain, isNot(-1));
       expect(
-        record < superOnCreate,
+        submit < startMain,
         isTrue,
         reason:
-            'super.onCreate configures the engine and Dart starts from there, '
-            'so a later write races the trigger host reading it.',
+            'Dart reads the store once the engine is up; the write must land '
+            'before MainActivity is even launched.',
       );
     });
 
-    test('a tap on a running app is recorded through onNewIntent', () {
-      final activity = File(
-        'android/app/src/main/kotlin/com/poyrazoncel/korubeni/MainActivity.kt',
-      ).readAsStringSync();
-      expect(activity, contains('override fun onNewIntent(intent: Intent)'));
-      expect(activity, contains('setIntent(intent)'));
+    test('a tap on a running app still routes through the trampoline', () {
+      // With a singleTop MainActivity the old path needed onNewIntent. The
+      // trampoline has noHistory + its own task, so every tap -- cold or warm --
+      // runs its onCreate and writes the request there.
+      final trampoline = kotlin('QuickPanicTrampolineActivity.kt');
+      expect(trampoline, contains('override fun onCreate(savedInstanceState: Bundle?)'));
+      expect(
+        trampoline,
+        contains('finish()'),
+        reason:
+            'It must not linger in the task or the user backs into a blank '
+            'screen after the countdown.',
+      );
     });
 
     test('an unrecognised source label is rejected', () {
-      final activity = File(
-        'android/app/src/main/kotlin/com/poyrazoncel/korubeni/MainActivity.kt',
-      ).readAsStringSync();
+      final activity = kotlin('QuickPanicTrampolineActivity.kt');
       expect(
         activity,
-        contains('source != PanicRequestStore.SOURCE_WIDGET'),
+        contains('source == PanicRequestStore.SOURCE_WIDGET'),
         reason: 'Intent extras are untrusted input, even from our own surfaces.',
       );
     });

@@ -162,6 +162,19 @@
              an intent-only request and launch MainActivity, which replays it into
              the single existing arm path (SubscriptionGate -> CountdownScreen ->
              PanicArmPolicy). No new uses-permission is required for either. -->
+        <!-- Not exported on purpose: only a PendingIntent created inside this
+             app can reach it. The widget and the tile record their panic
+             request here instead of on the exported launcher activity, so a
+             third-party app can no longer forge a countdown. No UI, no history
+             entry; it finishes immediately after handing off to MainActivity. -->
+        <activity
+            android:name=".quickaccess.QuickPanicTrampolineActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:taskAffinity=""
+            android:theme="@android:style/Theme.NoDisplay" />
+
         <receiver
             android:name=".quickaccess.PanicWidgetProvider"
             android:enabled="true"

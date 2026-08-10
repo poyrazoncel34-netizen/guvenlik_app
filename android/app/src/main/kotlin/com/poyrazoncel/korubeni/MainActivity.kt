@@ -54,11 +54,14 @@ class MainActivity : FlutterFragmentActivity() {
                 WindowManager.LayoutParams.FLAG_SECURE,
             )
         }
-        // Recorded BEFORE super.onCreate(): super configures the Flutter engine
-        // and Dart starts running from there, so writing afterwards races the
-        // trigger host's first read. Dart startup is slower in practice, but a
-        // panic press must not depend on that.
-        recordQuickPanicRequest(intent)
+        // Quick-access requests are NO LONGER read from this Activity's intent.
+        // MainActivity is the exported launcher component, so any app could set
+        // the PANIC_SOURCE extra and drop the user into a real, PIN-gated
+        // countdown. The request is now written by QuickPanicTrampolineActivity,
+        // which is not exported and therefore only reachable from our own
+        // PendingIntents. Verified on device: Activity.launchedFromUid returns
+        // -1 here both before and after super.onCreate(), so a UID check at this
+        // point is not a usable defence.
         super.onCreate(savedInstanceState)
     }
 
@@ -67,32 +70,6 @@ class MainActivity : FlutterFragmentActivity() {
         // launchMode is singleTop, so a tap while the app is already running
         // arrives here rather than through onCreate.
         setIntent(intent)
-        recordQuickPanicRequest(intent)
-    }
-
-    /**
-     * Persists a request that arrived from the widget or the Quick Settings
-     * tile. The Flutter engine may not be attached yet, so the request is
-     * durable rather than delivered straight to Dart; the trigger host consumes
-     * it and replays it into the single existing arm path.
-     *
-     * The extra carries a source label only -- no target, no deadline, no
-     * entitlement claim. An intent forged by another app could set it, and the
-     * worst it achieves is opening this app's own subscription-gated countdown,
-     * which then still resolves its own contact and its own entitlement.
-     */
-    private fun recordQuickPanicRequest(intent: Intent?) {
-        val source = intent?.getStringExtra(PanicLaunch.EXTRA_PANIC_SOURCE) ?: return
-        if (source != PanicRequestStore.SOURCE_WIDGET &&
-            source != PanicRequestStore.SOURCE_TILE
-        ) {
-            return
-        }
-        try {
-            PanicRequestStore.submit(applicationContext, source)
-        } catch (_: Exception) {
-            android.util.Log.e("MainActivity", "QUICK_PANIC_PERSIST_FAILED")
-        }
     }
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {

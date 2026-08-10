@@ -52,7 +52,19 @@ class AndroidEmergencyCapabilityProvider(
         val telecom = context.getSystemService(Context.TELECOM_SERVICE) as? TelecomManager
 
         return CapabilitySnapshot(
-            supportedOs = Build.VERSION.SDK_INT in 29..36,
+            // Floor only, deliberately no ceiling. The manifest declares
+            // minSdk=29 and no maximum, so Play installs this APK on every OS
+            // above that -- including ones released after this build. A closed
+            // range here meant the app installed on a newer Android, launched,
+            // looked healthy, and then refused every Panic / Check-In / Safe
+            // Walk arm with "unsupportedOs". Reproduced on an API 37 device;
+            // pinned by SupportedOsBoundaryInstrumentationTest, which must be
+            // run on the newest system image available, not only on the one
+            // matching targetSdk.
+            //
+            // An untested future OS is a risk. Silently refusing to place an
+            // emergency call is a certainty. This trade is not close.
+            supportedOs = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q,
             telephonyCalling = packageManager.hasSystemFeature(PackageManager.FEATURE_TELEPHONY),
             telecomAvailable = telecom != null,
             dialHandlerAvailable = dialIntent.resolveActivity(packageManager) != null,
