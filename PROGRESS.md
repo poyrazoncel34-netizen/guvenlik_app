@@ -38,6 +38,35 @@ Next unstarted work is **Batch 9 (design tokens)** in [`REMEDIATION_PLAN.md`](RE
 | 10 | Repository hygiene | ✅ Done | `.github/dependabot.yml`; README made canonical for local build; sqflite schema documented; formatting posture recorded as an explicit decision |
 | 11 | Adaptive layout (API 37) | ⬜ Scheduled | External platform deadline |
 
+### Independent review (INDEPENDENT_REVIEW.md) — outcome
+
+Reviewer verdict was **REVIEW FAILED**. Findings were treated as reopened requirements.
+
+| Finding | Outcome | Evidence |
+|---|---|---|
+| IR-01 keyboard hides save action | **RESOLVED** | Device-verified on arm64 API 36: with IME open the tree contains `Rehberden seç` (y=812) and `Kişiyi kaydet` (y=969); helper text renders in full. Root cause was that `Scaffold.resizeToAvoidBottomInset` consumes the inset, so nothing inside the body can see the IME via MediaQuery — the fix reads the FlutterView and reacts in `didChangeMetrics`. |
+| IR-02 regression test cannot fail | **RESOLVED** | Rewritten to assert geometry against the keyboard line, never calling `ensureVisible`. Negative control: fix disabled → fails 3/3; fix enabled → passes 5/5. |
+| IR-03 a11y harness vacuous | **RESOLVED (coverage PARTIAL)** | EasyLocalization loaded from the real `tr-TR.json`; raw-key leakage and un-settled screens now fail the run; two negative controls prove the matchers reject an unlabelled and a 12×12 target. 3 of 4 promised screens covered. |
+| IR-04 P0 claim unsupportable | **PRODUCT DECISION REQUIRED** | Transition reproduced and pinned by 12 tests. `MP-22-001` / `MP-54-029` reclassified **P0**. Warning API shipped; UI surfacing still open. |
+| IR-05 five contradictory summaries | **RESOLVED** | One summary, regenerated from the rows. |
+| IR-06 boilerplate evidence | **RESOLVED** | 145 PASS rows whose evidence was section boilerplate downgraded to UNVERIFIED. |
+| IR-07 stale batch states | **RESOLVED** | Batches 4 and 5 → Partial; suite counts de-duplicated; Batch 10 migration wording corrected. |
+| IR-08 uncommitted work | **RESOLVED** | Committed; OSV and secret scan re-run against the committed tree. |
+| IR-09 PIN banner shifts keypad | **OPEN (LOW)** | Not addressed this pass. |
+| IR-10 malformed rows | **RESOLVED** | Literal pipes removed; naive split yields only valid method codes. |
+
+### Two harness defects found while fixing IR-02/IR-03
+
+Both would have produced vacuous passes, and both are now guarded by explicit preconditions:
+
+1. **Wrong screen state.** The harnesses never granted emergency-contact consent, so the step
+   rendered its consent card, **disabled both text fields**, and never rendered the save button.
+   A tap on a disabled field focuses nothing, so the reveal could not fire and the assertion
+   silently measured the *consent* button.
+2. **`find.byType` misses subclasses.** `ElevatedButton.icon` builds a private
+   `_ElevatedButtonWithIcon`, so `find.byType(ElevatedButton)` matched the consent button instead
+   of the save action. Predicate finders are now used.
+
 ### Defects found and fixed during remediation
 
 1. **Dead database migration hook (latent, would have broken every upgrading user).**

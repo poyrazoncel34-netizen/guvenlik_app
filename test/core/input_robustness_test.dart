@@ -107,9 +107,27 @@ void main() {
             ),
           ),
         );
-        await Future<void>.delayed(const Duration(milliseconds: 400));
+        await Future<void>.delayed(const Duration(milliseconds: 300));
       });
-      await tester.pump(const Duration(milliseconds: 50));
+      // Poll until the step settles. A fixed delay is green in isolation and
+      // flaky in a full-suite run, where the first test pays the sqflite-ffi
+      // init cost -- and a step still on its spinner has no field to type into.
+      for (var round = 0; round < 20; round++) {
+        if (find.byType(TextField).evaluate().isNotEmpty) break;
+        await tester.runAsync(() async {
+          await Future<void>.delayed(const Duration(milliseconds: 150));
+        });
+        for (var i = 0; i < 4; i++) {
+          await tester.pump(const Duration(milliseconds: 50));
+        }
+      }
+      expect(
+        find.byType(TextField),
+        findsWidgets,
+        reason:
+            'harness precondition: the step must have rendered its form. '
+            'Asserting against a loading spinner proves nothing.',
+      );
     }
 
     testWidgets('hostile strings render without exception', (tester) async {
