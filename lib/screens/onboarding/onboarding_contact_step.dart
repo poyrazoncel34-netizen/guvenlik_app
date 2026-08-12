@@ -33,9 +33,32 @@ class OnboardingContactStep extends StatefulWidget {
       _OnboardingContactStepState();
 }
 
-class _OnboardingContactStepState extends State<OnboardingContactStep> {
+class _OnboardingContactStepState extends State<OnboardingContactStep>
+    with WidgetsBindingObserver {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
+
+  /// The soft keyboard resizes this step (Scaffold.resizeToAvoidBottomInset),
+  /// which leaves "save contact" -- the only control that can complete
+  /// onboarding -- below the fold. Flutter scrolls the FOCUSED field into view
+  /// automatically, but not the action beneath it, so the step does that itself.
+  ///
+  /// The reveal is driven by the IME INSET, not by the focus event. An earlier
+  /// attempt hung a single `addPostFrameCallback` off focus; that fires ~16ms
+  /// later while the Android IME animates in over ~200-300ms, so it measured a
+  /// viewport that had not shrunk yet and was a silent no-op. An independent
+  /// reviewer reproduced the original defect against that build.
+  ///
+  /// Note the trap that makes this non-obvious: `Scaffold.resizeToAvoidBottomInset`
+  /// defaults to true and CONSUMES the bottom inset, so `MediaQuery.viewInsetsOf`
+  /// inside the body reads 0 no matter what the keyboard is doing. The only
+  /// inset signal that survives into the body is the raw FlutterView's, observed
+  /// through the FlutterView (see [_imeInset]).
+  final FocusNode _phoneFocusNode = FocusNode();
+  final GlobalKey _saveButtonKey = GlobalKey();
+
+  /// Last observed raw view inset, in logical pixels.
+  double _lastViewInsetBottom = 0;
 
   bool _loading = true;
   bool _saving = false;
@@ -48,14 +71,80 @@ class _OnboardingContactStepState extends State<OnboardingContactStep> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _phoneFocusNode.addListener(_revealSaveActionOnFocus);
     _refresh();
   }
 
+  /// Live IME height in logical pixels.
+  ///
+  /// Read from the FlutterView, NOT from `MediaQuery.viewInsetsOf(context)`:
+  /// `Scaffold.resizeToAvoidBottomInset` defaults to true and CONSUMES the
+  /// bottom inset, so the MediaQuery visible inside the body always reports 0
+  /// no matter what the keyboard is doing. That trap made two earlier attempts
+  /// at this fix silently inert.
+  double get _imeInset {
+    final view = View.maybeOf(context);
+    if (view == null) return 0;
+    return view.viewInsets.bottom / view.devicePixelRatio;
+  }
+
+  /// Re-issued whenever inherited state changes, which includes the frames of
+  /// the IME animation. Driving the reveal from layout state rather than from a
+  /// one-shot post-frame callback is the whole point: a single callback fires
+  /// ~16ms after focus, while the Android IME animates over ~200-300ms, so it
+  /// measured a viewport that had not shrunk yet and did nothing.
+  /// `didChangeMetrics` is the only callback that fires on IME inset changes.
+  /// `didChangeDependencies` does NOT: `View.of` rebuilds dependents only when
+  /// the view OBJECT changes, and the MediaQuery inside a Scaffold body has the
+  /// bottom inset stripped by resizeToAvoidBottomInset.
   @override
-  void dispose() {
-    _nameController.dispose();
-    _phoneController.dispose();
-    super.dispose();
+  void didChangeMetrics() {
+    // Rebuild so build() re-reads _imeInset for the reserved bottom padding.
+    if (_onInsetChanged() && mounted) setState(() {});
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Deliberately no setState here: didChangeDependencies already runs as part
+    // of a build pass, and calling setState from it throws
+    // "setState() called during build".
+    _onInsetChanged();
+  }
+
+  /// Returns true when the inset actually moved.
+  bool _onInsetChanged() {
+    if (!mounted) return false;
+    final inset = _imeInset;
+    if ((inset - _lastViewInsetBottom).abs() < 1.0) return false;
+    final growing = inset > _lastViewInsetBottom;
+    _lastViewInsetBottom = inset;
+    if (growing && inset > 0 && _phoneFocusNode.hasFocus) {
+      _scheduleRevealSaveAction();
+    }
+    return true;
+  }
+
+  void _revealSaveActionOnFocus() {
+    if (!_phoneFocusNode.hasFocus) return;
+    _scheduleRevealSaveAction();
+  }
+
+  void _scheduleRevealSaveAction() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final target = _saveButtonKey.currentContext;
+      if (target == null) return;
+      // alignment 1.0 bottom-aligns the action in the shrunken viewport, the
+      // minimum scroll that clears the keyboard.
+      Scrollable.ensureVisible(
+        target,
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOut,
+        alignment: 1.0,
+      );
+    });
   }
 
   Future<void> _refresh() async {
@@ -164,7 +253,10 @@ class _OnboardingContactStepState extends State<OnboardingContactStep> {
     return Semantics(
       label: 'semantics_onboarding_contact_step'.tr(),
       child: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 32),
+        // Reserve the IME's height at the bottom so the scroll extent always
+        // covers the keyboard. Without this the content simply ends above the
+        // IME and the save action cannot be scrolled clear of it at all.
+        padding: EdgeInsets.only(left: 32, right: 32, bottom: _imeInset),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -251,6 +343,7 @@ class _OnboardingContactStepState extends State<OnboardingContactStep> {
       const SizedBox(height: 8),
       TextField(
         controller: _phoneController,
+        focusNode: _phoneFocusNode,
         enabled: !_needsConsent && !_saving,
         maxLength: _phoneInputLimit,
         keyboardType: TextInputType.phone,
@@ -295,6 +388,7 @@ class _OnboardingContactStepState extends State<OnboardingContactStep> {
       ),
       const SizedBox(height: 10),
       ElevatedButton.icon(
+        key: _saveButtonKey,
         onPressed: _needsConsent || _saving ? null : _save,
         icon: _saving
             ? const SizedBox(

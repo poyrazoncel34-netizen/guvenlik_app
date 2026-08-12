@@ -19,7 +19,6 @@ void main() {
     'lib/screens/settings_legal/data_deletion_screen.dart',
     'lib/screens/settings_legal/data_export_screen.dart',
     'lib/screens/legal/consent_management_screen.dart',
-    'lib/screens/legal/age_verification_screen.dart',
     'lib/screens/legal/consent_screen.dart',
     'lib/screens/legal/terms_of_service_screen.dart',
     'lib/screens/legal/kvkk_disclosure_screen.dart',

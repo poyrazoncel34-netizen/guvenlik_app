@@ -24,7 +24,20 @@ import '../screens/countdown_screen.dart';
 import '../core/motion.dart';
 
 class PanicButton extends StatefulWidget {
-  const PanicButton({super.key});
+  const PanicButton({super.key, this.holdClockOverride});
+
+  /// Test seam for the hold clock ONLY.
+  ///
+  /// Production measures the hold with a real [Stopwatch] on purpose: it is
+  /// monotonic, so a wall-clock change cannot shorten or complete an armed
+  /// hold. That is also why the gate cannot be driven by `tester.pump`, which
+  /// advances only the fake clock -- a widget test asserting "released before
+  /// the gate" would otherwise depend on how loaded the machine is, and would
+  /// flake under a full-suite run.
+  ///
+  /// Passing a stopwatch here lets a test control elapsed time exactly. It is
+  /// never supplied in production, where the default real Stopwatch is used.
+  final Stopwatch Function()? holdClockOverride;
 
   @override
   State<PanicButton> createState() => _PanicButtonState();
@@ -97,7 +110,7 @@ class _PanicButtonState extends State<PanicButton>
     _pointerDown = true;
     final epoch = ++_pressEpoch;
     _holdStopwatch?.stop();
-    _holdStopwatch = Stopwatch()..start();
+    _holdStopwatch = (widget.holdClockOverride?.call() ?? Stopwatch())..start();
     unawaited(_armPress(epoch));
   }
 

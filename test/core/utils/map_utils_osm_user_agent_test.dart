@@ -3,6 +3,8 @@
 // "If you have a way to contact your users (for example, an email address
 //  or other contact form), it is highly recommended to include it in the
 //  User-Agent."
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guvenlik_app/core/utils/map_utils.dart';
 
@@ -32,6 +34,26 @@ void main() {
             'OSMF tile policy highly recommends a contact channel in the '
             'User-Agent; expected an email or https URL inside '
             'kOsmUserAgentPackageName.',
+      );
+    });
+
+    // The two tests above only prove the CONSTANT is well formed. flutter_map
+    // emits the header solely because TileLayer receives userAgentPackageName
+    // (tile_layer.dart: headers.putIfAbsent('User-Agent', ...)). Drop that
+    // argument and the library falls back to its generic default, which OSMF
+    // policy says may be blocked without notice -- the map would go blank in
+    // production with every other test still green. The wire-level half of
+    // this contract lives in
+    // test/core/network/osm_tile_cache_client_test.dart.
+    test('map_page wires the identifier into TileLayer', () {
+      final source = File('lib/screens/map_page.dart').readAsStringSync();
+      expect(
+        source,
+        contains('userAgentPackageName: kOsmUserAgentPackageName'),
+        reason:
+            'TileLayer must receive kOsmUserAgentPackageName; without it '
+            'flutter_map sends its default User-Agent and OSM may block the '
+            'app without notice.',
       );
     });
   });

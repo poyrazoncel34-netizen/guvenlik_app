@@ -104,6 +104,18 @@
       "category": "product",
       "commitGroup": "05-legal-store",
       "reason": "Localized product copy or store-asset source."
+    },
+    {
+      "pattern": "^test/translations?_key_(?:parity|usage)_test\\.dart$",
+      "category": "product",
+      "commitGroup": "05-legal-store",
+      "reason": "Translation bundle gates ship in the same commit group as the bundles they guard."
+    },
+    {
+      "pattern": "^(?:docs/MASTER_PRODUCTION_CHECKLIST\\.md|PRODUCTION_AUDIT\\.md|REMEDIATION_PLAN\\.md|PROGRESS\\.md|INDEPENDENT_REVIEW\\.md)$",
+      "category": "release",
+      "commitGroup": "04-ci-evidence-security",
+      "reason": "Production-readiness standard and its per-requirement audit, remediation, continuity, and independent-review outputs are release-governance source."
     }
   ]
 }

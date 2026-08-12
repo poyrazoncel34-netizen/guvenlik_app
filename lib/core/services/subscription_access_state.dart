@@ -82,6 +82,49 @@ class SubscriptionAccessState {
     return moment.difference(verifiedAt) <= offlineGracePeriod;
   }
 
+  /// How much of the offline grace window remains, or null when the window
+  /// does not apply (no verified-Pro anchor, or the store answered).
+  ///
+  /// Exists so the product can warn BEFORE the cliff. Previously
+  /// [offlineGracePeriod] was referenced only inside this file, which meant a
+  /// paying subscriber discovered their panic button was disabled at the moment
+  /// they pressed it -- the worst possible moment. See PRODUCTION_AUDIT.md
+  /// MP-22-001 / MP-54-029 and INDEPENDENT_REVIEW.md IR-04.
+  Duration? remainingOfflineGrace({DateTime? now}) {
+    if (lastVerifiedPro != true) return null;
+    final verifiedAt = lastVerifiedProAt;
+    if (verifiedAt == null) return null;
+    final moment = now ?? DateTime.now();
+    // A future anchor is a rolled-back clock or a tampered store: report it as
+    // fully expired rather than as an unbounded grant.
+    if (verifiedAt.isAfter(moment)) return Duration.zero;
+    final elapsed = moment.difference(verifiedAt);
+    if (elapsed >= offlineGracePeriod) return Duration.zero;
+    return offlineGracePeriod - elapsed;
+  }
+
+  /// True when the store is unreachable AND the grace window is close enough to
+  /// expiry that the user should be told while they can still act on it.
+  bool isOfflineGraceExpiring({
+    Duration threshold = const Duration(hours: 48),
+    DateTime? now,
+  }) {
+    if (verifiedEntitlementDecision != EntitlementDecision.unknown) return false;
+    final remaining = remainingOfflineGrace(now: now);
+    if (remaining == null) return false;
+    return remaining > Duration.zero && remaining <= threshold;
+  }
+
+  /// True when a previously verified Pro user has already lost authorization
+  /// purely because the store could not be reached. This is the state the
+  /// independent review reproduced.
+  bool hasLostAccessToOfflineGraceExpiry({DateTime? now}) {
+    if (lastVerifiedPro != true) return false;
+    if (verifiedEntitlementDecision != EntitlementDecision.unknown) return false;
+    final remaining = remainingOfflineGrace(now: now);
+    return remaining != null && remaining <= Duration.zero;
+  }
+
   /// New safety work requires a current trustworthy authorization.
   bool get canUsePaidSafetyFeature =>
       entitlementDecision == EntitlementDecision.authorized &&

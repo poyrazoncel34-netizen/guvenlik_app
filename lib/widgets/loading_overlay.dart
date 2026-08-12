@@ -20,10 +20,19 @@ class LoadingOverlay extends StatelessWidget {
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        child,
+        // While the scrim is up nothing behind it is reachable, so it must not
+        // stay in the semantics tree either -- otherwise TalkBack focus walks
+        // into controls the user cannot actually touch.
+        ExcludeSemantics(excluding: isLoading, child: child),
         if (isLoading)
           Positioned.fill(
-            child: Container(
+            // The overlay blocks the screen, so a screen-reader user must be
+            // told why. Without liveRegion the state change is silent and the
+            // app simply stops responding from their point of view.
+            child: Semantics(
+              liveRegion: true,
+              label: message,
+              child: Container(
               color:
                   overlayColor ??
                   const Color(0xFF0A1B2A).withValues(alpha: 0.85),
@@ -54,6 +63,7 @@ class LoadingOverlay extends StatelessWidget {
                     ],
                   ],
                 ),
+              ),
               ),
             ),
           ),

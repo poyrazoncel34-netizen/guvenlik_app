@@ -30,6 +30,41 @@ import '../core/services/contact_service_test_support.dart';
 /// past the release handler's second entitlement check and did not reproduce
 /// under this FakeAsync harness; it needs the same treatment as the accept
 /// path rather than a weaker assertion standing in for it.
+/// A [Stopwatch] whose elapsed time the test sets explicitly.
+///
+/// The button measures the hold with a real Stopwatch on purpose (monotonic, so
+/// a wall-clock change cannot complete an armed hold). `tester.pump` advances
+/// only the FAKE clock, so a test that pumps 2.5s and asserts "did not arm" is
+/// really asserting "this machine executed the test body in under 3 real
+/// seconds" -- which is false under a loaded full-suite run. That is exactly
+/// how this file flaked: green in isolation, red about half the time in the
+/// full suite.
+class _ManualStopwatch implements Stopwatch {
+  Duration _elapsed = Duration.zero;
+  bool _running = false;
+
+  set elapsed(Duration value) => _elapsed = value;
+
+  @override
+  Duration get elapsed => _elapsed;
+  @override
+  void start() => _running = true;
+  @override
+  void stop() => _running = false;
+  @override
+  void reset() => _elapsed = Duration.zero;
+  @override
+  bool get isRunning => _running;
+  @override
+  int get elapsedMicroseconds => _elapsed.inMicroseconds;
+  @override
+  int get elapsedMilliseconds => _elapsed.inMilliseconds;
+  @override
+  int get elapsedTicks => _elapsed.inMicroseconds;
+  @override
+  int get frequency => 1000000;
+}
+
 class _FixedAccessProvider extends SubscriptionProvider {
   _FixedAccessProvider(this._state);
 
@@ -70,14 +105,21 @@ void main() {
     await serviceLocator.reset();
   });
 
+  late _ManualStopwatch holdClock;
+
   Future<void> pumpButton(
     WidgetTester tester,
     SubscriptionAccessState state,
   ) async {
+    holdClock = _ManualStopwatch();
     await tester.pumpWidget(
       ChangeNotifierProvider<SubscriptionProvider>.value(
         value: _FixedAccessProvider(state),
-        child: const MaterialApp(home: Scaffold(body: PanicButton())),
+        child: MaterialApp(
+          home: Scaffold(
+            body: PanicButton(holdClockOverride: () => holdClock),
+          ),
+        ),
       ),
     );
     await tester.pump();
@@ -91,6 +133,9 @@ void main() {
     );
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 50));
+    // Drive the hold clock explicitly rather than hoping real time passed.
+    holdClock.elapsed =
+        PanicHoldGate.requiredDuration + const Duration(milliseconds: 500);
     await tester.pump(
       PanicHoldGate.requiredDuration + const Duration(milliseconds: 500),
     );
@@ -166,6 +211,10 @@ void main() {
       tester.getCenter(find.byType(PanicButton)),
     );
     await tester.pump(const Duration(milliseconds: 50));
+    // Pin the hold clock strictly below the gate. Without this the assertion
+    // silently depends on machine speed instead of on the gate.
+    holdClock.elapsed =
+        PanicHoldGate.requiredDuration - const Duration(milliseconds: 500);
     await tester.pump(
       PanicHoldGate.requiredDuration - const Duration(milliseconds: 500),
     );

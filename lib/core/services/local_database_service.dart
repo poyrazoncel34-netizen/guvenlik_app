@@ -7,7 +7,16 @@ class LocalDatabaseService {
   LocalDatabaseService();
 
   static const String databaseName = 'korubeni.db';
-  static const int databaseVersion = 2;
+
+  /// v3 added `app_version` / `environment` to `crash_logs` so a user-submitted
+  /// diagnostic export is self-describing.
+  ///
+  /// Bumping this without extending [upgradeSchema] ships a column that exists
+  /// only on fresh installs: upgrading users keep the old table and every
+  /// insert naming the new column fails. That is precisely the bug the previous
+  /// `oldVersion < 1` guard hid, because sqflite user_version starts at 1 and
+  /// the branch could never run.
+  static const int databaseVersion = 3;
 
   Database? _database;
 
@@ -26,13 +35,15 @@ class LocalDatabaseService {
     _database = await openDatabase(
       path,
       version: databaseVersion,
-      onCreate: _onCreate,
-      onUpgrade: _onUpgrade,
+      onCreate: (db, version) => createSchema(db),
+      onUpgrade: upgradeSchema,
     );
     return _database!;
   }
 
-  Future<void> _onCreate(Database db, int version) async {
+  /// Full current schema. Public so migration behaviour is testable against an
+  /// in-memory sqflite-ffi database rather than only on a real device.
+  static Future<void> createSchema(Database db) async {
     await db.execute('''
       CREATE TABLE contacts(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -57,7 +68,9 @@ class LocalDatabaseService {
         source TEXT NOT NULL,
         error TEXT NOT NULL,
         stack TEXT,
-        created_at TEXT NOT NULL
+        created_at TEXT NOT NULL,
+        app_version TEXT,
+        environment TEXT
       )
     ''');
     await db.execute('''
@@ -68,9 +81,55 @@ class LocalDatabaseService {
     ''');
   }
 
-  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    if (oldVersion < 1) {
-      await _onCreate(db, newVersion);
+  /// Additive-only migration. Every step is `ADD COLUMN` or `CREATE TABLE`, so
+  /// no upgrade path can drop a row: `activity_events` is the user's own safety
+  /// timeline and losing it silently would be worse than any diagnostic gain.
+  static Future<void> upgradeSchema(
+    Database db,
+    int oldVersion,
+    int newVersion,
+  ) async {
+    // Safety net for a partially-created database: create anything missing
+    // before attempting to alter it.
+    final tables = await db.query(
+      'sqlite_master',
+      columns: <String>['name'],
+      where: 'type = ?',
+      whereArgs: <Object>['table'],
+    );
+    final tableNames = tables
+        .map((row) => row['name'] as String?)
+        .whereType<String>()
+        .toSet();
+    if (!tableNames.contains('crash_logs')) {
+      await createSchema(db);
+      return;
+    }
+
+    if (oldVersion < 3) {
+      await _addMissingColumns(db, 'crash_logs', const <String, String>{
+        'app_version': 'TEXT',
+        'environment': 'TEXT',
+      });
+    }
+  }
+
+  /// Idempotent `ADD COLUMN`. Re-running a migration must not throw: a user who
+  /// hits a half-applied upgrade should end up with a working database, not a
+  /// permanently unopenable one.
+  static Future<void> _addMissingColumns(
+    Database db,
+    String table,
+    Map<String, String> columns,
+  ) async {
+    final existing = await db.rawQuery('PRAGMA table_info($table)');
+    final existingNames = existing
+        .map((row) => row['name'] as String?)
+        .whereType<String>()
+        .toSet();
+    for (final entry in columns.entries) {
+      if (existingNames.contains(entry.key)) continue;
+      await db.execute('ALTER TABLE $table ADD COLUMN ${entry.key} ${entry.value}');
     }
   }
 

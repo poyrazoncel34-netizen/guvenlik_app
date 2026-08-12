@@ -392,6 +392,74 @@ void main() {
     expect(bodies, hasLength(1));
     client.close();
   });
+
+  // OSMF tile policy blocks traffic that carries a library default User-Agent.
+  // flutter_map puts the identifying UA on the OUTBOUND request, and this
+  // client is the last hop before the socket: if it ever stops forwarding the
+  // request it was handed (e.g. by rebuilding a fresh http.Request around the
+  // URL), the UA is silently dropped, OSM starts refusing tiles, and the map
+  // -- a FREE headline feature -- goes blank in production with every unit
+  // test still green. map_utils_osm_user_agent_test.dart pins the UA string
+  // itself; this pins that the string actually reaches the wire.
+  test('inbound User-Agent reaches upstream on a cold fetch', () async {
+    final upstream = _RecordingClient((request, _) {
+      return _response(
+        request,
+        200,
+        <int>[1],
+        headers: <String, String>{'content-type': 'image/png'},
+      );
+    });
+    final client = makeClient(upstream);
+    final request = http.Request(
+      'GET',
+      Uri.parse('https://tile.openstreetmap.org/4/9/6.png'),
+    )..headers['User-Agent'] = 'flutter_map (com.poyrazoncel.korubeni; +x@y.z)';
+
+    await client.send(request);
+
+    expect(
+      upstream.requests.single.headers['User-Agent'],
+      'flutter_map (com.poyrazoncel.korubeni; +x@y.z)',
+      reason: 'the cache client must forward the identifying UA untouched',
+    );
+    client.close();
+  });
+
+  test('inbound User-Agent survives a conditional revalidation', () async {
+    final upstream = _RecordingClient((request, index) {
+      if (index == 0) {
+        return _response(
+          request,
+          200,
+          <int>[1],
+          headers: <String, String>{
+            'content-type': 'image/png',
+            'cache-control': 'public, max-age=1',
+            'etag': '"tile-v1"',
+          },
+        );
+      }
+      return _response(request, 304, <int>[]);
+    });
+    final client = makeClient(upstream);
+    final uri = Uri.parse('https://tile.openstreetmap.org/4/9/6.png');
+    const userAgent = 'flutter_map (com.poyrazoncel.korubeni; +x@y.z)';
+
+    await client.send(
+      http.Request('GET', uri)..headers['User-Agent'] = userAgent,
+    );
+    now = now.add(const Duration(hours: 1));
+    // Revalidation adds if-none-match; it must not replace the whole request.
+    await client.send(
+      http.Request('GET', uri)..headers['User-Agent'] = userAgent,
+    );
+
+    expect(upstream.requests, hasLength(2));
+    expect(upstream.requests.last.headers['User-Agent'], userAgent);
+    expect(upstream.requests.last.headers['if-none-match'], '"tile-v1"');
+    client.close();
+  });
 }
 
 class _RecordingClient extends http.BaseClient {

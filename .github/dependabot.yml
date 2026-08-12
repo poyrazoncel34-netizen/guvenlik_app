@@ -1,0 +1,45 @@
+# Dependency currency for both ecosystems this app ships.
+#
+# The OSV gate (scripts/audit_dependencies_osv.sh, run on every CI push) already
+# BLOCKS known-vulnerable versions, so this file is currency hygiene rather than
+# a security control. It exists because 110 packages were behind at the time of
+# the 2026-08 production audit and nothing was tracking that drift.
+#
+# Grouped and rate-limited on purpose: this is a safety app whose dependency
+# pins carry recorded rationale (see pubspec.yaml comments on
+# flutter_local_notifications and timezone). A flood of individual bumps would
+# bury those decisions.
+version: 2
+updates:
+  - package-ecosystem: "pub"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 3
+    groups:
+      dart-minor-and-patch:
+        update-types:
+          - "minor"
+          - "patch"
+    ignore:
+      # Pinned with rationale in pubspec.yaml: v19.0.x did not fire
+      # notifications in release builds. Re-test on every minor bump by hand.
+      - dependency-name: "flutter_local_notifications"
+        update-types: ["version-update:semver-major"]
+
+  - package-ecosystem: "gradle"
+    directory: "/android"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 3
+    groups:
+      gradle-minor-and-patch:
+        update-types:
+          - "minor"
+          - "patch"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 3
