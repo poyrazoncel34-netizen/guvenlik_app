@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../app_colors.dart';
 import '../services/emergency_platform_service.dart';
+import '../services/subscription_access_state.dart';
 
 /// One readiness item, in the order the user should fix them.
 class ReadinessItem {
@@ -41,7 +42,8 @@ class ReadinessCard extends StatelessWidget {
     required this.onFixLocation,
     required this.onFixContacts,
     required this.onRunRehearsal,
-    this.subscriptionVerificationStale = false,
+    this.subscriptionNotice = SubscriptionNotice.none,
+    this.graceHoursRemaining,
   });
 
   final bool locationGranted;
@@ -56,13 +58,24 @@ class ReadinessCard extends StatelessWidget {
   final VoidCallback onFixContacts;
   final VoidCallback onRunRehearsal;
 
-  /// True when entitlement cannot be verified because the device is offline.
+  /// What may truthfully be said about entitlement verification.
   ///
-  /// Deliberately calm copy: under the IR-04 policy the emergency action keeps
-  /// working in this state, so alarming the user would be both frightening and
-  /// factually wrong. The notice exists so a subscriber is not surprised later,
-  /// not to pressure them.
-  final bool subscriptionVerificationStale;
+  /// This is an enum, not a boolean, on purpose. The previous boolean was bound
+  /// to `isTemporarilyUnverifiable`, which is TRUE by default for a user who
+  /// has never subscribed and whose provider was never initialised -- so the
+  /// card told that user the device was offline (it was not) and that emergency
+  /// features keep working (they did not: `PremiumFeature.panic` is Pro-gated
+  /// and their `canUsePaidSafetyFeature` was false). See
+  /// INDEPENDENT_REVIEW_ROUND_2.md R2-01.
+  ///
+  /// `SubscriptionAccessState.noticeFor()` is now the only producer of this
+  /// value, and it emits anything other than [SubscriptionNotice.none] ONLY
+  /// when `canUsePaidSafetyFeature` is true -- so the continuity sentence below
+  /// cannot be rendered to someone it is false for.
+  final SubscriptionNotice subscriptionNotice;
+
+  /// Whole hours left in the non-safety grace window, for the advance warning.
+  final int? graceHoursRemaining;
 
   bool get _callPermissionOk => readiness?.callPermission ?? false;
 
@@ -136,62 +149,7 @@ class ReadinessCard extends StatelessWidget {
       subtitle = 'setup_incomplete_desc'.tr();
     }
 
-    final staleNotice = subscriptionVerificationStale
-        ? Padding(
-            padding: const EdgeInsets.only(top: 12),
-            child: Semantics(
-              container: true,
-              label:
-                  '${'subscription_verification_stale_title'.tr()}. '
-                  '${'subscription_verification_stale_body'.tr()}',
-              child: Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: AppColors.info.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: AppColors.info.withValues(alpha: 0.22),
-                  ),
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Icon(
-                      Icons.cloud_off_rounded,
-                      size: 18,
-                      color: AppColors.info,
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'subscription_verification_stale_title'.tr(),
-                            style: const TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.textPrimary,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'subscription_verification_stale_body'.tr(),
-                            style: const TextStyle(
-                              fontSize: 12,
-                              height: 1.4,
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          )
-        : const SizedBox.shrink();
+    final staleNotice = _buildSubscriptionNotice();
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -278,6 +236,87 @@ class ReadinessCard extends StatelessWidget {
           ),
           staleNotice,
         ],
+      ),
+    );
+  }
+
+  /// One notice, three truthful variants. Every variant is only reachable from
+  /// a state where the emergency path is genuinely authorized, so all of them
+  /// may say so.
+  Widget _buildSubscriptionNotice() {
+    final String titleKey;
+    final String bodyKey;
+    switch (subscriptionNotice) {
+      case SubscriptionNotice.none:
+        return const SizedBox.shrink();
+      case SubscriptionNotice.verificationPending:
+        titleKey = 'subscription_verification_stale_title';
+        bodyKey = 'subscription_verification_stale_body';
+      case SubscriptionNotice.verificationPendingGraceExpiring:
+        titleKey = 'subscription_verification_grace_expiring_title';
+        bodyKey = 'subscription_verification_grace_expiring_body';
+      case SubscriptionNotice.nonEmergencyGraceLapsed:
+        titleKey = 'subscription_verification_lapsed_title';
+        bodyKey = 'subscription_verification_lapsed_body';
+    }
+
+    final title = titleKey.tr();
+    final body =
+        subscriptionNotice ==
+            SubscriptionNotice.verificationPendingGraceExpiring
+        ? bodyKey.tr(
+            namedArgs: {'hours': (graceHoursRemaining ?? 0).toString()},
+          )
+        : bodyKey.tr();
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 12),
+      child: Semantics(
+        container: true,
+        label: '$title. $body',
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: AppColors.info.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: AppColors.info.withValues(alpha: 0.22)),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Icon(
+                Icons.cloud_off_rounded,
+                size: 18,
+                color: AppColors.info,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      body,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        height: 1.4,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

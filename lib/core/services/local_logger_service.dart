@@ -33,7 +33,11 @@ enum LocalWarningCode {
   revenueCatDisabledInSmoke('revenuecat_disabled_in_smoke'),
   revenueCatApiKeyMissing('revenuecat_api_key_missing'),
   safetySessionDispatchUnknown('safety_session_dispatch_unknown'),
-  safetySessionDialerFallback('safety_session_dialer_fallback');
+  safetySessionDialerFallback('safety_session_dialer_fallback'),
+
+  /// A quick-access panic request arrived with no root navigator mounted, so
+  /// there was no surface to open a countdown on OR to explain the refusal on.
+  quickPanicNavigatorUnavailable('quick_panic_navigator_unavailable');
 
   const LocalWarningCode(this.wireCode);
   final String wireCode;

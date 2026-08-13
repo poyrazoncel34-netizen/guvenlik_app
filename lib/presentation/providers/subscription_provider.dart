@@ -32,7 +32,21 @@ class SubscriptionProvider extends ChangeNotifier {
   // ---------------------------------------------------------------------------
   // Getters
   // ---------------------------------------------------------------------------
-  bool get isPro => _access.canUsePaidSafetyFeature;
+  /// COMMERCIAL entitlement: "is this person currently a paying subscriber, as
+  /// far as we can tell". Bound to the BOUNDED policy, because that is the
+  /// question the paywall, settings and subscription-management screens ask.
+  ///
+  /// Do NOT use this to authorize an emergency control. The two policies
+  /// genuinely differ since the IR-04 change (emergency access is unbounded
+  /// while unverifiable, commercial access is not), and one boolean cannot
+  /// represent both -- reading this getter on an emergency surface is exactly
+  /// how the UI and the gate came to disagree (R2-04).
+  bool get isPro => _access.canUseNonEmergencyPaidFeature;
+
+  /// EMERGENCY authorization: the unbounded policy the panic/SOS, check-in and
+  /// safe-walk controls act on. Same value `SubscriptionGate.ensureAccess`
+  /// computes for an emergency-capable feature.
+  bool get canUseEmergencyFeature => _access.canUsePaidSafetyFeature;
   bool get isLoading => _isLoading;
   SubscriptionAccessState get access => _access;
 
@@ -127,7 +141,10 @@ class SubscriptionProvider extends ChangeNotifier {
     try {
       final info = await _rcService.purchasePackage(package);
       await _applyCustomerInfo(info);
-      if (!isPro) {
+      // A purchase either produced a store-CONFIRMED active entitlement or it
+      // did not. Checking a grace-widened getter here would report success on
+      // a stale anchor after a failed purchase.
+      if (_access.status != SubscriptionAccessStatus.verifiedPro) {
         _errorMessage = 'subscription_error_entitlement';
         return _errorMessage;
       }
@@ -288,8 +305,14 @@ class SubscriptionProvider extends ChangeNotifier {
         // start, handing offline authorization back to a lapsed subscriber.
         await _rcService.clearLastVerifiedProAt();
       case EntitlementDecision.unknown:
-        // Preserve lastVerifiedPro only as an already-armed in-process lease.
-        // `canUsePaidSafetyFeature` remains false, so no new arm is authorized.
+        // The store could not be reached. Preserve the anchor
+        // (`lastVerifiedPro` + `lastVerifiedProAt`) untouched: under the IR-04
+        // product policy a GENUINE prior confirmation keeps authorizing the
+        // emergency path for as long as the store stays unreachable, so
+        // `canUsePaidSafetyFeature` stays TRUE here for a confirmed subscriber
+        // and FALSE for everyone else. Non-emergency paid features remain
+        // bounded by `offlineGracePeriod`. An unknown answer is never converted
+        // into a verified-free answer in either direction.
         _setAccess(_access.markUnavailable());
     }
   }

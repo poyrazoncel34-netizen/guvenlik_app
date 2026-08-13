@@ -33,7 +33,15 @@ void main() {
       );
     });
 
-    test('EmergencyTriggerHost resets route guard in finally', () {
+    // NOTE: this used to be the ONLY coverage of the quick-access guard, and
+    // it asserted only that the guard was reset in a `finally`. That stayed
+    // green while the guard was WRITTEN after a ~2.2s await, so two triggers
+    // could stack two countdowns (INDEPENDENT_REVIEW_ROUND_2.md R2-02). The
+    // behavioural evidence now lives in
+    // test/core/widgets/emergency_trigger_duplicate_guard_test.dart, which
+    // fires the real trigger twice inside the resolve window; what remains
+    // here is the ORDERING contract that test proves.
+    test('EmergencyTriggerHost holds the guard across the whole open', () {
       final source = File(
         'lib/core/widgets/emergency_trigger_host.dart',
       ).readAsStringSync();
@@ -43,6 +51,13 @@ void main() {
       expect(body, contains('try {'));
       expect(body, contains('} finally {'));
       expect(body, contains('_countdownOpen = false;'));
+      expect(
+        body.indexOf('_countdownOpen = true;'),
+        lessThan(body.indexOf('await ')),
+        reason:
+            'the guard must be acquired before the first suspension point, '
+            'not after entitlement resolution',
+      );
     });
   });
 }

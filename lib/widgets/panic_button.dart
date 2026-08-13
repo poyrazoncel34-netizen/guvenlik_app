@@ -380,7 +380,10 @@ class _PanicButtonState extends State<PanicButton>
 
   @override
   Widget build(BuildContext context) {
-    final isPro = context.watch<SubscriptionProvider>().isPro;
+    // The EMERGENCY authorization, not the commercial one: this control follows
+    // the unbounded offline policy, so a subscriber whose store call is failing
+    // must still see an armed button (R2-04).
+    final isPro = context.watch<SubscriptionProvider>().canUseEmergencyFeature;
     final size = MediaQuery.sizeOf(context);
     final shortSide = size.shortestSide;
     // Scale button to ~38% of shortest side, clamped

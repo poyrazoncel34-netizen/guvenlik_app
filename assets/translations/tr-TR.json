@@ -953,5 +953,9 @@
   "settings_oem_guide_subtitle": "Üreticinize göre adım adım yönlendirme",
   "battery_wizard_oem_btn": "Cihazıma Özel Adımlar",
   "subscription_verification_stale_title": "Abonelik doğrulaması bekliyor",
-  "subscription_verification_stale_body": "Cihaz çevrimdışı olduğu için aboneliğin doğrulanamıyor. Acil durum özellikleri çalışmaya devam ediyor; bağlantı kurulduğunda doğrulama kendiliğinden yenilenir."
+  "subscription_verification_stale_body": "Aboneliğin şu anda doğrulanamıyor. Acil durum özellikleri çalışmaya devam ediyor; bağlantı kurulduğunda doğrulama kendiliğinden yenilenir.",
+  "subscription_verification_grace_expiring_title": "Doğrulama yakında gerekiyor",
+  "subscription_verification_grace_expiring_body": "Abonelik doğrulaması {hours} saat içinde zaman aşımına uğruyor. Acil durum özellikleri çalışmaya devam edecek; diğer Pro özellikleri doğrulama yenilenene kadar duraklayacak.",
+  "subscription_verification_lapsed_title": "Diğer Pro özellikleri duraklatıldı",
+  "subscription_verification_lapsed_body": "Abonelik uzun süredir doğrulanamadı. Acil durum özellikleri çalışmaya devam ediyor; diğer Pro özellikleri doğrulama yenilenene kadar kapalı."
 }

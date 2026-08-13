@@ -112,10 +112,10 @@
       "reason": "Translation bundle gates ship in the same commit group as the bundles they guard."
     },
     {
-      "pattern": "^(?:docs/MASTER_PRODUCTION_CHECKLIST\\.md|PRODUCTION_AUDIT\\.md|REMEDIATION_PLAN\\.md|PROGRESS\\.md|INDEPENDENT_REVIEW\\.md)$",
+      "pattern": "^(?:docs/MASTER_PRODUCTION_CHECKLIST\\.md|PRODUCTION_AUDIT\\.md|REMEDIATION_PLAN\\.md|PROGRESS\\.md|RESOLUTION_QUEUE\\.md|EXTERNAL_LAUNCH_BLOCKERS\\.md|INDEPENDENT_REVIEW[A-Za-z0-9_]*\\.md)$",
       "category": "release",
       "commitGroup": "04-ci-evidence-security",
-      "reason": "Production-readiness standard and its per-requirement audit, remediation, continuity, and independent-review outputs are release-governance source."
+      "reason": "Production-readiness standard and its per-requirement audit, remediation, continuity, resolution-queue, external-blocker, and independent-review outputs are release-governance source. The review pattern is deliberately open-ended: a NEW reviewer report must never be able to fail the classification gate simply by existing."
     }
   ]
 }

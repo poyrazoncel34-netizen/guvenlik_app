@@ -14,7 +14,24 @@ void main() {
       expect(source, contains('panic_button_locked_title'));
       expect(source, contains('panic_button_locked_subtitle'));
       expect(source, contains('subscription_badge_pro'));
-      expect(source, contains('context.watch<SubscriptionProvider>().isPro'));
+      // Deliberately the EMERGENCY getter, not the commercial `isPro`: this
+      // control follows the unbounded offline policy, so a subscriber whose
+      // store call is failing must still see an armed button. Reading `isPro`
+      // here would lock the SOS button for a user the gate would authorize
+      // (INDEPENDENT_REVIEW_ROUND_2.md R2-04).
+      expect(
+        source,
+        contains(
+          'context.watch<SubscriptionProvider>().canUseEmergencyFeature',
+        ),
+      );
+      expect(
+        source,
+        isNot(contains('context.watch<SubscriptionProvider>().isPro')),
+        reason:
+            'the commercial getter is bounded by the 7-day grace and must not '
+            'gate an emergency control',
+      );
     });
 
     test('free hold uses SubscriptionGate and cannot open countdown', () {

@@ -11,6 +11,7 @@ import 'package:provider/provider.dart';
 import '../core/app_colors.dart';
 import '../core/services/connectivity_service.dart';
 import '../core/services/consent_gate_service.dart';
+import '../core/services/subscription_access_state.dart';
 import '../core/services/subscription_gate.dart';
 import '../models/consent_record.dart';
 // Analytics service removed (offline-first)
@@ -155,7 +156,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<HomeProvider>();
-    final isPro = context.watch<SubscriptionProvider>().isPro;
+    final subscriptionAccess = context.watch<SubscriptionProvider>().access;
     final pendingMessage = provider.takeMessage();
     if (pendingMessage != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -219,13 +220,12 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                       _buildEmergencyContactChip(provider),
                       SizedBox(height: spacing),
                       ReadinessCard(
-                        // Calm, advance notice that entitlement verification is
-                        // stale. Under the IR-04 policy the emergency action is
-                        // unaffected, so the copy says exactly that.
-                        subscriptionVerificationStale: context
-                            .watch<SubscriptionProvider>()
-                            .access
-                            .isTemporarilyUnverifiable,
+                        // Derived from the SAME state that authorizes the
+                        // emergency action, so the card cannot claim protection
+                        // the gate would refuse (R2-01).
+                        subscriptionNotice: subscriptionAccess.noticeFor(),
+                        graceHoursRemaining: subscriptionAccess
+                            .remainingOfflineGraceHours(),
                         locationGranted: provider.locationPermissionGranted,
                         contactsGranted: provider.contactsPermissionGranted,
                         hasEmergencyContact: provider.emergencyContact != null,
@@ -250,7 +250,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                       SizedBox(height: sectionSpacing),
                       _buildTestModeButton(),
                       SizedBox(height: largeSectionSpacing),
-                      _buildQuickActions(isPro),
+                      _buildQuickActions(subscriptionAccess),
                       SizedBox(height: largeSectionSpacing),
                       _buildSafetyTips(),
                       SizedBox(height: shortScreen ? 10 : 16),
@@ -797,7 +797,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     await context.read<HomeProvider>().refreshAfterContactsChanged();
   }
 
-  Widget _buildQuickActions(bool isPro) {
+  Widget _buildQuickActions(SubscriptionAccessState access) {
     final shortScreen = MediaQuery.sizeOf(context).height < 700;
     final gap = shortScreen ? 10.0 : 14.0;
 
@@ -884,7 +884,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 child: _buildAnimatedActionCard(
                   actions[row * 2],
                   row * 2,
-                  isPro,
+                  access,
                 ),
               ),
               SizedBox(width: gap),
@@ -893,7 +893,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                   child: _buildAnimatedActionCard(
                     actions[row * 2 + 1],
                     row * 2 + 1,
-                    isPro,
+                    access,
                   ),
                 )
               else
@@ -905,8 +905,16 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildAnimatedActionCard(_ActionData data, int index, bool isPro) {
-    final isLocked = SubscriptionGate.isProFeature(data.feature) && !isPro;
+  Widget _buildAnimatedActionCard(
+    _ActionData data,
+    int index,
+    SubscriptionAccessState access,
+  ) {
+    // Per-feature, via the gate's own rule: safe-walk and check-in follow the
+    // unbounded emergency policy while timeline and the rest stay bounded. One
+    // `isPro` boolean for the whole grid showed a locked badge over a feature
+    // the gate would have allowed, and vice versa (R2-04).
+    final isLocked = !SubscriptionGate.isAuthorized(access, data.feature);
     if (index >= _cardFadeAnimations.length) {
       return _buildActionCard(data, isLocked: isLocked);
     }

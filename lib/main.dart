@@ -230,6 +230,7 @@ class KoruBeniApp extends StatelessWidget {
       child: EmergencyTriggerHost(
         child: MaterialApp(
           navigatorKey: rootNavigatorKey,
+          scaffoldMessengerKey: rootScaffoldMessengerKey,
           debugShowCheckedModeBanner: false,
           title: 'KoruBeni',
           theme: AppTheme.lightTheme,

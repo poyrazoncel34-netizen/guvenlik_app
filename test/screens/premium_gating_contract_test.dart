@@ -44,11 +44,33 @@ void main() {
       expect(home, contains('PremiumFeature.checkIn'));
     });
 
-    test('test mode is reachable by free users, not hidden behind isPro', () {
-      expect(home, contains('context.watch<SubscriptionProvider>().isPro'));
+    test('home lock state is decided per feature by the gate itself', () {
+      // Was: `contains('context.watch<SubscriptionProvider>().isPro')`. One
+      // boolean for the whole grid could not be right for both policies at
+      // once -- safe-walk/check-in follow the UNBOUNDED emergency rule while
+      // timeline and friends stay bounded -- so the badge disagreed with the
+      // gate (INDEPENDENT_REVIEW_ROUND_2.md R2-04). The contract is now that
+      // home asks SubscriptionGate.isAuthorized, the same function
+      // ensureAccess uses.
+      expect(home, contains('context.watch<SubscriptionProvider>().access'));
+      expect(
+        home,
+        contains('SubscriptionGate.isAuthorized(access, data.feature)'),
+        reason:
+            'The lock badge must come from the shared authorization rule, not '
+            'from a nearby boolean.',
+      );
+      expect(
+        home,
+        isNot(contains('SubscriptionGate.isProFeature(data.feature) && !isPro')),
+        reason: 'the superseded single-boolean lock rule must not return',
+      );
+    });
+
+    test('test mode is reachable by free users, not hidden behind a Pro gate', () {
       // Test mode is the rehearsal of the panic flow: it dials nothing and
       // sends nothing. Hiding it from free users made the locked SOS button
-      // unprovable, so the entry point must NOT sit inside an isPro branch.
+      // unprovable, so the entry point must NOT sit inside a Pro branch.
       expect(
         RegExp(
           r'if\s*\(isPro\)[\s\S]{0,160}_buildTestModeButton\(\)',

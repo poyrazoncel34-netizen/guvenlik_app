@@ -8,6 +8,72 @@ enum SubscriptionAccessStatus {
   unavailable,
 }
 
+/// The semantically distinct situations the UI and the authorization path must
+/// agree on.
+///
+/// This exists because a single "cannot verify right now" boolean conflated two
+/// opposite worlds: a subscriber whose store call failed (protected) and a
+/// person who has never subscribed and whose provider was simply never
+/// initialised (NOT protected). The home screen read that boolean and told the
+/// second group that "emergency features keep working" -- a safety claim that
+/// was false for exactly the users who most needed it to be true
+/// (INDEPENDENT_REVIEW_ROUND_2.md R2-01).
+///
+/// Absence of an answer is not an answer. [uninitialized] and [resolving] are
+/// therefore never merged into [entitledUnverifiable]: the latter asserts a
+/// POSITIVE PRIOR CONFIRMATION that is merely stale, and only that state may
+/// carry continuity messaging.
+enum SubscriptionReadiness {
+  /// Nothing has been asked of the store yet in this process, and no prior
+  /// entitlement anchor was found. Authorization: none.
+  uninitialized,
+
+  /// A resolution attempt is in flight and no anchor authorizes meanwhile.
+  resolving,
+
+  /// The store positively answered: entitlement active. Authorization: full.
+  entitledConfirmed,
+
+  /// The store cannot be reached, but a genuine prior confirmation (flag AND
+  /// corroborating timestamp) anchors the emergency authorization.
+  /// This -- and only this -- is the state the offline-continuity notice
+  /// describes truthfully.
+  entitledUnverifiable,
+
+  /// The store positively answered: not a subscriber. Authorization: none.
+  notEntitledConfirmed,
+
+  /// The store cannot be reached and there is no prior confirmation to fall
+  /// back on. Indistinguishable from "never subscribed" as far as the app can
+  /// prove, so it must never be described as protected.
+  unknownNoEntitlement,
+}
+
+/// What, if anything, the readiness surface may truthfully tell the user about
+/// entitlement verification.
+///
+/// Deliberately computed here rather than in the widget: the notice is a
+/// statement about authorization, so it must be derived from the same state the
+/// authorization is derived from, not from a loosely related boolean passed
+/// down the widget tree.
+enum SubscriptionNotice {
+  /// Say nothing. Either everything is confirmed, or nothing is confirmed and
+  /// the locked controls already say so.
+  none,
+
+  /// Entitled, store unreachable, the non-safety grace window is comfortable.
+  verificationPending,
+
+  /// Entitled, store unreachable, the non-safety grace window is about to
+  /// lapse. This is the advance warning: it is shown while the user can still
+  /// act on it.
+  verificationPendingGraceExpiring,
+
+  /// Entitled for safety, but the non-safety grace window has lapsed: paid
+  /// convenience features are paused while the emergency path continues.
+  nonEmergencyGraceLapsed,
+}
+
 /// Separates commercial entitlement truth from transport/loading failures.
 ///
 /// A missing RevenueCat response is not proof that the user is free or Pro.
@@ -145,6 +211,14 @@ class SubscriptionAccessState {
     return offlineGracePeriod - elapsed;
   }
 
+  /// [remainingOfflineGrace] rounded UP to whole hours, for user-facing copy.
+  /// Rounding up so "1 hour left" is never displayed as "0".
+  int? remainingOfflineGraceHours({DateTime? now}) {
+    final remaining = remainingOfflineGrace(now: now);
+    if (remaining == null) return null;
+    return (remaining.inMinutes / 60).ceil();
+  }
+
   /// True when the store is unreachable AND the grace window is close enough to
   /// expiry that the user should be told while they can still act on it.
   bool isOfflineGraceExpiring({
@@ -182,6 +256,67 @@ class SubscriptionAccessState {
   bool get canUseNonEmergencyPaidFeature =>
       nonEmergencyEntitlementDecision == EntitlementDecision.authorized &&
       lastVerifiedPro == true;
+
+  /// The single semantic classification every surface must agree on.
+  ///
+  /// INVARIANT (asserted in subscription_readiness_state_test.dart):
+  ///   canUsePaidSafetyFeature == (readiness == entitledConfirmed ||
+  ///                               readiness == entitledUnverifiable)
+  ///
+  /// Read that as: the UI can never describe a state as protected unless the
+  /// authorization path agrees, because both are computed from this one place.
+  SubscriptionReadiness get readiness {
+    switch (status) {
+      case SubscriptionAccessStatus.verifiedPro:
+        return SubscriptionReadiness.entitledConfirmed;
+      case SubscriptionAccessStatus.verifiedFree:
+        return SubscriptionReadiness.notEntitledConfirmed;
+      case SubscriptionAccessStatus.uninitialized:
+      case SubscriptionAccessStatus.loading:
+      case SubscriptionAccessStatus.unavailable:
+        // A genuine prior confirmation outranks the transport state: this is
+        // the subscriber whose store call failed, not someone who never
+        // subscribed.
+        if (canUsePaidSafetyFeature) {
+          return SubscriptionReadiness.entitledUnverifiable;
+        }
+        if (status == SubscriptionAccessStatus.uninitialized) {
+          return SubscriptionReadiness.uninitialized;
+        }
+        if (status == SubscriptionAccessStatus.loading) {
+          return SubscriptionReadiness.resolving;
+        }
+        return SubscriptionReadiness.unknownNoEntitlement;
+    }
+  }
+
+  /// What the readiness surface may truthfully say about verification.
+  ///
+  /// Only [SubscriptionReadiness.entitledUnverifiable] produces a notice. Every
+  /// other state either has an answer (nothing to warn about) or has no
+  /// entitlement to keep alive, and telling that second group their emergency
+  /// features "keep working" is the R2-01 defect.
+  ///
+  /// Within the entitled-unverifiable state the notice escalates with the
+  /// REMAINING non-safety grace, which is what [isOfflineGraceExpiring] and
+  /// [hasLostAccessToOfflineGraceExpiry] were built for. Before this they were
+  /// never called from production code and the shipped notice carried no notion
+  /// of "remaining" at all (R2-05).
+  SubscriptionNotice noticeFor({
+    Duration threshold = const Duration(hours: 48),
+    DateTime? now,
+  }) {
+    if (readiness != SubscriptionReadiness.entitledUnverifiable) {
+      return SubscriptionNotice.none;
+    }
+    if (hasLostAccessToOfflineGraceExpiry(now: now)) {
+      return SubscriptionNotice.nonEmergencyGraceLapsed;
+    }
+    if (isOfflineGraceExpiring(threshold: threshold, now: now)) {
+      return SubscriptionNotice.verificationPendingGraceExpiring;
+    }
+    return SubscriptionNotice.verificationPending;
+  }
 
   /// Historical in-process evidence may keep an already-armed session alive.
   /// Callers must never use this getter to arm a new session.

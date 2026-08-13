@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../constants/feature_access_matrix.dart';
+import '../navigation/app_navigator.dart';
 import 'subscription_access_state.dart';
 import '../../presentation/providers/subscription_provider.dart';
 import '../../screens/subscription/paywall_screen.dart';
@@ -54,6 +55,25 @@ class SubscriptionGate {
   /// above because it must NOT be skipped when the network is what is failing.
   static const Duration offlineAnchorLoadTimeout = Duration(milliseconds: 400);
 
+  /// The ONE authorization rule. Every surface -- the gate below, the home
+  /// quick-action lock badges, the panic button's locked state, the quick-access
+  /// trigger host -- must ask this function rather than reimplementing the
+  /// policy or reading a nearby boolean.
+  ///
+  /// Emergency-capable features follow the unbounded offline policy; every other
+  /// paid feature keeps the bounded grace (IR-04 product decision). Splitting
+  /// that decision across call sites is what let the UI report a feature as
+  /// available while the gate refused it (INDEPENDENT_REVIEW_ROUND_2.md R2-04).
+  static bool isAuthorized(
+    SubscriptionAccessState access,
+    PremiumFeature feature,
+  ) {
+    if (isFreeFeature(feature)) return true;
+    return FeatureAccessMatrix.isEmergencyCapable(feature)
+        ? access.canUsePaidSafetyFeature
+        : access.canUseNonEmergencyPaidFeature;
+  }
+
   static Future<bool> ensureAccess(
     BuildContext context,
     PremiumFeature feature,
@@ -81,32 +101,53 @@ class SubscriptionGate {
       access = provider.access;
     }
     if (!context.mounted) return false;
-    // Emergency-capable features follow the unbounded offline policy; every
-    // other paid feature keeps the bounded grace (IR-04 product decision).
-    final authorized = FeatureAccessMatrix.isEmergencyCapable(feature)
-        ? access.canUsePaidSafetyFeature
-        : access.canUseNonEmergencyPaidFeature;
-    if (authorized) return true;
+    if (isAuthorized(access, feature)) return true;
 
-    // Loading/unavailable is not evidence of a free account. Only a real
-    // CustomerInfo response that verified "free" may route to the paywall.
-    if (access.shouldShowPaywall) {
-      await showPaywall(context, lockedFeature: feature);
-      return false;
-    }
-
-    // Neither verified-Pro nor verified-free: the entitlement could not be
-    // resolved at all (first launch offline, store/RevenueCat unreachable).
-    // The authorization decision stays fail-closed, but a safety control must
-    // never read as "broken button" — an unexplained no-op is indistinguishable
-    // from a crash to someone who is about to need it.
-    showEntitlementUnverified(context);
+    await reportRejection(context, access, feature);
     return false;
   }
 
+  /// The ONE rejection surface for a refused paid action.
+  ///
+  /// Both [ensureAccess] (panic button, contacts, settings) and
+  /// `EmergencyTriggerHost` (home-screen widget, Quick Settings tile, volume
+  /// keys) route here. The quick-access entries used to reject with a bare
+  /// `return`, so a user in that state saw the app open and nothing happen --
+  /// indistinguishable from a crash, on the one control that exists for the
+  /// moment they cannot afford ambiguity (INDEPENDENT_REVIEW_ROUND_2.md R2-03).
+  ///
+  /// Loading/unavailable is not evidence of a free account. Only a real
+  /// CustomerInfo response that verified "free" may route to the paywall;
+  /// everything else gets the explain-and-retry message.
+  static Future<void> reportRejection(
+    BuildContext context,
+    SubscriptionAccessState access,
+    PremiumFeature feature,
+  ) async {
+    if (access.shouldShowPaywall) {
+      await showPaywall(context, lockedFeature: feature);
+      return;
+    }
+    showEntitlementUnverified(context);
+  }
+
   /// Visible, non-silent rejection for an unresolved entitlement.
+  ///
+  /// Falls back to the app-level messenger when the calling context has none of
+  /// its own: `EmergencyTriggerHost` is mounted ABOVE `MaterialApp`, where
+  /// `ScaffoldMessenger.maybeOf` can only ever return null.
+  ///
+  /// The message is a plain `Text`, so TalkBack announces the SnackBar as a
+  /// live region without any extra wiring; the 5-second duration is long enough
+  /// to be read aloud.
   static void showEntitlementUnverified(BuildContext context) {
-    ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+    final messenger =
+        ScaffoldMessenger.maybeOf(context) ??
+        rootScaffoldMessengerKey.currentState;
+    // One message at a time: rapid repeat presses must not queue a stack of
+    // identical SnackBars that outlive the situation.
+    messenger?.removeCurrentSnackBar();
+    messenger?.showSnackBar(
       SnackBar(
         content: Text('subscription_entitlement_unverified'.tr()),
         behavior: SnackBarBehavior.floating,

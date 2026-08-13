@@ -12,6 +12,8 @@ import '../services/app_lifecycle_handler.dart';
 import '../services/check_in_expiry_coordinator.dart';
 import '../services/check_in_service.dart';
 import '../services/emergency_platform_service.dart';
+import '../services/emergency_session_contract.dart';
+import '../services/local_logger_service.dart';
 import '../services/emergency_readiness_service.dart';
 import '../services/quick_panic_request_service.dart';
 import '../services/subscription_access_state.dart';
@@ -21,13 +23,23 @@ import '../services/volume_trigger_service.dart';
 class EmergencyTriggerHost extends StatefulWidget {
   final Widget child;
 
-  const EmergencyTriggerHost({super.key, required this.child});
+  /// Route builder for the countdown, overridable so a test can exercise the
+  /// duplicate-trigger boundary without standing up the whole dispatch screen.
+  /// Production always uses the default.
+  @visibleForTesting
+  final Widget Function(EntitlementDecision decision)? countdownBuilder;
+
+  const EmergencyTriggerHost({
+    super.key,
+    required this.child,
+    this.countdownBuilder,
+  });
 
   @override
-  State<EmergencyTriggerHost> createState() => _EmergencyTriggerHostState();
+  State<EmergencyTriggerHost> createState() => EmergencyTriggerHostState();
 }
 
-class _EmergencyTriggerHostState extends State<EmergencyTriggerHost>
+class EmergencyTriggerHostState extends State<EmergencyTriggerHost>
     with WidgetsBindingObserver {
   bool _countdownOpen = false;
   StreamSubscription<Map<String, dynamic>>? _platformEventsSubscription;
@@ -106,7 +118,7 @@ class _EmergencyTriggerHostState extends State<EmergencyTriggerHost>
         await VolumeTriggerService.instance.setEnabled(false);
         return;
       }
-      if (!access.canUsePaidSafetyFeature) {
+      if (!SubscriptionGate.isAuthorized(access, PremiumFeature.volumeTrigger)) {
         // Unknown is not free and does not authorize a new safety session, but
         // it also must not erase the user's preference as if access were denied.
         return;
@@ -223,30 +235,64 @@ class _EmergencyTriggerHostState extends State<EmergencyTriggerHost>
     }
   }
 
+  /// Exercises the real trigger entry point. This is the exact callback
+  /// `VolumeTriggerService.startListening` receives and `_consumeQuickPanicRequest`
+  /// awaits; the platform gates on those two paths (`Platform.isAndroid`) make
+  /// them unreachable from a host test, and the defect being guarded lives
+  /// entirely inside [_openCountdown].
+  @visibleForTesting
+  Future<void> triggerPanicForTest() => _openCountdown();
+
   Future<void> _openCountdown() async {
+    // ACQUIRED SYNCHRONOUSLY, before the first suspension point.
+    //
+    // This used to be written ~2.2s later, after `_resolveAccessBounded`
+    // (400ms anchor + 1800ms store budget) and a frame await. Every trigger
+    // arriving inside that window read `false` and proceeded, so two volume
+    // patterns two seconds apart -- the natural behaviour when the first press
+    // appears to do nothing -- stacked two CountdownScreen routes. The second
+    // one's arm is rejected by the native coordinator with
+    // `activeSessionExists`, which surfaces as a blocking total-failure dialog
+    // ON TOP of the first, genuinely armed countdown, hiding its PIN-cancel.
+    // See INDEPENDENT_REVIEW_ROUND_2.md R2-02.
+    //
+    // `PanicButton` already had this ordering right (`_pointerDown` is set in
+    // the synchronous tap handler); this is the same invariant for the
+    // quick-access entries.
     if (_countdownOpen) {
       return;
     }
-
-    final subscription = context.read<SubscriptionProvider>();
-    final access = await _resolveAccessBounded(subscription);
-    if (!mounted || !access.canUsePaidSafetyFeature) return;
-
-    var navigator = rootNavigatorKey.currentState;
-    if (navigator == null) {
-      // Cold start: the request can arrive before the root navigator is
-      // mounted. Dropping it here silently discarded the press, which on this
-      // path is the whole feature. Retry once on the next frame.
-      await WidgetsBinding.instance.endOfFrame;
-      if (!mounted) return;
-      navigator = rootNavigatorKey.currentState;
-      if (navigator == null) {
-        return;
-      }
-    }
-
     _countdownOpen = true;
     try {
+      final subscription = context.read<SubscriptionProvider>();
+      final access = await _resolveAccessBounded(subscription);
+      if (!mounted) return;
+      if (!SubscriptionGate.isAuthorized(access, PremiumFeature.panic)) {
+        // Never a bare return: an unexplained no-op on a safety control is
+        // indistinguishable from a crash (R2-03). Same surface the panic
+        // button gets, via the same shared decision.
+        await _reportRejection(access);
+        return;
+      }
+
+      var navigator = rootNavigatorKey.currentState;
+      if (navigator == null) {
+        // Cold start: the request can arrive before the root navigator is
+        // mounted. Dropping it here silently discarded the press, which on this
+        // path is the whole feature. Retry once on the next frame.
+        await WidgetsBinding.instance.endOfFrame;
+        if (!mounted) return;
+        navigator = rootNavigatorKey.currentState;
+        if (navigator == null) {
+          // No navigator means no surface to explain on either. Record it so
+          // the silence is at least diagnosable after the fact.
+          await LocalLoggerService.instance.warningCode(
+            LocalWarningCode.quickPanicNavigatorUnavailable,
+          );
+          return;
+        }
+      }
+
       // Parity with the panic button: the acknowledgement haptic is fired, not
       // awaited, and the route carries no transition. Awaiting the vibration
       // channel and then paying a 300ms MaterialPageRoute transition delayed
@@ -256,18 +302,42 @@ class _EmergencyTriggerHostState extends State<EmergencyTriggerHost>
           debugPrint('EmergencyTriggerHost: acknowledgement haptic failed');
         }),
       );
+      final decision = access.entitlementDecision;
       await navigator.push(
         PageRouteBuilder(
-          pageBuilder: (_, _, _) => CountdownScreen(
-            entitlementDecision: access.entitlementDecision,
-          ),
+          pageBuilder: (_, _, _) =>
+              widget.countdownBuilder?.call(decision) ??
+              CountdownScreen(entitlementDecision: decision),
           transitionDuration: Duration.zero,
           reverseTransitionDuration: Duration.zero,
         ),
       );
     } finally {
+      // Reset on EVERY exit -- success, early return, rejection, or a thrown
+      // exception. A guard that could stay latched would disable the quick
+      // access entries for the rest of the process.
       _countdownOpen = false;
     }
+  }
+
+  /// Routes a refused quick-access press to the shared rejection surface.
+  ///
+  /// Uses the root navigator's context, not the host's: the host lives above
+  /// `MaterialApp`, so its own context has neither a `Navigator` nor a
+  /// `ScaffoldMessenger`.
+  Future<void> _reportRejection(SubscriptionAccessState access) async {
+    final target = rootNavigatorKey.currentContext;
+    if (target == null || !target.mounted) {
+      await LocalLoggerService.instance.warningCode(
+        LocalWarningCode.quickPanicNavigatorUnavailable,
+      );
+      return;
+    }
+    await SubscriptionGate.reportRejection(
+      target,
+      access,
+      PremiumFeature.panic,
+    );
   }
 
   @override

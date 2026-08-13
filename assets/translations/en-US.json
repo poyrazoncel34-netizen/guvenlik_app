@@ -953,5 +953,9 @@
   "settings_oem_guide_subtitle": "Step-by-step guidance for your manufacturer",
   "battery_wizard_oem_btn": "Steps For My Device",
   "subscription_verification_stale_title": "Subscription check pending",
-  "subscription_verification_stale_body": "Your subscription can't be verified while the device is offline. Emergency features keep working; the check refreshes on its own once you're back online."
+  "subscription_verification_stale_body": "Your subscription can't be verified right now. Emergency features keep working; the check refreshes on its own once verification succeeds.",
+  "subscription_verification_grace_expiring_title": "Verification needed soon",
+  "subscription_verification_grace_expiring_body": "Subscription verification times out in {hours} hours. Emergency features keep working; other Pro features pause until the check refreshes.",
+  "subscription_verification_lapsed_title": "Other Pro features paused",
+  "subscription_verification_lapsed_body": "Your subscription hasn't been verified for a while. Emergency features keep working; other Pro features stay off until the check refreshes."
 }
