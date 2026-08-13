@@ -25,16 +25,16 @@ external system, device, account or product decision is.
 | Metric | Count |
 |---|---|
 | Unresolved requirements queued | 421 |
-| IN_REPO_RESOLVABLE | 251 |
+| IN_REPO_RESOLVABLE | 247 |
 | RUNTIME_VERIFIABLE_NOW | 33 |
-| EXTERNAL_BLOCKER | 87 |
+| EXTERNAL_BLOCKER | 91 |
 | PRODUCT_DECISION_REQUIRED | 50 |
 
 | Status | IN_REPO | RUNTIME | EXTERNAL | PRODUCT |
 |---|---|---|---|---|
 | FAIL | 2 | 0 | 2 | 7 |
-| PARTIAL | 69 | 3 | 31 | 18 |
-| UNVERIFIED | 180 | 30 | 37 | 13 |
+| PARTIAL | 68 | 3 | 32 | 18 |
+| UNVERIFIED | 177 | 30 | 40 | 13 |
 | BLOCKED | 0 | 0 | 17 | 12 |
 
 ## Queue
@@ -48,7 +48,7 @@ not already carry.
 | 1 | `MP-41-021` | P1 | PARTIAL | `EXTERNAL_BLOCKER` | Battery saver. | The app degrades correctly when battery optimisation is left on, but the actual delay under an aggressive OEM battery saver is unmeasured. | Measure timer drift under battery saver on at least one aggressive OEM device (Xiaomi/Huawei/Samsung) and record it in docs/audit/. |
 | 2 | `MP-53-003` | P1 | PARTIAL | `EXTERNAL_BLOCKER` | Cloud credentials compromised. | Play App Signing ENROLMENT itself is a Play Console fact the repository cannot prove, and MFA status on the Google/GitHub accounts is likewise external. | Confirm enrolment and MFA once in Play Console and record the date in the table at the top of docs/release/dr_and_key_custody.md. |
 | 3 | `MP-59-027` | P1 | PARTIAL | `EXTERNAL_BLOCKER` | Battery usage. | Actual battery consumption and timer drift under aggressive OEM battery savers are unmeasured for this build. | Measure on at least one aggressive-OEM physical device and record in docs/audit/ (same as section 41 item 21). |
-| 4 | `MP-59-029` | P1 | PARTIAL | `IN_REPO_RESOLVABLE` | Play policy. | CALL_PHONE plus REQUEST_IGNORE_BATTERY_OPTIMIZATIONS are both sensitive declarations that Play reviews case by case; approval is an external decision that cannot be verified from the repository. | Blocked on Play review. The repository-side preparation is unusually thorough; ensure the declarations submitted match store/permissions_declaration_notes.md exactly. |
+| 4 | `MP-59-029` | P1 | PARTIAL | `EXTERNAL_BLOCKER` | Play policy. | CALL_PHONE plus REQUEST_IGNORE_BATTERY_OPTIMIZATIONS are both sensitive declarations that Play reviews case by case; approval is an external decision that cannot be verified from the repository. | Blocked on Play review. The repository-side preparation is unusually thorough; ensure the declarations submitted match store/permissions_declaration_notes.md exactly. |
 | 5 | `MP-59-030` | P1 | PARTIAL | `EXTERNAL_BLOCKER` | Real device test. | This is emulator evidence. The project's own rules state the Doze race and OEM kill lists cannot be proven off physical hardware. | Execute store/REAL_DEVICE_QA_MATRIX.md on physical devices and record in docs/audit/. Emulator instrumentation now covers the regression surface continuously. |
 | 6 | `MP-62-020` | P1 | PARTIAL | `EXTERNAL_BLOCKER` | Google Play rules. | Actual Play policy compliance is decided by Google's review, and the sensitive CALL_PHONE and REQUEST_IGNORE_BATTERY_OPTIMIZATIONS declarations are reviewed case by case. | Blocked on external review. Submit to the internal-test track first so any declaration objection surfaces before a production rollout. |
 | 7 | `MP-77-001` | P1 | PARTIAL | `EXTERNAL_BLOCKER` | Product — Kritik flow'lar tamam | The real dial path has never been exercised end to end on hardware with a live entitlement. | Run the billing checklist on the internal-test track, then the real-device QA matrix. |
@@ -64,11 +64,11 @@ not already carry.
 | 17 | `MP-54-020` | P1 | UNVERIFIED | `EXTERNAL_BLOCKER` | Downgrade. | Subscription lifecycle transitions have not been observed against this build. | Covered by the billing-checklist run on the internal-test track. |
 | 18 | `MP-54-021` | P1 | UNVERIFIED | `EXTERNAL_BLOCKER` | Cancel. | Subscription lifecycle transitions have not been observed against this build. | Covered by the billing-checklist run on the internal-test track. |
 | 19 | `MP-54-022` | P1 | UNVERIFIED | `EXTERNAL_BLOCKER` | Pause uygunsa. | Subscription lifecycle transitions have not been observed against this build. | Covered by the billing-checklist run on the internal-test track. |
-| 20 | `MP-54-023` | P1 | UNVERIFIED | `IN_REPO_RESOLVABLE` | Trial. | Trial start and trial expiry transitions unverified. | Include explicit trial-start and trial-expiry cases in the billing-checklist run. |
-| 21 | `MP-54-024` | P1 | UNVERIFIED | `IN_REPO_RESOLVABLE` | Trial expire. | Trial start and trial expiry transitions unverified. | Include explicit trial-start and trial-expiry cases in the billing-checklist run. |
+| 20 | `MP-54-023` | P1 | UNVERIFIED | `EXTERNAL_BLOCKER` | Trial. | Trial start and trial expiry transitions unverified. | Include explicit trial-start and trial-expiry cases in the billing-checklist run. |
+| 21 | `MP-54-024` | P1 | UNVERIFIED | `EXTERNAL_BLOCKER` | Trial expire. | Trial start and trial expiry transitions unverified. | Include explicit trial-start and trial-expiry cases in the billing-checklist run. |
 | 22 | `MP-63-006` | P1 | UNVERIFIED | `EXTERNAL_BLOCKER` | MFA admin. | MFA status on the two accounts that can publish this app is unknown from here. | Confirm MFA is enabled on both, and prefer a hardware key on the Play publisher account. Compromise of that account is the highest-impact single failure this project has. |
 | 23 | `MP-73-010` | P1 | UNVERIFIED | `EXTERNAL_BLOCKER` | Payment integrity hatası varsa. | Payment integrity is architecturally sound but unverified end to end. | This is the one open item on the security gate. Run store/BILLING_RELEASE_CHECKLIST.md against the internal-test track before production rollout. |
-| 24 | `MP-74-007` | P1 | UNVERIFIED | `IN_REPO_RESOLVABLE` | Payment sonucu belirsizse. | Payment result clarity is unverified (section 54). | Covered by the billing-checklist run. |
+| 24 | `MP-74-007` | P1 | UNVERIFIED | `EXTERNAL_BLOCKER` | Payment sonucu belirsizse. | Payment result clarity is unverified (section 54). | Covered by the billing-checklist run. |
 | 25 | `MP-77-013` | P1 | UNVERIFIED | `EXTERNAL_BLOCKER` | Performance — Hedefler içinde | The numeric panic-press-to-dial budget has never been measured on physical hardware, and the project's own rules state the Doze race cannot be proven off-device. | Execute store/REAL_DEVICE_QA_MATRIX.md and record timings in docs/audit/. |
 | 26 | `MP-41-017` | P1 | BLOCKED | `EXTERNAL_BLOCKER` | Phone call interruption. | The interaction between an in-progress incoming call and an outgoing emergency dispatch cannot be reproduced without both a live entitlement and real telephony. | BLOCKED on the same external dependency as Batch 1 (Play internal-test account). Add an explicit 'incoming call during armed countdown' case to store/REAL_DEVICE_QA_MATRIX.md and run it on hardware wi |
 | 27 | `MP-54-001` | P1 | BLOCKED | `EXTERNAL_BLOCKER` | Pricing doğru. | Price, currency and tax configuration cannot be verified from the repository. | Blocked on Play Console access. Verify against DOC store/BILLING_RELEASE_CHECKLIST.md and record the result. |

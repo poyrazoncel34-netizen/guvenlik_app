@@ -64,9 +64,9 @@ AUDIT_ACCOUNTING_PASS checklist=1738 audit=1738 missing=0 duplicated=0 unaccount
 
 | Scope | Count |
 |---|---|
-| `IN_REPO_RESOLVABLE` | 251 |
+| `IN_REPO_RESOLVABLE` | 247 |
 | `RUNTIME_VERIFIABLE_NOW` | 33 |
-| `EXTERNAL_BLOCKER` | 87 |
+| `EXTERNAL_BLOCKER` | 91 |
 | `PRODUCT_DECISION_REQUIRED` | 50 |
 | **Total unresolved** | **421** |
 

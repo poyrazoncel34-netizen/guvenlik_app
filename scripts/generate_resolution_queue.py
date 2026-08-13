@@ -22,6 +22,26 @@ from pathlib import Path
 # Hand-decided scopes. Each entry needs a reason, so a later reader can
 # challenge the judgement rather than inherit it.
 SCOPE_OVERRIDES: dict[str, tuple[str, str]] = {
+    # --- P1s the heuristic read as in-repo but are not --------------------
+    "MP-54-023": (
+        "EXTERNAL_BLOCKER",
+        "Trial start cannot be observed without a Play internal-test account "
+        "and a RevenueCat sandbox key (E1).",
+    ),
+    "MP-54-024": (
+        "EXTERNAL_BLOCKER",
+        "Trial EXPIRY needs a real trial to elapse on a Play test account (E1).",
+    ),
+    "MP-59-029": (
+        "EXTERNAL_BLOCKER",
+        "Play policy acceptance of the sensitive-permission declarations is a "
+        "decision Google makes (E3).",
+    ),
+    "MP-74-007": (
+        "EXTERNAL_BLOCKER",
+        "An indeterminate payment outcome only occurs against a real billing "
+        "backend (E1).",
+    ),
     # --- misclassified by the gap-text heuristic; corrected by hand ----------
     # An emulator HAS a hardware keyboard and a measurable pixel grid, so these
     # are verifiable in this environment. Filing them as external would have
