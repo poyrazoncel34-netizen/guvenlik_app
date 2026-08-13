@@ -1,346 +1,218 @@
-# PROGRESS — production-readiness audit continuity file
+# PROGRESS — production-readiness continuity file
 
-**Purpose.** Let a fresh session continue this work without relying on conversational memory.
-Everything needed is here or in the two documents it points at.
+**Purpose.** Let a fresh session continue this work without conversational memory.
+
+**Rule for this file, learned the hard way.** `INDEPENDENT_REVIEW_ROUND_2.md` R2-07 found
+this file asserting *both* sides of four separate questions — including a withdrawn
+"no P0, structurally" paragraph restored verbatim next to the correction that withdrew it,
+and a status table matching no figure in the audit. A continuity file that contradicts
+itself is worse than no continuity file: it is agent memory that lies.
+
+So: **the "Current state" section below has exactly one answer per question.** Anything
+historical lives under "Superseded history" and is explicitly labelled as such. Counts are
+never typed by hand — they come from `python3 scripts/verify_audit_accounting.py` and
+`python3 scripts/regenerate_audit_summaries.py`.
 
 ---
 
-## Current phase
+## Current state
 
-**Phase 6 in progress: remediation. Batches 0, 1 (testable subset), 3, 5 and 7 are done.**
-
-Suite state is recorded in the report at the end of this file; do not hand-maintain a count here.
-Next unstarted work is **Batch 9 (design tokens)** in [`REMEDIATION_PLAN.md`](REMEDIATION_PLAN.md).
-
-| Phase | State |
+| Question | Answer |
 |---|---|
-| 1. Repository reconnaissance | ✅ Complete |
-| 2. Baseline verification | ✅ Complete |
-| 3. `PRODUCTION_AUDIT.md` (1,714 requirements) | ✅ Complete |
-| 4. `REMEDIATION_PLAN.md` (12 batches) | ✅ Complete |
-| 5. `PROGRESS.md` | ✅ Complete (this file) |
-| 6. Remediation | 🟡 In progress — see the batch log below |
+| **Verified code revision** | `273864f` — the tree the suite, analyzer and gates below were run against |
+| **Current phase** | Repository convergence: latest-review findings closed; working the resolution queue |
+| **Latest independent review** | `INDEPENDENT_REVIEW_ROUND_2.md`, 2026-08-13, verdict **REVIEW FAILED — REMEDIATION REQUIRED** |
+| **P0 remaining (total)** | **0** |
+| **P0 remaining (in-repo)** | **0** |
+| **P1 remaining (total)** | **29** |
+| **P1 remaining (in-repo)** | **0** — all 29 are external; see `EXTERNAL_LAUNCH_BLOCKERS.md` |
+| **Unresolved internal findings from the latest review** | **0** — R2-01 … R2-12 all closed, each with mutation evidence |
+| **Unresolved external blockers** | **87 requirement IDs in 9 categories** (`EXTERNAL_LAUNCH_BLOCKERS.md`) |
+| **Suite** | 1139 passed / 0 failed (`flutter test --no-pub`) |
+| **Analyzer** | No issues found (`flutter analyze --no-fatal-infos`) |
+| **Worktree** | see `git status`; the security gates refuse to run on a dirty tree |
 
-### Remediation batch log
+### Audit accounting (machine-verified)
 
-| Batch | Theme | State | Evidence |
-|---|---|---|---|
-| 0 | Restore green release gate | ✅ Done | `config/release_change_classification.json` rule added; suite 1025/1025 |
-| 1 | Billing — testable subset | 🟡 Partial | `test/screens/paywall_render_test.dart` (6 cases). Live purchase transitions remain **BLOCKED** |
-| 2 | Device scenarios | 🟡 Partial | `:app:connectedPlayDebugAndroidTest` green on API 36 emulator (4 pass / 2 skipped). Physical device + incoming-call case remain **BLOCKED** |
-| 3 | DR and key custody | ✅ Done | `docs/release/dr_and_key_custody.md` |
-| 4 | Accessibility | 🟡 Partial | Harness rebuilt after IR-03: real localization + 2 negative controls + 3 screens. CountdownScreen and contrast still uncovered |
-| 5 | Layout defect + regression test | 🟡 Partial | IR-01 fix device-verified; IR-02 test now fails without the fix. Golden-test deliverable dropped (repo forbids goldens) so MP-46-028 stays FAIL |
-| 6 | Hostile-input robustness | ✅ Done | `test/core/input_robustness_test.dart` (12 cases), stability-checked over 3 consecutive runs |
-| 7 | Observability posture | ✅ Done | `docs/release/observability_and_slo.md` + crash-log version stamping |
-| 8 | Operational runbooks | 🟡 Partial | DR/incident content landed in Batch 3; `CHANGELOG.md` still pending |
-| 9 | Design tokens | ⬜ Pending | — |
-| 10 | Repository hygiene | ✅ Done | `.github/dependabot.yml`; README made canonical for local build; sqflite schema documented; formatting posture recorded as an explicit decision |
-| 11 | Adaptive layout (API 37) | ⬜ Scheduled | External platform deadline |
+```
+$ python3 scripts/verify_audit_accounting.py
+AUDIT_ACCOUNTING_PASS checklist=1738 audit=1738 missing=0 duplicated=0 unaccounted=0
+                      sections=80 launchMatrix=24
+```
 
-### Post-review internal remediation (2026-08-13)
-
-**Checklist accounting reconciled.** The canonical checklist holds **1,738** independent
-requirements: 1,714 `- [ ]` checkboxes **plus 24 launch-gate rows in section 77**, which are a
-two-column table rather than a checkbox list. An earlier generation parsed only checkboxes and
-recorded section 77 as empty, under-counting by exactly 24. Those 24 are now
-`MP-77-001`..`MP-77-024`, each evaluated individually. **The canonical checklist was not modified.**
-Reconciliation: checklist 1738 / audit 1738 / missing 0 / duplicated 0 / unaccounted 0.
-
-**IR-04 — product decision implemented.** Owner decision: a failed entitlement refresh is not a
-confirmed expiry. `SubscriptionAccessState` now distinguishes three states —
-confirmed-active, confirmed-inactive, and temporarily-unverifiable — and the emergency path stays
-authorized **indefinitely** while merely unverifiable, provided a genuine prior confirmation exists
-(both the flag and its corroborating timestamp; a lone boolean cannot forge entitlement).
-Non-emergency paid features keep the bounded 7-day grace, so billing integrity is preserved where
-nobody's safety is at stake. Routing is by `FeatureAccessMatrix.emergencyCapableFeatures`.
-The advance-warning UX is now surfaced on the home readiness card with deliberately calm copy that
-states emergency features keep working. **P0 count is now 0.**
-
-**IR-09 — fixed and device-verified.** The PIN validation banner now occupies a reserved slot that
-scales with text size, so the keypad cannot move when it appears. Measured on device: banner shown,
-key `5` bounds identical before and after (`423,1474,657,1678`).
-
-**IR-03 — coverage completed.** CountdownScreen turned out to be renderable after all
-(`countdown_dispose_lifecycle_test.dart` already pumps it behind a mocked channel). All four
-promised screens now carry guideline matchers against the real Turkish catalogue.
-
-### Independent review (INDEPENDENT_REVIEW.md) — outcome
-
-Reviewer verdict was **REVIEW FAILED**. Findings were treated as reopened requirements.
-
-| Finding | Outcome | Evidence |
-|---|---|---|
-| IR-01 keyboard hides save action | **RESOLVED** | Device-verified on arm64 API 36: with IME open the tree contains `Rehberden seç` (y=812) and `Kişiyi kaydet` (y=969); helper text renders in full. Root cause was that `Scaffold.resizeToAvoidBottomInset` consumes the inset, so nothing inside the body can see the IME via MediaQuery — the fix reads the FlutterView and reacts in `didChangeMetrics`. |
-| IR-02 regression test cannot fail | **RESOLVED** | Rewritten to assert geometry against the keyboard line, never calling `ensureVisible`. Negative control: fix disabled → fails 3/3; fix enabled → passes 5/5. |
-| IR-03 a11y harness vacuous | **RESOLVED (coverage PARTIAL)** | EasyLocalization loaded from the real `tr-TR.json`; raw-key leakage and un-settled screens now fail the run; two negative controls prove the matchers reject an unlabelled and a 12×12 target. 3 of 4 promised screens covered. |
-| IR-04 P0 claim unsupportable | **PRODUCT DECISION REQUIRED** | Transition reproduced and pinned by 12 tests. `MP-22-001` / `MP-54-029` reclassified **P0**. Warning API shipped; UI surfacing still open. |
-| IR-05 five contradictory summaries | **RESOLVED** | One summary, regenerated from the rows. |
-| IR-06 boilerplate evidence | **RESOLVED** | 145 PASS rows whose evidence was section boilerplate downgraded to UNVERIFIED. |
-| IR-07 stale batch states | **RESOLVED** | Batches 4 and 5 → Partial; suite counts de-duplicated; Batch 10 migration wording corrected. |
-| IR-08 uncommitted work | **RESOLVED** | Committed; OSV and secret scan re-run against the committed tree. |
-| IR-09 PIN banner shifts keypad | **OPEN (LOW)** | Not addressed this pass. |
-| IR-10 malformed rows | **RESOLVED** | Literal pipes removed; naive split yields only valid method codes. |
-
-### Two harness defects found while fixing IR-02/IR-03
-
-Both would have produced vacuous passes, and both are now guarded by explicit preconditions:
-
-1. **Wrong screen state.** The harnesses never granted emergency-contact consent, so the step
-   rendered its consent card, **disabled both text fields**, and never rendered the save button.
-   A tap on a disabled field focuses nothing, so the reveal could not fire and the assertion
-   silently measured the *consent* button.
-2. **`find.byType` misses subclasses.** `ElevatedButton.icon` builds a private
-   `_ElevatedButtonWithIcon`, so `find.byType(ElevatedButton)` matched the consent button instead
-   of the save action. Predicate finders are now used.
-
-### Defects found and fixed during remediation
-
-1. **Dead database migration hook (latent, would have broken every upgrading user).**
-   `LocalDatabaseService._onUpgrade` read `if (oldVersion < 1) { _onCreate(...) }`. sqflite's
-   `user_version` starts at 1, so the branch could never execute — the migration system was dead
-   code that looked functional. Any column added later would exist only on fresh installs while
-   every insert naming it failed for upgrading users: invisible on a wiped emulator, broken for
-   every real user. Fixed with additive-only `ALTER TABLE` migrations plus
-   `test/core/services/local_database_migration_test.dart` (6 cases, including "migration never
-   drops the user safety timeline").
-2. **Flaky test on the most safety-critical control (found by running the suite repeatedly).**
-   `panic_button_behavior_test.dart` passed in isolation but failed roughly half of full-suite
-   runs. Root cause: `PanicButton` measures the hold with a real monotonic `Stopwatch` — which is
-   the *correct* production choice, because a wall-clock change must never complete an armed hold —
-   while `tester.pump()` advances only the FakeAsync clock. The assertion "released before the 3s
-   gate does not arm" therefore depended on how fast the machine executed the test body, not on the
-   gate. Under load, >3s of real time elapsed and the press genuinely armed. Fixed with a
-   production-inert seam (`PanicButton.holdClockOverride`, never supplied outside tests) plus a
-   controllable stopwatch. Verified green on 3 consecutive full-suite runs. A flaky test here is
-   worse than no test: it trains people to re-run until green, which is how a real regression in
-   the panic gate would have been dismissed.
-3. **Save action unreachable behind the keyboard.** Confirmed twice by driving the real app on an
-   API 36 emulator: focusing the phone field pushed "Kişiyi kaydet" out of the viewport and out of
-   the uiautomator tree. Since that button is the only way to complete onboarding, and onboarding
-   is what registers the emergency contact, a user who could not find the scroll gesture ended up
-   with no contact — and therefore no panic flow. Fixed with a `FocusNode` +
-   `Scrollable.ensureVisible`.
-
-### Audit corrections made during remediation
-
-- `MP-44-015` (log retention) was recorded as PARTIAL claiming no bound existed. A 100-row cap was
-  already enforced unconditionally in `crash_log_service.dart`. Corrected to PASS.
-- `MP-53-003` was written as if losing the keystore were catastrophic. The release workflow pins
-  **both** an upload certificate and a Play app-signing certificate, which is only possible under
-  Play App Signing — so upload-key loss is recoverable. Severity rationale corrected.
-- `REMEDIATION_PLAN.md` Batch 5 proposed golden tests. `.claude/rules/dart/testing.md` explicitly
-  forbids them in this repo. Replaced with direct layout-property assertions.
-
----
-
-## Audit counts
-
-Every one of the 1,714 checkboxes in `docs/MASTER_PRODUCTION_CHECKLIST.md` has an entry with a stable
-ID (`MP-<section>-<item>`). Verified: 1,714 parsed, 1,714 rows emitted, 1,714 unique IDs.
-
-> Counts are regenerated from `PRODUCTION_AUDIT.md` rows; do not hand-edit them here.
-
-| Status | Baseline | After remediation | After independent review |
-|---|---|---|---|
-| PASS | 561 | 630 | **485** |
-| FAIL | 44 | 21 | **21** |
-| PARTIAL | 164 | 140 | **140** |
-| BLOCKED | 27 | 28 | **28** |
-| N/A | 775 | 773 | **773** |
-| UNVERIFIED | 143 | 122 | **267** |
-| **TOTAL** | **1,714** | **1,714** | **1,714** |
-
-PASS fell by 145 on purpose: IR-06 showed 44% of PASS rows carried section boilerplate instead of
-requirement-specific evidence. Every such row was downgraded to UNVERIFIED rather than left as an
-unsupported PASS. That is a truer number, not a worse one.
-
-| Severity (non-PASS) | Baseline | After independent review |
-|---|---|---|
-| P0 | 0 | **2** |
-| P1 | 27 | **25** |
-| P2 | 288 | **228** |
-| P3 | 63 | **201** |
-
-**P0 = 2** (`MP-22-001`, `MP-54-029`). The earlier "no P0, structurally" claim was withdrawn: it
-enumerated only server/web hazards. This product's catastrophic event is the panic button failing to
-dial, and an entitlement-grace expiry reaches it.
-
-The large N/A share is architectural, not evasive: roughly 45% of this checklist targets server, web
-or AI products. Every N/A carries a per-item justification.
-
----
-
-## Unresolved P0
-
-**None.** No P0 finding exists. This is structural: with no server, no accounts, no telemetry and no
-AI, the catastrophic-risk classes this checklist targets (auth bypass, tenant leakage, mass data loss,
-prompt injection, financial-ledger corruption) have no surface in this architecture.
-
----
-
-## Unresolved P1 (27)
-
-Three clusters:
-
-**1. Billing path unverified (20 items)** — `MP-54-001`…`008`, `MP-54-018`…`024`, `MP-54-029`,
-`MP-73-010`, `MP-74-007`.
-A debug build has no RevenueCat key, so the walkthrough reached only the fail-closed entitlement
-message. No purchase, restore, trial or cancel transition has ever been observed against this build.
-→ Remediation Batch 1.
-
-**2. Physical-device evidence missing (5 items)** — `MP-41-017` (incoming call during armed countdown),
-`MP-41-021` (battery saver drift), `MP-59-027`, `MP-59-030`, plus `MP-62-020`/`MP-59-029` (Play policy
-review, externally blocked).
-→ Remediation Batch 2.
-
-**3. Account and key custody (2 items)** — `MP-63-006` (MFA on the Play/GitHub accounts),
-`MP-53-003` (credential-compromise procedure). Not verifiable from the repository.
-→ Remediation Batch 3.
-
-Also P1 but accepted-with-rationale, not defects: `MP-22-001` and `MP-54-029` (offline entitlement
-anchor). Documented in `docs/audit/panik-entitlement-agi-bagimliligi-2026-07-31.md`. A
-network-dependent panic button is a worse failure than a tampered entitlement — **do not narrow the
-offline grace window.**
-
----
-
-## Next remediation batch
-
-**Batch 9 — design tokens.** Add `lib/core/design_tokens.dart` (spacing, radius, elevation,
-duration, easing, icon size, semantic safety-state colours) and migrate `app_theme.dart` plus the
-most duplicated call sites. Resolve the light-theme question: `lightTheme` ships but can never
-render because `main.dart` pins `ThemeMode.dark`. This batch touches many files — sequence it last
-and keep CLAUDE.md rule 4 (do not redesign) in view.
-
-The five root `BUILD_*/DEBUG_*/KEYSETUP` notes were **marked stale in README rather than deleted** —
-deleting a user's files was out of scope for an unattended pass. Deleting them is a safe follow-up.
-
-Still open from Batch 4: `Semantics(header: true)` on screen titles, `textContrastGuideline`
-(needs a production-representative harness), and review of the `MaterialTapTargetSize.shrinkWrap`
-usage at `lib/screens/legal_disclaimer_screen.dart:386`.
-
-Then Batch 10 (hygiene: dependabot, README consolidation, formatting decision) and Batch 9
-(design tokens — sequence last, it touches many files).
-
----
-
-## Commands already run (this session)
-
-| Command | Result |
+| Status | Count |
 |---|---|
-| `flutter pub get` | OK (110 packages have newer versions available) |
-| `flutter analyze --no-fatal-infos` | **No issues found!** (2.9s) |
-| `flutter test --no-pub` | baseline **1009 passed / 1 failed**; after remediation **1025 passed / 0 failed** |
-| `./gradlew :app:connectedPlayDebugAndroidTest` | **BUILD SUCCESSFUL** on arm64 API 36 emulator — 4 passed, 0 failed, 2 skipped |
-| `flutter test --coverage --no-pub` + `dart scripts/verify_critical_coverage.dart` | **CRITICAL_COVERAGE_PASS** — emergency_session_contract 99.18%, emergency_platform_service 95.04%, pin_verification_service 94.87%, contact_service 93.08%, check_in_service 90.70% (min 90%) |
-| `scripts/audit_dependencies_osv.sh` (clean worktree) | **OSV_EVIDENCE_PASS** — 197 pub + 203 maven queries, `findingCount: 0`, `status: PASS` |
-| `scripts/scan_release_secrets.py --require-clean` (clean worktree) | **RELEASE_SECRET_SCAN_PASS** — 706 text + 46 binary, 0 findings |
-| `dart format --output=none --set-exit-if-changed lib/ test/` | 63 of 388 files would change (no CI format gate — deliberate) |
-| `flutter build apk --debug --flavor play --target-platform android-arm64` | Built OK |
-| Emulator run-through | Full first-run walkthrough, 9 screenshots captured |
+| PASS | 498 |
+| FAIL | 21 |
+| PARTIAL | 147 |
+| BLOCKED | 29 |
+| N/A | 778 |
+| UNVERIFIED | 265 |
+| **TOTAL** | **1738** |
 
-**Not run:** `scripts/verify_release.sh` (needs the release keystore), Android instrumentation tests
-(need a booted device with the project's gradle task), Play billing sandbox (needs a test account).
+| Severity | Count |
+|---|---|
+| P0 | 0 |
+| P1 | 29 |
+| P2 | 235 |
+| P3 | 198 |
 
-### Known baseline failure — not an app defect
+### Resolution queue
 
-`test/release_change_classification_test.dart` fails with
-`RELEASE_CHANGE_CLASSIFICATION_FAIL / UNCLASSIFIED_PATH docs/MASTER_PRODUCTION_CHECKLIST.md`.
-The gate is working as designed: it refuses to let an unclassified file enter release source. It
-predates this session (the checklist arrived untracked). Batch 0 fixes it.
+`RESOLUTION_QUEUE.md`, regenerated by `python3 scripts/generate_resolution_queue.py`.
 
-> Note for the next session: running the full suite twice attributed the failure to different files in
-> the compact reporter's overwriting output. Use `--reporter expanded` when isolating a failure here.
+| Scope | Count |
+|---|---|
+| `IN_REPO_RESOLVABLE` | 291 |
+| `RUNTIME_VERIFIABLE_NOW` | 33 |
+| `EXTERNAL_BLOCKER` | 87 |
+| `PRODUCT_DECISION_REQUIRED` | 51 |
+| **Total unresolved** | **462** |
 
-### How to run the security gates
+The dominant in-repo cluster is **142 rows whose evidence was section-level boilerplate**
+(the IR-06 downgrade). Those are not defects in the app; they are rows that need
+requirement-specific evidence written or measured. That is the next batch.
 
-Both fail closed on a dirty working tree (`candidate source is dirty`). To get a real result without
-touching the user's tree, use a detached worktree:
+---
+
+## Round-2 review remediation — one line per finding
+
+Every entry below is backed by a mutation or negative control: the covering test was shown
+to go **red** against the defect and green against the fix.
+
+| Finding | Sev | Outcome | Evidence |
+|---|---|---|---|
+| **R2-01** home card told a non-subscriber that emergency features keep working | P0 | **RESOLVED** | State model rebuilt: `SubscriptionReadiness` (6 states) + `noticeFor()`. Notice renders only where `canUsePaidSafetyFeature` is true, pinned by an invariant test. `subscription_readiness_state_test.dart` (21 cases, scenarios A–N) + `readiness_card_stale_verification_test.dart` (11 cases). MUTATION: restoring the old derivation fails 8 + 3 cases. |
+| **R2-02** duplicate countdown — guard written after a ~2.2 s await | P1 | **RESOLVED** | `_countdownOpen` acquired synchronously before the first suspension point, released in `finally`. `emergency_trigger_duplicate_guard_test.dart` fires the real trigger 2× and 20× inside a parked resolve window. MUTATION: old ordering yields 2 routes for 2 triggers and 20 for 20. |
+| **R2-03** quick-access entries rejected silently | P1 | **RESOLVED** | One shared surface: `SubscriptionGate.reportRejection`, reachable from above `MaterialApp` via `rootScaffoldMessengerKey`. Visible + screen-reader-announced + de-duplicated under rapid taps. MUTATION: the bare-return rejection fails 3 cases. |
+| **R2-04** `isPro` meant two different policies | P2 | **RESOLVED** | `isPro` → bounded commercial; `canUseEmergencyFeature` → unbounded emergency. Every lock surface asks `SubscriptionGate.isAuthorized(access, feature)`, the same function `ensureAccess` uses. |
+| **R2-05** advance-warning API was dead code | P2 | **RESOLVED** | `isOfflineGraceExpiring` / `remainingOfflineGrace` / `hasLostAccessToOfflineGraceExpiry` are now consumed by `noticeFor()`; the notice escalates with remaining grace and names the hours left. |
+| **R2-06** provider comment stated the opposite of the policy | P3 | **RESOLVED** | Comment rewritten to the implemented policy. |
+| **R2-07** `PROGRESS.md` contradicted itself four ways | P2 | **RESOLVED** | This file, rebuilt. Single-answer current state; history labelled. |
+| **R2-08** audit stamp predated the code it graded | P2 | **RESOLVED** | Three separate provenance facts (verified code revision / documentation revision / worktree), and the baseline-commands table re-measured. |
+| **R2-09** `MP-08-023` evidence was for a different requirement | P3 | **RESOLVED** | Real loading-button evidence: paywall restore shows progress, disables, refuses re-entry, recovers. MUTATION: removing the branch fails the case. |
+| **R2-10** recorded gate commands could not execute | P3 | **RESOLVED** | Exact invocations recorded, including the `--output` / `--config` arguments all three scripts require. |
+| **R2-11** future-dated anchor accepted by the SOS getter only | P2 | **RESOLVED** | Documented as a deliberate asymmetry — safety open, billing withdrawn — and pinned by scenario K. |
+| **R2-12** IR-01 reserved padding was uncovered | P3 | **RESOLVED** | Scroll-extent case added. MUTATION: removing `bottom: _imeInset` drops extent growth from 418 to 98 against a 320 px keyboard and fails. |
+
+New machinery added while closing these, because the same class of drift kept recurring:
+
+- `scripts/verify_audit_accounting.py` — compares IDs, section association, **ordered
+  requirement text** and every derived total. Mutation-tested against five drift classes
+  (status flip, dropped row, duplicated row, corrupted text, section-77 matrix lost).
+- `scripts/regenerate_audit_summaries.py` — the summary, severity and section-index tables
+  are now projections of the rows, not hand-maintained.
+- `scripts/generate_resolution_queue.py` — the queue is regenerated from the audit, so it
+  cannot claim progress the audit does not carry.
+- `test/audit_accounting_gate_test.dart` — runs the accounting gate in CI with two
+  negative controls.
+
+---
+
+## How to run the gates
+
+```bash
+python3 scripts/verify_audit_accounting.py
+```
+
+```bash
+python3 scripts/regenerate_audit_summaries.py && python3 scripts/generate_resolution_queue.py
+```
+
+The security gates fail closed on a dirty worktree (`candidate source is dirty`). Commit
+first, or use a detached worktree:
 
 ```bash
 git worktree add --detach /tmp/clean-wt HEAD && cd /tmp/clean-wt && flutter pub get
 ```
 
-The `flutter pub get` step is required — without it the OSV script's Gradle invocation fails on the
-missing Flutter plugin loader.
+`flutter pub get` in the worktree is required — without it the OSV script's Gradle
+invocation fails on the missing Flutter plugin loader.
+
+Exact invocations (all three take required arguments):
+
+```bash
+python3 scripts/scan_release_secrets.py --require-clean --output /tmp/secrets.json
+```
+
+```bash
+python3 scripts/verify_release_change_classification.py --config config/release_change_classification.json --output /tmp/cls.json
+```
+
+```bash
+bash scripts/audit_dependencies_osv.sh --output /tmp/osv.json
+```
 
 ### Emulator notes
 
-`Medium_Phone_API_36.1` is **arm64** on Apple Silicon. Build with
+`Medium_Phone_API_36.1` is **arm64** on Apple Silicon — build with
 `--target-platform android-arm64`; an x86_64 build installs but crashes with
-`MissingLibraryException: Could not find 'libflutter.so'`. The emulator `/data` partition filled at
-~91% — uninstall old APKs before reinstalling. `adb`/`emulator` are not on PATH; use
-`~/Library/Android/sdk/platform-tools` and `~/Library/Android/sdk/emulator`.
-
----
-
-## Important discovered architecture facts
-
-**What this product is.** `com.poyrazoncel.korubeni` — Android-only, offline-first Flutter personal-safety
-app. Turkish-only first runtime. Google Play is the sole distribution channel. minSdk 29, targetSdk 36,
-compileSdk 36. Flutter 3.38.9 (pinned in CI and matching local).
-
-**What it does not have** (this drives ~775 N/A verdicts):
-no backend/API/server DB · no accounts, login, email or password · no analytics, telemetry or crash SDK ·
-no AI/LLM/RAG/agents · no iOS or web target · no file uploads · no push (all notifications local) ·
-no admin panel · no multi-tenancy · no UGC.
-
-**Architecture.**
-- ~35 focused services in `lib/core/services/`; provider (ChangeNotifier) + get_it. **Not** used: BLoC,
-  Riverpod, freezed, GoRouter.
-- Typed native Kotlin safety kernel under `android/app/src/main/kotlin/.../emergency/` is the authority
-  for dispatch, alarms and session state. `docs/HANDOVER.md` is **ARCHIVED** and describes a removed
-  architecture — do not use it as current truth. Current truth: `docs/release/safety_case.md`.
-- Storage single sources of truth: emergency contacts → `flutter_secure_storage` key
-  `emergency_contacts_v1` (the sqflite `contacts` table is deliberately kept EMPTY); KVKK consent log →
-  plain SharedPreferences `kvkk_consent_log_v2` (deliberately off the keystore so consent proof survives
-  a keystore reset); legal versions → `lib/constants/legal_texts.dart`.
-
-**Binding product rules — these are decisions, not gaps. Do not "fix" them.**
-1. **112 is never dialled by any flow.** Only user-configured 7–15 digit numbers. The "112" strings in
-   legal copy say *you* should call 112 — unrelated.
-2. **Local PIN only; biometrics strictly forbidden** (duress model — a finger can be forced, a PIN can be
-   withheld). Never add `local_auth`, never suggest it.
-3. **Emergency path is network-free.** Optional network: OSM tiles, RevenueCat, connectivity checks.
-   Claiming "100% offline product" is also forbidden.
-4. Panic/countdown and check-in/safe-walk are **deliberately different** (PIN-gated cancel + failover
-   across all numbers vs. one-tap cancel + primary contact only). Do not unify them.
-5. Backups are deliberately disabled (`allowBackup=false`, all domains excluded) — a cloud copy of a
-   victim's contacts is a liability under the duress model.
-
-**Strong areas found (do not disturb).** Release engineering is well above typical: signed-annotated-tag
-release gate with main-ancestry verification, build provenance and attestations, deterministic CycloneDX
-SBOM (400 components) with per-component licence evidence (named reviewer, date, SPDX, source URL,
-SHA-256), OSV audit, secret scanner, MASVS assessment, safety mutation testing, critical-coverage gate at
-90%, nightly connected-safety emulator matrix across API 29–36, and a family of policy tests that fail
-closed on drift.
-
-**Weak areas found.** No design-token layer · no golden/visual-regression tests · no accessibility
-guideline matchers and no TalkBack pass · no telemetry (deliberate, but its consequences are
-undocumented) · no SLO/alerting/incident runbook · no physical-device evidence for this build ·
-billing path never exercised.
-
----
-
-## Blockers
-
-| Blocker | Blocks | Nature |
-|---|---|---|
-| No Play internal-test account / RevenueCat sandbox key | Batch 1 (20 P1 items) | External account access |
-| No physical Android device in this environment | Batch 2 (12 items) | Hardware |
-| Play Console + GitHub account settings not inspectable from the repo | Batch 3 (`MP-63-006`, `MP-48-006`…`008`) | External org access |
-| Play policy review of CALL_PHONE + REQUEST_IGNORE_BATTERY_OPTIMIZATIONS | `MP-59-029`, `MP-62-020` | External decision by Google |
-| Android 16 large-screen compat opt-out expires at API 37 | Batch 11 (14 items) | External platform deadline |
-| Release keystore not available in this environment | `scripts/verify_release.sh` full chain | Credential |
+`MissingLibraryException: Could not find 'libflutter.so'`. `adb`/`emulator` are not on
+PATH; use `~/Library/Android/sdk/platform-tools` and `~/Library/Android/sdk/emulator`.
+The `/data` partition fills at ~91 % — uninstall old APKs before reinstalling.
 
 ---
 
 ## Next action
 
-1. Apply **Batch 0** (one rule in `config/release_change_classification.json`), then confirm
-   `flutter test --no-pub` is 1010/1010 green.
-2. Start **Batch 1** — build with a RevenueCat sandbox key, push to the Play internal-test track, and
-   execute `store/BILLING_RELEASE_CHECKLIST.md` end to end, recording dated evidence in `docs/qa/`.
+Work `RESOLUTION_QUEUE.md` top-down. The next batch is the **142 boilerplate-evidence
+rows**: write requirement-specific evidence, or measure it on the emulator, one row at a
+time. A row only leaves the queue when its audit row changes status and the accounting
+gate still passes.
 
-Per CLAUDE.md rule 5, write a plan and get approval before changing application code.
+Do **not** close a row by pasting a new, differently-worded blanket sentence across a
+section. That is what created the IR-06 finding in the first place.
+
+---
+
+## Superseded history
+
+> Kept because it explains why the current machinery exists. **None of it is current
+> state.** Where it conflicts with "Current state" above, "Current state" wins.
+
+### Round-1 review (`INDEPENDENT_REVIEW.md`) — verdict REVIEW FAILED
+
+| Finding | Outcome |
+|---|---|
+| IR-01 keyboard hides save action | RESOLVED — root cause: `Scaffold.resizeToAvoidBottomInset` consumes the inset, so nothing inside the body sees the IME via MediaQuery; the fix reads the FlutterView in `didChangeMetrics` |
+| IR-02 regression test could not fail | RESOLVED — rewritten to assert geometry against the keyboard line, never calling `ensureVisible` |
+| IR-03 a11y harness vacuous | RESOLVED — real `tr-TR.json`, raw-key leakage fails the run, two negative controls; round 2 independently confirmed 10 tests / 2 negative controls / 4 screens |
+| IR-04 offline entitlement P0 | RESOLVED by product decision — a failed refresh is not a confirmed expiry |
+| IR-05 five contradictory summaries | RESOLVED — one summary, regenerated from rows |
+| IR-06 boilerplate evidence | RESOLVED as a *classification* — 145 unsupported PASS rows downgraded to UNVERIFIED. 142 of them still need real evidence; that is the current queue |
+| IR-07 stale batch states | RESOLVED |
+| IR-08 uncommitted work | RESOLVED |
+| IR-09 PIN banner shifted the keypad | RESOLVED — reserved slot scaling with text size; round 2 confirmed by its own negative control (3 of 6 fail when made conditional) |
+| IR-10 malformed rows | RESOLVED — 1738/1738 parse to valid method codes |
+
+### Withdrawn claims (do not restore)
+
+1. **"No P0, structurally."** Withdrawn. It enumerated only server/web hazards. This
+   product's catastrophic event is a panic button that does not dial, and both round-1
+   IR-04 and round-2 R2-01 reached it. P0 is currently 0 because two specific defects were
+   fixed and regression-proven — not because the architecture makes P0 impossible.
+2. **"P0 count is now 0" (2026-08-13, pre-round-2).** True only after R2-01 was closed;
+   when written, the change it cited had *introduced* R2-01.
+3. **Status table showing TOTAL 1,714.** Superseded: the checklist holds 1,738
+   requirements (1,714 checkboxes + 24 section-77 launch-matrix rows). The canonical
+   checklist was never modified.
+4. **"29 P1 items, all externally blocked" as a status claim.** The severity is right and
+   the external classification is right, but by *status* they are BLOCKED 4 / PARTIAL 9 /
+   UNVERIFIED 16, and two (`MP-53-003`, `MP-77-009`) have in-repo runbooks already written
+   with only the console fact outstanding.
+
+### Defects found and fixed during earlier remediation
+
+1. **Dead database migration hook.** `_onUpgrade` read `if (oldVersion < 1)`; sqflite's
+   `user_version` starts at 1, so the branch could never run. Any later column would have
+   existed only on fresh installs while every insert naming it failed for upgrading users.
+   Fixed with additive-only migrations + `local_database_migration_test.dart`.
+2. **Flaky test on the panic gate.** `panic_button_behavior_test.dart` passed in isolation
+   and failed ~half of full-suite runs: `PanicButton` measures the hold with a real
+   monotonic `Stopwatch` (correct — a wall-clock change must never complete an armed hold)
+   while `tester.pump()` advances only the FakeAsync clock. Fixed with a production-inert
+   `holdClockOverride` seam. A flaky test here is worse than no test: it trains people to
+   re-run until green.
+3. **Save action unreachable behind the keyboard.** Confirmed on an API 36 emulator; that
+   button is the only way to register an emergency contact, so a user who could not find
+   the scroll gesture ended up with no panic flow at all.

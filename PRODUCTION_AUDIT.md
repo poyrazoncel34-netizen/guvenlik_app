@@ -2,7 +2,27 @@
 
 > Audit of every individual checkbox in [`docs/MASTER_PRODUCTION_CHECKLIST.md`](docs/MASTER_PRODUCTION_CHECKLIST.md).
 
-> Generated 2026-08-12 against git HEAD `fe83771` (branch `feat/tutundurma-ucretsiz-prova`).
+## Evidence provenance
+
+> **The single stamp this document used to carry named an OLDER tree than the one it
+> graded.** `INDEPENDENT_REVIEW_ROUND_2.md` R2-08 showed 9,972 insertions across 42 files
+> between the stamped commit and the tree being assessed, including the safety-critical
+> files whose rows were being written. A reader could not tell which rows described which
+> tree, which is the only property a stamp exists to provide. Three separate facts are
+> therefore recorded separately, and they are not interchangeable.
+
+| Fact | Value |
+|---|---|
+| **VERIFIED CODE REVISION** — the tree every `TEST`/`CMD`/`RUN` result below was produced against | `273864f` (branch `feat/tutundurma-ucretsiz-prova`) |
+| **Documentation revision** — the commit that carries this file's current text | the commit containing this line; it changes no `lib/`, `android/` or `test/` source |
+| **Worktree at verification time** | clean (`git status --porcelain` empty); the secret scan refuses to run otherwise |
+| Verification date | 2026-08-13 |
+
+> Rows dated **2026-08-12** were produced against the earlier `fe83771` tree and carry
+> their own date in the evidence cell. Where a row was re-verified against `273864f` its
+> evidence says so explicitly. Evidence from one revision is never presented as proof of
+> behaviour introduced in another.
+
 
 
 **Scope note.** KoruBeni is an Android-only, offline-first Flutter personal-safety app with **no developer backend, no accounts, no analytics/telemetry, and no AI**. A large share of this checklist targets server/web/AI products; those requirements are marked `N/A` with a per-item justification, never for difficulty. Where a requirement genuinely applies but could not be verified with available evidence it is marked `UNVERIFIED`, and where an external dependency blocks it, `BLOCKED`.
@@ -21,16 +41,24 @@
 
 ## Baseline commands run
 
+> Recorded as the **exact invocations**, because the previous table's command lines could
+> not execute as written -- `scan_release_secrets.py` and
+> `verify_release_change_classification.py` both have required arguments, and
+> `audit_dependencies_osv.sh` requires `--output` (R2-10). Measured against the verified
+> code revision above.
+
 | Command | Result |
 |---|---|
-| `flutter analyze --no-fatal-infos` | **No issues found!** (2.9s) |
-| `flutter test --no-pub` | **1009 passed / 1 failed** — the failure is `release_change_classification_test.dart` reporting `UNCLASSIFIED_PATH docs/MASTER_PRODUCTION_CHECKLIST.md`, i.e. the release gate correctly refusing an unclassified file. Not an app defect. |
-| `dart scripts/verify_critical_coverage.dart` | **CRITICAL_COVERAGE_PASS** — all 5 critical safety files ≥90% |
-| `scripts/audit_dependencies_osv.sh` (clean worktree) | **OSV_EVIDENCE_PASS** — 197 pub + 203 maven queries, `findingCount: 0` |
-| `scripts/scan_release_secrets.py --require-clean` (clean worktree) | **RELEASE_SECRET_SCAN_PASS** — 706 text + 46 binary files, 0 findings |
-| `dart format --output=none --set-exit-if-changed lib/ test/` | **63 of 388 files would change** — no format gate in CI (deliberate, see MP-27-003) |
-| `flutter build apk --debug --flavor play --target-platform android-arm64` | **Built successfully** (`app-play-debug.apk`) |
-| App runtime | **Launched and driven on emulator** — consent gate → onboarding → contact validation → PIN setup → permission rationale/denial → home → settings |
+| `flutter analyze --no-fatal-infos` | **No issues found!** (2.2s) |
+| `flutter test --no-pub` | **1139 passed / 0 failed** |
+| `dart scripts/verify_critical_coverage.dart` | **CRITICAL_COVERAGE_PASS** -- all 5 critical safety files >=90% |
+| `bash scripts/audit_dependencies_osv.sh --output <path>` | **OSV_EVIDENCE_PASS** -- 197 pub + 203 maven queries, `findingCount: 0` |
+| `python3 scripts/scan_release_secrets.py --require-clean --output <path>` | **RELEASE_SECRET_SCAN_PASS** -- 733 text + 46 binary files, 0 findings |
+| `python3 scripts/verify_release_change_classification.py --config config/release_change_classification.json --output <path>` | **RELEASE_CHANGE_CLASSIFICATION_PASS** |
+| `python3 scripts/verify_audit_accounting.py` | **AUDIT_ACCOUNTING_PASS** -- checklist=1738 audit=1738 missing=0 duplicated=0 unaccounted=0 sections=80 launchMatrix=24 |
+| `dart format --output=none --set-exit-if-changed lib/ test/` | **63 of 388 files would change** -- no format gate in CI (deliberate, see MP-27-003) |
+| `flutter build apk --debug --flavor play --target-platform android-arm64` | **Built successfully** (`app-play-debug.apk`), 2026-08-12 against `fe83771` |
+| App runtime | **Launched and driven on emulator**, 2026-08-12 against `fe83771` -- consent gate -> onboarding -> contact validation -> PIN setup -> permission rationale/denial -> home -> settings |
 
 ---
 ## Result summary
@@ -2874,7 +2902,7 @@ Every P0 and P1 individually, so none hides inside an aggregate.
 | `MP-75-003` | Integration green. | Applicable | **PASS** | - | TEST: integration-level coverage runs through the sqflite-ffi harness and the Kotlin unit suites; CMD `dart scripts/verify_critical_coverage.dart` -> CRITICAL_COVERAGE_PASS; all 5 critical safety files >=90% (emergency_session_contract 99.18%, emergency_platform_service 95.04%, pin_verification_service 94.87%, contact_service 93.08%, check_in_service 90.70%). | - | - | `CMD` |
 | `MP-75-004` | Critical E2E green. | Applicable | **PASS** | - | TEST android/app/src/androidTest/.../EmergencySessionAlarmInstrumentationTest.kt, Phase3RebootProbeTest.kt and SupportedOsBoundaryInstrumentationTest.kt run nightly across API 29-36 - the critical E2E path for this product. | - | - | `CMD` |
 | `MP-75-005` | AI evals green. | N/A | **N/A** | - | SRC: no AI/LLM dependency exists. pubspec.yaml declares none, and grep for openai/anthropic/langchain/embedding/vector/llm across lib/ and android/ returns nothing. | - | Not applicable. | `SRC` |
-| `MP-75-006` | Security gate green. | Applicable | **PASS** | - | R2-10 FIXED: the recorded invocations are now the exact command lines, which the previous ones were not (both scripts have required arguments). CMD `scripts/audit_dependencies_osv.sh` on a clean worktree -> OSV_EVIDENCE_PASS, pub_queries=197, maven_queries=203, findingCount=0. CMD `python3 scripts/scan_release_secrets.py --require-clean --output <path>` -> RELEASE_SECRET_SCAN_PASS. CMD `python3 scripts/verify_release_change_classification.py --config config/release_change_classification.json --output <path>` -> RELEASE_CHANGE_CLASSIFICATION_PASS. CMD `python3 scripts/verify_audit_accounting.py` -> AUDIT_ACCOUNTING_PASS. Plus the MASVS assessment gate (TEST test/masvs_assessment_gate_test.dart). | - | - | `CMD` |
+| `MP-75-006` | Security gate green. | Applicable | **PASS** | - | R2-10 FIXED: the recorded invocations are now the exact command lines, which the previous ones were not (both scripts have required arguments). CMD `bash scripts/audit_dependencies_osv.sh --output <path>` on a clean worktree -> OSV_EVIDENCE_PASS, pub_queries=197, maven_queries=203, findingCount=0. CMD `python3 scripts/scan_release_secrets.py --require-clean --output <path>` -> RELEASE_SECRET_SCAN_PASS. CMD `python3 scripts/verify_release_change_classification.py --config config/release_change_classification.json --output <path>` -> RELEASE_CHANGE_CLASSIFICATION_PASS. CMD `python3 scripts/verify_audit_accounting.py` -> AUDIT_ACCOUNTING_PASS. Plus the MASVS assessment gate (TEST test/masvs_assessment_gate_test.dart). | - | - | `CMD` |
 | `MP-75-007` | Performance gate green. | Applicable | **PARTIAL** | P2 | TEST test/screens/dispatch_path_latency_contract_test.dart enforces the structural latency contract on the dispatch path. | No measured performance gate on physical hardware (section 41). | Add the measured dispatch budget once the real-device pass is executed. | `CMD` |
 | `MP-75-008` | Migration tested. | Applicable | **PASS** | - | TEST test/core/services/local_database_migration_test.dart (6 cases, added 2026-08-12) drives the real createSchema/upgradeSchema against sqflite-ffi. | - | - | `TEST` |
 | `MP-75-009` | Smoke test green. | Applicable | **PASS** | - | SRC scripts/verify_release.sh runs the full local gate (analyze -> test -> signed AAB -> Android lint -> Kotlin unit -> 16KB alignment); DOC store/MANUAL_SMOKE_TEST_SCRIPT.md covers the post-install smoke test. | - | - | `CMD` |
@@ -2935,7 +2963,7 @@ Every P0 and P1 individually, so none hides inside an aggregate.
 | `MP-77-006` | Frontend — Kritik hata yok | Applicable | **PASS** | - | CMD `flutter analyze --no-fatal-infos` -> No issues found!; full suite green on the final tree. | - | - | `CMD` |
 | `MP-77-007` | Backend — Kritik endpoint'ler doğrulandı | N/A | **N/A** | - | SRC: the product has no backend. CLAUDE.md rule 1 makes the emergency path backend-free; the only outbound calls are OSM tiles and the RevenueCat SDK. | - | Not applicable — there is no endpoint this project operates. | `SRC` |
 | `MP-77-008` | Database — Integrity + migration doğrulandı | Applicable | **PASS** | - | TEST test/core/services/local_database_migration_test.dart (6 cases) drives the real createSchema/upgradeSchema against sqflite-ffi, including 'migration never drops the user safety timeline' and a version/migration parity guard. The previously dead upgrade hook was found and fixed during remediation. | - | - | `TEST` |
-| `MP-77-009` | Security — Critical açık yok | Applicable | **PARTIAL** | P1 | CMD on the final committed tree, with the exact reproducible invocations (R2-10): `python3 scripts/scan_release_secrets.py --require-clean --output <path>` -> RELEASE_SECRET_SCAN_PASS, and `scripts/audit_dependencies_osv.sh` -> OSV_EVIDENCE_PASS. No auth/tenant/RCE surface exists (no server, no accounts, no WebView). | MFA on the Play/GitHub accounts and Play App Signing enrolment cannot be verified from the repository. | Confirm both in the consoles; see EXTERNAL_LAUNCH_BLOCKERS.md. | `CMD` |
+| `MP-77-009` | Security — Critical açık yok | Applicable | **PARTIAL** | P1 | CMD on the final committed tree, with the exact reproducible invocations (R2-10): `python3 scripts/scan_release_secrets.py --require-clean --output <path>` -> RELEASE_SECRET_SCAN_PASS, and `bash scripts/audit_dependencies_osv.sh --output <path>` -> OSV_EVIDENCE_PASS. No auth/tenant/RCE surface exists (no server, no accounts, no WebView). | MFA on the Play/GitHub accounts and Play App Signing enrolment cannot be verified from the repository. | Confirm both in the consoles; see EXTERNAL_LAUNCH_BLOCKERS.md. | `CMD` |
 | `MP-77-010` | Privacy — Veri akışı anlaşılmış | Applicable | **PASS** | - | DOC docs/kvkk_veri_isleme_envanteri.md is the data inventory; RUN verified granular per-purpose consent with retention stated per category; no analytics SDK exists anywhere. | - | - | `RUN` |
 | `MP-77-011` | AI — Eval threshold geçildi | N/A | **N/A** | - | SRC: the product ships no model, prompt, inference or generated output. No AI dependency exists in pubspec.yaml or anywhere under lib/ or android/. | - | Not applicable — there is nothing to evaluate. | `SRC` |
 | `MP-77-012` | AI Security — Critical agent/LLM riski açık değil | N/A | **N/A** | - | SRC: no LLM, agent, RAG or tool-calling surface exists, so OWASP LLM/AISVS risks have no attack surface. | - | Not applicable. | `SRC` |
