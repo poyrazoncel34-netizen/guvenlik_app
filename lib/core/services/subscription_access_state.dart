@@ -156,6 +156,20 @@ class SubscriptionAccessState {
     // timestamp must be present: a lone boolean written into local storage
     // must not be able to forge an entitlement that never happened
     // (see subscription_offline_grace_test.dart).
+    //
+    // FUTURE-DATED ANCHOR (owner decision, 2026-08-13, closing
+    // INDEPENDENT_REVIEW_ROUND_2.md R2-11): only PRESENCE is checked here, not
+    // plausibility, so a rolled-back device clock still authorizes the
+    // emergency path. This is deliberate and differs from
+    // [canArmWithinOfflineGrace] and [remainingOfflineGrace], which both treat
+    // a future anchor as fully expired. The asymmetry is the policy: a wrong
+    // clock must never remove SOS from a confirmed subscriber, but it also
+    // must not hand out unbounded BILLING value -- so the safety path stays
+    // open and every non-safety paid feature is withdrawn. The anti-forgery
+    // boundary is therefore "two present keys" for safety and "two plausible
+    // keys" for billing. Scenario K in
+    // test/core/services/subscription_readiness_state_test.dart pins both
+    // halves.
     final confirmedBefore =
         lastVerifiedPro == true && lastVerifiedProAt != null;
     return confirmedBefore

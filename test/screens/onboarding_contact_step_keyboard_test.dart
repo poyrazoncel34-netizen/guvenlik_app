@@ -245,4 +245,52 @@ void main() {
       lessThanOrEqualTo(1600 - kImeInset + 1.0),
     );
   });
+
+  // R2-12: the fix has TWO mechanisms -- the scroll reveal and the reserved
+  // bottom padding. An independent reviewer disabled the padding and all six
+  // existing cases still passed, so the padding was uncovered. This case
+  // measures the scroll extent the padding creates.
+  testWidgets('the reserved bottom padding gives the scroll view enough '
+      'extent to clear the IME', (tester) async {
+    await pumpStep(tester);
+
+    final scrollableFinder = find.byType(Scrollable).first;
+    final closedExtent = tester
+        .state<ScrollableState>(scrollableFinder)
+        .position
+        .maxScrollExtent;
+
+    await focusPhoneField(tester);
+    await openKeyboard(tester);
+
+    final openExtent = tester
+        .state<ScrollableState>(scrollableFinder)
+        .position
+        .maxScrollExtent;
+
+    // Harness precondition: the IME must really be simulated. Without this a
+    // zero-inset run would compare two identical numbers and "pass".
+    expect(
+      tester.view.viewInsets.bottom,
+      moreOrLessEquals(kImeInset, epsilon: 1.0),
+      reason: 'harness precondition: the IME inset must be applied',
+    );
+
+    // Opening the IME shrinks the viewport by the inset AND, because of
+    // `bottom: _imeInset`, adds the same inset to the content. The viewport
+    // shrink alone cannot reach this bound: with this content the closed state
+    // has slack, so removing the reserved padding leaves the growth well under
+    // one keyboard height (measured: 98 vs 418).
+    expect(
+      openExtent - closedExtent,
+      greaterThanOrEqualTo(kImeInset),
+      reason:
+          'The scrollable extent must grow by at least the keyboard height '
+          'when the IME opens. Less than that means `bottom: _imeInset` was '
+          'removed: the content ends above the keyboard and the save action '
+          'cannot be scrolled clear of it at all. '
+          'closed=$closedExtent open=$openExtent',
+    );
+  });
+
 }

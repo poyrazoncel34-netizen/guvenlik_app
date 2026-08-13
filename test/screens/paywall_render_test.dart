@@ -13,6 +13,7 @@
 // objects, and SubscriptionProvider is subclassed to keep initialize() away
 // from the platform channel.
 
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -77,9 +78,27 @@ class _StubPaywallProvider extends SubscriptionProvider {
   Future<void> initialize() async {}
 }
 
+/// Parks `restorePurchases()` so the busy state can be observed. Real async
+/// work is what a loading button exists for; a stub that returns immediately
+/// would never render the busy frame.
+class _ParkedRestoreProvider extends _StubPaywallProvider {
+  _ParkedRestoreProvider() : super(plansAvailable: true);
+
+  final Completer<void> gate = Completer<void>();
+  int restoreCalls = 0;
+
+  @override
+  Future<String?> restorePurchases() async {
+    restoreCalls++;
+    await gate.future;
+    return null;
+  }
+}
+
 Future<void> _pumpPaywall(
   WidgetTester tester, {
   required bool plansAvailable,
+  SubscriptionProvider? provider,
 }) async {
   // The paywall is a lazy ListView. At the default 800px test viewport the
   // renewal disclosure, legal links and restore action are below the fold and
@@ -101,7 +120,9 @@ Future<void> _pumpPaywall(
       child: Builder(
         builder: (context) =>
             ChangeNotifierProvider<SubscriptionProvider>.value(
-              value: _StubPaywallProvider(plansAvailable: plansAvailable),
+              value:
+                  provider ??
+                  _StubPaywallProvider(plansAvailable: plansAvailable),
               child: MaterialApp(
                 localizationsDelegates: context.localizationDelegates,
                 supportedLocales: context.supportedLocales,
@@ -120,6 +141,10 @@ Future<void> _pumpPaywall(
     await tester.pump(const Duration(milliseconds: 50));
   }
 }
+
+Map<String, dynamic> _catalogue() =>
+    jsonDecode(File('assets/translations/tr-TR.json').readAsStringSync())
+        as Map<String, dynamic>;
 
 /// Finds a Text whose rendered data contains [needle], regardless of how the
 /// string is split across the widget tree.
@@ -264,4 +289,119 @@ void main() {
       },
     );
   });
+
+  // MP-08-023 "Loading button." Previously this row carried evidence about PIN
+  // banner layout stability -- a different requirement entirely
+  // (INDEPENDENT_REVIEW_ROUND_2.md R2-09). This is the real thing: an async
+  // action must show progress AND refuse re-entry while it runs.
+  group('MP-08-023: the restore action is a real loading button', () {
+    testWidgets('shows progress and disables itself while the async action '
+        'runs, then recovers', (tester) async {
+      final provider = _ParkedRestoreProvider();
+      await _pumpPaywall(tester, plansAvailable: true, provider: provider);
+
+      // The paywall carries several TextButtons; identify the restore action
+      // by its own localized label rather than by type, and use an ancestor
+      // finder because `TextButton.icon` builds a private subclass.
+      final restoreLabel = _catalogue()['subscription_restore_title'] as String;
+      final restoreFinder = find.ancestor(
+        of: find.text(restoreLabel),
+        matching: find.byWidgetPredicate((w) => w is TextButton),
+      );
+      expect(
+        restoreFinder,
+        findsOneWidget,
+        reason: 'harness precondition: the restore action must be built',
+      );
+      // Precondition: idle, enabled, no spinner.
+      expect(tester.widget<TextButton>(restoreFinder).onPressed, isNotNull);
+      expect(
+        find.descendant(
+          of: restoreFinder,
+          matching: find.byType(CircularProgressIndicator),
+        ),
+        findsNothing,
+      );
+
+      await tester.tap(restoreFinder);
+      await tester.pump();
+
+      expect(provider.restoreCalls, 1);
+      expect(
+        find.descendant(
+          of: restoreFinder,
+          matching: find.byType(CircularProgressIndicator),
+        ),
+        findsOneWidget,
+        reason: 'a loading button must show progress while its action runs',
+      );
+      expect(
+        tester.widget<TextButton>(restoreFinder).onPressed,
+        isNull,
+        reason: 'a loading button must be disabled while its action runs',
+      );
+
+      // Re-entry while busy must not start a second restore.
+      await tester.tap(restoreFinder, warnIfMissed: false);
+      await tester.pump();
+      expect(provider.restoreCalls, 1);
+
+      provider.gate.complete();
+      for (var i = 0; i < 6; i++) {
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+
+      expect(
+        tester.widget<TextButton>(restoreFinder).onPressed,
+        isNotNull,
+        reason: 'the button must become usable again once the action settles',
+      );
+      expect(
+        find.descendant(
+          of: restoreFinder,
+          matching: find.byType(CircularProgressIndicator),
+        ),
+        findsNothing,
+      );
+    });
+
+    testWidgets('plan cards refuse purchase while a restore is in flight', (
+      tester,
+    ) async {
+      final provider = _ParkedRestoreProvider();
+      await _pumpPaywall(tester, plansAvailable: true, provider: provider);
+
+      final restoreLabel = _catalogue()['subscription_restore_title'] as String;
+      final restoreFinder = find.ancestor(
+        of: find.text(restoreLabel),
+        matching: find.byWidgetPredicate((w) => w is TextButton),
+      );
+      expect(restoreFinder, findsOneWidget);
+      await tester.tap(restoreFinder);
+      await tester.pump();
+
+      final planCards = tester
+          .widgetList<InkWell>(find.byType(InkWell))
+          .where((w) => w.borderRadius == BorderRadius.circular(18))
+          .toList();
+      expect(
+        planCards,
+        isNotEmpty,
+        reason: 'harness precondition: plan cards must be built',
+      );
+      expect(
+        planCards.every((card) => card.onTap == null),
+        isTrue,
+        reason:
+            'a concurrent purchase during an in-flight restore is exactly the '
+            'double-submit this requirement forbids',
+      );
+
+      provider.gate.complete();
+      for (var i = 0; i < 6; i++) {
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+    });
+  });
+
 }
