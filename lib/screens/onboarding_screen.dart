@@ -244,14 +244,18 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                                 // Title with slight parallax
                                 Transform.translate(
                                   offset: Offset(pageOffset * -30, 0),
-                                  child: Text(
-                                    p.title,
-                                    textAlign: TextAlign.center,
-                                    style: const TextStyle(
-                                      fontSize: 26,
-                                      fontWeight: FontWeight.w800,
-                                      color: AppColors.textPrimary,
-                                      letterSpacing: -0.5,
+                                  // Page heading (MP-12-017).
+                                  child: Semantics(
+                                    header: true,
+                                    child: Text(
+                                      p.title,
+                                      textAlign: TextAlign.center,
+                                      style: const TextStyle(
+                                        fontSize: 26,
+                                        fontWeight: FontWeight.w800,
+                                        color: AppColors.textPrimary,
+                                        letterSpacing: -0.5,
+                                      ),
                                     ),
                                   ),
                                 ),

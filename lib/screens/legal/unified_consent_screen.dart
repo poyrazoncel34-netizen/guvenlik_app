@@ -148,12 +148,16 @@ class _UnifiedConsentScreenState extends State<UnifiedConsentScreen> {
       children: [
         const Icon(Icons.shield_rounded, size: 40, color: AppColors.primary),
         const SizedBox(height: 12),
-        Text(
-          'legal_unified_title'.tr(),
-          style: const TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.w800,
-            color: AppColors.textPrimary,
+        // Screen heading (MP-12-017).
+        Semantics(
+          header: true,
+          child: Text(
+            'legal_unified_title'.tr(),
+            style: const TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w800,
+              color: AppColors.textPrimary,
+            ),
           ),
         ),
         const SizedBox(height: 6),

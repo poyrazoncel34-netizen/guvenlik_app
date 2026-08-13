@@ -463,14 +463,12 @@ class _CountdownScreenState extends State<CountdownScreen>
                 ),
               ),
               const SizedBox(height: 16),
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w900,
-                  color: Colors.white,
-                ),
-                textAlign: TextAlign.center,
+              // Heading of the blocking failure surface (MP-12-017).
+              Semantics(
+                header: true,
+                child: Text(title, textAlign: TextAlign.center, style: const
+                    TextStyle(fontSize: 20, fontWeight: FontWeight.w900,
+                        color: Colors.white)),
               ),
               const SizedBox(height: 12),
               Text(

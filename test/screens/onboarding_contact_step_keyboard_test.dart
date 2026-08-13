@@ -293,4 +293,110 @@ void main() {
     );
   });
 
+
+  // ==========================================================================
+  // R3-01: the SAME step, in the embedding production actually uses.
+  //
+  // Every case above pumps `OnboardingContactStep` alone in a full-height
+  // Scaffold body. Production puts it inside `onboarding_screen`'s PageView,
+  // under a skip header and above the page dots, the primary button and a
+  // helper line. That chrome costs ~230 logical px, so the step's viewport with
+  // the IME open is ~345px on a real device instead of the ~480px the standalone
+  // harness gives it.
+  //
+  // Driving the real build on an arm64 API 36 emulator (1080x2400 @ 420dpi,
+  // logical 411x914, IME 339) showed the save action NOT revealed on focus: the
+  // content still ended mid-helper-sentence and the user had to find the scroll
+  // gesture -- the exact IR-01 defect, in the exact embedding the standalone
+  // harness cannot see.
+  // ==========================================================================
+  group('production embedding (PageView + footer chrome)', () {
+    // Logical geometry measured from the emulator, not invented.
+    const embeddedViewport = Size(411 * 2.625, 914 * 2.625);
+    const embeddedIme = 339.0 * 2.625;
+
+    Future<void> pumpEmbedded(WidgetTester tester) async {
+      tester.view.devicePixelRatio = 2.625;
+      tester.view.physicalSize = embeddedViewport;
+      tester.view.viewInsets = FakeViewPadding.zero;
+      addTearDown(tester.view.reset);
+
+      await tester.runAsync(() async {
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: SafeArea(
+                child: Column(
+                  children: [
+                    // skip header
+                    const SizedBox(height: 48),
+                    Expanded(
+                      child: PageView(
+                        children: [
+                          OnboardingContactStep(onGateChanged: (_) {}),
+                        ],
+                      ),
+                    ),
+                    // page dots
+                    const SizedBox(height: 56),
+                    // primary button
+                    const SizedBox(height: 84),
+                    // gate helper line
+                    const SizedBox(height: 40),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+        await Future<void>.delayed(const Duration(milliseconds: 400));
+      });
+      await tester.pump(const Duration(milliseconds: 50));
+      assertRealFormState(tester);
+    }
+
+    testWidgets('the save action is revealed above the keyboard without the '
+        'user scrolling', (tester) async {
+      await pumpEmbedded(tester);
+
+      final keyboardTop =
+          embeddedViewport.height / 2.625 - embeddedIme / 2.625;
+
+      // Precondition: before the IME opens the action is on screen (compared
+      // against the FULL viewport, not the future keyboard line -- comparing
+      // against the keyboard line here would fail for a perfectly healthy
+      // layout and mask the real result).
+      expect(
+        tester.getRect(saveAction()).bottom,
+        lessThanOrEqualTo(embeddedViewport.height / 2.625 + 1.0),
+        reason: 'harness precondition: action visible before the IME opens',
+      );
+
+      await tester.tap(find.byType(TextField).last);
+      await tester.pump(const Duration(milliseconds: 50));
+      for (final fraction in <double>[0.25, 0.5, 0.75, 1.0]) {
+        tester.view.viewInsets = FakeViewPadding(bottom: embeddedIme * fraction);
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+      for (var i = 0; i < 12; i++) {
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+
+      // Precondition: the IME really is simulated.
+      expect(
+        tester.view.viewInsets.bottom,
+        moreOrLessEquals(embeddedIme, epsilon: 1.0),
+      );
+
+      expect(
+        tester.getRect(saveAction()).bottom,
+        lessThanOrEqualTo(keyboardTop + 1.0),
+        reason:
+            'The save action is the ONLY way to register an emergency contact, '
+            'and a user who cannot find the scroll gesture ends up with no '
+            'panic flow at all. Reproduced on device before this test existed.',
+      );
+    });
+  });
+
 }

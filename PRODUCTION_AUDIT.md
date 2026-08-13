@@ -76,12 +76,12 @@
 | **MISSING** | **0** |
 | **DUPLICATED** | **0** |
 | **UNACCOUNTED** | **0** |
-| PASS | 498 |
+| PASS | 499 |
 | FAIL | 21 |
 | PARTIAL | 147 |
 | BLOCKED | 29 |
 | N/A | 778 |
-| UNVERIFIED | 265 |
+| UNVERIFIED | 264 |
 
 ### Severity of non-PASS findings
 
@@ -90,7 +90,7 @@
 | P0 | 0 |
 | P1 | 29 |
 | P2 | 235 |
-| P3 | 198 |
+| P3 | 197 |
 
 ### P0 / P1 register
 
@@ -143,7 +143,7 @@ Every P0 and P1 individually, so none hides inside an aggregate.
 | 9 | 6 | 0 | 2 | 0 | 0 | 20 |
 | 10 | 10 | 0 | 0 | 0 | 18 | 1 |
 | 11 | 7 | 0 | 2 | 0 | 6 | 5 |
-| 12 | 19 | 0 | 3 | 0 | 4 | 14 |
+| 12 | 20 | 0 | 3 | 0 | 4 | 13 |
 | 13 | 6 | 0 | 1 | 0 | 1 | 10 |
 | 14 | 7 | 0 | 7 | 0 | 6 | 2 |
 | 15 | 5 | 0 | 0 | 0 | 1 | 7 |
@@ -254,7 +254,7 @@ Every P0 and P1 individually, so none hides inside an aggregate.
 | `MP-01-027` | Partial success state'i varsa tasarlanmış. | Applicable | **PARTIAL** | P2 | SRC lib/screens/countdown_screen.dart: dispatch fails over across all configured numbers and surfaces a blocking manual-dial dialog when every target fails. | Per-target partial outcome (first contact dialled, second not) collapses into one session result in the timeline. | Record and display per-target dispatch outcome in the safety timeline. | `RUN` |
 | `MP-01-028` | Offline/poor connection state'i düşünülmüş. | Applicable | **PASS** | - | Row-specific evidence (was section boilerplate, IR-06). The offline state is designed in three places: the emergency dispatch path takes no network at all (no HTTP in the dispatch path, CLAUDE.md rule 1); SRC lib/widgets/connectivity_banner.dart announces genuine connectivity loss; and entitlement resolution degrades to the persisted anchor under a 400ms + 1800ms budget rather than blocking the press (SRC lib/core/services/subscription_gate.dart). TEST test/core/services/subscription_readiness_state_test.dart covers the offline entitlement states end to end (scenarios B, F, F2, G). | - | - | `TEST` |
 | `MP-01-029` | Timeout state'i düşünülmüş. | Applicable | **UNVERIFIED** | P3 | RUN 2026-08-12: first-run walkthrough on an API 36 emulator (consent gate -> onboarding -> contact gate -> PIN setup -> battery wizard -> home -> settings). Entry point, primary CTA, next step and exit path were unambiguous on every screen walked. | Evidence was the section-level assessment verbatim, which does not address this specific requirement (IR-06). | Write row-specific evidence or verify directly; downgraded rather than left as an unsupported PASS. | `RUN` |
-| `MP-01-030` | Permission denied state'i düşünülmüş. | Applicable | **PASS** | - | Row-specific evidence (was section boilerplate, IR-06). Denied permission is a designed state, not a crash path: SRC lib/core/services/emergency_readiness_service.dart reports per-capability readiness and the home card renders a fixable chip per missing permission; the call path falls back to the dialer when CALL_PHONE is refused. TEST test/screens/map_permission_ui_test.dart, test/core/services/emergency_readiness_behavior_test.dart and test/core/services/media_permissions_test.dart. Re-examined for R2-03: a refused ENTITLEMENT is now also an explained state rather than a silent no-op. | - | - | `TEST` |
+| `MP-01-030` | Permission denied state'i düşünülmüş. | Applicable | **PASS** | - | RUN 2026-08-13 on arm64 API 36, observed directly: notification permission DECLINED at the battery wizard and CALL_PHONE never granted. The home readiness card then rendered the Telefon Aramasi chip in the warning state plus the note 'Izin verilmedi -- acil durumda dialer acilacak'. A refused call permission therefore degrades to the dialer hand-off and SAYS SO, instead of failing silently or blocking the flow (CLAUDE.md rule 3). SRC lib/core/services/emergency_readiness_service.dart reports per-capability readiness. TEST test/screens/map_permission_ui_test.dart, test/core/services/emergency_readiness_behavior_test.dart, test/core/services/media_permissions_test.dart. Screenshots in docs/audit/device-verification-2026-08-13-r2.md (D-3). | - | - | `RUN` |
 | `MP-01-031` | Account restricted state'i düşünülmüş. | N/A | **N/A** | - | SRC: no server accounts exist, so no account can be restricted. | - | Not applicable without a server-side account lifecycle. | `SRC` |
 
 ## 2. Information Architecture
@@ -686,7 +686,7 @@ Every P0 and P1 individually, so none hides inside an aggregate.
 | `MP-12-014` | Icon-only button'ların accessible name'i var. | Applicable | **PASS** | - | TEST test/screens/accessibility_guidelines_test.dart (7 cases) now initialises EasyLocalization against the REAL assets/translations/tr-TR.json, asserts no raw localization key reaches the tree, and asserts the screen has settled (no spinner) before measuring. Two NEGATIVE CONTROLS prove the matchers still reject an unlabelled tap target and a 12x12 target. Covers onboarding contact step, panic button (entitled + locked) and the consent gate. The locked-SOS case specifically asserts the control still exposes a real accessible name. | - | - | `TEST` |
 | `MP-12-015` | Decorative images gizlenmiş. | Applicable | **PASS** | - | SRC: decorative icons are rendered as Icon widgets inside labelled controls; the app ships no standalone decorative imagery that would need explicit exclusion. | - | - | `TEST` |
 | `MP-12-016` | Informational images alt text taşıyor. | N/A | **N/A** | - | SRC: the app bundles no informational images (assets are the launcher icon, splash shield and two sound files). Information is carried by text. | - | Not applicable. | `SRC` |
-| `MP-12-017` | Heading yapısı doğru. | Applicable | **UNVERIFIED** | P3 | SRC: screens use Text with themed styles; Flutter has no HTML heading construct, and no explicit header semantics flag is set. | Screen titles are not marked with Semantics(header: true). | Add header semantics to screen titles - a small, low-risk change that materially improves TalkBack navigation. | `TEST` |
+| `MP-12-017` | Heading yapısı doğru. | Applicable | **PASS** | - | FIXED. Every screen now exposes a heading: 15 of 22 through AppBar (Flutter marks the AppBar title header:true on Android) and 7 explicitly -- home greeting and quick-actions section, onboarding page title, onboarding contact step, unified consent, legal disclaimer, countdown failure surface, emergency-call failsafe and the fake-call subject. TEST test/screens/screen_header_semantics_test.dart: (a) pins the FRAMEWORK behaviour the other screens rely on, asserting an empty tree has no header first so the positive result cannot come from an unrelated node; (b) walks every file under lib/screens and fails on any screen with neither an AppBar nor an explicit marker; (c) carries a four-entry allow-list (tab shell, router, splash, 4-line re-export) that itself fails if an entry stops applying, so an exemption cannot outlive its reason. | Not a TalkBack pass: this proves the heading FLAG is set, not what a screen reader announces or in what order. | TalkBack verification on hardware -- EXTERNAL_LAUNCH_BLOCKERS.md E8. | `TEST` |
 | `MP-12-018` | Landmarks doğru. | N/A | **N/A** | - | SRC: ARIA landmarks are a web construct; the Flutter/Android equivalent is the Scaffold structure, which is used throughout. | - | Not applicable to a native Android target. | `SRC` |
 | `MP-12-019` | Live region gereken yerde var. | Applicable | **PASS** | - | TEST test/screens/countdown_live_region_test.dart - the countdown announces through a live region, which is the one place a live region genuinely matters in this product. | - | - | `TEST` |
 | `MP-12-020` | Error screen reader'a duyuruluyor. | Applicable | **PARTIAL** | P2 | SRC lib/core/services/countdown_announcement.dart handles the countdown case; other error surfaces rely on SnackBar/dialog default semantics. | Non-countdown errors are not explicitly announced. | Wrap the validation and entitlement error surfaces in a live region or use SemanticsService.announce. | `TEST` |
@@ -2830,7 +2830,7 @@ Every P0 and P1 individually, so none hides inside an aggregate.
 | `MP-72-027` | Sticky header. | N/A | **N/A** | - | SRC: no sticky header or footer pattern is used; screens scroll as a whole with a fixed bottom tab bar. | - | Not applicable. | `SRC` |
 | `MP-72-028` | Sticky footer. | N/A | **N/A** | - | SRC: no sticky header or footer pattern is used; screens scroll as a whole with a fixed bottom tab bar. | - | Not applicable. | `SRC` |
 | `MP-72-029` | Safe area. | Applicable | **PASS** | - | RUN: safe areas were respected on every capture; TEST test/screens/edge_to_edge_bottom_inset_test.dart pins the inset contract. | - | - | `RUN` |
-| `MP-72-030` | Keyboard overlay. | Applicable | **PASS** | - | Device-verified 2026-08-13 (arm64 API 36): with the IME open both "Rehberden sec" and "Kisiyi kaydet" are present and the helper line renders in full. TEST test/screens/onboarding_contact_step_keyboard_test.dart (7 cases). R2-12 CLOSED: the fix has two mechanisms and the reserved bottom padding was previously uncovered; the added case measures the scroll extent it creates. MUTATION: disabling the scroll reveal fails 3 cases, removing `bottom: _imeInset` fails the new case (extent growth 98 vs 418 against a 320px keyboard). | - | - | `TEST` |
+| `MP-72-030` | Keyboard overlay. | Applicable | **PASS** | - | RE-VERIFIED ON DEVICE 2026-08-13 against this tree, and the previous device claim was WRONG. Driving app-play-debug on arm64 API 36 showed the save action still NOT revealed on a single tap: content ended mid-helper-sentence and both actions were off-screen until a manual scroll. Root cause from a logcat probe: the Android IME animates over ~500ms and didChangeMetrics fires ~15 times; each firing issued a 200ms ensureVisible that the next superseded, all computed against a still-shrinking viewport, settling at offset 107 when ~249 was needed. FIX: a 180ms settle-debounce re-issues the reveal against the FINAL layout. RE-VERIFIED after the fix: both actions fully above the keyboard and the helper text complete. Full write-up with the probe output in docs/audit/device-verification-2026-08-13-r2.md. TEST test/screens/onboarding_contact_step_keyboard_test.dart (8 cases incl. the production PageView embedding and the reserved-padding extent case). | The settle-debounce is DEVICE-verified, not unit-verified: a widget harness steps the IME inset discretely and pumps, so its layout is always settled by the last reveal and it cannot reproduce the defect. This is device-only in the same class as the Doze race. | Keep the device walkthrough in the release checklist; the harness covers the other two mechanisms (scroll reveal, reserved padding) with mutation evidence. | `RUN` |
 | `MP-72-031` | Z-index issues. | Applicable | **PASS** | - | RUN: dialogs, banners and the bottom nav layered correctly with no z-order defect observed. | - | - | `RUN` |
 | `MP-72-032` | Body scroll leak. | Applicable | **PASS** | - | RUN: background scroll was correctly locked behind modals (section 10). | - | - | `RUN` |
 | `MP-72-033` | Transition flash. | Applicable | **PASS** | - | TEST test/screens/dispatch_path_latency_contract_test.dart asserts no transition animation on the dispatch path, so there is no transition flash there; RUN observed no flash elsewhere. | - | - | `RUN` |

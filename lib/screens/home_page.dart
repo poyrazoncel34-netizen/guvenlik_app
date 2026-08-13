@@ -274,7 +274,13 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Expanded(
-          child: Text(
+          // Home is the one screen with no AppBar, and AppBar is what supplies
+          // `header: true` on every other screen. Without this the screen has no
+          // heading at all for a screen reader, so heading navigation lands
+          // nowhere (MP-12-017).
+          child: Semantics(
+            header: true,
+            child: Text(
             'welcome_greeting'.tr(),
             style: const TextStyle(
               fontSize: 30,
@@ -282,6 +288,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               color: AppColors.textPrimary,
               letterSpacing: -0.8,
               height: 1.1,
+            ),
             ),
           ),
         ),
@@ -865,13 +872,17 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          "quick_actions".tr(),
-          style: TextStyle(
-            fontSize: shortScreen ? 18 : 21,
-            fontWeight: FontWeight.w800,
-            color: AppColors.textPrimary,
-            letterSpacing: -0.5,
+        // Section heading, so heading navigation can jump the grid.
+        Semantics(
+          header: true,
+          child: Text(
+            "quick_actions".tr(),
+            style: TextStyle(
+              fontSize: shortScreen ? 18 : 21,
+              fontWeight: FontWeight.w800,
+              color: AppColors.textPrimary,
+              letterSpacing: -0.5,
+            ),
           ),
         ),
         SizedBox(height: gap),

@@ -339,12 +339,16 @@ class _FakeCallScreenState extends State<FakeCallScreen>
                               ),
                       ),
                       const SizedBox(height: 28),
-                      Text(
-                        _callerName,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 34,
-                          fontWeight: FontWeight.w600,
+                      // The caller name IS this screen's heading (MP-12-017).
+                      Semantics(
+                        header: true,
+                        child: Text(
+                          _callerName,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 34,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                       const SizedBox(height: 10),

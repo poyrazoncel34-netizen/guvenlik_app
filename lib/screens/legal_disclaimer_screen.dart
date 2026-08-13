@@ -115,14 +115,18 @@ class _LegalDisclaimerScreenState extends State<LegalDisclaimerScreen> {
                     color: AppColors.primary,
                   ),
                   const SizedBox(height: 16),
-                  const Text(
-                    'KoruBeni',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 26,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.textPrimary,
-                      letterSpacing: -0.5,
+                  // Screen heading (MP-12-017).
+                  Semantics(
+                    header: true,
+                    child: const Text(
+                      'KoruBeni',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 26,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.textPrimary,
+                        letterSpacing: -0.5,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 4),

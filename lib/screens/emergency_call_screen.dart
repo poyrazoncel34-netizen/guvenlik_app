@@ -135,14 +135,18 @@ class _EmergencyCallScreenState extends State<EmergencyCallScreen>
                 ),
               ),
               const SizedBox(height: 16),
-              Text(
-                'failsafe_title'.tr(),
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w900,
-                  color: Colors.white,
+              // Screen heading (MP-12-017).
+              Semantics(
+                header: true,
+                child: Text(
+                  'failsafe_title'.tr(),
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w900,
+                    color: Colors.white,
+                  ),
+                  textAlign: TextAlign.center,
                 ),
-                textAlign: TextAlign.center,
               ),
               const SizedBox(height: 12),
               Text(

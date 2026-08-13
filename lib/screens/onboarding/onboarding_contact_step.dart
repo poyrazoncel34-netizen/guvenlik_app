@@ -60,6 +60,11 @@ class _OnboardingContactStepState extends State<OnboardingContactStep>
   /// Last observed raw view inset, in logical pixels.
   double _lastViewInsetBottom = 0;
 
+  /// Fires the settled reveal once the IME stops moving. Longer than one frame
+  /// and shorter than a user would notice.
+  static const Duration _imeSettleDelay = Duration(milliseconds: 180);
+  Timer? _settleTimer;
+
   bool _loading = true;
   bool _saving = false;
   bool _hasContact = false;
@@ -74,6 +79,20 @@ class _OnboardingContactStepState extends State<OnboardingContactStep>
     WidgetsBinding.instance.addObserver(this);
     _phoneFocusNode.addListener(_revealSaveActionOnFocus);
     _refresh();
+  }
+
+  /// The step had no `dispose` at all: the lifecycle observer, the focus node
+  /// and its listener all outlived the widget. Onboarding is entered once, so
+  /// it never showed up as a visible leak -- but a StatefulWidget that
+  /// registers an observer and never removes it is a real one, and the settle
+  /// timer below would fire into a disposed State.
+  @override
+  void dispose() {
+    _settleTimer?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
+    _phoneFocusNode.removeListener(_revealSaveActionOnFocus);
+    _phoneFocusNode.dispose();
+    super.dispose();
   }
 
   /// Live IME height in logical pixels.
@@ -132,6 +151,28 @@ class _OnboardingContactStepState extends State<OnboardingContactStep>
   }
 
   void _scheduleRevealSaveAction() {
+    _revealNow();
+    // ...and again once the IME has STOPPED moving.
+    //
+    // Device evidence (arm64 API 36, logcat probe): the Android IME animates
+    // over ~500ms and `didChangeMetrics` fires ~15 times during it. Reacting to
+    // each frame issues a 200ms `ensureVisible` that the next frame immediately
+    // supersedes, and every one of them is computed against a viewport that is
+    // still shrinking. The measured result was a scroll that stopped at offset
+    // 107 when 249 was needed -- the save action stayed below the keyboard and
+    // the user still had to find the scroll gesture, which IS the IR-01 defect.
+    // The standalone widget harness could not see this: it steps the inset in
+    // four discrete jumps and then pumps, so its last reveal always lands on a
+    // settled layout.
+    //
+    // The per-frame call is kept because it tracks the keyboard as it rises;
+    // this timer is what guarantees the FINAL layout also gets a reveal.
+    _settleTimer?.cancel();
+    _settleTimer = Timer(_imeSettleDelay, _revealNow);
+  }
+
+  /// One reveal against whatever the layout is at the next frame.
+  void _revealNow() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       final target = _saveButtonKey.currentContext;
@@ -299,14 +340,18 @@ class _OnboardingContactStepState extends State<OnboardingContactStep>
           ),
         ),
         const SizedBox(height: 20),
-        Text(
-          'onboarding_contact_title'.tr(),
-          textAlign: TextAlign.center,
-          style: const TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.w800,
-            color: AppColors.textPrimary,
-            letterSpacing: -0.5,
+        // Step heading, so heading navigation has a target (MP-12-017).
+        Semantics(
+          header: true,
+          child: Text(
+            'onboarding_contact_title'.tr(),
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.w800,
+              color: AppColors.textPrimary,
+              letterSpacing: -0.5,
+            ),
           ),
         ),
         const SizedBox(height: 12),
