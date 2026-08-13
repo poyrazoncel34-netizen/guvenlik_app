@@ -951,5 +951,7 @@
   "oem_step_generic_battery_body": "Sistem pil optimizasyonu listesinde KoruBeni'nin optimize edilmeyenler arasında olduğunu doğrulayın.",
   "settings_oem_guide_title": "Cihaza Özel Arka Plan Ayarları",
   "settings_oem_guide_subtitle": "Üreticinize göre adım adım yönlendirme",
-  "battery_wizard_oem_btn": "Cihazıma Özel Adımlar"
+  "battery_wizard_oem_btn": "Cihazıma Özel Adımlar",
+  "subscription_verification_stale_title": "Abonelik doğrulaması bekliyor",
+  "subscription_verification_stale_body": "Cihaz çevrimdışı olduğu için aboneliğin doğrulanamıyor. Acil durum özellikleri çalışmaya devam ediyor; bağlantı kurulduğunda doğrulama kendiliğinden yenilenir."
 }

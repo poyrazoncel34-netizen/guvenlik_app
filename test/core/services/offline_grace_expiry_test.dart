@@ -39,17 +39,28 @@ void main() {
       expect(state.entitlementDecision, EntitlementDecision.authorized);
     });
 
-    test('8 days offline: the SAME subscriber loses the panic button', () {
+    test('8 days offline: the NON-EMERGENCY window has lapsed', () {
+      final state = offlineSubscriber(const Duration(days: 8), now: now);
+      expect(state.canArmWithinOfflineGrace(now: now), isFalse);
+      expect(state.hasLostAccessToOfflineGraceExpiry(now: now), isTrue);
+      expect(
+        state.nonEmergencyEntitlementDecision,
+        EntitlementDecision.unknown,
+        reason: 'convenience features lapse, preserving billing integrity',
+      );
+    });
+
+    test('8 days offline: but SOS is RETAINED (IR-04 policy)', () {
       final state = offlineSubscriber(const Duration(days: 8), now: now);
       expect(
-        state.canArmWithinOfflineGrace(now: now),
-        isFalse,
+        state.entitlementDecision,
+        EntitlementDecision.authorized,
         reason:
-            'This is the reproduced state: a paying user, offline past the '
-            'grace window, whose panic button now refuses to arm.',
+            'Superseded behaviour: this used to return unknown and disable the '
+            'panic button. Owner decision 2026-08-13 -- a failed refresh is not '
+            'a confirmed expiry. See offline_sos_entitlement_policy_test.dart.',
       );
-      expect(state.entitlementDecision, EntitlementDecision.unknown);
-      expect(state.hasLostAccessToOfflineGraceExpiry(now: now), isTrue);
+      expect(state.canUsePaidSafetyFeature, isTrue);
     });
 
     test('the boundary is exactly 7 days, inclusive', () {
@@ -146,9 +157,12 @@ void main() {
       final state = offlineSubscriber(const Duration(days: 9), now: now);
       expect(
         state.canUsePaidSafetyFeature,
-        isFalse,
-        reason: 'cannot arm anything NEW',
+        isTrue,
+        reason:
+            'Since the IR-04 policy change an unverifiable entitlement no '
+            'longer blocks a NEW emergency arm either.',
       );
+      expect(state.canUseNonEmergencyPaidFeature, isFalse);
       expect(
         state.canContinueAlreadyArmedSession,
         isTrue,

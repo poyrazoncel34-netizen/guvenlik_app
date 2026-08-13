@@ -129,6 +129,23 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
     }
   }
 
+  /// Height reserved for the validation banner, whether or not one is showing.
+  ///
+  /// Scales with the user's text size so the reservation stays correct at 200%
+  /// rather than clipping the message. Because it does not depend on WHETHER an
+  /// error exists, the keypad below cannot move when one appears.
+  static const double _errorSlotGap = 16;
+  static const double _errorSlotPadding = 20; // 10 top + 10 bottom
+  static const double _errorSlotFontSize = 13;
+  static const int _errorSlotMaxLines = 2;
+
+  double _errorSlotHeight(BuildContext context) {
+    final scaled = MediaQuery.textScalerOf(context).scale(_errorSlotFontSize);
+    return _errorSlotGap +
+        _errorSlotPadding +
+        scaled * 1.35 * _errorSlotMaxLines;
+  }
+
   @override
   Widget build(BuildContext context) {
     final currentPin = _isConfirming ? _confirmPin : _pin;
@@ -202,27 +219,47 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
                       color: AppColors.textSecondary,
                     ),
                   ),
-                  if (_errorMessage != null) ...[
-                    const SizedBox(height: 16),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 10,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.emergency.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        _errorMessage!,
-                        style: const TextStyle(
-                          color: AppColors.emergency,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
+                  // Reserved slot -- see [_errorSlotHeight]. The banner used to
+                  // be inserted conditionally here, which pushed the keypad
+                  // down ~120px the moment a weak PIN was rejected. On a
+                  // control where the user is typing an unseen secret, keys
+                  // moving under their fingers causes mis-entry: an
+                  // independent reviewer hit exactly that (IR-09).
+                  SizedBox(
+                    height: _errorSlotHeight(context),
+                    child: _errorMessage == null
+                        ? null
+                        : Align(
+                            alignment: Alignment.topCenter,
+                            child: Container(
+                              margin: const EdgeInsets.only(top: 16),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 10,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.emergency.withValues(
+                                  alpha: 0.1,
+                                ),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Semantics(
+                                liveRegion: true,
+                                child: Text(
+                                  _errorMessage!,
+                                  textAlign: TextAlign.center,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    color: AppColors.emergency,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                  ),
                   const SizedBox(height: 28),
                   // PIN dots
                   Row(

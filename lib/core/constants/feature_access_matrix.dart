@@ -144,6 +144,24 @@ class FeatureAccessMatrix {
       .map((entry) => entry.feature)
       .toSet();
 
+  /// Paid features that can place, or directly trigger, an emergency call.
+  ///
+  /// These are the only features covered by the unbounded offline entitlement
+  /// policy (see SubscriptionAccessState.entitlementDecision): losing them
+  /// because a phone had no signal defeats the product. Every other paid
+  /// feature keeps the bounded offline grace so billing integrity is intact.
+  static const Set<PremiumFeature> emergencyCapableFeatures = <PremiumFeature>{
+    PremiumFeature.panic,
+    PremiumFeature.safeWalk,
+    PremiumFeature.checkIn,
+    // The volume trigger exists only to fire the panic flow, so gating it more
+    // strictly than panic itself would be incoherent.
+    PremiumFeature.volumeTrigger,
+  };
+
+  static bool isEmergencyCapable(PremiumFeature feature) =>
+      emergencyCapableFeatures.contains(feature);
+
   static FeatureAccessEntry entryFor(PremiumFeature feature) =>
       entries[feature] ??
       (throw ArgumentError('Unknown premium feature: $feature'));

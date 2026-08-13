@@ -42,8 +42,9 @@ void main() {
     },
   );
 
-  test('a cold start with an expired anchor does not authorize', () async {
-    // No in-process history at all: only what was persisted, and it is stale.
+  test('a cold start with an aged anchor still authorizes SOS (IR-04)', () async {
+    // No in-process history at all: only what was persisted, and it is old.
+    // This is the cold-start-with-no-signal case the policy exists for.
     final fake = _FakeRevenueCatService()
       ..nextInfo = null
       ..hintStored = true
@@ -55,9 +56,9 @@ void main() {
 
     final resolved = await provider.resolveAccess();
 
-    expect(resolved.entitlementDecision, EntitlementDecision.unknown);
-    expect(resolved.canUsePaidSafetyFeature, isFalse);
-    expect(provider.isPro, isFalse);
+    expect(resolved.entitlementDecision, EntitlementDecision.authorized);
+    expect(resolved.canUsePaidSafetyFeature, isTrue);
+    expect(resolved.canUseNonEmergencyPaidFeature, isFalse);
   });
 
   test('a cold start with an uncorroborated anchor does not authorize', () async {

@@ -41,6 +41,7 @@ class ReadinessCard extends StatelessWidget {
     required this.onFixLocation,
     required this.onFixContacts,
     required this.onRunRehearsal,
+    this.subscriptionVerificationStale = false,
   });
 
   final bool locationGranted;
@@ -54,6 +55,14 @@ class ReadinessCard extends StatelessWidget {
   final VoidCallback onFixLocation;
   final VoidCallback onFixContacts;
   final VoidCallback onRunRehearsal;
+
+  /// True when entitlement cannot be verified because the device is offline.
+  ///
+  /// Deliberately calm copy: under the IR-04 policy the emergency action keeps
+  /// working in this state, so alarming the user would be both frightening and
+  /// factually wrong. The notice exists so a subscriber is not surprised later,
+  /// not to pressure them.
+  final bool subscriptionVerificationStale;
 
   bool get _callPermissionOk => readiness?.callPermission ?? false;
 
@@ -126,6 +135,63 @@ class ReadinessCard extends StatelessWidget {
       );
       subtitle = 'setup_incomplete_desc'.tr();
     }
+
+    final staleNotice = subscriptionVerificationStale
+        ? Padding(
+            padding: const EdgeInsets.only(top: 12),
+            child: Semantics(
+              container: true,
+              label:
+                  '${'subscription_verification_stale_title'.tr()}. '
+                  '${'subscription_verification_stale_body'.tr()}',
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.info.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: AppColors.info.withValues(alpha: 0.22),
+                  ),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(
+                      Icons.cloud_off_rounded,
+                      size: 18,
+                      color: AppColors.info,
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'subscription_verification_stale_title'.tr(),
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'subscription_verification_stale_body'.tr(),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              height: 1.4,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          )
+        : const SizedBox.shrink();
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -210,6 +276,7 @@ class ReadinessCard extends StatelessWidget {
             lastRehearsalAt: lastRehearsalAt,
             onRunRehearsal: onRunRehearsal,
           ),
+          staleNotice,
         ],
       ),
     );

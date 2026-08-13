@@ -219,6 +219,13 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                       _buildEmergencyContactChip(provider),
                       SizedBox(height: spacing),
                       ReadinessCard(
+                        // Calm, advance notice that entitlement verification is
+                        // stale. Under the IR-04 policy the emergency action is
+                        // unaffected, so the copy says exactly that.
+                        subscriptionVerificationStale: context
+                            .watch<SubscriptionProvider>()
+                            .access
+                            .isTemporarilyUnverifiable,
                         locationGranted: provider.locationPermissionGranted,
                         contactsGranted: provider.contactsPermissionGranted,
                         hasEmergencyContact: provider.emergencyContact != null,

@@ -52,16 +52,58 @@ class SubscriptionAccessState {
     _ => EntitlementDecision.unknown,
   };
 
-  /// The authorization every layer acts on.
+  /// True only when the store POSITIVELY answered that the user is not a
+  /// subscriber. An unreachable store is never this.
+  bool get isConfirmedInactive =>
+      status == SubscriptionAccessStatus.verifiedFree;
+
+  /// True when entitlement cannot be resolved right now (offline, store down,
+  /// cold start with no signal) as opposed to being confirmed either way.
+  bool get isTemporarilyUnverifiable =>
+      verifiedEntitlementDecision == EntitlementDecision.unknown;
+
+  /// The authorization the EMERGENCY path acts on (panic/SOS, check-in,
+  /// safe-walk).
+  ///
+  /// PRODUCT POLICY (owner decision, 2026-08-13, closing INDEPENDENT_REVIEW.md
+  /// IR-04): failure to refresh entitlement is NOT equivalent to confirmed
+  /// expiry. A subscriber whose last CONFIRMED answer was active keeps the
+  /// emergency action while the store is merely unreachable, with no time
+  /// limit. Losing SOS because a phone had no signal for a week fails at
+  /// exactly the moment this product exists for -- and signal loss correlates
+  /// with the situations it exists for.
   ///
   /// This getter -- not a separate boolean -- is deliberately the single place
-  /// the grace window is applied. The panic path checks entitlement in three
+  /// the policy is applied. The panic path checks entitlement in three
   /// independent places (`panic_button` re-reads it after the gate,
   /// `CountdownScreen` gates the native alarm on it, and the Kotlin side
   /// rejects `unknown` again). Widening only a gate's return value leaves the
-  /// other two refusing, which is exactly how an earlier attempt at this fix
-  /// failed. Resolving it here means no wire or native contract has to change.
+  /// other two refusing, which is exactly how an earlier attempt failed.
+  ///
+  /// A positively confirmed inactive subscription still denies: the store said
+  /// no, which is an answer, not an absence of one.
   EntitlementDecision get entitlementDecision {
+    final verified = verifiedEntitlementDecision;
+    if (verified != EntitlementDecision.unknown) return verified;
+    // UNKNOWN is never silently converted to EXPIRED -- but the policy widens
+    // only a GENUINE prior confirmation. Both the flag and its corroborating
+    // timestamp must be present: a lone boolean written into local storage
+    // must not be able to forge an entitlement that never happened
+    // (see subscription_offline_grace_test.dart).
+    final confirmedBefore =
+        lastVerifiedPro == true && lastVerifiedProAt != null;
+    return confirmedBefore
+        ? EntitlementDecision.authorized
+        : EntitlementDecision.unknown;
+  }
+
+  /// The authorization NON-emergency paid features act on (timeline, advanced
+  /// automation, and anything else that is convenience rather than safety).
+  ///
+  /// Billing integrity still applies here: an unverifiable entitlement only
+  /// carries these features for [offlineGracePeriod], because nobody's safety
+  /// depends on them.
+  EntitlementDecision get nonEmergencyEntitlementDecision {
     final verified = verifiedEntitlementDecision;
     if (verified != EntitlementDecision.unknown) return verified;
     return canArmWithinOfflineGrace()
@@ -115,9 +157,12 @@ class SubscriptionAccessState {
     return remaining > Duration.zero && remaining <= threshold;
   }
 
-  /// True when a previously verified Pro user has already lost authorization
-  /// purely because the store could not be reached. This is the state the
-  /// independent review reproduced.
+  /// True when a previously verified Pro user has passed the non-emergency
+  /// grace window purely because the store could not be reached.
+  ///
+  /// NOTE: since the IR-04 policy change this no longer means the panic button
+  /// is disabled -- the emergency path is unbounded. It means non-safety paid
+  /// features have lapsed and verification is overdue.
   bool hasLostAccessToOfflineGraceExpiry({DateTime? now}) {
     if (lastVerifiedPro != true) return false;
     if (verifiedEntitlementDecision != EntitlementDecision.unknown) return false;
@@ -125,9 +170,17 @@ class SubscriptionAccessState {
     return remaining != null && remaining <= Duration.zero;
   }
 
-  /// New safety work requires a current trustworthy authorization.
+  /// Authorization for SAFETY work (the emergency path). Unbounded while the
+  /// entitlement is merely unverifiable -- see [entitlementDecision].
   bool get canUsePaidSafetyFeature =>
       entitlementDecision == EntitlementDecision.authorized &&
+      lastVerifiedPro == true;
+
+  /// Authorization for non-safety paid features. Bounded by
+  /// [offlineGracePeriod] so billing integrity is preserved where no one's
+  /// safety is at stake.
+  bool get canUseNonEmergencyPaidFeature =>
+      nonEmergencyEntitlementDecision == EntitlementDecision.authorized &&
       lastVerifiedPro == true;
 
   /// Historical in-process evidence may keep an already-armed session alive.

@@ -81,7 +81,12 @@ class SubscriptionGate {
       access = provider.access;
     }
     if (!context.mounted) return false;
-    if (access.canUsePaidSafetyFeature) return true;
+    // Emergency-capable features follow the unbounded offline policy; every
+    // other paid feature keeps the bounded grace (IR-04 product decision).
+    final authorized = FeatureAccessMatrix.isEmergencyCapable(feature)
+        ? access.canUsePaidSafetyFeature
+        : access.canUseNonEmergencyPaidFeature;
+    if (authorized) return true;
 
     // Loading/unavailable is not evidence of a free account. Only a real
     // CustomerInfo response that verified "free" may route to the paywall.

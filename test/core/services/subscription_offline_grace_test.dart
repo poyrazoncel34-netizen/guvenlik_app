@@ -36,7 +36,7 @@ void main() {
       expect(state.canUsePaidSafetyFeature, isTrue);
     });
 
-    test('an expired anchor falls back to unknown', () {
+    test('an aged anchor still authorizes the EMERGENCY path (IR-04)', () {
       final state = unresolved(
         lastPro: true,
         verifiedAt: DateTime.now().subtract(
@@ -45,8 +45,19 @@ void main() {
         ),
       );
 
-      expect(state.entitlementDecision, EntitlementDecision.unknown);
-      expect(state.canUsePaidSafetyFeature, isFalse);
+      // Superseded behaviour: this used to fall back to unknown and disable
+      // the panic button. Owner product decision 2026-08-13 -- a failed
+      // refresh is not a confirmed expiry, so a corroborated prior
+      // confirmation keeps the emergency path open indefinitely.
+      expect(state.entitlementDecision, EntitlementDecision.authorized);
+      expect(state.canUsePaidSafetyFeature, isTrue);
+      // Non-emergency paid features still lapse: billing integrity is intact
+      // where nobody's safety is at stake.
+      expect(
+        state.nonEmergencyEntitlementDecision,
+        EntitlementDecision.unknown,
+      );
+      expect(state.canUseNonEmergencyPaidFeature, isFalse);
     });
 
     test('the window closes exactly at seven days', () {

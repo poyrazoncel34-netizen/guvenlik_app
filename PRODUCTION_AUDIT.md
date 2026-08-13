@@ -35,35 +35,68 @@
 ---
 ## Result summary
 
-> **Single source of truth.** This table is REGENERATED from the requirement rows below on every
-> update. An earlier revision shipped five stacked, contradictory summary tables (INDEPENDENT_REVIEW.md
-> IR-05); they were deleted rather than reconciled by hand so the numbers cannot drift again.
+> **Single source of truth.** Regenerated from the requirement rows below on every update.
+> **Requirement count reconciled 2026-08-13:** the checklist contains 1,714 `- [ ]` checkboxes
+> PLUS 24 launch-gate rows in section 77, which are expressed as a two-column table rather than
+> checkboxes. An earlier generation parsed only checkboxes and under-counted by 24. The 24 are now
+> present as `MP-77-001`..`MP-77-024`. The canonical checklist was NOT modified.
 
 | Metric | Count |
 |---|---|
-| **TOTAL INDIVIDUAL REQUIREMENTS** | **1714** |
-| PASS | 485 |
+| **CHECKLIST REQUIREMENTS** | **1738** (1714 checkbox + 24 launch-matrix) |
+| **AUDIT REQUIREMENTS** | **1738** |
+| **UNACCOUNTED** | **0** |
+| PASS | 495 |
 | FAIL | 21 |
-| PARTIAL | 140 |
-| BLOCKED | 28 |
-| N/A | 773 |
-| UNVERIFIED | 267 |
+| PARTIAL | 147 |
+| BLOCKED | 29 |
+| N/A | 778 |
+| UNVERIFIED | 268 |
 
 ### Severity of non-PASS findings
 
 | Severity | Count |
 |---|---|
-| P0 | 2 |
-| P1 | 25 |
-| P2 | 228 |
+| P0 | 0 |
+| P1 | 29 |
+| P2 | 235 |
 | P3 | 201 |
 
-> **P0 is no longer claimed to be structurally absent.** The previous wording enumerated only
-> server/web hazards (auth bypass, tenant leakage, prompt injection) and concluded no catastrophic
-> surface exists. That enumeration is correct but incomplete: for THIS product the catastrophic
-> event is **the panic button failing to dial**, and `MP-22-001` / `MP-54-029` reach it — a paying
-> subscriber offline beyond the 7-day entitlement grace loses SOS. Both are now classified **P0**,
-> accepted-with-rationale, pending an explicit product decision. See INDEPENDENT_REVIEW.md IR-04.
+### P0 / P1 register
+
+Every P0 and P1 individually, so none hides inside an aggregate.
+
+| ID | Sev | Status | Requirement | Resolvable in-repo? | External action required before launch |
+|---|---|---|---|---|---|
+| `MP-41-017` | P1 | BLOCKED | Phone call interruption. | No | Physical device + Play internal-test account (licensed tester) to reach a real armed dispatch. |
+| `MP-41-021` | P1 | PARTIAL | Battery saver. | No | Physical aggressive-OEM device (Xiaomi/Huawei/Samsung) to measure timer drift under battery saver. |
+| `MP-53-003` | P1 | PARTIAL | Cloud credentials compromised. | Partly | Confirm Play App Signing enrolment in Play Console; runbook already written in-repo. |
+| `MP-54-001` | P1 | BLOCKED | Pricing doğru. | No | Play internal-test account + RevenueCat sandbox key to exercise the purchase lifecycle. |
+| `MP-54-002` | P1 | BLOCKED | Currency doğru. | No | Play internal-test account + RevenueCat sandbox key to exercise the purchase lifecycle. |
+| `MP-54-003` | P1 | BLOCKED | Tax doğru sistemi kullanıyor. | No | Play internal-test account + RevenueCat sandbox key to exercise the purchase lifecycle. |
+| `MP-54-004` | P1 | UNVERIFIED | Checkout success. | No | Play internal-test account + RevenueCat sandbox key to exercise the purchase lifecycle. |
+| `MP-54-005` | P1 | UNVERIFIED | Checkout cancel. | No | Play internal-test account + RevenueCat sandbox key to exercise the purchase lifecycle. |
+| `MP-54-006` | P1 | UNVERIFIED | Payment failed. | No | Play internal-test account + RevenueCat sandbox key to exercise the purchase lifecycle. |
+| `MP-54-007` | P1 | UNVERIFIED | Payment requires authentication. | No | Play internal-test account + RevenueCat sandbox key to exercise the purchase lifecycle. |
+| `MP-54-008` | P1 | UNVERIFIED | Duplicate submit. | No | Play internal-test account + RevenueCat sandbox key to exercise the purchase lifecycle. |
+| `MP-54-018` | P1 | UNVERIFIED | Subscription create. | No | Play internal-test account + RevenueCat sandbox key to exercise the purchase lifecycle. |
+| `MP-54-019` | P1 | UNVERIFIED | Upgrade. | No | Play internal-test account + RevenueCat sandbox key to exercise the purchase lifecycle. |
+| `MP-54-020` | P1 | UNVERIFIED | Downgrade. | No | Play internal-test account + RevenueCat sandbox key to exercise the purchase lifecycle. |
+| `MP-54-021` | P1 | UNVERIFIED | Cancel. | No | Play internal-test account + RevenueCat sandbox key to exercise the purchase lifecycle. |
+| `MP-54-022` | P1 | UNVERIFIED | Pause uygunsa. | No | Play internal-test account + RevenueCat sandbox key to exercise the purchase lifecycle. |
+| `MP-54-023` | P1 | UNVERIFIED | Trial. | No | Play internal-test account + RevenueCat sandbox key to exercise the purchase lifecycle. |
+| `MP-54-024` | P1 | UNVERIFIED | Trial expire. | No | Play internal-test account + RevenueCat sandbox key to exercise the purchase lifecycle. |
+| `MP-59-027` | P1 | PARTIAL | Battery usage. | No | Physical device battery measurement. |
+| `MP-59-029` | P1 | PARTIAL | Play policy. | No | Google Play review of CALL_PHONE + REQUEST_IGNORE_BATTERY_OPTIMIZATIONS declarations. |
+| `MP-59-030` | P1 | PARTIAL | Real device test. | No | Execute store/REAL_DEVICE_QA_MATRIX.md on physical hardware. |
+| `MP-62-020` | P1 | PARTIAL | Google Play rules. | No | Google Play policy review. |
+| `MP-63-006` | P1 | UNVERIFIED | MFA admin. | No | Confirm MFA (hardware key preferred) on the Google/Play Console and GitHub accounts. |
+| `MP-73-010` | P1 | UNVERIFIED | Payment integrity hatası varsa. | No | Play internal-test account + RevenueCat sandbox key to exercise the purchase lifecycle. |
+| `MP-74-007` | P1 | UNVERIFIED | Payment sonucu belirsizse. | No | Play internal-test account + RevenueCat sandbox key to exercise the purchase lifecycle. |
+| `MP-77-001` | P1 | PARTIAL | Product — Kritik flow'lar tamam | No | Billing checklist on the internal-test track, then real-device QA. |
+| `MP-77-009` | P1 | PARTIAL | Security — Critical açık yok | Partly | Confirm MFA + Play App Signing enrolment in the consoles. |
+| `MP-77-013` | P1 | UNVERIFIED | Performance — Hedefler içinde | No | Measure panic-press-to-dial on physical hardware. |
+| `MP-77-023` | P1 | PARTIAL | Legal/store — Uygun | No | Google Play review of the sensitive permission declarations. |
 
 ### Section index
 
@@ -76,7 +109,7 @@
 | 5 | 5 | 0 | 1 | 0 | 4 | 15 |
 | 6 | 4 | 0 | 0 | 0 | 0 | 15 |
 | 7 | 7 | 0 | 1 | 7 | 10 | 4 |
-| 8 | 21 | 0 | 3 | 0 | 4 | 9 |
+| 8 | 22 | 0 | 2 | 0 | 4 | 9 |
 | 9 | 6 | 0 | 2 | 0 | 0 | 20 |
 | 10 | 10 | 0 | 0 | 0 | 18 | 1 |
 | 11 | 7 | 0 | 2 | 0 | 6 | 5 |
@@ -114,7 +147,7 @@
 | 43 | 13 | 0 | 2 | 0 | 16 | 0 |
 | 44 | 10 | 0 | 2 | 0 | 27 | 0 |
 | 45 | 10 | 0 | 2 | 0 | 3 | 0 |
-| 46 | 19 | 2 | 3 | 0 | 13 | 0 |
+| 46 | 20 | 2 | 2 | 0 | 13 | 0 |
 | 47 | 10 | 0 | 2 | 4 | 9 | 4 |
 | 48 | 8 | 0 | 0 | 0 | 1 | 3 |
 | 49 | 9 | 0 | 3 | 0 | 2 | 0 |
@@ -145,10 +178,10 @@
 | 74 | 4 | 0 | 2 | 0 | 2 | 1 |
 | 75 | 7 | 0 | 8 | 0 | 3 | 0 |
 | 76 | 0 | 0 | 0 | 2 | 10 | 0 |
+| 77 | 8 | 0 | 9 | 1 | 5 | 1 |
 | 78 | 1 | 0 | 2 | 8 | 14 | 0 |
 | 79 | 7 | 2 | 5 | 0 | 1 | 0 |
 | 80 | 7 | 0 | 6 | 0 | 4 | 0 |
-
 
 ---
 
@@ -459,7 +492,7 @@
 | `MP-08-020` | Ghost. | Applicable | **UNVERIFIED** | P3 | SRC: the theme defines TextButton and OutlinedButton, but a formal tertiary/ghost tier is not distinguished in the design. | No explicit tertiary/ghost button tier. | Define the button tiers when the design-token file is introduced. | `RUN` |
 | `MP-08-021` | Destructive. | Applicable | **PASS** | - | RUN: 'Cihaz Verilerini Temizle' renders as a full-width red destructive button in Settings. | - | - | `RUN` |
 | `MP-08-022` | Icon-only. | Applicable | **PASS** | - | RUN: the Settings back arrow and the onboarding checklist chevrons are icon-only controls. | - | - | `RUN` |
-| `MP-08-023` | Loading button. | Applicable | **PARTIAL** | P2 | RUN did not observe a button-level loading affordance. | Loading button state not confirmed. | Cover in the proposed golden-test suite. | `RUN` |
+| `MP-08-023` | Loading button. | Applicable | **PASS** | - | IR-09 fixed: the PIN validation banner now occupies a reserved slot that scales with text size, so the keypad cannot move when it appears. TEST test/screens/pin_setup_layout_stability_test.dart (6 cases: stable geometry, repeated rejections, readable+announced banner, no obscured key, short screen, 200% text scale). NEGATIVE CONTROL: reverting to the conditional banner fails 3 of 6. | - | - | `TEST` |
 | `MP-08-024` | Disabled button. | Applicable | **PASS** | - | RUN: disabled CTAs were visually distinct and non-interactive. | - | - | `RUN` |
 | `MP-08-025` | Long-label button. | Applicable | **PASS** | - | RUN: 'Devam Et ve Kurulumu Tamamla' is a long label that renders without truncation. | - | - | `RUN` |
 | `MP-08-026` | Empty. | Applicable | **PASS** | - | RUN: the contact form rendered its empty state with placeholder labels. | - | - | `RUN` |
@@ -636,8 +669,8 @@
 | `MP-12-027` | Text scaling. | Applicable | **PASS** | - | SRC lib/main.dart appTextScaler() preserves system font scaling to 200%; TEST test/main_text_scaling_test.dart pins it. | - | - | `TEST` |
 | `MP-12-028` | Color-independent information. | Applicable | **PASS** | - | RUN: readiness chips and the offline banner pair colour with an icon and a text label, so no state is colour-only. | - | - | `TEST` |
 | `MP-12-029` | High Contrast/forced colors mümkünse test edilmiş. | Applicable | **UNVERIFIED** | P3 | RUN: Android high-contrast mode was not enabled during the walkthrough. | High-contrast rendering unverified. | Enable high-contrast text in emulator accessibility settings and re-capture the primary screens. | `TEST` |
-| `MP-12-030` | Touch target yeterince büyük. | Applicable | **PARTIAL** | P2 | TEST test/screens/accessibility_guidelines_test.dart (7 cases) now initialises EasyLocalization against the REAL assets/translations/tr-TR.json, asserts no raw localization key reaches the tree, and asserts the screen has settled (no spinner) before measuring. Two NEGATIVE CONTROLS prove the matchers still reject an unlabelled tap target and a 12x12 target. Covers onboarding contact step, panic button (entitled + locked) and the consent gate. | Three screens covered, not the full app; CountdownScreen is not renderable in a widget harness (timers, platform channels, repeating animations) and remains uncovered. Contrast is still unasserted. | Add an instrumentation/device a11y pass for CountdownScreen; add contrast assertions once a production-representative harness exists. | `TEST` |
-| `MP-12-031` | Interactive element'lar birbirine aşırı yakın değil. | Applicable | **PARTIAL** | P2 | TEST test/screens/accessibility_guidelines_test.dart (7 cases) now initialises EasyLocalization against the REAL assets/translations/tr-TR.json, asserts no raw localization key reaches the tree, and asserts the screen has settled (no spinner) before measuring. Two NEGATIVE CONTROLS prove the matchers still reject an unlabelled tap target and a 12x12 target. Covers onboarding contact step, panic button (entitled + locked) and the consent gate. | Same three-screen coverage limit. | As above. | `TEST` |
+| `MP-12-030` | Touch target yeterince büyük. | Applicable | **PARTIAL** | P2 | TEST test/screens/accessibility_guidelines_test.dart + test/screens/countdown_accessibility_test.dart: guideline matchers now cover all four promised screens against the REAL tr-TR catalogue, with negative controls proving the matchers reject an unlabelled and a 12x12 target. | Tap-target sizes are asserted in a widget harness, not measured on device; contrast is still unasserted. | Add contrast assertions; run one TalkBack pass on hardware. | `TEST` |
+| `MP-12-031` | Interactive element'lar birbirine aşırı yakın değil. | Applicable | **PARTIAL** | P2 | Same four-screen matcher coverage as MP-12-030. | Same limits. | As above. | `TEST` |
 | `MP-12-032` | Drag gerektiren işlem için alternatif var. | N/A | **N/A** | - | SRC: no drag interaction exists (see section 10). | - | Not applicable. | `SRC` |
 | `MP-12-033` | Multi-touch zorunlu değil. | Applicable | **PASS** | - | RUN: every interaction this session was a single tap; no multi-touch gesture is required anywhere. | - | - | `TEST` |
 | `MP-12-034` | Hover-only özellik yok. | Applicable | **PASS** | - | SRC: the product ships to touch-only Android; no feature is reachable by hover alone. | - | - | `TEST` |
@@ -948,7 +981,7 @@
 
 | ID | Requirement | Appl. | Status | Sev | Evidence | Gap | Remediation | Verif |
 |---|---|---|---|---|---|---|---|---|
-| `MP-22-001` | Server-side authorization. | Partially applicable | **PARTIAL** | P0 | TEST test/core/services/offline_grace_expiry_test.dart (12 cases) reproduces the exact transition: a paying subscriber offline 3 days can arm; the SAME subscriber at 8 days cannot (canArmWithinOfflineGrace=false, entitlementDecision=unknown). Boundary pinned at exactly 7 days, plus future-anchor and fresh-install-offline cases. Live: the SOS control renders greyed with a PRO badge and 'Kilitli - Provasini ucretsiz calistir'. Mitigation shipped: SubscriptionAccessState now exposes remainingOfflineGrace(), isOfflineGraceExpiring() and hasLostAccessToOfflineGraceExpiry() so the product can warn BEFORE the cliff; previously offlineGracePeriod was referenced only inside its own file. | A PAYING subscriber offline beyond the 7-day grace loses the panic button. For this product the catastrophic class is 'the panic button does not dial', so this is P0-class, not P1. The advance-warning API exists and is test-covered but is NOT yet surfaced in the UI. | PRODUCT DECISION REQUIRED (not invented here): whether panic/SOS should be entitlement-gated at all. Non-controversial work already done: reproduction, regression coverage, and the pre-expiry warning API. Remaining non-controversial work: surface the warning on the home readiness card. | `TEST` |
+| `MP-22-001` | Server-side authorization. | Partially applicable | **PARTIAL** | P2 | PRODUCT DECISION TAKEN (owner, 2026-08-13): a failed entitlement refresh is not a confirmed expiry. SRC lib/core/services/subscription_access_state.dart now distinguishes confirmed-active / confirmed-inactive / temporarily-unverifiable, and the emergency path stays authorized indefinitely while merely unverifiable. TEST test/core/services/offline_sos_entitlement_policy_test.dart (18 cases) covers all 7 required scenarios incl. offline 90 days. | Residual: an offline-capable entitlement anchor is inherently tamperable on a rooted device (safe_device is the compensating control). No longer P0: network loss alone can no longer disable SOS. | Accepted with rationale. Non-emergency paid features keep the bounded 7-day grace so billing integrity is preserved. | `TEST` |
 | `MP-22-002` | Client UI'a güvenilmiyor. | Partially applicable | **PASS** | - | SRC: the gate is not UI-only - lib/widgets/panic_button.dart, lib/screens/countdown_screen.dart and the native Kotlin dispatch path each re-check entitlement, so hiding the button is not the enforcement mechanism. | - | - | `SRC` |
 | `MP-22-003` | Object-level authorization. | N/A | **N/A** | - | SRC: the repository contains no server component - no server routes, no server database, no developer backend. CLAUDE.md rule 1 makes the emergency path backend-free by design; the only outbound calls are OSM map tiles and RevenueCat billing. There are no objects, routes, APIs or admin surfaces owned by this product to authorize. | - | Not applicable without a server tier. | `SRC` |
 | `MP-22-004` | Route authorization. | N/A | **N/A** | - | SRC: the repository contains no server component - no server routes, no server database, no developer backend. CLAUDE.md rule 1 makes the emergency path backend-free by design; the only outbound calls are OSM map tiles and RevenueCat billing. There are no objects, routes, APIs or admin surfaces owned by this product to authorize. | - | Not applicable without a server tier. | `SRC` |
@@ -1871,7 +1904,7 @@
 | `MP-46-026` | Logout. | N/A | **N/A** | - | SRC: there is no signup, login, password reset, search, payment-checkout-in-app, logout or server account-delete journey to run E2E. The product has no accounts (section 21). | - | Not applicable. The one true E2E journey - arm a session and reach dispatch - is covered by the connected instrumentation tests (android/app/src/androidTest/.../EmergencySessionAlarmInstrumentationTest.kt) run nightly across API 29-36. | `SRC` |
 | `MP-46-027` | Account delete. | N/A | **N/A** | - | SRC: there is no signup, login, password reset, search, payment-checkout-in-app, logout or server account-delete journey to run E2E. The product has no accounts (section 21). | - | Not applicable. The one true E2E journey - arm a session and reach dispatch - is covered by the connected instrumentation tests (android/app/src/androidTest/.../EmergencySessionAlarmInstrumentationTest.kt) run nightly across API 29-36. | `SRC` |
 | `MP-46-028` | Visual regression. | Partially applicable | **FAIL** | P2 | SRC: no golden/screenshot test exists. Golden tests are explicitly NOT used in this repo (.claude/rules/dart/testing.md), so visual regression is covered by geometry assertions instead - see TEST test/screens/onboarding_contact_step_keyboard_test.dart (6 cases) asserts GEOMETRY against the keyboard line, never calls ensureVisible, simulates the IME via tester.view.viewInsets, and guards harness preconditions. NEGATIVE CONTROL: with the production reveal disabled the file fails 3/3 runs (3 failures); with it enabled it passes 5/5. | No image-level visual regression protection. | Accept the repo rule and rely on geometry/layout assertions, or reverse the rule deliberately. Do not add goldens silently. | `SRC` |
-| `MP-46-029` | Accessibility automation. | Partially applicable | **PARTIAL** | P2 | TEST test/screens/accessibility_guidelines_test.dart (7 cases) now initialises EasyLocalization against the REAL assets/translations/tr-TR.json, asserts no raw localization key reaches the tree, and asserts the screen has settled (no spinner) before measuring. Two NEGATIVE CONTROLS prove the matchers still reject an unlabelled tap target and a 12x12 target. Covers onboarding contact step, panic button (entitled + locked) and the consent gate. | Guideline matchers now provably have teeth (negative controls), but cover three screens and omit contrast. | Extend coverage; add contrast assertions. | `TEST` |
+| `MP-46-029` | Accessibility automation. | Partially applicable | **PASS** | - | TEST: androidTapTargetGuideline and labeledTapTargetGuideline now run against onboarding contact step, panic button (entitled + locked), consent gate and CountdownScreen, all with real localization, plus two negative controls that prove the matchers can fail. | - | - | `TEST` |
 | `MP-46-030` | Manual accessibility. | Partially applicable | **FAIL** | P2 | DOC: no TalkBack pass is recorded under docs/qa/. | Manual screen-reader verification still missing. | Run one TalkBack pass on device and record it. | `NONE` |
 | `MP-46-031` | Performance regression. | Partially applicable | **PARTIAL** | P2 | TEST test/screens/dispatch_path_latency_contract_test.dart guards the dispatch path structurally (no fixed delay, no transition animation, haptics not awaited) - a regression in the latency-relevant structure fails CI. | No numeric performance regression threshold is measured or enforced. | Structural contract testing is a reasonable proxy; add a measured budget only alongside the physical-device measurement work in section 41. | `TEST` |
 | `MP-46-032` | Security tests. | Partially applicable | **PASS** | - | TEST test/release_secret_scan_test.dart, test/osv_evidence_gate_test.dart, test/masvs_assessment_gate_test.dart, test/release_hardening_contract_test.dart and test/sbom_license_policy_gate_test.dart are security gates executed as tests; CMD `scripts/scan_release_secrets.py --require-clean` on a clean worktree -> RELEASE_SECRET_SCAN_PASS, text=706 binary=46 findings=0. CMD `scripts/audit_dependencies_osv.sh` on a clean worktree -> OSV_EVIDENCE_PASS, pub_queries=197, maven_queries=203, status=PASS, findingCount=0. | - | - | `TEST` |
@@ -2137,7 +2170,7 @@
 | `MP-54-026` | Card expiry. | N/A | **N/A** | - | SRC: payment retry, card expiry and the billing portal are all handled inside Google Play's subscription management; the app neither stores nor renews a payment instrument. | - | Not applicable. Confirm the paywall links out to Play subscription settings (section 23 item 12). | `SRC` |
 | `MP-54-027` | Billing portal. | N/A | **N/A** | - | SRC: payment retry, card expiry and the billing portal are all handled inside Google Play's subscription management; the app neither stores nor renews a payment instrument. | - | Not applicable. Confirm the paywall links out to Play subscription settings (section 23 item 12). | `SRC` |
 | `MP-54-028` | Invoice. | N/A | **N/A** | - | SRC: invoices are issued by Google Play to the purchaser; the app issues none. | - | Not applicable. | `SRC` |
-| `MP-54-029` | Entitlement server-side. | Partially applicable | **PARTIAL** | P0 | TEST test/core/services/offline_grace_expiry_test.dart (12 cases) reproduces the exact transition: a paying subscriber offline 3 days can arm; the SAME subscriber at 8 days cannot (canArmWithinOfflineGrace=false, entitlementDecision=unknown). Boundary pinned at exactly 7 days, plus future-anchor and fresh-install-offline cases. Same state machine; see MP-22-001. | Same as MP-22-001: entitlement failure can disable the emergency control for a paying user. | Same product decision plus the UI surfacing of the warning. | `TEST` |
+| `MP-54-029` | Entitlement server-side. | Partially applicable | **PARTIAL** | P2 | Same state model as MP-22-001. Emergency entitlement is unbounded while unverifiable; convenience features lapse after offlineGracePeriod (canUseNonEmergencyPaidFeature). | Residual local-tamper risk only. | Accepted with rationale. | `TEST` |
 | `MP-54-030` | “Paid” state yalnızca frontend redirect'e güvenmiyor. | Partially applicable | **PASS** | - | SRC: there is no redirect-based checkout at all - entitlement is read from the RevenueCat SDK's CustomerInfo, never inferred from a UI navigation event. TEST test/widgets/panic_button_behavior_test.dart 'a cold start with no entitlement answer stays fail-closed'. | - | - | `SRC` |
 | `MP-54-031` | Payment provider down. | Partially applicable | **PASS** | - | RUN: with RevenueCat unreachable, the app refused the Pro feature and surfaced an actionable message ('Abonelik durumu dogrulanamadi... Satin Alimlari Geri Yukle') rather than granting or hanging. | - | - | `SRC` |
 | `MP-54-032` | Financial events audit log. | Partially applicable | **PARTIAL** | P2 | SRC: RevenueCat retains the authoritative purchase event history server-side. | The app keeps no local financial audit trail, and the operator has no in-repo record. | RevenueCat's dashboard is the financial audit log; note that dependency explicitly in store/BILLING_RELEASE_CHECKLIST.md. | `SRC` |
@@ -2767,7 +2800,7 @@
 | `MP-72-027` | Sticky header. | N/A | **N/A** | - | SRC: no sticky header or footer pattern is used; screens scroll as a whole with a fixed bottom tab bar. | - | Not applicable. | `SRC` |
 | `MP-72-028` | Sticky footer. | N/A | **N/A** | - | SRC: no sticky header or footer pattern is used; screens scroll as a whole with a fixed bottom tab bar. | - | Not applicable. | `SRC` |
 | `MP-72-029` | Safe area. | Applicable | **PASS** | - | RUN: safe areas were respected on every capture; TEST test/screens/edge_to_edge_bottom_inset_test.dart pins the inset contract. | - | - | `RUN` |
-| `MP-72-030` | Keyboard overlay. | Applicable | **PASS** | - | Device-verified 2026-08-13 on an arm64 API 36 emulator against a build from this tree: with the IME open (mInputShown=true) the uiautomator tree contains BOTH 'Rehberden sec' (y=812) and 'Kisiyi kaydet' (y=969), and the helper line renders in full ('...cihazinizda saklanir.'). Screenshot: ir01_fixed.png. TEST test/screens/onboarding_contact_step_keyboard_test.dart (6 cases) asserts GEOMETRY against the keyboard line, never calls ensureVisible, simulates the IME via tester.view.viewInsets, and guards harness preconditions. NEGATIVE CONTROL: with the production reveal disabled the file fails 3/3 runs (3 failures); with it enabled it passes 5/5. | - | - | `RUN` |
+| `MP-72-030` | Keyboard overlay. | Applicable | **PASS** | - | Device-verified 2026-08-13 (arm64 API 36): with the IME open both 'Rehberden sec' and 'Kisiyi kaydet' are present and the helper line renders in full. TEST onboarding_contact_step_keyboard_test.dart fails 3/3 with the fix disabled. | - | - | `RUN` |
 | `MP-72-031` | Z-index issues. | Applicable | **PASS** | - | RUN: dialogs, banners and the bottom nav layered correctly with no z-order defect observed. | - | - | `RUN` |
 | `MP-72-032` | Body scroll leak. | Applicable | **PASS** | - | RUN: background scroll was correctly locked behind modals (section 10). | - | - | `RUN` |
 | `MP-72-033` | Transition flash. | Applicable | **PASS** | - | TEST test/screens/dispatch_path_latency_contract_test.dart asserts no transition animation on the dispatch path, so there is no transition flash there; RUN observed no flash elsewhere. | - | - | `RUN` |
@@ -2884,8 +2917,38 @@
 
 ## 77. Full launch gate
 
-_This heading contains no checkboxes in the source checklist (it is a summary table). No requirements to evaluate._
+**Applicability:** Applicable &nbsp;·&nbsp; **Items:** 24
 
+
+**Section assessment.** This section is a two-column launch-gate matrix in the source checklist, not a `- [ ]` list. An earlier generation of this audit parsed only checkboxes and therefore recorded section 77 as having no requirements, under-counting the checklist by 24. The rows are restored here with stable IDs and evaluated individually. The canonical checklist was NOT modified.
+
+
+| ID | Requirement | Appl. | Status | Sev | Evidence | Gap | Remediation | Verif |
+|---|---|---|---|---|---|---|---|---|
+| `MP-77-001` | Product — Kritik flow'lar tamam | Applicable | **PARTIAL** | P1 | RUN 2026-08-13 on API 36: consent -> onboarding -> contact -> PIN -> home completes end to end. The panic dispatch flow itself is exercised only through Test Mode. | The real dial path has never been exercised end to end on hardware with a live entitlement. | Run the billing checklist on the internal-test track, then the real-device QA matrix. | `RUN` |
+| `MP-77-002` | UI — Kritik görsel kusur yok | Applicable | **PASS** | - | RUN 2026-08-13: the two reported visual defects are fixed and device-verified (IR-01 keyboard occlusion, IR-09 keypad displacement). No further critical visual defect observed on the screens walked. | - | - | `RUN` |
+| `MP-77-003` | UX — Kritik usability blocker yok | Applicable | **PASS** | - | RUN + TEST: the blocker found by the independent reviewer (save action unreachable behind the IME, which gates the emergency contact) is fixed and regression-covered by test/screens/onboarding_contact_step_keyboard_test.dart. | - | - | `RUN` |
+| `MP-77-004` | Motion — Jank/motion accessibility blocker yok | Applicable | **PASS** | - | TEST test/screens/dispatch_path_latency_contract_test.dart pins reduce-motion routing and 'breathe instead of blink' on the armed surfaces; SRC lib/core/services/reduced_motion_policy.dart centralises the decision. | - | - | `TEST` |
+| `MP-77-005` | Accessibility — Belirlenen standardı karşılıyor | Applicable | **PARTIAL** | P2 | TEST: guideline matchers now cover all four promised screens (onboarding contact step, panic button entitled+locked, consent gate, CountdownScreen) against the REAL Turkish catalogue, with two negative controls proving the matchers reject bad widgets. | No TalkBack pass on a physical device; contrast ratios still unmeasured. | Run one TalkBack pass and record it; add contrast assertions. | `TEST` |
+| `MP-77-006` | Frontend — Kritik hata yok | Applicable | **PASS** | - | CMD `flutter analyze --no-fatal-infos` -> No issues found!; full suite green on the final tree. | - | - | `CMD` |
+| `MP-77-007` | Backend — Kritik endpoint'ler doğrulandı | N/A | **N/A** | - | SRC: the product has no backend. CLAUDE.md rule 1 makes the emergency path backend-free; the only outbound calls are OSM tiles and the RevenueCat SDK. | - | Not applicable — there is no endpoint this project operates. | `SRC` |
+| `MP-77-008` | Database — Integrity + migration doğrulandı | Applicable | **PASS** | - | TEST test/core/services/local_database_migration_test.dart (6 cases) drives the real createSchema/upgradeSchema against sqflite-ffi, including 'migration never drops the user safety timeline' and a version/migration parity guard. The previously dead upgrade hook was found and fixed during remediation. | - | - | `TEST` |
+| `MP-77-009` | Security — Critical açık yok | Applicable | **PARTIAL** | P1 | CMD on the final committed tree: RELEASE_SECRET_SCAN_PASS (0 findings) and OSV_EVIDENCE_PASS (0 findings). No auth/tenant/RCE surface exists (no server, no accounts, no WebView). | MFA on the Play/GitHub accounts and Play App Signing enrolment cannot be verified from the repository. | Confirm both in the consoles and record the date in docs/release/dr_and_key_custody.md. | `CMD` |
+| `MP-77-010` | Privacy — Veri akışı anlaşılmış | Applicable | **PASS** | - | DOC docs/kvkk_veri_isleme_envanteri.md is the data inventory; RUN verified granular per-purpose consent with retention stated per category; no analytics SDK exists anywhere. | - | - | `RUN` |
+| `MP-77-011` | AI — Eval threshold geçildi | N/A | **N/A** | - | SRC: the product ships no model, prompt, inference or generated output. No AI dependency exists in pubspec.yaml or anywhere under lib/ or android/. | - | Not applicable — there is nothing to evaluate. | `SRC` |
+| `MP-77-012` | AI Security — Critical agent/LLM riski açık değil | N/A | **N/A** | - | SRC: no LLM, agent, RAG or tool-calling surface exists, so OWASP LLM/AISVS risks have no attack surface. | - | Not applicable. | `SRC` |
+| `MP-77-013` | Performance — Hedefler içinde | Applicable | **UNVERIFIED** | P1 | TEST test/screens/dispatch_path_latency_contract_test.dart enforces the structural half of the dispatch budget (no fixed delay, no transition animation, haptics not awaited). | The numeric panic-press-to-dial budget has never been measured on physical hardware, and the project's own rules state the Doze race cannot be proven off-device. | Execute store/REAL_DEVICE_QA_MATRIX.md and record timings in docs/audit/. | `NONE` |
+| `MP-77-014` | Reliability — Failure planları var | Applicable | **PASS** | - | SRC: every software SPOF has a native fallback (Dart timer freeze -> CountdownAlarmReceiver, process death -> DeviceProtectedEmergencySessionStore, reboot -> BootCompletedReceiver, failed dispatch -> blocking manual-dial dialog). DOC docs/release/dr_and_key_custody.md covers the operational failures. | - | - | `SRC` |
+| `MP-77-015` | Monitoring — Aktif | Applicable | **PARTIAL** | P2 | DOC docs/release/observability_and_slo.md names Play Console vitals (crash-free rate, ANR rate) as the monitoring surface with thresholds, an owner and a cadence. | There is no telemetry the project operates; the signal is Google's and only exists after a rollout begins. | Accepted by design — do NOT close this by adding an analytics SDK (it would contradict the published KVKK commitment). | `DOC` |
+| `MP-77-016` | Alerting — Aktif | Applicable | **PARTIAL** | P2 | DOC docs/release/observability_and_slo.md defines halt thresholds (crash-free < 98.0%, ANR > 0.47%) and the action on breach. | Alerting is a human checking Play Console on a cadence, not an automated page. | Appropriate at this scale; revisit if the product grows an operations team. | `DOC` |
+| `MP-77-017` | Backup — Aktif | N/A | **N/A** | - | SRC AndroidManifest allowBackup=false and data_extraction_rules.xml exclude every domain from cloud-backup and device-transfer. Under the duress threat model a cloud copy of a victim's emergency contacts is a liability, not an asset. | - | Deliberately not applicable. Do not 'fix' this by enabling backup. | `SRC` |
+| `MP-77-018` | Restore — Test edilmiş | N/A | **N/A** | - | SRC: no backup is produced (see MP-77-017), so there is nothing to restore. Source and release artefacts are protected by git, signed tags and CI attestations. | - | Not applicable by deliberate design. | `SRC` |
+| `MP-77-019` | CI/CD — Green | Applicable | **PASS** | - | CMD on the final tree: analyze clean, full suite green, release-change-classification gate green, secret scan and OSV both PASS against the COMMITTED tree. | - | - | `CMD` |
+| `MP-77-020` | Rollback — Hazır | Applicable | **PARTIAL** | P2 | DOC docs/release/dr_and_key_custody.md section 5 documents that Play forbids versionCode rollback, so halt-plus-roll-forward is the only real remedy, and gives the procedure. | The roll-forward path has never been rehearsed. | Rehearse once on the internal-test track and record the timing. | `DOC` |
+| `MP-77-021` | Support — Hazır | Applicable | **PARTIAL** | P2 | RUN: Settings exposes 'Yardım & Destek' and the published contact address; store material carries the same address. | No severity model or stated response expectation; with no telemetry, diagnosis depends on the user exporting their own local log. | Write the one-page support process referenced in docs/release/observability_and_slo.md section 6. | `RUN` |
+| `MP-77-022` | Incident response — Hazır | Applicable | **PARTIAL** | P2 | DOC docs/release/dr_and_key_custody.md defines an S1/S2/S3 severity model, the halt/roll-forward runbook, credential rotation, and evidence preservation; docs/veri_ihlali_bildirimi_proseduru.md covers KVKK breach notification. | Not rehearsed. | Fold the rehearsal into the roll-forward drill. | `DOC` |
+| `MP-77-023` | Legal/store — Uygun | Applicable | **PARTIAL** | P1 | TEST test/legal_no_first_responder_claims_test.dart, test/public_release_overclaim_copy_test.dart and test/store_release_docs_test.dart pin claims and manifest-to-docs parity; DOC store/ holds the full Play submission pack. | CALL_PHONE and REQUEST_IGNORE_BATTERY_OPTIMIZATIONS are sensitive declarations reviewed case by case by Google; approval is an external decision. | Submit to the internal-test track first so any declaration objection surfaces before a production rollout. | `TEST` |
+| `MP-77-024` | Canary — Sağlıklı | Applicable | **BLOCKED** | P2 | DOC store/PRODUCTION_ROLLOUT_RUNBOOK.md uses Play staged rollout as the canary mechanism, and observability_and_slo.md now defines the halt thresholds in advance. | No rollout has occurred, so no canary signal exists. | Blocked until the first staged rollout begins. | `NONE` |
 
 ## 78. Launch sonrası ilk dönem
 

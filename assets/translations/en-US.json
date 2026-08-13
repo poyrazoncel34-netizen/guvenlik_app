@@ -951,5 +951,7 @@
   "oem_step_generic_battery_body": "Confirm KoruBeni is among the apps that are not optimized in the system battery optimization list.",
   "settings_oem_guide_title": "Device-Specific Background Settings",
   "settings_oem_guide_subtitle": "Step-by-step guidance for your manufacturer",
-  "battery_wizard_oem_btn": "Steps For My Device"
+  "battery_wizard_oem_btn": "Steps For My Device",
+  "subscription_verification_stale_title": "Subscription check pending",
+  "subscription_verification_stale_body": "Your subscription can't be verified while the device is offline. Emergency features keep working; the check refreshes on its own once you're back online."
 }

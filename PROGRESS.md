@@ -38,6 +38,33 @@ Next unstarted work is **Batch 9 (design tokens)** in [`REMEDIATION_PLAN.md`](RE
 | 10 | Repository hygiene | ✅ Done | `.github/dependabot.yml`; README made canonical for local build; sqflite schema documented; formatting posture recorded as an explicit decision |
 | 11 | Adaptive layout (API 37) | ⬜ Scheduled | External platform deadline |
 
+### Post-review internal remediation (2026-08-13)
+
+**Checklist accounting reconciled.** The canonical checklist holds **1,738** independent
+requirements: 1,714 `- [ ]` checkboxes **plus 24 launch-gate rows in section 77**, which are a
+two-column table rather than a checkbox list. An earlier generation parsed only checkboxes and
+recorded section 77 as empty, under-counting by exactly 24. Those 24 are now
+`MP-77-001`..`MP-77-024`, each evaluated individually. **The canonical checklist was not modified.**
+Reconciliation: checklist 1738 / audit 1738 / missing 0 / duplicated 0 / unaccounted 0.
+
+**IR-04 — product decision implemented.** Owner decision: a failed entitlement refresh is not a
+confirmed expiry. `SubscriptionAccessState` now distinguishes three states —
+confirmed-active, confirmed-inactive, and temporarily-unverifiable — and the emergency path stays
+authorized **indefinitely** while merely unverifiable, provided a genuine prior confirmation exists
+(both the flag and its corroborating timestamp; a lone boolean cannot forge entitlement).
+Non-emergency paid features keep the bounded 7-day grace, so billing integrity is preserved where
+nobody's safety is at stake. Routing is by `FeatureAccessMatrix.emergencyCapableFeatures`.
+The advance-warning UX is now surfaced on the home readiness card with deliberately calm copy that
+states emergency features keep working. **P0 count is now 0.**
+
+**IR-09 — fixed and device-verified.** The PIN validation banner now occupies a reserved slot that
+scales with text size, so the keypad cannot move when it appears. Measured on device: banner shown,
+key `5` bounds identical before and after (`423,1474,657,1678`).
+
+**IR-03 — coverage completed.** CountdownScreen turned out to be renderable after all
+(`countdown_dispose_lifecycle_test.dart` already pumps it behind a mocked channel). All four
+promised screens now carry guideline matchers against the real Turkish catalogue.
+
 ### Independent review (INDEPENDENT_REVIEW.md) — outcome
 
 Reviewer verdict was **REVIEW FAILED**. Findings were treated as reopened requirements.
