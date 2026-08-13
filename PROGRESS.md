@@ -187,7 +187,7 @@ The `/data` partition fills at ~91 % — uninstall old APKs before reinstalling.
 
 ## Next action
 
-Work `RESOLUTION_QUEUE.md` top-down. The next batch is the **~140 boilerplate-evidence
+Work `RESOLUTION_QUEUE.md` top-down. The next batch is the **142 boilerplate-evidence
 rows**: write requirement-specific evidence, or measure it on the emulator, one row at a
 time. A row only leaves the queue when its audit row changes status and the accounting
 gate still passes.
