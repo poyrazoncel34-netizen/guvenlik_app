@@ -19,7 +19,7 @@ never typed by hand — they come from `python3 scripts/verify_audit_accounting.
 
 | Question | Answer |
 |---|---|
-| **Verified code revision** | `7499ac9` — the tree the suite, analyzer, gates and the device walkthrough below were run against |
+| **Verified code revision** | `HEAD` of this branch — suite, analyzer, gates and two emulator passes all run against it |
 | **Current phase** | Repository convergence: latest-review findings closed; working the resolution queue |
 | **Latest independent review** | `INDEPENDENT_REVIEW_ROUND_2.md`, 2026-08-13, verdict **REVIEW FAILED — REMEDIATION REQUIRED** |
 | **P0 remaining (total)** | **0** |
@@ -29,7 +29,7 @@ never typed by hand — they come from `python3 scripts/verify_audit_accounting.
 | **Unresolved internal findings from the latest review** | **0** — R2-01 … R2-12 all closed, each with mutation evidence |
 | **Findings opened and closed by our OWN device pass** | **1** (D-2, below) — a previously "device-verified" row that was not actually fixed |
 | **Unresolved external blockers** | **87 requirement IDs in 9 categories** (`EXTERNAL_LAUNCH_BLOCKERS.md`) |
-| **Suite** | 1143 passed / 0 failed (`flutter test --no-pub`) |
+| **Suite** | 1190 passed / 0 failed (`flutter test --no-pub`) |
 | **Analyzer** | No issues found (`flutter analyze --no-fatal-infos`) |
 | **Worktree** | see `git status`; the security gates refuse to run on a dirty tree |
 
@@ -43,20 +43,20 @@ AUDIT_ACCOUNTING_PASS checklist=1738 audit=1738 missing=0 duplicated=0 unaccount
 
 | Status | Count |
 |---|---|
-| PASS | 499 |
-| FAIL | 21 |
-| PARTIAL | 147 |
+| PASS | 534 |
+| FAIL | 11 |
+| PARTIAL | 121 |
 | BLOCKED | 29 |
-| N/A | 778 |
-| UNVERIFIED | 264 |
+| N/A | 783 |
+| UNVERIFIED | 260 |
 | **TOTAL** | **1738** |
 
 | Severity | Count |
 |---|---|
 | P0 | 0 |
 | P1 | 29 |
-| P2 | 235 |
-| P3 | 197 |
+| P2 | 204 |
+| P3 | 188 |
 
 ### Resolution queue
 
@@ -64,15 +64,22 @@ AUDIT_ACCOUNTING_PASS checklist=1738 audit=1738 missing=0 duplicated=0 unaccount
 
 | Scope | Count |
 |---|---|
-| `IN_REPO_RESOLVABLE` | 290 |
+| `IN_REPO_RESOLVABLE` | 242 |
 | `RUNTIME_VERIFIABLE_NOW` | 33 |
 | `EXTERNAL_BLOCKER` | 87 |
-| `PRODUCT_DECISION_REQUIRED` | 51 |
-| **Total unresolved** | **461** |
+| `PRODUCT_DECISION_REQUIRED` | 59 |
+| **Total unresolved** | **421** |
 
-The dominant in-repo cluster is **142 rows whose evidence was section-level boilerplate**
-(the IR-06 downgrade). Those are not defects in the app; they are rows that need
-requirement-specific evidence written or measured. That is the next batch.
+Product decisions are grouped into **nine actual questions** in
+`PRODUCT_DECISIONS_REQUIRED.md`, not 59 repetitive ones.
+
+The dominant in-repo cluster is still the rows whose evidence was section-level
+boilerplate (the IR-06 downgrade), concentrated in sections 1, 3, 5, 6, 9 and 12.
+Those are not defects in the app; they are rows that need requirement-specific
+evidence written or measured, one at a time. **Sections 14, 19 and 4 were cleared
+this way and are the worked example to follow** — each row got its own evidence,
+several became N/A with a guard test that fails if the N/A ever stops being true,
+and two became FAIL because measuring them found real defects.
 
 ---
 

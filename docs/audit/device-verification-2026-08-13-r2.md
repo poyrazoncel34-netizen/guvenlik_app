@@ -126,3 +126,52 @@ screens are usable — but it is the same family of layout instability, and it i
 a scripted tap sequence recorded on the first screen misses on the second.
 
 Not fixed in this pass; recorded so it is not re-discovered as new.
+
+---
+
+## D-6 — OPEN: RenderFlex overflow on the unlock screen at display size "Larger"
+
+**Status: open finding, not closed.** Recorded here so it is not rediscovered as
+new, and so the partial work done on it is not mistaken for a fix.
+
+**Reproduction (measured, second emulator pass):**
+
+```
+adb shell wm density 560          # Android "Larger" display size, 1080x2400 device
+adb shell am force-stop com.poyrazoncel.korubeni
+adb shell am start -n com.poyrazoncel.korubeni/.MainActivity
+# reach the PIN unlock screen
+adb logcat -d | grep RenderFlex
+  -> FlutterError: A RenderFlex overflowed by 15 pixels on the bottom.
+```
+
+Visible symptom: the `0` / backspace row is clipped at the bottom edge and
+"Şifremi Unuttum" is off-screen entirely. At the default density (420) there is
+enough slack that nothing shows.
+
+**Why this matters more than a typical clipping bug.** PIN entry locks out after
+5 failures. An unreachable backspace turns a single mistyped digit into a failed
+attempt, and the user cannot reach the forgot-PIN affordance either.
+
+**What was fixed, and what that fix does NOT prove.** The screen's
+`ConstrainedBox` computed `minHeight` as
+`MediaQuery.size.height - padding.top - padding.bottom`, ignoring the Scaffold's
+AppBar and the scroll view's own 24px vertical padding — so the Column was given
+a minimum height larger than the viewport it actually had. That arithmetic is
+wrong on its own terms and is now `LayoutBuilder` + `constraints.maxHeight - 48`
+(`test/screens/unlock_screen_density_overflow_test.dart` pins it).
+
+**But that is not established as the cause of the 15px overflow.** A
+`SingleChildScrollView` scrolls rather than overflowing, so an over-large
+`minHeight` alone cannot raise a `RenderFlex` overflow. A negative control built
+to reproduce the old behaviour did **not** overflow, which falsifies the
+attribution rather than supporting it. The offending `RenderFlex` is somewhere
+else — most likely a fixed-height `Column`/`Row` inside the keypad or the
+lockout banner.
+
+**Next step for whoever picks this up:** re-run the reproduction above and read
+the FULL Flutter error from logcat, not just the first line — Flutter names the
+offending widget and its constraints in the details block. Then fix that widget
+and keep this reproduction as the regression test.
+
+**Do not mark `MP-72-001` or `MP-72-015` PASS until that is done.**

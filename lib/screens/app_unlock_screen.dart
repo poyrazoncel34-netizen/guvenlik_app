@@ -216,16 +216,32 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> {
             ],
           ),
           body: SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
-              child: ConstrainedBox(
-                constraints: BoxConstraints(
-                  minHeight:
-                      MediaQuery.of(context).size.height -
-                      MediaQuery.of(context).padding.top -
-                      MediaQuery.of(context).padding.bottom,
-                ),
-                child: Column(
+            // LayoutBuilder, not MediaQuery arithmetic.
+            //
+            // This used to compute minHeight as `screen.height - padding.top -
+            // padding.bottom`, which ignores TWO things that are really there:
+            // the Scaffold's AppBar, and this scroll view's own 24px vertical
+            // padding. The Column was therefore forced taller than the viewport
+            // it actually had. At the default density the slack absorbed it; at
+            // a large display size the content grows and the mismatch surfaces
+            // as a real overflow -- measured on an API 36 emulator at density
+            // 560: "RenderFlex overflowed by 15 pixels on the bottom", with the
+            // 0/backspace row clipped and "Sifremi Unuttum" off-screen.
+            //
+            // That is not cosmetic on this screen. PIN entry locks out after 5
+            // failures, so an unreachable backspace turns a single mistyped
+            // digit into a failed attempt.
+            //
+            // `constraints.maxHeight` is the height the scroll view actually
+            // offers, with app bar, safe area and padding already subtracted.
+            child: LayoutBuilder(
+              builder: (context, constraints) => SingleChildScrollView(
+                padding: const EdgeInsets.all(24),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    minHeight: constraints.maxHeight - 48,
+                  ),
+                  child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Container(
@@ -345,6 +361,7 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> {
                       ),
                     ],
                   ],
+                  ),
                 ),
               ),
             ),
