@@ -5,6 +5,7 @@
 
 import 'package:flutter/material.dart';
 import 'app_colors.dart';
+import 'design_tokens.dart';
 
 class AppTheme {
   // fontFamily: null → Android'de Roboto, iOS'te SF Pro otomatik seçilir
@@ -25,7 +26,7 @@ class AppTheme {
         surface: AppColors.surface,
       ),
       appBarTheme: const AppBarTheme(
-        elevation: 0,
+        elevation: Elevation.flat,
         scrolledUnderElevation: 0,
         backgroundColor: AppColors.background,
         foregroundColor: AppColors.textPrimary,
@@ -38,17 +39,22 @@ class AppTheme {
         ),
       ),
       cardTheme: CardThemeData(
-        elevation: 0,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        elevation: Elevation.flat,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(Radii.lg),
+        ),
         color: AppColors.cardBg,
         margin: EdgeInsets.zero,
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          elevation: 0,
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          elevation: Elevation.flat,
+          padding: const EdgeInsets.symmetric(
+            horizontal: Spacing.xl,
+            vertical: Spacing.md,
+          ),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(Radii.md),
           ),
           textStyle: const TextStyle(
             fontSize: 16,
@@ -62,23 +68,25 @@ class AppTheme {
         fillColor: AppColors.surface,
         hintStyle: const TextStyle(color: AppColors.textSecondary),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(Radii.input),
           borderSide: const BorderSide(color: AppColors.border),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(Radii.input),
           borderSide: const BorderSide(color: AppColors.border),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(Radii.input),
           borderSide: const BorderSide(color: AppColors.primary, width: 2),
         ),
       ),
       // ── Tutarlı SnackBar stili ──
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        elevation: 4,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(Radii.md),
+        ),
+        elevation: Elevation.raised,
         backgroundColor: AppColors.primary,
         contentTextStyle: const TextStyle(
           color: Colors.white,
@@ -89,8 +97,10 @@ class AppTheme {
       // ── Tutarlı Dialog stili ──
       dialogTheme: DialogThemeData(
         backgroundColor: AppColors.cardBg,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        elevation: 8,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(Radii.xxl),
+        ),
+        elevation: Elevation.overlay,
         titleTextStyle: const TextStyle(
           fontSize: 20,
           fontWeight: FontWeight.w800,
@@ -114,7 +124,9 @@ class AppTheme {
         backgroundColor: Colors.transparent,
         modalBackgroundColor: Colors.transparent,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          borderRadius: BorderRadius.vertical(
+            top: Radius.circular(Radii.xxl),
+          ),
         ),
       ),
     );
@@ -136,7 +148,7 @@ class AppTheme {
         surface: AppColors.surface,
       ),
       appBarTheme: const AppBarTheme(
-        elevation: 0,
+        elevation: Elevation.flat,
         scrolledUnderElevation: 0,
         backgroundColor: AppColors.background,
         foregroundColor: AppColors.textPrimary,
@@ -149,17 +161,22 @@ class AppTheme {
         ),
       ),
       cardTheme: CardThemeData(
-        elevation: 0,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        elevation: Elevation.flat,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(Radii.lg),
+        ),
         color: AppColors.cardBg,
         margin: EdgeInsets.zero,
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          elevation: 0,
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          elevation: Elevation.flat,
+          padding: const EdgeInsets.symmetric(
+            horizontal: Spacing.xl,
+            vertical: Spacing.md,
+          ),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(Radii.md),
           ),
           textStyle: const TextStyle(
             fontSize: 16,
@@ -173,23 +190,25 @@ class AppTheme {
         fillColor: AppColors.surface,
         hintStyle: const TextStyle(color: AppColors.textSecondary),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(Radii.input),
           borderSide: const BorderSide(color: AppColors.border),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(Radii.input),
           borderSide: const BorderSide(color: AppColors.border),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(Radii.input),
           borderSide: const BorderSide(color: AppColors.primary, width: 2),
         ),
       ),
       // ── Tutarlı SnackBar stili ──
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        elevation: 4,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(Radii.md),
+        ),
+        elevation: Elevation.raised,
         backgroundColor: AppColors.primary,
         contentTextStyle: const TextStyle(
           color: Colors.white,
@@ -200,8 +219,10 @@ class AppTheme {
       // ── Tutarlı Dialog stili ──
       dialogTheme: DialogThemeData(
         backgroundColor: AppColors.cardBg,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        elevation: 8,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(Radii.xxl),
+        ),
+        elevation: Elevation.overlay,
         titleTextStyle: const TextStyle(
           fontSize: 20,
           fontWeight: FontWeight.w800,
@@ -225,7 +246,9 @@ class AppTheme {
         backgroundColor: Colors.transparent,
         modalBackgroundColor: Colors.transparent,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          borderRadius: BorderRadius.vertical(
+            top: Radius.circular(Radii.xxl),
+          ),
         ),
       ),
     );

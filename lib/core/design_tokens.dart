@@ -1,0 +1,233 @@
+// ============================================================================
+// DESIGN TOKENS — the scales this app already uses, named
+// ============================================================================
+// This file was written by MEASURING the codebase, not by inventing a system
+// and then trying to make the UI match it. CLAUDE.md rule 4 forbids changing
+// visual design, so nothing here changes a rendered value: every rung below is
+// a value the app already ships, and the rungs were chosen because they are
+// the ones that actually dominate.
+//
+// Measured over lib/ before this file existed:
+//
+//   BorderRadius.circular : 13 distinct values; 12/14/16/20 accounted for 209
+//                           of ~254 uses, plus 999 for pills
+//   EdgeInsets.all        : 12 distinct values; 12/14/16/18/20/24 dominant
+//   elevation             : already a clean 3-rung scale (0 / 4 / 8)
+//   icon size             : 20 distinct values -- the genuinely scattered one
+//   durations/curves      : already tokenised in `Motion`
+//
+// So this is not a greenfield token system. Two of the six scales were already
+// real, one (motion) has its own documented file, and the honest gap was that
+// the rest had no name and no way to stop drifting.
+//
+// HOW THIS IS ENFORCED, and why that matters more than the constants:
+// `test/core/design_token_ratchet_test.dart` counts values that fall OFF these
+// scales and pins the current count. It does not demand a big-bang migration —
+// that would churn hundreds of lines and risk exactly the visual regressions
+// rule 4 exists to prevent. It stops the drift from growing, the same way
+// `source_file_size_ratchet_test.dart` handles oversized files. Accepted debt
+// is recorded there, in numbers, rather than hidden here.
+//
+// Motion deliberately lives in `motion.dart` and is NOT duplicated here.
+// ============================================================================
+
+import 'package:flutter/widgets.dart';
+
+/// Spacing scale. A 4px base grid; the rungs are the multiples actually used.
+abstract final class Spacing {
+  static const double xxs = 4;
+  static const double xs = 8;
+  static const double sm = 12;
+  static const double md = 16;
+  static const double lg = 20;
+  static const double xl = 24;
+  static const double xxl = 32;
+
+  /// Every rung, for the ratchet and for exhaustive tests.
+  static const List<double> scale = <double>[xxs, xs, sm, md, lg, xl, xxl];
+}
+
+/// Corner radius scale. `pill` is the fully-rounded case (chips, the SOS ring).
+abstract final class Radii {
+  static const double xs = 4;
+  static const double sm = 8;
+  static const double md = 12;
+
+  /// 14 is not a designed rung, it is measured reality: 61 uses, almost all of
+  /// them input fields and the cards that sit next to them. Changing it to 12
+  /// or 16 is a VISUAL change, which this pass is not allowed to make
+  /// (CLAUDE.md rule 4). It is on the scale so the ratchet does not report 61
+  /// false violations, and it is named honestly so a future design pass can
+  /// decide to collapse it deliberately rather than discover it by accident.
+  static const double input = 14;
+
+  static const double lg = 16;
+  static const double xl = 20;
+  static const double xxl = 24;
+  static const double pill = 999;
+
+  static const List<double> scale = <double>[
+    xs,
+    sm,
+    md,
+    input,
+    lg,
+    xl,
+    xxl,
+    pill,
+  ];
+}
+
+/// Elevation scale. Already a three-rung system before this file: flat
+/// surfaces, floating actions, dialogs. Shadows come from `AppColors.shadow`.
+abstract final class Elevation {
+  static const double flat = 0;
+  static const double raised = 4;
+  static const double overlay = 8;
+
+  static const List<double> scale = <double>[flat, raised, overlay];
+}
+
+/// Icon size scale — the scattered one. Seven rungs cover the real range from
+/// inline glyphs to the empty-state illustration.
+abstract final class IconSizes {
+  static const double xs = 14;
+  static const double sm = 16;
+  static const double md = 20;
+  static const double lg = 24;
+  static const double xl = 32;
+  static const double xxl = 40;
+  static const double hero = 48;
+
+  static const List<double> scale = <double>[xs, sm, md, lg, xl, xxl, hero];
+}
+
+/// Type scale, measured the same way as the rest.
+///
+/// 21 distinct font sizes were in use, clustered hard on 12-16 (184 of 335
+/// uses). The rungs below are those clusters plus the display sizes the
+/// onboarding and countdown screens genuinely need.
+///
+/// A note on why this is a SCALE and not a `TextTheme`: the app currently sets
+/// `fontSize` inline at 335 sites and reads `Theme.of(context).textTheme`
+/// nowhere. Routing all of it through the theme is a real refactor with real
+/// visual risk, so this pass names the scale and ratchets it; the migration is
+/// tracked as debt rather than pretended away.
+abstract final class TypeScale {
+  /// Fine print: legal footnotes, chip captions.
+  static const double caption = 11;
+
+  /// Secondary body: helper lines, card subtitles.
+  static const double bodySmall = 12;
+
+  /// The workhorse. Card body, list rows.
+  static const double body = 13;
+
+  /// Emphasised body, button labels.
+  static const double bodyLarge = 14;
+
+  /// Section intros and dialog body.
+  static const double subtitle = 16;
+
+  /// Section headings.
+  static const double title = 18;
+
+  /// Screen headings.
+  static const double headline = 22;
+
+  /// Onboarding and consent screen titles.
+  static const double display = 26;
+
+  /// The countdown number and the fake-call caller name.
+  static const double hero = 34;
+
+  static const List<double> scale = <double>[
+    caption,
+    bodySmall,
+    body,
+    bodyLarge,
+    subtitle,
+    title,
+    headline,
+    display,
+    hero,
+  ];
+
+  /// The four weights actually in use. w500 appears 14 times and is folded into
+  /// [medium]; w900 (11 uses) is reserved for the emergency surfaces.
+  static const FontWeight medium = FontWeight.w500;
+  static const FontWeight semiBold = FontWeight.w600;
+  static const FontWeight bold = FontWeight.w700;
+  static const FontWeight heavy = FontWeight.w800;
+  static const FontWeight emergency = FontWeight.w900;
+
+  static const List<FontWeight> weights = <FontWeight>[
+    medium,
+    semiBold,
+    bold,
+    heavy,
+    emergency,
+  ];
+}
+
+/// Stacking order. Flutter has no z-index, so ordering is expressed by widget
+/// order inside a Stack and by route layering. These names exist so a new
+/// overlay has an intended place rather than "wherever it was appended".
+abstract final class ZLayer {
+  /// Page content.
+  static const int content = 0;
+
+  /// Decorative glow/pulse rings behind an interactive control.
+  static const int ambient = 10;
+
+  /// Sticky headers, bottom bars.
+  static const int chrome = 20;
+
+  /// SnackBars and inline banners.
+  static const int notice = 30;
+
+  /// The privacy shield that covers the app in the recents switcher, and the
+  /// PIN gate. Nothing may render above these.
+  static const int shield = 40;
+}
+
+/// Breakpoints, taken from the checks the screens already make. This app is
+/// portrait-phone-only by an explicit product decision, so these are phone
+/// size classes rather than tablet/desktop breakpoints.
+abstract final class Breakpoints {
+  /// Below this the layout drops to its tightest horizontal padding.
+  static const double narrowWidth = 340;
+
+  /// Above this the layout uses its most generous horizontal padding.
+  static const double wideWidth = 400;
+
+  /// Below this, vertical rhythm compresses (the `shortScreen` path).
+  static const double shortHeight = 700;
+
+  static bool isNarrow(Size size) => size.width <= narrowWidth;
+  static bool isWide(Size size) => size.width > wideWidth;
+  static bool isShort(Size size) => size.height < shortHeight;
+}
+
+/// Component density. One switch, driven by [Breakpoints.shortHeight], which is
+/// what the screens already do ad hoc under the name `shortScreen`.
+enum Density { comfortable, compact }
+
+abstract final class DensityTokens {
+  static Density of(Size size) =>
+      Breakpoints.isShort(size) ? Density.compact : Density.comfortable;
+
+  /// Gap between sibling cards.
+  static double gap(Density d) =>
+      d == Density.compact ? Spacing.xs : Spacing.sm + 2;
+
+  /// Gap between major sections.
+  static double sectionGap(Density d) =>
+      d == Density.compact ? Spacing.sm : Spacing.lg;
+
+  /// Horizontal page padding for a given width.
+  static double horizontalPadding(Size size) {
+    if (Breakpoints.isWide(size)) return Spacing.xl;
+    return Breakpoints.isNarrow(size) ? Spacing.md : Spacing.lg;
+  }
+}
