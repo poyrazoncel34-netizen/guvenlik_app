@@ -76,12 +76,12 @@
 | **MISSING** | **0** |
 | **DUPLICATED** | **0** |
 | **UNACCOUNTED** | **0** |
-| PASS | 550 |
-| FAIL | 11 |
+| PASS | 552 |
+| FAIL | 12 |
 | PARTIAL | 122 |
 | BLOCKED | 29 |
 | N/A | 783 |
-| UNVERIFIED | 243 |
+| UNVERIFIED | 240 |
 
 ### Severity of non-PASS findings
 
@@ -89,7 +89,7 @@
 |---|---|
 | P0 | 0 |
 | P1 | 29 |
-| P2 | 187 |
+| P2 | 185 |
 | P3 | 189 |
 
 ### P0 / P1 register
@@ -143,7 +143,7 @@ Every P0 and P1 individually, so none hides inside an aggregate.
 | 9 | 6 | 0 | 2 | 0 | 0 | 20 |
 | 10 | 10 | 0 | 0 | 0 | 18 | 1 |
 | 11 | 7 | 0 | 2 | 0 | 6 | 5 |
-| 12 | 25 | 0 | 4 | 0 | 4 | 7 |
+| 12 | 27 | 1 | 4 | 0 | 4 | 4 |
 | 13 | 6 | 0 | 1 | 0 | 1 | 10 |
 | 14 | 15 | 0 | 0 | 0 | 7 | 0 |
 | 15 | 5 | 0 | 0 | 0 | 1 | 7 |
@@ -692,9 +692,9 @@ Every P0 and P1 individually, so none hides inside an aggregate.
 | `MP-12-020` | Error screen reader'a duyuruluyor. | Applicable | **PARTIAL** | P2 | SRC lib/core/services/countdown_announcement.dart handles the countdown case; other error surfaces rely on SnackBar/dialog default semantics. | Non-countdown errors are not explicitly announced. | Wrap the validation and entitlement error surfaces in a live region or use SemanticsService.announce. | `TEST` |
 | `MP-12-021` | Loading state duyuruluyor. | Applicable | **PASS** | - | SRC lib/widgets/loading_overlay.dart now wraps the scrim in Semantics(liveRegion, label) and the covered tree in ExcludeSemantics. TEST test/widgets/loading_overlay_semantics_test.dart (3 cases, added 2026-08-12). | - | - | `TEST` |
 | `MP-12-022` | Dialog doğru role sahip. | Applicable | **PASS** | - | RUN: dialogs are Material AlertDialog/Dialog instances, which carry dialog role and modal semantics by construction. | - | - | `TEST` |
-| `MP-12-023` | Text contrast. | Applicable | **UNVERIFIED** | P2 | RUN: text and UI read clearly in the captured screenshots, but no contrast ratio was measured and no automated contrast assertion exists. | Contrast is unmeasured (same gap as section 6 item 14). | Add textContrastGuideline assertions to the existing widget tests and record measured ratios in docs/audit/. | `TEST` |
-| `MP-12-024` | UI contrast. | Applicable | **UNVERIFIED** | P2 | RUN: text and UI read clearly in the captured screenshots, but no contrast ratio was measured and no automated contrast assertion exists. | Contrast is unmeasured (same gap as section 6 item 14). | Add textContrastGuideline assertions to the existing widget tests and record measured ratios in docs/audit/. | `TEST` |
-| `MP-12-025` | Focus contrast. | Applicable | **UNVERIFIED** | P2 | RUN: text and UI read clearly in the captured screenshots, but no contrast ratio was measured and no automated contrast assertion exists. | Contrast is unmeasured (same gap as section 6 item 14). | Add textContrastGuideline assertions to the existing widget tests and record measured ratios in docs/audit/. | `TEST` |
+| `MP-12-023` | Text contrast. | Applicable | **PASS** | - | MEASURED, not eyeballed. TEST test/screens/contrast_measurement_test.dart computes WCAG 2.1 relative luminance from the shipped AppColors values: textPrimary on background 16.26:1, on cardBg 13.49:1, on surface 14.38:1; textSecondary on background 7.84:1, on cardBg 6.50:1, on surface 6.93:1. All six clear the 4.5:1 AA bar with margin. The test carries a formula sanity check (white-on-black must be 21.00, grey-on-itself 1.00) so a broken implementation cannot report everything as passing. | - | - | `TEST` |
+| `MP-12-024` | UI contrast. | Applicable | **PASS** | - | MEASURED. The colours that carry MEANING are held to the 4.5:1 text bar rather than the 3:1 non-text bar, because a user reads state from them: primary 8.77:1 on background and 7.27:1 on cardBg, emergency 5.34:1, success 5.67:1, warning 8.24:1, info 4.53:1. The decorative card border measures 1.25:1 and is explicitly pinned BELOW 3:1 in the test with the reason recorded -- WCAG 1.4.11 governs information needed to identify a control, and these cards are identified by their fill, not their outline. Pinning it means a future change that makes a border the sole boundary indicator has to revisit that judgement. | - | - | `TEST` |
+| `MP-12-025` | Focus contrast. | Applicable | **FAIL** | P2 | MEASURED FROM RENDERED PIXELS and it FAILS. On an API 36 emulator, after Tab x5 on the Settings screen, the focused row background is rgb(47,69,89) and its unfocused sibling is rgb(18,43,66): a contrast of 1.46:1. WCAG 1.4.11 requires 3.0:1 for a focus indicator. The indicator IS present and visible in a screenshot (MP-12-003 passes on that basis), but it is not strong enough to meet the standard, which matters most for the low-vision users keyboard traversal exists to serve. TEST test/screens/contrast_measurement_test.dart pins the measured 1.46 and asserts it is below 3.0, with a note that when the assertion finally goes red the defect is fixed. | The default Material focus overlay on a dark surface is too subtle. This is a VISUAL change, so it sits against CLAUDE.md rule 4 and needs a deliberate decision rather than a drive-by tweak. | Raise the focus overlay opacity or add an explicit 2px AppColors.primary focus ring (primary is already 7.27:1 on cardBg, so a ring clears the bar immediately). Re-measure on device and invert the test assertion. | `RUN` |
 | `MP-12-026` | Zoom. | N/A | **N/A** | - | SRC: Android-only Flutter app. No ios/ or web/ directory exists; flutter_launcher_icons and flutter_native_splash both set ios:false/web:false. Google Play is the only distribution channel. Browser zoom does not exist on Android. | - | The Android equivalent, font scaling, is covered by item 27. | `SRC` |
 | `MP-12-027` | Text scaling. | Applicable | **PASS** | - | SRC lib/main.dart appTextScaler() preserves system font scaling to 200%; TEST test/main_text_scaling_test.dart pins it. | - | - | `TEST` |
 | `MP-12-028` | Color-independent information. | Applicable | **PASS** | - | RUN: readiness chips and the offline banner pair colour with an icon and a text label, so no state is colour-only. | - | - | `TEST` |
