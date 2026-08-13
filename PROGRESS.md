@@ -19,7 +19,7 @@ never typed by hand — they come from `python3 scripts/verify_audit_accounting.
 
 | Question | Answer |
 |---|---|
-| **Verified code revision** | `273864f` — the tree the suite, analyzer and gates below were run against |
+| **Verified code revision** | `7499ac9` — the tree the suite, analyzer, gates and the device walkthrough below were run against |
 | **Current phase** | Repository convergence: latest-review findings closed; working the resolution queue |
 | **Latest independent review** | `INDEPENDENT_REVIEW_ROUND_2.md`, 2026-08-13, verdict **REVIEW FAILED — REMEDIATION REQUIRED** |
 | **P0 remaining (total)** | **0** |
@@ -27,8 +27,9 @@ never typed by hand — they come from `python3 scripts/verify_audit_accounting.
 | **P1 remaining (total)** | **29** |
 | **P1 remaining (in-repo)** | **0** — all 29 are external; see `EXTERNAL_LAUNCH_BLOCKERS.md` |
 | **Unresolved internal findings from the latest review** | **0** — R2-01 … R2-12 all closed, each with mutation evidence |
+| **Findings opened and closed by our OWN device pass** | **1** (D-2, below) — a previously "device-verified" row that was not actually fixed |
 | **Unresolved external blockers** | **87 requirement IDs in 9 categories** (`EXTERNAL_LAUNCH_BLOCKERS.md`) |
-| **Suite** | 1139 passed / 0 failed (`flutter test --no-pub`) |
+| **Suite** | 1143 passed / 0 failed (`flutter test --no-pub`) |
 | **Analyzer** | No issues found (`flutter analyze --no-fatal-infos`) |
 | **Worktree** | see `git status`; the security gates refuse to run on a dirty tree |
 
@@ -42,12 +43,12 @@ AUDIT_ACCOUNTING_PASS checklist=1738 audit=1738 missing=0 duplicated=0 unaccount
 
 | Status | Count |
 |---|---|
-| PASS | 498 |
+| PASS | 499 |
 | FAIL | 21 |
 | PARTIAL | 147 |
 | BLOCKED | 29 |
 | N/A | 778 |
-| UNVERIFIED | 265 |
+| UNVERIFIED | 264 |
 | **TOTAL** | **1738** |
 
 | Severity | Count |
@@ -55,7 +56,7 @@ AUDIT_ACCOUNTING_PASS checklist=1738 audit=1738 missing=0 duplicated=0 unaccount
 | P0 | 0 |
 | P1 | 29 |
 | P2 | 235 |
-| P3 | 198 |
+| P3 | 197 |
 
 ### Resolution queue
 
@@ -63,11 +64,11 @@ AUDIT_ACCOUNTING_PASS checklist=1738 audit=1738 missing=0 duplicated=0 unaccount
 
 | Scope | Count |
 |---|---|
-| `IN_REPO_RESOLVABLE` | 291 |
+| `IN_REPO_RESOLVABLE` | 290 |
 | `RUNTIME_VERIFIABLE_NOW` | 33 |
 | `EXTERNAL_BLOCKER` | 87 |
 | `PRODUCT_DECISION_REQUIRED` | 51 |
-| **Total unresolved** | **462** |
+| **Total unresolved** | **461** |
 
 The dominant in-repo cluster is **142 rows whose evidence was section-level boilerplate**
 (the IR-06 downgrade). Those are not defects in the app; they are rows that need
@@ -106,6 +107,37 @@ New machinery added while closing these, because the same class of drift kept re
   cannot claim progress the audit does not carry.
 - `test/audit_accounting_gate_test.dart` — runs the accounting gate in CI with two
   negative controls.
+
+---
+
+## Our own device pass (2026-08-13) — one real defect found
+
+Full write-up: `docs/audit/device-verification-2026-08-13-r2.md`. Emulator
+`Medium_Phone_API_36.1`, arm64 API 36, full first-run walkthrough.
+
+**D-2 is the important one, and it is a lesson about evidence.** `MP-72-030` was
+recorded as *"device-verified"* — and it was not fixed. Driving the real build showed
+the onboarding save action still off-screen on a single tap. Root cause, from a
+logcat probe: the Android IME animates over ~500 ms firing `didChangeMetrics` ~15
+times, each firing issuing a 200 ms `ensureVisible` that the next supersedes, all
+computed against a still-shrinking viewport — the scroll settled at offset 107 when
+~249 was needed. Fixed with a 180 ms settle-debounce that re-issues the reveal
+against the final layout, and re-verified on device.
+
+A widget harness **cannot** reproduce this (it steps the inset discretely and pumps,
+so its last reveal always lands on a settled layout). Treat it like the Doze race:
+device-only, verified on device, recorded in `docs/audit/`.
+
+The same file also had **no `dispose()` at all** — observer, focus node and listener
+all outlived the widget. Fixed.
+
+**D-1 is the R2-01 production proof:** a never-subscribed user on a genuinely offline
+device now sees no subscription notice at all, and the SOS button reads
+"Kilitli · PRO". The card and the button finally say the same thing.
+
+**D-5 is left open and recorded, not fixed:** the PIN keypad sits ~86 logical px
+higher on the confirm step than on the set step because the subtitles differ in
+length. Same family as IR-09, not a safety defect.
 
 ---
 
@@ -155,7 +187,7 @@ The `/data` partition fills at ~91 % — uninstall old APKs before reinstalling.
 
 ## Next action
 
-Work `RESOLUTION_QUEUE.md` top-down. The next batch is the **142 boilerplate-evidence
+Work `RESOLUTION_QUEUE.md` top-down. The next batch is the **~140 boilerplate-evidence
 rows**: write requirement-specific evidence, or measure it on the emulator, one row at a
 time. A row only leaves the queue when its audit row changes status and the accounting
 gate still passes.
