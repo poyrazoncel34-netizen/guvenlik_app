@@ -64,14 +64,14 @@ AUDIT_ACCOUNTING_PASS checklist=1738 audit=1738 missing=0 duplicated=0 unaccount
 
 | Scope | Count |
 |---|---|
-| `IN_REPO_RESOLVABLE` | 242 |
+| `IN_REPO_RESOLVABLE` | 251 |
 | `RUNTIME_VERIFIABLE_NOW` | 33 |
 | `EXTERNAL_BLOCKER` | 87 |
-| `PRODUCT_DECISION_REQUIRED` | 59 |
+| `PRODUCT_DECISION_REQUIRED` | 50 |
 | **Total unresolved** | **421** |
 
 Product decisions are grouped into **nine actual questions** in
-`PRODUCT_DECISIONS_REQUIRED.md`, not 59 repetitive ones.
+`PRODUCT_DECISIONS_REQUIRED.md`, not 50 repetitive ones.
 
 The dominant in-repo cluster is still the rows whose evidence was section-level
 boilerplate (the IR-06 downgrade), concentrated in sections 1, 3, 5, 6, 9 and 12.
