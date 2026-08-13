@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:http/http.dart' as http;
 import 'package:http/retry.dart';
@@ -19,13 +20,47 @@ class OsmTileCacheClient extends http.BaseClient {
     int cacheByteLimit = maxCacheBytes,
     int tileByteLimit = maxTileBytes,
   }) : _cacheDirectory = cacheDirectory ?? _defaultCacheDirectory(),
-       _innerClient = innerClient ?? RetryClient(http.Client()),
+       _innerClient = innerClient ?? buildRetryClient(),
        _now = now ?? DateTime.now,
        _cacheByteLimit = cacheByteLimit,
        _tileByteLimit = tileByteLimit,
        assert(cacheByteLimit > 0),
        assert(tileByteLimit > 0),
        assert(tileByteLimit <= cacheByteLimit);
+
+  /// Exponential backoff WITH jitter for tile retries.
+  ///
+  /// `RetryClient()`'s default delay is exponential but deterministic, so every
+  /// device that lost connectivity at the same moment -- a tunnel, a stadium, a
+  /// power cut -- retries on exactly the same schedule. Against OSM's public
+  /// tile servers, which this project is a guest on and whose usage policy it
+  /// must respect, that is a self-inflicted thundering herd. The jitter spreads
+  /// the herd; the ceiling stops a long outage from retrying every 30 seconds
+  /// forever.
+  ///
+  /// Deliberately NOT on the emergency path: tiles are an optional map layer
+  /// and nothing here can delay a call.
+  static const Duration retryBaseDelay = Duration(milliseconds: 500);
+  static const Duration retryMaxDelay = Duration(seconds: 8);
+  static const int retryCount = 3;
+
+  static Duration retryDelayFor(int retry, {double Function()? randomSource}) {
+    final exponential = retryBaseDelay * math.pow(2, retry).toDouble();
+    final capped = exponential > retryMaxDelay ? retryMaxDelay : exponential;
+    // Full jitter over [50%, 100%] of the capped delay: still monotonic enough
+    // to back off, random enough not to align.
+    final random = (randomSource ?? _random.nextDouble)();
+    final jittered = capped * (0.5 + (random * 0.5));
+    return Duration(microseconds: jittered.inMicroseconds);
+  }
+
+  static final math.Random _random = math.Random();
+
+  static RetryClient buildRetryClient({http.Client? inner}) => RetryClient(
+    inner ?? http.Client(),
+    retries: retryCount,
+    delay: retryDelayFor,
+  );
 
   static const Duration fallbackLifetime = Duration(days: 7);
   static const int maxCacheBytes = 128 * 1024 * 1024;
