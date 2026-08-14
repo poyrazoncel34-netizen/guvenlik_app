@@ -320,20 +320,36 @@ class _UnifiedConsentScreenState extends State<UnifiedConsentScreen> {
                     top: Radius.circular(13),
                   ),
                 ),
+                // MEASURED OVERFLOW. On an API 36 emulator at `wm density 560`
+                // with `font_scale 2.0`, this Row logged "A RenderFlex
+                // overflowed by 82 pixels on the right" and the version string
+                // ran off the card. Neither setting alone reproduces it, which
+                // is why a density-only sweep and a text-scale-only sweep both
+                // missed it -- the two multiply.
+                //
+                // The version line is legal provenance ("which text did I
+                // accept?"), so it must stay readable rather than be clipped
+                // or ellipsised: Expanded lets it wrap onto a second line.
                 child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Icon(
-                      Icons.info_outline_rounded,
-                      size: 14,
-                      color: AppColors.primary,
+                    const Padding(
+                      padding: EdgeInsets.only(top: 2),
+                      child: Icon(
+                        Icons.info_outline_rounded,
+                        size: 14,
+                        color: AppColors.primary,
+                      ),
                     ),
                     const SizedBox(width: 6),
-                    Text(
-                      '${'legal_version_prefix'.tr()} ${LegalTexts.termsVersion} — ${LegalTexts.lastUpdated}',
-                      style: const TextStyle(
-                        fontSize: 11,
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.w600,
+                    Expanded(
+                      child: Text(
+                        '${'legal_version_prefix'.tr()} ${LegalTexts.termsVersion} — ${LegalTexts.lastUpdated}',
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                   ],
