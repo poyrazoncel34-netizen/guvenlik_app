@@ -19,18 +19,18 @@ never typed by hand — they come from `python3 scripts/verify_audit_accounting.
 
 | Question | Answer |
 |---|---|
-| **Verified code revision** | `HEAD` of this branch — suite, analyzer, gates and two emulator passes all run against it |
-| **Current phase** | Repository convergence: the 234-row evidence queue was executed; **14 in-repo rows remain** and are named below |
-| **Latest independent review** | `INDEPENDENT_REVIEW_ROUND_2.md`, 2026-08-13, verdict **REVIEW FAILED — REMEDIATION REQUIRED** |
+| **Verified code revision** | `HEAD` of this branch — suite, analyzer, gates, the release chain and one emulator pass all run against it |
+| **Current phase** | Repository convergence: the 14 remaining `IN_REPO_RESOLVABLE` rows were executed. **`IN_REPO_RESOLVABLE` is 0.** |
+| **Latest independent review** | `INDEPENDENT_REVIEW_ROUND_2.md`, 2026-08-13, verdict **REVIEW FAILED — REMEDIATION REQUIRED**; all 12 findings closed |
 | **P0 remaining (total)** | **0** |
 | **P0 remaining (in-repo)** | **0** |
 | **P1 remaining (total)** | **29** |
 | **P1 remaining (in-repo)** | **0** — all 29 are external; see `EXTERNAL_LAUNCH_BLOCKERS.md` |
-| **Unresolved internal findings from the latest review** | **0** — R2-01 … R2-12 all closed, each with mutation evidence |
-| **Findings opened and closed by our OWN device passes** | **6** — D-2 (below) plus five from the 2026-08-14 restoration / touch-target / layout pass |
+| **Unresolved internal findings from the latest review** | **0** |
 | **Unresolved external blockers** | **87 requirement IDs in 9 categories** (`EXTERNAL_LAUNCH_BLOCKERS.md`) |
-| **Suite** | 1299 passed / 0 failed (`flutter test --no-pub`) |
+| **Suite** | 1599 passed / 0 failed (`flutter test --no-pub`) |
 | **Analyzer** | No issues found (`flutter analyze --no-fatal-infos`) |
+| **Release chain** | `scripts/verify_release.sh` → `LOCAL_CANDIDATE_PASS` (5/5 code+smoke gates, 16 KB alignment green). The production AAB still refuses to build without a real `goog_` RevenueCat key — a deliberate gate, and the standing external blocker |
 | **Worktree** | see `git status`; the security gates refuse to run on a dirty tree |
 
 ### Audit accounting (machine-verified)
@@ -43,11 +43,11 @@ AUDIT_ACCOUNTING_PASS checklist=1738 audit=1738 missing=0 duplicated=0 unaccount
 
 | Status | Count |
 |---|---|
-| PASS | 774 |
+| PASS | 792 |
 | FAIL | 9 |
-| PARTIAL | 81 |
+| PARTIAL | 67 |
 | BLOCKED | 38 |
-| N/A | 783 |
+| N/A | 779 |
 | UNVERIFIED | 53 |
 | **TOTAL** | **1738** |
 
@@ -55,8 +55,8 @@ AUDIT_ACCOUNTING_PASS checklist=1738 audit=1738 missing=0 duplicated=0 unaccount
 |---|---|
 | P0 | 0 |
 | P1 | 29 |
-| P2 | 128 |
-| P3 | 24 |
+| P2 | 119 |
+| P3 | 19 |
 
 ### Resolution queue
 
@@ -64,26 +64,20 @@ AUDIT_ACCOUNTING_PASS checklist=1738 audit=1738 missing=0 duplicated=0 unaccount
 
 | Scope | Count |
 |---|---|
-| `IN_REPO_RESOLVABLE` | **14** |
+| `IN_REPO_RESOLVABLE` | **0** |
 | `RUNTIME_VERIFIABLE_NOW` | **0** |
 | `EXTERNAL_BLOCKER` | 112 |
 | `PRODUCT_DECISION_REQUIRED` | 55 |
-| **Total unresolved** | **181** |
+| **Total unresolved** | **167** |
 
-**Every in-repo FAIL is now closed: the `FAIL / IN_REPO` cell of the queue is 0.**
-The two that were open (`MP-72-001`, `MP-72-015`) are resolved below. The nine
-remaining FAILs are all external or product-decision.
+**Every in-repo row is closed: the whole `IN_REPO` column of the queue is 0.**
+The nine remaining FAILs are all external or product-decision.
 
 Product decisions are grouped into **nine actual questions** in
 `PRODUCT_DECISIONS_REQUIRED.md`, not 50 repetitive ones.
 
-The dominant in-repo cluster is still the rows whose evidence was section-level
-boilerplate (the IR-06 downgrade), concentrated in sections 1, 3, 5, 6, 9 and 12.
-Those are not defects in the app; they are rows that need requirement-specific
-evidence written or measured, one at a time. **Sections 14, 19 and 4 were cleared
-this way and are the worked example to follow** — each row got its own evidence,
-several became N/A with a guard test that fails if the N/A ever stops being true,
-and two became FAIL because measuring them found real defects.
+The IR-06 boilerplate cluster is closed, and so is the 14-row remainder it left
+behind — see the 2026-08-15 pass below.
 
 ---
 
@@ -241,9 +235,12 @@ remove. All twenty were replaced with computations, and **one of them was wrong*
 — the EXIF finding above. The staleness check also fired for real when a line
 shifted, which is what an exemption table is for.
 
-### What remains, honestly
+### What remained after that pass — SUPERSEDED by the 2026-08-15 pass below
 
-`RESOLUTION_QUEUE.md` — **14 `IN_REPO_RESOLVABLE`**. These are genuine remaining
+> These 14 were the queue as it stood on 2026-08-14. All fourteen are now closed;
+> the list is kept because it is what the next pass was measured against.
+
+`RESOLUTION_QUEUE.md` — **14 `IN_REPO_RESOLVABLE`**. These were genuine remaining
 work, not classification problems:
 
 `MP-01-027` per-target dispatch outcome · `MP-04-012` IconSizes migration (287
@@ -262,22 +259,75 @@ fix (#FF6B6B) is a brand-palette change CLAUDE.md rule 4 reserves to the owner.
 
 ---
 
+## Convergence pass, 2026-08-15 — the last 14 in-repo rows
+
+`IN_REPO_RESOLVABLE` went **14 → 0**. Every row was closed by building the thing,
+measuring it, and writing a verifier that can go red — never by reclassification.
+Nothing moved to `EXTERNAL_BLOCKER` or `PRODUCT_DECISION_REQUIRED` in this pass.
+
+| Row | What it actually took |
+|---|---|
+| `MP-01-027` | Per-target dispatch outcomes. Six targets, nine states, four reachability classes. The vocabulary cannot say "delivered" — an intent handoff cannot prove it. |
+| `MP-31-010` | Avatar import re-encoded to pixels only. Structural, not a blocklist: a new image builds from colour values, so no EXIF/XMP/ICC/PNG-text can be inherited. |
+| `MP-29-017` | DB integrity policy: `foreign_keys = ON` at connect, `quick_check` after migration, full scan + `foreign_key_check` in the user-triggered export. |
+| `MP-26-008` | One validated destination model. The link layer cannot navigate — it parks, and only `MainNavigation` (built after the PIN gate) consumes. |
+| `MP-11-014` / `MP-23-010` / `MP-26-006` | Per-category notification surface reading LIVE OS state, and a post that reports suppression instead of returning silently. |
+| `MP-23-015` | Both local-erase paths now say a Play subscription survives deletion and an uninstall, and link to the screen that can cancel. |
+| `MP-12-029` | Measured the SDK, then the device. `highContrast` is iOS-only in 3.38.9; Android's high-contrast text changed 3361 status-bar pixels and 0 app pixels. |
+| `MP-10-023` | Settings gets the built-in pixel offset; the timeline gets an identity anchor, because it prepends rows. |
+| `MP-04-012` | Icon scale rebuilt FROM the census, then 139 sites migrated with zero rendered change. |
+| `MP-42-024` / `MP-47-003` / `MP-47-011` | Tile volume counted at the boundary; the six-step long path automated; the growth table exercised at 100 / 1 000 / 10 000 rows. |
+
+### Defects found while doing it, not by reading
+
+1. **A notification tap and a deep link would have had two different gates.** Both now
+   go through one park; the fake call is the single named exception, and it is named.
+2. **`showEmergencyAlert` returned early and void** when notifications were off, so a
+   suppressed alert and a posted one were indistinguishable at every call site —
+   including the emergency dispatch, which rendered both as success.
+3. **Writing an unregistered `RestorableValue` asserts.** Registration happens in
+   `restoreState`, which runs *after* `initState` where the scroll listener attaches.
+4. **`GlobalObjectKey.currentContext` is null for an unbuilt item in a lazy list**, so
+   identity alone cannot find the anchor; the restore is estimate-then-correct.
+5. **`addPostFrameCallback` schedules no frame.** The anchor was right, the policy was
+   right, and the list silently never moved.
+6. **The existing `flows.py` negative control was demonstrating the wrong rule**:
+   `showDialog` → `_noConfirmDialog` contains the substring `ConfirmDialog`, which the
+   rule accepts, so the mutation removed the guard and the verifier stayed green.
+7. **The negative-control scratch tree copied only `lib/`, `assets/`, `test/`**, so a
+   verifier reading `docs/` or `store/` reported a false violation at *baseline* — twice.
+8. **`_sites(root, r"partial|PartialDispatch|perTarget")`** was matching the word
+   "partial" inside two translation keys on a screen with no per-target surface at all.
+9. **Four rows kept asserting "no deep links exist"** after MP-26-008 added them.
+   `MP-01-016`'s own remediation had predicted it: *"Becomes Applicable if deep links
+   are added."*
+10. **A device-evidence parser read `100` out of `(y<100)`** and made two different
+    measurements look identical.
+
+### Verifier accounting — the 11-vs-10 discrepancy, resolved
+
+The previous report said "11 verifiers, each has `--negative-control`, all 10
+demonstrated". That was internally inconsistent because it counted **artifacts** as
+verifiers. The truth then: 10 Python verifiers, 11 artifacts. The truth now:
+
+- **11 Python verifiers** in `scripts/audit_evidence/`, **11/11** negative controls
+  demonstrated by `--negative-control`.
+- **1 Dart-test verifier**, `test/screens/layout_size_matrix_test.dart` → `text_scale.json`,
+  whose negative control is an in-test case rather than a CLI flag ("the matrix can
+  fail: a fixed-width box narrower than its text overflows") and is demonstrated.
+- **12 verifiers, 12 artifacts, 12/12 negative controls.**
+
 ## Next action
 
-The IR-06 boilerplate cluster is **closed**: 0 rows now carry a section-level
-sentence as their evidence. **14 `IN_REPO_RESOLVABLE` rows remain**, listed above
-by ID. Convergence is therefore NOT met, and the verdict for this pass is
-**FAILED — INTERNAL REMEDIATION REMAINS**.
+Convergence is met in the repository sense only. **This is not a launch readiness
+claim.** 167 requirements remain unresolved and every one of them is external or a
+product decision: 112 `EXTERNAL_BLOCKER`, 55 `PRODUCT_DECISION_REQUIRED`. The
+production AAB still cannot be built here, by design — the Play release refuses a
+placeholder RevenueCat key.
 
-Write requirement-specific evidence one row at a time. Do **not** close a row by
-pasting a new, differently-worded blanket sentence across a section — that is
-what created IR-06. Sections 14, 19 and 4 are the worked example.
-
-**This session did not start that cluster.** It spent its budget on the four
-concrete defects below, three of which were only findable by running the app.
-That is a deliberate ordering — a boilerplate row rewritten while the app
-crashes on resume is evidence about the wrong thing — but it means the
-convergence exit condition (`IN_REPO_RESOLVABLE = 0`) is **not met**.
+A fresh independent review is the right next step, and it should attack the new
+verifiers first: `a11y_platform.py` and the new rules inside `flows.py`,
+`storage.py` and `interaction.py` are the least-reviewed evidence in the repository.
 
 ## Device-verification pass, 2026-08-14 (a11y / performance / lifecycle)
 
