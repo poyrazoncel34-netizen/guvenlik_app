@@ -29,6 +29,20 @@ COMMAND = "python3 scripts/audit_evidence/storage.py"
 DB = "lib/core/services/local_database_service.dart"
 
 
+def _sites(root: Path, pattern: str, files=None) -> list:
+    """file:line for every match, so a claim can be checked and can go stale."""
+    out = []
+    rx = re.compile(pattern)
+    for path in dart_files(root):
+        name = rel(path, root)
+        if files and name not in files:
+            continue
+        src = read_stripped(path)
+        for m in rx.finditer(src):
+            out.append(f"{name}:{src[: m.start()].count(chr(10)) + 1}")
+    return out
+
+
 def _manifest(root: Path) -> str:
     path = root / "android" / "app" / "src" / "main" / "AndroidManifest.xml"
     return path.read_text(encoding="utf-8") if path.exists() else ""
@@ -50,6 +64,72 @@ def _tracked_env_files(root: Path) -> list:
 def _db(root: Path) -> str:
     path = root / DB
     return read_stripped(path) if path.exists() else ""
+
+
+
+# The one file allowed to write a user-selected image to disk, and the one
+# allowed to produce its bytes.
+IMAGE_STORE_FILE = "lib/core/services/avatar_store_service.dart"
+IMAGE_SANITIZER_FILE = "lib/core/services/image_sanitizer_service.dart"
+IMAGE_PICKER_FILE = "lib/screens/fake_call_screen.dart"
+
+
+def _stored_extension(sanitizer: str):
+    match = re.search(r"extension = '(\w+)'", sanitizer)
+    return match.group(1) if match else None
+
+
+def _legacy_names(store: str) -> list:
+    if "legacyExtensions" not in store:
+        return []
+    block = store.split("legacyExtensions", 1)[1].split("]", 1)[0]
+    return re.findall(r"'(\w+)'", block)
+
+
+def _image_import_boundary(root: Path) -> dict:
+    """MP-31-010: what actually reaches disk when a user picks a photo.
+
+    Every value here is derived from the tree. Its predecessor was a pair of
+    hand-written constants (``"exifStripped": False`` plus a paragraph), which
+    is how this row's ORIGINAL evidence managed to claim there was no image
+    picker at all while `image_picker: ^1.1.2` sat in pubspec.yaml.
+    """
+    picker = read_stripped(root / IMAGE_PICKER_FILE) if (root / IMAGE_PICKER_FILE).exists() else ""
+    store = read_stripped(root / IMAGE_STORE_FILE) if (root / IMAGE_STORE_FILE).exists() else ""
+    sanitizer = read_stripped(root / IMAGE_SANITIZER_FILE) if (root / IMAGE_SANITIZER_FILE).exists() else ""
+
+    # A byte copy anywhere on the image path is the defect itself.
+    byte_copy_sites = _sites(root, r"File\([^)]*\)\.copy\(|\.copy\(target",
+                             files={IMAGE_PICKER_FILE, IMAGE_STORE_FILE})
+
+    # "Sanitised" is claimed only if the sanitiser demonstrably builds a NEW
+    # image rather than editing the decoded one.
+    rebuilds_pixels = "img.Image(" in sanitizer and "setPixelRgb(" in sanitizer
+    bakes_orientation = "bakeOrientation" in sanitizer
+    reads_source_orientation = "readSourceOrientation" in sanitizer
+    clones_metadata = bool(re.search(r"Image\.from\(|\.exif\s*=\s*ExifData\.from",
+                                     sanitizer))
+
+    return {
+        "imagePickerSite": (_sites(root, r"pickImage\(", files={IMAGE_PICKER_FILE})
+                            or [None])[0],
+        "importBoundaryFile": IMAGE_STORE_FILE if store else None,
+        "sanitizerFile": IMAGE_SANITIZER_FILE if sanitizer else None,
+        "pickerDelegatesToBoundary": "AvatarStoreService.instance.importFromFile"
+                                     in picker,
+        "byteCopySitesOnImagePath": byte_copy_sites,
+        "rebuildsPixelsIntoFreshImage": rebuilds_pixels,
+        "appliesOrientationToPixels": bakes_orientation,
+        "readsOrientationFromSourceBytes": reads_source_orientation,
+        "clonesSourceMetadata": clones_metadata,
+        "storedExtension": _stored_extension(sanitizer),
+        "legacyNamesCleanedUp": _legacy_names(store),
+        "exifStripped": bool(sanitizer) and rebuilds_pixels and not byte_copy_sites,
+        "coveringTests": [
+            "test/core/services/image_sanitizer_service_test.dart",
+            "test/core/services/avatar_store_service_test.dart",
+        ],
+    }
 
 
 def measure(root: Path) -> list:
@@ -129,6 +209,44 @@ def measure(root: Path) -> list:
                 "rule": "hardcodedSecretLiteral",
                 "detail": f"{rel(path, root)}:{src[: m.start()].count(chr(10)) + 1}",
             })
+    # N. MP-31-010: a user-selected image must reach disk as pixels only.
+    boundary = _image_import_boundary(root)
+    if boundary["imagePickerSite"]:
+        for site in boundary["byteCopySitesOnImagePath"]:
+            violations.append({
+                "rule": "sourceImageBytesCopiedToStorage",
+                "detail": f"{site} copies a picked file; every EXIF tag the "
+                          f"source carried, GPS included, lands in app documents",
+            })
+        if not boundary["sanitizerFile"]:
+            violations.append({"rule": "noImageSanitizer",
+                               "detail": "an image picker exists with no sanitiser"})
+        elif not boundary["rebuildsPixelsIntoFreshImage"]:
+            violations.append({
+                "rule": "sanitizerEditsSourceImage",
+                "detail": "the sanitiser mutates the decoded image instead of "
+                          "building a new one, so exif/iccProfile/textData are "
+                          "inherited and a new tag type would slip through",
+            })
+        if boundary["clonesSourceMetadata"]:
+            violations.append({
+                "rule": "sanitizerClonesMetadata",
+                "detail": "the sanitiser copies the source image object, which "
+                          "carries its metadata with it",
+            })
+        if not boundary["pickerDelegatesToBoundary"]:
+            violations.append({
+                "rule": "pickerBypassesImportBoundary",
+                "detail": "the picker writes storage without going through the "
+                          "one service that sanitises",
+            })
+        if not boundary["appliesOrientationToPixels"]:
+            violations.append({
+                "rule": "orientationDroppedNotBaked",
+                "detail": "removing the orientation tag without applying it to "
+                          "the pixels lays every portrait photo on its side",
+            })
+
     return violations
 
 
@@ -213,33 +331,25 @@ def build(root: Path) -> dict:
         },
         "files": {
             "userGeneratedFiles": ["the KVKK data export (JSON)",
-                                   "the fake-call avatar, copied from the gallery"],
+                                   "the fake-call avatar, re-encoded from a "
+                                   "gallery selection"],
             "exportScreen": "lib/screens/settings_legal/data_export_screen.dart",
-            "imagePickerSite": "lib/screens/fake_call_screen.dart:700",
-            "imagePickerFlow": (
-                "ImagePicker.pickImage(source: gallery, imageQuality: 85) -> "
-                "File(picked.path).copy('<appDocs>/fake_call_avatar.<ext>')"
-            ),
-            "exifStripped": False,
-            "exifNote": (
-                "the picked file is copied BYTE FOR BYTE with dart:io File.copy, so "
-                "every EXIF tag the source carried -- including GPSLatitude / "
-                "GPSLongitude if the photo was taken with location on -- lands in "
-                "app documents. `imageQuality: 85` re-encodes on some platform "
-                "implementations and may drop EXIF as a side effect, but that is a "
-                "platform behaviour, not a guarantee this app makes."
-            ),
+            **_image_import_boundary(root),
             "imageUploadSurfaces": len([p for p in dart_files(root)
                                         if re.search(r"ImagePicker|FilePicker|MultipartRequest",
                                                      read_stripped(p))]),
             "exifRisk": (
-                "REAL, and this field previously said the opposite. It was a "
-                "hard-coded claim -- 'no image picker dependency' -- rather than a "
-                "computation, and computing it found image_picker: ^1.1.2 in "
-                "pubspec.yaml and a live pickImage call. In a safety app whose "
-                "users may be at risk from someone with device access, a stored "
-                "photo carrying GPS EXIF is a genuine, if modest, exposure: it also "
-                "reaches the KVKK data export."
+                "CLOSED at the import boundary, and the history is kept because it "
+                "is the lesson. This field once asserted 'no camera permission and "
+                "no image picker dependency' as a hard-coded constant; computing it "
+                "found image_picker: ^1.1.2 and a live pickImage call, and the file "
+                "was then being copied byte for byte into app documents. The fix is "
+                "structural rather than a blocklist: the picked bytes are decoded, "
+                "the source orientation is applied to the PIXELS, and a NEW image "
+                "holding nothing but colour values is encoded -- so no EXIF block, "
+                "XMP packet or PNG text chunk can be inherited, including tags no "
+                "blocklist anticipated. Avatars written by earlier builds are "
+                "re-encoded on load, so the exposure does not survive an upgrade."
             ),
             "cameraPermissionDeclared": "android.permission.CAMERA" in _manifest(root),
             "imagePickerDependency": any(
@@ -290,8 +400,33 @@ def _mutate(scratch: Path) -> str:
                       "await db.execute('DROP TABLE activity_events');\n"
                       "      await _addMissingColumns(db, tableName,", 1)
     target.write_text(src, encoding="utf-8")
-    return ("a hard-coded API key, a DROP TABLE on activity_events, and a "
-            "PRAGMA identifier taken from a variable")
+
+    # MP-31-010: put the byte copy back, exactly as it was before the fix, and
+    # make the picker write storage directly again.
+    picker = scratch / IMAGE_PICKER_FILE
+    if picker.exists():
+        picker.write_text(
+            picker.read_text(encoding="utf-8").replace(
+                "await AvatarStoreService.instance.importFromFile(\n"
+                "        picked.path,\n      )",
+                "(await File(picked.path).copy(targetPath)).path",
+            ),
+            encoding="utf-8",
+        )
+    # ...and make the sanitiser clone the decoded image instead of rebuilding
+    # it, which silently reinstates every inherited metadata channel.
+    sanitizer = scratch / IMAGE_SANITIZER_FILE
+    if sanitizer.exists():
+        sanitizer.write_text(
+            sanitizer.read_text(encoding="utf-8").replace(
+                "final out = img.Image(", "final out = img.Image.from(", 1
+            ).replace("out.setPixelRgb(", "out.setPixel_disabled(")
+            .replace("bakeOrientation", "_noBake"),
+            encoding="utf-8",
+        )
+    return ("a hard-coded API key, a DROP TABLE on activity_events, a PRAGMA "
+            "identifier taken from a variable, the picked-image byte copy "
+            "restored, and the sanitiser turned into a clone of the source")
 
 
 def main() -> int:

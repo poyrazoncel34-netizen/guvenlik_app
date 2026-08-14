@@ -31,6 +31,11 @@ dependencies:
   shared_preferences: ^2.2.2
   url_launcher: ^6.2.4
   image_picker: ^1.1.2
+  # Pure-Dart decode/encode. Used ONLY at the image import boundary, to emit a
+  # metadata-free derivative of a user-selected photo (MP-31-010). No native
+  # code, so no R8 keep rules and no 16 KB alignment surface; it was already in
+  # the lock file transitively at this version.
+  image: ^4.7.2
   path_provider: ^2.1.4
   provider: ^6.1.2
   get_it: ^7.7.0

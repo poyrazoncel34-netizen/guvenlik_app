@@ -2,10 +2,10 @@
   "verifier": "scripts/audit_evidence/storage.py",
   "verifierVersion": "1.0.0",
   "codeRevision": {
-    "head": "59d1892fd8520cdb0563c5e61bb1d3a96543a212",
+    "head": "f13d1bafbd2a0d0766851c6a1c1f5fa9649e35b8",
     "dirty": true
   },
-  "measuredOn": "2026-08-14",
+  "measuredOn": "2026-08-15",
   "command": "python3 scripts/audit_evidence/storage.py",
   "surfaces": [
     "lib/core/services/local_database_service.dart",
@@ -69,15 +69,36 @@
     "files": {
       "userGeneratedFiles": [
         "the KVKK data export (JSON)",
-        "the fake-call avatar, copied from the gallery"
+        "the fake-call avatar, re-encoded from a gallery selection"
       ],
       "exportScreen": "lib/screens/settings_legal/data_export_screen.dart",
-      "imagePickerSite": "lib/screens/fake_call_screen.dart:700",
-      "imagePickerFlow": "ImagePicker.pickImage(source: gallery, imageQuality: 85) -> File(picked.path).copy('<appDocs>/fake_call_avatar.<ext>')",
-      "exifStripped": false,
-      "exifNote": "the picked file is copied BYTE FOR BYTE with dart:io File.copy, so every EXIF tag the source carried -- including GPSLatitude / GPSLongitude if the photo was taken with location on -- lands in app documents. `imageQuality: 85` re-encodes on some platform implementations and may drop EXIF as a side effect, but that is a platform behaviour, not a guarantee this app makes.",
+      "imagePickerSite": "lib/screens/fake_call_screen.dart:710",
+      "importBoundaryFile": "lib/core/services/avatar_store_service.dart",
+      "sanitizerFile": "lib/core/services/image_sanitizer_service.dart",
+      "pickerDelegatesToBoundary": true,
+      "byteCopySitesOnImagePath": [],
+      "rebuildsPixelsIntoFreshImage": true,
+      "appliesOrientationToPixels": true,
+      "readsOrientationFromSourceBytes": true,
+      "clonesSourceMetadata": false,
+      "storedExtension": "jpg",
+      "legacyNamesCleanedUp": [
+        "jpg",
+        "jpeg",
+        "png",
+        "heic",
+        "heif",
+        "webp",
+        "gif",
+        "bmp"
+      ],
+      "exifStripped": true,
+      "coveringTests": [
+        "test/core/services/image_sanitizer_service_test.dart",
+        "test/core/services/avatar_store_service_test.dart"
+      ],
       "imageUploadSurfaces": 1,
-      "exifRisk": "REAL, and this field previously said the opposite. It was a hard-coded claim -- 'no image picker dependency' -- rather than a computation, and computing it found image_picker: ^1.1.2 in pubspec.yaml and a live pickImage call. In a safety app whose users may be at risk from someone with device access, a stored photo carrying GPS EXIF is a genuine, if modest, exposure: it also reaches the KVKK data export.",
+      "exifRisk": "CLOSED at the import boundary, and the history is kept because it is the lesson. This field once asserted 'no camera permission and no image picker dependency' as a hard-coded constant; computing it found image_picker: ^1.1.2 and a live pickImage call, and the file was then being copied byte for byte into app documents. The fix is structural rather than a blocklist: the picked bytes are decoded, the source orientation is applied to the PIXELS, and a NEW image holding nothing but colour values is encoded -- so no EXIF block, XMP packet or PNG text chunk can be inherited, including tags no blocklist anticipated. Avatars written by earlier builds are re-encoded on load, so the exposure does not survive an upgrade.",
       "cameraPermissionDeclared": false,
       "imagePickerDependency": true
     },

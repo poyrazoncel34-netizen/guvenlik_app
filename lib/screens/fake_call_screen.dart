@@ -10,7 +10,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:path_provider/path_provider.dart';
+
+import '../core/services/avatar_store_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/app_colors.dart';
 import '../core/di/service_locator.dart';
@@ -193,11 +194,20 @@ class _FakeCallScreenState extends State<FakeCallScreen>
     final name = await _secureStorage.read(key: _keyName);
     final number = await _secureStorage.read(key: _keyNumber);
     final avatar = await _secureStorage.read(key: _keyAvatar);
+    // An avatar written before MP-31-010 still holds its source metadata.
+    // Fixing only the import boundary would leave those files in place, and in
+    // the file the KVKK export names.
+    final safeAvatar = avatar == null || avatar.isEmpty
+        ? avatar
+        : await AvatarStoreService.instance.sanitizeExisting(avatar);
+    if (safeAvatar != null && safeAvatar != avatar) {
+      await _secureStorage.write(key: _keyAvatar, value: safeAvatar);
+    }
     if (mounted) {
       setState(() {
         _callerName = name ?? "fake_call_default_name".tr();
         _callerNumber = number ?? "fake_call_default_number".tr();
-        _avatarPath = avatar;
+        _avatarPath = safeAvatar;
       });
     }
     if (name != null || number != null || avatar != null) return;
@@ -703,12 +713,18 @@ class _FakeCallScreenState extends State<FakeCallScreen>
       );
       if (picked == null) return;
 
-      final dir = await getApplicationDocumentsDirectory();
-      final ext = picked.path.split('.').last;
-      final targetPath = '${dir.path}/fake_call_avatar.$ext';
-      final saved = await File(picked.path).copy(targetPath);
+      // NEVER File.copy the picked file: that carried the source EXIF -- GPS
+      // included -- straight into app documents and into the KVKK export
+      // (MP-31-010). Only the sanitised derivative is ever written.
+      final savedPath = await AvatarStoreService.instance.importFromFile(
+        picked.path,
+      );
+      if (savedPath == null) {
+        if (mounted) _showWarningSnack('fake_call_photo_pick_failed'.tr());
+        return;
+      }
       if (mounted) {
-        setState(() => _avatarPath = saved.path);
+        setState(() => _avatarPath = savedPath);
       }
     } catch (_) {
       if (mounted) {

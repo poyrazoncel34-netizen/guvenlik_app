@@ -44,7 +44,7 @@ have meant filing a document under a code archetype to keep the list short.
 | Metric | Count |
 |---|---|
 | Rows in this matrix | 239 |
-| Still `IN_REPO_RESOLVABLE` in the queue | 13 |
+| Still `IN_REPO_RESOLVABLE` in the queue | 12 |
 | Evidence artifacts referenced | 11 |
 | Plan/audit integrity problems | 0 |
 
@@ -160,7 +160,7 @@ have meant filing a document under a code archetype to keep the list short.
 | `MP-01-024` | 1 | Failure state'i var. | PASS | - | all flows | scripts/audit_evidence/flows.py | `flows.json` → `measurements.flowStates.failureSurfaces` | unconfirmed data erase + exit-less screen -> 1 violation | no | PASS |
 | `MP-01-025` | 1 | Empty state'i var. | PASS | - | all flows | scripts/audit_evidence/flows.py | `flows.json` → `measurements.flowStates.emptySurfaces` | unconfirmed data erase + exit-less screen -> 1 violation | no | PASS |
 | `MP-01-026` | 1 | Loading state'i var. | PASS | - | all flows | scripts/audit_evidence/flows.py | `flows.json` → `measurements.flowStates.loadingSurfaces` | unconfirmed data erase + exit-less screen -> 1 violation | no | PASS |
-| `MP-01-027` | 1 | Partial success state'i varsa tasarlanmış. | PASS | - | per-target dispatch | scripts/audit_evidence/flows.py | `flows.json` → `measurements.flowStates.partialSuccessSurfaces` | unconfirmed data erase + exit-less screen -> 1 violation | no | PARTIAL |
+| `MP-01-027` | 1 | Partial success state'i varsa tasarlanmış. | PASS | - | lib/core/services/dispatch_outcome.dart + lib/core/widgets/dispatch_outcome_list.dart | scripts/audit_evidence/flows.py | `flows.json` → `measurements.flowStates.partialSuccessSurfaces` | rename an outcome to 'delivered' and delete the per-target renderer -> flows.py 0 -> 4 violations | yes | PASS |
 | `MP-01-029` | 1 | Timeout state'i düşünülmüş. | PASS | - | timeouts | scripts/audit_evidence/flows.py | `flows.json` → `measurements.flowStates.timeoutSurfaces` | unconfirmed data erase + exit-less screen -> 1 violation | no | PASS |
 | `MP-02-001` | 2 | Navigation hiyerarşisi açık. | PASS | - | bottom navigation | scripts/audit_evidence/flows.py | `flows.json` → `measurements.navigationHierarchy.depth` | unconfirmed data erase + exit-less screen -> 1 violation | no | PASS |
 | `MP-02-002` | 2 | Ana bölümler birbirinden net ayrılmış. | PASS | - | bottom navigation | scripts/audit_evidence/flows.py | `flows.json` → `measurements.navigationHierarchy.tabCount` | unconfirmed data erase + exit-less screen -> 1 violation | no | PASS |
@@ -284,7 +284,7 @@ have meant filing a document under a code archetype to keep the list short.
 | `MP-30-004` | 30 | TTL doğru. | PASS | - | tile cache | scripts/audit_evidence/storage.py | `storage.json` → `measurements.cache.caches.map tiles.ttl` | hard-coded API key + DROP TABLE + PRAGMA identifier from a variable -> 3 | no | PASS |
 | `MP-30-005` | 30 | Invalidation stratejisi. | PASS | - | tile cache | scripts/audit_evidence/storage.py | `storage.json` → `measurements.cache.caches.map tiles.invalidation` | hard-coded API key + DROP TABLE + PRAGMA identifier from a variable -> 3 | no | PASS |
 | `MP-30-006` | 30 | Stale data kabul kriteri. | PASS | - | tile cache | scripts/audit_evidence/storage.py | `storage.json` → `measurements.cache.caches.map tiles.stalenessAcceptable` | hard-coded API key + DROP TABLE + PRAGMA identifier from a variable -> 3 | no | PASS |
-| `MP-31-010` | 31 | Metadata/EXIF privacy düşünülmüş. | PARTIAL | P2 | lib/screens/fake_call_screen.dart:700 (gallery avatar picker) | scripts/audit_evidence/storage.py | `storage.json` → `measurements.files.exifNote` | hard-coded API key + DROP TABLE + PRAGMA identifier from a variable -> 3 | no | PARTIAL |
+| `MP-31-010` | 31 | Metadata/EXIF privacy düşünülmüş. | PASS | - | lib/screens/fake_call_screen.dart (gallery picker) -> lib/core/services/avatar_store_service.dart -> lib/core/services/image_sanitizer_service.dart | scripts/audit_evidence/storage.py | `storage.json` → `measurements.files.exifStripped` | restore the picked-image File.copy and turn the sanitiser into a clone of the source -> storage.py 0 -> 8 violations (5 of them the new image-path rules) | yes | PASS |
 | `MP-42-024` | 42 | Dependency quotas. | PARTIAL | P2 | OSM tile client | scripts/audit_evidence/storage.py | `storage.json` → `measurements.cache.caches.map tiles.contract` | hard-coded API key + DROP TABLE + PRAGMA identifier from a variable -> 3 | no | PARTIAL |
 | `MP-72-003` | 72 | Uneven padding. | PASS | - | every EdgeInsets.only in lib/ | scripts/audit_evidence/layout.py | `layout.json` → `measurements.paddingSymmetry.asymmetricCount` | two EdgeInsets.only gutters differing >4dp -> 2 violations | no | PASS |
 
