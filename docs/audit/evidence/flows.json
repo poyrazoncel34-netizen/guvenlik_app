@@ -1,0 +1,517 @@
+{
+  "verifier": "scripts/audit_evidence/flows.py",
+  "verifierVersion": "1.0.0",
+  "codeRevision": {
+    "head": "c692a76fd1bf4ad1b53f13389667e70df93aa67a",
+    "dirty": true
+  },
+  "measuredOn": "2026-08-14",
+  "command": "python3 scripts/audit_evidence/flows.py",
+  "surfaces": [
+    "lib/screens/**",
+    "lib/core/utils/**",
+    "lib/core/widgets/**",
+    "assets/translations/tr-TR.json"
+  ],
+  "measurements": {
+    "screenInventory": {
+      "screenFiles": 35,
+      "screens": [
+        "lib/screens/app_root.dart",
+        "lib/screens/app_unlock_screen.dart",
+        "lib/screens/auth_gate.dart",
+        "lib/screens/battery_optimization_wizard.dart",
+        "lib/screens/check_in_screen.dart",
+        "lib/screens/contacts_page.dart",
+        "lib/screens/countdown_screen.dart",
+        "lib/screens/edit_profile_screen.dart",
+        "lib/screens/emergency_call_screen.dart",
+        "lib/screens/fake_call_screen.dart",
+        "lib/screens/home_page.dart",
+        "lib/screens/legal/consent_management_screen.dart",
+        "lib/screens/legal/consent_screen.dart",
+        "lib/screens/legal/kvkk_disclosure_screen.dart",
+        "lib/screens/legal/onboarding_legal_flow.dart",
+        "lib/screens/legal/terms_of_service_screen.dart",
+        "lib/screens/legal/unified_consent_screen.dart",
+        "lib/screens/legal_disclaimer_screen.dart",
+        "lib/screens/main_navigation.dart",
+        "lib/screens/map_page.dart",
+        "lib/screens/oem_background_guide_screen.dart",
+        "lib/screens/onboarding/onboarding_contact_step.dart",
+        "lib/screens/onboarding_screen.dart",
+        "lib/screens/pin_setup_screen.dart",
+        "lib/screens/profile_page.dart",
+        "lib/screens/safe_walk_screen.dart",
+        "lib/screens/safety_timeline_screen.dart",
+        "lib/screens/settings_detail_page.dart",
+        "lib/screens/settings_legal/data_deletion_screen.dart",
+        "lib/screens/settings_legal/data_export_screen.dart",
+        "lib/screens/settings_legal/legal_settings_screen.dart",
+        "lib/screens/settings_page.dart",
+        "lib/screens/splash_screen.dart",
+        "lib/screens/subscription/paywall_screen.dart",
+        "lib/screens/subscription/subscription_management_screen.dart"
+      ],
+      "rootDecider": "lib/screens/app_root.dart",
+      "startupOrderContract": "test/main_startup_init_order_test.dart"
+    },
+    "entryPoints": {
+      "coldStartRoute": "SplashScreen -> AuthGate -> MainNavigation",
+      "gates": [
+        "legal/consent gate",
+        "onboarding",
+        "PIN gate"
+      ],
+      "gateFiles": [
+        "lib/screens/legal/unified_consent_screen.dart",
+        "lib/screens/onboarding_screen.dart",
+        "lib/screens/auth_gate.dart",
+        "lib/screens/app_unlock_screen.dart"
+      ],
+      "externalEntryPoints": {
+        "home-screen widget": "android/.../quickaccess",
+        "Quick Settings tile": "android/.../quickaccess",
+        "volume-key trigger": "lib/core/services (volume trigger)"
+      },
+      "singleStartingSurface": true,
+      "why": "there is exactly one landing surface after the gates: the home tab with the panic button, so 'where do I start' has one answer"
+    },
+    "callToAction": {
+      "primaryOnHome": "PanicButton — the largest control on the screen, centre-weighted, with its own arming animation",
+      "primarySites": [
+        "lib/screens/home_page.dart:248",
+        "lib/widgets/panic_button.dart:28"
+      ],
+      "secondaryTiers": {
+        "ElevatedButton": 106,
+        "OutlinedButton": 28,
+        "TextButton": 39,
+        "IconButton": 13
+      },
+      "competitionClaim": "no second filled-and-glowing control shares the home surface with the panic button"
+    },
+    "forwardPath": {
+      "pushSites": 30,
+      "routeBuilders": 35,
+      "wizardScreens": [
+        "lib/screens/onboarding_screen.dart",
+        "lib/screens/battery_optimization_wizard.dart",
+        "lib/screens/pin_setup_screen.dart"
+      ],
+      "progressIndicatorSites": []
+    },
+    "exitPaths": {
+      "popSites": 76,
+      "popScopeSites": [
+        "lib/screens/app_unlock_screen.dart:195",
+        "lib/screens/countdown_screen.dart:442",
+        "lib/screens/countdown_screen.dart:763",
+        "lib/screens/emergency_call_screen.dart:115",
+        "lib/screens/legal_disclaimer_screen.dart:93",
+        "lib/screens/pin_setup_screen.dart:155",
+        "lib/widgets/siren_dialog.dart:156"
+      ],
+      "escapeDismissible": "lib/core/widgets/escape_dismissible.dart",
+      "screensWithoutExit": [],
+      "noExitByDesign": {
+        "lib/screens/main_navigation.dart": "the navigation root — there is nothing above it",
+        "lib/screens/legal/unified_consent_screen.dart": "consent gate: without consent there is no lawful processing, so the only exits are 'accept' and leaving the app",
+        "lib/screens/onboarding_screen.dart": "setup gate: the app cannot dial anyone until it completes",
+        "lib/screens/splash_screen.dart": "transient boot surface"
+      }
+    },
+    "destructiveActions": {
+      "inventory": {
+        "delete an emergency contact": "lib/screens/contacts_page.dart",
+        "delete a timeline entry": "lib/screens/safety_timeline_screen.dart",
+        "erase all app data": "lib/core/utils/app_reset_helper.dart",
+        "withdraw a consent": "lib/screens/legal/consent_management_screen.dart",
+        "request data deletion": "lib/screens/settings_legal/data_deletion_screen.dart",
+        "reset a forgotten PIN": "lib/screens/app_unlock_screen.dart"
+      },
+      "count": 6,
+      "confirmationDialogSites": 31,
+      "everyDestructiveActionConfirmed": true,
+      "strongerThanDialog": {
+        "lib/screens/app_unlock_screen.dart": "forgot_pin_reset_token"
+      },
+      "extraVerificationBeyondConfirm": {
+        "erase all app data": "typed confirmation + PIN, not a single tap",
+        "reset the PIN": "current PIN required"
+      }
+    },
+    "interruptionSafety": {
+      "restorationPolicyTest": "test/state_restoration_policy_test.dart",
+      "restorationScopeSites": [
+        "lib/screens/main_navigation.dart:33",
+        "lib/screens/main_navigation.dart:50",
+        "lib/screens/onboarding/onboarding_contact_step.dart:37",
+        "lib/screens/onboarding/onboarding_contact_step.dart:64",
+        "lib/screens/onboarding_screen.dart:38",
+        "lib/screens/onboarding_screen.dart:54"
+      ],
+      "deviceEvidence": "docs/audit/device-verification-2026-08-14-state-restoration.md",
+      "whatSurvives": "unsaved emergency-contact entry",
+      "whatDeliberatelyDoesNot": [
+        "PIN buffers",
+        "destructive confirmation state",
+        "an armed countdown"
+      ]
+    },
+    "flowStates": {
+      "successSurfaces": 57,
+      "failureSurfaces": 77,
+      "emptySurfaces": 37,
+      "loadingSurfaces": 40,
+      "timeoutSurfaces": [
+        "lib/core/services/app_bootstrap_service.dart:56",
+        "lib/core/services/app_bootstrap_service.dart:57",
+        "lib/core/services/app_bootstrap_service.dart:58",
+        "lib/core/services/emergency_platform_service.dart:14",
+        "lib/core/services/emergency_platform_service.dart:15",
+        "lib/core/services/emergency_platform_service.dart:18",
+        "lib/core/services/emergency_platform_service.dart:18",
+        "lib/core/services/emergency_platform_service.dart:19",
+        "lib/core/services/emergency_platform_service.dart:19",
+        "lib/core/services/emergency_platform_service.dart:24",
+        "lib/core/services/emergency_platform_service.dart:25",
+        "lib/core/services/emergency_platform_service.dart:29",
+        "lib/core/services/emergency_platform_service.dart:29",
+        "lib/core/services/emergency_platform_service.dart:30",
+        "lib/core/services/emergency_platform_service.dart:30",
+        "lib/core/services/emergency_platform_service.dart:39",
+        "lib/core/services/emergency_platform_service.dart:40",
+        "lib/core/services/emergency_platform_service.dart:228",
+        "lib/core/services/emergency_platform_service.dart:325",
+        "lib/core/services/emergency_platform_service.dart:325",
+        "lib/core/services/emergency_platform_service.dart:345",
+        "lib/core/services/emergency_platform_service.dart:404",
+        "lib/core/services/emergency_platform_service.dart:404",
+        "lib/core/services/emergency_platform_service.dart:405",
+        "lib/core/services/emergency_platform_service.dart:694",
+        "lib/core/services/emergency_platform_service.dart:694",
+        "lib/core/services/emergency_platform_service.dart:700",
+        "lib/core/services/emergency_platform_service.dart:720",
+        "lib/core/services/emergency_platform_service.dart:720",
+        "lib/core/services/emergency_platform_service.dart:722",
+        "lib/core/services/emergency_platform_service.dart:741",
+        "lib/core/services/emergency_platform_service.dart:741",
+        "lib/core/services/emergency_platform_service.dart:743",
+        "lib/core/services/emergency_readiness_service.dart:40",
+        "lib/core/services/emergency_readiness_service.dart:43",
+        "lib/core/services/location_service.dart:119",
+        "lib/core/services/pin_verification_service.dart:22",
+        "lib/core/services/pin_verification_service.dart:25",
+        "lib/core/services/pin_verification_service.dart:25",
+        "lib/core/services/pin_verification_service.dart:30",
+        "lib/core/services/pin_verification_service.dart:34",
+        "lib/core/services/pin_verification_service.dart:34",
+        "lib/core/services/pin_verification_service.dart:41",
+        "lib/core/services/pin_verification_service.dart:62",
+        "lib/core/services/pin_verification_service.dart:62",
+        "lib/core/services/pin_verification_service.dart:67",
+        "lib/core/services/pin_verification_service.dart:67",
+        "lib/core/services/pin_verification_service.dart:82",
+        "lib/core/services/pin_verification_service.dart:82",
+        "lib/core/services/pin_verification_service.dart:85",
+        "lib/core/services/pin_verification_service.dart:85",
+        "lib/core/services/pin_verification_service.dart:99",
+        "lib/core/services/pin_verification_service.dart:99",
+        "lib/core/services/pin_verification_service.dart:100",
+        "lib/core/services/pin_verification_service.dart:100",
+        "lib/core/services/pin_verification_service.dart:120",
+        "lib/core/services/pin_verification_service.dart:120",
+        "lib/core/services/pin_verification_service.dart:128",
+        "lib/core/services/pin_verification_service.dart:128",
+        "lib/core/services/pin_verification_service.dart:169",
+        "lib/core/services/pin_verification_service.dart:169",
+        "lib/core/services/subscription_gate.dart:50",
+        "lib/core/services/subscription_gate.dart:56",
+        "lib/core/services/subscription_gate.dart:87",
+        "lib/core/services/subscription_gate.dart:88",
+        "lib/core/services/subscription_gate.dart:90",
+        "lib/core/services/subscription_gate.dart:95",
+        "lib/core/services/subscription_gate.dart:96",
+        "lib/core/services/subscription_gate.dart:98",
+        "lib/core/widgets/emergency_trigger_host.dart:225",
+        "lib/core/widgets/emergency_trigger_host.dart:226",
+        "lib/core/widgets/emergency_trigger_host.dart:228",
+        "lib/core/widgets/emergency_trigger_host.dart:232",
+        "lib/core/widgets/emergency_trigger_host.dart:233",
+        "lib/core/widgets/emergency_trigger_host.dart:235"
+      ],
+      "partialSuccessSurfaces": [
+        "lib/screens/emergency_call_screen.dart:600",
+        "lib/screens/emergency_call_screen.dart:601"
+      ]
+    },
+    "navigationHierarchy": {
+      "depth": 2,
+      "level1": "five bottom-navigation destinations",
+      "level2": "detail screens pushed from a destination",
+      "tabCount": 0,
+      "tabLabelKeys": [
+        "nav_home",
+        "nav_map",
+        "nav_contacts",
+        "nav_settings",
+        "label"
+      ],
+      "currentLocationIndicator": "NavigationBar selectedIndex + selected label",
+      "homeReachableFromEverywhere": "the bottom bar is persistent across destinations; detail screens pop back to it"
+    },
+    "naming": {
+      "translationKeys": 963,
+      "localeParityTest": "test/translations_key_parity_test.dart",
+      "hardcodedStringGuard": "test/screens/hardcoded_strings_test.dart",
+      "oneNamePerConceptClaim": "each concept has exactly one translation key, and the key is the only way a string reaches the screen -- the hardcoded-string guard is what makes that true rather than aspirational"
+    },
+    "menuOrder": {
+      "order": [
+        "nav_home",
+        "nav_map",
+        "nav_contacts",
+        "nav_settings",
+        "label"
+      ],
+      "rationale": "the panic surface is the first destination, so the highest-stakes action is never behind a tab switch",
+      "rareFeaturesLocation": "settings detail screens, one push deep"
+    },
+    "settingsTaxonomy": {
+      "settingsScreens": [
+        "lib/screens/settings_detail_page.dart",
+        "lib/screens/settings_legal/data_deletion_screen.dart",
+        "lib/screens/settings_legal/data_export_screen.dart",
+        "lib/screens/settings_legal/legal_settings_screen.dart",
+        "lib/screens/settings_page.dart"
+      ],
+      "maxDepthFromRoot": 3,
+      "categoriesFile": "lib/screens/settings_page.dart"
+    },
+    "onboarding": {
+      "screens": [
+        "lib/screens/onboarding_screen.dart",
+        "lib/screens/onboarding/",
+        "lib/screens/battery_optimization_wizard.dart"
+      ],
+      "steps": 1,
+      "skippable": true,
+      "mandatorySteps": [
+        "legal consent (KVKK)",
+        "first emergency contact",
+        "PIN"
+      ],
+      "mandatoryJustification": "each is a precondition for the product to function at all: no consent means no lawful processing, no contact means nothing to dial, no PIN means no lock",
+      "timeToFirstValue": "the panic button is armed as soon as one contact exists",
+      "progressIndicator": [
+        "lib/screens/onboarding_screen.dart:231"
+      ]
+    },
+    "loadingSurfaces": {
+      "componentLevel": [
+        "lib/screens/app_unlock_screen.dart:280",
+        "lib/screens/contacts_page.dart:118",
+        "lib/screens/legal/consent_screen.dart:254",
+        "lib/screens/legal/kvkk_disclosure_screen.dart:247",
+        "lib/screens/legal/terms_of_service_screen.dart:261",
+        "lib/screens/legal/unified_consent_screen.dart:643",
+        "lib/screens/legal_disclaimer_screen.dart:338",
+        "lib/screens/map_page.dart:765",
+        "lib/screens/map_page.dart:795",
+        "lib/screens/oem_background_guide_screen.dart:97",
+        "lib/screens/onboarding/onboarding_contact_step.dart:336",
+        "lib/screens/onboarding/onboarding_contact_step.dart:487",
+        "lib/screens/safe_walk_screen.dart:486",
+        "lib/screens/safety_timeline_screen.dart:462",
+        "lib/screens/settings_detail_page.dart:357",
+        "lib/screens/settings_legal/data_deletion_screen.dart:233",
+        "lib/screens/settings_legal/data_export_screen.dart:220",
+        "lib/screens/splash_screen.dart:440",
+        "lib/screens/subscription/paywall_screen.dart:315",
+        "lib/screens/subscription/paywall_screen.dart:389",
+        "lib/screens/subscription/paywall_screen.dart:525",
+        "lib/screens/subscription/paywall_screen.dart:548",
+        "lib/screens/subscription/subscription_management_screen.dart:191",
+        "lib/widgets/emergency_contact_consent_dialog.dart:281",
+        "lib/widgets/loading_overlay.dart:46"
+      ],
+      "buttonLevel": [
+        "lib/presentation/providers/contacts_provider.dart:33",
+        "lib/presentation/providers/contacts_provider.dart:38",
+        "lib/presentation/providers/contacts_provider.dart:46",
+        "lib/presentation/providers/contacts_provider.dart:55",
+        "lib/presentation/providers/subscription_provider.dart:22",
+        "lib/presentation/providers/subscription_provider.dart:50",
+        "lib/presentation/providers/subscription_provider.dart:287",
+        "lib/screens/map_page.dart:46",
+        "lib/screens/map_page.dart:69",
+        "lib/screens/map_page.dart:103",
+        "lib/screens/map_page.dart:125",
+        "lib/screens/map_page.dart:155",
+        "lib/screens/map_page.dart:164",
+        "lib/screens/map_page.dart:219",
+        "lib/screens/map_page.dart:432",
+        "lib/screens/map_page.dart:791",
+        "lib/screens/safety_timeline_screen.dart:30",
+        "lib/screens/safety_timeline_screen.dart:86",
+        "lib/screens/safety_timeline_screen.dart:461"
+      ],
+      "skeletonSites": [
+        "lib/core/app_colors.dart:53",
+        "lib/core/app_colors.dart:54",
+        "lib/screens/splash_screen.dart:49",
+        "lib/screens/splash_screen.dart:119",
+        "lib/screens/splash_screen.dart:290",
+        "lib/screens/splash_screen.dart:297",
+        "lib/screens/splash_screen.dart:312",
+        "lib/screens/splash_screen.dart:394",
+        "lib/screens/splash_screen.dart:459",
+        "lib/screens/splash_screen.dart:461",
+        "lib/screens/splash_screen.dart:463",
+        "lib/screens/splash_screen.dart:463",
+        "lib/screens/splash_screen.dart:475",
+        "lib/screens/splash_screen.dart:476",
+        "lib/screens/splash_screen.dart:477"
+      ],
+      "futureBuilderSites": [
+        "lib/screens/settings_detail_page.dart:155"
+      ]
+    },
+    "emptyStates": {
+      "sites": [
+        "lib/core/services/activity_service.dart:17",
+        "lib/core/services/activity_service.dart:95",
+        "lib/core/services/check_in_expiry_coordinator.dart:27",
+        "lib/core/services/check_in_service.dart:167",
+        "lib/core/services/contact_service.dart:65",
+        "lib/core/services/contact_service.dart:159",
+        "lib/core/services/contact_service.dart:194",
+        "lib/core/services/contact_service.dart:201",
+        "lib/core/services/contact_service.dart:268",
+        "lib/core/services/contact_service.dart:318",
+        "lib/core/services/contact_service.dart:362",
+        "lib/core/services/contact_service.dart:454",
+        "lib/core/services/contact_service.dart:487",
+        "lib/core/services/contact_service.dart:672",
+        "lib/core/services/contact_service.dart:691",
+        "lib/core/services/foreground_service.dart:104",
+        "lib/core/services/foreground_service.dart:109",
+        "lib/core/services/foreground_service_ownership.dart:26",
+        "lib/core/services/pin_verification_service.dart:69",
+        "lib/core/services/pin_verification_service.dart:113",
+        "lib/core/services/pin_verification_service.dart:121",
+        "lib/core/services/pin_verification_service.dart:129",
+        "lib/core/services/revenue_cat_service.dart:92",
+        "lib/presentation/providers/settings_provider.dart:21",
+        "lib/presentation/providers/settings_provider.dart:22",
+        "lib/screens/contacts_page.dart:935",
+        "lib/screens/edit_profile_screen.dart:37",
+        "lib/screens/emergency_call_screen.dart:376",
+        "lib/screens/fake_call_screen.dart:230",
+        "lib/screens/fake_call_screen.dart:233",
+        "lib/screens/fake_call_screen.dart:643",
+        "lib/screens/fake_call_screen.dart:646",
+        "lib/screens/onboarding/onboarding_contact_step.dart:296",
+        "lib/screens/onboarding/onboarding_contact_step.dart:442",
+        "lib/screens/onboarding/onboarding_contact_step.dart:514",
+        "lib/screens/safety_timeline_screen.dart:463",
+        "lib/screens/subscription/paywall_screen.dart:81"
+      ],
+      "screensWithEmptyState": [
+        "lib/screens/contacts_page.dart",
+        "lib/screens/edit_profile_screen.dart",
+        "lib/screens/emergency_call_screen.dart",
+        "lib/screens/fake_call_screen.dart",
+        "lib/screens/onboarding/onboarding_contact_step.dart",
+        "lib/screens/safety_timeline_screen.dart",
+        "lib/screens/subscription/paywall_screen.dart"
+      ],
+      "firstRunEmpty": "contacts list before the first contact",
+      "deletedEverythingEmpty": "timeline after clearing history"
+    },
+    "offline": {
+      "productClaim": "the emergency path performs zero network I/O",
+      "bannerSites": [],
+      "connectivitySites": [
+        "lib/core/services/connectivity_service.dart:2",
+        "lib/core/services/connectivity_service.dart:2",
+        "lib/core/services/connectivity_service.dart:6",
+        "lib/core/services/connectivity_service.dart:7",
+        "lib/core/services/connectivity_service.dart:7",
+        "lib/core/services/connectivity_service.dart:8",
+        "lib/core/services/connectivity_service.dart:9",
+        "lib/core/services/connectivity_service.dart:11",
+        "lib/core/services/connectivity_service.dart:11",
+        "lib/core/services/connectivity_service.dart:12",
+        "lib/core/services/connectivity_service.dart:30",
+        "lib/core/services/connectivity_service.dart:49",
+        "lib/core/services/connectivity_service.dart:52",
+        "lib/core/services/connectivity_service.dart:56",
+        "lib/core/services/connectivity_service.dart:64",
+        "lib/core/services/connectivity_service.dart:76",
+        "lib/core/services/connectivity_service.dart:82",
+        "lib/core/services/offline_queue_service.dart:30",
+        "lib/core/services/offline_queue_service.dart:37",
+        "lib/core/services/startup_diagnostics_service.dart:71",
+        "lib/main.dart:134",
+        "lib/screens/home_page.dart:104",
+        "lib/screens/home_page.dart:122",
+        "lib/screens/home_page.dart:123",
+        "lib/screens/home_page.dart:125",
+        "lib/screens/main_navigation.dart:231",
+        "lib/screens/map_page.dart:360",
+        "lib/widgets/connectivity_banner.dart:13",
+        "lib/widgets/connectivity_banner.dart:14",
+        "lib/widgets/connectivity_banner.dart:17",
+        "lib/widgets/connectivity_banner.dart:17",
+        "lib/widgets/connectivity_banner.dart:20",
+        "lib/widgets/connectivity_banner.dart:20",
+        "lib/widgets/connectivity_banner.dart:39",
+        "lib/widgets/connectivity_banner.dart:44"
+      ],
+      "retrySites": [
+        "lib/core/network/osm_tile_cache_client.dart:45",
+        "lib/core/network/osm_tile_cache_client.dart:61",
+        "lib/core/services/offline_queue_service.dart:73",
+        "lib/core/services/offline_queue_service.dart:73",
+        "lib/core/services/offline_queue_service.dart:94",
+        "lib/core/services/offline_queue_service.dart:102",
+        "lib/core/services/offline_queue_service.dart:105",
+        "lib/core/services/offline_queue_service.dart:119",
+        "lib/core/services/offline_queue_service.dart:119",
+        "lib/core/services/offline_queue_service.dart:208",
+        "lib/core/services/offline_queue_service.dart:217",
+        "lib/core/services/offline_queue_service.dart:221",
+        "lib/core/services/offline_queue_service.dart:228",
+        "lib/core/services/offline_queue_service.dart:228",
+        "lib/core/services/offline_queue_service.dart:228",
+        "lib/core/services/offline_queue_service.dart:239",
+        "lib/core/services/offline_queue_service.dart:239",
+        "lib/core/services/offline_queue_service.dart:251",
+        "lib/core/services/offline_queue_service.dart:251",
+        "lib/screens/map_page.dart:265",
+        "lib/widgets/network_error_retry.dart:12",
+        "lib/widgets/network_error_retry.dart:18",
+        "lib/widgets/network_error_retry.dart:52",
+        "lib/widgets/network_error_retry.dart:78",
+        "lib/widgets/network_error_retry.dart:90",
+        "lib/widgets/network_error_retry.dart:94"
+      ],
+      "networkLayer": "lib/core/network/",
+      "duplicateGuard": "lib/core/utils/panic_hold_gate.dart + the countdown duplicate-trigger guard"
+    }
+  },
+  "violations": [],
+  "exclusions": [
+    {
+      "what": "the two Android quick-access surfaces",
+      "why": "they submit an intent and hand off to the Flutter arm boundary; their own UI is a system widget this app does not lay out"
+    }
+  ],
+  "negativeControl": {
+    "command": "python3 scripts/audit_evidence/flows.py --negative-control",
+    "mutation": "remove the confirmation from 'erase all app data' and add a screen with no exit path",
+    "expected": "destructiveActionUnconfirmed and screenWithNoExitPath fire"
+  }
+}

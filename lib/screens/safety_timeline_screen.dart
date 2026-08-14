@@ -194,6 +194,71 @@ class _SafetyTimelineScreenState extends State<SafetyTimelineScreen> {
     }
   }
 
+  /// Confirms before deleting, and NAMES the entry being deleted.
+  ///
+  /// [_deleteEntry] is genuinely irreversible -- it clears both the note store
+  /// and the mirrored activity row, deliberately, so the KVKK Md. 11/f promise
+  /// is real. That makes an unguarded one-tap popup-menu item the wrong
+  /// affordance for it: a mis-tap in a `PopupMenuButton` permanently destroyed
+  /// a safety record with no confirmation and no undo.
+  Future<void> _confirmAndDeleteEntry(Map<String, dynamic> entry) async {
+    final title = (entry['title'] as String?)?.trim();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => EscapeDismissible(
+        child: AlertDialog(
+          backgroundColor: AppColors.surface,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(Radii.xl),
+          ),
+          title: Text(
+            'timeline_delete_confirm_title'.tr(),
+            style: const TextStyle(
+              color: AppColors.textPrimary,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          content: Text(
+            'timeline_delete_confirm_body'.tr(
+              namedArgs: {
+                'title': (title == null || title.isEmpty)
+                    ? 'timeline_entry_untitled'.tr()
+                    : title,
+              },
+            ),
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 14,
+              height: 1.5,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(
+                'cancel'.tr(),
+                style: const TextStyle(color: AppColors.textSecondary),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.emergency,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(Radii.md),
+                ),
+              ),
+              child: Text('timeline_delete_confirm_action'.tr()),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (confirmed != true) return;
+    await _deleteEntry(entry['id'] ?? '', kind: entry['_kind']);
+  }
+
   /// Deletes an entry from whichever store actually holds it.
   ///
   /// This list merges two stores: user notes in SharedPreferences and recorded
@@ -536,10 +601,7 @@ class _SafetyTimelineScreenState extends State<SafetyTimelineScreen> {
                   onSelected: (value) {
                     if (value == 'share') _shareEntry(entry);
                     if (value == 'delete') {
-                      _deleteEntry(
-                        entry['id'] ?? '',
-                        kind: entry['_kind'],
-                      );
+                      _confirmAndDeleteEntry(entry);
                     }
                   },
                   itemBuilder: (context) => [
