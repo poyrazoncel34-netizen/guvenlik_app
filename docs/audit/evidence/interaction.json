@@ -2,7 +2,7 @@
   "verifier": "scripts/audit_evidence/interaction.py",
   "verifierVersion": "1.0.0",
   "codeRevision": {
-    "head": "098a36072a7ebefaf918bf02bb47f2af702a3878",
+    "head": "59d1892fd8520cdb0563c5e61bb1d3a96543a212",
     "dirty": true
   },
   "measuredOn": "2026-08-14",
@@ -100,7 +100,7 @@
       "undoSites": [
         "lib/screens/check_in_screen.dart:100",
         "lib/screens/check_in_screen.dart:177",
-        "lib/screens/home_page.dart:597",
+        "lib/screens/home_page.dart:602",
         "lib/screens/safe_walk_screen.dart:117",
         "lib/screens/safe_walk_screen.dart:167",
         "lib/widgets/panic_button.dart:304"

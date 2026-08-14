@@ -125,7 +125,7 @@ MICRO_LABEL_EXEMPTIONS = {
         "'Zorunlu' pill marking a mandatory consent row. The consent text itself "
         "is body-sized; the pill is a redundant marker."
     ),
-    "lib/screens/map_page.dart:385": (
+    "lib/screens/map_page.dart:396": (
         "'(c) OpenStreetMap contributors' tile attribution. Required by the ODbL "
         "and conventionally set small so it does not compete with the map."
     ),
@@ -296,7 +296,9 @@ def build(root: Path) -> dict:
             ),
             "themeFamilyConstant": "_fontFamily = null (lib/core/app_theme.dart)",
             "resolvesTo": "platform system face — Roboto on Android, SF Pro on iOS",
-            "bundledFontAssets": 0,
+            "bundledFontAssets": len([p for p in (root / "assets").rglob("*")
+                                      if p.suffix.lower() in (".ttf", ".otf", ".woff",
+                                                              ".woff2")]),
             "pubspecFontsSection": "commented out; no custom face is shipped",
             "why": (
                 "A safety app that ships no font asset can never fail to render "

@@ -2,7 +2,7 @@
   "verifier": "scripts/audit_evidence/typography.py",
   "verifierVersion": "1.0.0",
   "codeRevision": {
-    "head": "c94988183043f5b28ca8d13ca7de3481efb032ba",
+    "head": "59d1892fd8520cdb0563c5e61bb1d3a96543a212",
     "dirty": true
   },
   "measuredOn": "2026-08-14",
@@ -40,16 +40,16 @@
         "hero": 34.0
       },
       "distinctSizesInUse": 21,
-      "totalSizeSites": 329,
-      "onScaleSites": 252,
-      "onScalePercent": 76.6,
+      "totalSizeSites": 330,
+      "onScaleSites": 253,
+      "onScalePercent": 76.7,
       "distribution": {
         "9.0": 1,
         "10.0": 3,
         "11.0": 12,
         "12.0": 49,
         "13.0": 63,
-        "14.0": 51,
+        "14.0": 52,
         "15.0": 33,
         "16.0": 41,
         "17.0": 13,
@@ -101,12 +101,12 @@
         "1.35": 5,
         "1.4": 37,
         "1.45": 9,
-        "1.5": 30,
+        "1.5": 31,
         "1.6": 4,
         "1.65": 1
       },
-      "sitesWithExplicitHeight": 90,
-      "atOrAbove1_3": 88,
+      "sitesWithExplicitHeight": 91,
+      "atOrAbove1_3": 89,
       "atOrAbove1_3Percent": 97.8,
       "minimum": 1.0,
       "flutterDefaultWhenAbsent": "the font's own metric ratio (~1.16 for Roboto)"
@@ -154,14 +154,14 @@
     "weightDistribution": {
       "distribution": {
         "w600": 61,
-        "w800": 74,
+        "w800": 75,
         "w700": 92,
         "w500": 13,
         "w900": 11
       },
-      "totalWeightedSites": 251,
-      "heavySites": 177,
-      "heavyPercent": 70.5,
+      "totalWeightedSites": 252,
+      "heavySites": 178,
+      "heavyPercent": 70.6,
       "distinctWeights": 5
     },
     "uppercase": {

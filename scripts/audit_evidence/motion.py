@@ -120,6 +120,21 @@ def _scan(root: Path) -> dict:
     }
 
 
+def _blur_is_animated(root: Path, site: str) -> bool:
+    """True when a blur radius is computed from an animation value.
+
+    Was a hard-coded 0. The claim "no blur is animated" is only evidence if
+    something looked.
+    """
+    name, line = site.rsplit(":", 1)
+    path = root / name
+    if not path.exists():
+        return False
+    src = read_stripped(path).splitlines()
+    window = "\n".join(src[max(0, int(line) - 3): int(line) + 6])
+    return bool(re.search(r"sigma\w*:\s*[^,\n]*(?:Controller|animation|\.value)", window))
+
+
 def measure(root: Path) -> list:
     data = _scan(root)
     violations = []
@@ -314,7 +329,8 @@ def build(root: Path) -> dict:
         "blur": {
             "sites": data["blurSites"],
             "count": len(data["blurSites"]),
-            "animatedBlurCount": 0,
+            "animatedBlurCount": len([s for s in data["blurSites"]
+                                      if _blur_is_animated(root, s)]),
             "why": "BackdropFilter is static glass chrome, never animated: animating a "
                    "blur radius re-rasterises the whole subtree every frame",
         },

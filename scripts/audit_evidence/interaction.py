@@ -170,6 +170,10 @@ def build(root: Path) -> dict:
         "notificationFeedback": {
             "notificationSites": len(sites(r"flutter_local_notifications|showNotification")),
             "channelSetup": "lib/core/services (notification service)",
+            "userFacingPreferenceSurface": (
+                "notification preference toggles live in settings; the OS channel is "
+                "the authority and the app cannot re-enable a channel the user muted"
+            ),
         },
         "undo": {
             "undoSites": sites(r"SnackBarAction|undo|Undo"),

@@ -83,6 +83,24 @@ NO_EXIT_BY_DESIGN = {
 }
 
 
+def _landing_surfaces(root: Path) -> list:
+    """Widgets the root router can land on once every gate has passed.
+
+    Was a hard-coded `True`. Counting them makes "there is one place you start"
+    falsifiable: a second landing surface would show up here.
+    """
+    # app_root holds a `_destination` Widget it is HANDED; the decision is made in
+    # SplashScreen, which is where the landing surfaces are actually named. The
+    # first version read app_root and returned [] -- an empty measurement that
+    # would have been cited as evidence for "there is one place you start".
+    splash = root / "lib" / "screens" / "splash_screen.dart"
+    if not splash.exists():
+        return []
+    src = read_stripped(splash)
+    return sorted(set(re.findall(r"\b(MainNavigation|HomePage|OnboardingScreen|"
+                                 r"UnifiedConsentScreen|AppUnlockScreen|AuthGate)\b", src)))
+
+
 def _sites(root: Path, pattern: str, files=None) -> list:
     out = []
     rx = re.compile(pattern)
@@ -216,7 +234,7 @@ def build(root: Path) -> dict:
                 "Quick Settings tile": "android/.../quickaccess",
                 "volume-key trigger": "lib/core/services (volume trigger)",
             },
-            "singleStartingSurface": True,
+            "landingSurfacesAfterGates": _landing_surfaces(root),
             "why": "there is exactly one landing surface after the gates: the home tab "
                    "with the panic button, so 'where do I start' has one answer",
         },
@@ -245,14 +263,18 @@ def build(root: Path) -> dict:
             "popSites": len(_sites(root, r"Navigator\.pop|maybePop")),
             "popScopeSites": _sites(root, r"PopScope"),
             "escapeDismissible": "lib/core/widgets/escape_dismissible.dart",
-            "screensWithoutExit": [],
+            "screensWithoutExit": [v["detail"].split(" builds")[0]
+                                   for v in measure(root)
+                                   if v["rule"] == "screenWithNoExitPath"],
             "noExitByDesign": NO_EXIT_BY_DESIGN,
         },
         "destructiveActions": {
             "inventory": DESTRUCTIVE,
             "count": len(DESTRUCTIVE),
             "confirmationDialogSites": len(dialogs),
-            "everyDestructiveActionConfirmed": True,
+            "destructiveActionsWithoutAGuard": [v["detail"] for v in measure(root)
+                                                if v["rule"] in ("destructiveActionUnconfirmed",
+                                                                 "strongerGuardMissing")],
             "strongerThanDialog": STRONGER_THAN_DIALOG,
             "extraVerificationBeyondConfirm": {
                 "erase all app data": "typed confirmation + PIN, not a single tap",
@@ -336,6 +358,11 @@ def build(root: Path) -> dict:
                                              if s.startswith("lib/screens/")}),
             "firstRunEmpty": "contacts list before the first contact",
             "deletedEverythingEmpty": "timeline after clearing history",
+            "onboardingUseOfEmpty": (
+                "the contacts empty state IS the onboarding surface for that tab: it "
+                "carries the add-contact call to action rather than only reporting "
+                "absence"
+            ),
         },
         "offline": {
             "productClaim": "the emergency path performs zero network I/O",
@@ -345,6 +372,12 @@ def build(root: Path) -> dict:
             "networkLayer": "lib/core/network/",
             "duplicateGuard": "lib/core/utils/panic_hold_gate.dart + the countdown "
                               "duplicate-trigger guard",
+            "noRuntimeFlagSurface": (
+                "no runtime feature-flag mechanism exists in lib/: no remote config, "
+                "no flag store, and every gate is keyed on subscription entitlement "
+                "or device capability, both of which are local facts"
+            ),
+            "flagLikeSites": _sites(root, r"RemoteConfig|FeatureFlag|featureFlags"),
         },
     }
 

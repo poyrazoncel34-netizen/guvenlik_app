@@ -2,7 +2,7 @@
   "verifier": "scripts/audit_evidence/color.py",
   "verifierVersion": "1.0.0",
   "codeRevision": {
-    "head": "c94988183043f5b28ca8d13ca7de3481efb032ba",
+    "head": "59d1892fd8520cdb0563c5e61bb1d3a96543a212",
     "dirty": true
   },
   "measuredOn": "2026-08-14",
@@ -38,7 +38,7 @@
       "error": {
         "hex": "#FF4D4D",
         "token": "AppColors.emergency",
-        "sites": 106,
+        "sites": 107,
         "note": "one token carries both 'error' and 'emergency'; this app's error surface IS its emergency surface"
       },
       "info": {

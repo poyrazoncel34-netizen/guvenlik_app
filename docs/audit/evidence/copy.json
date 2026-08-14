@@ -2,7 +2,7 @@
   "verifier": "scripts/audit_evidence/copy.py",
   "verifierVersion": "1.0.0",
   "codeRevision": {
-    "head": "098a36072a7ebefaf918bf02bb47f2af702a3878",
+    "head": "59d1892fd8520cdb0563c5e61bb1d3a96543a212",
     "dirty": true
   },
   "measuredOn": "2026-08-14",
@@ -142,7 +142,13 @@
     },
     "permissionCopy": {
       "keys": 40,
-      "rationaleBeforeRequest": true,
+      "rationaleScreensWithARequestCall": {
+        "lib/core/utils/permission_helper.dart": {
+          "rationaleAtLine": 48,
+          "requestAtLine": 53,
+          "rationaleFirst": true
+        }
+      },
       "rationaleScreens": [
         "lib/screens/onboarding_screen.dart",
         "lib/core/utils/permission_helper.dart",

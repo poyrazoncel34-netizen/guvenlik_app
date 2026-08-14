@@ -2,7 +2,7 @@
   "verifier": "scripts/audit_evidence/flows.py",
   "verifierVersion": "1.0.0",
   "codeRevision": {
-    "head": "c692a76fd1bf4ad1b53f13389667e70df93aa67a",
+    "head": "59d1892fd8520cdb0563c5e61bb1d3a96543a212",
     "dirty": true
   },
   "measuredOn": "2026-08-14",
@@ -74,13 +74,18 @@
         "Quick Settings tile": "android/.../quickaccess",
         "volume-key trigger": "lib/core/services (volume trigger)"
       },
-      "singleStartingSurface": true,
+      "landingSurfacesAfterGates": [
+        "AppUnlockScreen",
+        "MainNavigation",
+        "OnboardingScreen",
+        "UnifiedConsentScreen"
+      ],
       "why": "there is exactly one landing surface after the gates: the home tab with the panic button, so 'where do I start' has one answer"
     },
     "callToAction": {
       "primaryOnHome": "PanicButton — the largest control on the screen, centre-weighted, with its own arming animation",
       "primarySites": [
-        "lib/screens/home_page.dart:248",
+        "lib/screens/home_page.dart:253",
         "lib/widgets/panic_button.dart:28"
       ],
       "secondaryTiers": {
@@ -132,7 +137,7 @@
       },
       "count": 6,
       "confirmationDialogSites": 31,
-      "everyDestructiveActionConfirmed": true,
+      "destructiveActionsWithoutAGuard": [],
       "strongerThanDialog": {
         "lib/screens/app_unlock_screen.dart": "forgot_pin_reset_token"
       },
@@ -429,7 +434,7 @@
       ],
       "firstRunEmpty": "contacts list before the first contact",
       "deletedEverythingEmpty": "timeline after clearing history",
-      "onboardingUseOfEmpty": "the contacts empty state IS the onboarding surface for the contacts tab: it carries the add-contact call to action rather than only reporting absence"
+      "onboardingUseOfEmpty": "the contacts empty state IS the onboarding surface for that tab: it carries the add-contact call to action rather than only reporting absence"
     },
     "offline": {
       "productClaim": "the emergency path performs zero network I/O",
@@ -455,11 +460,11 @@
         "lib/core/services/offline_queue_service.dart:30",
         "lib/core/services/offline_queue_service.dart:37",
         "lib/core/services/startup_diagnostics_service.dart:71",
-        "lib/main.dart:134",
-        "lib/screens/home_page.dart:104",
-        "lib/screens/home_page.dart:122",
+        "lib/main.dart:135",
+        "lib/screens/home_page.dart:105",
         "lib/screens/home_page.dart:123",
-        "lib/screens/home_page.dart:125",
+        "lib/screens/home_page.dart:124",
+        "lib/screens/home_page.dart:126",
         "lib/screens/main_navigation.dart:231",
         "lib/screens/map_page.dart:360",
         "lib/widgets/connectivity_banner.dart:13",
@@ -501,7 +506,8 @@
       ],
       "networkLayer": "lib/core/network/",
       "duplicateGuard": "lib/core/utils/panic_hold_gate.dart + the countdown duplicate-trigger guard",
-      "noRuntimeFlagSurface": "there is no runtime feature-flag mechanism in lib/: no remote config, no flag store, no gate keyed on anything but subscription entitlement and device capability"
+      "noRuntimeFlagSurface": "no runtime feature-flag mechanism exists in lib/: no remote config, no flag store, and every gate is keyed on subscription entitlement or device capability, both of which are local facts",
+      "flagLikeSites": []
     }
   },
   "violations": [],

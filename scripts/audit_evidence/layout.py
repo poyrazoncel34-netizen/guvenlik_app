@@ -38,6 +38,43 @@ ONLY = re.compile(r"EdgeInsets\.only\(([^)]*)\)")
 GRID = 2.0
 
 
+def _competing_glow_sites(root: Path) -> list:
+    """Coloured glow shadows on the panic button's own screen.
+
+    Was a hard-coded `[]`. A constant in a measurements block is an assertion
+    wearing a measurement's clothes, which is the exact defect this whole phase
+    exists to remove.
+    """
+    home = root / "lib" / "screens" / "home_page.dart"
+    if not home.exists():
+        return []
+    src = read_stripped(home)
+    out = []
+    # Strength matters, not merely "is tinted". The first version of this counted
+    # any tinted BoxShadow and reported the quick-action card tint (alpha 0.06)
+    # as a competing call to action -- a 5x weaker shadow than brandGlow's 0.30.
+    for m in re.finditer(r"Shadows\.brandGlow", src):
+        out.append(f"lib/screens/home_page.dart:{src[: m.start()].count(chr(10)) + 1}")
+    for m in re.finditer(r"BoxShadow\((?:[^()]|\([^()]*\))*?alpha:\s*([0-9.]+)", src):
+        if float(m.group(1)) >= 0.15:
+            out.append(f"lib/screens/home_page.dart:{src[: m.start()].count(chr(10)) + 1}"
+                       f" (alpha {m.group(1)})")
+    return out
+
+
+def _uninitiated_modals(root: Path) -> list:
+    """Modal call sites with no user callback within 400 chars above them."""
+    out = []
+    for path in dart_files(root):
+        src = read_stripped(path)
+        for m in re.finditer(r"showDialog|showModalBottomSheet", src):
+            window = src[max(0, m.start() - 400): m.start()]
+            if not re.search(r"onPressed|onTap|onSelected|onChanged|onLongPress|"
+                             r"Future<\w*> _?\w+\(|void _?\w+\(", window):
+                out.append(f"{rel(path, root)}:{src[: m.start()].count(chr(10)) + 1}")
+    return out
+
+
 def _screen_files(root: Path) -> list:
     return [p for p in dart_files(root) if rel(p, root).startswith("lib/screens/")]
 
@@ -259,7 +296,7 @@ def build(root: Path) -> dict:
                 "(Shadows.brandGlow), the only one with an arming animation, and "
                 "the largest hit area on its screen"
             ),
-            "competingGlowSites": [],
+            "competingGlowSites": _competing_glow_sites(root),
         },
         "actionTiers": {
             "tierCounts": dict(tiers),
@@ -299,7 +336,7 @@ def build(root: Path) -> dict:
             "sites": len(modal_sites),
             "ceiling": 75,
             "byScreen": Counter(s.split(":")[0] for s in modal_sites).most_common(10),
-            "everyModalIsUserInitiated": True,
+            "modalsNotReachedFromACallback": _uninitiated_modals(root),
         },
         "tooltipBudget": {"sites": tooltip_sites, "count": len(tooltip_sites)},
         "paddingSymmetry": {

@@ -2,7 +2,7 @@
   "verifier": "scripts/audit_evidence/storage.py",
   "verifierVersion": "1.0.0",
   "codeRevision": {
-    "head": "098a36072a7ebefaf918bf02bb47f2af702a3878",
+    "head": "59d1892fd8520cdb0563c5e61bb1d3a96543a212",
     "dirty": true
   },
   "measuredOn": "2026-08-14",
@@ -68,13 +68,18 @@
     },
     "files": {
       "userGeneratedFiles": [
-        "the KVKK data export (JSON)"
+        "the KVKK data export (JSON)",
+        "the fake-call avatar, copied from the gallery"
       ],
       "exportScreen": "lib/screens/settings_legal/data_export_screen.dart",
-      "imageUploadSurfaces": 0,
-      "exifRisk": "none reachable: the app captures, stores and uploads no images. There is no camera permission and no image picker dependency, so there is no EXIF payload to strip.",
+      "imagePickerSite": "lib/screens/fake_call_screen.dart:700",
+      "imagePickerFlow": "ImagePicker.pickImage(source: gallery, imageQuality: 85) -> File(picked.path).copy('<appDocs>/fake_call_avatar.<ext>')",
+      "exifStripped": false,
+      "exifNote": "the picked file is copied BYTE FOR BYTE with dart:io File.copy, so every EXIF tag the source carried -- including GPSLatitude / GPSLongitude if the photo was taken with location on -- lands in app documents. `imageQuality: 85` re-encodes on some platform implementations and may drop EXIF as a side effect, but that is a platform behaviour, not a guarantee this app makes.",
+      "imageUploadSurfaces": 1,
+      "exifRisk": "REAL, and this field previously said the opposite. It was a hard-coded claim -- 'no image picker dependency' -- rather than a computation, and computing it found image_picker: ^1.1.2 in pubspec.yaml and a live pickImage call. In a safety app whose users may be at risk from someone with device access, a stored photo carrying GPS EXIF is a genuine, if modest, exposure: it also reaches the KVKK data export.",
       "cameraPermissionDeclared": false,
-      "imagePickerDependency": false
+      "imagePickerDependency": true
     },
     "appsec": {
       "sastTooling": {

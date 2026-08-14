@@ -44,7 +44,7 @@ have meant filing a document under a code archetype to keep the list short.
 | Metric | Count |
 |---|---|
 | Rows in this matrix | 239 |
-| Still `IN_REPO_RESOLVABLE` in the queue | 13 |
+| Still `IN_REPO_RESOLVABLE` in the queue | 14 |
 | Evidence artifacts referenced | 11 |
 | Plan/audit integrity problems | 0 |
 
@@ -104,15 +104,14 @@ have meant filing a document under a code archetype to keep the list short.
 | `MP-80-016` | 80 | rollout | PASS | - | definition of done -- rollout | .claude/rules/common/development-workflow.md | development-workflow.md definition of done now names rollout: a change that reaches production carries its halt thresholds and its staged-rollout plan | test/release/process_artifact_contract_test.dart pins each section; deleting a heading fails it | yes | PASS |
 | `MP-80-017` | 80 | rollback** | PARTIAL | P2 | docs/release/incident_runbook.md | docs/release/incident_runbook.md | incident_runbook.md section 8: the roll-forward drill is recorded as unrehearsed, and section 3 gives the 4h target it will be measured against | test/release/process_artifact_contract_test.dart pins each section; deleting a heading fails it | yes | PARTIAL |
 
-### SCOPE_JUDGEMENT — 17 rows
+### SCOPE_JUDGEMENT — 16 rows
 
 | ID | § | Requirement | Status | Sev | Surface | Verifier | Evidence property | Negative control | Remediated? | Disposition |
 |---|---|---|---|---|---|---|---|---|---|---|
 | `MP-07-015` | 7 | Orientation change. | PARTIAL | P2 | portrait lock | android/app/src/main/AndroidManifest.xml | screenOrientation=portrait in the manifest; reversing it is the recorded portrait-only product decision | n/a - orientation is locked in the manifest | no | PRODUCT_DECISION_REQUIRED |
 | `MP-12-029` | 12 | High Contrast/forced colors mümkünse test edilmiş. | PARTIAL | P3 | Android high-contrast | docs/audit/device-verification-2026-08-14-a11y-perf.md | `color.json` → `measurements.textContrast.pairsPassingAA` | unreadable secondary text, red 'success', card merged into ground -> +4 | no | PARTIAL |
-| `MP-27-023` | 27 | Feature flags güvenli. | PARTIAL | P2 | runtime feature flags | scripts/audit_evidence/flows.py | `flows.json` → `measurements.offline.productClaim` | unconfirmed data erase + exit-less screen -> 1 violation | no | PRODUCT_DECISION_REQUIRED |
+| `MP-27-023` | 27 | Feature flags güvenli. | PARTIAL | P2 | runtime feature flags | scripts/audit_evidence/flows.py | `flows.json` → `measurements.offline.flagLikeSites` | unconfirmed data erase + exit-less screen -> 1 violation | no | PRODUCT_DECISION_REQUIRED |
 | `MP-30-007` | 30 | Cache stampede önleniyor. | PASS | - | no shared origin | scripts/audit_evidence/storage.py | `storage.json` → `measurements.cache.stampedeRisk` | hard-coded API key + DROP TABLE + PRAGMA identifier from a variable -> 3 | no | PASS |
-| `MP-31-010` | 31 | Metadata/EXIF privacy düşünülmüş. | N/A | - | no image capture surface | scripts/audit_evidence/storage.py | `storage.json` → `measurements.files.exifRisk` | hard-coded API key + DROP TABLE + PRAGMA identifier from a variable -> 3 | no | N/A |
 | `MP-33-004` | 33 | Secrets secret manager'da. | PASS | - | two compile-time secrets | scripts/audit_evidence/storage.py | `storage.json` → `measurements.secrets.secretManager` | hard-coded API key + DROP TABLE + PRAGMA identifier from a variable -> 3 | no | PASS |
 | `MP-42-025` | 42 | Cloud quotas. | BLOCKED | P2 | RevenueCat plan tier | - | plan limits are visible only inside the RevenueCat account (E1) | - | no | EXTERNAL_BLOCKER |
 | `MP-43-023` | 43 | Circuit breaker gerekiyorsa. | PASS | - | one optional dependency | lib/core/network/osm_tile_cache_client.dart | `storage.json` → `measurements.cache.caches.map tiles.contract` | removing the retry ceiling fails the tile contract test | no | PASS |
@@ -144,11 +143,11 @@ have meant filing a document under a code archetype to keep the list short.
 | `MP-05-008` | 5 | Heading kullanımı yalnızca font büyütme amacıyla yapılmıyor. | PASS | - | screen titles | test/screens/screen_header_semantics_test.dart | `typography.json` → `measurements.headingHierarchy.rungs` | removing header:true fails the header test | no | PASS |
 | `MP-12-020` | 12 | Error screen reader'a duyuruluyor. | PASS | - | error announcements | scripts/audit_evidence/interaction.py | `interaction.json` → `measurements.feedbackChannels.semanticAnnouncementSites` | PIN field offering password autofill + unlabelled field -> 2 | no | PASS |
 
-### STATIC_CODE — 139 rows
+### STATIC_CODE — 140 rows
 
 | ID | § | Requirement | Status | Sev | Surface | Verifier | Evidence property | Negative control | Remediated? | Disposition |
 |---|---|---|---|---|---|---|---|---|---|---|
-| `MP-01-001` | 1 | Başlangıç noktası belli. | PASS | - | the five gates and five destinations (lib/screens/**) | scripts/audit_evidence/flows.py | `flows.json` → `measurements.entryPoints.singleStartingSurface` | unconfirmed data erase + exit-less screen -> 1 violation | no | PASS |
+| `MP-01-001` | 1 | Başlangıç noktası belli. | PASS | - | the five gates and five destinations (lib/screens/**) | scripts/audit_evidence/flows.py | `flows.json` → `measurements.entryPoints.landingSurfacesAfterGates` | unconfirmed data erase + exit-less screen -> 1 violation | no | PASS |
 | `MP-01-002` | 1 | Kullanıcı ne yapmak istediğini anlayabiliyor. | PASS | - | the five gates and five destinations (lib/screens/**) | scripts/audit_evidence/flows.py | `flows.json` → `measurements.entryPoints.gates` | unconfirmed data erase + exit-less screen -> 1 violation | no | PASS |
 | `MP-01-003` | 1 | Primary CTA açık. | PASS | - | home surface | scripts/audit_evidence/flows.py | `flows.json` → `measurements.callToAction.primaryOnHome` | unconfirmed data erase + exit-less screen -> 1 violation | no | PASS |
 | `MP-01-004` | 1 | Secondary CTA primary CTA ile yarışmıyor. | PASS | - | home surface | scripts/audit_evidence/layout.py | `layout.json` → `measurements.attentionOrder.competingGlowSites` | two EdgeInsets.only gutters differing >4dp -> 2 violations | no | PASS |
@@ -275,7 +274,7 @@ have meant filing a document under a code archetype to keep the list short.
 | `MP-20-004` | 20 | Retry var. | PASS | - | retry surfaces | scripts/audit_evidence/flows.py | `flows.json` → `measurements.offline.retrySites` | unconfirmed data erase + exit-less screen -> 1 violation | no | PASS |
 | `MP-20-005` | 20 | Duplicate oluşmuyor. | PASS | - | duplicate guard | scripts/audit_evidence/flows.py | `flows.json` → `measurements.offline.duplicateGuard` | unconfirmed data erase + exit-less screen -> 1 violation | no | PASS |
 | `MP-23-010` | 23 | Notification preferences. | PARTIAL | P2 | notification preferences | scripts/audit_evidence/interaction.py | `interaction.json` → `measurements.notificationFeedback.channelSetup` | PIN field offering password autofill + unlabelled field -> 2 | no | PARTIAL |
-| `MP-23-015` | 23 | Subscription olan kullanıcı account silerken uygun flow görüyor. | PARTIAL | P2 | account deletion + subscription | scripts/audit_evidence/flows.py | `flows.json` → `measurements.destructiveActions.inventory` | unconfirmed data erase + exit-less screen -> 1 violation | no | PARTIAL |
+| `MP-23-015` | 23 | Subscription olan kullanıcı account silerken uygun flow görüyor. | PARTIAL | P2 | account deletion + subscription | scripts/audit_evidence/flows.py | `flows.json` → `measurements.destructiveActions.strongerThanDialog` | unconfirmed data erase + exit-less screen -> 1 violation | no | PARTIAL |
 | `MP-26-006` | 26 | Notification preferences. | PARTIAL | P2 | in-app notification preference toggles | scripts/audit_evidence/interaction.py | `interaction.json` → `measurements.notificationFeedback.userFacingPreferenceSurface` | PIN field offering password autofill + unlabelled field -> 2 | no | PARTIAL |
 | `MP-29-006` | 29 | Check constraints. | PASS | - | sqflite schema v3 | scripts/audit_evidence/storage.py | `storage.json` → `measurements.schema.constraintStrategy` | hard-coded API key + DROP TABLE + PRAGMA identifier from a variable -> 3 | no | PASS |
 | `MP-29-011` | 29 | Transaction boundaries doğru. | PASS | - | sqflite writes | scripts/audit_evidence/storage.py | `storage.json` → `measurements.schema.transactionBoundary` | hard-coded API key + DROP TABLE + PRAGMA identifier from a variable -> 3 | no | PASS |
@@ -285,6 +284,7 @@ have meant filing a document under a code archetype to keep the list short.
 | `MP-30-004` | 30 | TTL doğru. | PASS | - | tile cache | scripts/audit_evidence/storage.py | `storage.json` → `measurements.cache.caches.map tiles.ttl` | hard-coded API key + DROP TABLE + PRAGMA identifier from a variable -> 3 | no | PASS |
 | `MP-30-005` | 30 | Invalidation stratejisi. | PASS | - | tile cache | scripts/audit_evidence/storage.py | `storage.json` → `measurements.cache.caches.map tiles.invalidation` | hard-coded API key + DROP TABLE + PRAGMA identifier from a variable -> 3 | no | PASS |
 | `MP-30-006` | 30 | Stale data kabul kriteri. | PASS | - | tile cache | scripts/audit_evidence/storage.py | `storage.json` → `measurements.cache.caches.map tiles.stalenessAcceptable` | hard-coded API key + DROP TABLE + PRAGMA identifier from a variable -> 3 | no | PASS |
+| `MP-31-010` | 31 | Metadata/EXIF privacy düşünülmüş. | PARTIAL | - | lib/screens/fake_call_screen.dart:700 (gallery avatar picker) | scripts/audit_evidence/storage.py | `storage.json` → `measurements.files.exifNote` | hard-coded API key + DROP TABLE + PRAGMA identifier from a variable -> 3 | no | PARTIAL |
 | `MP-42-024` | 42 | Dependency quotas. | PARTIAL | P2 | OSM tile client | scripts/audit_evidence/storage.py | `storage.json` → `measurements.cache.caches.map tiles.contract` | hard-coded API key + DROP TABLE + PRAGMA identifier from a variable -> 3 | no | PARTIAL |
 | `MP-72-003` | 72 | Uneven padding. | PASS | - | every EdgeInsets.only in lib/ | scripts/audit_evidence/layout.py | `layout.json` → `measurements.paddingSymmetry.asymmetricCount` | two EdgeInsets.only gutters differing >4dp -> 2 violations | no | PASS |
 
@@ -328,7 +328,7 @@ have meant filing a document under a code archetype to keep the list short.
 
 | ID | § | Requirement | Status | Sev | Surface | Verifier | Evidence property | Negative control | Remediated? | Disposition |
 |---|---|---|---|---|---|---|---|---|---|---|
-| `MP-01-008` | 1 | Yanlış işlem geri alınabiliyor. | PASS | - | destructive actions | test/screens/timeline_delete_confirmation_test.dart | `flows.json` → `measurements.destructiveActions.everyDestructiveActionConfirmed` | menu wired back to _deleteEntry -> red; confirmed==false -> red | yes | PASS |
+| `MP-01-008` | 1 | Yanlış işlem geri alınabiliyor. | PASS | - | destructive actions | test/screens/timeline_delete_confirmation_test.dart | `flows.json` → `measurements.destructiveActions.destructiveActionsWithoutAGuard` | menu wired back to _deleteEntry -> red; confirmed==false -> red | yes | PASS |
 | `MP-01-010` | 1 | Destructive action confirmation var. | PASS | - | 6 destructive actions | test/screens/timeline_delete_confirmation_test.dart | `flows.json` → `measurements.destructiveActions.inventory` | both mutations red | yes | PASS |
 | `MP-09-013` | 9 | Repeated animation rahatsız etmiyor. | PASS | - | 8 ambient loops | test/core/reduced_motion_coverage_test.dart | `motion.json` → `measurements.repetition.reducedMotionAwareCount` | restore the cascade -> red; stop() without parking -> red | yes | PASS |
 | `MP-09-025` | 9 | Animasyon düşük güçlü cihazda da düzgün. | PASS | - | reduce-motion policy | test/core/reduced_motion_coverage_test.dart | `motion.json` → `measurements.reducedMotion.consumers` | restore the cascade -> red | yes | PASS |

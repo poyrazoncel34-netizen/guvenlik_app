@@ -63,6 +63,29 @@ JARGON_EXEMPT = {
 }
 
 
+def _tooltip_widgets(root: Path) -> int:
+    count = 0
+    for path in (root / "lib").rglob("*.dart"):
+        count += len(re.findall(r"\bTooltip\(", path.read_text(encoding="utf-8")))
+    return count
+
+
+def _rationale_before_request(root: Path) -> dict:
+    """Files that BOTH explain a permission and request it, with the order."""
+    out = {}
+    for path in (root / "lib").rglob("*.dart"):
+        src = path.read_text(encoding="utf-8")
+        req = re.search(r"\.request\(\)|requestPermission", src)
+        rationale = re.search(r"rationale|_showRationale|perm_\w+_(?:title|body)", src)
+        if req and rationale:
+            out[str(path.relative_to(root))] = {
+                "rationaleAtLine": src[: rationale.start()].count("\n") + 1,
+                "requestAtLine": src[: req.start()].count("\n") + 1,
+                "rationaleFirst": rationale.start() < req.start(),
+            }
+    return out
+
+
 def _payloads(root: Path) -> dict:
     return {
         loc: json.loads((root / "assets" / "translations" / f"{loc}.json").read_text(encoding="utf-8"))
@@ -172,7 +195,7 @@ def build(root: Path) -> dict:
         },
         "tone": {
             "blamePhrasesSearched": {"tr": list(BLAME_TR), "en": list(BLAME_EN)},
-            "blameHits": 0,
+            "blameHits": len([v for v in measure(root) if v["rule"] == "blameLanguage"]),
             "errorKeysExamined": len(_keys_matching(tr, "error", "fail", "hata", "_denied")),
             "styleClaim": (
                 "errors describe the SYSTEM state and the next step, not the user: "
@@ -185,7 +208,7 @@ def build(root: Path) -> dict:
             "claim": "success copy states what became true, not merely 'OK'",
         },
         "tooltipCopy": {
-            "tooltipWidgets": 0,
+            "tooltipWidgets": _tooltip_widgets(root),
             "why": "the app ships no Tooltip widget at all; labels are inline, so "
                    "there is no hover-only copy to keep short",
         },
@@ -209,7 +232,7 @@ def build(root: Path) -> dict:
         },
         "permissionCopy": {
             "keys": len(permission),
-            "rationaleBeforeRequest": True,
+            "rationaleScreensWithARequestCall": _rationale_before_request(root),
             "rationaleScreens": ["lib/screens/onboarding_screen.dart",
                                  "lib/core/utils/permission_helper.dart",
                                  "lib/screens/battery_optimization_wizard.dart"],
@@ -217,7 +240,8 @@ def build(root: Path) -> dict:
         },
         "jargon": {
             "termsSearched": list(JARGON),
-            "hits": 0,
+            "hits": len([v for v in measure(root)
+                         if v["rule"] == "developerJargonInCopy"]),
             "justifiedExemptions": {f"{k[0]}:{k[1]}": v for k, v in JARGON_EXEMPT.items()},
             "scope": "both shipped translation payloads, every key in each",
         },

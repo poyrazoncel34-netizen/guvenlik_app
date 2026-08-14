@@ -29,6 +29,24 @@ COMMAND = "python3 scripts/audit_evidence/storage.py"
 DB = "lib/core/services/local_database_service.dart"
 
 
+def _manifest(root: Path) -> str:
+    path = root / "android" / "app" / "src" / "main" / "AndroidManifest.xml"
+    return path.read_text(encoding="utf-8") if path.exists() else ""
+
+
+def _tracked_env_files(root: Path) -> list:
+    """Env/keystore files git actually tracks. Was a hard-coded empty list."""
+    import subprocess
+    try:
+        out = subprocess.run(["git", "ls-files"], cwd=root, capture_output=True,
+                             text=True, check=True).stdout.splitlines()
+    except Exception:
+        return ["<git unavailable>"]
+    return [f for f in out
+            if f.endswith((".env", ".jks", ".keystore")) or f.endswith("key.properties")
+            or "/.env" in f]
+
+
 def _db(root: Path) -> str:
     path = root / DB
     return read_stripped(path) if path.exists() else ""
@@ -194,16 +212,39 @@ def build(root: Path) -> dict:
             "networkLayer": "lib/core/network/",
         },
         "files": {
-            "userGeneratedFiles": ["the KVKK data export (JSON)"],
+            "userGeneratedFiles": ["the KVKK data export (JSON)",
+                                   "the fake-call avatar, copied from the gallery"],
             "exportScreen": "lib/screens/settings_legal/data_export_screen.dart",
-            "imageUploadSurfaces": 0,
-            "exifRisk": (
-                "none reachable: the app captures, stores and uploads no images. "
-                "There is no camera permission and no image picker dependency, so "
-                "there is no EXIF payload to strip."
+            "imagePickerSite": "lib/screens/fake_call_screen.dart:700",
+            "imagePickerFlow": (
+                "ImagePicker.pickImage(source: gallery, imageQuality: 85) -> "
+                "File(picked.path).copy('<appDocs>/fake_call_avatar.<ext>')"
             ),
-            "cameraPermissionDeclared": False,
-            "imagePickerDependency": False,
+            "exifStripped": False,
+            "exifNote": (
+                "the picked file is copied BYTE FOR BYTE with dart:io File.copy, so "
+                "every EXIF tag the source carried -- including GPSLatitude / "
+                "GPSLongitude if the photo was taken with location on -- lands in "
+                "app documents. `imageQuality: 85` re-encodes on some platform "
+                "implementations and may drop EXIF as a side effect, but that is a "
+                "platform behaviour, not a guarantee this app makes."
+            ),
+            "imageUploadSurfaces": len([p for p in dart_files(root)
+                                        if re.search(r"ImagePicker|FilePicker|MultipartRequest",
+                                                     read_stripped(p))]),
+            "exifRisk": (
+                "REAL, and this field previously said the opposite. It was a "
+                "hard-coded claim -- 'no image picker dependency' -- rather than a "
+                "computation, and computing it found image_picker: ^1.1.2 in "
+                "pubspec.yaml and a live pickImage call. In a safety app whose "
+                "users may be at risk from someone with device access, a stored "
+                "photo carrying GPS EXIF is a genuine, if modest, exposure: it also "
+                "reaches the KVKK data export."
+            ),
+            "cameraPermissionDeclared": "android.permission.CAMERA" in _manifest(root),
+            "imagePickerDependency": any(
+                d in (root / "pubspec.yaml").read_text(encoding="utf-8")
+                for d in ("image_picker", "camera:", "file_picker")),
         },
         "appsec": {
             "sastTooling": {
@@ -223,7 +264,7 @@ def build(root: Path) -> dict:
         },
         "secrets": {
             "scanner": "scripts/scan_release_secrets.py --require-clean",
-            "envFilesTracked": [],
+            "envFilesTracked": _tracked_env_files(root),
             "compileTimeInjection": ["REVENUECAT_ANDROID_API_KEY", "ENCRYPTION_KEY"],
             "injectionMechanism": "--dart-define / CI secret, read via String.fromEnvironment",
             "fromEnvironmentSites": sites(r"String\.fromEnvironment"),

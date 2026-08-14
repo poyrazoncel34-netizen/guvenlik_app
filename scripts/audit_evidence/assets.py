@@ -119,7 +119,8 @@ def build(root: Path) -> dict:
             "referencedCount": len(referenced),
             "unreferencedOnDisk": sorted(set(disk) - set(referenced)),
             "demoMarkersSearched": list(DEMO_MARKERS),
-            "demoAssetsFound": 0,
+            "demoAssetsFound": len([v for v in measure(root)
+                                    if v["rule"] == "demoAssetShipped"]),
             "webDoubledPrefixNote": (
                 "audioplayers' UrlSource path on web resolves under a doubled "
                 "assets/ prefix; the Android AssetSource path does not. Both "
@@ -131,14 +132,17 @@ def build(root: Path) -> dict:
             "distinctGlyphs": len(icons),
             "totalGlyphSites": sum(icons.values()),
             "mostUsed": icons.most_common(15),
-            "customIconFonts": 0,
+            "customIconFonts": len(re.findall(
+                r"IconData\(", "".join(read_stripped(p) for p in dart_files(root)))),
             "whyNoMissingGlyph": (
                 "every glyph is a const IconData from the Material font, resolved at "
                 "compile time -- a wrong name does not compile. There is no dynamic "
                 "icon lookup by string anywhere in lib/, which is the only way a "
                 "Flutter app renders a missing-icon box."
             ),
-            "dynamicIconLookupSites": [],
+            "dynamicIconLookupSites": [
+                f"{rel(p, root)}" for p in dart_files(root)
+                if re.search(r"IconData\(\s*[a-z_]\w*\s*[,)]", read_stripped(p))],
         },
         "launcherIcons": {
             "androidResources": launcher,

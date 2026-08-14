@@ -2,7 +2,7 @@
   "verifier": "scripts/audit_evidence/layout.py",
   "verifierVersion": "1.0.0",
   "codeRevision": {
-    "head": "098a36072a7ebefaf918bf02bb47f2af702a3878",
+    "head": "59d1892fd8520cdb0563c5e61bb1d3a96543a212",
     "dirty": true
   },
   "measuredOn": "2026-08-14",
@@ -81,7 +81,8 @@
           "14.0": 1,
           "8.0": 1,
           "24.0": 1,
-          "12.0": 1
+          "12.0": 1,
+          "DensityTokens.horizontalPadding": 1
         },
         "lib/screens/legal/consent_management_screen.dart": {
           "14.0": 2,
@@ -213,7 +214,9 @@
       "gapCompact": 8,
       "sectionGapComfortable": 20,
       "sectionGapCompact": 12,
-      "screensConsultingDensityTokens": [],
+      "screensConsultingDensityTokens": [
+        "lib/screens/home_page.dart"
+      ],
       "screensMeasuringTheViewportDirectly": [
         "lib/screens/app_unlock_screen.dart",
         "lib/screens/countdown_screen.dart",
@@ -338,7 +341,19 @@
           1
         ]
       ],
-      "everyModalIsUserInitiated": true
+      "modalsNotReachedFromACallback": [
+        "lib/core/utils/app_reset_helper.dart:140",
+        "lib/core/utils/permission_helper.dart:58",
+        "lib/core/utils/permission_helper.dart:134",
+        "lib/core/utils/permission_helper.dart:181",
+        "lib/core/utils/permission_helper.dart:258",
+        "lib/core/utils/permission_helper.dart:357",
+        "lib/core/utils/permission_helper.dart:364",
+        "lib/core/widgets/safety_session_pin_gate.dart:31",
+        "lib/screens/app_unlock_screen.dart:397",
+        "lib/screens/contacts_page.dart:746",
+        "lib/widgets/panic_button.dart:342"
+      ]
     },
     "tooltipBudget": {
       "sites": [],
