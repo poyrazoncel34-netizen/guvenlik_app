@@ -9,6 +9,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/app_colors.dart';
+import '../core/services/scroll_restoration.dart';
 import '../core/services/activity_service.dart';
 import '../domain/models/activity_event.dart';
 import '../core/widgets/escape_dismissible.dart';
@@ -21,7 +22,8 @@ class SafetyTimelineScreen extends StatefulWidget {
   State<SafetyTimelineScreen> createState() => _SafetyTimelineScreenState();
 }
 
-class _SafetyTimelineScreenState extends State<SafetyTimelineScreen> {
+class _SafetyTimelineScreenState extends State<SafetyTimelineScreen>
+    with RestorationMixin {
   static const String _storageKey = 'safety_timeline_notes';
   final TextEditingController _destinationController = TextEditingController();
   final TextEditingController _planController = TextEditingController();
@@ -29,19 +31,41 @@ class _SafetyTimelineScreenState extends State<SafetyTimelineScreen> {
   List<Map<String, dynamic>> _entries = [];
   bool _isLoading = true;
 
+  /// MP-10-023. Deliberately NOT `ListView.restorationId`, which restores a raw
+  /// pixel offset: this list grows and new rows are PREPENDED (it is sorted by
+  /// timestamp DESC), so an offset restored across a process death lands on a
+  /// different event than the one the user was reading. That reads as the app
+  /// scrolling somewhere by itself, which is worse than not restoring.
+  final KeyedListScrollRestorer _restorer = KeyedListScrollRestorer();
+
+  @override
+  String? get restorationId => 'safety_timeline';
+
+  @override
+  void restoreState(RestorationBucket? oldBucket, bool initialRestore) {
+    registerForRestoration(_restorer.anchor, 'scroll_anchor');
+  }
+
   @override
   void initState() {
     super.initState();
+    _restorer.attach();
     _loadEntries();
   }
 
   @override
   void dispose() {
+    _restorer.dispose();
     _destinationController.dispose();
     _planController.dispose();
     _notesController.dispose();
     super.dispose();
   }
+
+  List<String> get _entryIds => _entries
+      .map((e) => e['id']?.toString() ?? '')
+      .where((id) => id.isNotEmpty)
+      .toList(growable: false);
 
   Future<void> _loadEntries() async {
     final prefs = await SharedPreferences.getInstance();
@@ -85,6 +109,9 @@ class _SafetyTimelineScreenState extends State<SafetyTimelineScreen> {
         _entries = entries;
         _isLoading = false;
       });
+      _restorer
+        ..setItems(_entryIds)
+        ..applyOnce(_entryIds);
     }
   }
 
@@ -513,6 +540,7 @@ class _SafetyTimelineScreenState extends State<SafetyTimelineScreen> {
 
   Widget _buildEntryList() {
     return ListView.builder(
+      controller: _restorer.controller,
       padding: EdgeInsets.fromLTRB(
         20,
         20,
@@ -522,7 +550,12 @@ class _SafetyTimelineScreenState extends State<SafetyTimelineScreen> {
       itemCount: _entries.length,
       itemBuilder: (context, index) {
         final entry = _entries[index];
-        return _buildEntryCard(entry);
+        final id = entry['id']?.toString() ?? '';
+        if (id.isEmpty) return _buildEntryCard(entry);
+        return KeyedSubtree(
+          key: _restorer.keyFor(id),
+          child: _buildEntryCard(entry),
+        );
       },
     );
   }

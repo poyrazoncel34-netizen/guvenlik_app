@@ -108,6 +108,10 @@ class _SettingsPageState extends State<SettingsPage> {
       child: Scaffold(
         appBar: AppBar(title: Text("settings".tr())),
         body: ListView(
+          // MP-10-023. This list's content is FIXED, so Flutter's own pixel-
+          // offset restoration is exactly right here -- the timeline needs the
+          // heavier identity anchor precisely because its content is not.
+          restorationId: 'settings_page_scroll',
           padding: const EdgeInsets.all(20),
           children: [
             // Profile section

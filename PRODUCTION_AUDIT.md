@@ -76,9 +76,9 @@
 | **MISSING** | **0** |
 | **DUPLICATED** | **0** |
 | **UNACCOUNTED** | **0** |
-| PASS | 783 |
+| PASS | 784 |
 | FAIL | 9 |
-| PARTIAL | 72 |
+| PARTIAL | 71 |
 | BLOCKED | 38 |
 | N/A | 783 |
 | UNVERIFIED | 53 |
@@ -90,7 +90,7 @@
 | P0 | 0 |
 | P1 | 29 |
 | P2 | 120 |
-| P3 | 23 |
+| P3 | 22 |
 
 ### P0 / P1 register
 
@@ -141,7 +141,7 @@ Every P0 and P1 individually, so none hides inside an aggregate.
 | 7 | 11 | 0 | 1 | 7 | 10 | 0 |
 | 8 | 32 | 0 | 1 | 0 | 4 | 0 |
 | 9 | 28 | 0 | 0 | 0 | 0 | 0 |
-| 10 | 10 | 0 | 1 | 0 | 18 | 0 |
+| 10 | 11 | 0 | 0 | 0 | 18 | 0 |
 | 11 | 14 | 0 | 0 | 0 | 6 | 0 |
 | 12 | 36 | 0 | 0 | 0 | 4 | 0 |
 | 13 | 16 | 0 | 1 | 0 | 1 | 0 |
@@ -615,7 +615,7 @@ Every P0 and P1 individually, so none hides inside an aggregate.
 | `MP-10-020` | Modal açıldığında background scroll etmiyor. | Partially applicable | **PASS** | - | RUN: the modal barrier blocked background scrolling for every dialog opened. | - | - | `SRC` |
 | `MP-10-021` | Modal kapanınca scroll position korunuyor. | Partially applicable | **PASS** | - | RUN: dismissing the consent dialog returned to the same scroll offset. | - | - | `SRC` |
 | `MP-10-022` | Infinite scroll pagination düzgün. | N/A | **N/A** | - | SRC: no paginated or infinite-scroll collection exists; contacts and the timeline are fully materialised local lists. | - | Not applicable at this data volume. | `SRC` |
-| `MP-10-023` | Scroll restoration düzgün. | Partially applicable | **PARTIAL** | P3 | MEASURED, not asserted. Archetype WIDGET_BEHAVIOR. Surface: scroll restoration. Verifier `test/state_restoration_policy_test.dart` -> `docs/audit/evidence/flows.json`, property `measurements.interruptionSafety.restorationScopeSites` = lib/screens/main_navigation.dart:33; lib/screens/main_navigation.dart:50; lib/screens/onboarding/onboarding_contact_step.dart:37; lib/screens/onboarding/onboarding_contact_step.dart:64 ... (+2 more, 6 total). NEGATIVE CONTROL: restoration policy negative controls. | flows.json measurements.interruptionSafety.restorationScopeSites lists the restoration scopes that exist; none is a scroll offset. Scroll position is not restored across process death, only across in-session navigation. | Add restorationId to the two long scroll views (settings, timeline) and cover with the existing restoration harness. | `TEST` |
+| `MP-10-023` | Scroll restoration düzgün. | Partially applicable | **PASS** | - | MEASURED, not asserted. Archetype WIDGET_BEHAVIOR. Surface: lib/core/services/scroll_restoration.dart + settings_page.dart + safety_timeline_screen.dart. Verifier `scripts/audit_evidence/flows.py` -> `docs/audit/evidence/flows.json`, property `measurements.interruptionSafety.scrollRestoration`: settingsUsesPixelOffset = true, timelineRegistersAnchor = true, anchorCarriesIdentity = true, anchorCarriesIndex = true, twoPhaseRestore = true, clampsToCurrentExtent = true, degradesWhenUnregistered = true, schedulesItsOwnFrame = true -- all COMPUTED. TWO LISTS, TWO MECHANISMS, and the difference is the finding: the queue's own note said 'add restorationId to the two long scroll views', which is right for settings (fixed content, so a pixel offset IS the answer) and wrong for the timeline, whose rows are PREPENDED (sorted timestamp DESC) so a restored offset lands on a different event than the one the user was reading. The timeline anchor therefore carries the item IDENTITY and restores estimate-then-correct: the capture index gives a first jump that forces the lazy ListView to BUILD the anchored item, then the item's real geometry aligns it exactly. Behaviour: `test/screens/scroll_restoration_test.dart` (17 cases) drives a real ListView.builder with UNEVEN extents, simulates process death with a fresh restorer fed the decoded anchor, prepends five rows, and asserts the restored position followed the EVENT (960) and not the pixel (500). NEGATIVE CONTROL, in the same file: the naive pixel restore is shown to land on a different event, so the machinery is not overhead. Verifier control: unregistering the anchor and breaking the two-phase restore moves flows.py violations 0 -> 10. Bucket transport across REAL process death (adb am kill, PID change, state restored) is already recorded in docs/audit/device-verification-2026-08-14-state-restoration.md; this row adds a new RestorableValue to that same proven bucket. | None. Three defects were found by driving the real list rather than reading the API: writing an unregistered RestorableValue ASSERTS (so a scroll before restoreState, or any use outside a restoration scope, would have thrown on every notification); GlobalObjectKey.currentContext is null for an unbuilt item in a lazy list, so identity alone cannot find the target; and addPostFrameCallback schedules no frame, so the restore silently never ran even though the anchor and the policy were both correct. | None in repo. | `TEST` |
 | `MP-10-024` | Overscroll beklenen davranışta. | Partially applicable | **PASS** | - | RUN: standard Android stretch overscroll was observed on the home screen. | - | - | `SRC` |
 | `MP-10-025` | Swipe threshold mantıklı. | Partially applicable | **PASS** | - | SRC lib/core/utils/panic_hold_gate.dart with TEST test/widgets/panic_button_behavior_test.dart 'a press released before the 3s gate does not arm' - the hold threshold is explicit and tested. | - | - | `SRC` |
 | `MP-10-026` | Swipe velocity hesaba katılıyor. | N/A | **N/A** | - | SRC: the panic gate is a time-based hold, not a velocity-based swipe; no swipe gesture drives a product decision. | - | Not applicable - the product uses no velocity-sensitive gesture. | `SRC` |

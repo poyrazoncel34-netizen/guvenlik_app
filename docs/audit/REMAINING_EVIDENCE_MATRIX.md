@@ -44,7 +44,7 @@ have meant filing a document under a code archetype to keep the list short.
 | Metric | Count |
 |---|---|
 | Rows in this matrix | 239 |
-| Still `IN_REPO_RESOLVABLE` in the queue | 5 |
+| Still `IN_REPO_RESOLVABLE` in the queue | 4 |
 | Evidence artifacts referenced | 12 |
 | Plan/audit integrity problems | 0 |
 
@@ -332,7 +332,7 @@ have meant filing a document under a code archetype to keep the list short.
 | `MP-01-010` | 1 | Destructive action confirmation var. | PASS | - | 6 destructive actions | test/screens/timeline_delete_confirmation_test.dart | `flows.json` → `measurements.destructiveActions.inventory` | both mutations red | yes | PASS |
 | `MP-09-013` | 9 | Repeated animation rahatsız etmiyor. | PASS | - | 8 ambient loops | test/core/reduced_motion_coverage_test.dart | `motion.json` → `measurements.repetition.reducedMotionAwareCount` | restore the cascade -> red; stop() without parking -> red | yes | PASS |
 | `MP-09-025` | 9 | Animasyon düşük güçlü cihazda da düzgün. | PASS | - | reduce-motion policy | test/core/reduced_motion_coverage_test.dart | `motion.json` → `measurements.reducedMotion.consumers` | restore the cascade -> red | yes | PASS |
-| `MP-10-023` | 10 | Scroll restoration düzgün. | PARTIAL | P3 | scroll restoration | test/state_restoration_policy_test.dart | `flows.json` → `measurements.interruptionSafety.restorationScopeSites` | restoration policy negative controls | no | PARTIAL |
+| `MP-10-023` | 10 | Scroll restoration düzgün. | PASS | - | lib/core/services/scroll_restoration.dart + settings_page.dart + safety_timeline_screen.dart | test/state_restoration_policy_test.dart | `flows.json` → `measurements.interruptionSafety.scrollRestoration` | unregister the timeline anchor and break the two-phase restore -> flows.py 0 -> 10 violations; in-test, the naive pixel restore lands on a different event | yes | PASS |
 | `MP-47-003` | 47 | Power user. | PARTIAL | P3 | power-user path | test/screens/layout_size_matrix_test.dart | `text_scale.json` → `cellsMeasured` | inflexible Row overflows | no | PARTIAL |
 | `MP-62-014` | 62 | Refund terms. | PASS | - | paywall disclosures | test/screens/paywall_compliance_test.dart | `copy.json` → `measurements.privacyCopy.overclaimGuards` | removing a disclosure string fails the compliance test | no | PASS |
 

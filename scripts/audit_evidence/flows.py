@@ -288,6 +288,48 @@ def _subscription_deletion_notice(root: Path) -> dict:
     }
 
 
+SCROLL_SERVICE = "lib/core/services/scroll_restoration.dart"
+TIMELINE = "lib/screens/safety_timeline_screen.dart"
+SETTINGS = "lib/screens/settings_page.dart"
+
+
+def _scroll_restoration(root: Path) -> dict:
+    """MP-10-023: is a scroll position restored, and by the RIGHT mechanism?
+
+    Two long lists, two different answers, and the difference is the finding:
+    `ListView.restorationId` restores a raw pixel offset, which is exactly right
+    for the fixed settings list and wrong for the timeline, whose rows are
+    PREPENDED (sorted timestamp DESC) so a restored offset lands on a different
+    event than the one the user was reading.
+    """
+    service = read_stripped(root / SCROLL_SERVICE) if (root / SCROLL_SERVICE).exists() else ""
+    timeline = read_stripped(root / TIMELINE) if (root / TIMELINE).exists() else ""
+    settings = read_stripped(root / SETTINGS) if (root / SETTINGS).exists() else ""
+
+    return {
+        "anchorModel": SCROLL_SERVICE if service else None,
+        "pixelOffsetLists": sorted(
+            {site.split(":")[0] for site in _sites(root, r"restorationId:\s*'")}
+        ),
+        "identityAnchoredLists": sorted(
+            {site.split(":")[0]
+             for site in _sites(root, r"KeyedListScrollRestorer\(")}
+        ),
+        "anchorCarriesIdentity": "topItemId" in service,
+        "anchorCarriesIndex": "topItemIndex" in service,
+        "twoPhaseRestore": "estimateOffset" in service and "offsetOf(" in service,
+        "clampsToCurrentExtent": "maxScrollExtent" in service,
+        "degradesWhenUnregistered": "isAttached" in service,
+        "schedulesItsOwnFrame": "ensureVisualUpdate" in service,
+        "timelineRegistersAnchor":
+            "registerForRestoration(_restorer.anchor" in timeline,
+        "settingsUsesPixelOffset": "restorationId: 'settings_page_scroll'" in settings,
+        "bucketTransportEvidence":
+            "docs/audit/device-verification-2026-08-14-state-restoration.md",
+        "coveringTests": ["test/screens/scroll_restoration_test.dart"],
+    }
+
+
 def _tabs(root: Path) -> list:
     src = read_stripped(root / TAB_FILE) if (root / TAB_FILE).exists() else ""
     return re.findall(r"NavigationDestination\(|BottomNavigationBarItem\(", src)
@@ -485,6 +527,48 @@ def measure(root: Path) -> list:
                           "than the silence this row is about",
             })
 
+    # 8. MP-10-023: a scroll position must be restored by the mechanism that
+    #    suits the list's content.
+    scroll = _scroll_restoration(root)
+    if not scroll["anchorModel"]:
+        violations.append({"rule": "noScrollRestoration", "detail": SCROLL_SERVICE})
+    else:
+        if not scroll["settingsUsesPixelOffset"]:
+            violations.append({
+                "rule": "fixedListWithoutScrollRestoration",
+                "detail": "the settings list has fixed content, so the built-in "
+                          "pixel restoration is exactly right and is missing",
+            })
+        if not scroll["timelineRegistersAnchor"]:
+            violations.append({
+                "rule": "growingListWithoutIdentityAnchor",
+                "detail": "the timeline prepends rows, so a restored pixel "
+                          "offset lands on a different event",
+            })
+        if TIMELINE in scroll["pixelOffsetLists"]:
+            violations.append({
+                "rule": "growingListUsesPixelOffset",
+                "detail": f"{TIMELINE} restores a raw offset into a list that "
+                          f"prepends rows",
+            })
+        for flag, detail in (
+            ("anchorCarriesIdentity", "the anchor is a bare offset again"),
+            ("anchorCarriesIndex", "without the capture index a lazy list cannot "
+                                   "build the anchored item to correct against"),
+            ("twoPhaseRestore", "the restore no longer corrects its estimate "
+                                "against real geometry"),
+            ("clampsToCurrentExtent", "a restored offset from a longer list can "
+                                      "throw or snap on resume"),
+            ("degradesWhenUnregistered", "writing an unregistered RestorableValue "
+                                         "asserts, so a scroll outside a "
+                                         "restoration scope would crash"),
+            ("schedulesItsOwnFrame", "addPostFrameCallback alone schedules no "
+                                     "frame, so the restore silently never runs"),
+        ):
+            if not scroll[flag]:
+                violations.append({"rule": "scrollRestorationWeakened",
+                                   "detail": detail})
+
     return violations
 
 
@@ -577,6 +661,7 @@ def build(root: Path) -> dict:
             "whatSurvives": "unsaved emergency-contact entry",
             "whatDeliberatelyDoesNot": ["PIN buffers", "destructive confirmation state",
                                         "an armed countdown"],
+            "scrollRestoration": _scroll_restoration(root),
         },
         "flowStates": {
             "successSurfaces": len(snackbars),
@@ -715,6 +800,23 @@ def _mutate(scratch: Path) -> str:
         )
     # MP-23-015: strip the subscription notice from the reset dialog, which is
     # the erase path a user is most likely to take.
+    # MP-10-023: take the timeline back to the naive mechanism.
+    timeline = scratch / TIMELINE
+    if timeline.exists():
+        timeline.write_text(
+            timeline.read_text(encoding="utf-8").replace(
+                "registerForRestoration(_restorer.anchor", "// removed("
+            ),
+            encoding="utf-8",
+        )
+    scroll_service = scratch / SCROLL_SERVICE
+    if scroll_service.exists():
+        scroll_service.write_text(
+            scroll_service.read_text(encoding="utf-8")
+            .replace("topItemIndex", "_droppedIndex")
+            .replace("ensureVisualUpdate", "_noFrame"),
+            encoding="utf-8",
+        )
     reset = scratch / "lib/core/utils/app_reset_helper.dart"
     if reset.exists():
         reset.write_text(
@@ -747,7 +849,8 @@ def _mutate(scratch: Path) -> str:
             "renamed to 'delivered' + the per-target renderer deleted + a "
             "deep-link destination renamed to 'panic-dial' + a second consumer "
             "of the parked destination + the subscription notice removed from "
-            "the reset dialog")
+            "the reset dialog + the timeline's scroll anchor unregistered and "
+            "the two-phase restore broken")
 
 
 def main() -> int:

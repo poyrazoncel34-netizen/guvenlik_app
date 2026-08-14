@@ -1201,14 +1201,15 @@
   "MP-10-023": {
     "archetype": "WIDGET_BEHAVIOR",
     "artifact": "flows.json",
-    "disposition": "PARTIAL",
-    "gap": "flows.json measurements.interruptionSafety.restorationScopeSites lists the restoration scopes that exist; none is a scroll offset. Scroll position is not restored across process death, only across in-session navigation.",
-    "negativeControl": "restoration policy negative controls",
-    "property": "measurements.interruptionSafety.restorationScopeSites",
-    "remediated": "no",
-    "remediation": "Add restorationId to the two long scroll views (settings, timeline) and cover with the existing restoration harness.",
-    "surface": "scroll restoration",
-    "verifier": "test/state_restoration_policy_test.dart"
+    "disposition": "PASS",
+    "gap": "None. The settings list uses the built-in pixel offset; the timeline uses an identity anchor because it prepends rows.",
+    "negativeControl": "unregister the timeline anchor and break the two-phase restore -> flows.py 0 -> 10 violations; in-test, the naive pixel restore lands on a different event",
+    "property": "measurements.interruptionSafety.scrollRestoration",
+    "remediated": "yes",
+    "remediation": "None in repo.",
+    "surface": "lib/core/services/scroll_restoration.dart + settings_page.dart + safety_timeline_screen.dart",
+    "verifier": "test/state_restoration_policy_test.dart",
+    "cite": "the queue's own note said 'add restorationId to the two long scroll views'. That is right for one of them: ListView.restorationId restores a RAW PIXEL OFFSET, and the timeline prepends rows, so the naive fix would have restored the wrong event and looked like the app scrolling by itself"
   },
   "MP-11-001": {
     "archetype": "STATIC_CODE",

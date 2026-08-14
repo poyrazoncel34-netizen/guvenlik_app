@@ -2,7 +2,7 @@
   "verifier": "scripts/audit_evidence/flows.py",
   "verifierVersion": "1.0.0",
   "codeRevision": {
-    "head": "cc5c7b1d98b5da580c162d3e398859991a08b0b0",
+    "head": "672f23b95df86bb3876e27495be27b86c1a22450",
     "dirty": true
   },
   "measuredOn": "2026-08-15",
@@ -227,7 +227,10 @@
         "lib/screens/onboarding/onboarding_contact_step.dart:37",
         "lib/screens/onboarding/onboarding_contact_step.dart:64",
         "lib/screens/onboarding_screen.dart:38",
-        "lib/screens/onboarding_screen.dart:54"
+        "lib/screens/onboarding_screen.dart:54",
+        "lib/screens/safety_timeline_screen.dart:26",
+        "lib/screens/safety_timeline_screen.dart:42",
+        "lib/screens/settings_page.dart:114"
       ],
       "deviceEvidence": "docs/audit/device-verification-2026-08-14-state-restoration.md",
       "whatSurvives": "unsaved emergency-contact entry",
@@ -235,12 +238,34 @@
         "PIN buffers",
         "destructive confirmation state",
         "an armed countdown"
-      ]
+      ],
+      "scrollRestoration": {
+        "anchorModel": "lib/core/services/scroll_restoration.dart",
+        "pixelOffsetLists": [
+          "lib/screens/settings_page.dart"
+        ],
+        "identityAnchoredLists": [
+          "lib/core/services/scroll_restoration.dart",
+          "lib/screens/safety_timeline_screen.dart"
+        ],
+        "anchorCarriesIdentity": true,
+        "anchorCarriesIndex": true,
+        "twoPhaseRestore": true,
+        "clampsToCurrentExtent": true,
+        "degradesWhenUnregistered": true,
+        "schedulesItsOwnFrame": true,
+        "timelineRegistersAnchor": true,
+        "settingsUsesPixelOffset": true,
+        "bucketTransportEvidence": "docs/audit/device-verification-2026-08-14-state-restoration.md",
+        "coveringTests": [
+          "test/screens/scroll_restoration_test.dart"
+        ]
+      }
     },
     "flowStates": {
       "successSurfaces": 57,
       "failureSurfaces": 81,
-      "emptySurfaces": 41,
+      "emptySurfaces": 42,
       "loadingSurfaces": 41,
       "timeoutSurfaces": [
         "lib/core/services/app_bootstrap_service.dart:56",
@@ -439,7 +464,7 @@
         "lib/screens/onboarding/onboarding_contact_step.dart:336",
         "lib/screens/onboarding/onboarding_contact_step.dart:487",
         "lib/screens/safe_walk_screen.dart:486",
-        "lib/screens/safety_timeline_screen.dart:462",
+        "lib/screens/safety_timeline_screen.dart:489",
         "lib/screens/settings_detail_page.dart:357",
         "lib/screens/settings_legal/data_deletion_screen.dart:253",
         "lib/screens/settings_legal/data_export_screen.dart:220",
@@ -470,9 +495,9 @@
         "lib/screens/map_page.dart:219",
         "lib/screens/map_page.dart:432",
         "lib/screens/map_page.dart:791",
-        "lib/screens/safety_timeline_screen.dart:30",
-        "lib/screens/safety_timeline_screen.dart:86",
-        "lib/screens/safety_timeline_screen.dart:461"
+        "lib/screens/safety_timeline_screen.dart:32",
+        "lib/screens/safety_timeline_screen.dart:110",
+        "lib/screens/safety_timeline_screen.dart:488"
       ],
       "skeletonSites": [
         "lib/core/app_colors.dart:53",
@@ -523,6 +548,7 @@
         "lib/core/services/pin_verification_service.dart:121",
         "lib/core/services/pin_verification_service.dart:129",
         "lib/core/services/revenue_cat_service.dart:92",
+        "lib/core/services/scroll_restoration.dart:252",
         "lib/presentation/providers/settings_provider.dart:21",
         "lib/presentation/providers/settings_provider.dart:22",
         "lib/screens/contacts_page.dart:935",
@@ -536,7 +562,7 @@
         "lib/screens/onboarding/onboarding_contact_step.dart:296",
         "lib/screens/onboarding/onboarding_contact_step.dart:442",
         "lib/screens/onboarding/onboarding_contact_step.dart:514",
-        "lib/screens/safety_timeline_screen.dart:463",
+        "lib/screens/safety_timeline_screen.dart:490",
         "lib/screens/subscription/paywall_screen.dart:81"
       ],
       "screensWithEmptyState": [
