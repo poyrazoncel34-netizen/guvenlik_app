@@ -18,6 +18,8 @@ import '../services/activity_service.dart';
 import '../services/android_intent_service.dart';
 import '../services/call_service.dart';
 import '../services/check_in_expiry_coordinator.dart';
+import '../services/dispatch_ledger_recorder.dart';
+import '../services/dispatch_outcome.dart';
 import '../services/emergency_platform_service.dart';
 import '../services/emergency_session_contract.dart';
 import '../services/foreground_service.dart';
@@ -555,22 +557,38 @@ class CheckInService extends ChangeNotifier {
 
       await _clearLocalProjection(stopForeground: !callResult.isSuccess);
 
+      // Per-target accounting, identical in vocabulary to the panic path
+      // (MP-01-027). Check-In escalation had the same defect: three independent
+      // targets whose failures went to debugPrint, so a run that dialled but
+      // could not post the alert reached the user as unqualified success.
+      final ledger = DispatchOutcomeLedger(dispatchId: token.randomId);
+      DispatchLedgerRecorder.recordCallTargets(ledger, callResult);
       if (_sideEffectsEnabled) {
-        await _bestEffort(() async {
-          await ActivityService.logEvent(
-            type: ActivityType.emergencyTriggered,
-            title: "check_in_emergency_title".tr(),
-            description: "check_in_emergency_desc".tr(),
-          );
+        await DispatchLedgerRecorder.runRecorded(
+          ledger,
+          DispatchTarget.safetyTimeline,
+          () async {
+            await ActivityService.logEvent(
+              type: ActivityType.emergencyTriggered,
+              title: "check_in_emergency_title".tr(),
+              description: "check_in_emergency_desc".tr(),
+            );
+            return null;
+          },
+        );
+        await DispatchLedgerRecorder.runRecorded(ledger, DispatchTarget.haptic, () async {
+          await HapticService.emergencyTriggered();
+          return null;
         });
-        await _bestEffort(HapticService.emergencyTriggered);
-        await _bestEffort(() async {
-          await NotificationService.instance.showEmergencyAlert(
+        await DispatchLedgerRecorder.runRecorded(
+          ledger,
+          DispatchTarget.alertNotification,
+          () => NotificationService.instance.showEmergencyAlert(
             id: _alertNotificationId,
             title: "check_in_emergency_title".tr(),
             body: "alarm_notification_body".tr(),
-          );
-        });
+          ),
+        );
       }
 
       final navigator = rootNavigatorKey.currentState;
@@ -582,6 +600,7 @@ class CheckInService extends ChangeNotifier {
                 name: "pin_verify_emergency_contact".tr(),
                 phone: primaryNumber,
                 callResult: callResult,
+                dispatchLedger: ledger,
                 foregroundOwner: _foregroundOwner,
               ),
             ),

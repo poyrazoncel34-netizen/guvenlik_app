@@ -114,6 +114,65 @@ def _sites(root: Path, pattern: str, files=None) -> list:
     return out
 
 
+# Words a dispatch outcome may NOT contain. An Android app hands an intent to
+# the platform; it never observes the far end, so an outcome named "delivered"
+# or "answered" would be an unprovable claim wearing a state's clothes.
+UNPROVABLE_OUTCOME_WORDS = ("delivered", "ringing", "answered", "connected",
+                            "completed")
+
+MODEL_FILE = "lib/core/services/dispatch_outcome.dart"
+
+
+def _enum_members(src: str, name: str) -> list:
+    """The member names of `enum <name> { ... }`, comments already stripped."""
+    match = re.search(r"enum\s+" + re.escape(name) + r"\s*\{(.*?)\n\}", src, re.S)
+    if not match:
+        return []
+    return [
+        m.group(1)
+        for m in re.finditer(r"^\s*([a-z][A-Za-z0-9]*)\s*,", match.group(1), re.M)
+    ]
+
+
+def _per_target_outcome_surface(root: Path) -> dict:
+    """MP-01-027: is each dispatch target's outcome separately observable?
+
+    Everything below is COMPUTED from the tree. The predecessor of this function
+    was `_sites(root, r"partial|PartialDispatch|perTarget")`, which matched the
+    word "partial" inside two translation keys on a screen that had no
+    per-target surface at all -- a measurement that answered a different
+    question than the one asked.
+    """
+    model = read_stripped(root / MODEL_FILE) if (root / MODEL_FILE).exists() else ""
+    targets = _enum_members(model, "DispatchTarget")
+    outcomes = _enum_members(model, "DispatchTargetOutcome")
+    reachability = _enum_members(model, "DispatchReachability")
+
+    # Where outcomes are RECORDED, and where they are RENDERED. A model with no
+    # renderer is the same defect in a nicer wrapper.
+    recording = sorted({site.split(":")[0] for site in
+                        _sites(root, r"\.recordOutcome\(|recordCallTargets\(")})
+    rendering = sorted({site.split(":")[0] for site in
+                        _sites(root, r"DispatchOutcomeList\.build\(|"
+                                     r"row\.outcome\.messageKey|"
+                                     r"row\.target\.labelKey")})
+    partial_predicate = _sites(root, r"bool get isPartial")
+
+    unprovable = [o for o in outcomes
+                  if any(w in o.lower() for w in UNPROVABLE_OUTCOME_WORDS)]
+
+    return {
+        "modelFile": MODEL_FILE if model else None,
+        "targetKinds": targets,
+        "outcomeStates": outcomes,
+        "reachabilityClasses": reachability,
+        "recordingFiles": recording,
+        "renderingFiles": rendering,
+        "partialPredicateSites": partial_predicate,
+        "unprovableOutcomeNames": unprovable,
+    }
+
+
 def _tabs(root: Path) -> list:
     src = read_stripped(root / TAB_FILE) if (root / TAB_FILE).exists() else ""
     return re.findall(r"NavigationDestination\(|BottomNavigationBarItem\(", src)
@@ -199,6 +258,36 @@ def measure(root: Path) -> list:
     if not banner:
         violations.append({"rule": "noOfflineIndicator",
                            "detail": "no offline banner widget found in lib/"})
+
+    # 5. MP-01-027: every dispatch target must have an independently observable
+    #    outcome, and no outcome may claim more than an intent handoff proves.
+    surface = _per_target_outcome_surface(root)
+    if not surface["modelFile"]:
+        violations.append({"rule": "noPerTargetOutcomeModel",
+                           "detail": f"{MODEL_FILE} is missing"})
+    if len(surface["targetKinds"]) < 2:
+        violations.append({
+            "rule": "singleDispatchTarget",
+            "detail": "fewer than two dispatch targets are modelled, so a "
+                      "partial outcome cannot be expressed at all",
+        })
+    if not surface["recordingFiles"]:
+        violations.append({"rule": "outcomesNeverRecorded",
+                           "detail": "no file records a per-target outcome"})
+    if not surface["renderingFiles"]:
+        violations.append({
+            "rule": "outcomesNeverRendered",
+            "detail": "outcomes are recorded but no surface shows them; a model "
+                      "the user cannot read is the same aggregate defect",
+        })
+    if not surface["partialPredicateSites"]:
+        violations.append({"rule": "noPartialPredicate",
+                           "detail": "nothing computes whether a dispatch was partial"})
+    for name in surface["unprovableOutcomeNames"]:
+        violations.append({
+            "rule": "unprovableDispatchOutcome",
+            "detail": f"outcome {name!r} claims more than an intent handoff proves",
+        })
     return violations
 
 
@@ -295,7 +384,7 @@ def build(root: Path) -> dict:
             "emptySurfaces": len(empties),
             "loadingSurfaces": len(spinners) + len(shimmers),
             "timeoutSurfaces": _sites(root, r"timeout\(|Timeout|onTimeout"),
-            "partialSuccessSurfaces": _sites(root, r"partial|PartialDispatch|perTarget"),
+            "partialSuccessSurfaces": _per_target_outcome_surface(root),
         },
         "navigationHierarchy": {
             "depth": 2,
@@ -385,7 +474,12 @@ def build(root: Path) -> dict:
 def _mutate(scratch: Path) -> str:
     target = scratch / "lib" / "core" / "utils" / "app_reset_helper.dart"
     src = target.read_text(encoding="utf-8")
-    src = src.replace("showDialog", "_noConfirmDialog")
+    # NOTE: this replacement used to be "_noConfirmDialog", which contains the
+    # substring "ConfirmDialog" -- the very alternative rule 1 accepts. The
+    # mutation therefore removed the guard and the verifier stayed green, so
+    # this negative control was demonstrating a DIFFERENT rule than the one it
+    # named. Found by extending the control for MP-01-027, 2026-08-15.
+    src = src.replace("showDialog", "_skippedPrompt")
     target.write_text(src, encoding="utf-8")
     trap = scratch / "lib" / "screens" / "_trap_screen.dart"
     trap.write_text(
@@ -398,7 +492,33 @@ def _mutate(scratch: Path) -> str:
         "}\n",
         encoding="utf-8",
     )
-    return "unconfirmed data erase + a screen with no exit path"
+    # MP-01-027: launder the outcome vocabulary. Renaming handoffAccepted to
+    # "delivered" is the exact overclaim this row exists to prevent, and
+    # deleting the renderer reproduces "modelled but invisible".
+    model = scratch / MODEL_FILE
+    if model.exists():
+        model.write_text(
+            model.read_text(encoding="utf-8").replace(
+                "  handoffAccepted,", "  delivered,", 1
+            ),
+            encoding="utf-8",
+        )
+    renderer = scratch / "lib/core/widgets/dispatch_outcome_list.dart"
+    if renderer.exists():
+        renderer.unlink()
+    # Deleting the widget alone is not enough: the screen still names it, so the
+    # measurement would still find a rendering site. The CALL has to go too --
+    # which is precisely the "modelled but never shown" defect.
+    screen = scratch / "lib/screens/emergency_call_screen.dart"
+    if screen.exists():
+        screen.write_text(
+            screen.read_text(encoding="utf-8").replace(
+                "...DispatchOutcomeList.build(widget.dispatchLedger),", ""
+            ),
+            encoding="utf-8",
+        )
+    return ("unconfirmed data erase + a screen with no exit path + an outcome "
+            "renamed to 'delivered' + the per-target renderer deleted")
 
 
 def main() -> int:
@@ -421,9 +541,11 @@ def main() -> int:
         ],
         extra={"negativeControl": {
             "command": COMMAND + " --negative-control",
-            "mutation": "remove the confirmation from 'erase all app data' and add a "
-                        "screen with no exit path",
-            "expected": "destructiveActionUnconfirmed and screenWithNoExitPath fire",
+            "mutation": "remove the confirmation from 'erase all app data'; add a "
+                        "screen with no exit path; rename the handoffAccepted "
+                        "outcome to 'delivered'; delete the per-target renderer",
+            "expected": "destructiveActionUnconfirmed, screenWithNoExitPath, "
+                        "unprovableDispatchOutcome and outcomesNeverRendered fire",
         }},
     )
     print(f"FLOWS_OK violations={len(violations)} -> {rel(path)}")

@@ -76,9 +76,9 @@
 | **MISSING** | **0** |
 | **DUPLICATED** | **0** |
 | **UNACCOUNTED** | **0** |
-| PASS | 774 |
+| PASS | 775 |
 | FAIL | 9 |
-| PARTIAL | 81 |
+| PARTIAL | 80 |
 | BLOCKED | 38 |
 | N/A | 783 |
 | UNVERIFIED | 53 |
@@ -89,7 +89,7 @@
 |---|---|
 | P0 | 0 |
 | P1 | 29 |
-| P2 | 128 |
+| P2 | 127 |
 | P3 | 24 |
 
 ### P0 / P1 register
@@ -132,7 +132,7 @@ Every P0 and P1 individually, so none hides inside an aggregate.
 
 | # | PASS | FAIL | PARTIAL | BLOCKED | N/A | UNVERIFIED |
 |---|---|---|---|---|---|---|
-| 1 | 22 | 0 | 1 | 0 | 8 | 0 |
+| 1 | 23 | 0 | 0 | 0 | 8 | 0 |
 | 2 | 10 | 0 | 1 | 0 | 5 | 0 |
 | 3 | 30 | 0 | 1 | 0 | 0 | 0 |
 | 4 | 22 | 0 | 3 | 0 | 4 | 0 |
@@ -251,7 +251,7 @@ Every P0 and P1 individually, so none hides inside an aggregate.
 | `MP-01-024` | Failure state'i var. | Applicable | **PASS** | - | MEASURED, not asserted. Archetype STATIC_CODE. Surface: all flows. Verifier `scripts/audit_evidence/flows.py` -> `docs/audit/evidence/flows.json`, property `measurements.flowStates.failureSurfaces` = 77. NEGATIVE CONTROL: unconfirmed data erase + exit-less screen -> 1 violation. | None. The cited property is the measurement, and the negative control shows the verifier can report the opposite. | Re-run `scripts/audit_evidence/flows.py` to reproduce; the artifact carries the code revision it was measured against. | `SRC` |
 | `MP-01-025` | Empty state'i var. | Applicable | **PASS** | - | MEASURED, not asserted. Archetype STATIC_CODE. Surface: all flows. Verifier `scripts/audit_evidence/flows.py` -> `docs/audit/evidence/flows.json`, property `measurements.flowStates.emptySurfaces` = 37. NEGATIVE CONTROL: unconfirmed data erase + exit-less screen -> 1 violation. | None. The cited property is the measurement, and the negative control shows the verifier can report the opposite. | Re-run `scripts/audit_evidence/flows.py` to reproduce; the artifact carries the code revision it was measured against. | `SRC` |
 | `MP-01-026` | Loading state'i var. | Applicable | **PASS** | - | MEASURED, not asserted. Archetype STATIC_CODE. Surface: all flows. Verifier `scripts/audit_evidence/flows.py` -> `docs/audit/evidence/flows.json`, property `measurements.flowStates.loadingSurfaces` = 40. NEGATIVE CONTROL: unconfirmed data erase + exit-less screen -> 1 violation. | None. The cited property is the measurement, and the negative control shows the verifier can report the opposite. | Re-run `scripts/audit_evidence/flows.py` to reproduce; the artifact carries the code revision it was measured against. | `SRC` |
-| `MP-01-027` | Partial success state'i varsa tasarlanmış. | Applicable | **PARTIAL** | P2 | MEASURED, not asserted. Archetype STATIC_CODE. Surface: per-target dispatch. Verifier `scripts/audit_evidence/flows.py` -> `docs/audit/evidence/flows.json`, property `measurements.flowStates.partialSuccessSurfaces` = lib/screens/emergency_call_screen.dart:600; lib/screens/emergency_call_screen.dart:601. NEGATIVE CONTROL: unconfirmed data erase + exit-less screen -> 1 violation. | flows.json measurements.flowStates.partialSuccessSurfaces is EMPTY: there is no per-target outcome surface. A dispatch to two contacts where the first dials and the second does not collapses into one session outcome, so the user is told 'started' without being told WHICH target started. | Record and render a per-target result (dialled / not dialled / unknown) from the dispatch layer. Emergency-path behaviour, so it ships with its tests in the same commit. | `SRC` |
+| `MP-01-027` | Partial success state'i varsa tasarlanmış. | Applicable | **PASS** | - | MEASURED, not asserted. Archetype STATIC_CODE + TEST. Surface: per-target dispatch outcome. Verifier `scripts/audit_evidence/flows.py` -> `docs/audit/evidence/flows.json`, property `measurements.flowStates.partialSuccessSurfaces`: 6 targetKinds, 9 outcomeStates over 4 reachabilityClasses, recorded in 3 files, rendered in 2, 0 unprovableOutcomeNames. Behaviour: `test/core/services/emergency_dispatch_pipeline_test.dart` (14 cases incl. first/middle/last/all-fail, PlatformException classification, duplicate target, concurrent dispatch) + `test/screens/emergency_per_target_outcome_test.dart` (5 cases, real tr-TR catalogue). MUTATION: laundering failures into handoffAccepted fails 7 of 14; deleting the render call fails 2 of 5. NEGATIVE CONTROL: renaming an outcome to 'delivered' and removing the renderer moves flows.py violations 0 -> 4. | None. [reached, notReached, reached] is provably distinguishable in both the ledger and the rendered screen; the vocabulary is pinned against claiming delivery, ringing or answering, which an intent handoff cannot prove. | None in repo. The far end of a call (ringing, answered) remains unobservable by design and is not claimed anywhere. | `TEST` |
 | `MP-01-028` | Offline/poor connection state'i düşünülmüş. | Applicable | **PASS** | - | Row-specific evidence (was section boilerplate, IR-06). The offline state is designed in three places: the emergency dispatch path takes no network at all (no HTTP in the dispatch path, CLAUDE.md rule 1); SRC lib/widgets/connectivity_banner.dart announces genuine connectivity loss; and entitlement resolution degrades to the persisted anchor under a 400ms + 1800ms budget rather than blocking the press (SRC lib/core/services/subscription_gate.dart). TEST test/core/services/subscription_readiness_state_test.dart covers the offline entitlement states end to end (scenarios B, F, F2, G). | - | - | `TEST` |
 | `MP-01-029` | Timeout state'i düşünülmüş. | Applicable | **PASS** | - | MEASURED, not asserted. Archetype STATIC_CODE. Surface: timeouts. Verifier `scripts/audit_evidence/flows.py` -> `docs/audit/evidence/flows.json`, property `measurements.flowStates.timeoutSurfaces` = lib/core/services/app_bootstrap_service.dart:56; lib/core/services/app_bootstrap_service.dart:57; lib/core/services/app_bootstrap_service.dart:58; lib/core/services/emergency_platform_service.dart:14 ... (+71 more, 75 total). NEGATIVE CONTROL: unconfirmed data erase + exit-less screen -> 1 violation. | None. The cited property is the measurement, and the negative control shows the verifier can report the opposite. | Re-run `scripts/audit_evidence/flows.py` to reproduce; the artifact carries the code revision it was measured against. | `SRC` |
 | `MP-01-030` | Permission denied state'i düşünülmüş. | Applicable | **PASS** | - | RUN 2026-08-13 on arm64 API 36, observed directly: notification permission DECLINED at the battery wizard and CALL_PHONE never granted. The home readiness card then rendered the Telefon Aramasi chip in the warning state plus the note 'Izin verilmedi -- acil durumda dialer acilacak'. A refused call permission therefore degrades to the dialer hand-off and SAYS SO, instead of failing silently or blocking the flow (CLAUDE.md rule 3). SRC lib/core/services/emergency_readiness_service.dart reports per-capability readiness. TEST test/screens/map_permission_ui_test.dart, test/core/services/emergency_readiness_behavior_test.dart, test/core/services/media_permissions_test.dart. Screenshots in docs/audit/device-verification-2026-08-13-r2.md (D-3). | - | - | `RUN` |

@@ -2,10 +2,10 @@
   "verifier": "scripts/audit_evidence/flows.py",
   "verifierVersion": "1.0.0",
   "codeRevision": {
-    "head": "59d1892fd8520cdb0563c5e61bb1d3a96543a212",
+    "head": "e36fe498920dc969a13cc1707c91547661747cda",
     "dirty": true
   },
-  "measuredOn": "2026-08-14",
+  "measuredOn": "2026-08-15",
   "command": "python3 scripts/audit_evidence/flows.py",
   "surfaces": [
     "lib/screens/**",
@@ -110,9 +110,9 @@
       "popSites": 76,
       "popScopeSites": [
         "lib/screens/app_unlock_screen.dart:195",
-        "lib/screens/countdown_screen.dart:442",
-        "lib/screens/countdown_screen.dart:763",
-        "lib/screens/emergency_call_screen.dart:115",
+        "lib/screens/countdown_screen.dart:427",
+        "lib/screens/countdown_screen.dart:748",
+        "lib/screens/emergency_call_screen.dart:126",
         "lib/screens/legal_disclaimer_screen.dart:93",
         "lib/screens/pin_setup_screen.dart:155",
         "lib/widgets/siren_dialog.dart:156"
@@ -246,10 +246,47 @@
         "lib/core/widgets/emergency_trigger_host.dart:233",
         "lib/core/widgets/emergency_trigger_host.dart:235"
       ],
-      "partialSuccessSurfaces": [
-        "lib/screens/emergency_call_screen.dart:600",
-        "lib/screens/emergency_call_screen.dart:601"
-      ]
+      "partialSuccessSurfaces": {
+        "modelFile": "lib/core/services/dispatch_outcome.dart",
+        "targetKinds": [
+          "primaryCall",
+          "dialerHandoff",
+          "alertNotification",
+          "safetyTimeline",
+          "offlineQueue",
+          "haptic"
+        ],
+        "outcomeStates": [
+          "notAttempted",
+          "handoffAccepted",
+          "handoffUnconfirmed",
+          "noCompatibleHandler",
+          "permissionDenied",
+          "platformRejected",
+          "platformException",
+          "cancelled",
+          "suppressedByUserSetting"
+        ],
+        "reachabilityClasses": [
+          "reached",
+          "unknown",
+          "notReached",
+          "inapplicable"
+        ],
+        "recordingFiles": [
+          "lib/core/services/check_in_service.dart",
+          "lib/core/services/dispatch_ledger_recorder.dart",
+          "lib/core/services/emergency_dispatch_pipeline.dart"
+        ],
+        "renderingFiles": [
+          "lib/core/widgets/dispatch_outcome_list.dart",
+          "lib/screens/emergency_call_screen.dart"
+        ],
+        "partialPredicateSites": [
+          "lib/core/services/dispatch_outcome.dart:255"
+        ],
+        "unprovableOutcomeNames": []
+      }
     },
     "navigationHierarchy": {
       "depth": 2,
@@ -267,7 +304,7 @@
       "homeReachableFromEverywhere": "the bottom bar is persistent across destinations; detail screens pop back to it"
     },
     "naming": {
-      "translationKeys": 963,
+      "translationKeys": 981,
       "localeParityTest": "test/translations_key_parity_test.dart",
       "hardcodedStringGuard": "test/screens/hardcoded_strings_test.dart",
       "oneNamePerConceptClaim": "each concept has exactly one translation key, and the key is the only way a string reaches the screen -- the hardcoded-string guard is what makes that true rather than aspirational"
@@ -388,7 +425,7 @@
         "lib/core/services/activity_service.dart:17",
         "lib/core/services/activity_service.dart:95",
         "lib/core/services/check_in_expiry_coordinator.dart:27",
-        "lib/core/services/check_in_service.dart:167",
+        "lib/core/services/check_in_service.dart:169",
         "lib/core/services/contact_service.dart:65",
         "lib/core/services/contact_service.dart:159",
         "lib/core/services/contact_service.dart:194",
@@ -412,7 +449,7 @@
         "lib/presentation/providers/settings_provider.dart:22",
         "lib/screens/contacts_page.dart:935",
         "lib/screens/edit_profile_screen.dart:37",
-        "lib/screens/emergency_call_screen.dart:376",
+        "lib/screens/emergency_call_screen.dart:387",
         "lib/screens/fake_call_screen.dart:230",
         "lib/screens/fake_call_screen.dart:233",
         "lib/screens/fake_call_screen.dart:643",
@@ -519,7 +556,7 @@
   ],
   "negativeControl": {
     "command": "python3 scripts/audit_evidence/flows.py --negative-control",
-    "mutation": "remove the confirmation from 'erase all app data' and add a screen with no exit path",
-    "expected": "destructiveActionUnconfirmed and screenWithNoExitPath fire"
+    "mutation": "remove the confirmation from 'erase all app data'; add a screen with no exit path; rename the handoffAccepted outcome to 'delivered'; delete the per-target renderer",
+    "expected": "destructiveActionUnconfirmed, screenWithNoExitPath, unprovableDispatchOutcome and outcomesNeverRendered fire"
   }
 }

@@ -1,10 +1,12 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:timezone/data/latest.dart' as tz_data;
 import 'package:timezone/timezone.dart' as tz;
 
 import 'app_settings_service.dart';
+import 'dispatch_outcome.dart';
 import 'emergency_platform_service.dart';
 import '../navigation/app_navigator.dart';
 import '../utils/permission_helper.dart';
@@ -77,13 +79,23 @@ class NotificationService {
     _timezoneInitialized = true;
   }
 
-  Future<void> showEmergencyAlert({
+  /// Posts the high-importance alert and REPORTS what happened.
+  ///
+  /// It used to return void, and returned early when the user had notifications
+  /// switched off. A suppressed alert was then indistinguishable from a posted
+  /// one at every call site -- including the emergency dispatch, which rendered
+  /// both as success. The typed outcome is what makes MP-01-027's per-target
+  /// list able to say "notification: turned off in settings" truthfully.
+  Future<DispatchTargetOutcome> showEmergencyAlert({
     required int id,
     required String title,
     required String body,
   }) async {
     if (!await AppSettingsService.notificationsEnabled()) {
-      return;
+      return DispatchTargetOutcome.suppressedByUserSetting;
+    }
+    if (!await areSystemNotificationsEnabled()) {
+      return DispatchTargetOutcome.permissionDenied;
     }
 
     await initialize();
@@ -114,6 +126,30 @@ class NotificationService {
     // Show group summary if multiple notifications
     if (_activeNotificationCount > 1) {
       await _showGroupSummary();
+    }
+    return DispatchTargetOutcome.handoffAccepted;
+  }
+
+  /// Whether the OS itself will display our notifications right now.
+  ///
+  /// Distinct from the in-app preference: POST_NOTIFICATIONS can be revoked in
+  /// Android settings at any time after it was granted, and the plugin's `show`
+  /// call succeeds silently when it has been. Unknown (a channel query that
+  /// throws or is unimplemented) is treated as ENABLED, so a query failure can
+  /// never suppress an emergency alert that would otherwise have been posted.
+  Future<bool> areSystemNotificationsEnabled() async {
+    await initialize();
+    final android = _plugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
+    if (android == null) return true;
+    try {
+      return await android.areNotificationsEnabled() ?? true;
+    } on PlatformException {
+      return true;
+    } on MissingPluginException {
+      return true;
     }
   }
 

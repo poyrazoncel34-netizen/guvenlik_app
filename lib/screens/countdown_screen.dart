@@ -17,14 +17,14 @@ import '../core/services/countdown_clock.dart';
 import '../core/services/call_service.dart';
 import '../core/services/android_intent_service.dart';
 import '../core/services/pin_lockout_service.dart';
-import '../core/services/offline_queue_service.dart';
 import '../domain/models/activity_event.dart';
 import 'emergency_call_screen.dart';
 import '../core/services/foreground_service.dart';
 import '../core/services/countdown_announcement.dart';
 import '../core/services/haptic_service.dart';
 import '../core/services/reduced_motion_policy.dart';
-import '../core/services/notification_service.dart';
+import '../core/services/dispatch_ledger_recorder.dart';
+import '../core/services/emergency_bookkeeping.dart';
 import '../core/services/emergency_dispatch_pipeline.dart';
 import '../core/services/emergency_platform_service.dart';
 import '../core/services/emergency_session_contract.dart';
@@ -325,7 +325,8 @@ class _CountdownScreenState extends State<CountdownScreen>
     // cannot redirect an already-authorized safety action.
     final primaryNumber = _armedTargetNumber;
 
-    final callResult = await _dispatchPipeline.execute<EmergencyCallResult?>(
+    final execution = await _dispatchPipeline.execute<EmergencyCallResult?>(
+      dispatchId: _dispatchId,
       criticalOperation: () async {
         final token = _sessionToken;
         if (token != null) {
@@ -355,29 +356,12 @@ class _CountdownScreenState extends State<CountdownScreen>
             ? EmergencyCallResult.dialer(primaryNumber)
             : EmergencyCallResult.failed(primaryNumber ?? '');
       },
+      recordCriticalOutcome: DispatchLedgerRecorder.recordCallTargets,
       shouldRunBestEffort: (result) => result != null,
-      bestEffortOperations: <FutureOr<void> Function()>[
-        () => OfflineQueueService.instance.enqueue(
-          OfflineEvent(
-            type: 'emergency',
-            title: "countdown_emergency_title".tr(),
-            description: "countdown_emergency_desc".tr(),
-            data: const {},
-          ),
-        ),
-        () => ActivityService.logEvent(
-          type: ActivityType.emergencyTriggered,
-          title: "countdown_emergency_title".tr(),
-          description: "countdown_emergency_desc".tr(),
-        ),
-        HapticService.emergencyTriggered,
-        () => NotificationService.instance.showEmergencyAlert(
-          id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
-          title: 'countdown_emergency_title'.tr(),
-          body: 'alarm_notification_body'.tr(),
-        ),
-      ],
+      bestEffortOperations: EmergencyBookkeeping.panicStepsWithDefaultCopy(),
     );
+    final callResult = execution.result;
+    final ledger = execution.ledger;
     if (callResult == null) return;
 
     final calledNumber = primaryNumber ?? '';
@@ -409,6 +393,7 @@ class _CountdownScreenState extends State<CountdownScreen>
               // Display the immutable arming-time identity when available.
               phone: calledNumber,
               callResult: callResult,
+              dispatchLedger: ledger,
               foregroundOwner: _foregroundOwner,
             ),
           ),

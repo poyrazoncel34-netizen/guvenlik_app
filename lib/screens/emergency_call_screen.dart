@@ -10,8 +10,10 @@ import 'package:flutter/services.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
 import '../core/app_colors.dart';
+import '../core/widgets/dispatch_outcome_list.dart';
 import '../core/services/android_intent_service.dart';
 import '../core/services/call_service.dart';
+import '../core/services/dispatch_outcome.dart';
 import '../core/services/foreground_service.dart';
 import '../core/services/reduced_motion_policy.dart';
 
@@ -19,6 +21,14 @@ class EmergencyCallScreen extends StatefulWidget {
   final String name;
   final String phone;
   final EmergencyCallResult callResult;
+
+  /// Per-target outcomes for the dispatch that produced [callResult].
+  ///
+  /// Null only for entry points that predate the ledger (none in the emergency
+  /// path). When present and NOT uniformly successful, the per-target list is
+  /// rendered: a dispatch where the call was handed off and the alert
+  /// notification was suppressed must not read as plain success (MP-01-027).
+  final DispatchOutcomeLedger? dispatchLedger;
   final String? emergencyMessage;
   final String? foregroundOwner;
 
@@ -27,6 +37,7 @@ class EmergencyCallScreen extends StatefulWidget {
     this.name = '',
     this.phone = '',
     required this.callResult,
+    this.dispatchLedger,
     this.emergencyMessage,
     this.foregroundOwner,
   });
@@ -403,6 +414,7 @@ class _EmergencyCallScreenState extends State<EmergencyCallScreen>
                         title: 'emergency_status_call'.tr(),
                         presentation: callPresentation,
                       ),
+                      ...DispatchOutcomeList.build(widget.dispatchLedger),
                     ],
                   ),
                 ),

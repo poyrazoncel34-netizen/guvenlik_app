@@ -44,7 +44,7 @@ have meant filing a document under a code archetype to keep the list short.
 | Metric | Count |
 |---|---|
 | Rows in this matrix | 239 |
-| Still `IN_REPO_RESOLVABLE` in the queue | 14 |
+| Still `IN_REPO_RESOLVABLE` in the queue | 13 |
 | Evidence artifacts referenced | 11 |
 | Plan/audit integrity problems | 0 |
 
@@ -160,7 +160,7 @@ have meant filing a document under a code archetype to keep the list short.
 | `MP-01-024` | 1 | Failure state'i var. | PASS | - | all flows | scripts/audit_evidence/flows.py | `flows.json` → `measurements.flowStates.failureSurfaces` | unconfirmed data erase + exit-less screen -> 1 violation | no | PASS |
 | `MP-01-025` | 1 | Empty state'i var. | PASS | - | all flows | scripts/audit_evidence/flows.py | `flows.json` → `measurements.flowStates.emptySurfaces` | unconfirmed data erase + exit-less screen -> 1 violation | no | PASS |
 | `MP-01-026` | 1 | Loading state'i var. | PASS | - | all flows | scripts/audit_evidence/flows.py | `flows.json` → `measurements.flowStates.loadingSurfaces` | unconfirmed data erase + exit-less screen -> 1 violation | no | PASS |
-| `MP-01-027` | 1 | Partial success state'i varsa tasarlanmış. | PARTIAL | P2 | per-target dispatch | scripts/audit_evidence/flows.py | `flows.json` → `measurements.flowStates.partialSuccessSurfaces` | unconfirmed data erase + exit-less screen -> 1 violation | no | PARTIAL |
+| `MP-01-027` | 1 | Partial success state'i varsa tasarlanmış. | PASS | - | per-target dispatch | scripts/audit_evidence/flows.py | `flows.json` → `measurements.flowStates.partialSuccessSurfaces` | unconfirmed data erase + exit-less screen -> 1 violation | no | PARTIAL |
 | `MP-01-029` | 1 | Timeout state'i düşünülmüş. | PASS | - | timeouts | scripts/audit_evidence/flows.py | `flows.json` → `measurements.flowStates.timeoutSurfaces` | unconfirmed data erase + exit-less screen -> 1 violation | no | PASS |
 | `MP-02-001` | 2 | Navigation hiyerarşisi açık. | PASS | - | bottom navigation | scripts/audit_evidence/flows.py | `flows.json` → `measurements.navigationHierarchy.depth` | unconfirmed data erase + exit-less screen -> 1 violation | no | PASS |
 | `MP-02-002` | 2 | Ana bölümler birbirinden net ayrılmış. | PASS | - | bottom navigation | scripts/audit_evidence/flows.py | `flows.json` → `measurements.navigationHierarchy.tabCount` | unconfirmed data erase + exit-less screen -> 1 violation | no | PASS |
