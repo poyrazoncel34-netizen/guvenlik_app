@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../app_colors.dart';
 import '../services/emergency_platform_service.dart';
 import '../services/subscription_access_state.dart';
+import 'minimum_tap_target.dart';
 
 /// One readiness item, in the order the user should fix them.
 class ReadinessItem {
@@ -206,15 +207,29 @@ class ReadinessCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
+          // Each chip is both a status indicator AND the shortcut that fixes
+          // the missing permission it reports, on the primary safety screen.
+          // Measured from the real semantics tree on API 36 (density 420):
+          // 30.9 dp tall -- above the WCAG 2.5.8 AA floor of 24 dp, but well
+          // under Android's recommended 48 dp.
+          //
+          // The PILL is unchanged: MinimumTapTarget grows only the invisible
+          // box around it. `runSpacing` drops to 0 because that box now
+          // supplies the separation; the measured cost is the card growing by
+          // roughly 35 dp over three chip runs, which is deliberate and worth
+          // it for five permission shortcuts a user has to hit under stress.
           Wrap(
             spacing: 8,
-            runSpacing: 8,
+            runSpacing: 0,
             children: [
               for (final item in items)
-                _StatusChip(
-                  label: item.label,
-                  isOk: item.isOk,
+                MinimumTapTarget(
                   onTap: item.onTap,
+                  child: _StatusChip(
+                    label: item.label,
+                    isOk: item.isOk,
+                    onTap: item.onTap,
+                  ),
                 ),
             ],
           ),
@@ -351,10 +366,18 @@ class _RehearsalLine extends StatelessWidget {
             namedArgs: {'date': ReadinessCard.formatRehearsalDate(recorded)},
           );
 
+    // Measured 38.1 dp tall on device, 33.0 dp in the harness (the device
+    // number includes the ripple's own bounds). Padding alone was tried and
+    // measured short -- 4 -> 9 only reached 33 dp -- so the floor is stated as
+    // a CONSTRAINT rather than guessed from the content height. The row's own
+    // padding is left exactly as designed; the extra height is empty space the
+    // thumb can now use.
     return InkWell(
       onTap: onRunRehearsal,
       borderRadius: BorderRadius.circular(10),
-      child: Padding(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 48),
+        child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 4),
         child: Row(
           children: [
@@ -376,6 +399,7 @@ class _RehearsalLine extends StatelessWidget {
             ),
           ],
         ),
+      ),
       ),
     );
   }

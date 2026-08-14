@@ -220,11 +220,15 @@ class _MainNavigationState extends State<MainNavigation>
             ),
           ),
           // Offline mode banner at top
+          // No SafeArea: it was measuring a zero top inset here (an ancestor
+          // had already consumed `padding`) and therefore did nothing, which
+          // is how the banner ended up entirely under the status bar. The
+          // banner now reads the unconsumed `viewPadding` itself.
           const Positioned(
             top: 0,
             left: 0,
             right: 0,
-            child: SafeArea(bottom: false, child: ConnectivityBanner()),
+            child: ConnectivityBanner(),
           ),
         ],
       ),

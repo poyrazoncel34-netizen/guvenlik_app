@@ -183,7 +183,15 @@ class _EmergencyContactConsentDialogState
             const SizedBox(height: 16),
 
             // Onay checkbox
-            GestureDetector(
+            //
+            // MERGED ON PURPOSE. The row is the real target; the Checkbox
+            // inside it was also exposed as its own node at 22.1 x 22.1 dp
+            // (measured from the semantics tree on API 36, density 420), the
+            // smallest interactive element in the app. Merging leaves one node
+            // the size of the row and changes nothing on screen -- the 22 dp
+            // box is a visual affordance, not the thing a user has to hit.
+            MergeSemantics(
+              child: GestureDetector(
               onTap: () {
                 HapticFeedback.lightImpact();
                 setState(() => _confirmed = !_confirmed);
@@ -206,7 +214,6 @@ class _EmergencyContactConsentDialogState
                       height: 22,
                       child: Checkbox(
                         value: _confirmed,
-                        semanticLabel: 'contact_consent_checkbox_label'.tr(),
                         onChanged: (v) =>
                             setState(() => _confirmed = v ?? false),
                         activeColor: AppColors.success,
@@ -229,6 +236,7 @@ class _EmergencyContactConsentDialogState
                     ),
                   ],
                 ),
+              ),
               ),
             ),
             const SizedBox(height: 20),

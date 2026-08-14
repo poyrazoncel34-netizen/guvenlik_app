@@ -13,6 +13,7 @@ import '../../services/consent_manager.dart';
 import '../../models/consent_record.dart';
 import '../../core/di/service_locator.dart';
 import '../../core/widgets/escape_dismissible.dart';
+import '../../core/widgets/minimum_tap_target.dart';
 
 class ConsentManagementScreen extends StatefulWidget {
   const ConsentManagementScreen({super.key});
@@ -351,12 +352,18 @@ class _ConsentManagementScreenState extends State<ConsentManagementScreen> {
             ),
           ),
           const SizedBox(width: 8),
-          Transform.scale(
-            scale: 0.85,
-            child: Switch(
-              value: granted,
-              onChanged: _loading ? null : (v) => _toggle(item.type, v),
-              activeThumbColor: item.color,
+          // Same 0.85-transform defect as settings_page.dart: the transform
+          // shrinks the hit region with the artwork. Measured 51.0 x 28.2 dp
+          // for the compact variant.
+          MinimumTapTarget(
+            onTap: _loading ? null : () => _toggle(item.type, !granted),
+            child: Transform.scale(
+              scale: 0.85,
+              child: Switch(
+                value: granted,
+                onChanged: _loading ? null : (v) => _toggle(item.type, v),
+                activeThumbColor: item.color,
+              ),
             ),
           ),
         ],

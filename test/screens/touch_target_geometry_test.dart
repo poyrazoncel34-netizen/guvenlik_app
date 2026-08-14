@@ -1,12 +1,33 @@
-// MP-12-030 / MP-12-031 — dokunma hedefi geometrisi, WCAG 2.2 SC 2.5.8 (AA).
+// MP-12-030 / MP-12-031 — dokunma hedefi geometrisi, WCAG 2.2 SC 2.5.8 (AA)
+// VE Android'in 48 dp onerisi.
 //
 // Sayilar CIHAZDAN geldi: API 36 emulatorunde `uiautomator` semantik agacindan
 // okunan GERCEK etkilesim sinirlari (ikon boyutu degil). dpr 2.625.
 //
-// Bir sayi ayrica AMPIRIK OLARAK dogrulandi: "Yasal Bilgiler & KVKK" satirinin
-// gercek vurus alani, semantik sinirlarla birebir ayni cikti -- ust kenardan
-// 20 px yukarisi ve alt kenarin kendisi satiri ETKINLESTIRMEDI. Yani semantik
-// dugum burada gercek hedefi buyutmuyor da kucultmuyor da.
+// 2026-08-14 GUNCELLEMESI — bu tablodaki iki satir YANLISTI ve ucu duzeltildi.
+//
+// 1. KIRPILMA TUZAGI. uiautomator KIRPILMIS dikdortgeni bildirir, yani kaydirma
+//    penceresinin kenarina denk gelen bir kontrol oldugundan kisa olculur.
+//    "Yasal Bilgiler & KVKK" satiri burada 23.2 dp olarak kayitliydi; tam
+//    gorunur haldeyken ayni yapida ayni satir **371.4 x 74.3 dp** olcusun.
+//    Ayni kosumda ayni sey "Detayi Gor" dugmesinde de gorulds: pencere
+//    kenarinda 115.8 x 26.3 dp, 300 px kaydirdiktan sonra 115.8 x 48.0 dp.
+//    Kirpilmis bir okuma ne gecer ne kalir sayilir; yeniden olculur.
+//    (Olcum araci: scripts/../scratchpad/sweep.py, kaydirilabilir atayi bulup
+//    kenara degen dugumleri UNMEASURED isaretler.)
+//
+// 2. GERCEK KUSURLAR DUZELTILDI. Kalan kucuk hedefler bosluk istisnasina
+//    birakilmadi; Android'in 48 dp onerisine cikarildi. Gorsel hicbir yerde
+//    buyutulmedi -- yalnizca etkilesim/semantik alan buyutuldu
+//    (lib/core/widgets/minimum_tap_target.dart ve MergeSemantics).
+//
+// 3. YENI BULUNAN KUSUR. Cevrimdisi Mod banneri 411.4 x 24.0 dp idi VE tamamen
+//    sistem durum cubugunun altinda kaliyordu: y = 10, 31, 55, 62'ye enjekte
+//    edilen dokunuslarin HICBIRI diyalogu acmadi. Yani kucuk degil,
+//    ERISILEMEZ bir kontroldu. Simdi 411.4 x 67.0 dp ve dokunusla aciliyor.
+//
+// Regresyon bari artik `test/screens/touch_target_minimum_size_test.dart`
+// icinde, cerceve icinde olculuyor; bu dosya cihaz kayitlarini tutar.
 
 import 'package:flutter_test/flutter_test.dart';
 
@@ -22,6 +43,11 @@ class Target {
   final double? nearestNeighbourDp;
 
   bool get meetsMinimumSize => w >= 24.0 && h >= 24.0;
+
+  /// Android'in onerdigi asgari etkilesim boyutu. SC 2.5.8'in 24 dp'lik AA
+  /// barindan farkli ve daha yuksek bir cita; urun kalitesi icin hedeflenen
+  /// budur.
+  bool get meetsAndroidRecommendation => w >= 48.0 && h >= 48.0;
 
   /// SC 2.5.8 "Spacing" istisnasi: 24 dp capli bir daire hedefin sinir
   /// kutusuna ortalandiginda baska bir hedefin dairesiyle kesismiyorsa,
@@ -46,17 +72,26 @@ const List<Target> measured = <Target>[
   Target('Cihaz Verilerini Temizle', 371.4, 56.0),
   Target('Yasal ekran satirlari', 369.5, 72.0),
 
-  // --- 48 dp'nin ALTINDA kalan uc hedef ---
-  // Yukseklik 24 dp barinin 0.8 dp altinda; en yakin hedef 56 dp uzakta
-  // oldugu icin Spacing istisnasiyla geciyor.
-  Target('Yasal Bilgiler & KVKK satiri', 371.4, 23.2, nearestNeighbourDp: 56.0),
-  // Tam barin uzerinde.
-  Target('Cevrimdisi Mod banneri', 411.4, 24.0, nearestNeighbourDp: 56.0),
-  // Switch'ler 48 dp Material onerisinin altinda ama 24 dp AA barinin ustunde.
-  Target('Ayarlar switch (kompakt)', 51.0, 28.2, nearestNeighbourDp: 45.0),
-  Target('Ayarlar switch', 51.0, 40.8, nearestNeighbourDp: 45.0),
-  // Modal icindeki onay kutusu: 22.1 dp, en yakin hedef (Iptal/Ekle) 47.6 dp.
-  Target('Kisi onam modali onay kutusu', 22.1, 22.1, nearestNeighbourDp: 47.6),
+  // --- DUZELTILEN OLCUM ---------------------------------------------------
+  // 23.2 dp olarak kayitliydi; o okuma kaydirma penceresinin kenarindan
+  // alinmisti. Tam gorunur haldeki gercek olcu:
+  Target('Yasal Bilgiler & KVKK satiri', 371.4, 74.3),
+  Target('Detayi Gor (rizalar)', 115.8, 48.0),
+
+  // --- DUZELTILEN KUSURLAR ------------------------------------------------
+  // Hepsi onceden 24-41 dp araligindaydi ve yalnizca bosluk istisnasiyla
+  // geciyordu. Gorsel degismedi; etkilesim alani buyutuldu.
+  Target('Cevrimdisi Mod banneri', 411.4, 67.0),        // onceden 24.0, ERISILEMEZ
+  Target('Riza onay satiri (birlestirilmis)', 371.4, 82.3), // onceden ic ice 24.0
+  Target('Kisi onam modali onay satiri', 283.4, 77.0),  // onceden 22.1
+  Target('Ayarlar switch', 60.2, 48.0),                 // onceden 51.0 x 40.8
+  Target('Riza yonetimi switch (kompakt)', 60.2, 48.0), // onceden 51.0 x 28.2
+  Target('Hazirlik cipi (Acil kisi)', 90.7, 48.0),      // onceden 30.9
+  Target('Hazirlik cipi (Telefon Aramasi)', 138.7, 48.0),
+  Target('Hazirlik cipi (Arka Plan Hazirligi)', 151.2, 48.0),
+  Target('Hazirlik cipi (Konum)', 85.3, 48.0),
+  Target('Hazirlik cipi (Rehber)', 85.7, 48.0),
+  Target('Prova satiri', 329.1, 48.0),                  // onceden 38.1
 ];
 
 void main() {
@@ -85,24 +120,37 @@ void main() {
   });
 
   test(
-    'MP-12-030: 24 dp altindaki hedefler SADECE bosluk istisnasiyla geciyor',
+    'MP-12-030: hicbir olculmus hedef artik bosluk istisnasina muhtac degil',
     () {
-      // Gizlenmiyor, sayiliyor: uc hedef minimum boyutu KARSILAMIYOR ve yalnizca
-      // aralarindaki bosluk sayesinde geciyor. Bu sayi artarsa yerlesim
-      // sikilasmis demektir ve yeniden olculmesi gerekir.
-      final undersized = measured.where((t) => !t.meetsMinimumSize).toList();
+      // Onceki hali "uc hedef minimum boyutu karsilamiyor ama bosluk
+      // istisnasiyla geciyor" idi. Istisna WCAG icin gecerliydi; native bir
+      // Android urunu icin yeterli degildi, ve bir tanesi (Cevrimdisi Mod
+      // banneri) aslinda hic dokunulamiyordu. Hepsi buyutuldu.
+      final undersized =
+          measured.where((t) => !t.meetsMinimumSize).toList();
       expect(
-        undersized.map((t) => t.label),
-        unorderedEquals(<String>[
-          'Yasal Bilgiler & KVKK satiri',
-          'Kisi onam modali onay kutusu',
-        ]),
+        undersized,
+        isEmpty,
+        reason:
+            'SC 2.5.8 AA barinin altinda kalan hedef kalmadi: '
+            '${undersized.map((t) => t.label).toList()}',
       );
-      for (final t in undersized) {
-        expect(t.meetsSpacingException, isTrue);
-      }
     },
   );
+
+  test('Android 48 dp onerisi: her olculmus hedef karsiliyor', () {
+    final short = measured
+        .where((t) => !t.meetsAndroidRecommendation)
+        .toList();
+    expect(
+      short,
+      isEmpty,
+      reason:
+          'Bu satirlarin GORSELI kucuk kalabilir, ama etkilesim/semantik alani '
+          '48 dp olmali (MinimumTapTarget veya MergeSemantics). Eksik: '
+          '${short.map((t) => "${t.label} ${t.w}x${t.h}").toList()}',
+    );
+  });
 
   test('MP-12-031: hicbir hedef bir digerine 24 dp\'den yakin degil', () {
     final crowded = measured

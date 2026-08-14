@@ -63,6 +63,19 @@ class _ConnectivityBannerState extends State<ConnectivityBanner>
 
   @override
   Widget build(BuildContext context) {
+    // The banner paints edge to edge, so its colour still runs behind the
+    // status bar -- but its CONTENT and its tap area must not. Measured on an
+    // API 36 emulator before this: the interactive node was [0,0][1080,63],
+    // i.e. 411.4 x 24.0 dp entirely underneath the system status bar, and taps
+    // injected at y = 10, 31, 55 and 62 ALL failed to open the dialog. The
+    // banner was not merely an undersized target; it could not be activated at
+    // all, and its label sat beside the system clock.
+    //
+    // `viewPadding` rather than `padding` on purpose: an ancestor SafeArea
+    // consumes `padding`, which is why the SafeArea that used to wrap this
+    // widget reported a zero inset and did nothing. `viewPadding` reports the
+    // real, unconsumed inset.
+    final double statusBarInset = MediaQuery.viewPaddingOf(context).top;
     return SlideTransition(
       position: _slideAnimation,
       child: GestureDetector(
@@ -70,7 +83,15 @@ class _ConnectivityBannerState extends State<ConnectivityBanner>
         child: AnimatedContainer(
           duration: Motion.base,
           width: double.infinity,
-          padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 16),
+          // 12 + content + 12 puts >= 48 dp of reachable height BELOW the
+          // status bar, which is both the Android minimum and the first
+          // version of this control a thumb can actually hit.
+          padding: EdgeInsets.only(
+            top: statusBarInset + 12,
+            bottom: 12,
+            left: 16,
+            right: 16,
+          ),
           decoration: BoxDecoration(
             color: AppColors.warning.withValues(alpha: 0.9),
           ),

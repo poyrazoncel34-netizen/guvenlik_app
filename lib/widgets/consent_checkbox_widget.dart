@@ -23,7 +23,19 @@ class ConsentCheckboxWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    // MERGED ON PURPOSE. The row itself is the target and is 371 dp wide by
+    // 69-198 dp tall, but the Checkbox inside it was ALSO exposed as its own
+    // interactive node -- measured 24.0 x 24.0 dp from the real semantics tree
+    // on API 36 (density 420 / dpr 2.625), five times over on the consent
+    // screen. Both nodes carried the SAME label, so a screen-reader user heard
+    // the consent sentence twice and the second time on a target half the
+    // recommended size.
+    //
+    // Merging collapses them into one node the size of the row. Nothing moves
+    // on screen: the fix is to stop advertising a small target that was never
+    // the one users needed to hit, not to grow the artwork.
+    return MergeSemantics(
+      child: GestureDetector(
       onTap: () => onChanged(!value),
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 6),
@@ -50,7 +62,6 @@ class ConsentCheckboxWidget extends StatelessWidget {
               height: 24,
               child: Checkbox(
                 value: value,
-                semanticLabel: label,
                 onChanged: onChanged,
                 activeColor: isSpecialCategory
                     ? AppColors.emergency
@@ -121,6 +132,7 @@ class ConsentCheckboxWidget extends StatelessWidget {
             ),
           ],
         ),
+      ),
       ),
     );
   }

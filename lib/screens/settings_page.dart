@@ -30,6 +30,7 @@ import 'oem_background_guide_screen.dart';
 import 'settings_legal/legal_settings_screen.dart';
 import 'subscription/paywall_screen.dart';
 import 'subscription/subscription_management_screen.dart';
+import '../widgets/settings_switch_tile.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -189,7 +190,7 @@ class _SettingsPageState extends State<SettingsPage> {
             _buildSectionTitle("settings_sound_vibration".tr()),
             const SizedBox(height: 14),
             _buildSettingsCard([
-              _buildSwitchTile(
+              SettingsSwitchTile(
                 icon: Icons.volume_up_rounded,
                 iconColor: AppColors.success,
                 title: "settings_sound_title".tr(),
@@ -199,7 +200,7 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
               if (defaultTargetPlatform == TargetPlatform.android) ...[
                 _buildDivider(),
-                _buildSwitchTile(
+                SettingsSwitchTile(
                   icon: Icons.volume_down_rounded,
                   iconColor: AppColors.primary,
                   title: "settings_volume_trigger_title".tr(),
@@ -662,66 +663,6 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  Widget _buildSwitchTile({
-    required IconData icon,
-    required Color iconColor,
-    required String title,
-    required String subtitle,
-    required bool value,
-    required Function(bool) onChanged,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      child: Row(
-        children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: iconColor.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: iconColor, size: 22),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  subtitle,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Transform.scale(
-            scale: 0.85,
-            child: Switch(
-              value: value,
-              onChanged: (val) {
-                HapticFeedback.lightImpact();
-                onChanged(val);
-              },
-              activeThumbColor: AppColors.primary,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildNavigationTile({
     required IconData icon,
