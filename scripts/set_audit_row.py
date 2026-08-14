@@ -34,6 +34,15 @@ def main() -> int:
     parser.add_argument("requirement_id")
     parser.add_argument("--audit", default="PRODUCTION_AUDIT.md")
     parser.add_argument("--status")
+    parser.add_argument(
+        "--applicability",
+        help="the Applicable / N/A / Partially applicable cell. Editable "
+             "because a requirement CAN become applicable: MP-01-016's own "
+             "remediation said 'Becomes Applicable if deep links are added', "
+             "and when MP-26-008 added them, four rows were left asserting that "
+             "no deep links exist. Hand-editing that cell is what this tool "
+             "exists to prevent.",
+    )
     parser.add_argument("--severity")
     parser.add_argument("--evidence")
     parser.add_argument("--gap")
@@ -73,6 +82,8 @@ def main() -> int:
 
     match, cells = matches[0]
     before = list(cells)
+    if args.applicability:
+        cells[2] = args.applicability
     if args.status:
         cells[3] = f"**{args.status}**"
     if args.severity:
@@ -85,6 +96,12 @@ def main() -> int:
         cells[7] = args.remediation
     if args.verification:
         cells[8] = f"`{args.verification}`"
+
+    if args.applicability and args.applicability not in {
+        "Applicable", "N/A", "Partially applicable",
+    }:
+        print(f"SET_ROW_FAIL: invalid applicability {args.applicability!r}")
+        return 1
 
     if cells == before:
         print(f"SET_ROW_NOOP {args.requirement_id}")
