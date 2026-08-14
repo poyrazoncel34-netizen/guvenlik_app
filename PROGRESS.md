@@ -20,7 +20,7 @@ never typed by hand — they come from `python3 scripts/verify_audit_accounting.
 | Question | Answer |
 |---|---|
 | **Verified code revision** | `HEAD` of this branch — suite, analyzer, gates and two emulator passes all run against it |
-| **Current phase** | Repository convergence: latest-review findings closed; working the resolution queue |
+| **Current phase** | Repository convergence: **RUNTIME_VERIFIABLE_NOW is 0**; the queue is now in-repo evidence work |
 | **Latest independent review** | `INDEPENDENT_REVIEW_ROUND_2.md`, 2026-08-13, verdict **REVIEW FAILED — REMEDIATION REQUIRED** |
 | **P0 remaining (total)** | **0** |
 | **P0 remaining (in-repo)** | **0** |
@@ -29,7 +29,7 @@ never typed by hand — they come from `python3 scripts/verify_audit_accounting.
 | **Unresolved internal findings from the latest review** | **0** — R2-01 … R2-12 all closed, each with mutation evidence |
 | **Findings opened and closed by our OWN device pass** | **1** (D-2, below) — a previously "device-verified" row that was not actually fixed |
 | **Unresolved external blockers** | **87 requirement IDs in 9 categories** (`EXTERNAL_LAUNCH_BLOCKERS.md`) |
-| **Suite** | 1190 passed / 0 failed (`flutter test --no-pub`) |
+| **Suite** | 1252 passed / 0 failed (`flutter test --no-pub`) |
 | **Analyzer** | No issues found (`flutter analyze --no-fatal-infos`) |
 | **Worktree** | see `git status`; the security gates refuse to run on a dirty tree |
 
@@ -43,20 +43,20 @@ AUDIT_ACCOUNTING_PASS checklist=1738 audit=1738 missing=0 duplicated=0 unaccount
 
 | Status | Count |
 |---|---|
-| PASS | 534 |
+| PASS | 568 |
 | FAIL | 11 |
-| PARTIAL | 121 |
+| PARTIAL | 117 |
 | BLOCKED | 29 |
 | N/A | 783 |
-| UNVERIFIED | 260 |
+| UNVERIFIED | 230 |
 | **TOTAL** | **1738** |
 
 | Severity | Count |
 |---|---|
 | P0 | 0 |
 | P1 | 29 |
-| P2 | 204 |
-| P3 | 188 |
+| P2 | 172 |
+| P3 | 186 |
 
 ### Resolution queue
 
@@ -64,11 +64,11 @@ AUDIT_ACCOUNTING_PASS checklist=1738 audit=1738 missing=0 duplicated=0 unaccount
 
 | Scope | Count |
 |---|---|
-| `IN_REPO_RESOLVABLE` | 247 |
-| `RUNTIME_VERIFIABLE_NOW` | 33 |
+| `IN_REPO_RESOLVABLE` | 246 |
+| `RUNTIME_VERIFIABLE_NOW` | **0** |
 | `EXTERNAL_BLOCKER` | 91 |
 | `PRODUCT_DECISION_REQUIRED` | 50 |
-| **Total unresolved** | **421** |
+| **Total unresolved** | **387** |
 
 Product decisions are grouped into **nine actual questions** in
 `PRODUCT_DECISIONS_REQUIRED.md`, not 50 repetitive ones.
@@ -194,13 +194,66 @@ The `/data` partition fills at ~91 % — uninstall old APKs before reinstalling.
 
 ## Next action
 
-Work `RESOLUTION_QUEUE.md` top-down. The next batch is the **142 boilerplate-evidence
-rows**: write requirement-specific evidence, or measure it on the emulator, one row at a
-time. A row only leaves the queue when its audit row changes status and the accounting
-gate still passes.
+`RUNTIME_VERIFIABLE_NOW` is **0**. Everything that needed the app running has been run.
+The remaining in-repo work is the **246 `IN_REPO_RESOLVABLE`** rows, of which 177 are
+UNVERIFIED — mostly the IR-06 boilerplate-evidence downgrades. They concentrate in
+sections 3 (31), 9 (20), 1 (19), 5 (15) and 6 (15).
 
-Do **not** close a row by pasting a new, differently-worded blanket sentence across a
-section. That is what created the IR-06 finding in the first place.
+Write requirement-specific evidence one row at a time. Do **not** close a row by pasting a
+new, differently-worded blanket sentence across a section — that is what created IR-06.
+Several section-3 rows are now genuinely measurable against `lib/core/design_tokens.dart`
+and its ratchet, so they can carry real counts instead of prose.
+
+---
+
+## Device-verification pass, 2026-08-14 (a11y / performance / lifecycle)
+
+Full write-up: `docs/audit/device-verification-2026-08-14-a11y-perf.md`. Emulator
+`Medium_Phone_API_36.1`, **profile** build for the frame work. This pass closed the last
+14 `RUNTIME_VERIFIABLE_NOW` rows and found four defects that source inspection had missed.
+
+**The instrument mattered more than the effort.** Three things were only knowable by
+running the app:
+
+- `adb shell uiautomator dump` exposes this Flutter app's real semantics tree, so "which
+  node has focus" is answered by node identity, not by squinting at a screenshot. Empty
+  focus output was never accepted as a pass.
+- `dumpsys gfxinfo` is the WRONG frame instrument here — it sees only HWUI and reported 7
+  frames. Flutter's content goes through its own BLAST SurfaceView layer, read with
+  `dumpsys SurfaceFlinger --latency`.
+- `input keyevent` cannot carry a modifier; Shift+Tab needs `input keycombination`.
+
+**Four defects found, all fixed and re-measured:**
+
+1. **Focus indicator absent, not merely weak.** On the profile card and the Pro row the
+   focused and unfocused pixels were IDENTICAL (1.00:1) — Material's ink highlight was
+   painted UNDER the child's opaque background. Focus really was there (ENTER activated
+   both). The prior FAIL had also measured the right number against the wrong criterion:
+   1.46:1 is the SC 2.4.13 focused-vs-unfocused formula, while SC 1.4.11 compares the
+   indicator to ADJACENT colours. Fixed with a two-tone ring drawn ON TOP; **the ring
+   order was chosen by measurement** — dark-outside gave 1.14:1 on the bright card and had
+   to be reversed.
+2. **Escape had two independent gates.** `barrierDismissible: false` disables Flutter's
+   DismissAction (proven independent of focus), and separately `ModalRoute.didPush` only
+   calls `setFirstFocus`, which does nothing when the app holds no focus — so
+   `showModalBottomSheet`, whose barrier IS dismissible, was dead too. **The second gate
+   also defeated the first fix**, which used `Focus(autofocus:)`; that only records an
+   intent applied if the scope gains focus, so it failed in exactly the condition it was
+   meant to repair. The widget harness passed while the device failed.
+3. **The 2-minute re-auth lock never fired.** `AppLifecycleState.inactive` fires on the way
+   BACK IN as well as out, and it was feeding `onPaused()`, so the resume transition reset
+   the clock and elapsed computed as ~0. Measured: 141 s backgrounded, no lock. This is a
+   security defect in a duress model whose whole auth story is a local PIN.
+   `app_privacy_shield.dart` already documented the correct distinction.
+4. **A premature PASS of my own.** MP-12-007 was marked PASS on a partial fix; device
+   re-verification caught it and the row was corrected rather than left standing.
+
+**Honest limits recorded rather than smoothed:** Escape resolves only once the app holds
+keyboard focus (fine for the keyboard user the requirement serves, but it makes a
+touch-only adb script see a false negative); unsubmitted input does NOT survive true
+process death (no `RestorationMixin`); two touch targets clear SC 2.5.8 only via the
+spacing exception; the app renders 60fps on a 120Hz panel and does not opt into the higher
+rate; under 100% CPU starvation it drops 16.1% of frames while staying functional.
 
 ---
 
