@@ -59,6 +59,60 @@ def _fields(root: Path) -> list:
     return out
 
 
+NOTIFICATION_SERVICE = "lib/core/services/notification_service.dart"
+NOTIFICATION_PREFS = "lib/core/services/notification_preferences_service.dart"
+NOTIFICATION_SCREEN = (
+    "lib/screens/settings_notifications/notification_categories_screen.dart"
+)
+SETTINGS_PAGE = "lib/screens/settings_page.dart"
+
+
+def _notification_surface(root: Path, sites) -> dict:
+    """MP-11-014 / MP-23-010 / MP-26-006, computed rather than described.
+
+    The field this replaces asserted that "notification preference toggles live
+    in settings". They did not: the settings row opened Android's app-level
+    screen, which answers "notifications on or off" and says nothing about which
+    of this app's categories the user wants. A sentence is not a measurement.
+    """
+    service = read_stripped(root / NOTIFICATION_SERVICE) if (root / NOTIFICATION_SERVICE).exists() else ""
+    prefs = read_stripped(root / NOTIFICATION_PREFS) if (root / NOTIFICATION_PREFS).exists() else ""
+    screen = read_stripped(root / NOTIFICATION_SCREEN) if (root / NOTIFICATION_SCREEN).exists() else ""
+    settings = read_stripped(root / SETTINGS_PAGE) if (root / SETTINGS_PAGE).exists() else ""
+
+    categories_block = re.search(r"enum NotificationCategory\s*\{(.*?)\n\}", prefs, re.S)
+    categories = ([m.group(1) for m in
+                   re.finditer(r"^\s*([a-z][A-Za-z0-9]*)[,;]", categories_block.group(1), re.M)]
+                  if categories_block else [])
+    channels = sorted(set(re.findall(r"k(\w+)ChannelId", service)))
+    safety_critical = re.findall(r"NotificationCategory\.(\w+) => true", prefs)
+
+    # A local switch that can disagree with the OS is the defect this design
+    # already rejected once. Assert it stays rejected.
+    holds_local_copy = bool(re.search(r"setBool\(.*[Nn]otification", prefs))
+
+    return {
+        "notificationSites": len(sites(r"flutter_local_notifications|showNotification")),
+        "categories": categories,
+        "androidChannels": channels,
+        "safetyCriticalCategories": safety_critical,
+        "preferenceScreen": NOTIFICATION_SCREEN if screen else None,
+        "reachableFromSettings": "NotificationCategoriesScreen" in settings,
+        "readsLivePlatformState": "getNotificationChannels" in prefs
+                                  and "areNotificationsEnabled" in service,
+        "holdsLocalToggleCopy": holds_local_copy,
+        "perChannelSettingsDeepLink": "openNotificationChannelSettings" in prefs,
+        "postReportsSuppression": "suppressedByUserSetting" in service,
+        "postReportsPermissionDenied": "permissionDenied" in service,
+        "silencedSafetySurfaceWarned": "isSilencedSafetySurface" in screen,
+        "tapRoutesThroughDestinationPark":
+            "PendingDestinationService.instance.submitDestination" in service,
+        "payloadAllowlist": re.findall(r"'(\w+)': AppDestination\.\w+", service),
+        "directPushExceptions": len(re.findall(r"navigator\.push\(", service)),
+        "coveringTests": ["test/screens/notification_categories_test.dart"],
+    }
+
+
 def measure(root: Path) -> list:
     violations = []
     fields = _fields(root)
@@ -91,6 +145,66 @@ def measure(root: Path) -> list:
             "rule": "contactInputNotNormalised",
             "detail": "contacts_page.dart never trims user input",
         })
+
+    # MP-11-014 / MP-23-010 / MP-26-006: the notification surfaces.
+    def _sites(pattern):
+        out = []
+        for path in dart_files(root):
+            src = read_stripped(path)
+            for m in re.finditer(pattern, src):
+                out.append(f"{rel(path, root)}:{src[: m.start()].count(chr(10)) + 1}")
+        return out
+
+    notifications = _notification_surface(root, _sites)
+    if notifications["notificationSites"]:
+        if not notifications["preferenceScreen"]:
+            violations.append({
+                "rule": "noPerCategoryNotificationSurface",
+                "detail": "the app posts notifications with no in-app category "
+                          "surface; the OS app-level screen answers a different "
+                          "question than 'which of these do I want'",
+            })
+        if not notifications["reachableFromSettings"]:
+            violations.append({
+                "rule": "notificationSurfaceUnreachable",
+                "detail": "the category screen is not reachable from settings",
+            })
+        if notifications["holdsLocalToggleCopy"]:
+            violations.append({
+                "rule": "localNotificationToggleCopy",
+                "detail": "a local switch can read ON while Android says OFF, so "
+                          "the app promises alerts it cannot deliver",
+            })
+        if not notifications["readsLivePlatformState"]:
+            violations.append({
+                "rule": "notificationStateNotReadFromPlatform",
+                "detail": "the surface does not ask Android what is actually on",
+            })
+        if not notifications["postReportsSuppression"]:
+            violations.append({
+                "rule": "suppressedNotificationLooksLikeSuccess",
+                "detail": "posting returns without distinguishing a suppressed "
+                          "alert from a delivered one",
+            })
+        if not notifications["silencedSafetySurfaceWarned"]:
+            violations.append({
+                "rule": "mutedSafetyChannelUnflagged",
+                "detail": "a muted emergency channel is rendered like a muted "
+                          "ordinary one",
+            })
+        if not notifications["tapRoutesThroughDestinationPark"]:
+            violations.append({
+                "rule": "notificationTapBypassesGateModel",
+                "detail": "a notification tap navigates outside the validated "
+                          "destination park, so it can reach a screen ahead of "
+                          "the PIN gate",
+            })
+        if notifications["directPushExceptions"] > 1:
+            violations.append({
+                "rule": "multipleUngatedNotificationPushes",
+                "detail": f"{notifications['directPushExceptions']} direct pushes; "
+                          f"exactly one (the named fake-call exception) is allowed",
+            })
     return violations
 
 
@@ -167,14 +281,7 @@ def build(root: Path) -> dict:
             "claim": "every state-changing action acknowledges on at least one channel, "
                      "and the safety-critical ones on all three",
         },
-        "notificationFeedback": {
-            "notificationSites": len(sites(r"flutter_local_notifications|showNotification")),
-            "channelSetup": "lib/core/services (notification service)",
-            "userFacingPreferenceSurface": (
-                "notification preference toggles live in settings; the OS channel is "
-                "the authority and the app cannot re-enable a channel the user muted"
-            ),
-        },
+        "notificationFeedback": _notification_surface(root, sites),
         "undo": {
             "undoSites": sites(r"SnackBarAction|undo|Undo"),
             "mechanism": "confirmation-before-destruction rather than undo-after",
@@ -228,7 +335,31 @@ def _mutate(scratch: Path) -> str:
         "final w = TextField(controller: TextEditingController());\n",
         encoding="utf-8",
     )
-    return "a PIN field offering password autofill + an unlabelled text field"
+    # MP-11-014 / MP-23-010 / MP-26-006: take the notification surfaces back
+    # out -- restore the silent suppression, drop the muted-safety warning, and
+    # let a tap push directly past the destination park.
+    service = scratch / NOTIFICATION_SERVICE
+    if service.exists():
+        service.write_text(
+            service.read_text(encoding="utf-8")
+            .replace("DispatchTargetOutcome.suppressedByUserSetting", "null")
+            .replace(
+                "PendingDestinationService.instance.submitDestination",
+                "_ignoredDestination",
+            ),
+            encoding="utf-8",
+        )
+    screen = scratch / NOTIFICATION_SCREEN
+    if screen.exists():
+        screen.write_text(
+            screen.read_text(encoding="utf-8").replace(
+                "isSilencedSafetySurface", "willBeDelivered == false"
+            ),
+            encoding="utf-8",
+        )
+    return ("a PIN field offering password autofill + an unlabelled text field + "
+            "notification suppression made silent again + the muted-safety "
+            "warning removed + a tap that bypasses the destination park")
 
 
 def main() -> int:
@@ -252,8 +383,14 @@ def main() -> int:
         ],
         extra={"negativeControl": {
             "command": COMMAND + " --negative-control",
-            "mutation": "give the PIN field password autofill and add an unlabelled field",
-            "expected": "pinFieldOffersAutofill and unlabelledTextField fire",
+            "mutation": "give the PIN field password autofill; add an unlabelled "
+                        "field; make notification suppression silent again; "
+                        "remove the muted-safety warning; let a notification tap "
+                        "bypass the destination park",
+            "expected": "5 violations: pinFieldOffersAutofill, "
+                        "unlabelledTextField, suppressedNotificationLooksLikeSuccess, "
+                        "mutedSafetyChannelUnflagged and "
+                        "notificationTapBypassesGateModel",
         }},
     )
     print(f"INTERACTION_OK violations={len(violations)} -> {rel(path)}")

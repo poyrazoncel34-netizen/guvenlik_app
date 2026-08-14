@@ -979,5 +979,22 @@
   "dispatch_outcome_rejected": "Sistem reddetti",
   "dispatch_outcome_exception": "Sistem hatası",
   "dispatch_outcome_cancelled": "İptal edildiği için yapılmadı",
-  "dispatch_outcome_suppressed": "Ayarlardan kapalı"
+  "dispatch_outcome_suppressed": "Ayarlardan kapalı",
+  "notification_categories_title": "Bildirim türleri",
+  "notification_categories_intro": "Bu uygulamanın gönderdiği bildirim türleri aşağıda. Aç/kapa anahtarı Android'in kendisinde durur; burada her türün şu anki durumunu görür ve tek dokunuşla Android'in o türe ait ayar ekranına gidersiniz.",
+  "notification_categories_open_settings": "Android ayarlarında aç",
+  "notification_categories_read_failed": "Durum okunamadı",
+  "notification_categories_read_failed_body": "Bildirim ayarları şu anda okunamıyor. Android ayarlarından kontrol edebilirsiniz.",
+  "notification_category_emergency": "Acil durum uyarıları",
+  "notification_category_emergency_desc": "Panik gönderimi, check-in süresi dolduğunda ve Güvenli Yürüyüş tırmanmasında gösterilir.",
+  "notification_category_service": "Çalışıyor bildirimi",
+  "notification_category_service_desc": "Bir oturum aktifken kalıcı olarak görünür. Android bunu zorunlu kılar.",
+  "notification_category_fake_call": "Sahte çağrı",
+  "notification_category_fake_call_desc": "Zamanlanmış sahte gelen çağrı bildirimi.",
+  "notification_category_general": "Diğer bildirimler",
+  "notification_category_general_desc": "Uygulamanın gönderebileceği diğer bilgilendirmeler.",
+  "notification_status_delivered": "Gösterilecek",
+  "notification_status_channel_muted": "Bu tür Android'de kapatılmış",
+  "notification_status_app_blocked": "Uygulamanın bildirim izni yok",
+  "notification_status_safety_warning": "Bu kapalıyken acil durum uyarısını göremezsiniz. Uygulama arama isteğini yine de gönderir, ama ekranda bir uyarı çıkmaz."
 }

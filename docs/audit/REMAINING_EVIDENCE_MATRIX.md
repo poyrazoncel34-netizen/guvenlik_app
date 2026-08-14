@@ -44,7 +44,7 @@ have meant filing a document under a code archetype to keep the list short.
 | Metric | Count |
 |---|---|
 | Rows in this matrix | 239 |
-| Still `IN_REPO_RESOLVABLE` in the queue | 10 |
+| Still `IN_REPO_RESOLVABLE` in the queue | 7 |
 | Evidence artifacts referenced | 11 |
 | Plan/audit integrity problems | 0 |
 
@@ -237,7 +237,7 @@ have meant filing a document under a code archetype to keep the list short.
 | `MP-11-003` | 11 | Checkbox feedback. | PASS | - | checkbox feedback | scripts/audit_evidence/interaction.py | `interaction.json` → `measurements.componentStates.withLabel` | PIN field offering password autofill + unlabelled field -> 2 | no | PASS |
 | `MP-11-004` | 11 | Save feedback. | PASS | - | save feedback | scripts/audit_evidence/interaction.py | `interaction.json` → `measurements.feedbackChannels.snackBarSites` | PIN field offering password autofill + unlabelled field -> 2 | no | PASS |
 | `MP-11-012` | 11 | Error feedback. | PASS | - | error feedback | scripts/audit_evidence/interaction.py | `interaction.json` → `measurements.validation.inlineErrorSites` | PIN field offering password autofill + unlabelled field -> 2 | no | PASS |
-| `MP-11-014` | 11 | Notification feedback. | PARTIAL | P2 | notification feedback | scripts/audit_evidence/interaction.py | `interaction.json` → `measurements.notificationFeedback.notificationSites` | PIN field offering password autofill + unlabelled field -> 2 | no | PARTIAL |
+| `MP-11-014` | 11 | Notification feedback. | PASS | - | lib/core/services/notification_preferences_service.dart + lib/screens/settings_notifications/notification_categories_screen.dart | scripts/audit_evidence/interaction.py | `interaction.json` → `measurements.notificationFeedback` | make suppression silent again, remove the muted-safety warning and bypass the destination park -> interaction.py 0 -> 5 violations | yes | PASS |
 | `MP-11-016` | 11 | Undo feedback. | PASS | - | undo policy | scripts/audit_evidence/interaction.py | `interaction.json` → `measurements.undo.why` | PIN field offering password autofill + unlabelled field -> 2 | yes | PASS |
 | `MP-13-001` | 13 | CTA ne olacağını anlatıyor. | PASS | - | 963 keys x 2 locales | scripts/audit_evidence/copy.py | `copy.json` → `measurements.ctaClarity.verbLeadingPercent` | blame language + raw exception name + unnamed confirmation -> 3 | no | PASS |
 | `MP-13-005` | 13 | Blame edici dil yok. | PASS | - | 963 keys x 2 locales | scripts/audit_evidence/copy.py | `copy.json` → `measurements.tone.blameHits` | blame language + raw exception name + unnamed confirmation -> 3 | no | PASS |
@@ -273,9 +273,9 @@ have meant filing a document under a code archetype to keep the list short.
 | `MP-20-003` | 20 | Pending operation belli. | PASS | - | offline queue | scripts/audit_evidence/flows.py | `flows.json` → `measurements.offline.connectivitySites` | unconfirmed data erase + exit-less screen -> 1 violation | no | PASS |
 | `MP-20-004` | 20 | Retry var. | PASS | - | retry surfaces | scripts/audit_evidence/flows.py | `flows.json` → `measurements.offline.retrySites` | unconfirmed data erase + exit-less screen -> 1 violation | no | PASS |
 | `MP-20-005` | 20 | Duplicate oluşmuyor. | PASS | - | duplicate guard | scripts/audit_evidence/flows.py | `flows.json` → `measurements.offline.duplicateGuard` | unconfirmed data erase + exit-less screen -> 1 violation | no | PASS |
-| `MP-23-010` | 23 | Notification preferences. | PARTIAL | P2 | notification preferences | scripts/audit_evidence/interaction.py | `interaction.json` → `measurements.notificationFeedback.channelSetup` | PIN field offering password autofill + unlabelled field -> 2 | no | PARTIAL |
+| `MP-23-010` | 23 | Notification preferences. | PASS | - | lib/core/services/notification_preferences_service.dart + lib/screens/settings_notifications/notification_categories_screen.dart | scripts/audit_evidence/interaction.py | `interaction.json` → `measurements.notificationFeedback` | make suppression silent again, remove the muted-safety warning and bypass the destination park -> interaction.py 0 -> 5 violations | yes | PASS |
 | `MP-23-015` | 23 | Subscription olan kullanıcı account silerken uygun flow görüyor. | PARTIAL | P2 | account deletion + subscription | scripts/audit_evidence/flows.py | `flows.json` → `measurements.destructiveActions.strongerThanDialog` | unconfirmed data erase + exit-less screen -> 1 violation | no | PARTIAL |
-| `MP-26-006` | 26 | Notification preferences. | PARTIAL | P2 | in-app notification preference toggles | scripts/audit_evidence/interaction.py | `interaction.json` → `measurements.notificationFeedback.userFacingPreferenceSurface` | PIN field offering password autofill + unlabelled field -> 2 | no | PARTIAL |
+| `MP-26-006` | 26 | Notification preferences. | PASS | - | lib/core/services/notification_preferences_service.dart + lib/screens/settings_notifications/notification_categories_screen.dart | scripts/audit_evidence/interaction.py | `interaction.json` → `measurements.notificationFeedback` | make suppression silent again, remove the muted-safety warning and bypass the destination park -> interaction.py 0 -> 5 violations | yes | PASS |
 | `MP-29-006` | 29 | Check constraints. | PASS | - | sqflite schema v3 | scripts/audit_evidence/storage.py | `storage.json` → `measurements.schema.constraintStrategy` | hard-coded API key + DROP TABLE + PRAGMA identifier from a variable -> 3 | no | PASS |
 | `MP-29-011` | 29 | Transaction boundaries doğru. | PASS | - | sqflite writes | scripts/audit_evidence/storage.py | `storage.json` → `measurements.schema.transactionBoundary` | hard-coded API key + DROP TABLE + PRAGMA identifier from a variable -> 3 | no | PASS |
 | `MP-29-012` | 29 | Isolation level düşünülmüş. | PASS | - | sqflite connection model | scripts/audit_evidence/storage.py | `storage.json` → `measurements.schema.isolationLevel` | hard-coded API key + DROP TABLE + PRAGMA identifier from a variable -> 3 | no | PASS |

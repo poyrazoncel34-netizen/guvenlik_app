@@ -8,7 +8,9 @@ import 'package:timezone/timezone.dart' as tz;
 import 'app_settings_service.dart';
 import 'dispatch_outcome.dart';
 import 'emergency_platform_service.dart';
+import '../navigation/app_destination.dart';
 import '../navigation/app_navigator.dart';
+import '../navigation/pending_destination_service.dart';
 import '../utils/permission_helper.dart';
 import '../../screens/fake_call_screen.dart';
 
@@ -202,8 +204,52 @@ class NotificationService {
     }
   }
 
+  /// Notification payloads this app emits, and where each one leads.
+  ///
+  /// A payload is untrusted input like any other external entry: it survives a
+  /// reboot inside Android's own store and comes back to us verbatim. So it is
+  /// matched against this allowlist and nothing else -- there is no "parse the
+  /// payload as a route" branch to abuse.
+  static const String fakeCallPayload = 'fake_call';
+
+  /// Payload -> destination, for every tap that lands inside the app proper.
+  ///
+  /// [fakeCallPayload] is deliberately ABSENT from this map, and that exception
+  /// is named rather than accidental: see [_handleNotificationResponse].
+  static final Map<String, AppDestination> payloadDestinations =
+      <String, AppDestination>{
+        'timeline': AppDestination.safetyTimeline,
+        'check_in': AppDestination.checkIn,
+        'subscription': AppDestination.subscription,
+      };
+
   void _handleNotificationResponse(NotificationResponse response) {
-    if (response.payload != 'fake_call') return;
+    final payload = response.payload;
+    if (payload == null) return;
+
+    // Every in-app destination goes through the SAME park the deep-link layer
+    // uses (MP-26-008), so a notification tap on a locked device waits behind
+    // the PIN gate exactly as a link does. Building a second navigation path
+    // here is how one of them ends up with a weaker gate.
+    final destination = payloadDestinations[payload];
+    if (destination != null) {
+      PendingDestinationService.instance.submitDestination(
+        destination,
+        source: ExternalEntrySource.notification,
+      );
+      return;
+    }
+
+    if (payload != fakeCallPayload) return;
+
+    // THE NAMED EXCEPTION. The fake call is a safety surface, not app data: its
+    // entire purpose is to produce a convincing incoming call instantly, in
+    // front of someone, which a PIN prompt would defeat -- the same reason the
+    // emergency escalation screen is not PIN-gated either. It is still gated:
+    // FakeCallScreen re-checks fake-call consent on entry and its only exit is
+    // a pop back to whatever was underneath, which is the unlock screen when
+    // the app is locked. It exposes the decoy identity the user themselves
+    // configured and nothing else.
     final navigator = rootNavigatorKey.currentState;
     if (navigator == null) return;
     navigator.push(MaterialPageRoute(builder: (_) => const FakeCallScreen()));

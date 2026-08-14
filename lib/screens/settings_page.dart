@@ -16,7 +16,6 @@ import 'package:url_launcher/url_launcher.dart';
 import '../core/app_colors.dart';
 import '../core/design_tokens.dart';
 import '../core/widgets/focus_ring.dart';
-import '../core/utils/permission_helper.dart';
 import '../core/constants/app_constants.dart';
 import '../core/services/subscription_gate.dart';
 import '../core/utils/app_reset_helper.dart';
@@ -26,6 +25,7 @@ import 'settings_detail_page.dart';
 import '../presentation/providers/settings_provider.dart';
 import '../presentation/providers/subscription_provider.dart';
 import 'battery_optimization_wizard.dart';
+import 'settings_notifications/notification_categories_screen.dart';
 import 'oem_background_guide_screen.dart';
 import 'settings_legal/legal_settings_screen.dart';
 import 'subscription/paywall_screen.dart';
@@ -129,13 +129,23 @@ class _SettingsPageState extends State<SettingsPage> {
               // -- and emergency alerts are the thing being promised. Android
               // owns this decision, so the row now opens the system screen
               // instead of holding a second, disagreeing copy of the answer.
+              // MP-23-010 / MP-26-006: per-CATEGORY control. The row used to
+              // jump straight to Android's app-level notification screen, which
+              // answers "notifications: on or off" and nothing about which of
+              // this app's four categories the user actually wants. The screen
+              // behind it still holds no local copy of the switch -- it reads
+              // the platform's current answer per channel and links to that
+              // channel's own Android screen.
               _buildNavigationTile(
                 icon: Icons.notifications_rounded,
                 iconColor: AppColors.warning,
                 title: "settings_notifications_title".tr(),
                 subtitle: "settings_notifications_subtitle".tr(),
-                onTap: () => unawaited(
-                  PermissionHelper.openNotificationSettings(),
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute<void>(
+                    builder: (_) => const NotificationCategoriesScreen(),
+                  ),
                 ),
               ),
               _buildDivider(),

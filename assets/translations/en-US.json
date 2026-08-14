@@ -979,5 +979,22 @@
   "dispatch_outcome_rejected": "The system refused it",
   "dispatch_outcome_exception": "System error",
   "dispatch_outcome_cancelled": "Skipped because it was cancelled",
-  "dispatch_outcome_suppressed": "Turned off in settings"
+  "dispatch_outcome_suppressed": "Turned off in settings",
+  "notification_categories_title": "Notification types",
+  "notification_categories_intro": "These are the notification types this app sends. The on/off switch lives in Android itself; here you see each type's current state and can jump straight to Android's settings screen for it.",
+  "notification_categories_open_settings": "Open in Android settings",
+  "notification_categories_read_failed": "Could not read the state",
+  "notification_categories_read_failed_body": "Notification settings cannot be read right now. You can check them in Android settings.",
+  "notification_category_emergency": "Emergency alerts",
+  "notification_category_emergency_desc": "Shown on panic dispatch, when a check-in expires, and on Safe Walk escalation.",
+  "notification_category_service": "Running notification",
+  "notification_category_service_desc": "Stays visible while a session is active. Android requires it.",
+  "notification_category_fake_call": "Fake call",
+  "notification_category_fake_call_desc": "The scheduled fake incoming-call notification.",
+  "notification_category_general": "Other notifications",
+  "notification_category_general_desc": "Anything else the app may tell you about.",
+  "notification_status_delivered": "Will be shown",
+  "notification_status_channel_muted": "This type is turned off in Android",
+  "notification_status_app_blocked": "The app has no notification permission",
+  "notification_status_safety_warning": "With this off you will not see the emergency alert. The app still sends the call request, but nothing appears on screen."
 }

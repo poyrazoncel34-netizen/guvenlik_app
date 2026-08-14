@@ -1263,14 +1263,15 @@
   "MP-11-014": {
     "archetype": "STATIC_CODE",
     "artifact": "interaction.json",
-    "disposition": "PARTIAL",
-    "gap": "interaction.json counts the notification call sites, but the DELIVERED notification was never observed: POST_NOTIFICATIONS was denied in every prior run and was granted for the first time in the 2026-08-14 resource pass, after these rows were written.",
-    "negativeControl": "PIN field offering password autofill + unlabelled field -> 2",
-    "property": "measurements.notificationFeedback.notificationSites",
-    "remediated": "no",
-    "remediation": "Re-run the notification surfaces with the permission granted and record what the user actually sees.",
-    "surface": "notification feedback",
-    "verifier": "scripts/audit_evidence/interaction.py"
+    "disposition": "PASS",
+    "gap": "None. A suppressed alert is now distinguishable from a delivered one.",
+    "negativeControl": "make suppression silent again, remove the muted-safety warning and bypass the destination park -> interaction.py 0 -> 5 violations",
+    "property": "measurements.notificationFeedback",
+    "remediated": "yes",
+    "remediation": "None in repo.",
+    "surface": "lib/core/services/notification_preferences_service.dart + lib/screens/settings_notifications/notification_categories_screen.dart",
+    "verifier": "scripts/audit_evidence/interaction.py",
+    "cite": "showEmergencyAlert returned void and returned EARLY when the user had notifications off, so a suppressed alert and a posted one were indistinguishable at every call site -- including the emergency dispatch, which rendered both as success"
   },
   "MP-11-016": {
     "archetype": "STATIC_CODE",
@@ -1677,14 +1678,15 @@
   "MP-23-010": {
     "archetype": "STATIC_CODE",
     "artifact": "interaction.json",
-    "disposition": "PARTIAL",
-    "gap": "interaction.json measurements.notificationFeedback.channelSetup names the channel setup, but per-category user preferences are not exposed in-app: the OS channel screen is the only control.",
-    "negativeControl": "PIN field offering password autofill + unlabelled field -> 2",
-    "property": "measurements.notificationFeedback.channelSetup",
-    "remediated": "no",
-    "remediation": "Either surface per-category toggles or state in settings that channel control lives in Android settings, and link to it.",
-    "surface": "notification preferences",
-    "verifier": "scripts/audit_evidence/interaction.py"
+    "disposition": "PASS",
+    "gap": "None. Per-category state is exposed in-app and each row links to that category's own Android channel screen.",
+    "negativeControl": "make suppression silent again, remove the muted-safety warning and bypass the destination park -> interaction.py 0 -> 5 violations",
+    "property": "measurements.notificationFeedback",
+    "remediated": "yes",
+    "remediation": "None in repo.",
+    "surface": "lib/core/services/notification_preferences_service.dart + lib/screens/settings_notifications/notification_categories_screen.dart",
+    "verifier": "scripts/audit_evidence/interaction.py",
+    "cite": "the previous evidence asserted that 'notification preference toggles live in settings'. They did not: the row opened Android's app-level screen, which answers a different question. A sentence is not a measurement"
   },
   "MP-23-015": {
     "archetype": "STATIC_CODE",
@@ -1701,14 +1703,15 @@
   "MP-26-006": {
     "archetype": "STATIC_CODE",
     "artifact": "interaction.json",
-    "disposition": "PARTIAL",
-    "gap": "interaction.json measurements.notificationFeedback.userFacingPreferenceSurface: the app holds no per-category preference store, so a user who wants check-in reminders but not rehearsal nudges has no in-app control.",
-    "negativeControl": "PIN field offering password autofill + unlabelled field -> 2",
-    "property": "measurements.notificationFeedback.userFacingPreferenceSurface",
-    "remediated": "no",
-    "remediation": "Same remediation as MP-23-010; one preference surface serves both rows.",
-    "surface": "in-app notification preference toggles",
-    "verifier": "scripts/audit_evidence/interaction.py"
+    "disposition": "PASS",
+    "gap": "None. One preference surface serves this row and MP-23-010, as the audit's own remediation proposed.",
+    "negativeControl": "make suppression silent again, remove the muted-safety warning and bypass the destination park -> interaction.py 0 -> 5 violations",
+    "property": "measurements.notificationFeedback",
+    "remediated": "yes",
+    "remediation": "None in repo.",
+    "surface": "lib/core/services/notification_preferences_service.dart + lib/screens/settings_notifications/notification_categories_screen.dart",
+    "verifier": "scripts/audit_evidence/interaction.py",
+    "cite": "the channels existed; the taxonomy did not, so a user who wanted emergency alerts but not the fake-call notification had no in-app control and no route to the right OS screen"
   },
   "MP-26-008": {
     "archetype": "STATIC_CONFIG",

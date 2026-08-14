@@ -2,10 +2,10 @@
   "verifier": "scripts/audit_evidence/interaction.py",
   "verifierVersion": "1.0.0",
   "codeRevision": {
-    "head": "59d1892fd8520cdb0563c5e61bb1d3a96543a212",
+    "head": "0404899d52bd56180e1c0350b3c963abba52c15a",
     "dirty": true
   },
-  "measuredOn": "2026-08-14",
+  "measuredOn": "2026-08-15",
   "command": "python3 scripts/audit_evidence/interaction.py",
   "surfaces": [
     "lib/screens/**",
@@ -24,8 +24,8 @@
       "enabledFalseSites": [],
       "disabledMechanism": "a condition yielding null into the callback, plus ThemeData's disabled colours",
       "selectableTextSites": [
-        "lib/screens/countdown_screen.dart:513",
-        "lib/screens/emergency_call_screen.dart:192",
+        "lib/screens/countdown_screen.dart:498",
+        "lib/screens/emergency_call_screen.dart:203",
         "lib/screens/legal/kvkk_disclosure_screen.dart:147",
         "lib/screens/legal/terms_of_service_screen.dart:139",
         "lib/screens/legal/unified_consent_screen.dart:361",
@@ -47,8 +47,8 @@
         "lib/core/utils/pin_settings_helper.dart:85",
         "lib/core/utils/pin_settings_helper.dart:105",
         "lib/screens/edit_profile_screen.dart:118",
-        "lib/screens/fake_call_screen.dart:582",
-        "lib/screens/fake_call_screen.dart:620",
+        "lib/screens/fake_call_screen.dart:592",
+        "lib/screens/fake_call_screen.dart:630",
         "lib/screens/safety_timeline_screen.dart:350",
         "lib/screens/safety_timeline_screen.dart:359",
         "lib/screens/safety_timeline_screen.dart:368"
@@ -61,8 +61,8 @@
         "lib/screens/contacts_page.dart:854",
         "lib/screens/contacts_page.dart:872",
         "lib/screens/edit_profile_screen.dart:119",
-        "lib/screens/fake_call_screen.dart:583",
-        "lib/screens/fake_call_screen.dart:621",
+        "lib/screens/fake_call_screen.dart:593",
+        "lib/screens/fake_call_screen.dart:631",
         "lib/screens/safety_timeline_screen.dart:412"
       ],
       "robustnessTest": "test/core/input_robustness_test.dart"
@@ -92,9 +92,40 @@
       "claim": "every state-changing action acknowledges on at least one channel, and the safety-critical ones on all three"
     },
     "notificationFeedback": {
-      "notificationSites": 4,
-      "channelSetup": "lib/core/services (notification service)",
-      "userFacingPreferenceSurface": "notification preference toggles live in settings; the OS channel is the authority and the app cannot re-enable a channel the user muted"
+      "notificationSites": 6,
+      "categories": [
+        "emergencyAlert",
+        "serviceStatus",
+        "fakeCall",
+        "general"
+      ],
+      "androidChannels": [
+        "EmergencyAlerts",
+        "GeneralNotifications",
+        "ServiceStatus"
+      ],
+      "safetyCriticalCategories": [
+        "emergencyAlert",
+        "serviceStatus"
+      ],
+      "preferenceScreen": "lib/screens/settings_notifications/notification_categories_screen.dart",
+      "reachableFromSettings": true,
+      "readsLivePlatformState": true,
+      "holdsLocalToggleCopy": false,
+      "perChannelSettingsDeepLink": true,
+      "postReportsSuppression": true,
+      "postReportsPermissionDenied": true,
+      "silencedSafetySurfaceWarned": true,
+      "tapRoutesThroughDestinationPark": true,
+      "payloadAllowlist": [
+        "timeline",
+        "check_in",
+        "subscription"
+      ],
+      "directPushExceptions": 1,
+      "coveringTests": [
+        "test/screens/notification_categories_test.dart"
+      ]
     },
     "undo": {
       "undoSites": [
@@ -150,7 +181,7 @@
   ],
   "negativeControl": {
     "command": "python3 scripts/audit_evidence/interaction.py --negative-control",
-    "mutation": "give the PIN field password autofill and add an unlabelled field",
-    "expected": "pinFieldOffersAutofill and unlabelledTextField fire"
+    "mutation": "give the PIN field password autofill; add an unlabelled field; make notification suppression silent again; remove the muted-safety warning; let a notification tap bypass the destination park",
+    "expected": "5 violations: pinFieldOffersAutofill, unlabelledTextField, suppressedNotificationLooksLikeSuccess, mutedSafetyChannelUnflagged and notificationTapBypassesGateModel"
   }
 }

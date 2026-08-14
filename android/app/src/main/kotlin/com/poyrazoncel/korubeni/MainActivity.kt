@@ -270,6 +270,32 @@ class MainActivity : FlutterFragmentActivity() {
                                     startActivity(intent)
                                     result.success(true)
                                 }
+                                "openNotificationChannelSettings" -> {
+                                    // Per-CHANNEL settings (MP-23-010 / MP-26-006).
+                                    // Android owns the switch; the app's job is to
+                                    // take the user to the right one rather than
+                                    // hold a second, disagreeing copy of it.
+                                    // Pre-O has no channels, so it falls back to
+                                    // the app-level screen.
+                                    val channelId = call.argument<String>("channelId").orEmpty()
+                                    val intent = if (
+                                        Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
+                                        channelId.isNotEmpty()
+                                    ) {
+                                        Intent(Settings.ACTION_CHANNEL_NOTIFICATION_SETTINGS).apply {
+                                            putExtra(Settings.EXTRA_APP_PACKAGE, packageName)
+                                            putExtra(Settings.EXTRA_CHANNEL_ID, channelId)
+                                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                        }
+                                    } else {
+                                        Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+                                            putExtra(Settings.EXTRA_APP_PACKAGE, packageName)
+                                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                        }
+                                    }
+                                    startActivity(intent)
+                                    result.success(true)
+                                }
                                 else -> result.notImplemented()
                             }
                         } catch (_: ActivityNotFoundException) {
