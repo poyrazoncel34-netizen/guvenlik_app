@@ -23,6 +23,7 @@ import '../core/services/consent_gate_service.dart';
 import '../domain/models/activity_event.dart';
 import '../models/consent_record.dart';
 import '../core/widgets/escape_dismissible.dart';
+import '../core/services/reduced_motion_policy.dart';
 
 class FakeCallScreen extends StatefulWidget {
   const FakeCallScreen({super.key});
@@ -52,7 +53,7 @@ class _FakeCallScreenState extends State<FakeCallScreen>
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1300),
-    )..repeat(reverse: true);
+    );
     _loadSavedSettings();
     // The ringtone used to start here, before either gate below had run. A
     // scheduled fake call could therefore play audio on a device whose owner
@@ -163,6 +164,21 @@ class _FakeCallScreenState extends State<FakeCallScreen>
     } else {
       if (mounted) Navigator.of(context).maybePop();
     }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Ambient loops start HERE, not in initState: initState runs before
+    // the MediaQuery is readable, so a controller started there has
+    // already ignored the platform's reduce-motion preference by the time
+    // anything can consult it. didChangeDependencies also re-runs when the
+    // user toggles the setting, so the change takes effect without a
+    // restart. ReducedMotionPolicy.pulse is idempotent by contract.
+    ReducedMotionPolicy.pulse(
+      _pulseController,
+      reduced: ReducedMotionPolicy.isReduced(context),
+    );
   }
 
   @override

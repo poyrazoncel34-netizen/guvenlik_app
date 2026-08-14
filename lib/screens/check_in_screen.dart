@@ -21,6 +21,7 @@ import '../core/widgets/safety_session_pin_gate.dart';
 import '../presentation/providers/subscription_provider.dart';
 import 'contacts_page.dart';
 import '../core/design_tokens.dart';
+import '../core/services/reduced_motion_policy.dart';
 // Analytics service removed (offline-first)
 
 class CheckInScreen extends StatefulWidget {
@@ -43,7 +44,7 @@ class _CheckInScreenState extends State<CheckInScreen>
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1200),
-    )..repeat(reverse: true);
+    );
     _staggerController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 800),
@@ -51,6 +52,21 @@ class _CheckInScreenState extends State<CheckInScreen>
     _service.addListener(_onServiceChanged);
     _service.initialize();
     // Analytics removed (offline-first)
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Ambient loops start HERE, not in initState: initState runs before
+    // the MediaQuery is readable, so a controller started there has
+    // already ignored the platform's reduce-motion preference by the time
+    // anything can consult it. didChangeDependencies also re-runs when the
+    // user toggles the setting, so the change takes effect without a
+    // restart. ReducedMotionPolicy.pulse is idempotent by contract.
+    ReducedMotionPolicy.pulse(
+      _pulseController,
+      reduced: ReducedMotionPolicy.isReduced(context),
+    );
   }
 
   @override

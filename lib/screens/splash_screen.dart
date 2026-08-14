@@ -21,6 +21,7 @@ import '../services/device_security_service.dart';
 import '../core/services/emergency_session_contract.dart';
 import '../core/services/pin_verification_service.dart';
 import '../core/widgets/escape_dismissible.dart';
+import '../core/services/reduced_motion_policy.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key, this.advance});
@@ -118,13 +119,13 @@ class _SplashScreenState extends State<SplashScreen>
     _shimmerController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1500),
-    )..repeat();
+    );
 
     // ── Glow pulse efekti ──
     _glowController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1800),
-    )..repeat(reverse: true);
+    );
 
     // Animasyon sıralaması
     _startAnimations();
@@ -275,13 +276,31 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // This screen already suppressed its one-shot logo and text animations under
+    // reduce-motion, but started the shimmer sweep and glow pulse with `..repeat()`
+    // cascades in initState -- so the two ambient loops ran anyway, on the very
+    // first screen the user ever sees. Both are decided here now.
+    _applyMotionPolicy();
+  }
+
+  void _applyMotionPolicy() {
+    final reduced = ReducedMotionPolicy.isReduced(context);
+    ReducedMotionPolicy.loop(_shimmerController, reduced: reduced);
+    ReducedMotionPolicy.pulse(_glowController, reduced: reduced);
+  }
+
+  @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.paused) {
       _shimmerController.stop();
       _glowController.stop();
     } else if (state == AppLifecycleState.resumed) {
-      if (!_shimmerController.isAnimating) _shimmerController.repeat();
-      if (!_glowController.isAnimating) _glowController.repeat(reverse: true);
+      // Resuming must re-ask, not blindly restart: an unconditional repeat() here
+      // reintroduced the defect on every return from the background even after
+      // initState was fixed.
+      if (mounted) _applyMotionPolicy();
     }
   }
 

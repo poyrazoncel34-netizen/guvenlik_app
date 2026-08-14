@@ -12,6 +12,7 @@ import '../core/motion.dart';
 import '../core/services/onboarding_contact_gate_service.dart';
 import 'main_navigation.dart';
 import 'onboarding/onboarding_contact_step.dart';
+import '../core/services/reduced_motion_policy.dart';
 
 /// Public entry point. It exists only to place [AppRestorationScope] ABOVE
 /// the stateful body, because a State cannot supply a restoration scope to
@@ -117,7 +118,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     _iconPulseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1800),
-    )..repeat(reverse: true);
+    );
 
     _fadeController = AnimationController(
       vsync: this,
@@ -164,6 +165,21 @@ class _OnboardingScreenState extends State<OnboardingScreen>
         transitionDuration: Motion.slow,
       ),
       (_) => false,
+    );
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Ambient loops start HERE, not in initState: initState runs before
+    // the MediaQuery is readable, so a controller started there has
+    // already ignored the platform's reduce-motion preference by the time
+    // anything can consult it. didChangeDependencies also re-runs when the
+    // user toggles the setting, so the change takes effect without a
+    // restart. ReducedMotionPolicy.pulse is idempotent by contract.
+    ReducedMotionPolicy.pulse(
+      _iconPulseController,
+      reduced: ReducedMotionPolicy.isReduced(context),
     );
   }
 

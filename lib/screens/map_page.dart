@@ -20,6 +20,8 @@ import '../core/utils/map_utils.dart';
 import '../domain/repositories/location_repository.dart';
 import '../core/widgets/escape_dismissible.dart';
 import '../core/design_tokens.dart';
+import '../core/services/reduced_motion_policy.dart';
+import '../core/utils/formatters.dart';
 
 class MapPage extends StatefulWidget {
   final bool isActive;
@@ -59,7 +61,7 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1500),
-    )..repeat(reverse: true);
+    );
 
     if (widget.isActive) {
       _initLocation();
@@ -76,6 +78,15 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
         !_hasRequestedInitialLocation) {
       _initLocation();
     }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Not initState: see ReducedMotionPolicy.pulse for why a construction
+    // cascade cannot honour a preference it is unable to read yet.
+    final reduced = ReducedMotionPolicy.isReduced(context);
+    ReducedMotionPolicy.pulse(_pulseController, reduced: reduced);
   }
 
   @override
@@ -459,7 +470,7 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
                               Text(
                                 'map_fallback_location_time'.tr(
                                   namedArgs: {
-                                    'time': _formatClock(_fallbackCheckedAt!),
+                                    'time': Formatters.clockHm(_fallbackCheckedAt!),
                                   },
                                 ),
                                 style: const TextStyle(
@@ -535,12 +546,6 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
           ),
       ],
     );
-  }
-
-  String _formatClock(DateTime value) {
-    final hour = value.hour.toString().padLeft(2, '0');
-    final minute = value.minute.toString().padLeft(2, '0');
-    return '$hour:$minute';
   }
 
   Widget _buildOfflineMapSurface() {

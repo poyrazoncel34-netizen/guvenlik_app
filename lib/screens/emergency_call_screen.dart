@@ -13,6 +13,7 @@ import '../core/app_colors.dart';
 import '../core/services/android_intent_service.dart';
 import '../core/services/call_service.dart';
 import '../core/services/foreground_service.dart';
+import '../core/services/reduced_motion_policy.dart';
 
 class EmergencyCallScreen extends StatefulWidget {
   final String name;
@@ -50,7 +51,7 @@ class _EmergencyCallScreenState extends State<EmergencyCallScreen>
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1300),
-    )..repeat(reverse: true);
+    );
 
     // Keep the CPU/screen awake while the user resolves the emergency call.
     // Idempotent with any wakelock acquired by CountdownScreen; the matching
@@ -274,6 +275,21 @@ class _EmergencyCallScreenState extends State<EmergencyCallScreen>
     final owner = widget.foregroundOwner;
     if (owner == null || owner.isEmpty) return;
     await KoruBeniForegroundService.stop(owner: owner);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Ambient loops start HERE, not in initState: initState runs before
+    // the MediaQuery is readable, so a controller started there has
+    // already ignored the platform's reduce-motion preference by the time
+    // anything can consult it. didChangeDependencies also re-runs when the
+    // user toggles the setting, so the change takes effect without a
+    // restart. ReducedMotionPolicy.pulse is idempotent by contract.
+    ReducedMotionPolicy.pulse(
+      _pulseController,
+      reduced: ReducedMotionPolicy.isReduced(context),
+    );
   }
 
   @override

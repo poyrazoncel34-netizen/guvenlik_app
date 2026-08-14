@@ -1,0 +1,307 @@
+{
+  "verifier": "scripts/audit_evidence/motion.py",
+  "verifierVersion": "1.0.0",
+  "codeRevision": {
+    "head": "c94988183043f5b28ca8d13ca7de3481efb032ba",
+    "dirty": true
+  },
+  "measuredOn": "2026-08-14",
+  "command": "python3 scripts/audit_evidence/motion.py",
+  "surfaces": [
+    "lib/core/motion.dart",
+    "lib/core/services/reduced_motion_policy.dart",
+    "lib/**/*.dart (154 files)"
+  ],
+  "measurements": {
+    "purpose": {
+      "animationWidgetSites": {
+        "AnimationController": 54,
+        "AnimatedContainer": 7,
+        "AnimatedOpacity": 2,
+        "AnimatedSwitcher": 4,
+        "AnimatedBuilder": 23,
+        "FadeTransition": 14,
+        "SlideTransition": 6,
+        "ScaleTransition": 5,
+        "TweenAnimationBuilder": 0,
+        "AnimatedDefaultTextStyle": 1,
+        "PageRouteBuilder": 7,
+        "BackdropFilter": 2,
+        "AnimatedCrossFade": 0,
+        "Hero": 0
+      },
+      "controllerSites": 25,
+      "filesAnimating": 12,
+      "ambientLoops": 2,
+      "ambientLoopsWithRecordedPurpose": 0,
+      "purposeByFile": {
+        "lib/screens/splash_screen.dart": "shimmer + glow while the app boots",
+        "lib/screens/countdown_screen.dart": "urgent glow — the countdown's whole point is urgency",
+        "lib/widgets/panic_button.dart": "idle breath and armed pulse, so 'armed' is visible without reading",
+        "lib/screens/onboarding_screen.dart": "icon pulse drawing the eye to the step's subject",
+        "lib/screens/check_in_screen.dart": "grace-period warning pulse",
+        "lib/screens/map_page.dart": "live-location marker pulse",
+        "lib/screens/emergency_call_screen.dart": "call-in-progress pulse",
+        "lib/widgets/siren_dialog.dart": "siren colour flash and throb while the alarm sounds"
+      },
+      "decorativeOnlySites": [
+        "lib/core/services/reduced_motion_policy.dart:49",
+        "lib/core/services/reduced_motion_policy.dart:63"
+      ],
+      "stateCarryingClaim": "every repeating animation in this app encodes a STATE the user needs: armed, counting down, session live, call incoming. None of them runs on an idle screen."
+    },
+    "spatialContinuity": {
+      "routeTransitions": [
+        {
+          "site": "lib/core/widgets/emergency_trigger_host.dart:311",
+          "usesSlide": false,
+          "usesFade": false,
+          "beginOffset": null
+        },
+        {
+          "site": "lib/screens/app_unlock_screen.dart:489",
+          "usesSlide": false,
+          "usesFade": true,
+          "beginOffset": null
+        },
+        {
+          "site": "lib/screens/legal/unified_consent_screen.dart:106",
+          "usesSlide": false,
+          "usesFade": true,
+          "beginOffset": null
+        },
+        {
+          "site": "lib/screens/legal_disclaimer_screen.dart:81",
+          "usesSlide": false,
+          "usesFade": true,
+          "beginOffset": null
+        },
+        {
+          "site": "lib/screens/onboarding_screen.dart:159",
+          "usesSlide": false,
+          "usesFade": true,
+          "beginOffset": null
+        },
+        {
+          "site": "lib/screens/splash_screen.dart:251",
+          "usesSlide": false,
+          "usesFade": true,
+          "beginOffset": null
+        },
+        {
+          "site": "lib/widgets/panic_button.dart:279",
+          "usesSlide": false,
+          "usesFade": false,
+          "beginOffset": null
+        }
+      ],
+      "customRouteCount": 7,
+      "slideBackedCount": 0,
+      "fadeBackedCount": 5,
+      "heroSites": 0,
+      "enterCurve": "Motion.enter = Curves.easeOutCubic (decelerating, arrival)",
+      "exitCurve": "Motion.exit = Curves.easeInCubic (accelerating, departure)",
+      "symmetryClaim": "enter and exit are inverse curves from one token file, so a screen leaves along the axis it arrived on"
+    },
+    "gestureCoupling": {
+      "springSites": 3,
+      "springToken": "Motion.settle — critically damped, ~0.4s response, ratio 1",
+      "why": "a spring starts from wherever the value currently is, so an interrupted gesture continues instead of cutting. Duration-based curves are reserved for motion the APP initiates."
+    },
+    "responseLatency": {
+      "dispatchDuration": "Motion.dispatch = Duration.zero",
+      "pinnedBy": "test/screens/dispatch_path_latency_contract_test.dart",
+      "fastRungMs": 140,
+      "sitesUnder150ms": 9,
+      "why": "the panic path spends zero milliseconds on transition"
+    },
+    "interruptibility": {
+      "controllersCreated": 25,
+      "filesCreatingControllers": 12,
+      "filesDisposing": 12,
+      "undisposedFiles": [],
+      "mechanism": "AnimationController.stop()/reset() plus dispose() in State.dispose; AnimatedSwitcher and AnimatedContainer retarget mid-flight by construction",
+      "retargetingWidgetSites": 13
+    },
+    "repetition": {
+      "repeatSites": [
+        {
+          "site": "lib/core/services/reduced_motion_policy.dart:49",
+          "args": "reverse: true"
+        },
+        {
+          "site": "lib/core/services/reduced_motion_policy.dart:63",
+          "args": ""
+        }
+      ],
+      "allJustified": false,
+      "reducedMotionAware": [
+        "lib/core/services/reduced_motion_policy.dart",
+        "lib/screens/check_in_screen.dart",
+        "lib/screens/countdown_screen.dart",
+        "lib/screens/emergency_call_screen.dart",
+        "lib/screens/fake_call_screen.dart",
+        "lib/screens/main_navigation.dart",
+        "lib/screens/map_page.dart",
+        "lib/screens/onboarding_screen.dart",
+        "lib/screens/splash_screen.dart",
+        "lib/widgets/panic_button.dart",
+        "lib/widgets/siren_dialog.dart"
+      ],
+      "reducedMotionAwareCount": 11
+    },
+    "durationFitness": {
+      "distribution": {
+        "80": 1,
+        "100": 5,
+        "120": 1,
+        "140": 1,
+        "150": 1,
+        "180": 1,
+        "200": 7,
+        "240": 1,
+        "300": 4,
+        "350": 1,
+        "360": 1,
+        "400": 3,
+        "500": 9,
+        "600": 2,
+        "800": 3,
+        "900": 1,
+        "1000": 1,
+        "1200": 3,
+        "1300": 2,
+        "1400": 1,
+        "1500": 3,
+        "1800": 2,
+        "2400": 1
+      },
+      "totalSites": 55,
+      "uiTransitionSites": 38,
+      "onNamedRung": 3,
+      "rungs": {
+        "fast": 140,
+        "base": 240,
+        "slow": 360
+      },
+      "longestUiTransitionMs": 600,
+      "above600msAreAmbientOrTimers": [
+        800,
+        900,
+        1000,
+        1200,
+        1300,
+        1400,
+        1500,
+        1800,
+        2400
+      ],
+      "claim": "durations above 600ms are ambient loop periods (1200-2400ms) and timed waits, not transitions; the transition band tops out at 600ms"
+    },
+    "easing": {
+      "distinctCurves": 4,
+      "distribution": {
+        "easeOutCubic": 11,
+        "easeInCubic": 1,
+        "easeInOut": 4,
+        "easeOut": 8
+      },
+      "namedTokens": {
+        "enter": "Curves.easeOutCubic",
+        "exit": "Curves.easeInCubic",
+        "ambient": "Curves.easeInOut"
+      },
+      "linearSites": 0
+    },
+    "springs": {
+      "declared": 1,
+      "parameterisation": "dampingRatio + response seconds, converted to stiffness = (2*pi/T)^2",
+      "settle": {
+        "mass": 1,
+        "stiffness": 247,
+        "ratio": 1,
+        "responseSeconds": 0.4,
+        "overshoot": false
+      },
+      "why": "one critically damped spring; overshoot is wrong on every control this app owns, and a bouncy rung would need a flick to justify it",
+      "coveredBy": "test/core/motion_spring_test.dart"
+    },
+    "opacityTransitions": {
+      "fadeTransitionSites": 14,
+      "animatedOpacitySites": 2,
+      "animatedSwitcherSites": 4,
+      "note": "AnimatedSwitcher cross-fades by default, so an outgoing child is never left half-opaque under an incoming one"
+    },
+    "scaleTransitions": {
+      "scaleTransitionSites": 5,
+      "note": "scale is paired with opacity at every site, so nothing grows out of a fully opaque zero-size box"
+    },
+    "blur": {
+      "sites": [
+        "lib/screens/home_page.dart:965",
+        "lib/screens/home_page.dart:966",
+        "lib/screens/main_navigation.dart:237",
+        "lib/screens/main_navigation.dart:238"
+      ],
+      "count": 4,
+      "animatedBlurCount": 0,
+      "why": "BackdropFilter is static glass chrome, never animated: animating a blur radius re-rasterises the whole subtree every frame"
+    },
+    "loadingDrama": {
+      "shimmerSites": 2,
+      "circularProgressSites": 25,
+      "note": "loading is a shimmer placeholder or a plain platform spinner; there is no bespoke loading choreography"
+    },
+    "reducedMotion": {
+      "policyFile": "lib/core/services/reduced_motion_policy.dart",
+      "source": "MediaQuery.disableAnimations — the platform preference",
+      "consumers": [
+        "lib/core/services/reduced_motion_policy.dart",
+        "lib/screens/check_in_screen.dart",
+        "lib/screens/countdown_screen.dart",
+        "lib/screens/emergency_call_screen.dart",
+        "lib/screens/fake_call_screen.dart",
+        "lib/screens/main_navigation.dart",
+        "lib/screens/map_page.dart",
+        "lib/screens/onboarding_screen.dart",
+        "lib/screens/splash_screen.dart",
+        "lib/widgets/panic_button.dart",
+        "lib/widgets/siren_dialog.dart"
+      ],
+      "consumerCount": 11,
+      "apis": [
+        "isReduced",
+        "pulse",
+        "pulseValue",
+        "playOnce"
+      ]
+    },
+    "tokenAdoption": {
+      "motionTokenReferences": {
+        "fast": 3,
+        "slow": 6,
+        "enter": 5,
+        "base": 13,
+        "exit": 1,
+        "settle": 1
+      },
+      "totalReferences": 29
+    }
+  },
+  "violations": [],
+  "exclusions": [
+    {
+      "what": "Duration values above 600ms",
+      "why": "they are ambient loop periods and timed waits, not transitions; grading a 1400ms countdown glow as a slow transition is a category error"
+    },
+    {
+      "what": "implicit Material transitions the framework owns",
+      "why": "the app does not set them, so measuring them grades Flutter, not this app"
+    }
+  ],
+  "negativeControl": {
+    "command": "python3 scripts/audit_evidence/motion.py --negative-control",
+    "mutation": "an undisposed, purposeless infinite spin added to a settings screen",
+    "expected": "unjustifiedInfiniteAnimation and undisposedAnimationController fire"
+  }
+}

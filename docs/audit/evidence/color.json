@@ -1,0 +1,565 @@
+{
+  "verifier": "scripts/audit_evidence/color.py",
+  "verifierVersion": "1.0.0",
+  "codeRevision": {
+    "head": "c94988183043f5b28ca8d13ca7de3481efb032ba",
+    "dirty": true
+  },
+  "measuredOn": "2026-08-14",
+  "command": "python3 scripts/audit_evidence/color.py",
+  "surfaces": [
+    "lib/core/app_colors.dart",
+    "lib/core/app_theme.dart",
+    "lib/**/*.dart (154 files) for usage counts"
+  ],
+  "measurements": {
+    "paletteFile": "lib/core/app_colors.dart",
+    "namedColours": 26,
+    "brand": {
+      "primary": "#2EC5FF",
+      "primaryDark": "#0F6AA3",
+      "primaryLight": "#74E4FF",
+      "accent": "#16E0C4",
+      "gradientStart": "#0D2137",
+      "gradientEnd": "#0A1B2A",
+      "rampMonotonic": true,
+      "usageSites": 171
+    },
+    "semantic": {
+      "success": {
+        "hex": "#2CB5A0",
+        "sites": 74,
+        "note": "teal rather than green -- chosen for dichromat separation"
+      },
+      "warning": {
+        "hex": "#FFB547",
+        "sites": 103
+      },
+      "error": {
+        "hex": "#FF4D4D",
+        "token": "AppColors.emergency",
+        "sites": 106,
+        "note": "one token carries both 'error' and 'emergency'; this app's error surface IS its emergency surface"
+      },
+      "info": {
+        "hex": "#4C8DFF",
+        "sites": 51
+      },
+      "allFourDistinct": true
+    },
+    "backgrounds": {
+      "background": "#0A1B2A",
+      "gradientStart": "#0D2137",
+      "gradientEnd": "#0A1B2A",
+      "luminance": {
+        "background": 0.0102,
+        "gradientStart": 0.0145,
+        "gradientEnd": 0.0102
+      }
+    },
+    "surfaceLevels": {
+      "ladder": [
+        "background",
+        "surface",
+        "cardBg",
+        "cardHover"
+      ],
+      "hex": {
+        "background": "#0A1B2A",
+        "surface": "#10263A",
+        "cardBg": "#122B42",
+        "cardHover": "#163350"
+      },
+      "luminance": {
+        "background": 0.0102,
+        "surface": 0.018,
+        "cardBg": 0.0225,
+        "cardHover": 0.0312
+      },
+      "strictlyAscending": true,
+      "glassOverlays": {
+        "glass": {
+          "argb": "0x1AFFFFFF",
+          "compositedOverBackground": "#233240"
+        },
+        "glassLight": {
+          "argb": "0x0DFFFFFF",
+          "compositedOverBackground": "#162735"
+        },
+        "glassBorder": {
+          "argb": "0x33FFFFFF",
+          "compositedOverBackground": "#3B4955"
+        }
+      }
+    },
+    "borders": {
+      "border": "#1D3B54",
+      "glassBorder": "#3B4955",
+      "sites": 90,
+      "contrastAgainstBackground": 1.5
+    },
+    "interactionStates": {
+      "hover": {
+        "token": "AppColors.cardHover",
+        "hex": "#163350",
+        "deltaFromResting": 16.6,
+        "note": "Android has no hover pointer; this tone serves the pointer/keyboard-highlight case and the pressed ripple base"
+      },
+      "pressed": {
+        "mechanism": "Material InkWell splash + highlight from ThemeData",
+        "themeSites": 0
+      },
+      "selected": {
+        "mechanism": "AppColors.primary fill / tint on the selected item",
+        "sites": 171
+      }
+    },
+    "focusIndicator": {
+      "innerRing": "#2EC5FF",
+      "outerRing": "#0A1B2A",
+      "widths": {
+        "ring": 2,
+        "outline": 2,
+        "total": 4
+      },
+      "minContrastToken": 3.0,
+      "whyTwoTone": "measured: a single primary ring reads 7.27:1 on dark surfaces but 1.17:1 on the bright cyan profile card; background is the exact inverse. Two tones guarantee one of them clears 3:1 on every surface.",
+      "measuredPairs": {
+        "focusRing|cardBg": 7.27,
+        "focusRing|background": 8.77,
+        "focusRingOutline|primary": 8.77
+      }
+    },
+    "textContrast": {
+      "bar": {
+        "normal": 4.5,
+        "large": 3.0
+      },
+      "pairsMeasured": 16,
+      "pairsPassingAA": 15,
+      "worst": {
+        "foreground": "emergency",
+        "background": "cardBg",
+        "usedFor": "emergency label on a card",
+        "ratio": 4.43,
+        "bar": 4.5,
+        "passesAA": false,
+        "passesAALarge": true,
+        "passesAAA": false
+      },
+      "best": {
+        "foreground": "textPrimary",
+        "background": "background",
+        "usedFor": "body copy on the page ground",
+        "ratio": 16.26,
+        "bar": 4.5,
+        "passesAA": true,
+        "passesAALarge": true,
+        "passesAAA": true
+      },
+      "pairs": [
+        {
+          "foreground": "textPrimary",
+          "background": "background",
+          "usedFor": "body copy on the page ground",
+          "ratio": 16.26,
+          "bar": 4.5,
+          "passesAA": true,
+          "passesAALarge": true,
+          "passesAAA": true
+        },
+        {
+          "foreground": "textPrimary",
+          "background": "surface",
+          "usedFor": "body copy on a sheet",
+          "ratio": 14.38,
+          "bar": 4.5,
+          "passesAA": true,
+          "passesAALarge": true,
+          "passesAAA": true
+        },
+        {
+          "foreground": "textPrimary",
+          "background": "cardBg",
+          "usedFor": "card title",
+          "ratio": 13.49,
+          "bar": 4.5,
+          "passesAA": true,
+          "passesAALarge": true,
+          "passesAAA": true
+        },
+        {
+          "foreground": "textSecondary",
+          "background": "background",
+          "usedFor": "helper line on the page ground",
+          "ratio": 7.84,
+          "bar": 4.5,
+          "passesAA": true,
+          "passesAALarge": true,
+          "passesAAA": true
+        },
+        {
+          "foreground": "textSecondary",
+          "background": "surface",
+          "usedFor": "helper line on a sheet",
+          "ratio": 6.93,
+          "bar": 4.5,
+          "passesAA": true,
+          "passesAALarge": true,
+          "passesAAA": false
+        },
+        {
+          "foreground": "textSecondary",
+          "background": "cardBg",
+          "usedFor": "card subtitle",
+          "ratio": 6.5,
+          "bar": 4.5,
+          "passesAA": true,
+          "passesAALarge": true,
+          "passesAAA": false
+        },
+        {
+          "foreground": "primary",
+          "background": "background",
+          "usedFor": "link / accent label",
+          "ratio": 8.77,
+          "bar": 4.5,
+          "passesAA": true,
+          "passesAALarge": true,
+          "passesAAA": true
+        },
+        {
+          "foreground": "primary",
+          "background": "cardBg",
+          "usedFor": "accent label on a card",
+          "ratio": 7.27,
+          "bar": 4.5,
+          "passesAA": true,
+          "passesAALarge": true,
+          "passesAAA": true
+        },
+        {
+          "foreground": "emergency",
+          "background": "background",
+          "usedFor": "emergency label",
+          "ratio": 5.34,
+          "bar": 4.5,
+          "passesAA": true,
+          "passesAALarge": true,
+          "passesAAA": false
+        },
+        {
+          "foreground": "emergency",
+          "background": "cardBg",
+          "usedFor": "emergency label on a card",
+          "ratio": 4.43,
+          "bar": 4.5,
+          "passesAA": false,
+          "passesAALarge": true,
+          "passesAAA": false
+        },
+        {
+          "foreground": "success",
+          "background": "background",
+          "usedFor": "success label",
+          "ratio": 6.84,
+          "bar": 4.5,
+          "passesAA": true,
+          "passesAALarge": true,
+          "passesAAA": false
+        },
+        {
+          "foreground": "success",
+          "background": "cardBg",
+          "usedFor": "success label on a card",
+          "ratio": 5.67,
+          "bar": 4.5,
+          "passesAA": true,
+          "passesAALarge": true,
+          "passesAAA": false
+        },
+        {
+          "foreground": "warning",
+          "background": "background",
+          "usedFor": "warning label",
+          "ratio": 9.93,
+          "bar": 4.5,
+          "passesAA": true,
+          "passesAALarge": true,
+          "passesAAA": true
+        },
+        {
+          "foreground": "warning",
+          "background": "cardBg",
+          "usedFor": "warning label on a card",
+          "ratio": 8.24,
+          "bar": 4.5,
+          "passesAA": true,
+          "passesAALarge": true,
+          "passesAAA": true
+        },
+        {
+          "foreground": "info",
+          "background": "background",
+          "usedFor": "info label",
+          "ratio": 5.45,
+          "bar": 4.5,
+          "passesAA": true,
+          "passesAALarge": true,
+          "passesAAA": false
+        },
+        {
+          "foreground": "info",
+          "background": "cardBg",
+          "usedFor": "info label on a card",
+          "ratio": 4.53,
+          "bar": 4.5,
+          "passesAA": true,
+          "passesAALarge": true,
+          "passesAAA": false
+        }
+      ]
+    },
+    "nonTextContrast": {
+      "criterion": "WCAG 2.1 SC 1.4.11 Non-text Contrast (AA)",
+      "scopeNote": "applied to control boundaries only. A card fill is not a user interface component; a text input's boundary is.",
+      "bar": 3.0,
+      "pairsMeasured": 5,
+      "pairsPassing": 3,
+      "pairs": [
+        {
+          "colour": "border",
+          "against": "background",
+          "usedFor": "TEXT INPUT resting boundary on the page ground (InputDecorationTheme.enabledBorder)",
+          "ratio": 1.5,
+          "bar": 3.0,
+          "passes": false
+        },
+        {
+          "colour": "surface",
+          "against": "background",
+          "usedFor": "TEXT INPUT fill on the page ground (InputDecorationTheme.fillColor, filled: true)",
+          "ratio": 1.13,
+          "bar": 3.0,
+          "passes": false
+        },
+        {
+          "colour": "primary",
+          "against": "background",
+          "usedFor": "text input FOCUSED boundary on the page ground",
+          "ratio": 8.77,
+          "bar": 3.0,
+          "passes": true
+        },
+        {
+          "colour": "focusRing",
+          "against": "cardBg",
+          "usedFor": "focus ring inner tone on a card",
+          "ratio": 7.27,
+          "bar": 3.0,
+          "passes": true
+        },
+        {
+          "colour": "focusRingOutline",
+          "against": "primary",
+          "usedFor": "focus ring outline against its own inner tone",
+          "ratio": 8.77,
+          "bar": 3.0,
+          "passes": true
+        }
+      ]
+    },
+    "surfaceSeparation": {
+      "graded": false,
+      "why": "decorative depth, not component identification",
+      "pairs": [
+        {
+          "colour": "cardBg",
+          "against": "background",
+          "usedFor": "card surface against the page ground",
+          "ratio": 1.21
+        },
+        {
+          "colour": "surface",
+          "against": "background",
+          "usedFor": "sheet against the page ground",
+          "ratio": 1.13
+        },
+        {
+          "colour": "border",
+          "against": "cardBg",
+          "usedFor": "card outline on a card",
+          "ratio": 1.25
+        },
+        {
+          "colour": "cardHover",
+          "against": "cardBg",
+          "usedFor": "highlighted row against its resting tone",
+          "ratio": 1.12
+        }
+      ]
+    },
+    "tintedContainerText": {
+      "why": "the app draws emergency-coloured text INSIDE containers tinted with that same colour. Measuring the text against a flat surface reports a pass the screen does not deliver.",
+      "bar": 4.5,
+      "pairs": [
+        {
+          "foreground": "emergency",
+          "tintAlpha": 0.1,
+          "ground": "background",
+          "usedFor": "check_in grace warning, pulse minimum",
+          "site": "lib/screens/check_in_screen.dart:460",
+          "compositedTint": "#23202E",
+          "ratio": 4.87
+        },
+        {
+          "foreground": "emergency",
+          "tintAlpha": 0.25,
+          "ground": "background",
+          "usedFor": "check_in grace warning, pulse maximum",
+          "site": "lib/screens/check_in_screen.dart:460",
+          "compositedTint": "#472833",
+          "ratio": 3.97
+        },
+        {
+          "foreground": "emergency",
+          "tintAlpha": 0.12,
+          "ground": "background",
+          "usedFor": "PIN lockout countdown chip",
+          "site": "lib/screens/app_unlock_screen.dart:314",
+          "compositedTint": "#28212E",
+          "ratio": 4.77
+        },
+        {
+          "foreground": "emergency",
+          "tintAlpha": 0.12,
+          "ground": "cardBg",
+          "usedFor": "emergency badge on a card",
+          "site": "lib/screens/contacts_page.dart:318",
+          "compositedTint": "#2F2F43",
+          "ratio": 3.99
+        }
+      ]
+    },
+    "colourVisionSafety": {
+      "method": "linear-RGB dichromacy simulation, three types",
+      "rolesCompared": [
+        "success",
+        "warning",
+        "emergency",
+        "info"
+      ],
+      "separationBar": 40,
+      "byType": {
+        "protanopia": {
+          "simulated": {
+            "success": "#6769A5",
+            "warning": "#DFDE62",
+            "emergency": "#B2B04D",
+            "info": "#6869E3"
+          },
+          "pairwiseRgbDistance": {
+            "success|warning": 180.5,
+            "success|emergency": 135.7,
+            "success|info": 62.0,
+            "warning|emergency": 67.7,
+            "warning|info": 210.9,
+            "emergency|info": 181.7
+          },
+          "minimumDistance": 62.0
+        },
+        "deuteranopia": {
+          "simulated": {
+            "success": "#5F55A6",
+            "warning": "#E3E968",
+            "emergency": "#BCCA4D",
+            "info": "#6460DD"
+          },
+          "pairwiseRgbDistance": {
+            "success|warning": 207.8,
+            "success|emergency": 174.0,
+            "success|info": 56.3,
+            "warning|emergency": 56.7,
+            "warning|info": 220.4,
+            "emergency|info": 199.3
+          },
+          "minimumDistance": 56.3
+        },
+        "tritanopia": {
+          "simulated": {
+            "success": "#33A9AA",
+            "warning": "#FB777B",
+            "emergency": "#F64D4D",
+            "info": "#4FCEC9"
+          },
+          "pairwiseRgbDistance": {
+            "success|warning": 211.4,
+            "success|emergency": 234.8,
+            "success|info": 55.8,
+            "warning|emergency": 62.5,
+            "warning|info": 207.9,
+            "emergency|info": 244.8
+          },
+          "minimumDistance": 55.8
+        }
+      },
+      "redundantEncoding": {
+        "statusIconSites": 59,
+        "semanticsAnnotationSites": 40,
+        "claim": "status is carried by icon + text label in addition to colour"
+      }
+    },
+    "oled": {
+      "darkestSurface": "#0A1B2A",
+      "darkestLuminance": 0.0102,
+      "isTrueBlack": false,
+      "why": "the ground is #0A1B2A, not #000000. On an OLED panel a true-black ground next to bright cyan is what produces halo/blooming and the black-smear artefact on scroll; a near-black keeps every pixel lit.",
+      "brightestLargeArea": "#2EC5FF",
+      "peakVsGroundRatio": 8.77
+    }
+  },
+  "violations": [
+    {
+      "rule": "textContrastBelowAA",
+      "detail": "emergency on cardBg (emergency label on a card) = 4.43:1, bar 4.5",
+      "ratio": 4.43
+    },
+    {
+      "rule": "nonTextContrastBelow3",
+      "detail": "border vs background (TEXT INPUT resting boundary on the page ground (InputDecorationTheme.enabledBorder)) = 1.50:1",
+      "ratio": 1.5
+    },
+    {
+      "rule": "nonTextContrastBelow3",
+      "detail": "surface vs background (TEXT INPUT fill on the page ground (InputDecorationTheme.fillColor, filled: true)) = 1.13:1",
+      "ratio": 1.13
+    },
+    {
+      "rule": "tintedContainerTextBelowAA",
+      "detail": "emergency text on emergency@25% over background (check_in grace warning, pulse maximum) = 3.97:1",
+      "site": "lib/screens/check_in_screen.dart:460",
+      "ratio": 3.97
+    },
+    {
+      "rule": "tintedContainerTextBelowAA",
+      "detail": "emergency text on emergency@12% over cardBg (emergency badge on a card) = 3.99:1",
+      "site": "lib/screens/contacts_page.dart:318",
+      "ratio": 3.99
+    }
+  ],
+  "exclusions": [
+    {
+      "what": "colour pairs the app never renders together",
+      "why": "a cartesian product of the palette manufactures both false passes and false failures; only real pairings are measured"
+    },
+    {
+      "what": "the unreachable light ThemeData",
+      "why": "measured separately under MP-04-015; it renders to no user today"
+    }
+  ],
+  "negativeControl": {
+    "command": "python3 scripts/audit_evidence/color.py --negative-control",
+    "mutation": "unreadable secondary text, a red 'success', and a card surface merged into the page ground",
+    "expected": "violations rise above baseline"
+  }
+}

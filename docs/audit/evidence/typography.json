@@ -1,0 +1,196 @@
+{
+  "verifier": "scripts/audit_evidence/typography.py",
+  "verifierVersion": "1.0.0",
+  "codeRevision": {
+    "head": "c94988183043f5b28ca8d13ca7de3481efb032ba",
+    "dirty": true
+  },
+  "measuredOn": "2026-08-14",
+  "command": "python3 scripts/audit_evidence/typography.py",
+  "surfaces": [
+    "lib/**/*.dart (154 files)",
+    "lib/core/design_tokens.dart (TypeScale)",
+    "lib/core/app_theme.dart",
+    "pubspec.yaml (fonts section)"
+  ],
+  "measurements": {
+    "fontFamily": {
+      "declaredFamilies": {},
+      "indirectFamilyReferences": {
+        "_fontFamily": 2
+      },
+      "indirectResolution": "every `fontFamily:` reference in lib/ is the identifier `_fontFamily`, declared `static const String? _fontFamily = null` in lib/core/app_theme.dart -- i.e. the platform face",
+      "themeFamilyConstant": "_fontFamily = null (lib/core/app_theme.dart)",
+      "resolvesTo": "platform system face — Roboto on Android, SF Pro on iOS",
+      "bundledFontAssets": 0,
+      "pubspecFontsSection": "commented out; no custom face is shipped",
+      "why": "A safety app that ships no font asset can never fail to render because a webfont did not load, and inherits the user's own system font scaling and face substitutions for free.",
+      "fallbackChain": "Flutter delegates to the platform font manager; with fontFamily null the chain is the OS default face plus the OS fallback list, which is what renders Turkish diacritics and emoji."
+    },
+    "typeScale": {
+      "rungs": {
+        "caption": 11.0,
+        "bodySmall": 12.0,
+        "body": 13.0,
+        "bodyLarge": 14.0,
+        "subtitle": 16.0,
+        "title": 18.0,
+        "headline": 22.0,
+        "display": 26.0,
+        "hero": 34.0
+      },
+      "distinctSizesInUse": 21,
+      "totalSizeSites": 329,
+      "onScaleSites": 252,
+      "onScalePercent": 76.6,
+      "distribution": {
+        "9.0": 1,
+        "10.0": 3,
+        "11.0": 12,
+        "12.0": 49,
+        "13.0": 63,
+        "14.0": 51,
+        "15.0": 33,
+        "16.0": 41,
+        "17.0": 13,
+        "18.0": 19,
+        "19.0": 2,
+        "20.0": 12,
+        "22.0": 10,
+        "24.0": 5,
+        "26.0": 5,
+        "28.0": 2,
+        "30.0": 3,
+        "32.0": 1,
+        "34.0": 2,
+        "42.0": 1,
+        "48.0": 1
+      }
+    },
+    "headingHierarchy": {
+      "rungs": {
+        "subtitle": 16.0,
+        "title": 18.0,
+        "headline": 22.0,
+        "display": 26.0,
+        "hero": 34.0
+      },
+      "minimumAdjacentDelta": 2.0,
+      "semanticHeaderWidgets": 9
+    },
+    "bodyReadability": {
+      "bodySizesInUse": [
+        11.0,
+        12.0,
+        13.0,
+        14.0,
+        15.0,
+        16.0,
+        17.0,
+        18.0
+      ],
+      "dominantBodySize": 13.0,
+      "sitesAtOrBelow12": 65,
+      "smallestSizeInUse": 9.0
+    },
+    "lineHeight": {
+      "distribution": {
+        "1.0": 1,
+        "1.1": 1,
+        "1.3": 2,
+        "1.35": 5,
+        "1.4": 37,
+        "1.45": 9,
+        "1.5": 30,
+        "1.6": 4,
+        "1.65": 1
+      },
+      "sitesWithExplicitHeight": 90,
+      "atOrAbove1_3": 88,
+      "atOrAbove1_3Percent": 97.8,
+      "minimum": 1.0,
+      "flutterDefaultWhenAbsent": "the font's own metric ratio (~1.16 for Roboto)"
+    },
+    "letterSpacing": {
+      "distribution": {
+        "-1.0": 1,
+        "-0.8": 1,
+        "-0.5": 9,
+        "-0.4": 1,
+        "-0.3": 2,
+        "-0.2": 4,
+        "-0.1": 2,
+        "0.5": 2,
+        "0.8": 1,
+        "1.0": 2,
+        "1.5": 1,
+        "2.0": 3
+      },
+      "sites": 29,
+      "negativeTrackingSites": 20,
+      "positiveTrackingSites": 9,
+      "extremeTrackingSites": 0
+    },
+    "measureChars": {
+      "assumedWidthDp": 360,
+      "pagePaddingDp": 40,
+      "usableWidthDp": 320,
+      "avgGlyphRatio": 0.5,
+      "charsPerLine": {
+        "11.0": 58,
+        "12.0": 53,
+        "13.0": 49,
+        "14.0": 46,
+        "15.0": 43,
+        "16.0": 40,
+        "17.0": 38,
+        "18.0": 36
+      },
+      "comfortableBand": [
+        30,
+        90
+      ]
+    },
+    "weightDistribution": {
+      "distribution": {
+        "w600": 61,
+        "w800": 74,
+        "w700": 92,
+        "w500": 13,
+        "w900": 11
+      },
+      "totalWeightedSites": 251,
+      "heavySites": 177,
+      "heavyPercent": 70.5,
+      "distinctWeights": 5
+    },
+    "uppercase": {
+      "toUpperCaseSites": 0,
+      "sites": []
+    },
+    "linkAffordance": {
+      "underlineSites": 3,
+      "sites": [
+        "lib/screens/legal_disclaimer_screen.dart:192",
+        "lib/screens/legal_disclaimer_screen.dart:231",
+        "lib/screens/legal_disclaimer_screen.dart:249"
+      ]
+    }
+  },
+  "violations": [],
+  "exclusions": [
+    {
+      "what": "comments and doc comments",
+      "why": "design_tokens.dart documents the literals it replaced inside its own doc comments; counting those makes the token file its worst offender"
+    },
+    {
+      "what": "test/ and android/ sources",
+      "why": "neither renders type to a user"
+    }
+  ],
+  "negativeControl": {
+    "command": "python3 scripts/audit_evidence/typography.py --negative-control",
+    "mutation": "a second font family plus a 7px / 1.05-line-height style",
+    "expected": "violations rise above baseline"
+  }
+}

@@ -12,6 +12,7 @@ import '../core/app_colors.dart';
 import '../core/constants/app_constants.dart';
 import '../core/services/activity_service.dart';
 import '../core/services/app_settings_service.dart';
+import '../core/services/reduced_motion_policy.dart';
 import '../core/widgets/feature_warning_dialog.dart';
 import '../domain/models/activity_event.dart';
 
@@ -43,15 +44,27 @@ class _SirenDialogState extends State<SirenDialog>
     _colorController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 600),
-    )..repeat(reverse: true);
+    );
 
     _scaleController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 600),
-    )..repeat(reverse: true);
+    );
 
     // İlk kullanımda uyarı dialogu göster, onay sonrası siren başlar
     WidgetsBinding.instance.addPostFrameCallback((_) => _initWithWarning());
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // The siren's flash and throb are DECORATION: the audible siren and the
+    // running duration counter carry the whole message. Suppressing them when
+    // the platform asks for reduced motion removes a 600 ms full-screen colour
+    // flash, which is the single most vestibular-hostile animation in the app.
+    final reduced = ReducedMotionPolicy.isReduced(context);
+    ReducedMotionPolicy.pulse(_colorController, reduced: reduced);
+    ReducedMotionPolicy.pulse(_scaleController, reduced: reduced);
   }
 
   Future<void> _initWithWarning() async {

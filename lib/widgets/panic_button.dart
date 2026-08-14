@@ -67,7 +67,7 @@ class _PanicButtonState extends State<PanicButton>
     _breathController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 2400),
-    )..repeat(reverse: true);
+    );
 
     // Armed pulse animation (when pressed/holding)
     // 400ms out-and-back was a 0.8s blink under the finger, at the moment the
@@ -89,6 +89,11 @@ class _PanicButtonState extends State<PanicButton>
   void didChangeDependencies() {
     super.didChangeDependencies();
     _reduceMotion = ReducedMotionPolicy.isReduced(context);
+    // The IDLE breath was started with a `..repeat()` cascade in initState, i.e.
+    // before any MediaQuery could be read, so it ran regardless of the platform
+    // preference while the armed pulse right below it honoured it. Same widget,
+    // two answers. Both are decided here now.
+    ReducedMotionPolicy.pulse(_breathController, reduced: _reduceMotion);
     if (_isArmed) {
       ReducedMotionPolicy.pulse(_armedPulseController, reduced: _reduceMotion);
     }

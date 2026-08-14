@@ -32,12 +32,35 @@ abstract final class ReducedMotionPolicy {
 
   /// Drives a repeating pulse, or parks it when motion is suppressed.
   /// Idempotent: safe to call on every didChangeDependencies.
+  ///
+  /// A suppressed pulse is parked AT [stillPulseValue], not merely stopped.
+  /// `stop()` alone leaves the controller wherever it happened to be — which,
+  /// for a controller that never started, is 0.0, i.e. the dimmest frame of the
+  /// animation. Every consumer in this app reads `controller.value` straight
+  /// into an alpha, a scale or a radius, so stopping without parking renders
+  /// the armed state INVISIBLE for exactly the users who asked for less motion.
+  /// Parking here fixes all of them at once instead of at eight call sites.
   static void pulse(AnimationController controller, {required bool reduced}) {
     if (reduced) {
       controller.stop();
+      controller.value = stillPulseValue;
       return;
     }
     if (!controller.isAnimating) controller.repeat(reverse: true);
+  }
+
+  /// Drives a one-directional repeating loop (a shimmer sweep), or parks it.
+  ///
+  /// Separate from [pulse] because a sweep has no meaningful mid-travel state:
+  /// parking a shimmer at 0.5 leaves a highlight frozen across the middle of
+  /// the surface, which reads as a rendering fault rather than as a still frame.
+  static void loop(AnimationController controller, {required bool reduced}) {
+    if (reduced) {
+      controller.stop();
+      controller.value = 0;
+      return;
+    }
+    if (!controller.isAnimating) controller.repeat();
   }
 
   /// Current pulse position, or the parked position when suppressed.
