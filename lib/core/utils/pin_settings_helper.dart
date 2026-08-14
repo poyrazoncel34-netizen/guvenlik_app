@@ -5,6 +5,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
+import '../design_tokens.dart';
 import '../app_colors.dart';
 import '../services/activity_service.dart';
 import '../services/emergency_session_contract.dart';
@@ -54,7 +55,7 @@ abstract class PinSettingsHelper {
                   ),
                   child: const Icon(
                     Icons.lock_rounded,
-                    size: 36,
+                    size: IconSizes.feature,
                     color: AppColors.primary,
                   ),
                 ),

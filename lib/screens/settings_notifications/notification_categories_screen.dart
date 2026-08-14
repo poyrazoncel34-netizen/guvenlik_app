@@ -136,7 +136,7 @@ class _NotificationCategoriesScreenState
     child: Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, color: color, size: IconSizes.md),
+        Icon(icon, color: color, size: IconSizes.action),
         const SizedBox(width: Spacing.sm),
         Expanded(
           child: Column(
@@ -201,7 +201,7 @@ class _NotificationCategoriesScreenState
                       ? Icons.notifications_active_rounded
                       : Icons.notifications_off_rounded,
                   color: color,
-                  size: IconSizes.lg,
+                  size: IconSizes.dialog,
                 ),
                 const SizedBox(width: Spacing.sm),
                 Expanded(
@@ -251,7 +251,7 @@ class _NotificationCategoriesScreenState
                 const Icon(
                   Icons.open_in_new_rounded,
                   color: Colors.white38,
-                  size: IconSizes.sm,
+                  size: IconSizes.dense,
                 ),
               ],
             ),

@@ -329,7 +329,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               child: const Icon(
                 Icons.shield_rounded,
                 color: AppColors.accent,
-                size: 18,
+                size: IconSizes.listItem,
               ),
             ),
             const SizedBox(width: 12),
@@ -362,7 +362,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             ),
             const Icon(
               Icons.arrow_forward_ios_rounded,
-              size: 14,
+              size: IconSizes.inline,
               color: AppColors.textSecondary,
             ),
           ],
@@ -665,7 +665,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 onPressed: provider.dismissOnboarding,
                 icon: const Icon(
                   Icons.close_rounded,
-                  size: 18,
+                  size: IconSizes.listItem,
                   color: AppColors.textSecondary,
                 ),
               ),
@@ -758,7 +758,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               ),
               const Icon(
                 Icons.arrow_forward_ios_rounded,
-                size: 14,
+                size: IconSizes.inline,
                 color: AppColors.textSecondary,
               ),
             ],
@@ -771,7 +771,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   Widget _buildTestModeButton() {
     return OutlinedButton.icon(
       onPressed: _startTestMode,
-      icon: const Icon(Icons.check_circle_outline_rounded, size: 18),
+      icon: const Icon(Icons.check_circle_outline_rounded, size: IconSizes.listItem),
       label: Text("test_mode_no_real_call".tr()),
       style: OutlinedButton.styleFrom(
         foregroundColor: AppColors.primary,
@@ -1015,7 +1015,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                       child: const Icon(
                         Icons.lock_rounded,
                         color: AppColors.primary,
-                        size: 14,
+                        size: IconSizes.inline,
                       ),
                     ),
                   ),

@@ -29,7 +29,12 @@ import 'package:guvenlik_app/core/design_tokens.dart';
 const Map<String, int> acceptedOffScale = <String, int>{
   'radius': 28,
   'spacing': 30,
-  'icon': 73,
+  // 73 -> 23 after the MP-04-012 migration. TIGHTENED rather than left high:
+  // a pin far above reality stops catching the drift it exists to catch. The
+  // 23 that remain are exactly IconSizes.documentedExceptions, and
+  // icon_size_migration_test.dart fails if a NEW one appears or a listed one
+  // goes stale.
+  'icon': 23,
   'fontSize': 77,
 };
 

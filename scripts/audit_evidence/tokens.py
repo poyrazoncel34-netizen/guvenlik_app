@@ -107,15 +107,26 @@ def build(root: Path) -> dict:
             ),
             "consequence": (
                 "MP-04-008 (ZLayer), MP-04-012 (IconSizes) and MP-04-013 "
-                "(DensityTokens) were recorded PASS on existence. They are "
-                "downgraded to PARTIAL on this measurement, matching MP-04-004, "
-                "which was already PARTIAL for exactly the same reason."
+                "(DensityTokens) were once recorded PASS on existence and were "
+                "downgraded to PARTIAL on this measurement, matching MP-04-004. "
+                "ZLayer, Breakpoints and DensityTokens were then migrated with "
+                "zero rendered change; IconSizes followed on 2026-08-15, once "
+                "the scale itself was rebuilt from measured usage."
             ),
             "notDoneAndWhy": (
-                "IconSizes and TypeScale together cover 408 literal sites; a "
-                "big-bang migration is the rendered-pixel churn CLAUDE.md rule 4 "
-                "forbids as a drive-by. The honest record is the consumer count, "
-                "not a migration nobody reviewed."
+                "TypeScale remains unmigrated and that is deliberate: it covers "
+                "329 inline fontSize sites and the honest fix is a TextTheme, "
+                "which is a real refactor rather than a rename -- MP-04-004 is "
+                "PARTIAL for exactly that. IconSizes is DONE, and WHY it had "
+                "failed before is the useful part: the invented scale omitted "
+                "18 dp (24 sites) and 22 dp (19 sites), the two most common "
+                "sizes after 20, so adopting it would have moved 43 rendered "
+                "icons -- a visual change CLAUDE.md rule 4 reserves to the "
+                "owner. Rebuilding the scale from the census made the migration "
+                "pixel-neutral: 139 of 162 sites now read a role, and the "
+                "remaining 23 are one-offs enumerated in "
+                "IconSizes.documentedExceptions and guarded by "
+                "test/core/icon_size_migration_test.dart."
             ),
         },
         "themes": _themes(root),

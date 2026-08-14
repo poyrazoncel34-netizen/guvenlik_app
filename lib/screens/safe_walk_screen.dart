@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:provider/provider.dart';
+import '../core/design_tokens.dart';
 import '../core/app_colors.dart';
 import '../core/motion.dart';
 import '../core/services/activity_service.dart';
@@ -355,7 +356,7 @@ class _SafeWalkScreenState extends State<SafeWalkScreen> {
                 ),
                 child: const Icon(
                   Icons.directions_walk_rounded,
-                  size: 40,
+                  size: IconSizes.illustration,
                   color: AppColors.accent,
                 ),
               ),
@@ -449,7 +450,7 @@ class _SafeWalkScreenState extends State<SafeWalkScreen> {
           width: double.infinity,
           child: ElevatedButton.icon(
             onPressed: _startSafeWalk,
-            icon: const Icon(Icons.play_arrow_rounded, size: 24),
+            icon: const Icon(Icons.play_arrow_rounded, size: IconSizes.dialog),
             label: Text(
               "safe_walk_start".tr(),
               style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
@@ -499,7 +500,7 @@ class _SafeWalkScreenState extends State<SafeWalkScreen> {
                   isUrgent
                       ? Icons.warning_rounded
                       : Icons.directions_walk_rounded,
-                  size: 36,
+                  size: IconSizes.feature,
                   color: isUrgent ? AppColors.emergency : AppColors.accent,
                 ),
                 const SizedBox(height: 12),
@@ -599,7 +600,7 @@ class _SafeWalkScreenState extends State<SafeWalkScreen> {
           width: double.infinity,
           child: ElevatedButton.icon(
             onPressed: _markSafe,
-            icon: const Icon(Icons.check_circle_rounded, size: 24),
+            icon: const Icon(Icons.check_circle_rounded, size: IconSizes.dialog),
             label: Text(
               "safe_walk_safe".tr(),
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),

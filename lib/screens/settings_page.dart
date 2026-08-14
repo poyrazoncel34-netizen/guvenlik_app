@@ -363,7 +363,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   HapticFeedback.mediumImpact();
                   _showLogoutDialog(context);
                 },
-                icon: const Icon(Icons.logout_rounded, size: 20),
+                icon: const Icon(Icons.logout_rounded, size: IconSizes.action),
                 label: Text(
                   "settings_logout".tr(),
                   style: const TextStyle(
@@ -459,7 +459,7 @@ class _SettingsPageState extends State<SettingsPage> {
               child: Icon(
                 Icons.workspace_premium_rounded,
                 color: isPro ? AppColors.success : AppColors.warning,
-                size: 22,
+                size: IconSizes.emphasis,
               ),
             ),
             const SizedBox(width: 14),
@@ -514,7 +514,7 @@ class _SettingsPageState extends State<SettingsPage> {
               const Icon(
                 Icons.chevron_right_rounded,
                 color: AppColors.textSecondary,
-                size: 20,
+                size: IconSizes.action,
               ),
           ],
         ),
@@ -566,7 +566,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
                 child: const Icon(
                   Icons.person_rounded,
-                  size: 36,
+                  size: IconSizes.feature,
                   color: Colors.white,
                 ),
               ),
@@ -603,7 +603,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 child: const Icon(
                   Icons.edit_rounded,
                   color: Colors.white,
-                  size: 20,
+                  size: IconSizes.action,
                 ),
               ),
             ],
@@ -694,7 +694,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   color: iconColor.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(icon, color: iconColor, size: 22),
+                child: Icon(icon, color: iconColor, size: IconSizes.emphasis),
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -722,7 +722,7 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
               const Icon(
                 Icons.arrow_forward_ios_rounded,
-                size: 16,
+                size: IconSizes.dense,
                 color: AppColors.textSecondary,
               ),
             ],

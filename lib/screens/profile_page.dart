@@ -234,7 +234,7 @@ class _ProfilePageState extends State<ProfilePage> {
           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
           child: Row(
             children: [
-              Icon(icon, color: AppColors.textSecondary, size: 24),
+              Icon(icon, color: AppColors.textSecondary, size: IconSizes.dialog),
               const SizedBox(width: 18),
               Expanded(
                 child: Text(
@@ -249,7 +249,7 @@ class _ProfilePageState extends State<ProfilePage> {
               const Icon(
                 Icons.arrow_forward_ios_rounded,
                 color: AppColors.textSecondary,
-                size: 16,
+                size: IconSizes.dense,
               ),
             ],
           ),

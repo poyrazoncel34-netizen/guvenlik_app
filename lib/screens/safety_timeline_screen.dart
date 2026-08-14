@@ -160,7 +160,7 @@ class _SafetyTimelineScreenState extends State<SafetyTimelineScreen>
               const Icon(
                 Icons.check_circle_rounded,
                 color: Colors.white,
-                size: 20,
+                size: IconSizes.action,
               ),
               const SizedBox(width: 10),
               Expanded(child: Text("timeline_note_saved".tr())),
@@ -206,7 +206,7 @@ class _SafetyTimelineScreenState extends State<SafetyTimelineScreen>
         SnackBar(
           content: Row(
             children: [
-              const Icon(Icons.send_rounded, color: Colors.white, size: 20),
+              const Icon(Icons.send_rounded, color: Colors.white, size: IconSizes.action),
               const SizedBox(width: 10),
               Expanded(child: Text("timeline_shared_ready".tr())),
             ],
@@ -509,7 +509,7 @@ class _SafetyTimelineScreenState extends State<SafetyTimelineScreen>
               ),
               child: const Icon(
                 Icons.timeline_rounded,
-                size: 48,
+                size: IconSizes.hero,
                 color: AppColors.accent,
               ),
             ),
@@ -596,7 +596,7 @@ class _SafetyTimelineScreenState extends State<SafetyTimelineScreen>
                   child: const Icon(
                     Icons.timeline_rounded,
                     color: AppColors.accent,
-                    size: 22,
+                    size: IconSizes.emphasis,
                   ),
                 ),
                 const SizedBox(width: 14),
@@ -645,7 +645,7 @@ class _SafetyTimelineScreenState extends State<SafetyTimelineScreen>
                           const Icon(
                             Icons.send_rounded,
                             color: AppColors.primary,
-                            size: 20,
+                            size: IconSizes.action,
                           ),
                           const SizedBox(width: 10),
                           Text(
@@ -664,7 +664,7 @@ class _SafetyTimelineScreenState extends State<SafetyTimelineScreen>
                           const Icon(
                             Icons.delete_outline_rounded,
                             color: AppColors.emergency,
-                            size: 20,
+                            size: IconSizes.action,
                           ),
                           const SizedBox(width: 10),
                           Text(
@@ -695,7 +695,7 @@ class _SafetyTimelineScreenState extends State<SafetyTimelineScreen>
                     const Icon(
                       Icons.event_note_rounded,
                       color: AppColors.textSecondary,
-                      size: 16,
+                      size: IconSizes.dense,
                     ),
                     const SizedBox(width: 8),
                     Expanded(
@@ -727,7 +727,7 @@ class _SafetyTimelineScreenState extends State<SafetyTimelineScreen>
                     const Icon(
                       Icons.notes_rounded,
                       color: AppColors.info,
-                      size: 16,
+                      size: IconSizes.dense,
                     ),
                     const SizedBox(width: 8),
                     Expanded(

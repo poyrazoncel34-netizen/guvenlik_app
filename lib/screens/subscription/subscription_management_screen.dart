@@ -152,7 +152,7 @@ class _SubscriptionManagementScreenState
                   );
                   if (mounted) provider.refresh();
                 },
-                icon: const Icon(Icons.workspace_premium_rounded, size: 20),
+                icon: const Icon(Icons.workspace_premium_rounded, size: IconSizes.action),
                 label: Text(
                   'subscription_upgrade_btn'.tr(),
                   style: const TextStyle(
@@ -350,7 +350,7 @@ class _SubscriptionManagementScreenState
                 color: iconColor.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(icon, color: iconColor, size: 22),
+              child: Icon(icon, color: iconColor, size: IconSizes.emphasis),
             ),
             const SizedBox(width: 14),
             Expanded(
@@ -380,7 +380,7 @@ class _SubscriptionManagementScreenState
                 const Icon(
                   Icons.chevron_right_rounded,
                   color: AppColors.textSecondary,
-                  size: 20,
+                  size: IconSizes.action,
                 ),
           ],
         ),
@@ -404,7 +404,7 @@ class _SubscriptionManagementScreenState
               color: iconColor.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(icon, color: iconColor, size: 22),
+            child: Icon(icon, color: iconColor, size: IconSizes.emphasis),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -420,7 +420,7 @@ class _SubscriptionManagementScreenState
           const Icon(
             Icons.check_circle_rounded,
             color: AppColors.success,
-            size: 20,
+            size: IconSizes.action,
           ),
         ],
       ),

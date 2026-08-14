@@ -3,6 +3,7 @@
 // Yaş Doğrulama + EULA + KVKK + Granüler Rıza
 // ============================================================================
 
+import '../../core/design_tokens.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -159,7 +160,7 @@ class _UnifiedConsentScreenState extends State<UnifiedConsentScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Icon(Icons.shield_rounded, size: 40, color: AppColors.primary),
+        const Icon(Icons.shield_rounded, size: IconSizes.illustration, color: AppColors.primary),
         const SizedBox(height: 12),
         // Screen heading (MP-12-017).
         Semantics(
@@ -337,7 +338,7 @@ class _UnifiedConsentScreenState extends State<UnifiedConsentScreen> {
                       padding: EdgeInsets.only(top: 2),
                       child: Icon(
                         Icons.info_outline_rounded,
-                        size: 14,
+                        size: IconSizes.inline,
                         color: AppColors.primary,
                       ),
                     ),
@@ -375,7 +376,7 @@ class _UnifiedConsentScreenState extends State<UnifiedConsentScreen> {
                   _eulaExpanded
                       ? Icons.keyboard_arrow_up_rounded
                       : Icons.keyboard_arrow_down_rounded,
-                  size: 18,
+                  size: IconSizes.listItem,
                   color: AppColors.primary,
                 ),
                 label: Text(
@@ -438,7 +439,7 @@ class _UnifiedConsentScreenState extends State<UnifiedConsentScreen> {
                   children: [
                     const Icon(
                       Icons.verified_user_rounded,
-                      size: 14,
+                      size: IconSizes.inline,
                       color: AppColors.accent,
                     ),
                     const SizedBox(width: 6),
@@ -500,7 +501,7 @@ class _UnifiedConsentScreenState extends State<UnifiedConsentScreen> {
                   _kvkkExpanded
                       ? Icons.keyboard_arrow_up_rounded
                       : Icons.keyboard_arrow_down_rounded,
-                  size: 18,
+                  size: IconSizes.listItem,
                   color: AppColors.accent,
                 ),
                 label: Text(
@@ -549,7 +550,7 @@ class _UnifiedConsentScreenState extends State<UnifiedConsentScreen> {
             children: [
               const Icon(
                 Icons.info_outline_rounded,
-                size: 14,
+                size: IconSizes.inline,
                 color: AppColors.info,
               ),
               const SizedBox(width: 8),
@@ -665,7 +666,7 @@ class _UnifiedConsentScreenState extends State<UnifiedConsentScreen> {
   }) {
     return Row(
       children: [
-        Icon(icon, size: 18, color: color),
+        Icon(icon, size: IconSizes.listItem, color: color),
         const SizedBox(width: 8),
         Expanded(
           child: Text(

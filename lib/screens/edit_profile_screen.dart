@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:easy_localization/easy_localization.dart';
+import '../core/design_tokens.dart';
 import '../core/app_colors.dart';
 import '../presentation/providers/settings_provider.dart';
 
@@ -71,7 +72,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               const Icon(
                 Icons.check_circle_rounded,
                 color: Colors.white,
-                size: 20,
+                size: IconSizes.action,
               ),
               const SizedBox(width: 10),
               Text("edit_profile_success".tr()),

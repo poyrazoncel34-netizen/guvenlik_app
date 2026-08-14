@@ -184,7 +184,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                 child: const Icon(
                   Icons.workspace_premium_rounded,
                   color: AppColors.primary,
-                  size: 24,
+                  size: IconSizes.dialog,
                 ),
               ),
               const SizedBox(width: 14),
@@ -270,7 +270,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                     child: const Icon(
                       Icons.check_rounded,
                       color: AppColors.accent,
-                      size: 18,
+                      size: IconSizes.listItem,
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -352,7 +352,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                 child: const Icon(
                   Icons.info_outline_rounded,
                   color: AppColors.warning,
-                  size: 20,
+                  size: IconSizes.action,
                 ),
               ),
               const SizedBox(width: 12),
@@ -388,7 +388,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                     height: 16,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : const Icon(Icons.refresh_rounded, size: 18),
+                : const Icon(Icons.refresh_rounded, size: IconSizes.listItem),
             label: Text('retry_button'.tr()),
             style: OutlinedButton.styleFrom(
               foregroundColor: AppColors.primary,
@@ -547,7 +547,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
               height: 16,
               child: CircularProgressIndicator(strokeWidth: 2),
             )
-          : const Icon(Icons.restore_rounded, size: 18),
+          : const Icon(Icons.restore_rounded, size: IconSizes.listItem),
       label: Text('subscription_restore_title'.tr()),
       style: TextButton.styleFrom(
         foregroundColor: AppColors.textSecondary,

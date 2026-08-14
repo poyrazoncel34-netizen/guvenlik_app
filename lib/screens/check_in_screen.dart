@@ -223,7 +223,7 @@ class _CheckInScreenState extends State<CheckInScreen>
             const Icon(
               Icons.check_circle_rounded,
               color: Colors.white,
-              size: 20,
+              size: IconSizes.action,
             ),
             const SizedBox(width: 10),
             Expanded(child: Text("check_in_safe_confirmed".tr())),
@@ -427,7 +427,7 @@ class _CheckInScreenState extends State<CheckInScreen>
                 child: const Icon(
                   Icons.timer_rounded,
                   color: AppColors.success,
-                  size: 24,
+                  size: IconSizes.dialog,
                 ),
               ),
               const SizedBox(height: 12),
@@ -582,7 +582,7 @@ class _CheckInScreenState extends State<CheckInScreen>
             width: double.infinity,
             child: ElevatedButton.icon(
               onPressed: _confirmSafe,
-              icon: const Icon(Icons.check_circle_rounded, size: 24),
+              icon: const Icon(Icons.check_circle_rounded, size: IconSizes.dialog),
               label: Text(
                 "check_in_im_safe".tr(),
                 style: const TextStyle(
@@ -605,7 +605,7 @@ class _CheckInScreenState extends State<CheckInScreen>
           // Cancel button
           TextButton.icon(
             onPressed: _stopCheckIn,
-            icon: const Icon(Icons.close_rounded, size: 20),
+            icon: const Icon(Icons.close_rounded, size: IconSizes.action),
             label: Text("check_in_cancel".tr()),
             style: TextButton.styleFrom(
               foregroundColor: AppColors.textSecondary,
@@ -623,7 +623,7 @@ class _CheckInScreenState extends State<CheckInScreen>
             ),
             child: Row(
               children: [
-                Icon(Icons.info_outline_rounded, color: color, size: 20),
+                Icon(Icons.info_outline_rounded, color: color, size: IconSizes.action),
                 const SizedBox(width: 14),
                 Expanded(
                   child: Text(

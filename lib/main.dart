@@ -69,7 +69,7 @@ void main() async {
               children: [
                 const Icon(
                   Icons.error_outline_rounded,
-                  size: 48,
+                  size: IconSizes.hero,
                   color: Colors.amber,
                 ),
                 const SizedBox(height: 16),

@@ -6,6 +6,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
+import '../../core/design_tokens.dart';
 import '../../core/app_colors.dart';
 import '../../core/utils/app_reset_helper.dart';
 import '../../core/widgets/subscription_deletion_notice.dart';
@@ -43,7 +44,7 @@ class _DataDeletionScreenState extends State<DataDeletionScreen> {
               child: const Icon(
                 Icons.delete_forever_rounded,
                 color: AppColors.emergency,
-                size: 22,
+                size: IconSizes.emphasis,
               ),
             ),
             const SizedBox(width: 12),
@@ -166,7 +167,7 @@ class _DataDeletionScreenState extends State<DataDeletionScreen> {
                     const Icon(
                       Icons.warning_amber_rounded,
                       color: AppColors.emergency,
-                      size: 20,
+                      size: IconSizes.action,
                     ),
                     const SizedBox(width: 10),
                     Text(
@@ -286,7 +287,7 @@ class _DataDeletionScreenState extends State<DataDeletionScreen> {
         children: [
           const Icon(
             Icons.remove_circle_rounded,
-            size: 16,
+            size: IconSizes.dense,
             color: AppColors.emergency,
           ),
           const SizedBox(width: 10),

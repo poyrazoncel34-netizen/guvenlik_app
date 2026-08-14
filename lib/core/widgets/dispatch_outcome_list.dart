@@ -104,7 +104,7 @@ abstract final class DispatchOutcomeList {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(icon, color: color, size: IconSizes.sm),
+            Icon(icon, color: color, size: IconSizes.dense),
             const SizedBox(width: Spacing.xs),
             Expanded(
               child: Column(

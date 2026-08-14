@@ -178,7 +178,7 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
           SnackBar(
             content: Row(
               children: [
-                const Icon(Icons.my_location, color: Colors.white, size: 20),
+                const Icon(Icons.my_location, color: Colors.white, size: IconSizes.action),
                 const SizedBox(width: 12),
                 Text(
                   "map_location_updated".tr(),
@@ -286,7 +286,7 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
               ),
               child: const Icon(
                 Icons.location_off_rounded,
-                size: 36,
+                size: IconSizes.feature,
                 color: AppColors.warning,
               ),
             ),
@@ -451,7 +451,7 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
                       const Icon(
                         Icons.warning_amber_rounded,
                         color: Colors.white,
-                        size: 20,
+                        size: IconSizes.action,
                       ),
                       const SizedBox(width: 8),
                       Expanded(
@@ -726,7 +726,7 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
       child: Row(
         children: [
           const SizedBox(width: 12),
-          const Icon(Icons.map_rounded, color: AppColors.primary, size: 24),
+          const Icon(Icons.map_rounded, color: AppColors.primary, size: IconSizes.dialog),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
@@ -839,7 +839,7 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
                   color: _locationStatus == LocationStatus.success
                       ? AppColors.success
                       : AppColors.warning,
-                  size: 24,
+                  size: IconSizes.dialog,
                 ),
               ),
               const SizedBox(width: 14),

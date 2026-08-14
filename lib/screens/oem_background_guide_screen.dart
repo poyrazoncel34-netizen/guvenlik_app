@@ -9,6 +9,7 @@
 // verisi, intent calistirma ve kalici ilerleme. Bu dosya yalnizca sunum.
 // ============================================================================
 
+import '../core/design_tokens.dart';
 import 'dart:async';
 
 import 'package:easy_localization/easy_localization.dart';
@@ -197,7 +198,7 @@ class _OemBackgroundGuideScreenState extends State<OemBackgroundGuideScreen> {
                   child: isDone
                       ? const Icon(
                           Icons.check_rounded,
-                          size: 16,
+                          size: IconSizes.dense,
                           color: AppColors.success,
                         )
                       : Text(
@@ -251,7 +252,7 @@ class _OemBackgroundGuideScreenState extends State<OemBackgroundGuideScreen> {
               if (step.hasTarget)
                 OutlinedButton.icon(
                   onPressed: () => _openStep(step),
-                  icon: const Icon(Icons.open_in_new_rounded, size: 18),
+                  icon: const Icon(Icons.open_in_new_rounded, size: IconSizes.listItem),
                   label: Text('oem_guide_open_btn'.tr()),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppColors.textPrimary,
@@ -261,7 +262,7 @@ class _OemBackgroundGuideScreenState extends State<OemBackgroundGuideScreen> {
               if (!isDone)
                 ElevatedButton.icon(
                   onPressed: () => _markDone(step),
-                  icon: const Icon(Icons.done_rounded, size: 18),
+                  icon: const Icon(Icons.done_rounded, size: IconSizes.listItem),
                   label: Text('oem_guide_done_btn'.tr()),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,

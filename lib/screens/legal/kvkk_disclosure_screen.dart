@@ -6,6 +6,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
+import '../../core/design_tokens.dart';
 import '../../core/app_colors.dart';
 import '../../core/constants/app_constants.dart';
 import '../../constants/legal_texts.dart';
@@ -94,7 +95,7 @@ class _KvkkDisclosureScreenState extends State<KvkkDisclosureScreen> {
               children: [
                 const Icon(
                   Icons.verified_user_rounded,
-                  size: 16,
+                  size: IconSizes.dense,
                   color: AppColors.accent,
                 ),
                 const SizedBox(width: 8),

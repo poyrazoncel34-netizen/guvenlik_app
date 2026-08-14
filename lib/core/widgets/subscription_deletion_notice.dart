@@ -73,7 +73,7 @@ class SubscriptionDeletionNotice extends StatelessWidget {
               const Icon(
                 Icons.credit_card_rounded,
                 color: AppColors.warning,
-                size: IconSizes.sm,
+                size: IconSizes.dense,
               ),
               const SizedBox(width: Spacing.xs),
               Expanded(
@@ -122,7 +122,7 @@ class SubscriptionDeletionNotice extends StatelessWidget {
                       const Icon(
                         Icons.open_in_new_rounded,
                         color: AppColors.warning,
-                        size: IconSizes.xs,
+                        size: IconSizes.inline,
                       ),
                     ],
                   ),

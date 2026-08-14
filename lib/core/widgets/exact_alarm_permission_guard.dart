@@ -1,3 +1,4 @@
+import '../design_tokens.dart';
 import 'dart:async';
 
 import 'package:easy_localization/easy_localization.dart';
@@ -50,7 +51,7 @@ Future<bool> requireExactAlarmPermission(BuildContext context) async {
             Navigator.of(dialogContext).pop();
             unawaited(platform.requestExactAlarmPermission());
           },
-          icon: const Icon(Icons.settings_rounded, size: 18),
+          icon: const Icon(Icons.settings_rounded, size: IconSizes.listItem),
           label: Text('exact_alarm_degraded_settings'.tr()),
         ),
       ],

@@ -2,6 +2,7 @@
 // GERİ SAYIM EKRANI – DRAMATIC UX (Gradient arc, pulsating glow, scale bounce)
 // ============================================================================
 
+import '../core/design_tokens.dart';
 import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
@@ -515,7 +516,7 @@ class _CountdownScreenState extends State<CountdownScreen>
                   onPressed: () async {
                     await AndroidIntentService.openDialer(phoneNumber);
                   },
-                  icon: const Icon(Icons.call, size: 20),
+                  icon: const Icon(Icons.call, size: IconSizes.action),
                   label: Text(
                     'emergency_manual_call_now'.tr(),
                     style: const TextStyle(fontWeight: FontWeight.w700),
@@ -543,7 +544,7 @@ class _CountdownScreenState extends State<CountdownScreen>
                       ),
                     );
                   },
-                  icon: const Icon(Icons.copy, size: 18),
+                  icon: const Icon(Icons.copy, size: IconSizes.listItem),
                   label: Text('emergency_copy_message'.tr()),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: Colors.white70,

@@ -3,6 +3,7 @@
 // SECURITY RULE: Biyometrik kimlik doğrulama YASAKTIR (duress riski).
 // ============================================================================
 
+import '../core/design_tokens.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -254,7 +255,7 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> {
                       ),
                       child: const Icon(
                         Icons.lock_rounded,
-                        size: 40,
+                        size: IconSizes.illustration,
                         color: AppColors.primary,
                       ),
                     ),
@@ -327,7 +328,7 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> {
                                 const Icon(
                                   Icons.lock_clock_rounded,
                                   color: AppColors.emergency,
-                                  size: 20,
+                                  size: IconSizes.action,
                                 ),
                                 const SizedBox(width: 8),
                                 Text(
@@ -410,7 +411,7 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> {
               const Icon(
                 Icons.warning_amber_rounded,
                 color: AppColors.emergency,
-                size: 24,
+                size: IconSizes.dialog,
               ),
               const SizedBox(width: 8),
               Expanded(
@@ -551,7 +552,7 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> {
             child: isIcon
                 ? const Icon(
                     Icons.backspace_outlined,
-                    size: 24,
+                    size: IconSizes.dialog,
                     color: AppColors.textPrimary,
                   )
                 : Text(

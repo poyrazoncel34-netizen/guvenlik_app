@@ -2,39 +2,45 @@
   "verifier": "scripts/audit_evidence/tokens.py",
   "verifierVersion": "1.0.0",
   "codeRevision": {
-    "head": "59d1892fd8520cdb0563c5e61bb1d3a96543a212",
+    "head": "460a9d42dd12d1cd6dd93b28d4ee300b584f026e",
     "dirty": true
   },
-  "measuredOn": "2026-08-14",
+  "measuredOn": "2026-08-15",
   "command": "python3 scripts/audit_evidence/tokens.py",
   "surfaces": [
     "lib/core/design_tokens.dart",
     "lib/core/motion.dart",
     "lib/core/app_theme.dart",
     "lib/main.dart",
-    "lib/**/*.dart (154 files)"
+    "lib/**/*.dart (170 files)"
   ],
   "measurements": {
     "adoption": {
       "scalesDefined": 11,
-      "scalesWithAtLeastOneConsumer": 9,
+      "scalesWithAtLeastOneConsumer": 11,
       "byScale": {
         "Spacing": {
-          "references": 7,
+          "references": 31,
           "consumerFiles": [
             "lib/core/app_theme.dart",
-            "lib/screens/home_page.dart"
+            "lib/core/widgets/dispatch_outcome_list.dart",
+            "lib/core/widgets/subscription_deletion_notice.dart",
+            "lib/screens/home_page.dart",
+            "lib/screens/settings_notifications/notification_categories_screen.dart"
           ],
-          "consumerCount": 2
+          "consumerCount": 5
         },
         "Radii": {
-          "references": 21,
+          "references": 27,
           "consumerFiles": [
             "lib/core/app_theme.dart",
+            "lib/core/widgets/dispatch_outcome_list.dart",
+            "lib/core/widgets/subscription_deletion_notice.dart",
             "lib/screens/safety_timeline_screen.dart",
+            "lib/screens/settings_notifications/notification_categories_screen.dart",
             "lib/screens/settings_page.dart"
           ],
-          "consumerCount": 3
+          "consumerCount": 6
         },
         "Elevation": {
           "references": 10,
@@ -58,14 +64,62 @@
           "consumerCount": 8
         },
         "IconSizes": {
-          "references": 0,
-          "consumerFiles": [],
-          "consumerCount": 0
+          "references": 139,
+          "consumerFiles": [
+            "lib/core/utils/app_reset_helper.dart",
+            "lib/core/utils/pin_settings_helper.dart",
+            "lib/core/widgets/dispatch_outcome_list.dart",
+            "lib/core/widgets/exact_alarm_permission_guard.dart",
+            "lib/core/widgets/readiness_card.dart",
+            "lib/core/widgets/subscription_deletion_notice.dart",
+            "lib/main.dart",
+            "lib/screens/app_unlock_screen.dart",
+            "lib/screens/battery_optimization_wizard.dart",
+            "lib/screens/check_in_screen.dart",
+            "lib/screens/contacts_page.dart",
+            "lib/screens/countdown_screen.dart",
+            "lib/screens/edit_profile_screen.dart",
+            "lib/screens/emergency_call_screen.dart",
+            "lib/screens/fake_call_screen.dart",
+            "lib/screens/home_page.dart",
+            "lib/screens/legal/consent_management_screen.dart",
+            "lib/screens/legal/consent_screen.dart",
+            "lib/screens/legal/kvkk_disclosure_screen.dart",
+            "lib/screens/legal/terms_of_service_screen.dart",
+            "lib/screens/legal/unified_consent_screen.dart",
+            "lib/screens/map_page.dart",
+            "lib/screens/oem_background_guide_screen.dart",
+            "lib/screens/onboarding/onboarding_contact_step.dart",
+            "lib/screens/pin_setup_screen.dart",
+            "lib/screens/profile_page.dart",
+            "lib/screens/safe_walk_screen.dart",
+            "lib/screens/safety_timeline_screen.dart",
+            "lib/screens/settings_detail_page.dart",
+            "lib/screens/settings_legal/data_deletion_screen.dart",
+            "lib/screens/settings_legal/data_export_screen.dart",
+            "lib/screens/settings_legal/legal_settings_screen.dart",
+            "lib/screens/settings_notifications/notification_categories_screen.dart",
+            "lib/screens/settings_page.dart",
+            "lib/screens/subscription/paywall_screen.dart",
+            "lib/screens/subscription/subscription_management_screen.dart",
+            "lib/widgets/connectivity_banner.dart",
+            "lib/widgets/emergency_contact_consent_dialog.dart",
+            "lib/widgets/empty_state.dart",
+            "lib/widgets/legal_disclaimer_banner.dart",
+            "lib/widgets/network_error_retry.dart",
+            "lib/widgets/settings_switch_tile.dart",
+            "lib/widgets/status_badge.dart"
+          ],
+          "consumerCount": 43
         },
         "TypeScale": {
-          "references": 0,
-          "consumerFiles": [],
-          "consumerCount": 0
+          "references": 15,
+          "consumerFiles": [
+            "lib/core/widgets/dispatch_outcome_list.dart",
+            "lib/core/widgets/subscription_deletion_notice.dart",
+            "lib/screens/settings_notifications/notification_categories_screen.dart"
+          ],
+          "consumerCount": 3
         },
         "ZLayer": {
           "references": 3,
@@ -115,13 +169,10 @@
           "consumerCount": 12
         }
       },
-      "zeroConsumerScales": [
-        "IconSizes",
-        "TypeScale"
-      ],
+      "zeroConsumerScales": [],
       "principle": "a scale that nothing reads cannot enforce consistency; it is a parallel definition sitting beside the literals it was meant to replace. test/core/shadow_token_ratchet_test.dart already asserts this for shadows (>=8 consumer files); the other scales had no equivalent bar, and three of them have none at all.",
-      "consequence": "MP-04-008 (ZLayer), MP-04-012 (IconSizes) and MP-04-013 (DensityTokens) were recorded PASS on existence. They are downgraded to PARTIAL on this measurement, matching MP-04-004, which was already PARTIAL for exactly the same reason.",
-      "notDoneAndWhy": "IconSizes and TypeScale together cover 408 literal sites; a big-bang migration is the rendered-pixel churn CLAUDE.md rule 4 forbids as a drive-by. The honest record is the consumer count, not a migration nobody reviewed."
+      "consequence": "MP-04-008 (ZLayer), MP-04-012 (IconSizes) and MP-04-013 (DensityTokens) were once recorded PASS on existence and were downgraded to PARTIAL on this measurement, matching MP-04-004. ZLayer, Breakpoints and DensityTokens were then migrated with zero rendered change; IconSizes followed on 2026-08-15, once the scale itself was rebuilt from measured usage.",
+      "notDoneAndWhy": "TypeScale remains unmigrated and that is deliberate: it covers 329 inline fontSize sites and the honest fix is a TextTheme, which is a real refactor rather than a rename -- MP-04-004 is PARTIAL for exactly that. IconSizes is DONE, and WHY it had failed before is the useful part: the invented scale omitted 18 dp (24 sites) and 22 dp (19 sites), the two most common sizes after 20, so adopting it would have moved 43 rendered icons -- a visual change CLAUDE.md rule 4 reserves to the owner. Rebuilding the scale from the census made the migration pixel-neutral: 139 of 162 sites now read a role, and the remaining 23 are one-offs enumerated in IconSizes.documentedExceptions and guarded by test/core/icon_size_migration_test.dart."
     },
     "themes": {
       "darkDeclarations": 4,
@@ -160,16 +211,7 @@
       "shadowTest": "test/core/shadow_token_ratchet_test.dart"
     }
   },
-  "violations": [
-    {
-      "rule": "tokenScaleHasNoConsumer",
-      "detail": "IconSizes is defined but read by no file outside its own definition; it cannot enforce anything"
-    },
-    {
-      "rule": "tokenScaleHasNoConsumer",
-      "detail": "TypeScale is defined but read by no file outside its own definition; it cannot enforce anything"
-    }
-  ],
+  "violations": [],
   "exclusions": [
     {
       "what": "the token file and motion.dart themselves",

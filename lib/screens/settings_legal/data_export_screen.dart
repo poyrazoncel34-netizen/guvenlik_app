@@ -3,6 +3,7 @@
 // Kullanıcı tarafından başlatılan yerel kişisel veri kopyası
 // ============================================================================
 
+import '../../core/design_tokens.dart';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -128,7 +129,7 @@ class _DataExportScreenState extends State<DataExportScreen> {
                     const Icon(
                       Icons.download_rounded,
                       color: AppColors.info,
-                      size: 20,
+                      size: IconSizes.action,
                     ),
                     const SizedBox(width: 10),
                     Text(
@@ -260,7 +261,7 @@ class _DataExportScreenState extends State<DataExportScreen> {
               color: color.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(icon, color: color, size: 18),
+            child: Icon(icon, color: color, size: IconSizes.listItem),
           ),
           const SizedBox(width: 12),
           Text(

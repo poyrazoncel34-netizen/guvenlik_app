@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../core/design_tokens.dart';
 import '../../core/app_colors.dart';
 import '../../core/constants/app_constants.dart';
 import '../../services/consent_manager.dart';
@@ -129,7 +130,7 @@ class _ConsentScreenState extends State<ConsentScreen> {
               children: [
                 const Icon(
                   Icons.info_outline_rounded,
-                  size: 16,
+                  size: IconSizes.dense,
                   color: AppColors.info,
                 ),
                 const SizedBox(width: 10),

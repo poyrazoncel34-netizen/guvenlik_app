@@ -2,6 +2,7 @@
 // ÇEVRİMDIŞI MOD BANNER'I – Bağlantı kesildiğinde gösterilen ince banner
 // ============================================================================
 
+import '../core/design_tokens.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -101,7 +102,7 @@ class _ConnectivityBannerState extends State<ConnectivityBanner>
               const Icon(
                 Icons.cloud_off_rounded,
                 color: Colors.white,
-                size: 16,
+                size: IconSizes.dense,
               ),
               const SizedBox(width: 8),
               Text(
@@ -116,7 +117,7 @@ class _ConnectivityBannerState extends State<ConnectivityBanner>
               const Icon(
                 Icons.info_outline_rounded,
                 color: Colors.white,
-                size: 14,
+                size: IconSizes.inline,
               ),
             ],
           ),
@@ -137,7 +138,7 @@ class _ConnectivityBannerState extends State<ConnectivityBanner>
             const Icon(
               Icons.wifi_off_rounded,
               color: AppColors.warning,
-              size: 22,
+              size: IconSizes.emphasis,
             ),
             const SizedBox(width: 10),
             Text(
@@ -209,7 +210,7 @@ class _ConnectivityBannerState extends State<ConnectivityBanner>
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         children: [
-          Icon(icon, color: color, size: 16),
+          Icon(icon, color: color, size: IconSizes.dense),
           const SizedBox(width: 8),
           Expanded(
             child: Text(

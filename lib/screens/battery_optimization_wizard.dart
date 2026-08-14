@@ -5,6 +5,7 @@
 // için opsiyonel pil/güvenilirlik ayarlarına yönlendirir.
 // ============================================================================
 
+import '../core/design_tokens.dart';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -174,7 +175,7 @@ class _BatteryOptimizationWizardState extends State<BatteryOptimizationWizard>
                           _isOptimizationDisabled
                               ? Icons.check_circle_rounded
                               : Icons.battery_alert_rounded,
-                          size: 48,
+                          size: IconSizes.hero,
                           color: Colors.white,
                         ),
                       ),
@@ -245,7 +246,7 @@ class _BatteryOptimizationWizardState extends State<BatteryOptimizationWizard>
                       HapticFeedback.mediumImpact();
                       _requestDisableOptimization(context);
                     },
-                    icon: const Icon(Icons.battery_saver_rounded, size: 22),
+                    icon: const Icon(Icons.battery_saver_rounded, size: IconSizes.emphasis),
                     label: Text(
                       'battery_wizard_disable_btn'.tr(),
                       style: const TextStyle(
@@ -280,7 +281,7 @@ class _BatteryOptimizationWizardState extends State<BatteryOptimizationWizard>
                         ),
                       );
                     },
-                    icon: const Icon(Icons.phonelink_setup_rounded, size: 20),
+                    icon: const Icon(Icons.phonelink_setup_rounded, size: IconSizes.action),
                     label: Text(
                       'battery_wizard_oem_btn'.tr(),
                       style: const TextStyle(fontWeight: FontWeight.w600),
@@ -307,7 +308,7 @@ class _BatteryOptimizationWizardState extends State<BatteryOptimizationWizard>
                       HapticFeedback.lightImpact();
                       _openBatterySettings();
                     },
-                    icon: const Icon(Icons.settings_rounded, size: 20),
+                    icon: const Icon(Icons.settings_rounded, size: IconSizes.action),
                     label: Text(
                       'battery_wizard_settings_btn'.tr(),
                       style: const TextStyle(fontWeight: FontWeight.w600),
@@ -349,7 +350,7 @@ class _BatteryOptimizationWizardState extends State<BatteryOptimizationWizard>
                       if (!context.mounted) return;
                       Navigator.pop(context);
                     },
-                    icon: const Icon(Icons.check_rounded, size: 22),
+                    icon: const Icon(Icons.check_rounded, size: IconSizes.emphasis),
                     label: Text(
                       'battery_wizard_done_btn'.tr(),
                       style: const TextStyle(
@@ -396,7 +397,7 @@ class _BatteryOptimizationWizardState extends State<BatteryOptimizationWizard>
               color: AppColors.warning.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(icon, color: AppColors.warning, size: 24),
+            child: Icon(icon, color: AppColors.warning, size: IconSizes.dialog),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -449,7 +450,7 @@ class _BatteryOptimizationWizardState extends State<BatteryOptimizationWizard>
               color: AppColors.info.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(icon, color: AppColors.info, size: 24),
+            child: Icon(icon, color: AppColors.info, size: IconSizes.dialog),
           ),
           const SizedBox(width: 14),
           Expanded(

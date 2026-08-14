@@ -162,18 +162,80 @@ abstract final class Shadows {
   ];
 }
 
-/// Icon size scale — the scattered one. Seven rungs cover the real range from
-/// inline glyphs to the empty-state illustration.
+/// Icon sizes, named by the ROLE each one plays and sized by what the app
+/// already renders.
+///
+/// ## Why the names changed
+///
+/// The first version of this scale was `xs/sm/md/lg/xl/xxl/hero` at
+/// 14/16/20/24/32/40/48, and it had **zero consumers** — which is how
+/// `MP-04-012` came to be an open row rather than a closed one. Measuring the
+/// tree explained why nobody adopted it: the two most common icon sizes in the
+/// app after 20 are **18 (24 sites)** and **22 (19 sites)**, and neither was on
+/// the scale. A migration onto it would have moved 43 rendered icons, which is
+/// a visual change CLAUDE.md rule 4 reserves to the owner. So the scale was
+/// derived from usage instead of the other way round, and every rung below is a
+/// value the app was already drawing — the migration changes **no pixels**,
+/// exactly like the ZLayer / Breakpoints / DensityTokens migrations before it.
+///
+/// ## Visual size is NOT hit target
+///
+/// Every value here is the size of the GLYPH. None of them is a touch target: a
+/// 20 dp icon lives inside a >= 48 dp interactive box, which is asserted
+/// separately by `touch_target_geometry_test.dart`. Growing a role to reach
+/// 48 dp would be fixing the wrong thing.
 abstract final class IconSizes {
-  static const double xs = 14;
-  static const double sm = 16;
-  static const double md = 20;
-  static const double lg = 24;
-  static const double xl = 32;
-  static const double xxl = 40;
+  /// Inline with body text: chevrons, tiny meta marks. (14 dp, 10 sites)
+  static const double inline = 14;
+
+  /// Dense list metadata. (16 dp, 13 sites)
+  static const double dense = 16;
+
+  /// Leading glyph of an inline notice or compact row. (18 dp, 24 sites)
+  static const double listItem = 18;
+
+  /// The standard action glyph — the app's most common icon size.
+  /// (20 dp, 36 sites)
+  static const double action = 20;
+
+  /// A prominent row or section-header glyph. (22 dp, 19 sites)
+  static const double emphasis = 22;
+
+  /// Dialog and settings-tile glyphs. (24 dp, 12 sites)
+  static const double dialog = 24;
+
+  /// A feature mark inside a circular badge. (36 dp, 9 sites)
+  static const double feature = 36;
+
+  /// A screen-level illustrative mark. (40 dp, 7 sites)
+  static const double illustration = 40;
+
+  /// Empty-state and hero artwork. (48 dp, 3 sites)
   static const double hero = 48;
 
-  static const List<double> scale = <double>[xs, sm, md, lg, xl, xxl, hero];
+  static const List<double> scale = <double>[
+    inline, dense, listItem, action, emphasis, dialog, feature, illustration,
+    hero,
+  ];
+
+  /// Sizes the app renders that are deliberately NOT roles.
+  ///
+  /// Each is a one-off piece of artwork or a single decorative glyph; promoting
+  /// any of them would be inventing a role from one site. Listed rather than
+  /// pattern-matched, so a NEW off-scale size is still visible as drift.
+  static const Map<String, String> documentedExceptions = <String, String>{
+    '12': 'the lock glyph inside the panic button label (panic_button.dart)',
+    '26': 'PIN keypad backspace and three nav/list glyphs',
+    '28': 'the locked-Pro row mark (subscription_management_screen.dart)',
+    '32': 'two permission-dialog marks (permission_helper.dart)',
+    '34': 'three round-button glyphs sized to their button',
+    '42': 'two full-screen failure marks (emergency + countdown)',
+    '52': 'onboarding and legal-disclaimer artwork',
+    '56': 'check-in and profile avatars',
+    '60': 'the siren dialog mark',
+    '68': 'the splash shield',
+    '70': 'the caller avatar on the fake-call and emergency screens',
+  };
 }
 
 /// Type scale, measured the same way as the rest.

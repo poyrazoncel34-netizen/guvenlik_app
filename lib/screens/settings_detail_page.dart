@@ -2,6 +2,7 @@
 // AYARLAR DETAY SAYFASI
 // ============================================================================
 
+import '../core/design_tokens.dart';
 import 'dart:convert';
 import 'dart:io';
 
@@ -201,7 +202,7 @@ class SettingsDetailPage extends StatelessWidget {
                     color: AppColors.primary.withValues(alpha: 0.15),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(icon, size: 36, color: AppColors.primary),
+                  child: Icon(icon, size: IconSizes.feature, color: AppColors.primary),
                 ),
                 const SizedBox(height: 16),
                 Text(
@@ -359,7 +360,7 @@ class _DataExportButtonState extends State<_DataExportButton> {
                         color: Colors.white,
                       ),
                     )
-                  : const Icon(Icons.download_rounded, size: 18),
+                  : const Icon(Icons.download_rounded, size: IconSizes.listItem),
               label: Text(
                 _exporting
                     ? 'data_export_exporting'.tr()

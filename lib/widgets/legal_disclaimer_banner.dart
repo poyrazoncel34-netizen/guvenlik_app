@@ -3,6 +3,7 @@
 // ============================================================================
 
 import 'package:flutter/material.dart';
+import '../core/design_tokens.dart';
 import '../core/app_colors.dart';
 
 enum LegalBannerContext {
@@ -79,7 +80,7 @@ class LegalDisclaimerBanner extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(_icon, color: _color, size: 18),
+          Icon(_icon, color: _color, size: IconSizes.listItem),
           const SizedBox(width: 10),
           Expanded(
             child: Text(

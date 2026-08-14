@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../core/design_tokens.dart';
 import '../../core/app_colors.dart';
 import '../../core/constants/app_constants.dart';
 import '../../screens/legal/terms_of_service_screen.dart';
@@ -285,7 +286,7 @@ class LegalSettingsScreen extends StatelessWidget {
                   color: color.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(icon, color: color, size: 22),
+                child: Icon(icon, color: color, size: IconSizes.emphasis),
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -315,7 +316,7 @@ class LegalSettingsScreen extends StatelessWidget {
               ),
               Icon(
                 Icons.arrow_forward_ios_rounded,
-                size: 16,
+                size: IconSizes.dense,
                 color: isDanger
                     ? AppColors.emergency.withValues(alpha: 0.6)
                     : AppColors.textSecondary,

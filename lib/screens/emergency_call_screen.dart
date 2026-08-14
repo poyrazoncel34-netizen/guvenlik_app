@@ -2,6 +2,7 @@
 // ACIL DURUM DURUM EKRANI — HONEST STATUS DISPLAY
 // ============================================================================
 
+import '../core/design_tokens.dart';
 import 'dart:async';
 
 import 'package:easy_localization/easy_localization.dart';
@@ -220,7 +221,7 @@ class _EmergencyCallScreenState extends State<EmergencyCallScreen>
                   onPressed: () async {
                     await AndroidIntentService.openDialer(widget.phone);
                   },
-                  icon: const Icon(Icons.call, size: 20),
+                  icon: const Icon(Icons.call, size: IconSizes.action),
                   label: Text(
                     'emergency_manual_call_now'.tr(),
                     style: const TextStyle(
@@ -253,7 +254,7 @@ class _EmergencyCallScreenState extends State<EmergencyCallScreen>
                       ),
                     );
                   },
-                  icon: const Icon(Icons.copy, size: 18),
+                  icon: const Icon(Icons.copy, size: IconSizes.listItem),
                   label: Text('emergency_copy_message'.tr()),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: Colors.white70,
@@ -494,7 +495,7 @@ class _EmergencyCallScreenState extends State<EmergencyCallScreen>
               color: presentation.color.withValues(alpha: 0.18),
               shape: BoxShape.circle,
             ),
-            child: Icon(presentation.icon, color: presentation.color, size: 20),
+            child: Icon(presentation.icon, color: presentation.color, size: IconSizes.action),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -548,7 +549,7 @@ class _EmergencyCallScreenState extends State<EmergencyCallScreen>
               color: presentation.color.withValues(alpha: 0.16),
               shape: BoxShape.circle,
             ),
-            child: Icon(presentation.icon, color: presentation.color, size: 22),
+            child: Icon(presentation.icon, color: presentation.color, size: IconSizes.emphasis),
           ),
           const SizedBox(width: 14),
           Expanded(

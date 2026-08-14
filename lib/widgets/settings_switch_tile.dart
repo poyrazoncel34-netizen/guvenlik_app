@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../core/design_tokens.dart';
 import '../core/app_colors.dart';
 import '../core/widgets/minimum_tap_target.dart';
 
@@ -41,7 +42,7 @@ class SettingsSwitchTile extends StatelessWidget {
                 color: iconColor.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(icon, color: iconColor, size: 22),
+              child: Icon(icon, color: iconColor, size: IconSizes.emphasis),
             ),
             const SizedBox(width: 14),
             Expanded(

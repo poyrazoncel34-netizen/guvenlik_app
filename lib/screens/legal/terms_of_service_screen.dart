@@ -6,6 +6,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
+import '../../core/design_tokens.dart';
 import '../../core/app_colors.dart';
 import '../../constants/legal_texts.dart';
 import '../../services/consent_manager.dart';
@@ -115,7 +116,7 @@ class _TermsOfServiceScreenState extends State<TermsOfServiceScreen> {
               children: [
                 const Icon(
                   Icons.info_outline_rounded,
-                  size: 16,
+                  size: IconSizes.dense,
                   color: AppColors.primary,
                 ),
                 const SizedBox(width: 8),
@@ -171,7 +172,7 @@ class _TermsOfServiceScreenState extends State<TermsOfServiceScreen> {
                         children: [
                           const Icon(
                             Icons.keyboard_arrow_down_rounded,
-                            size: 16,
+                            size: IconSizes.dense,
                             color: AppColors.textSecondary,
                           ),
                           const SizedBox(width: 4),

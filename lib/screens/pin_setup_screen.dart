@@ -6,6 +6,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../core/design_tokens.dart';
 import '../core/app_colors.dart';
 import '../core/constants/app_constants.dart';
 import '../core/utils/validators.dart';
@@ -191,7 +192,7 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
                     ),
                     child: const Icon(
                       Icons.lock_rounded,
-                      size: 40,
+                      size: IconSizes.illustration,
                       color: AppColors.primary,
                     ),
                   ),
@@ -299,7 +300,7 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
                         const Icon(
                           Icons.info_outline_rounded,
                           color: AppColors.info,
-                          size: 18,
+                          size: IconSizes.listItem,
                         ),
                         const SizedBox(width: 10),
                         Expanded(

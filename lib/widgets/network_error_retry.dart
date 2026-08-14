@@ -4,6 +4,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
+import '../core/design_tokens.dart';
 import '../core/app_colors.dart';
 
 /// Ağ hatası durumunda gösterilen widget. Mesaj + Tekrar Dene butonu.
@@ -35,7 +36,7 @@ class NetworkErrorRetry extends StatelessWidget {
                 color: AppColors.warning.withValues(alpha: 0.12),
                 shape: BoxShape.circle,
               ),
-              child: Icon(icon, size: 36, color: AppColors.warning),
+              child: Icon(icon, size: IconSizes.feature, color: AppColors.warning),
             ),
             const SizedBox(height: 20),
             Text(
@@ -50,7 +51,7 @@ class NetworkErrorRetry extends StatelessWidget {
             const SizedBox(height: 24),
             ElevatedButton.icon(
               onPressed: onRetry,
-              icon: const Icon(Icons.refresh_rounded, size: 20),
+              icon: const Icon(Icons.refresh_rounded, size: IconSizes.action),
               label: Text("retry_button".tr()),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
@@ -79,7 +80,7 @@ void showNetworkErrorSnackBar(
 }) {
   final content = Row(
     children: [
-      const Icon(Icons.wifi_off_rounded, color: Colors.white, size: 20),
+      const Icon(Icons.wifi_off_rounded, color: Colors.white, size: IconSizes.action),
       const SizedBox(width: 12),
       Expanded(
         child: Text(

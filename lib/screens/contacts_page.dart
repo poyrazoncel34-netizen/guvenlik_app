@@ -94,7 +94,7 @@ class _ContactsPageState extends State<ContactsPage> {
                 ),
                 child: const Icon(
                   Icons.person_add_rounded,
-                  size: 20,
+                  size: IconSizes.action,
                   color: AppColors.primary,
                 ),
               ),
@@ -143,7 +143,7 @@ class _ContactsPageState extends State<ContactsPage> {
                           _showEmergencyPicker(context);
                         }
                       : null,
-                  icon: const Icon(Icons.shield_rounded, size: 18),
+                  icon: const Icon(Icons.shield_rounded, size: IconSizes.listItem),
                   label: Text("contacts_select_emergency".tr()),
                   style: TextButton.styleFrom(
                     foregroundColor: AppColors.accent,
@@ -356,7 +356,7 @@ class _ContactsPageState extends State<ContactsPage> {
                   child: const Icon(
                     Icons.call_rounded,
                     color: AppColors.success,
-                    size: 22,
+                    size: IconSizes.emphasis,
                   ),
                 ),
               ],
@@ -400,7 +400,7 @@ class _ContactsPageState extends State<ContactsPage> {
                 color: contact.color.withValues(alpha: 0.12),
                 shape: BoxShape.circle,
               ),
-              child: Icon(contact.icon, size: 40, color: contact.color),
+              child: Icon(contact.icon, size: IconSizes.illustration, color: contact.color),
             ),
             const SizedBox(height: 16),
             Text(
@@ -428,7 +428,7 @@ class _ContactsPageState extends State<ContactsPage> {
                       Navigator.pop(sheetContext);
                       await _dialNumber(contact.phone);
                     },
-                    icon: const Icon(Icons.call_rounded, size: 20),
+                    icon: const Icon(Icons.call_rounded, size: IconSizes.action),
                     label: Text(
                       "contacts_call".tr(),
                       style: const TextStyle(fontWeight: FontWeight.w700),
@@ -465,7 +465,7 @@ class _ContactsPageState extends State<ContactsPage> {
                     ),
                   );
                 },
-                icon: const Icon(Icons.shield_rounded, size: 20),
+                icon: const Icon(Icons.shield_rounded, size: IconSizes.action),
                 label: Text(
                   "contacts_select_emergency_btn".tr(),
                   style: const TextStyle(fontWeight: FontWeight.w700),
@@ -502,7 +502,7 @@ class _ContactsPageState extends State<ContactsPage> {
                         : AppColors.emergency,
                   );
                 },
-                icon: const Icon(Icons.delete_outline_rounded, size: 20),
+                icon: const Icon(Icons.delete_outline_rounded, size: IconSizes.action),
                 label: Text(
                   "contacts_remove".tr(),
                   style: const TextStyle(fontWeight: FontWeight.w700),
@@ -576,7 +576,7 @@ class _ContactsPageState extends State<ContactsPage> {
             ),
             child: const Icon(
               Icons.people_outline_rounded,
-              size: 36,
+              size: IconSizes.feature,
               color: AppColors.primary,
             ),
           ),
@@ -610,7 +610,7 @@ class _ContactsPageState extends State<ContactsPage> {
               if (!_requireEmergencyContactConsent()) return;
               await _pickContactFromDevice();
             },
-            icon: const Icon(Icons.person_add_rounded, size: 18),
+            icon: const Icon(Icons.person_add_rounded, size: IconSizes.listItem),
             label: Text(
               "contacts_add_person".tr(),
               style: const TextStyle(fontWeight: FontWeight.w700),
@@ -639,7 +639,7 @@ class _ContactsPageState extends State<ContactsPage> {
       ),
       child: Row(
         children: [
-          const Icon(Icons.info_rounded, color: AppColors.info, size: 22),
+          const Icon(Icons.info_rounded, color: AppColors.info, size: IconSizes.emphasis),
           const SizedBox(width: 16),
           Expanded(
             child: Text(
@@ -671,7 +671,7 @@ class _ContactsPageState extends State<ContactsPage> {
             const Icon(
               Icons.shield_rounded,
               color: AppColors.primary,
-              size: 22,
+              size: IconSizes.emphasis,
             ),
             const SizedBox(width: 8),
             Expanded(
@@ -778,7 +778,7 @@ class _ContactsPageState extends State<ContactsPage> {
                   ),
                   child: const Icon(
                     Icons.person_add_rounded,
-                    size: 36,
+                    size: IconSizes.feature,
                     color: AppColors.primary,
                   ),
                 ),

@@ -2,6 +2,7 @@
 // SAHTE ÇAĞRI
 // ============================================================================
 
+import '../core/design_tokens.dart';
 import 'dart:io';
 import 'dart:async';
 import 'package:easy_localization/easy_localization.dart';
@@ -107,7 +108,7 @@ class _FakeCallScreenState extends State<FakeCallScreen>
               child: const Icon(
                 Icons.warning_amber_rounded,
                 color: Color(0xFFFFB547),
-                size: 22,
+                size: IconSizes.emphasis,
               ),
             ),
             const SizedBox(width: 12),
@@ -321,7 +322,7 @@ class _FakeCallScreenState extends State<FakeCallScreen>
                         icon: const Icon(
                           Icons.tune_rounded,
                           color: Colors.white70,
-                          size: 18,
+                          size: IconSizes.listItem,
                         ),
                         label: Text(
                           "fake_call_settings".tr(),
@@ -402,7 +403,7 @@ class _FakeCallScreenState extends State<FakeCallScreen>
                             child: const Icon(
                               Icons.phone_callback_rounded,
                               color: AppColors.primary,
-                              size: 20,
+                              size: IconSizes.action,
                             ),
                           ),
                           const SizedBox(width: 10),

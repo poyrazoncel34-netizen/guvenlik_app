@@ -1,6 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
+import '../design_tokens.dart';
 import '../app_colors.dart';
 import '../services/emergency_platform_service.dart';
 import '../services/subscription_access_state.dart';
@@ -177,7 +178,7 @@ class ReadinessCard extends StatelessWidget {
                       ? Icons.check_circle_rounded
                       : Icons.error_outline_rounded,
                   color: allReady ? AppColors.success : AppColors.warning,
-                  size: 18,
+                  size: IconSizes.listItem,
                 ),
               ),
               const SizedBox(width: 12),
@@ -301,7 +302,7 @@ class ReadinessCard extends StatelessWidget {
             children: [
               const Icon(
                 Icons.cloud_off_rounded,
-                size: 18,
+                size: IconSizes.listItem,
                 color: AppColors.info,
               ),
               const SizedBox(width: 10),
@@ -383,7 +384,7 @@ class _RehearsalLine extends StatelessWidget {
           children: [
             const Icon(
               Icons.history_rounded,
-              size: 14,
+              size: IconSizes.inline,
               color: AppColors.textSecondary,
             ),
             const SizedBox(width: 6),
@@ -434,7 +435,7 @@ class _StatusChip extends StatelessWidget {
           children: [
             Icon(
               isOk ? Icons.check_circle_rounded : Icons.error_outline_rounded,
-              size: 14,
+              size: IconSizes.inline,
               color: color,
             ),
             const SizedBox(width: 6),

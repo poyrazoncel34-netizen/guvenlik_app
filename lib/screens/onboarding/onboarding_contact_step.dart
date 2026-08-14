@@ -6,6 +6,7 @@
 // surer ve durumunu ust ekrana bildirir.
 // ============================================================================
 
+import '../../core/design_tokens.dart';
 import 'dart:async';
 
 import 'package:easy_localization/easy_localization.dart';
@@ -380,7 +381,7 @@ class _OnboardingContactStepState extends State<OnboardingContactStep>
             _hasContact
                 ? Icons.how_to_reg_rounded
                 : Icons.contact_phone_rounded,
-            size: 40,
+            size: IconSizes.illustration,
             color: _hasContact ? AppColors.success : AppColors.primary,
           ),
         ),
@@ -465,7 +466,7 @@ class _OnboardingContactStepState extends State<OnboardingContactStep>
       const SizedBox(height: 16),
       OutlinedButton.icon(
         onPressed: _needsConsent || _saving ? null : _pickFromDevice,
-        icon: const Icon(Icons.contacts_rounded, size: 20),
+        icon: const Icon(Icons.contacts_rounded, size: IconSizes.action),
         label: Text('onboarding_contact_pick_btn'.tr()),
         style: OutlinedButton.styleFrom(
           foregroundColor: AppColors.textPrimary,
@@ -489,7 +490,7 @@ class _OnboardingContactStepState extends State<OnboardingContactStep>
                   color: Colors.white,
                 ),
               )
-            : const Icon(Icons.check_rounded, size: 20),
+            : const Icon(Icons.check_rounded, size: IconSizes.action),
         label: Text('onboarding_contact_save_btn'.tr()),
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
@@ -589,7 +590,7 @@ class _OnboardingContactStepState extends State<OnboardingContactStep>
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: color, size: 22),
+          Icon(icon, color: color, size: IconSizes.emphasis),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
@@ -615,7 +616,7 @@ class _OnboardingContactStepState extends State<OnboardingContactStep>
       labelText: label,
       errorText: errorText,
       counterText: '',
-      prefixIcon: Icon(icon, color: AppColors.textSecondary, size: 20),
+      prefixIcon: Icon(icon, color: AppColors.textSecondary, size: IconSizes.action),
       labelStyle: const TextStyle(color: AppColors.textSecondary),
       filled: true,
       fillColor: AppColors.cardBg,

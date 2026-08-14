@@ -542,14 +542,14 @@
   "MP-04-012": {
     "archetype": "STATIC_CODE",
     "artifact": "design_tokens.json",
-    "cite": "three of the five zero-consumer scales measured in this pass were migrated and closed; this one and TypeScale were not, and are recorded as remaining work rather than reclassified",
-    "disposition": "PARTIAL",
-    "gap": "IconSizes has zero consumers. Unlike ZLayer, Breakpoints and DensityTokens -- all three migrated in this pass -- the icon scale spans 287 call sites and its migration is genuine in-repo work that was not done here.",
-    "negativeControl": "strip every Radii consumer -> Radii joins the zero-consumer list, so the counter is not vacuous",
+    "cite": "the invented scale omitted 18 dp (24 sites) and 22 dp (19 sites) -- the two most common sizes after 20 -- so adopting it would have moved 43 rendered icons. Rebuilding the scale from the census made the migration pixel-neutral",
+    "disposition": "PASS",
+    "gap": "None. 139 of 162 icon sites read a role; the remaining 23 are documented one-offs.",
+    "negativeControl": "stripping a scale of its consumers turns it into a zero-consumer scale -> tokens.py 0 -> 1; icon_size_migration_test.dart fails on a new off-scale size, a stale exception, or an exception that duplicates a role",
     "property": "measurements.adoption.byScale.IconSizes",
-    "remediated": "no",
-    "remediation": "Migrate the icon sites onto IconSizes, or delete the scale. This is the honest remaining in-repo item for section 4, alongside MP-04-004 (TypeScale, 329 sites), and it is NOT a product decision or an external blocker.",
-    "surface": "287 Icon sites across 112 distinct glyphs",
+    "remediated": "yes",
+    "remediation": "None in repo for icons.",
+    "surface": "lib/core/design_tokens.dart + 43 consumer files",
     "verifier": "scripts/audit_evidence/tokens.py"
   },
   "MP-04-013": {

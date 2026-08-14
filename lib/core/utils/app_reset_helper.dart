@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../design_tokens.dart';
 import '../../screens/splash_screen.dart';
 import '../app_colors.dart';
 import '../widgets/subscription_deletion_notice.dart';
@@ -33,7 +34,7 @@ class AppResetHelper {
               ),
               child: const Icon(
                 Icons.delete_forever_rounded,
-                size: 36,
+                size: IconSizes.feature,
                 color: AppColors.emergency,
               ),
             ),

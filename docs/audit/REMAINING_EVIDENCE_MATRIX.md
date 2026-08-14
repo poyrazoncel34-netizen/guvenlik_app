@@ -44,7 +44,7 @@ have meant filing a document under a code archetype to keep the list short.
 | Metric | Count |
 |---|---|
 | Rows in this matrix | 239 |
-| Still `IN_REPO_RESOLVABLE` in the queue | 4 |
+| Still `IN_REPO_RESOLVABLE` in the queue | 3 |
 | Evidence artifacts referenced | 12 |
 | Plan/audit integrity problems | 0 |
 
@@ -196,7 +196,7 @@ have meant filing a document under a code archetype to keep the list short.
 | `MP-03-031` | 3 | Missing icon yok. | PASS | - | 287 icon sites | scripts/audit_evidence/assets.py | `assets.json` → `measurements.iconography.whyNoMissingGlyph` | absent referenced asset + shipped demo_ image -> 2 violations | no | PASS |
 | `MP-04-008` | 4 | Z-index scale var. | PASS | - | z-index scale consumers | scripts/audit_evidence/tokens.py | `design_tokens.json` → `measurements.adoption.byScale.ZLayer` | strip every Radii consumer -> Radii joins the zero-consumer list | yes | PASS |
 | `MP-04-011` | 4 | Breakpoint sistemi var. | PASS | - | breakpoint consumers | scripts/audit_evidence/tokens.py | `design_tokens.json` → `measurements.adoption.byScale.Breakpoints` | strip every Radii consumer -> Radii joins the zero-consumer list | yes | PASS |
-| `MP-04-012` | 4 | Icon size scale var. | PARTIAL | P3 | 287 Icon sites across 112 distinct glyphs | scripts/audit_evidence/tokens.py | `design_tokens.json` → `measurements.adoption.byScale.IconSizes` | strip every Radii consumer -> Radii joins the zero-consumer list, so the counter is not vacuous | no | PARTIAL |
+| `MP-04-012` | 4 | Icon size scale var. | PASS | - | lib/core/design_tokens.dart + 43 consumer files | scripts/audit_evidence/tokens.py | `design_tokens.json` → `measurements.adoption.byScale.IconSizes` | stripping a scale of its consumers turns it into a zero-consumer scale -> tokens.py 0 -> 1; icon_size_migration_test.dart fails on a new off-scale size, a stale exception, or an exception that duplicates a role | yes | PASS |
 | `MP-04-013` | 4 | Component density sistemi var. | PASS | - | density consumers | scripts/audit_evidence/tokens.py | `design_tokens.json` → `measurements.adoption.byScale.DensityTokens` | strip every Radii consumer -> Radii joins the zero-consumer list | yes | PASS |
 | `MP-04-015` | 4 | Dark theme tanımlıysa tam. | PARTIAL | P3 | AppTheme light/dark | scripts/audit_evidence/tokens.py | `design_tokens.json` → `measurements.themes.wiredInMain` | strip every Radii consumer -> Radii joins the zero-consumer list | no | PARTIAL |
 | `MP-05-001` | 5 | Font ailesi bilinçli seçilmiş. | PASS | - | type system | scripts/audit_evidence/typography.py | `typography.json` → `measurements.fontFamily.why` | second font family + 7px/1.05 style -> 5 violations | no | PASS |

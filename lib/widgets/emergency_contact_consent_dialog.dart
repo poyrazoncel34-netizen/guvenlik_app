@@ -6,6 +6,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
+import '../core/design_tokens.dart';
 import '../core/app_colors.dart';
 import '../services/consent_manager.dart';
 import '../models/consent_record.dart';
@@ -99,7 +100,7 @@ class _EmergencyContactConsentDialogState
                   child: const Icon(
                     Icons.person_add_rounded,
                     color: AppColors.warning,
-                    size: 22,
+                    size: IconSizes.emphasis,
                   ),
                 ),
                 const SizedBox(width: 12),

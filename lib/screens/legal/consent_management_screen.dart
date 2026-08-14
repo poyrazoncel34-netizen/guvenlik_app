@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../core/design_tokens.dart';
 import '../../core/app_colors.dart';
 import '../../core/constants/app_constants.dart';
 import '../../services/consent_manager.dart';
@@ -228,7 +229,7 @@ class _ConsentManagementScreenState extends State<ConsentManagementScreen> {
                   const Icon(
                     Icons.warning_amber_rounded,
                     color: AppColors.warning,
-                    size: 20,
+                    size: IconSizes.action,
                   ),
                   const SizedBox(width: 10),
                   Expanded(
@@ -319,7 +320,7 @@ class _ConsentManagementScreenState extends State<ConsentManagementScreen> {
               color: item.color.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(item.icon, color: item.color, size: 22),
+            child: Icon(item.icon, color: item.color, size: IconSizes.emphasis),
           ),
           const SizedBox(width: 14),
           Expanded(

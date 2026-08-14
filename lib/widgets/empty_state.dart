@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../core/design_tokens.dart';
 
 /// Boş veri durumunu gösteren widget.
 /// İkon, mesaj ve opsiyonel aksiyon butonu içerir.
@@ -37,7 +38,7 @@ class EmptyState extends StatelessWidget {
               ),
               child: Icon(
                 icon,
-                size: 40,
+                size: IconSizes.illustration,
                 color: iconColor ?? Colors.cyanAccent.withValues(alpha: 0.7),
               ),
             ),
@@ -66,7 +67,7 @@ class EmptyState extends StatelessWidget {
               const SizedBox(height: 24),
               ElevatedButton.icon(
                 onPressed: onAction,
-                icon: const Icon(Icons.add_rounded, size: 18),
+                icon: const Icon(Icons.add_rounded, size: IconSizes.listItem),
                 label: Text(actionLabel!),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.cyanAccent.withValues(alpha: 0.2),

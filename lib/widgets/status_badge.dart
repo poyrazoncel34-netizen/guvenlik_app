@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../core/design_tokens.dart';
 
 /// Durum göstergesi badge widget'ı.
 /// Online/offline, aktif/pasif gibi durumları kompakt şekilde gösterir.
@@ -43,7 +44,7 @@ class StatusBadge extends StatelessWidget {
           ),
           const SizedBox(width: 6),
           if (icon != null) ...[
-            Icon(icon, size: 14, color: color),
+            Icon(icon, size: IconSizes.inline, color: color),
             const SizedBox(width: 4),
           ],
           Text(
