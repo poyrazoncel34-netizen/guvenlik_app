@@ -1,0 +1,122 @@
+{
+  "verifier": "scripts/audit_evidence/storage.py",
+  "verifierVersion": "1.0.0",
+  "codeRevision": {
+    "head": "098a36072a7ebefaf918bf02bb47f2af702a3878",
+    "dirty": true
+  },
+  "measuredOn": "2026-08-14",
+  "command": "python3 scripts/audit_evidence/storage.py",
+  "surfaces": [
+    "lib/core/services/local_database_service.dart",
+    "lib/core/services/**",
+    "lib/core/network/**",
+    "lib/screens/settings_legal/data_export_screen.dart",
+    "pubspec.yaml"
+  ],
+  "measurements": {
+    "schema": {
+      "engine": "sqflite",
+      "databaseVersion": 3,
+      "tables": [
+        "activity_events",
+        "app_settings",
+        "contacts",
+        "crash_logs"
+      ],
+      "authoritativeTable": "activity_events — the user's safety timeline",
+      "deliberatelyEmptyTable": "contacts — the single source of truth is flutter_secure_storage key emergency_contacts_v1",
+      "constraintCounts": {
+        "NOT NULL": 11,
+        "PRIMARY KEY": 4,
+        "UNIQUE": 1,
+        "DEFAULT": 1,
+        "CHECK": 0,
+        "FOREIGN KEY": 0
+      },
+      "checkConstraintCount": 0,
+      "constraintStrategy": "column-level NOT NULL/PRIMARY KEY plus validation at the Dart boundary. SQLite CHECK constraints are deliberately absent: a failed CHECK raises inside an insert on the safety timeline, and the emergency path must degrade rather than throw.",
+      "transactionSites": 1,
+      "transactionBoundary": "the 100-row crash-log cap is enforced on every insert; the insert+prune pair is the only genuine multi-statement write",
+      "isolationLevel": "sqflite serialises through a single native connection per database handle, so the effective isolation is SERIALIZABLE. There is no second writer: no backend, no sync, one process.",
+      "migrationStyle": "additive only — ALTER TABLE ADD COLUMN / CREATE TABLE",
+      "migrationTest": "test/core/services/local_database_migration_test.dart"
+    },
+    "cache": {
+      "caches": {
+        "map tiles": {
+          "store": "flutter_map tile provider (on-disk, library-owned)",
+          "key": "z/x/y tile coordinate — the only cache with a real key space",
+          "ttl": "library default; tiles are immutable for a given z/x/y",
+          "invalidation": "eviction by the tile provider, never by this app",
+          "stalenessAcceptable": "a month-old street tile is still the street",
+          "contract": "test/screens/map_osm_cache_contract_test.dart"
+        },
+        "SharedPreferences": {
+          "store": "settings, consent log, notes",
+          "key": "explicit constant keys in lib/core/constants",
+          "ttl": "none — this is durable state, not a cache"
+        },
+        "secure storage": {
+          "store": "emergency contacts",
+          "key": "emergency_contacts_v1",
+          "ttl": "none — durable"
+        }
+      },
+      "stampedeRisk": "none: there is no shared origin to stampede. The only network cache is per-tile against a public tile server, fetched by one process on one device, and the emergency path performs zero network I/O.",
+      "networkLayer": "lib/core/network/"
+    },
+    "files": {
+      "userGeneratedFiles": [
+        "the KVKK data export (JSON)"
+      ],
+      "exportScreen": "lib/screens/settings_legal/data_export_screen.dart",
+      "imageUploadSurfaces": 0,
+      "exifRisk": "none reachable: the app captures, stores and uploads no images. There is no camera permission and no image picker dependency, so there is no EXIF payload to strip.",
+      "cameraPermissionDeclared": false,
+      "imagePickerDependency": false
+    },
+    "appsec": {
+      "sastTooling": {
+        "dart": "flutter analyze --no-fatal-infos (CI gate)",
+        "android": "Android Lint (scripts/verify_release.sh)",
+        "dependencies": "scripts/audit_dependencies_osv.sh — OSV over pub + maven",
+        "secrets": "scripts/scan_release_secrets.py",
+        "mobileStandard": "scripts/verify_masvs_assessment.py"
+      },
+      "sastGap": "no taint-analysis SAST (Semgrep/CodeQL) runs on this repository; the linters above are pattern and type checks, not dataflow analysis. Recorded as the measured limit, not restated as coverage.",
+      "mutationHarness": "scripts/run_safety_mutations.py",
+      "criticalCoverageGate": "scripts/verify_critical_coverage.dart"
+    },
+    "secrets": {
+      "scanner": "scripts/scan_release_secrets.py --require-clean",
+      "envFilesTracked": [],
+      "compileTimeInjection": [
+        "REVENUECAT_ANDROID_API_KEY",
+        "ENCRYPTION_KEY"
+      ],
+      "injectionMechanism": "--dart-define / CI secret, read via String.fromEnvironment",
+      "fromEnvironmentSites": [
+        "lib/core/config/app_environment.dart:18",
+        "lib/core/config/app_environment.dart:19",
+        "lib/core/config/app_environment.dart:23",
+        "lib/core/services/revenue_cat_service.dart:22",
+        "lib/core/services/revenue_cat_service.dart:26"
+      ],
+      "keystorePolicy": "korubeni_keystore_release.jks is never committed; key.properties is in the secret-quarantine category",
+      "secretManager": "GitHub Actions encrypted secrets. There is no cloud secret manager because there is no server: the only secrets are a billing publishable key and a build-time encryption key, both injected at compile time. A KMS would be a system to run, not a risk removed."
+    }
+  },
+  "violations": [],
+  "exclusions": [
+    {
+      "what": "the legacy `contacts` table",
+      "why": "it is kept EMPTY by design; constraints on a table with no rows protect nothing, and resurrecting it is forbidden"
+    }
+  ],
+  "negativeControl": {
+    "command": "python3 scripts/audit_evidence/storage.py --negative-control",
+    "mutation": "a hard-coded API key and a DROP TABLE on activity_events",
+    "expected": "hardcodedSecretLiteral and destructiveMigration fire"
+  }
+}

@@ -1,0 +1,191 @@
+{
+  "verifier": "scripts/audit_evidence/tokens.py",
+  "verifierVersion": "1.0.0",
+  "codeRevision": {
+    "head": "098a36072a7ebefaf918bf02bb47f2af702a3878",
+    "dirty": true
+  },
+  "measuredOn": "2026-08-14",
+  "command": "python3 scripts/audit_evidence/tokens.py",
+  "surfaces": [
+    "lib/core/design_tokens.dart",
+    "lib/core/motion.dart",
+    "lib/core/app_theme.dart",
+    "lib/main.dart",
+    "lib/**/*.dart (154 files)"
+  ],
+  "measurements": {
+    "adoption": {
+      "scalesDefined": 11,
+      "scalesWithAtLeastOneConsumer": 6,
+      "byScale": {
+        "Spacing": {
+          "references": 4,
+          "consumerFiles": [
+            "lib/core/app_theme.dart"
+          ],
+          "consumerCount": 1
+        },
+        "Radii": {
+          "references": 21,
+          "consumerFiles": [
+            "lib/core/app_theme.dart",
+            "lib/screens/safety_timeline_screen.dart",
+            "lib/screens/settings_page.dart"
+          ],
+          "consumerCount": 3
+        },
+        "Elevation": {
+          "references": 10,
+          "consumerFiles": [
+            "lib/core/app_theme.dart"
+          ],
+          "consumerCount": 1
+        },
+        "Shadows": {
+          "references": 10,
+          "consumerFiles": [
+            "lib/screens/check_in_screen.dart",
+            "lib/screens/contacts_page.dart",
+            "lib/screens/map_page.dart",
+            "lib/screens/profile_page.dart",
+            "lib/screens/safety_timeline_screen.dart",
+            "lib/screens/settings_page.dart",
+            "lib/screens/subscription/paywall_screen.dart",
+            "lib/screens/subscription/subscription_management_screen.dart"
+          ],
+          "consumerCount": 8
+        },
+        "IconSizes": {
+          "references": 0,
+          "consumerFiles": [],
+          "consumerCount": 0
+        },
+        "TypeScale": {
+          "references": 0,
+          "consumerFiles": [],
+          "consumerCount": 0
+        },
+        "ZLayer": {
+          "references": 0,
+          "consumerFiles": [],
+          "consumerCount": 0
+        },
+        "Breakpoints": {
+          "references": 0,
+          "consumerFiles": [],
+          "consumerCount": 0
+        },
+        "DensityTokens": {
+          "references": 0,
+          "consumerFiles": [],
+          "consumerCount": 0
+        },
+        "FocusIndicator": {
+          "references": 5,
+          "consumerFiles": [
+            "lib/core/widgets/focus_ring.dart"
+          ],
+          "consumerCount": 1
+        },
+        "Motion": {
+          "references": 29,
+          "consumerFiles": [
+            "lib/core/widgets/app_privacy_shield.dart",
+            "lib/screens/app_root.dart",
+            "lib/screens/app_unlock_screen.dart",
+            "lib/screens/countdown_screen.dart",
+            "lib/screens/legal/unified_consent_screen.dart",
+            "lib/screens/legal_disclaimer_screen.dart",
+            "lib/screens/main_navigation.dart",
+            "lib/screens/onboarding_screen.dart",
+            "lib/screens/safe_walk_screen.dart",
+            "lib/screens/splash_screen.dart",
+            "lib/widgets/connectivity_banner.dart",
+            "lib/widgets/panic_button.dart"
+          ],
+          "consumerCount": 12
+        }
+      },
+      "zeroConsumerScales": [
+        "Breakpoints",
+        "DensityTokens",
+        "IconSizes",
+        "TypeScale",
+        "ZLayer"
+      ],
+      "principle": "a scale that nothing reads cannot enforce consistency; it is a parallel definition sitting beside the literals it was meant to replace. test/core/shadow_token_ratchet_test.dart already asserts this for shadows (>=8 consumer files); the other scales had no equivalent bar, and three of them have none at all.",
+      "consequence": "MP-04-008 (ZLayer), MP-04-012 (IconSizes) and MP-04-013 (DensityTokens) were recorded PASS on existence. They are downgraded to PARTIAL on this measurement, matching MP-04-004, which was already PARTIAL for exactly the same reason.",
+      "notDoneAndWhy": "IconSizes and TypeScale together cover 408 literal sites; a big-bang migration is the rendered-pixel churn CLAUDE.md rule 4 forbids as a drive-by. The honest record is the consumer count, not a migration nobody reviewed."
+    },
+    "themes": {
+      "darkDeclarations": 4,
+      "lightDeclarations": 0,
+      "componentThemesDeclared": [
+        "appBarTheme",
+        "bottomSheetTheme",
+        "cardTheme",
+        "dialogTheme",
+        "elevatedButtonTheme",
+        "inputDecorationTheme",
+        "pageTransitionsTheme",
+        "snackBarTheme"
+      ],
+      "componentThemeCount": 8,
+      "wiredInMain": [
+        [
+          "darkTheme",
+          "AppTheme.darkTheme"
+        ],
+        [
+          "theme",
+          "AppTheme.lightTheme"
+        ],
+        [
+          "themeMode",
+          "ThemeMode.dark"
+        ]
+      ],
+      "themeSelectorScreen": "lib/screens/settings_page.dart",
+      "themeSelectorTest": "test/screens/settings_page_contains_theme_selector_test.dart"
+    },
+    "ratchet": {
+      "test": "test/core/design_token_ratchet_test.dart",
+      "buildsAllowedSetFromTokenFile": true,
+      "shadowTest": "test/core/shadow_token_ratchet_test.dart"
+    }
+  },
+  "violations": [
+    {
+      "rule": "tokenScaleHasNoConsumer",
+      "detail": "Breakpoints is defined but read by no file outside its own definition; it cannot enforce anything"
+    },
+    {
+      "rule": "tokenScaleHasNoConsumer",
+      "detail": "DensityTokens is defined but read by no file outside its own definition; it cannot enforce anything"
+    },
+    {
+      "rule": "tokenScaleHasNoConsumer",
+      "detail": "IconSizes is defined but read by no file outside its own definition; it cannot enforce anything"
+    },
+    {
+      "rule": "tokenScaleHasNoConsumer",
+      "detail": "TypeScale is defined but read by no file outside its own definition; it cannot enforce anything"
+    },
+    {
+      "rule": "tokenScaleHasNoConsumer",
+      "detail": "ZLayer is defined but read by no file outside its own definition; it cannot enforce anything"
+    }
+  ],
+  "exclusions": [
+    {
+      "what": "the token file and motion.dart themselves",
+      "why": "a definition referencing its own rungs is not adoption; counting it is how a zero-consumer scale reports as adopted"
+    }
+  ],
+  "negativeControl": {
+    "command": "python3 scripts/audit_evidence/tokens.py --negative-control",
+    "mutation": "strip every Radii consumer reference",
+    "expected": "Radii joins the zero-consumer list"
+  }
+}

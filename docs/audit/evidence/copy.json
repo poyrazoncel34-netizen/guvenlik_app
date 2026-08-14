@@ -1,0 +1,259 @@
+{
+  "verifier": "scripts/audit_evidence/copy.py",
+  "verifierVersion": "1.0.0",
+  "codeRevision": {
+    "head": "098a36072a7ebefaf918bf02bb47f2af702a3878",
+    "dirty": true
+  },
+  "measuredOn": "2026-08-14",
+  "command": "python3 scripts/audit_evidence/copy.py",
+  "surfaces": [
+    "assets/translations/tr-TR.json",
+    "assets/translations/en-US.json"
+  ],
+  "measurements": {
+    "payloads": {
+      "locales": [
+        "en-US",
+        "tr-TR"
+      ],
+      "keysPerLocale": {
+        "tr-TR": 963,
+        "en-US": 963
+      },
+      "parityTest": "test/translations_key_parity_test.dart",
+      "hardcodedStringGuard": "test/screens/hardcoded_strings_test.dart",
+      "usageTest": "test/translation_key_usage_test.dart"
+    },
+    "ctaClarity": {
+      "actionKeys": 33,
+      "verbLeading": 25,
+      "verbLeadingPercent": 75.8,
+      "examples": {
+        "panic_button": "ACİL YARDIM",
+        "btn_skip": "Atla",
+        "btn_next": "İleri",
+        "btn_start": "Başla",
+        "quick_actions": "Hızlı İşlemler",
+        "pin_setup_button": "PIN Belirle",
+        "timer_add_contact_action": "Kişi Ekle",
+        "panic_button_semantics_label": "Pro Panik Butonu",
+        "panic_button_semantics_hint": "Basılı tutarak acil durum geri sayımını başlatın.",
+        "panic_button_locked_semantics_label": "Kilitli SOS butonu",
+        "panic_button_locked_semantics_hint": "Basılı tutunca prova ve abonelik seçenekleri açılır.",
+        "panic_button_hold_title": "BASILI TUT"
+      },
+      "claim": "an action label names the action, not the surface it opens"
+    },
+    "tone": {
+      "blamePhrasesSearched": {
+        "tr": [
+          "yanlis yaptiniz",
+          "hatali girdiniz",
+          "hata yaptiniz",
+          "yanlış yaptınız",
+          "hatalı girdiniz",
+          "başaramadınız",
+          "basaramadiniz",
+          "unuttunuz"
+        ],
+        "en": [
+          "you failed",
+          "you did not",
+          "you forgot",
+          "your mistake",
+          "you entered wrong",
+          "invalid input by you"
+        ]
+      },
+      "blameHits": 0,
+      "errorKeysExamined": 67,
+      "styleClaim": "errors describe the SYSTEM state and the next step, not the user: the duress context makes second-person fault language actively unsafe"
+    },
+    "successCopy": {
+      "keys": 22,
+      "examples": {
+        "new_features_added": "Yeni özellikler eklendi",
+        "settings_logout_success": "Cihaz verileri temizlendi",
+        "countdown_offline_saved": "Çevrimdışı - olay yalnızca yerel kayda alındı",
+        "profile_logout_success": "Cihaz verileri temizlendi",
+        "edit_profile_success": "Profil güncellendi",
+        "emergency_flow_confirmed_title": "İşlem başlatıldı",
+        "emergency_flow_confirmed_body": "En az bir adım cihaz tarafından başlatıldı. Karşı tarafın yanıtı operatör ve cihaz davranışına bağlıdır.",
+        "contacts_added": "{name} eklendi",
+        "timeline_note_saved": "Not kaydedildi!",
+        "timeline_note_added": "Zaman Çizelgesi Notu"
+      },
+      "claim": "success copy states what became true, not merely 'OK'"
+    },
+    "tooltipCopy": {
+      "tooltipWidgets": 0,
+      "why": "the app ships no Tooltip widget at all; labels are inline, so there is no hover-only copy to keep short"
+    },
+    "emptyStateCopy": {
+      "keys": 20,
+      "examples": {
+        "no_internet_connection": "İnternet bağlantısı yok",
+        "readiness_no_rehearsal": "Henüz prova yapmadın. Test Modu gerçek arama yapmaz — dokunup deneyebilirsin.",
+        "test_mode_no_real_call": "Test Modu (gerçek arama yapılmaz)",
+        "countdown_no_contact": "Acil kişi seçilmedi",
+        "countdown_emergency_msg_no_loc": "ACİL DURUM! Konum alınamadı. Lütfen bana ulaşın.",
+        "contacts_empty": "Henüz acil durum kişisi eklenmedi.",
+        "contacts_no_phone": "Seçilen kişide telefon numarası yok",
+        "pin_verify_no_number": "Aranacak kayıtlı numara yok!",
+        "activity_empty": "Henüz bir aktivite yok",
+        "contacts_empty_subtitle": "Güvendiğiniz kişileri acil kişi olarak ekleyin.\nYalnızca seçilen veya girilen kişi verisi saklanır."
+      },
+      "claim": "each empty state names the next action rather than only the absence"
+    },
+    "confirmationCopy": {
+      "keys": 26,
+      "examples": {
+        "settings_logout_confirm": "Bu cihazdaki yerel veriler, PIN, acil kişi kayıtları, uygulama ayarları ve yerel dosyalar silinecek. Devam etmek istediğinizden emin misiniz?",
+        "pin_confirm_title": "PIN'i Tekrar Girin",
+        "pin_confirm_hint": "Doğrulamak için aynı PIN'i tekrar girin",
+        "contacts_remove_confirm_title": "Kişi kaldırılsın mı?",
+        "contacts_remove_confirm_desc": "{name} acil durum kişilerinizden kaldırılacak. Bu işlem güvenlik akışlarındaki kişi seçimini etkileyebilir.",
+        "panic_button_a11y_confirm_title": "SOS başlatılsın mı?",
+        "panic_button_a11y_confirm_body": "Acil durum geri sayımı başlayacak. Vazgeçmek için PIN girebileceksiniz.",
+        "panic_button_a11y_confirm_start": "SOS başlat",
+        "emergency_flow_confirmed_title": "İşlem başlatıldı",
+        "emergency_flow_confirmed_body": "En az bir adım cihaz tarafından başlatıldı. Karşı tarafın yanıtı operatör ve cihaz davranışına bağlıdır.",
+        "timeline_delete_confirm_title": "Bu kayit silinsin mi?",
+        "timeline_delete_confirm_body": "\"{title}\" kaydi kalici olarak silinecek. Bu islem geri alinamaz.",
+        "timeline_delete_confirm_action": "Kalici olarak sil",
+        "check_in_safe_confirmed": "Güvende olduğunuz kaydedildi! Zamanlayıcı sıfırlandı."
+      },
+      "interpolatingKeys": [
+        "contacts_remove_confirm_desc",
+        "settings_language_confirm_body",
+        "timeline_delete_confirm_body"
+      ],
+      "claim": "destructive confirmations interpolate the object being destroyed"
+    },
+    "privacyCopy": {
+      "keys": 111,
+      "legalVersionSource": "lib/constants/legal_texts.dart",
+      "bumpProcedure": "scripts/bump_legal.sh",
+      "overclaimGuards": [
+        "test/public_release_overclaim_copy_test.dart",
+        "test/legal_no_first_responder_claims_test.dart"
+      ]
+    },
+    "permissionCopy": {
+      "keys": 40,
+      "rationaleBeforeRequest": true,
+      "rationaleScreens": [
+        "lib/screens/onboarding_screen.dart",
+        "lib/core/utils/permission_helper.dart",
+        "lib/screens/battery_optimization_wizard.dart"
+      ],
+      "examples": {
+        "phone_call_permission": "Telefon Araması",
+        "call_permission_fallback_note": "İzin verilmedi — acil durumda dialer açılacak",
+        "allow_location_permission": "Konum iznini verin",
+        "location_permission_required_desc": "Haritada gerçek konumunuzu göstermek için konum izni gerekir. Konum alınamazsa sahte koordinat gösterilmez.",
+        "map_grant_permission": "İzin Ver",
+        "map_permission_required": "Konum İzni Gerekli",
+        "map_permission_message": "Konumunuzu görmek için izin vermeniz gerekiyor.",
+        "map_permission_denied": "İzin Kalıcı Olarak Reddedildi",
+        "home_location_permission_denied": "Konum izni verilemedi",
+        "perm_location_service_off": "Konum Servisi Kapalı"
+      }
+    },
+    "jargon": {
+      "termsSearched": [
+        "null",
+        "undefined",
+        "exception",
+        "stacktrace",
+        "stack trace",
+        "timeout ms",
+        "http 4",
+        "http 5",
+        "socket",
+        "json",
+        "parse error",
+        "nullpointer",
+        "asenkron",
+        "callback",
+        "deserialize",
+        "backend",
+        "endpoint"
+      ],
+      "hits": 0,
+      "justifiedExemptions": {
+        "data_export_body:json": "KVKK Md. 11 data portability requires naming the machine-readable format the export produces; 'a file' would be less informative, not more human",
+        "data_export_kvkk_desc:json": "same right, same reason -- the format is part of the legal description"
+      },
+      "scope": "both shipped translation payloads, every key in each"
+    },
+    "lengthDelta": {
+      "pairsCompared": 963,
+      "worstRatios": [
+        {
+          "key": "legal_dc_name",
+          "tr": 14,
+          "en": 4,
+          "ratio": 3.5
+        },
+        {
+          "key": "activity_yesterday",
+          "tr": 3,
+          "en": 9,
+          "ratio": 3.0
+        },
+        {
+          "key": "fake_template_spouse",
+          "tr": 2,
+          "en": 6,
+          "ratio": 3.0
+        },
+        {
+          "key": "settings_rate_app",
+          "tr": 22,
+          "en": 8,
+          "ratio": 2.75
+        },
+        {
+          "key": "settings_language_section",
+          "tr": 3,
+          "en": 8,
+          "ratio": 2.67
+        },
+        {
+          "key": "audio_consent_confirm_button",
+          "tr": 5,
+          "en": 2,
+          "ratio": 2.5
+        },
+        {
+          "key": "battery_wizard_done_btn",
+          "tr": 10,
+          "en": 4,
+          "ratio": 2.5
+        },
+        {
+          "key": "btn_ok",
+          "tr": 5,
+          "en": 2,
+          "ratio": 2.5
+        }
+      ],
+      "bar": 2.2,
+      "why": "a locale twice as long as its sibling is what overflows a fixed row; the geometry consequence is measured separately in text_scale.json"
+    }
+  },
+  "violations": [],
+  "exclusions": [
+    {
+      "what": "the long-form legal texts in lib/constants/legal_texts.dart",
+      "why": "they are versioned legal instruments, not UI microcopy; their wording is governed by scripts/bump_legal.sh and pinned by the legal policy tests"
+    }
+  ],
+  "negativeControl": {
+    "command": "python3 scripts/audit_evidence/copy.py --negative-control",
+    "mutation": "blame language, a raw exception name, and a confirmation that names nothing",
+    "expected": "blameLanguage, developerJargonInCopy and confirmationDoesNotNameItsObject all fire"
+  }
+}

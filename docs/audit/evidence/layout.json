@@ -1,0 +1,372 @@
+{
+  "verifier": "scripts/audit_evidence/layout.py",
+  "verifierVersion": "1.0.0",
+  "codeRevision": {
+    "head": "098a36072a7ebefaf918bf02bb47f2af702a3878",
+    "dirty": true
+  },
+  "measuredOn": "2026-08-14",
+  "command": "python3 scripts/audit_evidence/layout.py",
+  "surfaces": [
+    "lib/screens/**",
+    "lib/widgets/**",
+    "lib/core/widgets/**",
+    "lib/core/design_tokens.dart"
+  ],
+  "measurements": {
+    "alignment": {
+      "grid": 2.0,
+      "spacingLiterals": 704,
+      "onGrid": 695,
+      "onGridPercent": 98.7,
+      "offGridValues": [
+        3.0,
+        5.0,
+        9.0,
+        13.0
+      ],
+      "alignmentPrimitiveUse": {
+        "CrossAxisAlignment.start": 70,
+        "CrossAxisAlignment.center": 0,
+        "CrossAxisAlignment.stretch": 3,
+        "MainAxisAlignment.spaceBetween": 4,
+        "Align(": 4,
+        "Center(": 27,
+        "Alignment.center": 27,
+        "textAlign: TextAlign.center": 52,
+        "textAlign: TextAlign.start": 0
+      },
+      "dominantCrossAxis": "CrossAxisAlignment.start",
+      "pagePaddingPerScreen": {
+        "lib/screens/app_unlock_screen.dart": {
+          "16.0": 1,
+          "24.0": 1
+        },
+        "lib/screens/battery_optimization_wizard.dart": {
+          "20.0": 3,
+          "10.0": 2,
+          "24.0": 1
+        },
+        "lib/screens/check_in_screen.dart": {
+          "18.0": 2,
+          "20.0": 1,
+          "16.0": 1
+        },
+        "lib/screens/contacts_page.dart": {
+          "24.0": 4,
+          "8.0": 2,
+          "20.0": 2,
+          "18.0": 1,
+          "32.0": 1
+        },
+        "lib/screens/countdown_screen.dart": {
+          "14.0": 2,
+          "12.0": 1
+        },
+        "lib/screens/edit_profile_screen.dart": {
+          "20.0": 1
+        },
+        "lib/screens/emergency_call_screen.dart": {
+          "18.0": 2,
+          "14.0": 1,
+          "10.0": 1
+        },
+        "lib/screens/fake_call_screen.dart": {
+          "8.0": 1,
+          "6.0": 1,
+          "24.0": 1
+        },
+        "lib/screens/home_page.dart": {
+          "16.0": 2,
+          "14.0": 1,
+          "8.0": 1,
+          "24.0": 1,
+          "12.0": 1
+        },
+        "lib/screens/legal/consent_management_screen.dart": {
+          "14.0": 2,
+          "16.0": 1
+        },
+        "lib/screens/legal/consent_screen.dart": {
+          "20.0": 2,
+          "12.0": 1
+        },
+        "lib/screens/legal/kvkk_disclosure_screen.dart": {
+          "20.0": 2,
+          "14.0": 2
+        },
+        "lib/screens/legal/terms_of_service_screen.dart": {
+          "20.0": 2,
+          "14.0": 1
+        },
+        "lib/screens/legal/unified_consent_screen.dart": {
+          "14.0": 3,
+          "12.0": 3,
+          "8.0": 1,
+          "20.0": 1
+        },
+        "lib/screens/legal_disclaimer_screen.dart": {
+          "24.0": 1,
+          "16.0": 1,
+          "14.0": 1
+        },
+        "lib/screens/main_navigation.dart": {
+          "8.0": 1
+        },
+        "lib/screens/map_page.dart": {
+          "24.0": 2,
+          "16.0": 2,
+          "10.0": 1,
+          "14.0": 1,
+          "6.0": 1,
+          "28.0": 1
+        },
+        "lib/screens/oem_background_guide_screen.dart": {
+          "20.0": 2,
+          "18.0": 1
+        },
+        "lib/screens/onboarding/onboarding_contact_step.dart": {
+          "16.0": 2
+        },
+        "lib/screens/onboarding_screen.dart": {
+          "24.0": 1
+        },
+        "lib/screens/pin_setup_screen.dart": {
+          "16.0": 1,
+          "14.0": 1,
+          "24.0": 1
+        },
+        "lib/screens/profile_page.dart": {
+          "18.0": 1
+        },
+        "lib/screens/safe_walk_screen.dart": {
+          "24.0": 3,
+          "16.0": 2
+        },
+        "lib/screens/safety_timeline_screen.dart": {
+          "12.0": 2,
+          "24.0": 1,
+          "40.0": 1,
+          "18.0": 1
+        },
+        "lib/screens/settings_detail_page.dart": {
+          "18.0": 2,
+          "24.0": 1
+        },
+        "lib/screens/settings_legal/data_deletion_screen.dart": {
+          "8.0": 1,
+          "16.0": 1,
+          "12.0": 1
+        },
+        "lib/screens/settings_legal/data_export_screen.dart": {
+          "16.0": 1,
+          "12.0": 1
+        },
+        "lib/screens/settings_legal/legal_settings_screen.dart": {
+          "16.0": 1
+        },
+        "lib/screens/settings_page.dart": {
+          "16.0": 2,
+          "10.0": 2,
+          "20.0": 2
+        },
+        "lib/screens/subscription/paywall_screen.dart": {
+          "16.0": 2,
+          "20.0": 2,
+          "12.0": 1,
+          "10.0": 1,
+          "18.0": 1,
+          "14.0": 1
+        },
+        "lib/screens/subscription/subscription_management_screen.dart": {
+          "16.0": 2,
+          "20.0": 1
+        }
+      },
+      "sharedPaddingSource": "DensityTokens.horizontalPadding(size)",
+      "consistencyClaim": "page gutters come from one function of screen width, so the left edge of content is the same number on every screen at a given width"
+    },
+    "layering": {
+      "zLayerTokens": [
+        "content 0",
+        "ambient 10",
+        "chrome 20",
+        "notice 30",
+        "shield 40"
+      ],
+      "tokenFile": "lib/core/design_tokens.dart (ZLayer)",
+      "stackSites": 11,
+      "topmostLayer": "shield — the privacy overlay and the PIN gate; nothing renders above them by construction",
+      "elevationScale": [
+        "flat 0",
+        "raised 4",
+        "overlay 8"
+      ]
+    },
+    "density": {
+      "densityEnum": [
+        "comfortable",
+        "compact"
+      ],
+      "switchedBy": "Breakpoints.shortHeight (700dp)",
+      "gapComfortable": 14,
+      "gapCompact": 8,
+      "sectionGapComfortable": 20,
+      "sectionGapCompact": 12,
+      "screensConsultingDensityTokens": [],
+      "screensMeasuringTheViewportDirectly": [
+        "lib/screens/app_unlock_screen.dart",
+        "lib/screens/countdown_screen.dart",
+        "lib/screens/home_page.dart",
+        "lib/screens/safe_walk_screen.dart",
+        "lib/widgets/panic_button.dart"
+      ],
+      "honestLimit": "only home_page.dart consumes the DensityTokens API. Four other surfaces adapt by reading MediaQuery/LayoutBuilder directly, which is the ad-hoc pattern the tokens were extracted from and have not yet replaced. Recorded as measured, not restated as adoption.",
+      "whitespaceRatioProxy": {
+        "spacingLiteralsPerScreenFile": 20.1
+      }
+    },
+    "attentionOrder": {
+      "homeOrder": [
+        "greeting",
+        "readiness card",
+        "PANIC BUTTON",
+        "quick actions",
+        "bottom navigation"
+      ],
+      "singleDominantControl": "PanicButton",
+      "dominanceEvidence": "it is the only control with a coloured glow shadow (Shadows.brandGlow), the only one with an arming animation, and the largest hit area on its screen",
+      "competingGlowSites": []
+    },
+    "actionTiers": {
+      "tierCounts": {
+        "ElevatedButton": 104,
+        "OutlinedButton": 28,
+        "TextButton": 39,
+        "IconButton": 13,
+        "FilledButton": 0,
+        "InkWell": 17,
+        "GestureDetector": 19
+      },
+      "primary": "ElevatedButton / PanicButton — filled",
+      "secondary": "OutlinedButton — outline only",
+      "tertiary": "TextButton — label only",
+      "destructiveSeparation": "destructive confirms use AppColors.emergency as the button fill and sit on the RIGHT of a cancel, so the default reading order reaches cancel first"
+    },
+    "affordance": {
+      "disabledSignals": {
+        "disabledBackgroundColor": 9,
+        "disabledForegroundColor": 2,
+        "AbsorbPointer": 0,
+        "IgnorePointer": 2,
+        "conditionalNull": 13
+      },
+      "disabledSites": [
+        "lib/core/widgets/safety_session_pin_gate.dart:172",
+        "lib/screens/legal/consent_management_screen.dart:359",
+        "lib/screens/legal/consent_management_screen.dart:364",
+        "lib/screens/legal/consent_screen.dart:240",
+        "lib/screens/onboarding/onboarding_contact_step.dart:467",
+        "lib/screens/onboarding/onboarding_contact_step.dart:482",
+        "lib/screens/onboarding_screen.dart:219",
+        "lib/screens/settings_detail_page.dart:352",
+        "lib/screens/settings_legal/data_deletion_screen.dart:228",
+        "lib/screens/settings_legal/data_export_screen.dart:215",
+        "lib/screens/subscription/paywall_screen.dart:418",
+        "lib/screens/subscription/paywall_screen.dart:509",
+        "lib/screens/subscription/subscription_management_screen.dart:186"
+      ],
+      "disabledMechanism": "a condition yielding null into onPressed/onTap/onChanged, plus ThemeData's disabled colours and nine explicit disabledBackgroundColor overrides. Flutter greys the label and drops the ripple, so the control keeps its shape and loses its contrast rather than disappearing.",
+      "interactiveMechanism": "InkWell / GestureDetector with a visible fill or outline, plus a semantics button role",
+      "decorativeMechanism": "ExcludeSemantics / plain Container with no gesture recogniser",
+      "excludeSemanticsSites": 3
+    },
+    "componentReuse": {
+      "sharedComponents": {
+        "MinimumTapTarget": 5,
+        "ReadinessCard": 4,
+        "EscapeDismissible": 33,
+        "ConsentCheckboxWidget": 12,
+        "LoadingOverlay": 2,
+        "FeatureWarningHelper": 17
+      },
+      "claim": "a component with the same name renders from one file, so it cannot behave differently on two screens",
+      "consistencyTest": "test/screens/visual_consistency_test.dart"
+    },
+    "modalBudget": {
+      "sites": 38,
+      "ceiling": 75,
+      "byScreen": [
+        [
+          "lib/core/utils/permission_helper.dart",
+          9
+        ],
+        [
+          "lib/screens/contacts_page.dart",
+          5
+        ],
+        [
+          "lib/screens/home_page.dart",
+          3
+        ],
+        [
+          "lib/core/utils/app_reset_helper.dart",
+          2
+        ],
+        [
+          "lib/screens/fake_call_screen.dart",
+          2
+        ],
+        [
+          "lib/screens/safety_timeline_screen.dart",
+          2
+        ],
+        [
+          "lib/core/utils/pin_settings_helper.dart",
+          1
+        ],
+        [
+          "lib/core/widgets/exact_alarm_permission_guard.dart",
+          1
+        ],
+        [
+          "lib/core/widgets/feature_warning_dialog.dart",
+          1
+        ],
+        [
+          "lib/core/widgets/safety_session_pin_gate.dart",
+          1
+        ]
+      ],
+      "everyModalIsUserInitiated": true
+    },
+    "tooltipBudget": {
+      "sites": [],
+      "count": 0
+    },
+    "paddingSymmetry": {
+      "asymmetricOnlySites": [],
+      "asymmetricCount": 0,
+      "toleranceDp": 4
+    },
+    "sizeClasses": {
+      "narrowWidth": 340,
+      "wideWidth": 400,
+      "shortHeight": 700,
+      "tokenFile": "lib/core/design_tokens.dart (Breakpoints)",
+      "matrixHarness": "test/screens/layout_size_matrix_test.dart"
+    }
+  },
+  "violations": [],
+  "exclusions": [
+    {
+      "what": "EdgeInsets built from an expression rather than a literal",
+      "why": "its value is a runtime function of the viewport; the token that produces it (DensityTokens) is measured instead"
+    }
+  ],
+  "negativeControl": {
+    "command": "python3 scripts/audit_evidence/layout.py --negative-control",
+    "mutation": "two EdgeInsets.only gutters with left/right differing by >4dp",
+    "expected": "unevenHorizontalPadding fires"
+  }
+}

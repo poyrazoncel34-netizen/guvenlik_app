@@ -1,0 +1,161 @@
+{
+  "verifier": "scripts/audit_evidence/assets.py",
+  "verifierVersion": "1.0.0",
+  "codeRevision": {
+    "head": "098a36072a7ebefaf918bf02bb47f2af702a3878",
+    "dirty": true
+  },
+  "measuredOn": "2026-08-14",
+  "command": "python3 scripts/audit_evidence/assets.py",
+  "surfaces": [
+    "assets/**",
+    "lib/**/*.dart",
+    "pubspec.yaml",
+    "android/app/src/main/res/**"
+  ],
+  "measurements": {
+    "declaredAssets": {
+      "onDisk": [
+        "assets/icon/app_icon.png",
+        "assets/icon/splash_shield.png",
+        "assets/legal/THIRD_PARTY_NOTICES.txt",
+        "assets/sounds/ringtone.wav",
+        "assets/sounds/siren.wav",
+        "assets/translations/en-US.json",
+        "assets/translations/tr-TR.json"
+      ],
+      "untrackedLocalJunk": [
+        "assets/.DS_Store"
+      ],
+      "onDiskCount": 8,
+      "referencedFromDart": [
+        "assets/assets/sounds/ringtone.wav",
+        "assets/assets/sounds/siren.wav",
+        "assets/sounds/ringtone.wav",
+        "assets/sounds/siren.wav",
+        "assets/translations"
+      ],
+      "referencedCount": 5,
+      "unreferencedOnDisk": [
+        "assets/.DS_Store",
+        "assets/icon/app_icon.png",
+        "assets/icon/splash_shield.png",
+        "assets/legal/THIRD_PARTY_NOTICES.txt",
+        "assets/translations/en-US.json",
+        "assets/translations/tr-TR.json"
+      ],
+      "demoMarkersSearched": [
+        "demo",
+        "sample",
+        "placeholder",
+        "dummy",
+        "test_",
+        "lorem",
+        "mock",
+        "example",
+        "temp_",
+        "draft"
+      ],
+      "demoAssetsFound": 0,
+      "webDoubledPrefixNote": "audioplayers' UrlSource path on web resolves under a doubled assets/ prefix; the Android AssetSource path does not. Both spellings appear in source and both are correct."
+    },
+    "iconography": {
+      "materialIconsDeclared": "uses-material-design: true",
+      "distinctGlyphs": 112,
+      "totalGlyphSites": 287,
+      "mostUsed": [
+        [
+          "check_circle_rounded",
+          17
+        ],
+        [
+          "info_outline_rounded",
+          16
+        ],
+        [
+          "lock_rounded",
+          9
+        ],
+        [
+          "person_rounded",
+          9
+        ],
+        [
+          "warning_amber_rounded",
+          9
+        ],
+        [
+          "verified_user_rounded",
+          8
+        ],
+        [
+          "shield_rounded",
+          8
+        ],
+        [
+          "warning_rounded",
+          6
+        ],
+        [
+          "error_outline_rounded",
+          5
+        ],
+        [
+          "location_on_rounded",
+          5
+        ],
+        [
+          "person_add_rounded",
+          5
+        ],
+        [
+          "person_outline_rounded",
+          5
+        ],
+        [
+          "arrow_forward_ios_rounded",
+          5
+        ],
+        [
+          "delete_forever_rounded",
+          4
+        ],
+        [
+          "settings_rounded",
+          4
+        ]
+      ],
+      "customIconFonts": 0,
+      "whyNoMissingGlyph": "every glyph is a const IconData from the Material font, resolved at compile time -- a wrong name does not compile. There is no dynamic icon lookup by string anywhere in lib/, which is the only way a Flutter app renders a missing-icon box.",
+      "dynamicIconLookupSites": []
+    },
+    "launcherIcons": {
+      "androidResources": [
+        "android/app/src/main/res/drawable-hdpi/ic_launcher_foreground.png",
+        "android/app/src/main/res/drawable-mdpi/ic_launcher_foreground.png",
+        "android/app/src/main/res/drawable-xhdpi/ic_launcher_foreground.png",
+        "android/app/src/main/res/drawable-xxhdpi/ic_launcher_foreground.png",
+        "android/app/src/main/res/drawable-xxxhdpi/ic_launcher_foreground.png",
+        "android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml",
+        "android/app/src/main/res/mipmap-hdpi/ic_launcher.png",
+        "android/app/src/main/res/mipmap-mdpi/ic_launcher.png",
+        "android/app/src/main/res/mipmap-xhdpi/ic_launcher.png",
+        "android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png",
+        "android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png"
+      ],
+      "count": 11
+    }
+  },
+  "violations": [],
+  "exclusions": [
+    {
+      "what": "translation JSON payloads",
+      "why": "they are content, measured by copy.json; their presence is proven by the app failing to start without them"
+    }
+  ],
+  "negativeControl": {
+    "command": "python3 scripts/audit_evidence/assets.py --negative-control",
+    "mutation": "reference an asset that is not on disk and ship a demo_ image",
+    "expected": "referencedAssetMissing and demoAssetShipped fire"
+  }
+}
