@@ -1,7 +1,6 @@
 // ============================================================================
 // KİŞİLER SAYFASI
 // ============================================================================
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
@@ -19,6 +18,7 @@ import '../models/consent_record.dart';
 import '../presentation/providers/contacts_provider.dart';
 import '../presentation/providers/home_provider.dart';
 import '../widgets/emergency_contact_consent_dialog.dart';
+import '../core/widgets/escape_dismissible.dart';
 
 const int _manualContactPhoneInputLimit = 32;
 const int _manualContactNameInputLimit = 60;
@@ -380,7 +380,7 @@ class _ContactsPageState extends State<ContactsPage> {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (sheetContext) => Container(
+      builder: (sheetContext) => EscapeDismissible(child: Container(
         decoration: const BoxDecoration(
           color: AppColors.cardBg,
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
@@ -521,7 +521,7 @@ class _ContactsPageState extends State<ContactsPage> {
             const SizedBox(height: 16),
           ],
         ),
-      ),
+      )),
     );
   }
 
@@ -529,7 +529,7 @@ class _ContactsPageState extends State<ContactsPage> {
     if (!mounted) return false;
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
+      builder: (dialogContext) => EscapeDismissible(child: AlertDialog(
         backgroundColor: AppColors.cardBg,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(
@@ -557,7 +557,7 @@ class _ContactsPageState extends State<ContactsPage> {
             child: Text("btn_delete".tr()),
           ),
         ],
-      ),
+      )),
     );
     return confirmed == true;
   }
@@ -668,7 +668,7 @@ class _ContactsPageState extends State<ContactsPage> {
     if (shown || !mounted) return;
     await showDialog<void>(
       context: context,
-      builder: (ctx) => AlertDialog(
+      builder: (ctx) => EscapeDismissible(child: AlertDialog(
         backgroundColor: AppColors.cardBg,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Row(
@@ -712,7 +712,7 @@ class _ContactsPageState extends State<ContactsPage> {
             child: Text('btn_ok'.tr()),
           ),
         ],
-      ),
+      )),
     );
     await prefs.setBool(AppConstants.prefContactConsentShown, true);
   }
@@ -752,7 +752,7 @@ class _ContactsPageState extends State<ContactsPage> {
         context: context,
         isScrollControlled: true,
         backgroundColor: Colors.transparent,
-        builder: (sheetContext) => SingleChildScrollView(
+        builder: (sheetContext) => EscapeDismissible(child: SingleChildScrollView(
           padding: EdgeInsets.only(
             bottom: MediaQuery.of(sheetContext).viewInsets.bottom,
           ),
@@ -913,7 +913,7 @@ class _ContactsPageState extends State<ContactsPage> {
               ],
             ),
           ),
-        ),
+        )),
       );
       if (!mounted || result == null) return;
       if (result.pickFromDevice) {
@@ -1060,7 +1060,7 @@ class _ContactsPageState extends State<ContactsPage> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (sheetContext) => SingleChildScrollView(
+      builder: (sheetContext) => EscapeDismissible(child: SingleChildScrollView(
         padding: EdgeInsets.only(
           bottom: MediaQuery.of(sheetContext).viewInsets.bottom,
         ),
@@ -1147,7 +1147,7 @@ class _ContactsPageState extends State<ContactsPage> {
             ),
           ),
         ),
-      ),
+      )),
     );
   }
 }

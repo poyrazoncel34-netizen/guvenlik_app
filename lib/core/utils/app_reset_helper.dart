@@ -15,7 +15,8 @@ class AppResetHelper {
   static void showResetDialog(BuildContext context, {String? title}) {
     showDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog(
+      builder: (dialogContext) => EscapeDismissible(
+        child: AlertDialog(
         backgroundColor: AppColors.cardBg,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         contentPadding: const EdgeInsets.all(28),
@@ -113,6 +114,7 @@ class AppResetHelper {
             ),
           ],
         ),
+      ),
       ),
     );
   }

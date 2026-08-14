@@ -492,7 +492,8 @@ class _FakeCallScreenState extends State<FakeCallScreen>
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (context) => Padding(
+      builder: (context) => EscapeDismissible(
+        child: Padding(
         padding: EdgeInsets.only(
           bottom: MediaQuery.of(context).viewInsets.bottom,
         ),
@@ -664,6 +665,7 @@ class _FakeCallScreenState extends State<FakeCallScreen>
             ],
           ),
         ),
+      ),
       ),
     ).whenComplete(() {
       nameController.dispose();

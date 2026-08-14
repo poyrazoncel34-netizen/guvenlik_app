@@ -25,6 +25,7 @@ import '../core/widgets/safety_session_pin_gate.dart';
 import '../domain/models/activity_event.dart';
 import '../presentation/providers/subscription_provider.dart';
 import 'contacts_page.dart';
+import '../core/widgets/escape_dismissible.dart';
 
 class SafeWalkScreen extends StatefulWidget {
   const SafeWalkScreen({super.key});
@@ -646,7 +647,8 @@ class _SafeWalkScreenState extends State<SafeWalkScreen> {
   void _showExitWarning() {
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
+      builder: (ctx) => EscapeDismissible(
+        child: AlertDialog(
         backgroundColor: AppColors.cardBg,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(
@@ -675,6 +677,7 @@ class _SafeWalkScreenState extends State<SafeWalkScreen> {
             ),
           ),
         ],
+      ),
       ),
     );
   }

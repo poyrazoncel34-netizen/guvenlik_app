@@ -12,6 +12,7 @@ import '../../core/constants/app_constants.dart';
 import '../../services/consent_manager.dart';
 import '../../models/consent_record.dart';
 import '../../core/di/service_locator.dart';
+import '../../core/widgets/escape_dismissible.dart';
 
 class ConsentManagementScreen extends StatefulWidget {
   const ConsentManagementScreen({super.key});
@@ -130,7 +131,8 @@ class _ConsentManagementScreenState extends State<ConsentManagementScreen> {
   Future<bool> _showRevokeConfirmation(String type) async {
     final result = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
+      builder: (ctx) => EscapeDismissible(
+        child: AlertDialog(
         backgroundColor: AppColors.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(
@@ -168,6 +170,7 @@ class _ConsentManagementScreenState extends State<ConsentManagementScreen> {
             child: Text('consent_revoke_confirm'.tr()),
           ),
         ],
+      ),
       ),
     );
     return result ?? false;

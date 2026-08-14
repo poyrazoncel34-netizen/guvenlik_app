@@ -11,6 +11,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../core/app_colors.dart';
 import '../core/services/activity_service.dart';
 import '../domain/models/activity_event.dart';
+import '../core/widgets/escape_dismissible.dart';
 
 class SafetyTimelineScreen extends StatefulWidget {
   const SafetyTimelineScreen({super.key});
@@ -231,7 +232,8 @@ class _SafetyTimelineScreenState extends State<SafetyTimelineScreen> {
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (context) => Padding(
+      builder: (context) => EscapeDismissible(
+        child: Padding(
         padding: EdgeInsets.only(
           bottom: MediaQuery.of(context).viewInsets.bottom,
         ),
@@ -324,6 +326,7 @@ class _SafetyTimelineScreenState extends State<SafetyTimelineScreen> {
             ),
           ),
         ),
+      ),
       ),
     );
   }

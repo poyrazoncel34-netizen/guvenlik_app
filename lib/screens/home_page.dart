@@ -34,6 +34,7 @@ import '../core/services/rehearsal_record_service.dart';
 import '../core/widgets/exact_alarm_permission_guard.dart';
 import '../core/widgets/readiness_card.dart';
 import '../core/utils/permission_helper.dart';
+import '../core/widgets/escape_dismissible.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -426,7 +427,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   }) async {
     final result = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
+      builder: (ctx) => EscapeDismissible(
+        child: AlertDialog(
         backgroundColor: AppColors.cardBg,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(
@@ -461,6 +463,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           ),
         ],
       ),
+      ),
     );
     return result ?? false;
   }
@@ -475,7 +478,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (ctx) => Container(
+      builder: (ctx) => EscapeDismissible(
+        child: Container(
         decoration: const BoxDecoration(
           color: AppColors.cardBg,
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
@@ -535,6 +539,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             const SizedBox(height: 12),
           ],
         ),
+      ),
       ),
     );
   }

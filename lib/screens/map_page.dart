@@ -18,6 +18,7 @@ import '../core/services/location_consent_gate.dart';
 import '../core/services/location_service.dart';
 import '../core/utils/map_utils.dart';
 import '../domain/repositories/location_repository.dart';
+import '../core/widgets/escape_dismissible.dart';
 
 class MapPage extends StatefulWidget {
   final bool isActive;
@@ -258,7 +259,7 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => EscapeDismissible(child: AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         contentPadding: const EdgeInsets.all(28),
         content: Column(
@@ -338,7 +339,7 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
             ),
           ],
         ),
-      ),
+      )),
     );
   }
 

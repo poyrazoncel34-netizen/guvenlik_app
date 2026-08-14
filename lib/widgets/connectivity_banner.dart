@@ -8,6 +8,7 @@ import 'package:easy_localization/easy_localization.dart';
 import '../core/app_colors.dart';
 import '../core/services/connectivity_service.dart';
 import '../core/motion.dart';
+import '../core/widgets/escape_dismissible.dart';
 
 class ConnectivityBanner extends StatefulWidget {
   const ConnectivityBanner({super.key});
@@ -106,7 +107,8 @@ class _ConnectivityBannerState extends State<ConnectivityBanner>
   void _showOfflineInfoDialog() {
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
+      builder: (ctx) => EscapeDismissible(
+        child: AlertDialog(
         backgroundColor: AppColors.cardBg,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Row(
@@ -176,6 +178,7 @@ class _ConnectivityBannerState extends State<ConnectivityBanner>
             ),
           ),
         ],
+      ),
       ),
     );
   }

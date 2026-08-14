@@ -147,4 +147,136 @@ void main() {
       reason: 'PIN alanından odağı çalmak gerçek bir gerileme olurdu.',
     );
   });
+
+  // showModalBottomSheet, `isDismissible` varsayilani true olmasina RAGMEN Escape'e
+  // yanit vermiyordu. Cihazda iki kez ureildi: sayfa acikken odaklanan HICBIR dugum
+  // yoktu (uiautomator bos liste dondu), Escape ekranda 0.0000 degistirdi, BACK ise
+  // kapatti. Bu, diyaloglardan AYRI bir modal sinifi ve ilk gecis onu atlamisti.
+  testWidgets('modal bottom sheet: sarmalayici ile Escape kapatir', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: Builder(
+            builder: (BuildContext context) => TextButton(
+              onPressed: () => showModalBottomSheet<void>(
+                context: context,
+                builder: (_) => const EscapeDismissible(
+                  child: SizedBox(height: 200, child: Text('sayfa')),
+                ),
+              ),
+              child: const Text('ac'),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('ac'));
+    await tester.pumpAndSettle();
+    expect(
+      find.text('sayfa'),
+      findsOneWidget,
+      reason: 'ÖNKOŞUL: sayfa açılmalı',
+    );
+
+    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+    await tester.pumpAndSettle();
+    expect(find.text('sayfa'), findsNothing);
+  });
+
+  testWidgets(
+    'NEGATIF KONTROL: ONCEDEN ODAK YOKKEN sarmalayicisiz sayfa Escape ile kapanmaz',
+    (tester) async {
+      // CIHAZDA OLCULEN KOSUL, BIREBIR: dokunmatik kullanici hicbir seye odak
+      // vermeden bir modal acinca `ModalRoute.didPush` yalnizca `setFirstFocus`
+      // cagirir; cevreleyen kapsamda odak yoksa odak modalin ICINE TASINMAZ.
+      // O zaman `Actions.maybeFind` aramasi modalin kapsamindan baslamaz ve
+      // barrierDismissible true OLSA BILE Escape cozulmez.
+      //
+      // Bu yuzden cihazda diyalog (klavyeyle acilmisti) Escape'e yanit verdi ama
+      // sayfa (dokunarak acilmisti) vermedi. Fark barrierDismissible degil, odakti.
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Builder(
+              builder: (BuildContext context) => TextButton(
+                onPressed: () => showModalBottomSheet<void>(
+                  context: context,
+                  builder: (_) =>
+                      const SizedBox(height: 200, child: Text('sayfa')),
+                ),
+                child: const Text('ac'),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('ac'));
+      await tester.pumpAndSettle();
+      expect(find.text('sayfa'), findsOneWidget);
+
+      // Dokunmatik kullanicinin gercek durumu: hicbir yerde odak yok.
+      FocusManager.instance.primaryFocus?.unfocus();
+      await tester.pumpAndSettle();
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+      await tester.pumpAndSettle();
+      expect(
+        find.text('sayfa'),
+        findsOneWidget,
+        reason:
+            'Odak modalin disindayken Escape cozulmuyor -- cihazda iki kez '
+            'uretilen kusur. Sarmalayici autofocus ile tam olarak bunu kapatiyor.',
+      );
+    },
+  );
+
+  testWidgets(
+    'KRITIK: ONCEDEN HIC ODAK YOKKEN de sarmalayici Escape\'i calistirir',
+    (tester) async {
+      // BU TEST ILK DUZELTMEYI YAKALARDI. Ilk surum `Focus(autofocus: true)`
+      // kullaniyordu; `autofocus` yalnizca cevreleyen kapsam odak kazanirsa
+      // uygulanan bir NIYET kaydi oldugu icin, dokunmatik kullanicinin
+      // "hicbir seyin odagi yok" durumunda hic uygulanmiyordu. Widget testi
+      // gecerken cihazda sayfa acildiginda Escape olu kaliyordu.
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Builder(
+              builder: (BuildContext context) => TextButton(
+                onPressed: () => showModalBottomSheet<void>(
+                  context: context,
+                  builder: (_) => const EscapeDismissible(
+                    child: SizedBox(height: 200, child: Text('sayfa')),
+                  ),
+                ),
+                child: const Text('ac'),
+              ),
+            ),
+          ),
+        ),
+      );
+      // ONKOSUL: uygulamada hicbir odak yok (dokunmatik kullanicinin durumu).
+      FocusManager.instance.primaryFocus?.unfocus();
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('ac'));
+      await tester.pumpAndSettle();
+      expect(find.text('sayfa'), findsOneWidget);
+
+      // Odak gercekten sayfanin icinde olmali -- niyet degil, olgu.
+      expect(
+        FocusManager.instance.primaryFocus?.context
+            ?.findAncestorWidgetOfExactType<EscapeDismissible>(),
+        isNotNull,
+        reason:
+            'requestFocus kosulsuzdur; autofocus bu kosulda uygulanmiyordu.',
+      );
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+      await tester.pumpAndSettle();
+      expect(find.text('sayfa'), findsNothing);
+    },
+  );
 }

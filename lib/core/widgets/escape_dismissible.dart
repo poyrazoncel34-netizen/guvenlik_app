@@ -29,7 +29,7 @@ import 'package:flutter/material.dart';
 
 /// Escape'i, modalın zaten desteklediği Back davranışına bağlar ve modal
 /// açılırken odağın İÇERİDE başlamasını sağlar.
-class EscapeDismissible extends StatelessWidget {
+class EscapeDismissible extends StatefulWidget {
   const EscapeDismissible({
     super.key,
     required this.child,
@@ -43,15 +43,48 @@ class EscapeDismissible extends StatelessWidget {
   final bool autofocus;
 
   @override
+  State<EscapeDismissible> createState() => _EscapeDismissibleState();
+}
+
+class _EscapeDismissibleState extends State<EscapeDismissible> {
+  final FocusNode _node = FocusNode(debugLabel: 'EscapeDismissible');
+
+  @override
+  void initState() {
+    super.initState();
+    if (!widget.autofocus) return;
+    // NEDEN `Focus(autofocus: true)` DEGIL — bu ayrim cihazda olculdu.
+    //
+    // `autofocus`, `FocusScope.autofocus(node)` cagirir; bu yalnizca bir NIYET
+    // kaydeder ve ancak cevreleyen kapsam odak KAZANIRSA uygulanir. Dokunmatik
+    // kullanicinin gercek durumunda uygulamada hicbir seyin odagi yoktur, kapsam
+    // hicbir zaman odak kazanmaz, dolayisiyla niyet hic uygulanmaz. Yani
+    // `autofocus` tam da duzeltmesi gereken kosulda calismiyordu: widget
+    // testinde (kok kapsamin odagi var) gecerken cihazda modal dokunarak
+    // acildiginda odaklanan dugum cikmadi ve Escape olu kaldi.
+    //
+    // `requestFocus()` kosullu degildir: zinciri yukari dogru odaklar.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && !_node.hasFocus) _node.requestFocus();
+    });
+  }
+
+  @override
+  void dispose() {
+    _node.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Actions(
       actions: <Type, Action<Intent>>{DismissIntent: _PopModalAction(context)},
       child: Focus(
-        autofocus: autofocus,
-        // Traversal'da durak OLUŞTURMAZ: yalnızca başlangıç odağını modalın
-        // içinde tutmak için var. Tab ilk gerçek denetime gider.
+        focusNode: _node,
+        // Traversal'da durak OLUSTURMAZ: yalnizca baslangic odagini modalin
+        // icinde tutmak icin var. Tab ilk gercek denetime gider.
         skipTraversal: true,
-        child: child,
+        child: widget.child,
       ),
     );
   }
@@ -64,7 +97,7 @@ class _PopModalAction extends DismissAction {
 
   @override
   Object? invoke(DismissIntent intent) {
-    // maybePop: PopScope(canPop:false) varsa kapatmaz. Kasıtlı kilitler korunur.
+    // maybePop: PopScope(canPop:false) varsa kapatmaz. Kasitli kilitler korunur.
     Navigator.of(context).maybePop();
     return null;
   }

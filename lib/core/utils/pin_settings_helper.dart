@@ -11,6 +11,7 @@ import '../services/emergency_session_contract.dart';
 import '../services/pin_verification_service.dart';
 import 'validators.dart';
 import '../../domain/models/activity_event.dart';
+import '../widgets/escape_dismissible.dart';
 
 abstract class PinSettingsHelper {
   /// Shows the PIN change bottom sheet. Used from Settings and Profile.
@@ -21,7 +22,8 @@ abstract class PinSettingsHelper {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (ctx) => SingleChildScrollView(
+      builder: (ctx) => EscapeDismissible(
+        child: SingleChildScrollView(
         padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
         child: Container(
           decoration: const BoxDecoration(
@@ -235,6 +237,7 @@ abstract class PinSettingsHelper {
             ),
           ),
         ),
+      ),
       ),
     ).whenComplete(() {
       oldController.dispose();

@@ -363,7 +363,8 @@ class PermissionHelper {
   }) {
     return showDialog<bool>(
       context: context,
-      builder: (ctx) => Semantics(
+      builder: (ctx) => EscapeDismissible(
+        child: Semantics(
         label: '$title. $message',
         child: AlertDialog(
           backgroundColor: AppColors.cardBg,
@@ -429,6 +430,7 @@ class PermissionHelper {
             ),
           ],
         ),
+      ),
       ),
     );
   }
