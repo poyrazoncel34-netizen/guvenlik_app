@@ -139,6 +139,81 @@ def _integrity_policy(root: Path) -> dict:
     }
 
 
+TILE_CLIENT = "lib/core/network/osm_tile_cache_client.dart"
+TILE_VOLUME_TEST = "test/core/network/tile_request_volume_test.dart"
+GROWTH_TEST = "test/core/services/high_volume_timeline_test.dart"
+POWER_USER_TEST = "test/core/services/power_user_path_test.dart"
+SMOKE_SCRIPT = "store/MANUAL_SMOKE_TEST_SCRIPT.md"
+
+
+def _int_after(text: str, label: str):
+    """The integer a Dart declaration assigns. Anchored on `=`, not on the first
+    digits on the line -- the forced-colour verifier already shipped that bug
+    once and reported 100 out of a `(y<100)` in the prose."""
+    match = re.search(re.escape(label) + r"\s*=?\s*(\d+)", text)
+    return int(match.group(1)) if match else None
+
+
+def _tile_request_volume(root: Path) -> dict:
+    """MP-42-024: how many tile requests one session costs OSM.
+
+    The client is instrumented at the boundary that actually talks to the tile
+    server, and the figures below are read from the covering test's own
+    constants rather than restated here -- a number that lives in two places
+    drifts.
+    """
+    client = read_stripped(root / TILE_CLIENT) if (root / TILE_CLIENT).exists() else ""
+    test = (root / TILE_VOLUME_TEST).read_text(encoding="utf-8") \
+        if (root / TILE_VOLUME_TEST).exists() else ""
+    return {
+        "instrumentedClient": TILE_CLIENT if client else None,
+        "counters": sorted(set(re.findall(r"int get (\w+) =>", client))),
+        "dedupesInFlight": "_inFlight" in client,
+        "cacheServesRepeatViews": "_tileServedLocally" in client,
+        "sessionModel": {
+            "viewports": _int_after(test, "const viewports ="),
+            "tileSidePx": _int_after(test, "_tileSide ="),
+            "keepBuffer": _int_after(test, "_keepBuffer ="),
+        },
+        "policyCeilingAsserted": "lessThan(250)" in test,
+        "policyNote": (
+            "OSM's tile usage policy names heavy use (e.g. > 250 tiles/sec) and "
+            "bulk downloading as unacceptable. The assertion is an "
+            "order-of-magnitude bound rather than a golden count: pinning the "
+            "exact number would break on any map-layout change while saying "
+            "nothing about the quota."
+        ),
+        "coveringTest": TILE_VOLUME_TEST,
+    }
+
+
+def _volume_paths(root: Path) -> dict:
+    """MP-47-003 / MP-47-011: the power-user path and the growth table."""
+    growth = (root / GROWTH_TEST).read_text(encoding="utf-8") \
+        if (root / GROWTH_TEST).exists() else ""
+    power = (root / POWER_USER_TEST).read_text(encoding="utf-8") \
+        if (root / POWER_USER_TEST).exists() else ""
+    script = (root / SMOKE_SCRIPT).read_text(encoding="utf-8") \
+        if (root / SMOKE_SCRIPT).exists() else ""
+    tiers = re.search(r"_tiers = <int>\[([^\]]*)\]", growth)
+    steps = re.findall(r"^\s*'([^']+)',", 
+                       power.split("_path = <String>[")[1].split("];")[0], re.M) \
+        if "_path = <String>[" in power else []
+    return {
+        "growthTable": "activity_events",
+        "volumeTiers": [int(t.strip()) for t in tiers.group(1).split(",") if t.strip()]
+                       if tiers else [],
+        "tiersAreProductBound": "worst REALISTIC supported volume" in growth,
+        "lazyBuildAsserted": "widgets built for 10000 rows" in growth,
+        "integrityAtMaxTierAsserted": "integrity stays clean at the maximum tier" in growth,
+        "powerUserSteps": steps,
+        "powerUserAutomated": POWER_USER_TEST if power else None,
+        "powerUserInManualScript": "Power user (long path)" in script,
+        "manualScriptNamesTheTest": "power_user_path_test.dart" in script,
+        "coveringTests": [GROWTH_TEST, POWER_USER_TEST],
+    }
+
+
 def _stored_extension(sanitizer: str):
     match = re.search(r"extension = '(\w+)'", sanitizer)
     return match.group(1) if match else None
@@ -349,6 +424,59 @@ def measure(root: Path) -> list:
                           "enforces",
             })
 
+    # N. MP-42-024 / MP-47-003 / MP-47-011: volume, quotas and the long path.
+    tiles = _tile_request_volume(root)
+    if not tiles["instrumentedClient"]:
+        violations.append({"rule": "tileClientUninstrumented",
+                           "detail": TILE_CLIENT})
+    else:
+        if len(tiles["counters"]) < 3:
+            violations.append({
+                "rule": "tileVolumeUncounted",
+                "detail": "asked / served-locally / upstream are different "
+                          "numbers and only upstream is the quota figure",
+            })
+        if not tiles["dedupesInFlight"]:
+            violations.append({
+                "rule": "tileRequestsNotDeduplicated",
+                "detail": "a fast pan asks for one tile many times; without "
+                          "de-duplication each ask becomes an OSM request",
+            })
+        if not tiles["policyCeilingAsserted"]:
+            violations.append({"rule": "tileVolumeUnbounded",
+                               "detail": "no assertion bounds session volume"})
+
+    paths = _volume_paths(root)
+    if len(paths["volumeTiers"]) < 3:
+        violations.append({
+            "rule": "growthTableUntested",
+            "detail": "activity_events is unbounded and is exercised at fewer "
+                      "than three volume tiers",
+        })
+    if not paths["tiersAreProductBound"]:
+        violations.append({
+            "rule": "volumeTiersUnjustified",
+            "detail": "the maximum tier is a number with no product argument "
+                      "behind it",
+        })
+    if not paths["lazyBuildAsserted"]:
+        violations.append({
+            "rule": "listLazinessUnasserted",
+            "detail": "nothing proves the list still builds a screenful rather "
+                      "than the whole table",
+        })
+    if len(paths["powerUserSteps"]) < 6:
+        violations.append({
+            "rule": "powerUserPathIncomplete",
+            "detail": f"the long path names {len(paths['powerUserSteps'])} "
+                      f"steps; the audit's path has six",
+        })
+    if not paths["powerUserInManualScript"]:
+        violations.append({
+            "rule": "powerUserPathNotInManualScript",
+            "detail": "the human pass has no row for the long journey",
+        })
+
     return violations
 
 
@@ -397,6 +525,7 @@ def build(root: Path) -> dict:
                 "the 100-row crash-log cap is enforced on every insert; the "
                 "insert+prune pair is the only genuine multi-statement write"
             ),
+            "volumePaths": _volume_paths(root),
             "isolationLevel": (
                 "sqflite serialises through a single native connection per database "
                 "handle, so the effective isolation is SERIALIZABLE. There is no "
@@ -432,6 +561,7 @@ def build(root: Path) -> dict:
                 "one device, and the emergency path performs zero network I/O."
             ),
             "networkLayer": "lib/core/network/",
+            "tileRequestVolume": _tile_request_volume(root),
         },
         "files": {
             "userGeneratedFiles": ["the KVKK data export (JSON)",
@@ -538,6 +668,23 @@ def _mutate(scratch: Path) -> str:
             .replace("foreign_key_check", "table_list"),
             encoding="utf-8",
         )
+    # MP-42-024 / MP-47-011: strip the tile counters and the volume tiers.
+    tile_client = scratch / TILE_CLIENT
+    if tile_client.exists():
+        tile_client.write_text(
+            tile_client.read_text(encoding="utf-8")
+            .replace("int get upstreamTileRequests =>", "int _hidden3 =")
+            .replace("int get tileRequestsServedLocally =>", "int _hidden2 ="),
+            encoding="utf-8",
+        )
+    growth = scratch / GROWTH_TEST
+    if growth.exists():
+        growth.write_text(
+            growth.read_text(encoding="utf-8").replace(
+                "_tiers = <int>[100, 1000, 10000]", "_tiers = <int>[100]"
+            ),
+            encoding="utf-8",
+        )
     db_service = scratch / DB
     if db_service.exists():
         db_service.write_text(
@@ -552,7 +699,8 @@ def _mutate(scratch: Path) -> str:
             "identifier taken from a variable, the picked-image byte copy "
             "restored, the sanitiser turned into a clone of the source, and "
             "the integrity policy stripped of foreign-key enforcement while "
-            "its scan is moved onto the connection open path")
+            "its scan is moved onto the connection open path, the tile "
+            "counters removed and the volume tiers cut to one")
 
 
 def main() -> int:

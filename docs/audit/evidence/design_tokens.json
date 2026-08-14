@@ -2,7 +2,7 @@
   "verifier": "scripts/audit_evidence/tokens.py",
   "verifierVersion": "1.0.0",
   "codeRevision": {
-    "head": "460a9d42dd12d1cd6dd93b28d4ee300b584f026e",
+    "head": "c6d197d35a185b03a9d1b83cab17bcf7f06a08e5",
     "dirty": true
   },
   "measuredOn": "2026-08-15",

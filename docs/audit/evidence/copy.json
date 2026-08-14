@@ -2,10 +2,10 @@
   "verifier": "scripts/audit_evidence/copy.py",
   "verifierVersion": "1.0.0",
   "codeRevision": {
-    "head": "59d1892fd8520cdb0563c5e61bb1d3a96543a212",
+    "head": "c6d197d35a185b03a9d1b83cab17bcf7f06a08e5",
     "dirty": true
   },
-  "measuredOn": "2026-08-14",
+  "measuredOn": "2026-08-15",
   "command": "python3 scripts/audit_evidence/copy.py",
   "surfaces": [
     "assets/translations/tr-TR.json",
@@ -18,17 +18,17 @@
         "tr-TR"
       ],
       "keysPerLocale": {
-        "tr-TR": 963,
-        "en-US": 963
+        "tr-TR": 1001,
+        "en-US": 1001
       },
       "parityTest": "test/translations_key_parity_test.dart",
       "hardcodedStringGuard": "test/screens/hardcoded_strings_test.dart",
       "usageTest": "test/translation_key_usage_test.dart"
     },
     "ctaClarity": {
-      "actionKeys": 33,
-      "verbLeading": 25,
-      "verbLeadingPercent": 75.8,
+      "actionKeys": 34,
+      "verbLeading": 26,
+      "verbLeadingPercent": 76.5,
       "examples": {
         "panic_button": "ACİL YARDIM",
         "btn_skip": "Atla",
@@ -67,7 +67,7 @@
         ]
       },
       "blameHits": 0,
-      "errorKeysExamined": 67,
+      "errorKeysExamined": 70,
       "styleClaim": "errors describe the SYSTEM state and the next step, not the user: the duress context makes second-person fault language actively unsafe"
     },
     "successCopy": {
@@ -91,7 +91,7 @@
       "why": "the app ships no Tooltip widget at all; labels are inline, so there is no hover-only copy to keep short"
     },
     "emptyStateCopy": {
-      "keys": 20,
+      "keys": 21,
       "examples": {
         "no_internet_connection": "İnternet bağlantısı yok",
         "readiness_no_rehearsal": "Henüz prova yapmadın. Test Modu gerçek arama yapmaz — dokunup deneyebilirsin.",
@@ -141,7 +141,7 @@
       ]
     },
     "permissionCopy": {
-      "keys": 40,
+      "keys": 41,
       "rationaleScreensWithARequestCall": {
         "lib/core/utils/permission_helper.dart": {
           "rationaleAtLine": 48,
@@ -195,7 +195,7 @@
       "scope": "both shipped translation payloads, every key in each"
     },
     "lengthDelta": {
-      "pairsCompared": 963,
+      "pairsCompared": 1001,
       "worstRatios": [
         {
           "key": "legal_dc_name",

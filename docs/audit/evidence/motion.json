@@ -2,15 +2,15 @@
   "verifier": "scripts/audit_evidence/motion.py",
   "verifierVersion": "1.0.0",
   "codeRevision": {
-    "head": "59d1892fd8520cdb0563c5e61bb1d3a96543a212",
+    "head": "c6d197d35a185b03a9d1b83cab17bcf7f06a08e5",
     "dirty": true
   },
-  "measuredOn": "2026-08-14",
+  "measuredOn": "2026-08-15",
   "command": "python3 scripts/audit_evidence/motion.py",
   "surfaces": [
     "lib/core/motion.dart",
     "lib/core/services/reduced_motion_policy.dart",
-    "lib/**/*.dart (154 files)"
+    "lib/**/*.dart (170 files)"
   ],
   "measurements": {
     "purpose": {
@@ -59,13 +59,13 @@
           "beginOffset": null
         },
         {
-          "site": "lib/screens/app_unlock_screen.dart:489",
+          "site": "lib/screens/app_unlock_screen.dart:490",
           "usesSlide": false,
           "usesFade": true,
           "beginOffset": null
         },
         {
-          "site": "lib/screens/legal/unified_consent_screen.dart:106",
+          "site": "lib/screens/legal/unified_consent_screen.dart:107",
           "usesSlide": false,
           "usesFade": true,
           "beginOffset": null
@@ -240,8 +240,8 @@
       "sites": [
         "lib/screens/home_page.dart:970",
         "lib/screens/home_page.dart:971",
-        "lib/screens/main_navigation.dart:237",
-        "lib/screens/main_navigation.dart:238"
+        "lib/screens/main_navigation.dart:297",
+        "lib/screens/main_navigation.dart:298"
       ],
       "count": 4,
       "animatedBlurCount": 0,
@@ -249,7 +249,7 @@
     },
     "loadingDrama": {
       "shimmerSites": 2,
-      "circularProgressSites": 25,
+      "circularProgressSites": 26,
       "note": "loading is a shimmer placeholder or a plain platform spinner; there is no bespoke loading choreography"
     },
     "reducedMotion": {

@@ -84,15 +84,44 @@ class OsmTileCacheClient extends http.BaseClient {
     return Directory('${root.path}/osm_tiles_v1');
   }
 
+  /// Tile requests this client has been ASKED for, since construction.
+  ///
+  /// MP-42-024 needs a request-volume figure to compare against OSM's bulk-use
+  /// policy, and the honest place to count is the boundary that actually talks
+  /// to the tile server. Three counters rather than one, because "how many
+  /// tiles did a session need" and "how many times did we hit OSM" are
+  /// different numbers and only the second is what the policy is about.
+  int get tileRequests => _tileRequests;
+
+  /// Requests served without touching the network: an in-flight duplicate or a
+  /// fresh cache entry.
+  int get tileRequestsServedLocally => _tileServedLocally;
+
+  /// Requests that reached the upstream server. THIS is the policy figure.
+  int get upstreamTileRequests => _tileUpstream;
+
+  int _tileRequests = 0;
+  int _tileServedLocally = 0;
+  int _tileUpstream = 0;
+
+  /// Zeroes the counters so a measured session starts from a known point.
+  void resetTileCounters() {
+    _tileRequests = 0;
+    _tileServedLocally = 0;
+    _tileUpstream = 0;
+  }
+
   @override
   Future<http.StreamedResponse> send(http.BaseRequest request) async {
     if (_closed) throw StateError('OSM tile cache client is closed');
 
     final address = _TileAddress.tryParse(request);
     if (address == null) return _innerClient.send(request);
+    _tileRequests++;
 
     final existing = _inFlight[address.key];
     if (existing != null) {
+      _tileServedLocally++;
       return (await existing).toStreamedResponse(request);
     }
 
@@ -122,6 +151,7 @@ class OsmTileCacheClient extends http.BaseClient {
 
     final now = _now().toUtc();
     if (cached != null && now.isBefore(cached.metadata.expiresAt)) {
+      _tileServedLocally++;
       return _ResponseSnapshot.cached(cached.body, cached.metadata.contentType);
     }
 
@@ -132,6 +162,7 @@ class OsmTileCacheClient extends http.BaseClient {
       request.headers['if-modified-since'] = modified;
     }
 
+    _tileUpstream++;
     final upstream = await _innerClient.send(request);
     final body = await _readBoundedTileBody(upstream.stream);
     final headers = Map<String, String>.from(upstream.headers);

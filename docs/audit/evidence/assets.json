@@ -2,10 +2,10 @@
   "verifier": "scripts/audit_evidence/assets.py",
   "verifierVersion": "1.0.0",
   "codeRevision": {
-    "head": "59d1892fd8520cdb0563c5e61bb1d3a96543a212",
+    "head": "c6d197d35a185b03a9d1b83cab17bcf7f06a08e5",
     "dirty": true
   },
-  "measuredOn": "2026-08-14",
+  "measuredOn": "2026-08-15",
   "command": "python3 scripts/audit_evidence/assets.py",
   "surfaces": [
     "assets/**",
@@ -61,8 +61,8 @@
     },
     "iconography": {
       "materialIconsDeclared": "uses-material-design: true",
-      "distinctGlyphs": 112,
-      "totalGlyphSites": 287,
+      "distinctGlyphs": 114,
+      "totalGlyphSites": 297,
       "mostUsed": [
         [
           "check_circle_rounded",
@@ -93,12 +93,12 @@
           8
         ],
         [
-          "warning_rounded",
+          "error_outline_rounded",
           6
         ],
         [
-          "error_outline_rounded",
-          5
+          "warning_rounded",
+          6
         ],
         [
           "location_on_rounded",

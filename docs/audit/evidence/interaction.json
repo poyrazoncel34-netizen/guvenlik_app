@@ -2,7 +2,7 @@
   "verifier": "scripts/audit_evidence/interaction.py",
   "verifierVersion": "1.0.0",
   "codeRevision": {
-    "head": "0404899d52bd56180e1c0350b3c963abba52c15a",
+    "head": "c6d197d35a185b03a9d1b83cab17bcf7f06a08e5",
     "dirty": true
   },
   "measuredOn": "2026-08-15",
@@ -24,12 +24,12 @@
       "enabledFalseSites": [],
       "disabledMechanism": "a condition yielding null into the callback, plus ThemeData's disabled colours",
       "selectableTextSites": [
-        "lib/screens/countdown_screen.dart:498",
-        "lib/screens/emergency_call_screen.dart:203",
-        "lib/screens/legal/kvkk_disclosure_screen.dart:147",
-        "lib/screens/legal/terms_of_service_screen.dart:139",
-        "lib/screens/legal/unified_consent_screen.dart:361",
-        "lib/screens/legal/unified_consent_screen.dart:486"
+        "lib/screens/countdown_screen.dart:499",
+        "lib/screens/emergency_call_screen.dart:204",
+        "lib/screens/legal/kvkk_disclosure_screen.dart:148",
+        "lib/screens/legal/terms_of_service_screen.dart:140",
+        "lib/screens/legal/unified_consent_screen.dart:362",
+        "lib/screens/legal/unified_consent_screen.dart:487"
       ],
       "readOnlyVsDisabled": "read-only surfaces (legal texts, exported data preview) use SelectableText so the content can still be copied; disabled controls drop their callback and their contrast"
     },
@@ -44,26 +44,26 @@
       "fieldsWithMaxLength": 13,
       "fieldsWithFormatters": 11,
       "maxLengthSites": [
-        "lib/core/utils/pin_settings_helper.dart:85",
-        "lib/core/utils/pin_settings_helper.dart:105",
-        "lib/screens/edit_profile_screen.dart:118",
-        "lib/screens/fake_call_screen.dart:592",
-        "lib/screens/fake_call_screen.dart:630",
-        "lib/screens/safety_timeline_screen.dart:350",
-        "lib/screens/safety_timeline_screen.dart:359",
-        "lib/screens/safety_timeline_screen.dart:368"
-      ],
-      "formatterSites": [
-        "lib/core/utils/app_reset_helper.dart:165",
-        "lib/core/utils/pin_settings_helper.dart:88",
-        "lib/core/utils/pin_settings_helper.dart:108",
-        "lib/core/widgets/safety_session_pin_gate.dart:154",
-        "lib/screens/contacts_page.dart:854",
-        "lib/screens/contacts_page.dart:872",
+        "lib/core/utils/pin_settings_helper.dart:86",
+        "lib/core/utils/pin_settings_helper.dart:106",
         "lib/screens/edit_profile_screen.dart:119",
         "lib/screens/fake_call_screen.dart:593",
         "lib/screens/fake_call_screen.dart:631",
-        "lib/screens/safety_timeline_screen.dart:412"
+        "lib/screens/safety_timeline_screen.dart:377",
+        "lib/screens/safety_timeline_screen.dart:386",
+        "lib/screens/safety_timeline_screen.dart:395"
+      ],
+      "formatterSites": [
+        "lib/core/utils/app_reset_helper.dart:172",
+        "lib/core/utils/pin_settings_helper.dart:89",
+        "lib/core/utils/pin_settings_helper.dart:109",
+        "lib/core/widgets/safety_session_pin_gate.dart:154",
+        "lib/screens/contacts_page.dart:854",
+        "lib/screens/contacts_page.dart:872",
+        "lib/screens/edit_profile_screen.dart:120",
+        "lib/screens/fake_call_screen.dart:594",
+        "lib/screens/fake_call_screen.dart:632",
+        "lib/screens/safety_timeline_screen.dart:439"
       ],
       "robustnessTest": "test/core/input_robustness_test.dart"
     },
@@ -132,8 +132,8 @@
         "lib/screens/check_in_screen.dart:100",
         "lib/screens/check_in_screen.dart:177",
         "lib/screens/home_page.dart:602",
-        "lib/screens/safe_walk_screen.dart:117",
-        "lib/screens/safe_walk_screen.dart:167",
+        "lib/screens/safe_walk_screen.dart:118",
+        "lib/screens/safe_walk_screen.dart:168",
         "lib/widgets/panic_button.dart:304"
       ],
       "mechanism": "confirmation-before-destruction rather than undo-after",

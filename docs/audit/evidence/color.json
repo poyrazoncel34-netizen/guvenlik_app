@@ -2,15 +2,15 @@
   "verifier": "scripts/audit_evidence/color.py",
   "verifierVersion": "1.0.0",
   "codeRevision": {
-    "head": "59d1892fd8520cdb0563c5e61bb1d3a96543a212",
+    "head": "c6d197d35a185b03a9d1b83cab17bcf7f06a08e5",
     "dirty": true
   },
-  "measuredOn": "2026-08-14",
+  "measuredOn": "2026-08-15",
   "command": "python3 scripts/audit_evidence/color.py",
   "surfaces": [
     "lib/core/app_colors.dart",
     "lib/core/app_theme.dart",
-    "lib/**/*.dart (154 files) for usage counts"
+    "lib/**/*.dart (170 files) for usage counts"
   ],
   "measurements": {
     "paletteFile": "lib/core/app_colors.dart",
@@ -28,17 +28,17 @@
     "semantic": {
       "success": {
         "hex": "#2CB5A0",
-        "sites": 74,
+        "sites": 76,
         "note": "teal rather than green -- chosen for dichromat separation"
       },
       "warning": {
         "hex": "#FFB547",
-        "sites": 103
+        "sites": 111
       },
       "error": {
         "hex": "#FF4D4D",
         "token": "AppColors.emergency",
-        "sites": 107,
+        "sites": 110,
         "note": "one token carries both 'error' and 'emergency'; this app's error surface IS its emergency surface"
       },
       "info": {
@@ -504,8 +504,8 @@
         }
       },
       "redundantEncoding": {
-        "statusIconSites": 59,
-        "semanticsAnnotationSites": 40,
+        "statusIconSites": 61,
+        "semanticsAnnotationSites": 44,
         "claim": "status is carried by icon + text label in addition to colour"
       }
     },

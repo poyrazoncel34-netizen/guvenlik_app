@@ -2,7 +2,7 @@
   "verifier": "scripts/audit_evidence/a11y_platform.py",
   "verifierVersion": "1.0.0",
   "codeRevision": {
-    "head": "b8fae46ca3e7db67e591c3f2588bcf8fab1424c5",
+    "head": "c6d197d35a185b03a9d1b83cab17bcf7f06a08e5",
     "dirty": true
   },
   "measuredOn": "2026-08-15",

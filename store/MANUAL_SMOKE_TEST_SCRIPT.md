@@ -29,6 +29,12 @@ Never place a real emergency call unless the release owner has a controlled, wri
 | REVENUECAT | Billing restore | Reinstall/clear data and tap restore | Active purchase restores, or no-purchase state is explicit | NOT_RUN | TBD |
 | REVENUECAT | Billing cancel/manage | Open customer center/manage subscription | Google Play/RevenueCat manage path opens safely | NOT_RUN | TBD |
 | REVENUECAT | Billing expired/lapsed | Let sandbox subscription expire/lapse and refresh app | Pro access is removed and paywall/no-entitlement copy is shown | NOT_RUN | TBD |
+| NEEDS_REAL_DEVICE_TEST | Power user (long path) | Drive the whole journey in one session, in order: arm a safety session -> cancel it -> record a rehearsal -> export local data -> revoke one consent -> re-consent. Do not restart the app between steps. | Every step's record survives the steps after it: the timeline still shows BOTH the arm and the cancel, the rehearsal timestamp is unchanged, the export contains the consent log, and after re-consent a fresh app launch still reads the consent as granted. No step erases an earlier one. | NOT_RUN | TBD |
 | NEEDS_OPERATOR_ACTION | Legal URLs | Open privacy, terms, data deletion, and aydınlatma URLs | Live pages load expected content; date/URL evidence saved | NOT_RUN | TBD |
+
+The **Power user (long path)** row is also driven automatically by
+`test/core/services/power_user_path_test.dart`, which runs on every release.
+The manual row remains because a human notices things a test does not — but the
+path itself is no longer answered only once and then left to rot (MP-47-003).
 
 Keep final evidence filenames in the QA matrix. Do not store screenshots containing real phone numbers, real precise locations, account emails, or purchase IDs in the repo.

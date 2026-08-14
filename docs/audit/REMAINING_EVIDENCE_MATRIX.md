@@ -44,7 +44,7 @@ have meant filing a document under a code archetype to keep the list short.
 | Metric | Count |
 |---|---|
 | Rows in this matrix | 239 |
-| Still `IN_REPO_RESOLVABLE` in the queue | 3 |
+| Still `IN_REPO_RESOLVABLE` in the queue | 0 |
 | Evidence artifacts referenced | 12 |
 | Plan/audit integrity problems | 0 |
 
@@ -285,7 +285,7 @@ have meant filing a document under a code archetype to keep the list short.
 | `MP-30-005` | 30 | Invalidation stratejisi. | PASS | - | tile cache | scripts/audit_evidence/storage.py | `storage.json` → `measurements.cache.caches.map tiles.invalidation` | hard-coded API key + DROP TABLE + PRAGMA identifier from a variable -> 3 | no | PASS |
 | `MP-30-006` | 30 | Stale data kabul kriteri. | PASS | - | tile cache | scripts/audit_evidence/storage.py | `storage.json` → `measurements.cache.caches.map tiles.stalenessAcceptable` | hard-coded API key + DROP TABLE + PRAGMA identifier from a variable -> 3 | no | PASS |
 | `MP-31-010` | 31 | Metadata/EXIF privacy düşünülmüş. | PASS | - | lib/screens/fake_call_screen.dart (gallery picker) -> lib/core/services/avatar_store_service.dart -> lib/core/services/image_sanitizer_service.dart | scripts/audit_evidence/storage.py | `storage.json` → `measurements.files.exifStripped` | restore the picked-image File.copy and turn the sanitiser into a clone of the source -> storage.py 0 -> 8 violations (5 of them the new image-path rules) | yes | PASS |
-| `MP-42-024` | 42 | Dependency quotas. | PARTIAL | P2 | OSM tile client | scripts/audit_evidence/storage.py | `storage.json` → `measurements.cache.caches.map tiles.contract` | hard-coded API key + DROP TABLE + PRAGMA identifier from a variable -> 3 | no | PARTIAL |
+| `MP-42-024` | 42 | Dependency quotas. | PASS | - | lib/core/network/osm_tile_cache_client.dart | scripts/audit_evidence/storage.py | `storage.json` → `measurements.cache.tileRequestVolume` | remove the tile counters -> storage.py 0 -> 13 violations | yes | PASS |
 | `MP-72-003` | 72 | Uneven padding. | PASS | - | every EdgeInsets.only in lib/ | scripts/audit_evidence/layout.py | `layout.json` → `measurements.paddingSymmetry.asymmetricCount` | two EdgeInsets.only gutters differing >4dp -> 2 violations | no | PASS |
 
 ### STATIC_CONFIG — 2 rows
@@ -302,7 +302,7 @@ have meant filing a document under a code archetype to keep the list short.
 | `MP-08-035` | 8 | Character limit. | PASS | - | text fields | test/core/input_robustness_test.dart | `interaction.json` → `measurements.characterLimits.formatterSites` | PIN field offering password autofill + unlabelled field -> 2 | no | PASS |
 | `MP-09-016` | 9 | Spring değerleri sistematik. | PASS | - | Motion.settle | test/core/motion_spring_test.dart | `motion.json` → `measurements.springs.settle` | undisposed purposeless infinite spin -> 2 violations | no | PASS |
 | `MP-43-027` | 43 | Jitter. | PASS | - | OSM tile retry schedule | test/core/network/tile_http_status_handling_test.dart | osm_tile_cache_client.retryDelayFor applies full jitter over [50%,100%] of the capped delay -- on the one retry schedule that faces a shared public origin | a deterministic randomSource pins the [50%,100%] jitter band; removing the jitter changes the value | no | PASS |
-| `MP-47-011` | 47 | Account with thousands of objects. | PARTIAL | P3 | timeline at volume | test/core/services | `storage.json` → `measurements.schema.tables` | hard-coded API key + DROP TABLE + PRAGMA identifier from a variable -> 3 | no | PARTIAL |
+| `MP-47-011` | 47 | Account with thousands of objects. | PASS | - | activity_events at 100 / 1000 / 10000 rows | test/core/services | `storage.json` → `measurements.schema.volumePaths` | cut the volume tiers to one -> storage.py 0 -> 13 violations | yes | PASS |
 
 ### VISUAL_MEASUREMENT — 15 rows
 
@@ -333,7 +333,7 @@ have meant filing a document under a code archetype to keep the list short.
 | `MP-09-013` | 9 | Repeated animation rahatsız etmiyor. | PASS | - | 8 ambient loops | test/core/reduced_motion_coverage_test.dart | `motion.json` → `measurements.repetition.reducedMotionAwareCount` | restore the cascade -> red; stop() without parking -> red | yes | PASS |
 | `MP-09-025` | 9 | Animasyon düşük güçlü cihazda da düzgün. | PASS | - | reduce-motion policy | test/core/reduced_motion_coverage_test.dart | `motion.json` → `measurements.reducedMotion.consumers` | restore the cascade -> red | yes | PASS |
 | `MP-10-023` | 10 | Scroll restoration düzgün. | PASS | - | lib/core/services/scroll_restoration.dart + settings_page.dart + safety_timeline_screen.dart | test/state_restoration_policy_test.dart | `flows.json` → `measurements.interruptionSafety.scrollRestoration` | unregister the timeline anchor and break the two-phase restore -> flows.py 0 -> 10 violations; in-test, the naive pixel restore lands on a different event | yes | PASS |
-| `MP-47-003` | 47 | Power user. | PARTIAL | P3 | power-user path | test/screens/layout_size_matrix_test.dart | `text_scale.json` → `cellsMeasured` | inflexible Row overflows | no | PARTIAL |
+| `MP-47-003` | 47 | Power user. | PASS | - | test/core/services/power_user_path_test.dart + store/MANUAL_SMOKE_TEST_SCRIPT.md | test/screens/layout_size_matrix_test.dart | `storage.json` → `measurements.schema.volumePaths` | a path missing a step, or a manual row that omits one, fails storage.py | yes | PASS |
 | `MP-62-014` | 62 | Refund terms. | PASS | - | paywall disclosures | test/screens/paywall_compliance_test.dart | `copy.json` → `measurements.privacyCopy.overclaimGuards` | removing a disclosure string fails the compliance test | no | PASS |
 
 ### WIDGET_GEOMETRY — 8 rows

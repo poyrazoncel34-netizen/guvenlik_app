@@ -121,7 +121,13 @@ MICRO_LABEL_EXEMPTIONS = {
         "single-line 'ACIL' badge inside a tinted chip; w800 + 0.5 tracking. "
         "Duplicates the row's own emergency styling, carries no unique meaning."
     ),
-    "lib/screens/legal/unified_consent_screen.dart:690": (
+    # Repinned 690 -> 691 on 2026-08-15: the IconSizes migration added one
+    # import line to this file. The exemption table is line-pinned ON PURPOSE so
+    # a shift like this is REPORTED rather than absorbed, and this is the second
+    # time it has done its job. The site and its justification are unchanged;
+    # only the line moved, and that was verified against the source rather than
+    # assumed.
+    "lib/screens/legal/unified_consent_screen.dart:691": (
         "'Zorunlu' pill marking a mandatory consent row. The consent text itself "
         "is body-sized; the pill is a redundant marker."
     ),

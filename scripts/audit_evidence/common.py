@@ -200,11 +200,13 @@ def run_negative_control(name: str, mutate, measure) -> int:
     with tempfile.TemporaryDirectory() as tmp:
         scratch = Path(tmp)
         shutil.copytree(REPO / "lib", scratch / "lib")
-        # docs/ is copied because some verifiers PARSE a device write-up (the
-        # forced-colour pass records its measured pixel counts there). A
-        # mutation that cannot reach its target is a control that proves
-        # nothing, and a baseline missing the file reports a false violation.
-        for extra in ("assets", "test", "docs"):
+        # Every directory a verifier READS has to be here, not just lib/.
+        # Twice now a verifier grew a rule over a file outside lib/ and the
+        # control reported a FALSE violation at baseline (docs/ for the
+        # forced-colour write-up, store/ for the manual smoke script). A
+        # baseline that is already red hides whether the mutation did anything,
+        # and a mutation that cannot reach its target proves nothing.
+        for extra in ("assets", "test", "docs", "store", "config"):
             src = REPO / extra
             if src.exists():
                 shutil.copytree(src, scratch / extra, dirs_exist_ok=True)

@@ -2,7 +2,7 @@
   "verifier": "scripts/audit_evidence/storage.py",
   "verifierVersion": "1.0.0",
   "codeRevision": {
-    "head": "e9156143dea76817828bbb65709e482134bc10b8",
+    "head": "c6d197d35a185b03a9d1b83cab17bcf7f06a08e5",
     "dirty": true
   },
   "measuredOn": "2026-08-15",
@@ -61,6 +61,32 @@
       },
       "transactionSites": 1,
       "transactionBoundary": "the 100-row crash-log cap is enforced on every insert; the insert+prune pair is the only genuine multi-statement write",
+      "volumePaths": {
+        "growthTable": "activity_events",
+        "volumeTiers": [
+          100,
+          1000,
+          10000
+        ],
+        "tiersAreProductBound": true,
+        "lazyBuildAsserted": true,
+        "integrityAtMaxTierAsserted": true,
+        "powerUserSteps": [
+          "arm a safety session",
+          "cancel it",
+          "record a rehearsal",
+          "export local data",
+          "revoke a consent",
+          "re-consent"
+        ],
+        "powerUserAutomated": "test/core/services/power_user_path_test.dart",
+        "powerUserInManualScript": true,
+        "manualScriptNamesTheTest": true,
+        "coveringTests": [
+          "test/core/services/high_volume_timeline_test.dart",
+          "test/core/services/power_user_path_test.dart"
+        ]
+      },
       "isolationLevel": "sqflite serialises through a single native connection per database handle, so the effective isolation is SERIALIZABLE. There is no second writer: no backend, no sync, one process.",
       "migrationStyle": "additive only — ALTER TABLE ADD COLUMN / CREATE TABLE",
       "migrationTest": "test/core/services/local_database_migration_test.dart"
@@ -87,7 +113,25 @@
         }
       },
       "stampedeRisk": "none: there is no shared origin to stampede. The only network cache is per-tile against a public tile server, fetched by one process on one device, and the emergency path performs zero network I/O.",
-      "networkLayer": "lib/core/network/"
+      "networkLayer": "lib/core/network/",
+      "tileRequestVolume": {
+        "instrumentedClient": "lib/core/network/osm_tile_cache_client.dart",
+        "counters": [
+          "tileRequests",
+          "tileRequestsServedLocally",
+          "upstreamTileRequests"
+        ],
+        "dedupesInFlight": true,
+        "cacheServesRepeatViews": true,
+        "sessionModel": {
+          "viewports": 4,
+          "tileSidePx": 256,
+          "keepBuffer": 1
+        },
+        "policyCeilingAsserted": true,
+        "policyNote": "OSM's tile usage policy names heavy use (e.g. > 250 tiles/sec) and bulk downloading as unacceptable. The assertion is an order-of-magnitude bound rather than a golden count: pinning the exact number would break on any map-layout change while saying nothing about the quota.",
+        "coveringTest": "test/core/network/tile_request_volume_test.dart"
+      }
     },
     "files": {
       "userGeneratedFiles": [
@@ -95,7 +139,7 @@
         "the fake-call avatar, re-encoded from a gallery selection"
       ],
       "exportScreen": "lib/screens/settings_legal/data_export_screen.dart",
-      "imagePickerSite": "lib/screens/fake_call_screen.dart:710",
+      "imagePickerSite": "lib/screens/fake_call_screen.dart:711",
       "importBoundaryFile": "lib/core/services/avatar_store_service.dart",
       "sanitizerFile": "lib/core/services/image_sanitizer_service.dart",
       "pickerDelegatesToBoundary": true,

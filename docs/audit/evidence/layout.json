@@ -2,10 +2,10 @@
   "verifier": "scripts/audit_evidence/layout.py",
   "verifierVersion": "1.0.0",
   "codeRevision": {
-    "head": "59d1892fd8520cdb0563c5e61bb1d3a96543a212",
+    "head": "c6d197d35a185b03a9d1b83cab17bcf7f06a08e5",
     "dirty": true
   },
-  "measuredOn": "2026-08-14",
+  "measuredOn": "2026-08-15",
   "command": "python3 scripts/audit_evidence/layout.py",
   "surfaces": [
     "lib/screens/**",
@@ -16,8 +16,8 @@
   "measurements": {
     "alignment": {
       "grid": 2.0,
-      "spacingLiterals": 704,
-      "onGrid": 695,
+      "spacingLiterals": 707,
+      "onGrid": 698,
       "onGridPercent": 98.7,
       "offGridValues": [
         3.0,
@@ -26,13 +26,13 @@
         13.0
       ],
       "alignmentPrimitiveUse": {
-        "CrossAxisAlignment.start": 70,
+        "CrossAxisAlignment.start": 80,
         "CrossAxisAlignment.center": 0,
         "CrossAxisAlignment.stretch": 3,
         "MainAxisAlignment.spaceBetween": 4,
         "Align(": 4,
-        "Center(": 27,
-        "Alignment.center": 27,
+        "Center(": 28,
+        "Alignment.center": 28,
         "textAlign: TextAlign.center": 52,
         "textAlign: TextAlign.start": 0
       },
@@ -226,7 +226,7 @@
       ],
       "honestLimit": "only home_page.dart consumes the DensityTokens API. Four other surfaces adapt by reading MediaQuery/LayoutBuilder directly, which is the ad-hoc pattern the tokens were extracted from and have not yet replaced. Recorded as measured, not restated as adoption.",
       "whitespaceRatioProxy": {
-        "spacingLiteralsPerScreenFile": 20.1
+        "spacingLiteralsPerScreenFile": 19.6
       }
     },
     "attentionOrder": {
@@ -248,7 +248,7 @@
         "TextButton": 39,
         "IconButton": 13,
         "FilledButton": 0,
-        "InkWell": 17,
+        "InkWell": 19,
         "GestureDetector": 19
       },
       "primary": "ElevatedButton / PanicButton — filled",
@@ -266,15 +266,15 @@
       },
       "disabledSites": [
         "lib/core/widgets/safety_session_pin_gate.dart:172",
-        "lib/screens/legal/consent_management_screen.dart:359",
-        "lib/screens/legal/consent_management_screen.dart:364",
-        "lib/screens/legal/consent_screen.dart:240",
-        "lib/screens/onboarding/onboarding_contact_step.dart:467",
-        "lib/screens/onboarding/onboarding_contact_step.dart:482",
+        "lib/screens/legal/consent_management_screen.dart:360",
+        "lib/screens/legal/consent_management_screen.dart:365",
+        "lib/screens/legal/consent_screen.dart:241",
+        "lib/screens/onboarding/onboarding_contact_step.dart:468",
+        "lib/screens/onboarding/onboarding_contact_step.dart:483",
         "lib/screens/onboarding_screen.dart:219",
-        "lib/screens/settings_detail_page.dart:352",
-        "lib/screens/settings_legal/data_deletion_screen.dart:228",
-        "lib/screens/settings_legal/data_export_screen.dart:215",
+        "lib/screens/settings_detail_page.dart:353",
+        "lib/screens/settings_legal/data_deletion_screen.dart:249",
+        "lib/screens/settings_legal/data_export_screen.dart:216",
         "lib/screens/subscription/paywall_screen.dart:418",
         "lib/screens/subscription/paywall_screen.dart:509",
         "lib/screens/subscription/subscription_management_screen.dart:186"
@@ -342,7 +342,7 @@
         ]
       ],
       "modalsNotReachedFromACallback": [
-        "lib/core/utils/app_reset_helper.dart:140",
+        "lib/core/utils/app_reset_helper.dart:147",
         "lib/core/utils/permission_helper.dart:58",
         "lib/core/utils/permission_helper.dart:134",
         "lib/core/utils/permission_helper.dart:181",
@@ -350,7 +350,7 @@
         "lib/core/utils/permission_helper.dart:357",
         "lib/core/utils/permission_helper.dart:364",
         "lib/core/widgets/safety_session_pin_gate.dart:31",
-        "lib/screens/app_unlock_screen.dart:397",
+        "lib/screens/app_unlock_screen.dart:398",
         "lib/screens/contacts_page.dart:746",
         "lib/widgets/panic_button.dart:342"
       ]
