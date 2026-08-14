@@ -10,7 +10,7 @@ import 'package:provider/provider.dart';
 import 'core/app_theme.dart';
 import 'core/navigation/app_navigator.dart';
 import 'presentation/providers/providers.dart';
-import 'screens/splash_screen.dart';
+import 'screens/app_root.dart';
 import 'core/services/offline_queue_service.dart';
 import 'core/services/crash_log_service.dart';
 import 'core/services/medical_data_cleanup_service.dart';
@@ -231,6 +231,26 @@ class KoruBeniApp extends StatelessWidget {
         child: MaterialApp(
           navigatorKey: rootNavigatorKey,
           scaffoldMessengerKey: rootScaffoldMessengerKey,
+          // Enables Android state restoration for the whole app: without a
+          // root bucket every `RestorationMixin` below is inert,
+          // `registerForRestoration` silently keeps its default value, and a
+          // half-typed emergency contact is lost to any OS-initiated process
+          // death. Measured on an API 36 emulator: before this line the drafts
+          // were gone after `adb shell am kill`; after it they came back.
+          //
+          // THIS LINE HAS A PRECONDITION, and it is not obvious. `WidgetsApp`
+          // gives its Navigator `restorationScopeId: 'nav'` unconditionally, so
+          // turning restoration on ALSO turns on route-history restoration. If
+          // the app destroys its initial route, the restored history comes back
+          // empty and `assert(_history.isNotEmpty)` in navigator.dart bricks the
+          // app on every resume. Startup used to do exactly that, four times
+          // over, with `pushReplacement`/`pushAndRemoveUntil`; that is why
+          // `home:` is now the [AppRoot] shell, which swaps destinations as
+          // STATE and never touches the route stack. Do not reintroduce a
+          // top-level route replacement without re-reading
+          // lib/screens/app_root.dart and
+          // test/screens/state_restoration_navigator_precondition_test.dart.
+          restorationScopeId: 'korubeni',
           debugShowCheckedModeBanner: false,
           title: 'KoruBeni',
           theme: AppTheme.lightTheme,
@@ -254,7 +274,7 @@ class KoruBeniApp extends StatelessWidget {
           localizationsDelegates: context.localizationDelegates,
           supportedLocales: context.supportedLocales,
           locale: context.locale,
-          home: const SplashScreen(),
+          home: const AppRoot(),
         ),
       ),
     );

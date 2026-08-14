@@ -39,7 +39,26 @@ class _Scenario {
 }
 
 void main() {
-  final now = DateTime(2026, 8, 13, 12);
+  // TIME BASE -- read this before changing it.
+  //
+  // This used to be a FIXED calendar date, `DateTime(2026, 8, 13, 12)`, and
+  // that made the table a time bomb: it passed for exactly seven days and then
+  // started failing on its own, which is what happened on 2026-08-14.
+  //
+  // The cause is an asymmetry in the production API, and it is not a bug there:
+  // `noticeFor(now:)` takes an injectable instant, while the two AUTHORIZATION
+  // getters (`canUsePaidSafetyFeature`, `canUseNonEmergencyPaidFeature`) are
+  // plain getters that resolve the offline-grace window against the REAL wall
+  // clock -- which is correct at runtime, because a subscriber's grace really
+  // does elapse in real time. Pinning `now` to a calendar date therefore pinned
+  // only HALF of each scenario: `verifiedAt` drifted further into the past
+  // every day the suite was not run, until scenario F2's "24h of grace left"
+  // silently became "24h of grace expired".
+  //
+  // Anchoring on the real clock is what the scenario names actually mean --
+  // "6 days offline" is a RELATIVE statement -- so every row now describes the
+  // same state on every day it runs.
+  final now = DateTime.now();
   DateTime ago(Duration d) => now.subtract(d);
 
   SubscriptionAccessState at(

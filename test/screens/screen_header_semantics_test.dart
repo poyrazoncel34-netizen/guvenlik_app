@@ -73,6 +73,11 @@ void main() {
     'lib/screens/main_navigation.dart':
         'Tab shell. It hosts screens that carry their own headings and renders '
         'only nav labels; a heading here would announce above the real one.',
+    'lib/screens/app_root.dart':
+        'Startup shell. It renders no content of its own: it swaps between '
+        'SplashScreen, the consent screen, onboarding, the unlock screen and '
+        'the tab shell, each of which carries its own heading. A heading here '
+        'would announce ABOVE the real one on every screen in the app.',
     'lib/screens/auth_gate.dart':
         'Pure router widget — contains no Text at all.',
     'lib/screens/splash_screen.dart':

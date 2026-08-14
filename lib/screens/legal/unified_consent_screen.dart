@@ -19,7 +19,15 @@ import '../../widgets/consent_checkbox_widget.dart';
 import '../onboarding_screen.dart';
 
 class UnifiedConsentScreen extends StatefulWidget {
-  const UnifiedConsentScreen({super.key});
+  const UnifiedConsentScreen({super.key, this.onAccepted});
+
+  /// Advances the [AppRoot] shell instead of replacing the route. Replacing it
+  /// destroys the Navigator's initial route, which is what made Android state
+  /// restoration impossible -- see lib/screens/app_root.dart.
+  ///
+  /// Null keeps the historical route replacement, so this screen still works
+  /// when it is pushed on its own.
+  final VoidCallback? onAccepted;
 
   @override
   State<UnifiedConsentScreen> createState() => _UnifiedConsentScreenState();
@@ -89,16 +97,21 @@ class _UnifiedConsentScreenState extends State<UnifiedConsentScreen> {
 
       if (!mounted) return;
 
-      unawaited(
-        Navigator.of(context).pushReplacement(
-          PageRouteBuilder(
-            pageBuilder: (context, animation, _) => const OnboardingScreen(),
-            transitionsBuilder: (context, animation, _, child) =>
-                FadeTransition(opacity: animation, child: child),
-            transitionDuration: Motion.slow,
+      final onAccepted = widget.onAccepted;
+      if (onAccepted != null) {
+        onAccepted();
+      } else {
+        unawaited(
+          Navigator.of(context).pushReplacement(
+            PageRouteBuilder(
+              pageBuilder: (context, animation, _) => const OnboardingScreen(),
+              transitionsBuilder: (context, animation, _, child) =>
+                  FadeTransition(opacity: animation, child: child),
+              transitionDuration: Motion.slow,
+            ),
           ),
-        ),
-      );
+        );
+      }
     } on Exception catch (_) {
       if (mounted) setState(() => _loading = false);
       rethrow;

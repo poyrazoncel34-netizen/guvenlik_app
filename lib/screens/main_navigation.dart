@@ -30,8 +30,29 @@ class MainNavigation extends StatefulWidget {
 }
 
 class _MainNavigationState extends State<MainNavigation>
-    with SingleTickerProviderStateMixin {
-  int _selectedIndex = 0;
+    with SingleTickerProviderStateMixin, RestorationMixin {
+  /// RESTORABLE ON PURPOSE: this is navigation state, and losing it is not
+  /// cosmetic. A process death while the user is on Map (a live location
+  /// share), Contacts (mid-edit) or Profile silently returns them to Home,
+  /// which reads as "the app forgot what I was doing" at exactly the moment a
+  /// safety app must not.
+  ///
+  /// Restoring the INDEX is safe in a way restoring ROUTES is not: the tab set
+  /// lives inside [MainNavigation], which SplashScreen only builds after the
+  /// PIN gate has been satisfied. Restored widget state cannot make a widget
+  /// appear, so it cannot put anything above the unlock screen.
+  final RestorableInt _restoredIndex = RestorableInt(0);
+
+  int get _selectedIndex => _restoredIndex.value;
+  set _selectedIndex(int value) => _restoredIndex.value = value;
+
+  @override
+  String? get restorationId => 'main_navigation';
+
+  @override
+  void restoreState(RestorationBucket? oldBucket, bool initialRestore) {
+    registerForRestoration(_restoredIndex, 'tab_index');
+  }
 
   /// Tab requested but not yet shown: the swap happens at the fade trough, so
   /// the old page is never seen dissolving into the new one.
@@ -84,6 +105,7 @@ class _MainNavigationState extends State<MainNavigation>
   void dispose() {
     _tabFadeController.removeListener(_swapAtTrough);
     _tabFadeController.dispose();
+    _restoredIndex.dispose();
     super.dispose();
   }
 

@@ -11,7 +11,6 @@ import '../constants/legal_texts.dart';
 import '../core/app_colors.dart';
 import '../core/motion.dart';
 import '../core/constants/app_constants.dart';
-import '../core/navigation/app_navigator.dart';
 import '../presentation/providers/subscription_provider.dart';
 import 'legal/unified_consent_screen.dart';
 import 'app_unlock_screen.dart';
@@ -24,7 +23,19 @@ import '../core/services/pin_verification_service.dart';
 import '../core/widgets/escape_dismissible.dart';
 
 class SplashScreen extends StatefulWidget {
-  const SplashScreen({super.key});
+  const SplashScreen({super.key, this.advance});
+
+  /// Hands the chosen destination to [AppRoot], which shows it WITHOUT touching
+  /// the route stack.
+  ///
+  /// This used to be four `pushReplacement` / `pushAndRemoveUntil` calls, and
+  /// each of them destroyed the Navigator's initial route -- which is why the
+  /// app could not restore its state after an Android process death at all.
+  /// See lib/screens/app_root.dart for the measurement.
+  ///
+  /// Null keeps the historical route-based behaviour so a SplashScreen mounted
+  /// on its own (tests, deep links) still works.
+  final ValueChanged<Widget>? advance;
 
   @override
   State<SplashScreen> createState() => _SplashScreenState();
@@ -208,24 +219,36 @@ class _SplashScreenState extends State<SplashScreen>
 
     final Widget nextScreen;
     if (!legalAccepted || needsReConsent) {
-      nextScreen = const UnifiedConsentScreen();
+      nextScreen = UnifiedConsentScreen(
+        onAccepted: () => _goTo(const OnboardingScreen()),
+      );
     } else if (!onboardingDone) {
-      nextScreen = const OnboardingScreen();
+      nextScreen = OnboardingScreen(
+        onCompleted: () => _goTo(const MainNavigation()),
+      );
     } else if (hasConfiguredPin) {
       nextScreen = AppUnlockScreen(
-        onUnlocked: () {
-          rootNavigatorKey.currentState?.pushReplacement(
-            MaterialPageRoute(builder: (_) => const MainNavigation()),
-          );
-        },
+        onUnlocked: () => _goTo(const MainNavigation()),
       );
     } else {
       nextScreen = const MainNavigation();
     }
 
+    _goTo(nextScreen);
+  }
+
+  /// Shows [destination] through [AppRoot] when this splash is hosted by it,
+  /// and falls back to the historical route replacement when it is not.
+  void _goTo(Widget destination) {
+    final advance = widget.advance;
+    if (advance != null) {
+      advance(destination);
+      return;
+    }
+    if (!mounted) return;
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) => nextScreen,
+        pageBuilder: (context, animation, secondaryAnimation) => destination,
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return FadeTransition(opacity: animation, child: child);
         },

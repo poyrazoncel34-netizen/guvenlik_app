@@ -13,17 +13,57 @@ import '../core/services/onboarding_contact_gate_service.dart';
 import 'main_navigation.dart';
 import 'onboarding/onboarding_contact_step.dart';
 
+/// Public entry point. It exists only to place [AppRestorationScope] ABOVE
+/// the stateful body, because a State cannot supply a restoration scope to
+/// itself -- and the scope cannot go on the root MaterialApp without enabling
+/// route restoration, which crashes this app on process death. The reason is
+/// measured and written up in lib/core/widgets/app_restoration_scope.dart.
 class OnboardingScreen extends StatefulWidget {
-  const OnboardingScreen({super.key});
+  const OnboardingScreen({super.key, this.onCompleted});
+
+  /// Advances the [AppRoot] shell instead of clearing the route stack.
+  /// `pushAndRemoveUntil` destroyed the Navigator's initial route, which is
+  /// what made Android state restoration impossible -- see
+  /// lib/screens/app_root.dart.
+  ///
+  /// Null keeps the historical navigation so this screen still works alone.
+  final VoidCallback? onCompleted;
 
   @override
   State<OnboardingScreen> createState() => _OnboardingScreenState();
 }
 
 class _OnboardingScreenState extends State<OnboardingScreen>
-    with TickerProviderStateMixin {
-  final PageController _pageController = PageController();
-  int _currentPage = 0;
+    with TickerProviderStateMixin, RestorationMixin {
+  late final PageController _pageController;
+
+  /// RESTORABLE ON PURPOSE, and it is not cosmetic.
+  ///
+  /// [OnboardingContactStep] restores the half-typed emergency contact, but a
+  /// restored draft the user cannot SEE is the same as no restoration: after a
+  /// process death the PageView rebuilds at page 0, four swipes away from the
+  /// gate page holding their text. Restoring the page index is what makes the
+  /// restored draft reachable, so the two belong together.
+  final RestorableInt _restoredPage = RestorableInt(0);
+
+  int get _currentPage => _restoredPage.value;
+  set _currentPage(int value) => _restoredPage.value = value;
+
+  @override
+  String? get restorationId => 'onboarding_screen';
+
+  @override
+  void restoreState(RestorationBucket? oldBucket, bool initialRestore) {
+    registerForRestoration(_restoredPage, 'page_index');
+    // The controller has to be built from the restored index: PageController
+    // takes its start page at construction, and jumping afterwards would show
+    // page 0 for a frame and animate away from it.
+    if (initialRestore) {
+      _pageController = PageController(initialPage: _restoredPage.value);
+    } else if (_pageController.hasClients) {
+      _pageController.jumpToPage(_restoredPage.value);
+    }
+  }
   bool _contactGateSatisfied = false;
   late AnimationController _iconPulseController;
   late AnimationController _fadeController;
@@ -109,6 +149,11 @@ class _OnboardingScreenState extends State<OnboardingScreen>
       return;
     }
     HapticFeedback.mediumImpact();
+    final onCompleted = widget.onCompleted;
+    if (onCompleted != null) {
+      onCompleted();
+      return;
+    }
     Navigator.of(context).pushAndRemoveUntil(
       PageRouteBuilder(
         pageBuilder: (context, animation, secondaryAnimation) =>
@@ -125,6 +170,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   @override
   void dispose() {
     _pageController.dispose();
+    _restoredPage.dispose();
     _iconPulseController.dispose();
     _fadeController.dispose();
     super.dispose();

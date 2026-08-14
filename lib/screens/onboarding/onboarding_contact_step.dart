@@ -34,9 +34,49 @@ class OnboardingContactStep extends StatefulWidget {
 }
 
 class _OnboardingContactStepState extends State<OnboardingContactStep>
-    with WidgetsBindingObserver {
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _phoneController = TextEditingController();
+    with WidgetsBindingObserver, RestorationMixin {
+  /// RESTORABLE ON PURPOSE.
+  ///
+  /// Android can kill this process while the user is mid-typing -- an incoming
+  /// call, a camera launch, low memory, or the developer option "Don't keep
+  /// activities" is enough. Before restoration the app came back with two empty
+  /// fields, and this step is the ONLY gate that can complete onboarding: a
+  /// user who loses their half-entered contact here can end up with no panic
+  /// flow at all. That is the IR-01 failure reached by a different road, so it
+  /// is treated as a defect rather than as a documented limitation.
+  ///
+  /// A contact name and phone number are ordinary user-entered form values, not
+  /// authentication material -- the same two strings are about to be written to
+  /// secure storage anyway. PIN entry is a different class and is deliberately
+  /// NOT restorable; `test/state_restoration_policy_test.dart` fails if any PIN
+  /// surface ever becomes restorable.
+  final RestorableTextEditingController _nameController =
+      RestorableTextEditingController();
+  final RestorableTextEditingController _phoneController =
+      RestorableTextEditingController();
+
+  /// The phone verdict is derived from the phone text, so it travels with it.
+  /// Restoring the text without it would redraw a form that looks valid and is
+  /// not.
+  final RestorableStringN _restoredPhoneErrorKey = RestorableStringN(null);
+
+  @override
+  String? get restorationId => 'onboarding_contact_step';
+
+  @override
+  void restoreState(RestorationBucket? oldBucket, bool initialRestore) {
+    registerForRestoration(_nameController, 'contact_name_draft');
+    registerForRestoration(_phoneController, 'contact_phone_draft');
+    registerForRestoration(_restoredPhoneErrorKey, 'contact_phone_error');
+    _phoneErrorKey = _restoredPhoneErrorKey.value;
+  }
+
+  /// Single writer for the field, so the restorable copy can never drift from
+  /// the one the build method reads.
+  void _setPhoneErrorKey(String? key) {
+    _phoneErrorKey = key;
+    _restoredPhoneErrorKey.value = key;
+  }
 
   /// The soft keyboard resizes this step (Scaffold.resizeToAvoidBottomInset),
   /// which leaves "save contact" -- the only control that can complete
@@ -92,6 +132,9 @@ class _OnboardingContactStepState extends State<OnboardingContactStep>
     WidgetsBinding.instance.removeObserver(this);
     _phoneFocusNode.removeListener(_revealSaveActionOnFocus);
     _phoneFocusNode.dispose();
+    _nameController.dispose();
+    _phoneController.dispose();
+    _restoredPhoneErrorKey.dispose();
     super.dispose();
   }
 
@@ -230,24 +273,24 @@ class _OnboardingContactStepState extends State<OnboardingContactStep>
 
     setState(() {
       _failureKey = null;
-      _nameController.text = picked.name;
-      _phoneController.text = picked.number;
-      _phoneErrorKey = OnboardingContactGateService.phoneErrorKey(
-        picked.number,
+      _nameController.value.text = picked.name;
+      _phoneController.value.text = picked.number;
+      _setPhoneErrorKey(
+        OnboardingContactGateService.phoneErrorKey(picked.number),
       );
     });
   }
 
   Future<void> _save() async {
     if (_saving) return;
-    final phone = _phoneController.text;
+    final phone = _phoneController.value.text;
     final errorKey = OnboardingContactGateService.phoneErrorKey(phone);
     if (errorKey != null) {
-      setState(() => _phoneErrorKey = errorKey);
+      setState(() => _setPhoneErrorKey(errorKey));
       return;
     }
 
-    final name = _nameController.text.trim();
+    final name = _nameController.value.text.trim();
     final consentGiven = await EmergencyContactConsentDialog.show(
       context: context,
       contactName: name.isEmpty ? 'contacts_unknown'.tr() : name,
@@ -270,7 +313,9 @@ class _OnboardingContactStepState extends State<OnboardingContactStep>
         unawaited(HapticFeedback.mediumImpact());
         await _refresh();
       case OnboardingContactSaveOutcome.invalidPhone:
-        setState(() => _phoneErrorKey = 'onboarding_contact_invalid_phone');
+        setState(
+          () => _setPhoneErrorKey('onboarding_contact_invalid_phone'),
+        );
       case OnboardingContactSaveOutcome.storageFailed:
         setState(() => _failureKey = 'onboarding_contact_save_failed');
     }
@@ -279,7 +324,7 @@ class _OnboardingContactStepState extends State<OnboardingContactStep>
   void _startOver() {
     setState(() {
       _hasContact = false;
-      _phoneErrorKey = null;
+      _setPhoneErrorKey(null);
       _failureKey = null;
     });
     widget.onGateChanged(false);
@@ -375,7 +420,7 @@ class _OnboardingContactStepState extends State<OnboardingContactStep>
         const SizedBox(height: 16),
       ],
       TextField(
-        controller: _nameController,
+        controller: _nameController.value,
         enabled: !_needsConsent && !_saving,
         maxLength: _nameInputLimit,
         textInputAction: TextInputAction.next,
@@ -387,7 +432,7 @@ class _OnboardingContactStepState extends State<OnboardingContactStep>
       ),
       const SizedBox(height: 8),
       TextField(
-        controller: _phoneController,
+        controller: _phoneController.value,
         focusNode: _phoneFocusNode,
         enabled: !_needsConsent && !_saving,
         maxLength: _phoneInputLimit,
@@ -398,7 +443,7 @@ class _OnboardingContactStepState extends State<OnboardingContactStep>
               ? null
               : OnboardingContactGateService.phoneErrorKey(value);
           if (next != _phoneErrorKey) {
-            setState(() => _phoneErrorKey = next);
+            setState(() => _setPhoneErrorKey(next));
           }
         },
         decoration: _fieldDecoration(
