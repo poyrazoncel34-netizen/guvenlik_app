@@ -2,7 +2,7 @@
   "verifier": "scripts/audit_evidence/tokens.py",
   "verifierVersion": "1.0.0",
   "codeRevision": {
-    "head": "098a36072a7ebefaf918bf02bb47f2af702a3878",
+    "head": "dd741dc0840c543aa4f2e3f5c5cd686feec8f1a5",
     "dirty": true
   },
   "measuredOn": "2026-08-14",
@@ -17,14 +17,15 @@
   "measurements": {
     "adoption": {
       "scalesDefined": 11,
-      "scalesWithAtLeastOneConsumer": 6,
+      "scalesWithAtLeastOneConsumer": 9,
       "byScale": {
         "Spacing": {
-          "references": 4,
+          "references": 7,
           "consumerFiles": [
-            "lib/core/app_theme.dart"
+            "lib/core/app_theme.dart",
+            "lib/screens/home_page.dart"
           ],
-          "consumerCount": 1
+          "consumerCount": 2
         },
         "Radii": {
           "references": 21,
@@ -67,19 +68,26 @@
           "consumerCount": 0
         },
         "ZLayer": {
-          "references": 0,
-          "consumerFiles": [],
-          "consumerCount": 0
+          "references": 3,
+          "consumerFiles": [
+            "lib/core/widgets/app_privacy_shield.dart",
+            "lib/main.dart"
+          ],
+          "consumerCount": 2
         },
         "Breakpoints": {
-          "references": 0,
-          "consumerFiles": [],
-          "consumerCount": 0
+          "references": 2,
+          "consumerFiles": [
+            "lib/screens/home_page.dart"
+          ],
+          "consumerCount": 1
         },
         "DensityTokens": {
-          "references": 0,
-          "consumerFiles": [],
-          "consumerCount": 0
+          "references": 4,
+          "consumerFiles": [
+            "lib/screens/home_page.dart"
+          ],
+          "consumerCount": 1
         },
         "FocusIndicator": {
           "references": 5,
@@ -108,11 +116,8 @@
         }
       },
       "zeroConsumerScales": [
-        "Breakpoints",
-        "DensityTokens",
         "IconSizes",
-        "TypeScale",
-        "ZLayer"
+        "TypeScale"
       ],
       "principle": "a scale that nothing reads cannot enforce consistency; it is a parallel definition sitting beside the literals it was meant to replace. test/core/shadow_token_ratchet_test.dart already asserts this for shadows (>=8 consumer files); the other scales had no equivalent bar, and three of them have none at all.",
       "consequence": "MP-04-008 (ZLayer), MP-04-012 (IconSizes) and MP-04-013 (DensityTokens) were recorded PASS on existence. They are downgraded to PARTIAL on this measurement, matching MP-04-004, which was already PARTIAL for exactly the same reason.",
@@ -158,23 +163,11 @@
   "violations": [
     {
       "rule": "tokenScaleHasNoConsumer",
-      "detail": "Breakpoints is defined but read by no file outside its own definition; it cannot enforce anything"
-    },
-    {
-      "rule": "tokenScaleHasNoConsumer",
-      "detail": "DensityTokens is defined but read by no file outside its own definition; it cannot enforce anything"
-    },
-    {
-      "rule": "tokenScaleHasNoConsumer",
       "detail": "IconSizes is defined but read by no file outside its own definition; it cannot enforce anything"
     },
     {
       "rule": "tokenScaleHasNoConsumer",
       "detail": "TypeScale is defined but read by no file outside its own definition; it cannot enforce anything"
-    },
-    {
-      "rule": "tokenScaleHasNoConsumer",
-      "detail": "ZLayer is defined but read by no file outside its own definition; it cannot enforce anything"
     }
   ],
   "exclusions": [

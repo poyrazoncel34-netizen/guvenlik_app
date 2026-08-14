@@ -1,0 +1,876 @@
+{
+  "verifier": "test/screens/layout_size_matrix_test.dart",
+  "verifierVersion": "1.0.0",
+  "command": "flutter test test/screens/layout_size_matrix_test.dart --no-pub",
+  "method": "framework RenderFlex error capture via tester.takeException(); the debug overflow stripe is deliberately NOT the instrument",
+  "locale": "tr-TR (the shipped payload, not invented test copy)",
+  "textScaleCeiling": 2.0,
+  "textScaleCeilingSource": "appTextScaler in lib/main.dart",
+  "viewports": {
+    "narrow-320x568": {
+      "width": 320.0,
+      "height": 568.0
+    },
+    "dense-308x686": {
+      "width": 308.6,
+      "height": 685.7
+    },
+    "default-411x914": {
+      "width": 411.4,
+      "height": 914.3
+    },
+    "large-448x998": {
+      "width": 448.0,
+      "height": 998.0
+    },
+    "tall-411x1200": {
+      "width": 411.4,
+      "height": 1200.0
+    },
+    "short-411x480": {
+      "width": 411.4,
+      "height": 480.0
+    }
+  },
+  "surfaces": [
+    "settings-row",
+    "readiness-chip-strip",
+    "two-button-action-bar",
+    "legal-version-line",
+    "consent-row"
+  ],
+  "cellsMeasured": 90,
+  "cellsOverflowing": 0,
+  "negativeControls": [
+    {
+      "surface": "NEGATIVE-CONTROL-inflexible-row",
+      "viewport": "dense-308x686",
+      "widthDp": 308.6,
+      "heightDp": 685.7,
+      "textScale": 2.0,
+      "overflowed": true,
+      "error": "A RenderFlex overflowed by 2573 pixels on the right."
+    }
+  ],
+  "cells": [
+    {
+      "surface": "settings-row",
+      "viewport": "narrow-320x568",
+      "widthDp": 320.0,
+      "heightDp": 568.0,
+      "textScale": 1.0,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "readiness-chip-strip",
+      "viewport": "narrow-320x568",
+      "widthDp": 320.0,
+      "heightDp": 568.0,
+      "textScale": 1.0,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "two-button-action-bar",
+      "viewport": "narrow-320x568",
+      "widthDp": 320.0,
+      "heightDp": 568.0,
+      "textScale": 1.0,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "legal-version-line",
+      "viewport": "narrow-320x568",
+      "widthDp": 320.0,
+      "heightDp": 568.0,
+      "textScale": 1.0,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "consent-row",
+      "viewport": "narrow-320x568",
+      "widthDp": 320.0,
+      "heightDp": 568.0,
+      "textScale": 1.0,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "settings-row",
+      "viewport": "narrow-320x568",
+      "widthDp": 320.0,
+      "heightDp": 568.0,
+      "textScale": 1.3,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "readiness-chip-strip",
+      "viewport": "narrow-320x568",
+      "widthDp": 320.0,
+      "heightDp": 568.0,
+      "textScale": 1.3,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "two-button-action-bar",
+      "viewport": "narrow-320x568",
+      "widthDp": 320.0,
+      "heightDp": 568.0,
+      "textScale": 1.3,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "legal-version-line",
+      "viewport": "narrow-320x568",
+      "widthDp": 320.0,
+      "heightDp": 568.0,
+      "textScale": 1.3,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "consent-row",
+      "viewport": "narrow-320x568",
+      "widthDp": 320.0,
+      "heightDp": 568.0,
+      "textScale": 1.3,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "settings-row",
+      "viewport": "narrow-320x568",
+      "widthDp": 320.0,
+      "heightDp": 568.0,
+      "textScale": 2.0,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "readiness-chip-strip",
+      "viewport": "narrow-320x568",
+      "widthDp": 320.0,
+      "heightDp": 568.0,
+      "textScale": 2.0,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "two-button-action-bar",
+      "viewport": "narrow-320x568",
+      "widthDp": 320.0,
+      "heightDp": 568.0,
+      "textScale": 2.0,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "legal-version-line",
+      "viewport": "narrow-320x568",
+      "widthDp": 320.0,
+      "heightDp": 568.0,
+      "textScale": 2.0,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "consent-row",
+      "viewport": "narrow-320x568",
+      "widthDp": 320.0,
+      "heightDp": 568.0,
+      "textScale": 2.0,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "settings-row",
+      "viewport": "dense-308x686",
+      "widthDp": 308.6,
+      "heightDp": 685.7,
+      "textScale": 1.0,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "readiness-chip-strip",
+      "viewport": "dense-308x686",
+      "widthDp": 308.6,
+      "heightDp": 685.7,
+      "textScale": 1.0,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "two-button-action-bar",
+      "viewport": "dense-308x686",
+      "widthDp": 308.6,
+      "heightDp": 685.7,
+      "textScale": 1.0,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "legal-version-line",
+      "viewport": "dense-308x686",
+      "widthDp": 308.6,
+      "heightDp": 685.7,
+      "textScale": 1.0,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "consent-row",
+      "viewport": "dense-308x686",
+      "widthDp": 308.6,
+      "heightDp": 685.7,
+      "textScale": 1.0,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "settings-row",
+      "viewport": "dense-308x686",
+      "widthDp": 308.6,
+      "heightDp": 685.7,
+      "textScale": 1.3,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "readiness-chip-strip",
+      "viewport": "dense-308x686",
+      "widthDp": 308.6,
+      "heightDp": 685.7,
+      "textScale": 1.3,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "two-button-action-bar",
+      "viewport": "dense-308x686",
+      "widthDp": 308.6,
+      "heightDp": 685.7,
+      "textScale": 1.3,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "legal-version-line",
+      "viewport": "dense-308x686",
+      "widthDp": 308.6,
+      "heightDp": 685.7,
+      "textScale": 1.3,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "consent-row",
+      "viewport": "dense-308x686",
+      "widthDp": 308.6,
+      "heightDp": 685.7,
+      "textScale": 1.3,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "settings-row",
+      "viewport": "dense-308x686",
+      "widthDp": 308.6,
+      "heightDp": 685.7,
+      "textScale": 2.0,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "readiness-chip-strip",
+      "viewport": "dense-308x686",
+      "widthDp": 308.6,
+      "heightDp": 685.7,
+      "textScale": 2.0,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "two-button-action-bar",
+      "viewport": "dense-308x686",
+      "widthDp": 308.6,
+      "heightDp": 685.7,
+      "textScale": 2.0,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "legal-version-line",
+      "viewport": "dense-308x686",
+      "widthDp": 308.6,
+      "heightDp": 685.7,
+      "textScale": 2.0,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "consent-row",
+      "viewport": "dense-308x686",
+      "widthDp": 308.6,
+      "heightDp": 685.7,
+      "textScale": 2.0,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "settings-row",
+      "viewport": "default-411x914",
+      "widthDp": 411.4,
+      "heightDp": 914.3,
+      "textScale": 1.0,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "readiness-chip-strip",
+      "viewport": "default-411x914",
+      "widthDp": 411.4,
+      "heightDp": 914.3,
+      "textScale": 1.0,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "two-button-action-bar",
+      "viewport": "default-411x914",
+      "widthDp": 411.4,
+      "heightDp": 914.3,
+      "textScale": 1.0,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "legal-version-line",
+      "viewport": "default-411x914",
+      "widthDp": 411.4,
+      "heightDp": 914.3,
+      "textScale": 1.0,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "consent-row",
+      "viewport": "default-411x914",
+      "widthDp": 411.4,
+      "heightDp": 914.3,
+      "textScale": 1.0,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "settings-row",
+      "viewport": "default-411x914",
+      "widthDp": 411.4,
+      "heightDp": 914.3,
+      "textScale": 1.3,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "readiness-chip-strip",
+      "viewport": "default-411x914",
+      "widthDp": 411.4,
+      "heightDp": 914.3,
+      "textScale": 1.3,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "two-button-action-bar",
+      "viewport": "default-411x914",
+      "widthDp": 411.4,
+      "heightDp": 914.3,
+      "textScale": 1.3,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "legal-version-line",
+      "viewport": "default-411x914",
+      "widthDp": 411.4,
+      "heightDp": 914.3,
+      "textScale": 1.3,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "consent-row",
+      "viewport": "default-411x914",
+      "widthDp": 411.4,
+      "heightDp": 914.3,
+      "textScale": 1.3,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "settings-row",
+      "viewport": "default-411x914",
+      "widthDp": 411.4,
+      "heightDp": 914.3,
+      "textScale": 2.0,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "readiness-chip-strip",
+      "viewport": "default-411x914",
+      "widthDp": 411.4,
+      "heightDp": 914.3,
+      "textScale": 2.0,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "two-button-action-bar",
+      "viewport": "default-411x914",
+      "widthDp": 411.4,
+      "heightDp": 914.3,
+      "textScale": 2.0,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "legal-version-line",
+      "viewport": "default-411x914",
+      "widthDp": 411.4,
+      "heightDp": 914.3,
+      "textScale": 2.0,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "consent-row",
+      "viewport": "default-411x914",
+      "widthDp": 411.4,
+      "heightDp": 914.3,
+      "textScale": 2.0,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "settings-row",
+      "viewport": "large-448x998",
+      "widthDp": 448.0,
+      "heightDp": 998.0,
+      "textScale": 1.0,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "readiness-chip-strip",
+      "viewport": "large-448x998",
+      "widthDp": 448.0,
+      "heightDp": 998.0,
+      "textScale": 1.0,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "two-button-action-bar",
+      "viewport": "large-448x998",
+      "widthDp": 448.0,
+      "heightDp": 998.0,
+      "textScale": 1.0,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "legal-version-line",
+      "viewport": "large-448x998",
+      "widthDp": 448.0,
+      "heightDp": 998.0,
+      "textScale": 1.0,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "consent-row",
+      "viewport": "large-448x998",
+      "widthDp": 448.0,
+      "heightDp": 998.0,
+      "textScale": 1.0,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "settings-row",
+      "viewport": "large-448x998",
+      "widthDp": 448.0,
+      "heightDp": 998.0,
+      "textScale": 1.3,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "readiness-chip-strip",
+      "viewport": "large-448x998",
+      "widthDp": 448.0,
+      "heightDp": 998.0,
+      "textScale": 1.3,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "two-button-action-bar",
+      "viewport": "large-448x998",
+      "widthDp": 448.0,
+      "heightDp": 998.0,
+      "textScale": 1.3,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "legal-version-line",
+      "viewport": "large-448x998",
+      "widthDp": 448.0,
+      "heightDp": 998.0,
+      "textScale": 1.3,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "consent-row",
+      "viewport": "large-448x998",
+      "widthDp": 448.0,
+      "heightDp": 998.0,
+      "textScale": 1.3,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "settings-row",
+      "viewport": "large-448x998",
+      "widthDp": 448.0,
+      "heightDp": 998.0,
+      "textScale": 2.0,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "readiness-chip-strip",
+      "viewport": "large-448x998",
+      "widthDp": 448.0,
+      "heightDp": 998.0,
+      "textScale": 2.0,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "two-button-action-bar",
+      "viewport": "large-448x998",
+      "widthDp": 448.0,
+      "heightDp": 998.0,
+      "textScale": 2.0,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "legal-version-line",
+      "viewport": "large-448x998",
+      "widthDp": 448.0,
+      "heightDp": 998.0,
+      "textScale": 2.0,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "consent-row",
+      "viewport": "large-448x998",
+      "widthDp": 448.0,
+      "heightDp": 998.0,
+      "textScale": 2.0,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "settings-row",
+      "viewport": "tall-411x1200",
+      "widthDp": 411.4,
+      "heightDp": 1200.0,
+      "textScale": 1.0,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "readiness-chip-strip",
+      "viewport": "tall-411x1200",
+      "widthDp": 411.4,
+      "heightDp": 1200.0,
+      "textScale": 1.0,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "two-button-action-bar",
+      "viewport": "tall-411x1200",
+      "widthDp": 411.4,
+      "heightDp": 1200.0,
+      "textScale": 1.0,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "legal-version-line",
+      "viewport": "tall-411x1200",
+      "widthDp": 411.4,
+      "heightDp": 1200.0,
+      "textScale": 1.0,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "consent-row",
+      "viewport": "tall-411x1200",
+      "widthDp": 411.4,
+      "heightDp": 1200.0,
+      "textScale": 1.0,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "settings-row",
+      "viewport": "tall-411x1200",
+      "widthDp": 411.4,
+      "heightDp": 1200.0,
+      "textScale": 1.3,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "readiness-chip-strip",
+      "viewport": "tall-411x1200",
+      "widthDp": 411.4,
+      "heightDp": 1200.0,
+      "textScale": 1.3,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "two-button-action-bar",
+      "viewport": "tall-411x1200",
+      "widthDp": 411.4,
+      "heightDp": 1200.0,
+      "textScale": 1.3,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "legal-version-line",
+      "viewport": "tall-411x1200",
+      "widthDp": 411.4,
+      "heightDp": 1200.0,
+      "textScale": 1.3,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "consent-row",
+      "viewport": "tall-411x1200",
+      "widthDp": 411.4,
+      "heightDp": 1200.0,
+      "textScale": 1.3,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "settings-row",
+      "viewport": "tall-411x1200",
+      "widthDp": 411.4,
+      "heightDp": 1200.0,
+      "textScale": 2.0,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "readiness-chip-strip",
+      "viewport": "tall-411x1200",
+      "widthDp": 411.4,
+      "heightDp": 1200.0,
+      "textScale": 2.0,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "two-button-action-bar",
+      "viewport": "tall-411x1200",
+      "widthDp": 411.4,
+      "heightDp": 1200.0,
+      "textScale": 2.0,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "legal-version-line",
+      "viewport": "tall-411x1200",
+      "widthDp": 411.4,
+      "heightDp": 1200.0,
+      "textScale": 2.0,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "consent-row",
+      "viewport": "tall-411x1200",
+      "widthDp": 411.4,
+      "heightDp": 1200.0,
+      "textScale": 2.0,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "settings-row",
+      "viewport": "short-411x480",
+      "widthDp": 411.4,
+      "heightDp": 480.0,
+      "textScale": 1.0,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "readiness-chip-strip",
+      "viewport": "short-411x480",
+      "widthDp": 411.4,
+      "heightDp": 480.0,
+      "textScale": 1.0,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "two-button-action-bar",
+      "viewport": "short-411x480",
+      "widthDp": 411.4,
+      "heightDp": 480.0,
+      "textScale": 1.0,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "legal-version-line",
+      "viewport": "short-411x480",
+      "widthDp": 411.4,
+      "heightDp": 480.0,
+      "textScale": 1.0,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "consent-row",
+      "viewport": "short-411x480",
+      "widthDp": 411.4,
+      "heightDp": 480.0,
+      "textScale": 1.0,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "settings-row",
+      "viewport": "short-411x480",
+      "widthDp": 411.4,
+      "heightDp": 480.0,
+      "textScale": 1.3,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "readiness-chip-strip",
+      "viewport": "short-411x480",
+      "widthDp": 411.4,
+      "heightDp": 480.0,
+      "textScale": 1.3,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "two-button-action-bar",
+      "viewport": "short-411x480",
+      "widthDp": 411.4,
+      "heightDp": 480.0,
+      "textScale": 1.3,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "legal-version-line",
+      "viewport": "short-411x480",
+      "widthDp": 411.4,
+      "heightDp": 480.0,
+      "textScale": 1.3,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "consent-row",
+      "viewport": "short-411x480",
+      "widthDp": 411.4,
+      "heightDp": 480.0,
+      "textScale": 1.3,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "settings-row",
+      "viewport": "short-411x480",
+      "widthDp": 411.4,
+      "heightDp": 480.0,
+      "textScale": 2.0,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "readiness-chip-strip",
+      "viewport": "short-411x480",
+      "widthDp": 411.4,
+      "heightDp": 480.0,
+      "textScale": 2.0,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "two-button-action-bar",
+      "viewport": "short-411x480",
+      "widthDp": 411.4,
+      "heightDp": 480.0,
+      "textScale": 2.0,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "legal-version-line",
+      "viewport": "short-411x480",
+      "widthDp": 411.4,
+      "heightDp": 480.0,
+      "textScale": 2.0,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "consent-row",
+      "viewport": "short-411x480",
+      "widthDp": 411.4,
+      "heightDp": 480.0,
+      "textScale": 2.0,
+      "overflowed": false,
+      "error": null
+    },
+    {
+      "surface": "NEGATIVE-CONTROL-inflexible-row",
+      "viewport": "dense-308x686",
+      "widthDp": 308.6,
+      "heightDp": 685.7,
+      "textScale": 2.0,
+      "overflowed": true,
+      "error": "A RenderFlex overflowed by 2573 pixels on the right."
+    }
+  ]
+}

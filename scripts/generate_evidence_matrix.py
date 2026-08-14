@@ -1,0 +1,218 @@
+#!/usr/bin/env python3
+"""Generates docs/audit/REMAINING_EVIDENCE_MATRIX.md.
+
+The matrix is a JOIN, never a hand-kept list:
+
+  * the ROWS come from the canonical requirement rows of PRODUCTION_AUDIT.md
+    (id, section, requirement text, status, severity), so it can never describe
+    a requirement the audit does not carry, or miss one it does;
+  * the PLAN for each row comes from config/evidence_matrix.json, which records
+    the verification archetype, the production surface, the verifier, the exact
+    evidence property, the negative control and the disposition.
+
+The script FAILS if any queued row has no plan, or if a plan names a row that is
+no longer queued, or if a plan cites an evidence artifact or property that does
+not exist. That last check is the one that matters: it is what stops a matrix
+row from citing evidence that was never produced.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from generate_resolution_queue import classify, parse_rows  # noqa: E402
+
+REPO = Path(__file__).resolve().parents[1]
+EVIDENCE = REPO / "docs" / "audit" / "evidence"
+
+ARCHETYPES = {
+    "STATIC_CODE", "STATIC_CONFIG", "UNIT_BEHAVIOR", "WIDGET_BEHAVIOR",
+    "WIDGET_GEOMETRY", "SEMANTICS", "DEVICE_RUNTIME", "VISUAL_MEASUREMENT",
+    "PERFORMANCE", "SECURITY_INVARIANT", "BUILD_ARTIFACT",
+    # Added because the eleven above could not honestly hold them:
+    "PROCESS_ARTIFACT",   # the requirement asks for a document/runbook to EXIST
+    "SCOPE_JUDGEMENT",    # the requirement is inapplicable and the evidence is why
+}
+
+DISPOSITIONS = {"PASS", "PARTIAL", "FAIL", "N/A", "EXTERNAL_BLOCKER",
+                "PRODUCT_DECISION_REQUIRED"}
+
+
+def _resolve(artifact: str, prop: str) -> tuple[bool, str]:
+    """True when [artifact] exists and [prop] resolves inside it."""
+    if artifact in ("-", ""):
+        return True, ""
+    path = EVIDENCE / artifact
+    if not path.exists():
+        return False, f"artifact {artifact} does not exist"
+    if prop in ("-", ""):
+        return True, ""
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        return False, f"{artifact} is not valid JSON: {exc}"
+    cursor = data
+    for part in prop.split("."):
+        if isinstance(cursor, dict) and part in cursor:
+            cursor = cursor[part]
+        elif isinstance(cursor, list) and part.isdigit() and int(part) < len(cursor):
+            cursor = cursor[int(part)]
+        else:
+            return False, f"{artifact} has no property {prop}"
+    return True, ""
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--audit", default="PRODUCTION_AUDIT.md")
+    parser.add_argument("--plan", default="config/evidence_matrix.json")
+    parser.add_argument("--output", default="docs/audit/REMAINING_EVIDENCE_MATRIX.md")
+    parser.add_argument("--allow-missing", action="store_true",
+                        help="report rows without a plan instead of failing (bootstrap only)")
+    args = parser.parse_args()
+
+    rows = parse_rows(Path(args.audit))
+    plan_path = Path(args.plan)
+    plans = json.loads(plan_path.read_text(encoding="utf-8")) if plan_path.exists() else {}
+
+    unresolved = [r for r in rows if r["status"] in ("FAIL", "PARTIAL", "UNVERIFIED", "BLOCKED")]
+    for row in unresolved:
+        row["scope"], row["scopeReason"] = classify(row)
+
+    # The matrix covers every row that entered this phase as IN_REPO_RESOLVABLE,
+    # INCLUDING the ones this phase reclassified out of it -- otherwise a
+    # reclassification would silently remove a row from the record that justifies
+    # it, which is the exact move the matrix exists to prevent.
+    queued = {r["id"]: r for r in unresolved}
+    by_id = {r["id"]: r for r in rows}
+    covered = sorted(set(plans) | {r["id"] for r in unresolved
+                                   if r["scope"] == "IN_REPO_RESOLVABLE"})
+
+    problems: list[str] = []
+    for rid in covered:
+        row = by_id.get(rid)
+        if row is None:
+            problems.append(f"{rid}: plan names a requirement that is not in the audit")
+            continue
+        plan = plans.get(rid)
+        if plan is None:
+            problems.append(f"{rid}: queued IN_REPO_RESOLVABLE with no evidence plan")
+            continue
+        if plan["archetype"] not in ARCHETYPES:
+            problems.append(f"{rid}: unknown archetype {plan['archetype']!r}")
+        if plan["disposition"] not in DISPOSITIONS:
+            problems.append(f"{rid}: unknown disposition {plan['disposition']!r}")
+        ok, why = _resolve(plan.get("artifact", "-"), plan.get("property", "-"))
+        if not ok:
+            problems.append(f"{rid}: {why}")
+
+    still_queued_in_repo = [r for r in unresolved if r["scope"] == "IN_REPO_RESOLVABLE"]
+
+    lines: list[str] = [
+        "# REMAINING EVIDENCE MATRIX",
+        "",
+        "> Generated by `python3 scripts/generate_evidence_matrix.py`. Rows come from the",
+        "> canonical requirement rows of `PRODUCTION_AUDIT.md`; the evidence plan for each",
+        "> row comes from `config/evidence_matrix.json`. The generator FAILS if a queued",
+        "> requirement has no plan, if a plan names a requirement the audit does not carry,",
+        "> or **if a plan cites an evidence artifact or property that does not exist** —",
+        "> which is what stops a matrix row from citing evidence nobody produced.",
+        "",
+        "## Why this file exists",
+        "",
+        "135 of the 234 rows in this phase carried the same evidence sentence: the",
+        "section-level assessment, pasted verbatim (the IR-06 downgrade). Replacing that",
+        "with 135 NEW sentences would reproduce the defect in different words. So each row",
+        "below instead cites **one named property of a machine-readable artifact**, produced",
+        "by a verifier that is required to demonstrate it can fail. No two rows in a family",
+        "cite the same property.",
+        "",
+        "## Verification archetypes",
+        "",
+        "| Archetype | What it means | Instrument |",
+        "|---|---|---|",
+        "| `STATIC_CODE` | A property of the shipped source | verifier under `scripts/audit_evidence/` |",
+        "| `STATIC_CONFIG` | A property of manifest/gradle/pubspec/CI config | config verifier |",
+        "| `UNIT_BEHAVIOR` | A pure function's behaviour | `flutter test` |",
+        "| `WIDGET_BEHAVIOR` | What a pumped widget does | `flutter test` widget case |",
+        "| `WIDGET_GEOMETRY` | Measured layout, in GLOBAL coordinates | `tester.getRect` |",
+        "| `SEMANTICS` | The accessibility tree the platform receives | semantics harness / `uiautomator dump` |",
+        "| `DEVICE_RUNTIME` | Behaviour only observable on a running Android | emulator/device pass in `docs/audit/` |",
+        "| `VISUAL_MEASUREMENT` | Rendered pixels or computed colour | contrast maths / screenshot pixel read |",
+        "| `PERFORMANCE` | A timing or resource number | profile build + `dumpsys` |",
+        "| `SECURITY_INVARIANT` | Something that must never become true | invariant test + mutation |",
+        "| `BUILD_ARTIFACT` | A property of the built AAB/APK | `scripts/verify_release.sh` chain |",
+        "| `PROCESS_ARTIFACT` | The requirement asks for a document to EXIST and be correct | the document, plus a test pinning it |",
+        "| `SCOPE_JUDGEMENT` | The requirement does not apply, and the evidence is the proof of why | source/config showing the subsystem is absent |",
+        "",
+        "The last two were added because the eleven prescribed archetypes could not hold",
+        "them honestly. A postmortem template is not `STATIC_CODE`, and \"this app has no",
+        "cache to stampede\" is not a measurement of a cache — pretending otherwise would",
+        "have meant filing a document under a code archetype to keep the list short.",
+        "",
+        "## Coverage",
+        "",
+        "| Metric | Count |",
+        "|---|---|",
+        f"| Rows in this matrix | {len(covered)} |",
+        f"| Still `IN_REPO_RESOLVABLE` in the queue | {len(still_queued_in_repo)} |",
+        f"| Evidence artifacts referenced | {len({p.get('artifact') for p in plans.values() if p.get('artifact', '-') != '-'})} |",
+        f"| Plan/audit integrity problems | {len(problems)} |",
+        "",
+    ]
+
+    if problems:
+        lines += ["### Integrity problems", ""]
+        lines += [f"- {p}" for p in problems]
+        lines.append("")
+
+    # Group by archetype so the reader sees the evidence families, not 234 rows.
+    families: dict[str, list[str]] = {}
+    for rid in covered:
+        plan = plans.get(rid)
+        if plan:
+            families.setdefault(plan["archetype"], []).append(rid)
+
+    lines += ["## Rows", ""]
+    for archetype in sorted(families):
+        ids = sorted(families[archetype])
+        lines += [
+            f"### {archetype} — {len(ids)} rows",
+            "",
+            "| ID | § | Requirement | Status | Sev | Surface | Verifier | Evidence property | Negative control | Remediated? | Disposition |",
+            "|---|---|---|---|---|---|---|---|---|---|---|",
+        ]
+        for rid in ids:
+            row = by_id[rid]
+            plan = plans[rid]
+            status = queued.get(rid, row)["status"]
+            artifact = plan.get("artifact", "-")
+            prop = plan.get("property", "-")
+            cite = f"`{artifact}` → `{prop}`" if artifact != "-" else plan.get("cite", "-")
+            lines.append(
+                f"| `{rid}` | {row['section']} | {row['text'][:64].replace('|', '/')} | "
+                f"{status} | {row['severity']} | {plan['surface'].replace('|', '/')} | "
+                f"{plan['verifier'].replace('|', '/')} | {cite.replace('|', '/')} | "
+                f"{plan['negativeControl'].replace('|', '/')} | {plan['remediated']} | "
+                f"{plan['disposition']} |"
+            )
+        lines.append("")
+
+    Path(args.output).write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+    if problems and not args.allow_missing:
+        print(f"EVIDENCE_MATRIX_FAIL problems={len(problems)}")
+        for p in problems[:20]:
+            print(f"  - {p}")
+        return 1
+    print(f"EVIDENCE_MATRIX_OK rows={len(covered)} problems={len(problems)} "
+          f"stillInRepo={len(still_queued_in_repo)}")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

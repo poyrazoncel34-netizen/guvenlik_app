@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../design_tokens.dart';
 import '../motion.dart';
 
 /// Whether the privacy mask should cover the app for a given lifecycle state.
@@ -15,7 +17,22 @@ bool privacyShieldShouldMask(AppLifecycleState state) =>
 class AppPrivacyShield extends StatefulWidget {
   final Widget child;
 
-  const AppPrivacyShield({super.key, required this.child});
+  /// Which stacking layer this shield occupies.
+  ///
+  /// [ZLayer] named five layers and, when measured, had ZERO consumers -- so
+  /// "nothing renders above the shield" was a comment, not an invariant. Taking
+  /// the layer as a parameter makes the claim checkable: the assert below fails
+  /// if anyone ever mounts this at a layer that something else can sit above.
+  final int layer;
+
+  const AppPrivacyShield({
+    super.key,
+    required this.child,
+    this.layer = ZLayer.shield,
+  }) : assert(
+         layer >= ZLayer.notice,
+         'the privacy shield must sit above every notice surface',
+       );
 
   @override
   State<AppPrivacyShield> createState() => _AppPrivacyShieldState();

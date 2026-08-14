@@ -176,12 +176,24 @@ void main() {
 
   test('breakpoints and density match the checks the screens actually make',
       () {
-    // The scale was derived from home_page.dart's existing thresholds; if those
-    // move, the tokens are describing a layout that no longer exists.
+    // The scale was derived from home_page.dart's existing thresholds. This
+    // test used to assert those thresholds were still written out INLINE there
+    // -- which was correct while nothing consumed the tokens, and became exactly
+    // backwards once home_page was migrated onto them: the assertion demanded
+    // that the duplication survive.
+    //
+    // What matters now is that home_page CONSUMES the scale, so the tokens and
+    // the layout cannot disagree by construction.
     final home = File('lib/screens/home_page.dart').readAsStringSync();
-    expect(home, contains('size.width > 400'));
-    expect(home, contains('size.width > 340'));
-    expect(home, contains('size.height < 700'));
+    expect(home, contains('DensityTokens.horizontalPadding(size)'));
+    expect(home, contains('DensityTokens.gap(density)'));
+    expect(home, contains('DensityTokens.sectionGap(density)'));
+    expect(home, contains('Breakpoints.isShort('));
+    expect(
+      home.contains('size.width > 400'),
+      isFalse,
+      reason: 'the inline threshold must not come back alongside the token',
+    );
 
     expect(Breakpoints.wideWidth, 400);
     expect(Breakpoints.narrowWidth, 340);

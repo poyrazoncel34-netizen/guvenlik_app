@@ -35,6 +35,7 @@ import '../core/widgets/exact_alarm_permission_guard.dart';
 import '../core/widgets/readiness_card.dart';
 import '../core/utils/permission_helper.dart';
 import '../core/widgets/escape_dismissible.dart';
+import '../core/design_tokens.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -166,13 +167,17 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     }
     final size = MediaQuery.sizeOf(context);
     final padding = MediaQuery.paddingOf(context);
-    final horizontalPadding = size.width > 400
-        ? 24.0
-        : (size.width > 340 ? 20.0 : 16.0);
-    final shortScreen = size.height < 700;
-    final spacing = shortScreen ? 8.0 : 14.0;
-    final sectionSpacing = shortScreen ? 12.0 : 20.0;
-    final largeSectionSpacing = shortScreen ? 16.0 : 24.0;
+    // These four numbers were the ad-hoc original that DensityTokens was
+    // EXTRACTED FROM, and then nothing consumed the tokens -- so the scale sat
+    // beside the literals it was meant to replace and enforced nothing
+    // (measured: docs/audit/evidence/design_tokens.json). Every value below is
+    // byte-identical to what shipped, so this migration renders no differently.
+    final density = DensityTokens.of(size);
+    final horizontalPadding = DensityTokens.horizontalPadding(size);
+    final shortScreen = Breakpoints.isShort(size);
+    final spacing = DensityTokens.gap(density);
+    final sectionSpacing = DensityTokens.sectionGap(density);
+    final largeSectionSpacing = shortScreen ? Spacing.md : Spacing.xl;
     // Space for bottom nav so content does not sit under navigation.
     final bottomPadding = 72.0 + padding.bottom;
 
@@ -810,8 +815,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   }
 
   Widget _buildQuickActions(SubscriptionAccessState access) {
-    final shortScreen = MediaQuery.sizeOf(context).height < 700;
-    final gap = shortScreen ? 10.0 : 14.0;
+    final shortScreen = Breakpoints.isShort(MediaQuery.sizeOf(context));
+    final gap = shortScreen ? 10.0 : Spacing.sm + 2;
 
     // Define all action cards data
     final actions = [

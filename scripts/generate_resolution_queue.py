@@ -107,6 +107,88 @@ SCOPE_OVERRIDES: dict[str, tuple[str, str]] = {
         "EXTERNAL_BLOCKER",
         "Manual screen-reader verification needs TalkBack on real hardware.",
     ),
+
+    # --- 2026-08-14 convergence pass: reclassified WITH the measurement that
+    # --- justifies it, never on difficulty. Each reason names the evidence.
+    "MP-02-016": (
+        "EXTERNAL_BLOCKER",
+        "Whether the information architecture matches a USER'S mental model is a "
+        "claim about people, not about source. flows.json measures the structure "
+        "(depth 2, five destinations, one name per concept, 963 parity-tested "
+        "keys); it cannot measure comprehension. Five real users, section 71.",
+    ),
+    "MP-03-013": (
+        "EXTERNAL_BLOCKER",
+        "Same class: layout.json measures visual dominance (one glow shadow, one "
+        "arming animation, largest hit area) but 'the user understands where to "
+        "look' is an observation of users, not of pixels.",
+    ),
+    "MP-04-015": (
+        "PRODUCT_DECISION_REQUIRED",
+        "design_tokens.json measures it: main.dart wires theme: AppTheme.lightTheme "
+        "AND themeMode: ThemeMode.dark, so the light theme is maintained and "
+        "unreachable. The two exits are 'ship light mode' or 'delete it'; both are "
+        "the owner's call, and leaving it is the one option that lets it rot.",
+    ),
+    "MP-06-014": (
+        "PRODUCT_DECISION_REQUIRED",
+        "color.json measures the shortfall exactly: emergency text on its own 25% "
+        "tint is 3.97:1 against a 4.5 bar, and the text input's resting boundary is "
+        "1.50:1 against a 3.0 bar. The minimal fix is a brand-palette change "
+        "(#FF6B6B clears both), which is a rendered-pixel change CLAUDE.md rule 4 "
+        "reserves to the owner.",
+    ),
+    "MP-07-015": (
+        "PRODUCT_DECISION_REQUIRED",
+        "Portrait is locked in the manifest by the recorded portrait-only decision.",
+    ),
+    "MP-27-023": (
+        "PRODUCT_DECISION_REQUIRED",
+        "flows.json: no runtime feature-flag surface exists in lib/. Adding one is "
+        "the same product decision already recorded for MP-50-012 / MP-75-016.",
+    ),
+    **{
+        rid: (
+            "EXTERNAL_BLOCKER",
+            "Measured on the API 36 emulator and recorded in "
+            "docs/audit/device-verification-2026-08-14-perf-resources.md; the "
+            "irreducible remainder is an ABSOLUTE number on real silicon, which an "
+            "emulator cannot produce. The emulator verdict (no leak signature, no "
+            ">=2x-budget frame, no app-uid traffic) is kept, not discarded.",
+        )
+        for rid in ("MP-41-004", "MP-41-006", "MP-41-009", "MP-41-010", "MP-41-011")
+    },
+    "MP-46-031": (
+        "EXTERNAL_BLOCKER",
+        "A numeric performance-regression gate needs a physical-device baseline to "
+        "be a threshold rather than a record of emulator jitter.",
+    ),
+    "MP-69-012": (
+        "EXTERNAL_BLOCKER",
+        "text_scale.json covers six logical viewports including the density-560 "
+        "class; a real high-DPI PANEL is hardware.",
+    ),
+    "MP-69-013": (
+        "EXTERNAL_BLOCKER",
+        "Same: the 320dp width class is covered logically; a low-DPI panel is hardware.",
+    ),
+    "MP-77-022": (
+        "EXTERNAL_BLOCKER",
+        "The runbook now exists (incident_runbook.md) and records the drill as NOT "
+        "REHEARSED. Rehearsing it means halting a real Play rollout.",
+    ),
+    "MP-80-017": (
+        "EXTERNAL_BLOCKER",
+        "Same drill. incident_runbook.md section 3 states the 4h target the "
+        "rehearsal will be measured against, and section 8 records that it is unmet.",
+    ),
+    "MP-32-040": (
+        "PRODUCT_DECISION_REQUIRED",
+        "storage.json records the gap precisely: the five gates that run are pattern "
+        "and type checks, not dataflow analysis. Adding Semgrep or CodeQL adds a "
+        "third-party analysis service to a project whose envelope forbids a "
+        "developer backend and analytics -- that boundary is the owner's to move.",
+    ),
 }
 
 EXTERNAL_MARKERS = (

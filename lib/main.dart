@@ -20,6 +20,7 @@ import 'core/services/connectivity_service.dart';
 import 'core/services/atomic_storage_service.dart';
 import 'core/services/notification_service.dart';
 import 'core/widgets/emergency_trigger_host.dart';
+import 'core/design_tokens.dart';
 import 'core/widgets/app_privacy_shield.dart';
 import 'core/services/local_logger_service.dart';
 import 'core/services/sensitive_temp_file_service.dart';
@@ -260,7 +261,11 @@ class KoruBeniApp extends StatelessWidget {
               data: mediaQuery.copyWith(
                 textScaler: appTextScaler(mediaQuery.textScaler),
               ),
+              // ZLayer.shield: nothing may render above the privacy shield or
+              // the PIN gate. The token named that invariant and had no
+              // consumer, so nothing held it. This is the consumer.
               child: AppPrivacyShield(
+                layer: ZLayer.shield,
                 child: Semantics(
                   label: 'app_semantics_label'.tr(),
                   hint: 'app_semantics_hint'.tr(),

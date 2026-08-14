@@ -428,7 +428,8 @@
         "lib/screens/subscription/paywall_screen.dart"
       ],
       "firstRunEmpty": "contacts list before the first contact",
-      "deletedEverythingEmpty": "timeline after clearing history"
+      "deletedEverythingEmpty": "timeline after clearing history",
+      "onboardingUseOfEmpty": "the contacts empty state IS the onboarding surface for the contacts tab: it carries the add-contact call to action rather than only reporting absence"
     },
     "offline": {
       "productClaim": "the emergency path performs zero network I/O",
@@ -499,7 +500,8 @@
         "lib/widgets/network_error_retry.dart:94"
       ],
       "networkLayer": "lib/core/network/",
-      "duplicateGuard": "lib/core/utils/panic_hold_gate.dart + the countdown duplicate-trigger guard"
+      "duplicateGuard": "lib/core/utils/panic_hold_gate.dart + the countdown duplicate-trigger guard",
+      "noRuntimeFlagSurface": "there is no runtime feature-flag mechanism in lib/: no remote config, no flag store, no gate keyed on anything but subscription entitlement and device capability"
     }
   },
   "violations": [],
