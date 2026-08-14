@@ -200,7 +200,11 @@ def run_negative_control(name: str, mutate, measure) -> int:
     with tempfile.TemporaryDirectory() as tmp:
         scratch = Path(tmp)
         shutil.copytree(REPO / "lib", scratch / "lib")
-        for extra in ("assets", "test"):
+        # docs/ is copied because some verifiers PARSE a device write-up (the
+        # forced-colour pass records its measured pixel counts there). A
+        # mutation that cannot reach its target is a control that proves
+        # nothing, and a baseline missing the file reports a false violation.
+        for extra in ("assets", "test", "docs"):
             src = REPO / extra
             if src.exists():
                 shutil.copytree(src, scratch / extra, dirs_exist_ok=True)

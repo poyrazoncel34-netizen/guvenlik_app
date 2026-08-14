@@ -76,9 +76,9 @@
 | **MISSING** | **0** |
 | **DUPLICATED** | **0** |
 | **UNACCOUNTED** | **0** |
-| PASS | 782 |
+| PASS | 783 |
 | FAIL | 9 |
-| PARTIAL | 73 |
+| PARTIAL | 72 |
 | BLOCKED | 38 |
 | N/A | 783 |
 | UNVERIFIED | 53 |
@@ -90,7 +90,7 @@
 | P0 | 0 |
 | P1 | 29 |
 | P2 | 120 |
-| P3 | 24 |
+| P3 | 23 |
 
 ### P0 / P1 register
 
@@ -143,7 +143,7 @@ Every P0 and P1 individually, so none hides inside an aggregate.
 | 9 | 28 | 0 | 0 | 0 | 0 | 0 |
 | 10 | 10 | 0 | 1 | 0 | 18 | 0 |
 | 11 | 14 | 0 | 0 | 0 | 6 | 0 |
-| 12 | 35 | 0 | 1 | 0 | 4 | 0 |
+| 12 | 36 | 0 | 0 | 0 | 4 | 0 |
 | 13 | 16 | 0 | 1 | 0 | 1 | 0 |
 | 14 | 15 | 0 | 0 | 0 | 7 | 0 |
 | 15 | 12 | 0 | 0 | 0 | 1 | 0 |
@@ -698,7 +698,7 @@ Every P0 and P1 individually, so none hides inside an aggregate.
 | `MP-12-026` | Zoom. | N/A | **N/A** | - | SRC: Android-only Flutter app. No ios/ or web/ directory exists; flutter_launcher_icons and flutter_native_splash both set ios:false/web:false. Google Play is the only distribution channel. Browser zoom does not exist on Android. | - | The Android equivalent, font scaling, is covered by item 27. | `SRC` |
 | `MP-12-027` | Text scaling. | Applicable | **PASS** | - | SRC lib/main.dart appTextScaler() preserves system font scaling to 200%; TEST test/main_text_scaling_test.dart pins it. | - | - | `TEST` |
 | `MP-12-028` | Color-independent information. | Applicable | **PASS** | - | RUN: readiness chips and the offline banner pair colour with an icon and a text label, so no state is colour-only. | - | - | `TEST` |
-| `MP-12-029` | High Contrast/forced colors mümkünse test edilmiş. | Applicable | **PARTIAL** | P3 | MEASURED, not asserted. Archetype SCOPE_JUDGEMENT. Surface: Android high-contrast. Verifier `docs/audit/device-verification-2026-08-14-a11y-perf.md` -> `docs/audit/evidence/color.json`, property `measurements.textContrast.pairsPassingAA` = 15. NEGATIVE CONTROL: unreadable secondary text, red 'success', card merged into ground -> +4. | color.json measures the palette against WCAG, which is a different question from Android's forced-colors/high-contrast mode. That mode overrides colours at the platform level, and no run has been made with it enabled. | Enable high-contrast text on the emulator, re-drive the screens, and record whether any surface loses meaning. | `SRC` |
+| `MP-12-029` | High Contrast/forced colors mümkünse test edilmiş. | Applicable | **PASS** | - | MEASURED ON DEVICE, and the SDK limitation is measured rather than assumed. Flutter 3.38.9 stable, engine 5eb06b7ad5bb8cbc22c5230264c7a00ceac7674b, Dart 3.10.8 -- recorded by the verifier, not typed. Verifier `scripts/audit_evidence/a11y_platform.py` -> `docs/audit/evidence/a11y_platform.json`. It PARSES the installed SDK: measurements.platformSupport reports highContrast, reduceMotion and onOffSwitchLabels as 'Only supported on iOS' and accessibleNavigation / invertColors / disableAnimations / boldText as Android-delivered. A test written against MediaQuery.highContrast would therefore be green forever on Android and measure nothing. DEVICE RUN (emulator Medium_Phone_API_36.1, API 36, full write-up docs/audit/device-verification-2026-08-15-forced-colors.md): enabling Android's high-contrast text changed 3361 pixels in the status bar and 0 pixels of Flutter content. The status bar is the BUILT-IN POSITIVE CONTROL -- it is an Android View, it repainted, so the setting was demonstrably active. Second finding, recorded rather than smoothed: under colour inversion the app's pixels came back byte-identical, because inversion is applied below the point adb screencap captures -- a screenshot is the wrong instrument, the same class of error as the dumpsys gfxinfo finding already in this repo. What is ENFORCED instead is the property every forced-palette mechanism shares: measurements.colourIndependence shows 0 critical surfaces carrying meaning by colour alone across panic/SOS, locked PRO, warning banners, focus ring, error states, PIN, onboarding contact, countdown and the dispatch outcome list. `test/screens/forced_colors_test.dart` (8 cases) renders the critical surfaces with every colour collapsed to ONE value and asserts the states stay distinguishable, and it fails if a future SDK stops documenting highContrast as iOS-only. NEGATIVE CONTROL: reducing a critical surface to colour alone and zeroing the device run's positive control moves a11y_platform.py violations 0 -> 2. | None in repo. Android's high-contrast text is a View-layer render override; Flutter draws into its own Surface, so the setting neither repaints Flutter text nor is reported to the app, and this SDK exposes no flag for it. That is a platform fact, not an app defect, and it is why the app does not read highContrast at all -- a source guard asserts no file treats it as an Android signal. | None in repo. Behaviour under an OEM forced palette (Samsung/Xiaomi skins ship their own) is physical-device work and belongs with the OEM matrix, not here; the emulator has no such mode. | `RUN` |
 | `MP-12-030` | Touch target yeterince büyük. | Applicable | **PASS** | - | RE-MEASURED 2026-08-14, and the previous evidence was WRONG IN BOTH DIRECTIONS. (1) A recorded defect was a measurement artifact: uiautomator reports the CLIPPED rect, so the 'Yasal Bilgiler & KVKK' row read 371.4 x 23.2 dp at the scroll-viewport edge and 371.4 x 74.3 dp fully visible; the same happened to a 'Detayi Gor' button (115.8 x 26.3 vs 115.8 x 48.0). The sweep tool now finds each node's nearest scrollable ancestor and marks edge-touching nodes UNMEASURED instead of grading them. (2) Real defects had been left to the SC 2.5.8 spacing exception and are now fixed to Android's 48 dp: readiness chips 30.9 -> 48.0, rehearsal row 38.1 -> >=48, settings switch 40.8 -> 48.0, consent switch 28.2 -> 48.0, consent checkbox nested node 24.0 -> merged into a single 371.4 x 82.3 row, contact-consent checkbox 22.1 -> 283.4 x 77.0. No visual element was enlarged. (3) A NEW defect surfaced: the offline banner was 411.4 x 24.0 dp AND entirely under the system status bar -- taps injected at y=10/31/55/62 all failed to open its dialog. Now 411.4 x 67.0 dp and confirmed activating. Closing sweep across 13 screens: 0 undersized clickable nodes. | Two targets are under the 24 dp minimum and pass ONLY via the spacing exception; that is recorded and counted in the test, not smoothed over. They are also under the 44 dp of SC 2.5.5 (AAA), which this project does not claim. | test/screens/touch_target_minimum_size_test.dart measures the same geometry without a device (global tester.getRect, because SemanticsNode.rect is local and reported a transformed switch as compliant), with negative controls for the bare 20 dp control, the bare 0.85-scaled switch, and the un-merged consent row. | `RUN` |
 | `MP-12-031` | Interactive element'lar birbirine aşırı yakın değil. | Applicable | **PASS** | - | RE-MEASURED 2026-08-14 alongside MP-12-030. The spacing analysis is now largely moot: no measured target is under 48 dp any more, so nothing depends on the SC 2.5.8 spacing exception to pass. The closing sweep across 13 screens (consent x2, onboarding x2, contact-consent dialog, PIN setup, battery wizard, home, map, contacts, settings, legal settings, consent management) reports 0 nodes below 48 dp in either dimension and 0 nodes whose grading was blocked by viewport clipping. | None. | test/screens/touch_target_geometry_test.dart pins the measured spacings; any layout change that brings two targets within 24 dp turns it red. | `RUN` |
 | `MP-12-032` | Drag gerektiren işlem için alternatif var. | N/A | **N/A** | - | SRC: no drag interaction exists (see section 10). | - | Not applicable. | `SRC` |

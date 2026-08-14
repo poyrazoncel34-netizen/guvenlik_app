@@ -1294,16 +1294,17 @@
     "verifier": "scripts/audit_evidence/interaction.py"
   },
   "MP-12-029": {
-    "archetype": "SCOPE_JUDGEMENT",
-    "artifact": "color.json",
-    "disposition": "PARTIAL",
-    "gap": "color.json measures the palette against WCAG, which is a different question from Android's forced-colors/high-contrast mode. That mode overrides colours at the platform level, and no run has been made with it enabled.",
-    "negativeControl": "unreadable secondary text, red 'success', card merged into ground -> +4",
-    "property": "measurements.textContrast.pairsPassingAA",
-    "remediated": "no",
-    "remediation": "Enable high-contrast text on the emulator, re-drive the screens, and record whether any surface loses meaning.",
-    "surface": "Android high-contrast",
-    "verifier": "docs/audit/device-verification-2026-08-14-a11y-perf.md"
+    "archetype": "DEVICE_RUNTIME",
+    "artifact": "a11y_platform.json",
+    "disposition": "PASS",
+    "gap": "None in repo. Android's high-contrast text is a View-layer override that never reaches Flutter's Surface, measured as 0 changed app pixels against 3361 changed status-bar pixels.",
+    "negativeControl": "reduce a critical surface to colour alone and zero the device run's positive control -> a11y_platform.py 0 -> 2 violations",
+    "property": "measurements.colourIndependence",
+    "remediated": "yes",
+    "remediation": "None in repo. OEM forced palettes are physical-device work.",
+    "surface": "docs/audit/device-verification-2026-08-15-forced-colors.md + test/screens/forced_colors_test.dart",
+    "verifier": "docs/audit/device-verification-2026-08-14-a11y-perf.md",
+    "cite": "the obvious test -- MediaQuery.highContrast -- is documented 'Only supported on iOS' in Flutter 3.38.9, so on Android it is a constant false and any behaviour gated on it is dead code that looks like an accessibility feature. The verifier PARSES that doc rather than asserting it, and fails if a future SDK changes it"
   },
   "MP-13-001": {
     "archetype": "STATIC_CODE",

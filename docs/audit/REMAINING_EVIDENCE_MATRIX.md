@@ -44,18 +44,19 @@ have meant filing a document under a code archetype to keep the list short.
 | Metric | Count |
 |---|---|
 | Rows in this matrix | 239 |
-| Still `IN_REPO_RESOLVABLE` in the queue | 6 |
-| Evidence artifacts referenced | 11 |
+| Still `IN_REPO_RESOLVABLE` in the queue | 5 |
+| Evidence artifacts referenced | 12 |
 | Plan/audit integrity problems | 0 |
 
 ## Rows
 
-### DEVICE_RUNTIME — 4 rows
+### DEVICE_RUNTIME — 5 rows
 
 | ID | § | Requirement | Status | Sev | Surface | Verifier | Evidence property | Negative control | Remediated? | Disposition |
 |---|---|---|---|---|---|---|---|---|---|---|
 | `MP-01-012` | 1 | Kullanıcı yarıda bırakırsa state korunuyor. | PASS | - | process death | docs/audit/device-verification-2026-08-14-state-restoration.md | `flows.json` → `measurements.interruptionSafety.whatSurvives` | restoration policy test negative controls | no | PASS |
 | `MP-01-013` | 1 | Refresh sonrası mantıklı state korunuyor. | PASS | - | process death | docs/audit/device-verification-2026-08-14-state-restoration.md | `flows.json` → `measurements.interruptionSafety.whatDeliberatelyDoesNot` | restoration policy test negative controls | no | PASS |
+| `MP-12-029` | 12 | High Contrast/forced colors mümkünse test edilmiş. | PASS | - | docs/audit/device-verification-2026-08-15-forced-colors.md + test/screens/forced_colors_test.dart | docs/audit/device-verification-2026-08-14-a11y-perf.md | `a11y_platform.json` → `measurements.colourIndependence` | reduce a critical surface to colour alone and zero the device run's positive control -> a11y_platform.py 0 -> 2 violations | yes | PASS |
 | `MP-16-027` | 16 | Unsaved changes gerekiyorsa korunuyor. | PASS | - | process death | docs/audit/device-verification-2026-08-14-state-restoration.md | `interaction.json` → `measurements.unsavedChanges.preservedAcrossProcessDeath` | restoration policy negative controls | no | PASS |
 | `MP-41-018` | 41 | Notification interruption. | BLOCKED | P2 | POST_NOTIFICATIONS during an armed session | scripts/measure_device_resources.sh | docs/audit/device-verification-2026-08-14-perf-resources.md section 6: permission now grantable; a full armed-session interruption needs a licensed test account | the permission was DENIED in the prior pass, which is why this was never exercised | no | EXTERNAL_BLOCKER |
 
@@ -104,12 +105,11 @@ have meant filing a document under a code archetype to keep the list short.
 | `MP-80-016` | 80 | rollout | PASS | - | definition of done -- rollout | .claude/rules/common/development-workflow.md | development-workflow.md definition of done now names rollout: a change that reaches production carries its halt thresholds and its staged-rollout plan | test/release/process_artifact_contract_test.dart pins each section; deleting a heading fails it | yes | PASS |
 | `MP-80-017` | 80 | rollback** | PARTIAL | P2 | docs/release/incident_runbook.md | docs/release/incident_runbook.md | incident_runbook.md section 8: the roll-forward drill is recorded as unrehearsed, and section 3 gives the 4h target it will be measured against | test/release/process_artifact_contract_test.dart pins each section; deleting a heading fails it | yes | PARTIAL |
 
-### SCOPE_JUDGEMENT — 16 rows
+### SCOPE_JUDGEMENT — 15 rows
 
 | ID | § | Requirement | Status | Sev | Surface | Verifier | Evidence property | Negative control | Remediated? | Disposition |
 |---|---|---|---|---|---|---|---|---|---|---|
 | `MP-07-015` | 7 | Orientation change. | PARTIAL | P2 | portrait lock | android/app/src/main/AndroidManifest.xml | screenOrientation=portrait in the manifest; reversing it is the recorded portrait-only product decision | n/a - orientation is locked in the manifest | no | PRODUCT_DECISION_REQUIRED |
-| `MP-12-029` | 12 | High Contrast/forced colors mümkünse test edilmiş. | PARTIAL | P3 | Android high-contrast | docs/audit/device-verification-2026-08-14-a11y-perf.md | `color.json` → `measurements.textContrast.pairsPassingAA` | unreadable secondary text, red 'success', card merged into ground -> +4 | no | PARTIAL |
 | `MP-27-023` | 27 | Feature flags güvenli. | PARTIAL | P2 | runtime feature flags | scripts/audit_evidence/flows.py | `flows.json` → `measurements.offline.flagLikeSites` | unconfirmed data erase + exit-less screen -> 1 violation | no | PRODUCT_DECISION_REQUIRED |
 | `MP-30-007` | 30 | Cache stampede önleniyor. | PASS | - | no shared origin | scripts/audit_evidence/storage.py | `storage.json` → `measurements.cache.stampedeRisk` | hard-coded API key + DROP TABLE + PRAGMA identifier from a variable -> 3 | no | PASS |
 | `MP-33-004` | 33 | Secrets secret manager'da. | PASS | - | two compile-time secrets | scripts/audit_evidence/storage.py | `storage.json` → `measurements.secrets.secretManager` | hard-coded API key + DROP TABLE + PRAGMA identifier from a variable -> 3 | no | PASS |

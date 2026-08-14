@@ -1,0 +1,224 @@
+{
+  "verifier": "scripts/audit_evidence/a11y_platform.py",
+  "verifierVersion": "1.0.0",
+  "codeRevision": {
+    "head": "b8fae46ca3e7db67e591c3f2588bcf8fab1424c5",
+    "dirty": true
+  },
+  "measuredOn": "2026-08-15",
+  "command": "python3 scripts/audit_evidence/a11y_platform.py",
+  "surfaces": [
+    "lib/**",
+    "the installed Flutter SDK's sky_engine window.dart"
+  ],
+  "measurements": {
+    "sdk": {
+      "flutter": "3.38.9",
+      "channel": "stable",
+      "engineHash": "5eb06b7ad5bb8cbc22c5230264c7a00ceac7674b",
+      "dart": "3.10.8"
+    },
+    "platformSupport": {
+      "windowDart": "bin/cache/pkg/sky_engine/lib/ui/window.dart",
+      "flags": {
+        "accessibleNavigation": {
+          "sdkDocLimitation": null,
+          "androidDelivered": true,
+          "declared": true
+        },
+        "invertColors": {
+          "sdkDocLimitation": null,
+          "androidDelivered": true,
+          "declared": true
+        },
+        "disableAnimations": {
+          "sdkDocLimitation": null,
+          "androidDelivered": true,
+          "declared": true
+        },
+        "boldText": {
+          "sdkDocLimitation": "iOS and Android API 31+",
+          "androidDelivered": true,
+          "declared": true
+        },
+        "reduceMotion": {
+          "sdkDocLimitation": "iOS",
+          "androidDelivered": false,
+          "declared": true
+        },
+        "highContrast": {
+          "sdkDocLimitation": "iOS",
+          "androidDelivered": false,
+          "declared": true
+        },
+        "onOffSwitchLabels": {
+          "sdkDocLimitation": "iOS",
+          "androidDelivered": false,
+          "declared": true
+        }
+      }
+    },
+    "appConsumption": {
+      "accessibleNavigation": [
+        "lib/widgets/panic_button.dart:412"
+      ],
+      "invertColors": [],
+      "disableAnimations": [
+        "lib/screens/splash_screen.dart:142"
+      ],
+      "boldText": [],
+      "reduceMotion": [],
+      "highContrast": [],
+      "onOffSwitchLabels": []
+    },
+    "colourIndependence": {
+      "PIN": {
+        "file": "lib/screens/app_unlock_screen.dart",
+        "exists": true,
+        "signals": [
+          "Icon\\(",
+          "Icons\\.",
+          "Semantics\\(",
+          "\\.tr\\(",
+          "Text\\(",
+          "fontWeight",
+          "border:",
+          "Border\\."
+        ],
+        "colourOnly": false
+      },
+      "countdown": {
+        "file": "lib/screens/countdown_screen.dart",
+        "exists": true,
+        "signals": [
+          "Icon\\(",
+          "Icons\\.",
+          "Semantics\\(",
+          "\\.tr\\(",
+          "Text\\(",
+          "fontWeight",
+          "border:",
+          "Border\\."
+        ],
+        "colourOnly": false
+      },
+      "dispatch outcome": {
+        "file": "lib/core/widgets/dispatch_outcome_list.dart",
+        "exists": true,
+        "signals": [
+          "Icon\\(",
+          "Icons\\.",
+          "Semantics\\(",
+          "\\.tr\\(",
+          "Text\\(",
+          "fontWeight",
+          "border:",
+          "Border\\."
+        ],
+        "colourOnly": false
+      },
+      "error states": {
+        "file": "lib/screens/countdown_screen.dart",
+        "exists": true,
+        "signals": [
+          "Icon\\(",
+          "Icons\\.",
+          "Semantics\\(",
+          "\\.tr\\(",
+          "Text\\(",
+          "fontWeight",
+          "border:",
+          "Border\\."
+        ],
+        "colourOnly": false
+      },
+      "focus ring": {
+        "file": "lib/core/widgets/focus_ring.dart",
+        "exists": true,
+        "signals": [
+          "border:",
+          "Border\\."
+        ],
+        "colourOnly": false
+      },
+      "locked PRO": {
+        "file": "lib/core/widgets/readiness_card.dart",
+        "exists": true,
+        "signals": [
+          "Icon\\(",
+          "Icons\\.",
+          "Semantics\\(",
+          "\\.tr\\(",
+          "Text\\(",
+          "fontWeight",
+          "border:",
+          "Border\\."
+        ],
+        "colourOnly": false
+      },
+      "onboarding contact": {
+        "file": "lib/screens/onboarding/onboarding_contact_step.dart",
+        "exists": true,
+        "signals": [
+          "Icon\\(",
+          "Icons\\.",
+          "Semantics\\(",
+          "\\.tr\\(",
+          "Text\\(",
+          "fontWeight",
+          "border:",
+          "Border\\."
+        ],
+        "colourOnly": false
+      },
+      "panic / SOS": {
+        "file": "lib/widgets/panic_button.dart",
+        "exists": true,
+        "signals": [
+          "Icon\\(",
+          "Icons\\.",
+          "Semantics\\(",
+          "\\.tr\\(",
+          "Text\\(",
+          "fontWeight",
+          "border:",
+          "Border\\."
+        ],
+        "colourOnly": false
+      },
+      "warning banners": {
+        "file": "lib/widgets/connectivity_banner.dart",
+        "exists": true,
+        "signals": [
+          "Icon\\(",
+          "Icons\\.",
+          "\\.tr\\(",
+          "Text\\(",
+          "fontWeight"
+        ],
+        "colourOnly": false
+      }
+    },
+    "deviceEvidence": {
+      "file": "docs/audit/device-verification-2026-08-15-forced-colors.md",
+      "statusBarPixelsChangedByHighContrastText": 3361,
+      "appContentPixelsChangedByHighContrastText": 0,
+      "positiveControl": "the status-bar clock is an Android View and DID repaint, so the setting was demonstrably active while Flutter content changed by zero pixels",
+      "screenshotIsWrongInstrumentForInversion": true,
+      "coveringTest": "test/screens/forced_colors_test.dart"
+    },
+    "androidHighContrastNote": "Android's Settings > Accessibility > High contrast text is a VIEW-layer render override applied by the system to Android Views. Flutter draws into its own Surface, so the setting neither repaints Flutter text nor is reported to the app -- there is no flag for it in this SDK. The framework's `highContrast` is documented 'Only supported on iOS', so an Android test written against it would be green forever and measure nothing. What Android DOES deliver here is invertColors (colour inversion) and boldText (API 31+), and the durable answer for a forced palette is that meaning must not rest on colour alone -- which is what colourIndependence measures."
+  },
+  "violations": [],
+  "exclusions": [
+    {
+      "what": "iOS-only accessibility flags",
+      "why": "this release targets Android only; the flags are reported rather than consumed, so the limitation is visible instead of silently producing a constant-false test"
+    }
+  ],
+  "negativeControl": {
+    "command": "python3 scripts/audit_evidence/a11y_platform.py --negative-control",
+    "mutation": "reduce a critical surface to colour alone; zero the device run's positive control",
+    "expected": "surfaceCarriesMeaningByColourAlone and forcedColourRunHadNoPositiveControl fire"
+  }
+}
