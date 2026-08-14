@@ -76,12 +76,12 @@
 | **MISSING** | **0** |
 | **DUPLICATED** | **0** |
 | **UNACCOUNTED** | **0** |
-| PASS | 561 |
+| PASS | 565 |
 | FAIL | 11 |
-| PARTIAL | 121 |
+| PARTIAL | 119 |
 | BLOCKED | 29 |
 | N/A | 783 |
-| UNVERIFIED | 233 |
+| UNVERIFIED | 231 |
 
 ### Severity of non-PASS findings
 
@@ -89,7 +89,7 @@
 |---|---|
 | P0 | 0 |
 | P1 | 29 |
-| P2 | 179 |
+| P2 | 175 |
 | P3 | 186 |
 
 ### P0 / P1 register
@@ -178,7 +178,7 @@ Every P0 and P1 individually, so none hides inside an aggregate.
 | 44 | 10 | 0 | 2 | 0 | 27 | 0 |
 | 45 | 10 | 0 | 2 | 0 | 3 | 0 |
 | 46 | 20 | 2 | 2 | 0 | 13 | 0 |
-| 47 | 10 | 0 | 2 | 4 | 9 | 4 |
+| 47 | 12 | 0 | 0 | 4 | 9 | 4 |
 | 48 | 8 | 0 | 0 | 0 | 1 | 3 |
 | 49 | 9 | 0 | 3 | 0 | 2 | 0 |
 | 50 | 8 | 0 | 8 | 0 | 4 | 0 |
@@ -200,7 +200,7 @@ Every P0 and P1 individually, so none hides inside an aggregate.
 | 66 | 0 | 0 | 0 | 0 | 16 | 0 |
 | 67 | 8 | 0 | 5 | 0 | 3 | 0 |
 | 68 | 17 | 0 | 1 | 0 | 2 | 0 |
-| 69 | 4 | 0 | 2 | 0 | 7 | 4 |
+| 69 | 6 | 0 | 2 | 0 | 7 | 2 |
 | 70 | 17 | 0 | 0 | 0 | 8 | 0 |
 | 71 | 0 | 0 | 0 | 0 | 0 | 12 |
 | 72 | 6 | 2 | 1 | 0 | 14 | 13 |
@@ -1961,7 +1961,7 @@ Every P0 and P1 individually, so none hides inside an aggregate.
 | ID | Requirement | Appl. | Status | Sev | Evidence | Gap | Remediation | Verif |
 |---|---|---|---|---|---|---|---|---|
 | `MP-47-001` | Fresh user. | Partially applicable | **PASS** | - | RUN 2026-08-12: first-run walkthrough on an API 36 emulator (consent gate -> onboarding -> contact gate -> PIN setup -> battery wizard -> home -> settings). This session exercised a genuinely fresh install from first launch. | - | - | `RUN` |
-| `MP-47-002` | Existing user. | Partially applicable | **PARTIAL** | P2 | RUN: the returning-user path (relaunch to unlock screen) was implied by SRC lib/screens/auth_gate.dart but not separately walked. | Returning-user launch not exercised this session. | Include in the re-run of the smoke script. | `RUN` |
+| `MP-47-002` | Existing user. | Partially applicable | **PASS** | - | MEASURED on device: a returning user with existing data relaunching the app lands on the PIN unlock screen ('Uygulama kilidi. PIN ile acin.'), enters the PIN and reaches Home with the saved emergency contact present ('Acil kisi hazir / Ayse Yilmaz'). Also exercised after genuine process death (`am kill`, new pid): the reconstructed process ALSO landed on the PIN lock screen rather than restoring straight into the Contacts screen it died on -- the security-correct outcome for a duress model, since reconstructed state must not step around the lock. | None. | Covered by the recorded lifecycle matrix in docs/audit/device-verification-2026-08-14-a11y-perf.md. | `RUN` |
 | `MP-47-003` | Power user. | Partially applicable | **UNVERIFIED** | P3 | RUN covered a first-time user only. | Power-user path unexercised. | Include in the smoke script re-run. | `RUN` |
 | `MP-47-004` | Admin. | N/A | **N/A** | - | SRC: there is no admin role - the product is single-user with no privilege tiers beyond Free/Pro. | - | Not applicable. | `SRC` |
 | `MP-47-005` | Free user. | Partially applicable | **PASS** | - | RUN: this session ran entirely as a Free user, and the Pro gates behaved correctly (locked badges on Guvenli Yuruyus and Kontrol Noktasi; fail-closed entitlement message). | - | - | `RUN` |
@@ -1984,7 +1984,7 @@ Every P0 and P1 individually, so none hides inside an aggregate.
 | `MP-47-022` | Browser refresh. | N/A | **N/A** | - | SRC: Android-only Flutter app. No ios/ or web/ directory exists; flutter_launcher_icons and flutter_native_splash both set ios:false/web:false. Google Play is the only distribution channel. There is no browser refresh, no multi-tab and no server session to expire. | - | Not applicable. The Android analogues (process death, app switching) are covered in section 41 items 13-16. | `SRC` |
 | `MP-47-023` | Multiple tabs. | N/A | **N/A** | - | SRC: Android-only Flutter app. No ios/ or web/ directory exists; flutter_launcher_icons and flutter_native_splash both set ios:false/web:false. Google Play is the only distribution channel. There is no browser refresh, no multi-tab and no server session to expire. | - | Not applicable. The Android analogues (process death, app switching) are covered in section 41 items 13-16. | `SRC` |
 | `MP-47-024` | Session expiry. | N/A | **N/A** | - | SRC: Android-only Flutter app. No ios/ or web/ directory exists; flutter_launcher_icons and flutter_native_splash both set ios:false/web:false. Google Play is the only distribution channel. There is no browser refresh, no multi-tab and no server session to expire. | - | Not applicable. The Android analogues (process death, app switching) are covered in section 41 items 13-16. | `SRC` |
-| `MP-47-025` | App background/foreground. | Partially applicable | **PARTIAL** | P2 | SRC android/.../DeviceProtectedEmergencySessionStore.kt with TEST DirectBootSafetyKernelTest.kt covers background/foreground and process death; RUN did not exercise a background/foreground cycle. | Not exercised in this session's walkthrough. | Include in the smoke-script re-run. | `RUN` |
+| `MP-47-025` | App background/foreground. | Partially applicable | **PASS** | - | MEASURED on device (API 36 emulator, profile build) with the FOUR lifecycle scenarios kept SEPARATE, because a pause/resume test proves nothing about process death. (1) Flutter pause/resume: HOME then relaunch -- pid 2225 before and after, the Contacts screen restored exactly. (2) Memory-pressure notification: `am send-trim-memory` at RUNNING_MODERATE, RUNNING_LOW and RUNNING_CRITICAL -- process survived all three with the same pid, no crash, screen intact. (3) Activity recreation: with `settings put global always_finish_activities 1`, backgrounding destroyed and recreated the Activity while the PROCESS survived (pid unchanged) and the app came back on the correct screen. (4) Process death: `am kill` while backgrounded genuinely killed it (pidof empty), and relaunch produced a NEW pid. | None. All four transitions behave correctly and are distinguished by evidence rather than assumed equivalent. | Re-run the recorded four-scenario matrix; scenario 3 needs always_finish_activities reset to 0 afterwards. | `RUN` |
 | `MP-47-026` | Weird/long text. | Partially applicable | **PASS** | - | TEST test/core/input_robustness_test.dart (12 cases, added 2026-08-12): HTML, script, SQL-like, zero-width, RTL-override, emoji-flood, combining-mark and replacement-char strings, plus a 10,000-character paste. | - | - | `TEST` |
 | `MP-47-027` | Emoji. | Partially applicable | **PASS** | - | TEST test/core/input_robustness_test.dart (12 cases, added 2026-08-12): HTML, script, SQL-like, zero-width, RTL-override, emoji-flood, combining-mark and replacement-char strings, plus a 10,000-character paste. | - | - | `TEST` |
 | `MP-47-028` | RTL. | N/A | **N/A** | - | SRC lib/main.dart: one shipped locale (tr_TR), LTR only. | - | Not applicable until a second locale ships. | `SRC` |
@@ -2711,8 +2711,8 @@ Every P0 and P1 individually, so none hides inside an aggregate.
 | `MP-69-013` | Low DPI. | Partially applicable | **PARTIAL** | P2 | RUN at 1080x2400 (~xxhdpi); the nightly matrix uses a pixel_6 profile. | Only one density class is exercised. | Include a low-DPI device in the real-device matrix. | `DOC` |
 | `MP-69-014` | 60Hz. | Partially applicable | **PASS** | - | MEASURED IN PROFILE MODE (flutter build apk --profile, arm64, API 36 emulator), never debug. Frame source is SurfaceFlinger per-frame present timestamps for the app's own BLAST SurfaceView layer (`dumpsys SurfaceFlinger --latency`), because `dumpsys gfxinfo` only sees HWUI and reported just 7 frames for this app -- Flutter draws its content on its own raster thread, so gfxinfo is the WRONG instrument here and using it would have produced a meaningless pass. The panel reports supportedRefreshRates [60.000004], hasArrSupport false, presentationDeadlineNanos 16666666. The app holds that cadence: mean interval 16.66-16.70ms across every interaction measured (scroll, fling, map pan, route transitions, and the idle SOS breathing animation), with zero intervals at or beyond 2x budget in 744 samples. | None. | Covered by the recorded profile-mode capture. | `RUN` |
 | `MP-69-015` | High-refresh screen gerekiyorsa. | Partially applicable | **PASS** | - | VERIFIED ON A GENUINELY HIGH-REFRESH DISPLAY, not assumed. The AVD was reconfigured to hw.lcd.vsync=120 and rebooted; the panel then reported supportedRefreshRates [120.00001] and SurfaceFlinger peak-refresh-rate 120.00 Hz, confirming the display really was running at 120Hz (the AVD was restored to its 60Hz baseline afterwards). On that panel the app remained correct and smooth: mean interval 16.66-16.67ms, p90 17.3-17.5ms, and ZERO intervals at or beyond 2x budget. BEHAVIOURAL FINDING, recorded rather than glossed: the app presents a stable 60fps and does NOT opt into 120Hz -- the layer's reported period stayed 16.667ms while the display ran at 120Hz. | The app does not request the higher refresh rate. For this product that is a defensible default rather than a defect: the requirement is conditional ('if a high-refresh screen is needed'), a panic-button app gains nothing perceptible from 120fps, and rendering at half the panel rate directly serves the battery budget that sections 41/59 treat as a P1 concern. Recorded so the trade-off is deliberate and revisitable, not accidental. | If a future release wants 120fps, it must be a deliberate change measured against battery drain, not a silent default. | `RUN` |
-| `MP-69-016` | Slow CPU. | Partially applicable | **UNVERIFIED** | P2 | SRC minSdk 29 puts low-end Android 10 hardware in scope; no such device has been tested for this build. | Low-end CPU and low-memory behaviour unverified. | Include a low-end handset in the real-device matrix. | `NONE` |
-| `MP-69-017` | Low memory. | Partially applicable | **UNVERIFIED** | P2 | SRC minSdk 29 puts low-end Android 10 hardware in scope; no such device has been tested for this build. | Low-end CPU and low-memory behaviour unverified. | Include a low-end handset in the real-device matrix. | `NONE` |
+| `MP-69-016` | Slow CPU. | Partially applicable | **PASS** | - | MEASURED UNDER REAL CPU STARVATION, not asserted. The emulator exposes a SINGLE core; four busy-loop processes were spawned to hold it at 100% (top: 100%cpu 100%user 0%idle). Cold launch (`am start -W`, three runs each): baseline 664/688/688 ms, under full contention 3592/3541/3516 ms -- about 5.2x slower. THE APP STILL WORKED: it launched every time with no crash and no ANR, rendered the PIN screen, accepted the PIN and reached Home while the CPU stayed saturated. Frame cost under that load, same instrumentation as section 9: mean 22.88 ms, p90 33.65 ms, worst 44.48 ms, and 16.1% of intervals at or beyond 2x the 16.67 ms budget -- i.e. it genuinely drops frames under starvation. | Dropped frames under CPU saturation are expected and are reported rather than smoothed away; the app degrades in speed but stays functional and reachable, which is what matters for a panic button. A genuinely low-end PHYSICAL handset (slow storage and thermal throttling as well as slow CPU) is still not covered -- that stays with the real-device matrix. | Re-run the recorded contention procedure; remember to kill the busy loops afterwards. | `RUN` |
+| `MP-69-017` | Low memory. | Partially applicable | **PASS** | - | MEASURED on device (API 36 emulator, profile build) with the FOUR lifecycle scenarios kept SEPARATE, because a pause/resume test proves nothing about process death. Memory pressure delivered explicitly at three levels (RUNNING_MODERATE, RUNNING_LOW, RUNNING_CRITICAL) with the app foregrounded: same pid throughout, no crash, screen and in-progress form input intact. Separately, true reclaim was exercised via `am kill` while backgrounded -- the app died and relaunched into the PIN lock screen without losing stored contacts or consent. The distinction matters: a trim-memory callback is NOT process death, and both were run. | Unsubmitted in-progress input does not survive process death -- tracked separately as MP-01-021, not hidden here. | Re-run the recorded matrix. | `RUN` |
 
 ## 70. “Kötü kullanıcı” testi
 

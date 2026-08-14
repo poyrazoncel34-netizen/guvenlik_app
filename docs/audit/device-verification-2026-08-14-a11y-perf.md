@@ -151,3 +151,24 @@ modelinde yeniden kurulan durum kilidin onune gecmemeli.
 
 Basit bir pause/resume testinden "surec olumu guvenli" sonucu CIKARILMADI; dordu
 ayri ayri kosuldu.
+
+## Yavas CPU (MP-69-016)
+
+Emulator TEK cekirdek gosteriyor. Dort bosa-donen surecle cekirdek %100'e
+sabitlendi (`top`: 100%cpu 100%user 0%idle) ve olcum bu yukun altinda yapildi.
+
+| Olcum | Bosta | %100 CPU yuku altinda |
+|---|---|---|
+| Soguk baslatma (`am start -W`, 3 kosum) | 664 / 688 / 688 ms | 3592 / 3541 / 3516 ms |
+| Kare ort. | 16.67 ms | 22.88 ms |
+| Kare p90 | ~17-18 ms | 33.65 ms |
+| Kare en kotu | 20.01 ms | 44.48 ms |
+| >=2x butce (gercek dusen kare) | %0 | **%16.1** |
+
+Yaklasik 5.2 kat yavasladi ve kare dusurmeye BASLADI -- ama her seferinde
+COKMEDEN ve ANR vermeden acildi, PIN ekranini cizdi, PIN'i kabul etti ve ana
+ekrana ulasti. Panik butonu icin onemli olan budur: yavasliyor ama erisilebilir
+kaliyor. Dusen kareler yumusatilmadan raporlaniyor.
+
+Gercekten dusuk segment FIZIKSEL cihaz (yavas depolama + termal kisma) hala
+kapsanmiyor; o gercek-cihaz matrisinde kaliyor.
