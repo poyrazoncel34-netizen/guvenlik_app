@@ -173,6 +173,72 @@ def _per_target_outcome_surface(root: Path) -> dict:
     }
 
 
+DEEP_LINK_MODEL = "lib/core/navigation/app_destination.dart"
+DEEP_LINK_PARSER = "lib/core/navigation/deep_link_parser.dart"
+DEEP_LINK_PARK = "lib/core/navigation/pending_destination_service.dart"
+DEEP_LINK_ROUTER = "lib/core/navigation/destination_router.dart"
+MANIFEST = "android/app/src/main/AndroidManifest.xml"
+
+# Words a destination slug may not contain. An external link may put the user in
+# front of a surface; it may never perform a safety action on their behalf.
+FORBIDDEN_DESTINATION_WORDS = ("arm", "dial", "call", "panic", "sos", "cancel",
+                               "unlock", "pin", "trigger", "emergency")
+
+
+def _deep_link_surface(root: Path) -> dict:
+    """MP-26-008: the validated destination model, measured from the tree."""
+    model = read_stripped(root / DEEP_LINK_MODEL) if (root / DEEP_LINK_MODEL).exists() else ""
+    parser = read_stripped(root / DEEP_LINK_PARSER) if (root / DEEP_LINK_PARSER).exists() else ""
+    park = read_stripped(root / DEEP_LINK_PARK) if (root / DEEP_LINK_PARK).exists() else ""
+    router = read_stripped(root / DEEP_LINK_ROUTER) if (root / DEEP_LINK_ROUTER).exists() else ""
+    manifest = (root / MANIFEST).read_text(encoding="utf-8") if (root / MANIFEST).exists() else ""
+
+    slugs = re.findall(r"AppDestination\.\w+ => '([^']+)'", model)
+    rejections_block = re.search(r"enum DeepLinkRejection\s*\{([^}]*)\}", model, re.S)
+    rejections = ([r.strip() for r in re.findall(r"^\s*(\w+),", rejections_block.group(1), re.M)]
+                  if rejections_block else [])
+
+    # Who may CONSUME a parked destination. More than one consumer means more
+    # than one place that could run ahead of the PIN gate.
+    consumers = sorted({
+        site.split(":")[0]
+        for site in _sites(root, r"PendingDestinationService\.instance\.consume\(\)")
+        if not site.startswith(DEEP_LINK_PARK)
+    })
+
+    action_like = [s for s in slugs
+                   if any(w in s.lower() for w in FORBIDDEN_DESTINATION_WORDS)]
+
+    return {
+        "scheme": (re.search(r"scheme = '(\w+)'", parser) or [None, None])[1]
+                  if re.search(r"scheme = '(\w+)'", parser) else None,
+        "manifestSchemes": sorted(set(re.findall(r'android:scheme="([^"]+)"', manifest))),
+        "autoVerifyDeclared": 'android:autoVerify="true"' in manifest,
+        "destinationSlugs": slugs,
+        "actionLikeDestinations": action_like,
+        "rejectionReasons": rejections,
+        "gatedDestinations": re.findall(r"AppDestination\.(\w+) => PremiumFeature\.", model),
+        "parkFile": DEEP_LINK_PARK if park else None,
+        "parkConsumers": consumers,
+        "singleConsume": "_pending = null;" in park,
+        "boundedRejectionLog": "maxRecordedRejections" in park,
+        "routerAsksSubscriptionGate": "SubscriptionGate.ensureAccess" in router,
+        "parserIsPure": bool(parser) and "Navigator" not in parser
+                        and "BuildContext" not in parser,
+        "coveringTests": ["test/core/navigation/deep_link_test.dart",
+                          "test/android/release_surface_audit_test.dart"],
+        "appLinkNote": (
+            "an https App Link is deliberately ABSENT rather than deferred. "
+            "autoVerify requires /.well-known/assetlinks.json at the DOMAIN "
+            "ROOT, and this project's public pages are a GitHub Pages *project* "
+            "site, so the root belongs to github.io and cannot be served by us. "
+            "That is a fact about the hosting, not a difficulty, so it is not an "
+            "external blocker to be parked -- a custom scheme claims no domain "
+            "ownership and the whole surface is provable here."
+        ),
+    }
+
+
 def _tabs(root: Path) -> list:
     src = read_stripped(root / TAB_FILE) if (root / TAB_FILE).exists() else ""
     return re.findall(r"NavigationDestination\(|BottomNavigationBarItem\(", src)
@@ -288,6 +354,54 @@ def measure(root: Path) -> list:
             "rule": "unprovableDispatchOutcome",
             "detail": f"outcome {name!r} claims more than an intent handoff proves",
         })
+    # 6. MP-26-008: a deep link must not bypass a gate, and must not be able to
+    #    ask for a safety ACTION.
+    links = _deep_link_surface(root)
+    if links["scheme"]:
+        for slug in links["actionLikeDestinations"]:
+            violations.append({
+                "rule": "deepLinkDestinationPerformsSafetyAction",
+                "detail": f"destination {slug!r} names an action; an external "
+                          f"link may show a surface, never perform one",
+            })
+        if len(links["parkConsumers"]) != 1:
+            violations.append({
+                "rule": "multipleDestinationConsumers",
+                "detail": f"{links['parkConsumers']} each consume a parked "
+                          f"destination; a second consumer can run before the "
+                          f"PIN gate",
+            })
+        if not links["singleConsume"]:
+            violations.append({"rule": "destinationNotSingleConsume",
+                               "detail": "a parked destination can re-fire"})
+        if not links["boundedRejectionLog"]:
+            violations.append({"rule": "unboundedRejectionLog",
+                               "detail": "a hostile burst of links grows memory"})
+        if not links["routerAsksSubscriptionGate"]:
+            violations.append({
+                "rule": "deepLinkBypassesEntitlementGate",
+                "detail": "the router does not call SubscriptionGate.ensureAccess",
+            })
+        if not links["parserIsPure"]:
+            violations.append({
+                "rule": "linkParserCanNavigate",
+                "detail": "the parser reaches a Navigator or a BuildContext, so "
+                          "a link could route before the gates",
+            })
+        for scheme in links["manifestSchemes"]:
+            if scheme in {"http", "https"}:
+                violations.append({
+                    "rule": "unprovableAppLinkDeclared",
+                    "detail": "an https intent filter asserts domain ownership "
+                              "this project cannot publish assetlinks.json for",
+                })
+        if links["autoVerifyDeclared"]:
+            violations.append({
+                "rule": "autoVerifyWithoutAssetLinks",
+                "detail": "autoVerify claims a Digital Asset Links association "
+                          "that cannot be served from a GitHub Pages project site",
+            })
+
     return violations
 
 
@@ -322,7 +436,9 @@ def build(root: Path) -> dict:
                 "home-screen widget": "android/.../quickaccess",
                 "Quick Settings tile": "android/.../quickaccess",
                 "volume-key trigger": "lib/core/services (volume trigger)",
+                "deep link": "korubeni://open/<destination>",
             },
+            "deepLinks": _deep_link_surface(root),
             "landingSurfacesAfterGates": _landing_surfaces(root),
             "why": "there is exactly one landing surface after the gates: the home tab "
                    "with the panic button, so 'where do I start' has one answer",
@@ -503,6 +619,22 @@ def _mutate(scratch: Path) -> str:
             ),
             encoding="utf-8",
         )
+    # MP-26-008: give the link model a destination that performs a safety
+    # action, and let a second place consume the parked destination.
+    destinations = scratch / DEEP_LINK_MODEL
+    if destinations.exists():
+        destinations.write_text(
+            destinations.read_text(encoding="utf-8").replace(
+                "AppDestination.home => 'home',", "AppDestination.home => 'panic-dial',", 1
+            ),
+            encoding="utf-8",
+        )
+    second_consumer = scratch / "lib/screens/_early_consumer.dart"
+    second_consumer.write_text(
+        "import '../core/navigation/pending_destination_service.dart';\n"
+        "void runEarly() { PendingDestinationService.instance.consume(); }\n",
+        encoding="utf-8",
+    )
     renderer = scratch / "lib/core/widgets/dispatch_outcome_list.dart"
     if renderer.exists():
         renderer.unlink()
@@ -518,7 +650,9 @@ def _mutate(scratch: Path) -> str:
             encoding="utf-8",
         )
     return ("unconfirmed data erase + a screen with no exit path + an outcome "
-            "renamed to 'delivered' + the per-target renderer deleted")
+            "renamed to 'delivered' + the per-target renderer deleted + a "
+            "deep-link destination renamed to 'panic-dial' + a second consumer "
+            "of the parked destination")
 
 
 def main() -> int:
@@ -543,9 +677,13 @@ def main() -> int:
             "command": COMMAND + " --negative-control",
             "mutation": "remove the confirmation from 'erase all app data'; add a "
                         "screen with no exit path; rename the handoffAccepted "
-                        "outcome to 'delivered'; delete the per-target renderer",
+                        "outcome to 'delivered'; delete the per-target renderer; "
+                        "rename a deep-link destination to 'panic-dial'; add a "
+                        "second consumer of the parked destination",
             "expected": "destructiveActionUnconfirmed, screenWithNoExitPath, "
-                        "unprovableDispatchOutcome and outcomesNeverRendered fire",
+                        "unprovableDispatchOutcome, outcomesNeverRendered, "
+                        "deepLinkDestinationPerformsSafetyAction and "
+                        "multipleDestinationConsumers fire",
         }},
     )
     print(f"FLOWS_OK violations={len(violations)} -> {rel(path)}")

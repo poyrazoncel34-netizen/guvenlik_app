@@ -1713,14 +1713,15 @@
   "MP-26-008": {
     "archetype": "STATIC_CONFIG",
     "artifact": "flows.json",
-    "disposition": "PARTIAL",
-    "gap": "flows.json lists three external entry points (widget, tile, volume trigger); none is a URL deep link, and no intent-filter data element exists to verify.",
-    "negativeControl": "unconfirmed data erase + exit-less screen -> 1 violation",
-    "property": "measurements.entryPoints.externalEntryPoints",
-    "remediated": "no",
-    "remediation": "Either declare this N/A with the manifest as evidence, or add the deep links the store listing implies.",
-    "surface": "AndroidManifest intent filters",
-    "verifier": "scripts/audit_evidence/flows.py"
+    "disposition": "PASS",
+    "gap": "None. A link parks a validated destination; only MainNavigation consumes it, and SplashScreen builds MainNavigation after consent, onboarding and the PIN gate.",
+    "negativeControl": "rename a destination to 'panic-dial' and add a second consumer of the parked destination -> flows.py 0 -> 6; an https App Link or a dropped singleTop fails the release-surface audit closed",
+    "property": "measurements.entryPoints.deepLinks",
+    "remediated": "yes",
+    "remediation": "None in repo.",
+    "surface": "AndroidManifest VIEW filter -> MainActivity.captureDeepLink -> lib/core/navigation/* -> MainNavigation",
+    "verifier": "scripts/audit_evidence/flows.py",
+    "cite": "An https App Link is deliberately absent rather than parked as an external blocker: autoVerify needs assetlinks.json at the DOMAIN ROOT and this project publishes to a GitHub Pages project site whose root belongs to github.io, so the association could never be served no matter how much work went into it"
   },
   "MP-27-023": {
     "archetype": "SCOPE_JUDGEMENT",

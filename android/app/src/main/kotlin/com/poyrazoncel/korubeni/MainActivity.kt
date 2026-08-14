@@ -30,12 +30,27 @@ class MainActivity : FlutterFragmentActivity() {
         private const val AUDIO_CONTROL_CHANNEL = "com.poyrazoncel.korubeni/audio_control"
         private const val CONTACTS_PICKER_CHANNEL = "com.poyrazoncel.korubeni/contacts_picker"
         private const val QUICK_PANIC_CHANNEL = "com.poyrazoncel.korubeni/quick_panic"
+        private const val DEEP_LINK_CHANNEL = "com.poyrazoncel.korubeni/deep_link"
+
+        /// The ONLY scheme this Activity will hand to Dart. The manifest filter
+        /// already restricts what Android delivers; this is the second half of
+        /// the same rule, kept here so a manifest edit alone cannot widen it.
+        private const val DEEP_LINK_SCHEME = "korubeni"
+
+        /// A bound before the string ever leaves Kotlin. Dart bounds it again;
+        /// neither side trusts the other's check.
+        private const val DEEP_LINK_MAX_LENGTH = 512
         private const val CONTACT_PICK_REQUEST_CODE = 7341
     }
 
     private val volumeDetector = VolumeButtonDetector()
     private lateinit var emergencyPlatformHandler: EmergencyPlatformHandler
     private var pendingContactPickResult: MethodChannel.Result? = null
+
+    /// The most recent unconsumed link. One slot, not a queue: a burst of links
+    /// means the user pressed something repeatedly, and it must not accumulate
+    /// navigations that all fire after the PIN gate.
+    private var pendingDeepLink: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         // FLAG_SECURE blocks screenshots, screen recording and the recents
@@ -63,6 +78,7 @@ class MainActivity : FlutterFragmentActivity() {
         // -1 here both before and after super.onCreate(), so a UID check at this
         // point is not a usable defence.
         super.onCreate(savedInstanceState)
+        captureDeepLink(intent)
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -70,6 +86,22 @@ class MainActivity : FlutterFragmentActivity() {
         // launchMode is singleTop, so a tap while the app is already running
         // arrives here rather than through onCreate.
         setIntent(intent)
+        captureDeepLink(intent)
+    }
+
+    /// Records a VIEW intent's data for Dart to collect.
+    ///
+    /// Read-and-clear, like the quick-access request: Dart asks on init and on
+    /// resume, and one incoming link must produce at most one navigation. The
+    /// link is only PARKED here — nothing in this Activity acts on it, and the
+    /// Dart side cannot navigate until every gate has completed.
+    private fun captureDeepLink(intent: Intent?) {
+        if (intent?.action != Intent.ACTION_VIEW) return
+        val data = intent.data ?: return
+        if (data.scheme != DEEP_LINK_SCHEME) return
+        val asString = data.toString()
+        if (asString.length > DEEP_LINK_MAX_LENGTH) return
+        pendingDeepLink = asString
     }
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
@@ -270,6 +302,18 @@ class MainActivity : FlutterFragmentActivity() {
             // Quick-access hand-off. Read-and-clear only; the widget and the
             // tile cannot arm anything through this channel.
             try {
+                MethodChannel(messenger, DEEP_LINK_CHANNEL)
+                    .setMethodCallHandler { call, result ->
+                        when (call.method) {
+                            "consumeDeepLink" -> {
+                                val link = pendingDeepLink
+                                pendingDeepLink = null
+                                result.success(link)
+                            }
+                            else -> result.notImplemented()
+                        }
+                    }
+
                 MethodChannel(messenger, QUICK_PANIC_CHANNEL)
                     .setMethodCallHandler { call, result ->
                         try {

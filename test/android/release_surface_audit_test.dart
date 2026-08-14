@@ -42,10 +42,21 @@ String _validManifest({
     <activity
         android:name="com.poyrazoncel.korubeni.MainActivity"
         android:exported="true"
+        android:launchMode="singleTop"
         android:taskAffinity="">
       <intent-filter>
         <action android:name="android.intent.action.MAIN" />
         <category android:name="android.intent.category.LAUNCHER" />
+      </intent-filter>
+      <!-- The shipped deep-link filter (MP-26-008). Present in the fixture so
+           "a valid merged release surface" means the surface that actually
+           ships, not a reduced one that would let the scheme rule go
+           unexercised. -->
+      <intent-filter>
+        <action android:name="android.intent.action.VIEW" />
+        <category android:name="android.intent.category.DEFAULT" />
+        <category android:name="android.intent.category.BROWSABLE" />
+        <data android:scheme="korubeni" android:host="open" />
       </intent-filter>
     </activity>
     <activity android:name="com.poyrazoncel.korubeni.emergency.EmergencyFallbackDialActivity" android:directBootAware="true" android:exported="false" />
@@ -182,6 +193,42 @@ void main() {
     expect(result.exitCode, isNot(0));
     expect(result.stderr, contains('permission allowlist mismatch'));
     expect(result.stderr, contains('usesCleartextTraffic must be false'));
+  });
+
+  test('an https App Link on the launcher fails closed', () async {
+    // MP-26-008's negative control. An https intent filter asserts ownership of
+    // a domain, and this project publishes to a GitHub Pages PROJECT site whose
+    // root -- where assetlinks.json must live -- it does not control. Admitting
+    // one would let an unverifiable claim ship, so the audit refuses the scheme
+    // rather than trusting a reviewer to notice.
+    final directory = await Directory.systemTemp.createTemp(
+      'korubeni-release-surface-applink.',
+    );
+    addTearDown(() => directory.deleteSync(recursive: true));
+
+    final manifest = _validManifest().replaceFirst(
+      '<data android:scheme="korubeni" android:host="open" />',
+      '<data android:scheme="korubeni" android:host="open" />\n'
+      '        <data android:scheme="https" '
+      'android:host="poyrazoncel34-netizen.github.io" />',
+    );
+    final result = await _runAudit(directory, manifest);
+    expect(result.exitCode, isNot(0));
+    expect(result.stderr, contains('unexpected scheme: https'));
+    expect(File('${directory.path}/audit.json').existsSync(), isFalse);
+  });
+
+  test('dropping singleTop from the launcher fails closed', () async {
+    final directory = await Directory.systemTemp.createTemp(
+      'korubeni-release-surface-launchmode.',
+    );
+    addTearDown(() => directory.deleteSync(recursive: true));
+
+    final manifest = _validManifest()
+        .replaceFirst('android:launchMode="singleTop"\n        ', '');
+    final result = await _runAudit(directory, manifest);
+    expect(result.exitCode, isNot(0));
+    expect(result.stderr, contains('launcher must be singleTop'));
   });
 
   test('a failed rerun removes a stale PASS report', () async {

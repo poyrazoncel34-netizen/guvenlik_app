@@ -89,6 +89,27 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
+            <!-- Deep links (MP-26-008). A CUSTOM SCHEME, not an https App Link:
+                 autoVerify requires /.well-known/assetlinks.json at the DOMAIN
+                 ROOT, and this project's public pages are a GitHub Pages
+                 *project* site, so the root belongs to github.io and cannot be
+                 served by us. A custom scheme claims no domain ownership and
+                 needs no external association, so the whole surface is
+                 verifiable in this repository.
+
+                 The filter admits a VIEW on korubeni:// only. MainActivity
+                 records the URI and does NOTHING else with it: the Dart side
+                 parses it against an allowlist and PARKS it, and the parked
+                 destination is consumed by MainNavigation, which SplashScreen
+                 builds only after consent, onboarding and the PIN gate. A link
+                 therefore cannot reach a screen ahead of a gate, and no
+                 destination in the model can arm, dial or unlock. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="korubeni" android:host="open"/>
+            </intent-filter>
         </activity>
         <activity
             android:name=".emergency.EmergencyFallbackDialActivity"

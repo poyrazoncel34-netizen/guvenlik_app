@@ -2,6 +2,7 @@
 // ANA NAVİGASYON - MODERN BOTTOM NAVIGATION BAR (PREMIUM)
 // ============================================================================
 
+import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -21,6 +22,9 @@ import 'pin_setup_screen.dart';
 import 'settings_page.dart';
 import '../core/services/emergency_session_contract.dart';
 import '../core/services/pin_verification_service.dart';
+import '../core/navigation/deep_link_channel.dart';
+import '../core/navigation/destination_router.dart';
+import '../core/navigation/pending_destination_service.dart';
 
 class MainNavigation extends StatefulWidget {
   const MainNavigation({super.key});
@@ -30,7 +34,10 @@ class MainNavigation extends StatefulWidget {
 }
 
 class _MainNavigationState extends State<MainNavigation>
-    with SingleTickerProviderStateMixin, RestorationMixin {
+    with
+        SingleTickerProviderStateMixin,
+        RestorationMixin,
+        WidgetsBindingObserver {
   /// RESTORABLE ON PURPOSE: this is navigation state, and losing it is not
   /// cosmetic. A process death while the user is on Map (a live location
   /// share), Contacts (mid-edit) or Profile silently returns them to Home,
@@ -95,14 +102,67 @@ class _MainNavigationState extends State<MainNavigation>
       ),
     ]).animate(_tabFadeController);
     _tabFadeController.addListener(_swapAtTrough);
+    // Deep links are consumed HERE and nowhere earlier. This widget only exists
+    // once SplashScreen has cleared consent, onboarding and the PIN gate, so
+    // "a link cannot skip a gate" is a property of construction order rather
+    // than of a conditional someone has to remember to write (MP-26-008).
+    WidgetsBinding.instance.addObserver(this);
+    PendingDestinationService.instance.addListener(_onPendingDestination);
     // Firebase services removed (offline-first)
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _runStartupChecks();
+      _collectAndRouteExternalEntry();
     });
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // A link that arrives while the app is already running reaches
+    // MainActivity.onNewIntent, which parks it natively; this is where it is
+    // collected. Resume is also when a return from the PIN re-auth lock lands,
+    // so a link received while locked is routed only now.
+    if (state == AppLifecycleState.resumed) {
+      unawaited(_collectAndRouteExternalEntry());
+    }
+  }
+
+  void _onPendingDestination() {
+    if (!mounted || !PendingDestinationService.instance.hasPending) return;
+    unawaited(_routePending());
+  }
+
+  /// Asks the platform for a parked link, then routes whatever is pending.
+  Future<void> _collectAndRouteExternalEntry() async {
+    final uri = await DeepLinkChannel.consume();
+    if (uri != null) {
+      PendingDestinationService.instance.submitUri(uri);
+    }
+    await _routePending();
+  }
+
+  /// Single-consume: fifty rapid links leave one destination, and it fires once.
+  bool _routing = false;
+
+  Future<void> _routePending() async {
+    if (_routing || !mounted) return;
+    _routing = true;
+    try {
+      final accepted = PendingDestinationService.instance.consume();
+      if (accepted == null || !mounted) return;
+      await DestinationRouter.route(
+        context,
+        accepted.destination,
+        selectTab: _selectTab,
+      );
+    } finally {
+      _routing = false;
+    }
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    PendingDestinationService.instance.removeListener(_onPendingDestination);
     _tabFadeController.removeListener(_swapAtTrough);
     _tabFadeController.dispose();
     _restoredIndex.dispose();

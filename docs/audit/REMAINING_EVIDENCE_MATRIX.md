@@ -44,7 +44,7 @@ have meant filing a document under a code archetype to keep the list short.
 | Metric | Count |
 |---|---|
 | Rows in this matrix | 239 |
-| Still `IN_REPO_RESOLVABLE` in the queue | 11 |
+| Still `IN_REPO_RESOLVABLE` in the queue | 10 |
 | Evidence artifacts referenced | 11 |
 | Plan/audit integrity problems | 0 |
 
@@ -292,7 +292,7 @@ have meant filing a document under a code archetype to keep the list short.
 
 | ID | § | Requirement | Status | Sev | Surface | Verifier | Evidence property | Negative control | Remediated? | Disposition |
 |---|---|---|---|---|---|---|---|---|---|---|
-| `MP-26-008` | 26 | Deep link doğru. | PARTIAL | P2 | AndroidManifest intent filters | scripts/audit_evidence/flows.py | `flows.json` → `measurements.entryPoints.externalEntryPoints` | unconfirmed data erase + exit-less screen -> 1 violation | no | PARTIAL |
+| `MP-26-008` | 26 | Deep link doğru. | PASS | - | AndroidManifest VIEW filter -> MainActivity.captureDeepLink -> lib/core/navigation/* -> MainNavigation | scripts/audit_evidence/flows.py | `flows.json` → `measurements.entryPoints.deepLinks` | rename a destination to 'panic-dial' and add a second consumer of the parked destination -> flows.py 0 -> 6; an https App Link or a dropped singleTop fails the release-surface audit closed | yes | PASS |
 | `MP-32-040` | 32 | SAST. | PARTIAL | P2 | CI + release gates | scripts/audit_evidence/storage.py | `storage.json` → `measurements.appsec.sastGap` | hard-coded API key + DROP TABLE + PRAGMA identifier from a variable -> 3 | no | PARTIAL |
 
 ### UNIT_BEHAVIOR — 4 rows

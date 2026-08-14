@@ -2,7 +2,7 @@
   "verifier": "scripts/audit_evidence/flows.py",
   "verifierVersion": "1.0.0",
   "codeRevision": {
-    "head": "e36fe498920dc969a13cc1707c91547661747cda",
+    "head": "75057473b926340ecf6074ca07bc7a3c8e092390",
     "dirty": true
   },
   "measuredOn": "2026-08-15",
@@ -72,7 +72,52 @@
       "externalEntryPoints": {
         "home-screen widget": "android/.../quickaccess",
         "Quick Settings tile": "android/.../quickaccess",
-        "volume-key trigger": "lib/core/services (volume trigger)"
+        "volume-key trigger": "lib/core/services (volume trigger)",
+        "deep link": "korubeni://open/<destination>"
+      },
+      "deepLinks": {
+        "scheme": "korubeni",
+        "manifestSchemes": [
+          "korubeni",
+          "tel"
+        ],
+        "autoVerifyDeclared": false,
+        "destinationSlugs": [
+          "home",
+          "map",
+          "contacts",
+          "settings",
+          "timeline",
+          "check-in",
+          "subscription"
+        ],
+        "actionLikeDestinations": [],
+        "rejectionReasons": [
+          "foreignUri",
+          "unknownDestination",
+          "unknownParameter",
+          "malformedParameter",
+          "oversized",
+          "pathTooDeep"
+        ],
+        "gatedDestinations": [
+          "safetyTimeline",
+          "checkIn",
+          "contacts"
+        ],
+        "parkFile": "lib/core/navigation/pending_destination_service.dart",
+        "parkConsumers": [
+          "lib/screens/main_navigation.dart"
+        ],
+        "singleConsume": true,
+        "boundedRejectionLog": true,
+        "routerAsksSubscriptionGate": true,
+        "parserIsPure": true,
+        "coveringTests": [
+          "test/core/navigation/deep_link_test.dart",
+          "test/android/release_surface_audit_test.dart"
+        ],
+        "appLinkNote": "an https App Link is deliberately ABSENT rather than deferred. autoVerify requires /.well-known/assetlinks.json at the DOMAIN ROOT, and this project's public pages are a GitHub Pages *project* site, so the root belongs to github.io and cannot be served by us. That is a fact about the hosting, not a difficulty, so it is not an external blocker to be parked -- a custom scheme claims no domain ownership and the whole surface is provable here."
       },
       "landingSurfacesAfterGates": [
         "AppUnlockScreen",
@@ -98,7 +143,7 @@
     },
     "forwardPath": {
       "pushSites": 30,
-      "routeBuilders": 35,
+      "routeBuilders": 36,
       "wizardScreens": [
         "lib/screens/onboarding_screen.dart",
         "lib/screens/battery_optimization_wizard.dart",
@@ -149,8 +194,8 @@
     "interruptionSafety": {
       "restorationPolicyTest": "test/state_restoration_policy_test.dart",
       "restorationScopeSites": [
-        "lib/screens/main_navigation.dart:33",
-        "lib/screens/main_navigation.dart:50",
+        "lib/screens/main_navigation.dart:39",
+        "lib/screens/main_navigation.dart:57",
         "lib/screens/onboarding/onboarding_contact_step.dart:37",
         "lib/screens/onboarding/onboarding_contact_step.dart:64",
         "lib/screens/onboarding_screen.dart:38",
@@ -167,7 +212,7 @@
     "flowStates": {
       "successSurfaces": 57,
       "failureSurfaces": 77,
-      "emptySurfaces": 37,
+      "emptySurfaces": 41,
       "loadingSurfaces": 40,
       "timeoutSurfaces": [
         "lib/core/services/app_bootstrap_service.dart:56",
@@ -422,6 +467,9 @@
     },
     "emptyStates": {
       "sites": [
+        "lib/core/navigation/deep_link_parser.dart:70",
+        "lib/core/navigation/deep_link_parser.dart:80",
+        "lib/core/navigation/deep_link_parser.dart:127",
         "lib/core/services/activity_service.dart:17",
         "lib/core/services/activity_service.dart:95",
         "lib/core/services/check_in_expiry_coordinator.dart:27",
@@ -450,10 +498,11 @@
         "lib/screens/contacts_page.dart:935",
         "lib/screens/edit_profile_screen.dart:37",
         "lib/screens/emergency_call_screen.dart:387",
-        "lib/screens/fake_call_screen.dart:230",
-        "lib/screens/fake_call_screen.dart:233",
-        "lib/screens/fake_call_screen.dart:643",
-        "lib/screens/fake_call_screen.dart:646",
+        "lib/screens/fake_call_screen.dart:200",
+        "lib/screens/fake_call_screen.dart:240",
+        "lib/screens/fake_call_screen.dart:243",
+        "lib/screens/fake_call_screen.dart:653",
+        "lib/screens/fake_call_screen.dart:656",
         "lib/screens/onboarding/onboarding_contact_step.dart:296",
         "lib/screens/onboarding/onboarding_contact_step.dart:442",
         "lib/screens/onboarding/onboarding_contact_step.dart:514",
@@ -502,7 +551,7 @@
         "lib/screens/home_page.dart:123",
         "lib/screens/home_page.dart:124",
         "lib/screens/home_page.dart:126",
-        "lib/screens/main_navigation.dart:231",
+        "lib/screens/main_navigation.dart:291",
         "lib/screens/map_page.dart:360",
         "lib/widgets/connectivity_banner.dart:13",
         "lib/widgets/connectivity_banner.dart:14",
@@ -556,7 +605,7 @@
   ],
   "negativeControl": {
     "command": "python3 scripts/audit_evidence/flows.py --negative-control",
-    "mutation": "remove the confirmation from 'erase all app data'; add a screen with no exit path; rename the handoffAccepted outcome to 'delivered'; delete the per-target renderer",
-    "expected": "destructiveActionUnconfirmed, screenWithNoExitPath, unprovableDispatchOutcome and outcomesNeverRendered fire"
+    "mutation": "remove the confirmation from 'erase all app data'; add a screen with no exit path; rename the handoffAccepted outcome to 'delivered'; delete the per-target renderer; rename a deep-link destination to 'panic-dial'; add a second consumer of the parked destination",
+    "expected": "destructiveActionUnconfirmed, screenWithNoExitPath, unprovableDispatchOutcome, outcomesNeverRendered, deepLinkDestinationPerformsSafetyAction and multipleDestinationConsumers fire"
   }
 }

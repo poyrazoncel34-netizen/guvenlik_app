@@ -76,9 +76,9 @@
 | **MISSING** | **0** |
 | **DUPLICATED** | **0** |
 | **UNACCOUNTED** | **0** |
-| PASS | 777 |
+| PASS | 778 |
 | FAIL | 9 |
-| PARTIAL | 78 |
+| PARTIAL | 77 |
 | BLOCKED | 38 |
 | N/A | 783 |
 | UNVERIFIED | 53 |
@@ -89,7 +89,7 @@
 |---|---|
 | P0 | 0 |
 | P1 | 29 |
-| P2 | 125 |
+| P2 | 124 |
 | P3 | 24 |
 
 ### P0 / P1 register
@@ -157,7 +157,7 @@ Every P0 and P1 individually, so none hides inside an aggregate.
 | 23 | 7 | 0 | 3 | 0 | 5 | 0 |
 | 24 | 0 | 0 | 0 | 0 | 18 | 0 |
 | 25 | 1 | 0 | 0 | 0 | 13 | 0 |
-| 26 | 8 | 0 | 2 | 0 | 5 | 0 |
+| 26 | 9 | 0 | 1 | 0 | 5 | 0 |
 | 27 | 20 | 0 | 1 | 0 | 3 | 0 |
 | 28 | 0 | 0 | 0 | 0 | 24 | 0 |
 | 29 | 22 | 0 | 0 | 0 | 9 | 0 |
@@ -1135,7 +1135,7 @@ Every P0 and P1 individually, so none hides inside an aggregate.
 | `MP-26-005` | Transactional ve marketing ayrılmış. | N/A | **N/A** | - | SRC: the product sends no email and no marketing message of any kind. There is no mailing list and no server to send from. | - | Not applicable. | `SRC` |
 | `MP-26-006` | Notification preferences. | Partially applicable | **PARTIAL** | P2 | MEASURED, not asserted. Archetype STATIC_CODE. Surface: in-app notification preference toggles. Verifier `scripts/audit_evidence/interaction.py` -> `docs/audit/evidence/interaction.json`, property `measurements.notificationFeedback.userFacingPreferenceSurface` = notification preference toggles live in settings; the OS channel is the authority and the app cannot re-enable a channel the user muted. NEGATIVE CONTROL: PIN field offering password autofill + unlabelled field -> 2. | interaction.json measurements.notificationFeedback.userFacingPreferenceSurface: the app holds no per-category preference store, so a user who wants check-in reminders but not rehearsal nudges has no in-app control. | Same remediation as MP-23-010; one preference surface serves both rows. | `SRC` |
 | `MP-26-007` | Duplicate notification yok. | Partially applicable | **PASS** | - | SRC lib/core/services/foreground_service_ownership.dart plus the single-owner session model in android/.../EmergencySessionCoordinator.kt prevent duplicate concurrent session notifications; TEST android/app/src/test/.../EmergencySessionCoordinatorTest.kt. | - | - | `RUN` |
-| `MP-26-008` | Deep link doğru. | Partially applicable | **PARTIAL** | P2 | MEASURED, not asserted. Archetype STATIC_CONFIG. Surface: AndroidManifest intent filters. Verifier `scripts/audit_evidence/flows.py` -> `docs/audit/evidence/flows.json`, property `measurements.entryPoints.externalEntryPoints` = home-screen widget=android/.../quickaccess, Quick Settings tile=android/.../quickaccess, volume-key trigger=lib/core/services (volume trigger). NEGATIVE CONTROL: unconfirmed data erase + exit-less screen -> 1 violation. | flows.json lists three external entry points (widget, tile, volume trigger); none is a URL deep link, and no intent-filter data element exists to verify. | Either declare this N/A with the manifest as evidence, or add the deep links the store listing implies. | `SRC` |
+| `MP-26-008` | Deep link doğru. | Partially applicable | **PASS** | - | MEASURED, not asserted. Archetype STATIC_CODE + TEST. Surface: AndroidManifest VIEW filter -> MainActivity.captureDeepLink -> lib/core/navigation/{deep_link_channel, deep_link_parser, app_destination, pending_destination_service, destination_router}.dart -> MainNavigation. Verifier `scripts/audit_evidence/flows.py` -> `docs/audit/evidence/flows.json`, property `measurements.entryPoints.deepLinks`: scheme = korubeni, manifestSchemes = [korubeni, tel], autoVerifyDeclared = false, 7 destinationSlugs, 0 actionLikeDestinations, 6 rejectionReasons, 3 gatedDestinations, parkConsumers = [lib/screens/main_navigation.dart] (exactly one), singleConsume = true, boundedRejectionLog = true, routerAsksSubscriptionGate = true, parserIsPure = true -- all COMPUTED. SECURITY SHAPE: the link layer cannot navigate at all; it PARKS a validated destination, and the park is consumed only by MainNavigation, which SplashScreen builds after consent, onboarding and the PIN gate -- so gate ordering is a property of construction order, not of a conditional. No destination can arm, dial, cancel or unlock, and that is asserted over the slug set. Entitlement is decided by the SAME SubscriptionGate.ensureAccess call an in-app tap makes, with the same PremiumFeature. Behaviour: `test/core/navigation/deep_link_test.dart` (34 cases: cold start, warm, background, locked, foreign scheme/host, unknown destination, deep path, unknown/malformed parameter, oversized, null, duplicate and rapid bursts, hostile-burst bounding) + 7 cases in `test/android/release_surface_audit_test.dart`. NEGATIVE CONTROL: renaming a destination to panic-dial and adding a second consumer moves flows.py 0 -> 6; an https App Link or a dropped singleTop fails the release-surface audit closed. | None. NOT an external blocker: an https App Link is deliberately absent rather than deferred, because autoVerify needs /.well-known/assetlinks.json at the DOMAIN ROOT and this project publishes to a GitHub Pages *project* site whose root belongs to github.io. That is a fact about the hosting, not a difficulty, so a custom scheme -- which claims no domain ownership -- makes the whole surface provable here. The release-surface audit now REFUSES an https launcher scheme, so the unprovable claim cannot ship by accident. | None in repo. If the project ever acquires a domain root it can serve, the https filter plus a real assetlinks.json would be a new, separately verifiable change. | `TEST` |
 | `MP-26-009` | Expired notification doğru fallback'e gider. | Partially applicable | **PASS** | - | SRC android/.../EmergencyFallbackCleanupReceiver.kt plus EmergencyPrefs clearing: a stale session's notification is cleaned up rather than left tappable; TEST EmergencyPrefsClearTest.kt. | - | - | `RUN` |
 | `MP-26-010` | Badge count doğru. | N/A | **N/A** | - | SRC: the app sets no launcher badge count. | - | Not applicable. | `SRC` |
 | `MP-26-011` | Timezone doğru. | Partially applicable | **PASS** | - | SRC android/.../ClockChangeReceiver.kt reacts to TIME_SET/TIMEZONE_CHANGED and reschedules; TEST android/app/src/test/.../AlarmClockRecoveryTest.kt. | - | - | `RUN` |

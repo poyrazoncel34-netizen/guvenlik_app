@@ -60,6 +60,13 @@ REQUIRED_BACKUP_DOMAINS = {
     "device_sharedpref",
 }
 LAUNCHER_ACTIVITY = "com.poyrazoncel.korubeni.MainActivity"
+
+# Schemes the launcher may accept through a VIEW filter. `korubeni` is the app's
+# own custom scheme (MP-26-008). `http`/`https` are deliberately ABSENT: an
+# App Link asserts ownership of a domain, and this project publishes to a
+# GitHub Pages project site whose root -- where assetlinks.json must live -- is
+# not ours to serve. Admitting https here would let an unverifiable claim ship.
+ALLOWED_LAUNCHER_SCHEMES = {"korubeni"}
 PROFILE_RECEIVER = "androidx.profileinstaller.ProfileInstallReceiver"
 # A Quick Settings tile cannot be exported=false: SystemUI binds it. What makes
 # that safe is the signature-level BIND_QUICK_SETTINGS_TILE guard, which limits
@@ -119,6 +126,20 @@ def launcher_filter_present(component: ET.Element) -> bool:
         ):
             return True
     return False
+
+
+def launcher_view_schemes(component: ET.Element) -> set[str]:
+    """Schemes the launcher accepts through a VIEW intent filter."""
+    schemes: set[str] = set()
+    for intent_filter in component.findall("intent-filter"):
+        actions = {attr(item, "name") for item in intent_filter.findall("action")}
+        if "android.intent.action.VIEW" not in actions:
+            continue
+        for data in intent_filter.findall("data"):
+            scheme = attr(data, "scheme")
+            if scheme:
+                schemes.add(scheme)
+    return schemes
 
 
 def audit_manifest(
@@ -274,6 +295,23 @@ def audit_manifest(
         or attr(launcher, "taskAffinity") != ""
     ):
         errors.append("launcher activity contract is invalid")
+
+    # The launcher is the app's one exported activity, so every intent filter on
+    # it is externally reachable. Adding a BROWSABLE VIEW filter (deep links,
+    # MP-26-008) widens that surface, and nothing here noticed before this check
+    # existed. Each admitted scheme is enumerated, and an https scheme is
+    # refused outright: an https App Link asserts domain ownership, which this
+    # project cannot prove for a GitHub Pages *project* site whose domain root
+    # it does not control.
+    if launcher is not None:
+        for scheme in launcher_view_schemes(launcher):
+            if scheme not in ALLOWED_LAUNCHER_SCHEMES:
+                errors.append(f"launcher accepts an unexpected scheme: {scheme}")
+        if attr(launcher, "launchMode") != "singleTop":
+            errors.append(
+                "launcher must be singleTop: a deep link arriving at a second "
+                "task instance would run the gate decision twice"
+            )
 
     for name in sorted(SAFETY_COMPONENTS):
         component = component_by_name.get(name)
