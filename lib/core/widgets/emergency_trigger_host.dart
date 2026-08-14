@@ -91,8 +91,12 @@ class EmergencyTriggerHostState extends State<EmergencyTriggerHost>
         state == AppLifecycleState.paused ||
         state == AppLifecycleState.detached) {
       _stopForegroundTriggers();
-      // Record background start time
-      AppLifecycleHandler.instance.onPaused();
+      // Record background start time -- but ONLY for a genuine background
+      // transition. `inactive` also fires on the way back IN, and feeding it
+      // here reset the clock at resume time and silently disabled the lock.
+      if (lifecycleStartsBackgroundClock(state)) {
+        AppLifecycleHandler.instance.onPaused();
+      }
     }
   }
 

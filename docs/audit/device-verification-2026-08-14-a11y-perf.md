@@ -172,3 +172,39 @@ kaliyor. Dusen kareler yumusatilmadan raporlaniyor.
 
 Gercekten dusuk segment FIZIKSEL cihaz (yavas depolama + termal kisma) hala
 kapsanmiyor; o gercek-cihaz matrisinde kaliyor.
+
+## Oturum girdisi ve GUVENLIK BULGUSU (MP-01-021)
+
+Kontrol listesinin senaryosu kilit/kilit-acma dongusu. Onu kosmaya calismak
+gercek bir guvenlik kusuru ortaya cikardi.
+
+**Ilk kosum.** Profil > Kisisel Bilgiler alanina "Yarim Kalan Metin" yazildi,
+uygulama **141 saniye** arka planda tutuldu (esik 120 s) ve donuste
+**KILIT EKRANI HIC GELMEDI**.
+
+**Kok neden.** `AppLifecycleState.inactive` yalnizca disari cikarken degil,
+`resumed`'dan hemen once GERI GIRERKEN de tetikleniyor. `emergency_trigger_host`
+`onPaused()`'u `inactive` icin de cagirdigindan, donus gecisi duraklama zaman
+damgasini o anki zamanla eziyordu; gecen sure ~0 hesaplaniyor ve kilit HICBIR
+surede acilmiyordu. `app_privacy_shield.dart` tam bu `inactive` / `paused`
+ayrimini zaten belgeliyor -- kod tabani kendisiyle celisiyordu.
+
+Zorlama modelinde kimlik dogrulama tamamen yerel PIN'e dayandigi icin
+(CLAUDE.md kural 2), hic tetiklenmeyen bir otomatik kilit gercek bir guvenlik
+bulgusudur.
+
+**Duzeltme.** `lifecycleStartsBackgroundClock()` (yalnizca paused/hidden/detached)
+ve `onPaused()` icinde EN ERKEN zaman damgasinin kazanmasi.
+
+**Duzeltme sonrasi, ayni senaryo.** 135 saniye arka plan -> PIN kilit ekrani geldi
+("Uygulama kilidi. PIN ile acin."); PIN girildikten sonra uygulama Kisisel
+Bilgiler ekranina dondu ve gonderilmemis metin "Kilit Testi Metni" alanda duruyordu.
+Kilit, formun USTUNE bir rota olarak itildigi ve form altta bagli kaldigi icin
+girdi korunuyor.
+
+**DURUST KAYIT:** gonderilmemis girdi GERCEK SUREC OLUMUNDEN sagkurtulmuyor.
+Ayrica olculdu: arka plandayken `am kill`, ardindan yeniden baslatma -> yeni pid
+ve uygulama onboarding 1/5'te, yarim dolu form yok. Uygulamada Flutter durum
+geri yukleme (`RestorationMixin` / `restorationScopeId`) yok. Kontrol listesinin
+senaryosu kilit/kilit-acma ve o geciyor; surec olumu geri yuklemesi daha buyuk
+bir degisiklik ve ima edilmek yerine adiyla yaziliyor.

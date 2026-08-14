@@ -76,12 +76,12 @@
 | **MISSING** | **0** |
 | **DUPLICATED** | **0** |
 | **UNACCOUNTED** | **0** |
-| PASS | 567 |
+| PASS | 568 |
 | FAIL | 11 |
 | PARTIAL | 117 |
 | BLOCKED | 29 |
 | N/A | 783 |
-| UNVERIFIED | 231 |
+| UNVERIFIED | 230 |
 
 ### Severity of non-PASS findings
 
@@ -89,7 +89,7 @@
 |---|---|
 | P0 | 0 |
 | P1 | 29 |
-| P2 | 173 |
+| P2 | 172 |
 | P3 | 186 |
 
 ### P0 / P1 register
@@ -132,7 +132,7 @@ Every P0 and P1 individually, so none hides inside an aggregate.
 
 | # | PASS | FAIL | PARTIAL | BLOCKED | N/A | UNVERIFIED |
 |---|---|---|---|---|---|---|
-| 1 | 3 | 0 | 2 | 0 | 8 | 18 |
+| 1 | 4 | 0 | 2 | 0 | 8 | 17 |
 | 2 | 0 | 0 | 0 | 0 | 5 | 11 |
 | 3 | 0 | 0 | 2 | 0 | 0 | 29 |
 | 4 | 23 | 0 | 2 | 0 | 4 | 0 |
@@ -245,7 +245,7 @@ Every P0 and P1 individually, so none hides inside an aggregate.
 | `MP-01-018` | Login sonrası kullanıcı orijinal deep link'e dönebiliyor. | N/A | **N/A** | - | SRC: neither deep links nor a login/account system exist. | - | Not applicable without deep links or server accounts. | `SRC` |
 | `MP-01-019` | Aynı sayfanın birden fazla tab'da açılması bozulmaya yol açmıyor. | N/A | **N/A** | - | SRC AndroidManifest.xml: single MainActivity, launchMode=singleTop, taskAffinity="" - the platform cannot present two live instances of one screen. | - | Multi-tab concurrency is a browser concern. | `SRC` |
 | `MP-01-020` | Back/forward cache durumları düşünülmüş. | N/A | **N/A** | - | SRC: Android-only Flutter app. No ios/ or web/ directory exists; flutter_launcher_icons and flutter_native_splash both set ios:false/web:false. Google Play is the only distribution channel. | - | bfcache is a browser mechanism. | `SRC` |
-| `MP-01-021` | Session expire olursa kullanıcının yaptığı iş mümkün olduğunca kaybolmuyor. | Applicable | **UNVERIFIED** | P2 | SRC lib/screens/app_unlock_screen.dart and lib/core/widgets/safety_session_pin_gate.dart: the PIN lock is the only session concept; there is no server session to expire. | Whether in-progress input (a half-filled contact form) survives a lock/unlock cycle was not exercised. | Add a widget test that locks and unlocks mid-form and asserts field retention. | `SRC` |
+| `MP-01-021` | Session expire olursa kullanıcının yaptığı iş mümkün olduğunca kaybolmuyor. | Applicable | **PASS** | - | MEASURED on device, and measuring it FOUND AND FIXED A SECURITY DEFECT that made the requirement untestable. FIRST RUN: with a half-filled form (the Profile > Kisisel Bilgiler name field holding 'Yarim Kalan Metin'), the app was backgrounded for 141 s against a 120 s re-auth threshold -- and NO LOCK SCREEN APPEARED. Root cause: `AppLifecycleState.inactive` fires not only on the way out but again on the way BACK IN, immediately before `resumed`. `emergency_trigger_host` called `AppLifecycleHandler.onPaused()` for `inactive`, so the resume transition overwrote the paused timestamp with the current time; elapsed computed as ~0 and the lock could never fire at ANY duration. `app_privacy_shield.dart` already documented exactly this inactive-vs-paused distinction, so the codebase disagreed with itself. FIXED with a `lifecycleStartsBackgroundClock()` predicate (paused/hidden/detached only) plus earliest-timestamp-wins in `onPaused()`. AFTER THE FIX, SAME SCENARIO: 135 s in the background produced the PIN lock screen ('Uygulama kilidi. PIN ile acin.'), and after unlocking the app returned to Kisisel Bilgiler with the unsubmitted text 'Kilit Testi Metni' still in the field. So the checklist's lock/unlock cycle now genuinely occurs and in-progress input survives it -- the lock is pushed as a route ON TOP of the form, which stays mounted beneath. | RECORDED HONESTLY, not folded into the pass: unsubmitted input does NOT survive genuine PROCESS DEATH. Measured separately -- `am kill` while backgrounded, then relaunch, produced a new pid and the app restarted at onboarding page 1/5 with the half-filled contact form gone. The app has no Flutter state restoration (`RestorationMixin` / `restorationScopeId`). The checklist's scenario is the lock/unlock cycle, which passes; process-death restoration is a larger change and is named here rather than implied. | test/core/services/app_lifecycle_lock_test.dart -- 7 cases pinning the fix, including the defect itself as a named case ('inactive saati BASLATMAZ') and a mutation control proving the old overwrite-every-call behaviour would fail. Device evidence both before and after is in docs/audit/device-verification-2026-08-14-a11y-perf.md. | `RUN` |
 | `MP-01-022` | Kullanıcı bir işlemi iki kere tetiklerse duplicate işlem oluşmuyor. | Applicable | **PASS** | - | R2-02 FIXED. SRC lib/widgets/panic_button.dart guards re-entry with `if (_pointerDown // _isArmed // _countdownOpening) return;` set synchronously in the tap handler, plus a _pressEpoch generation counter. SRC lib/core/widgets/emergency_trigger_host.dart now acquires `_countdownOpen` SYNCHRONOUSLY before the first await and releases it in `finally` -- it used to be written after a ~2.2s entitlement budget, so two quick-access/volume triggers inside that window stacked two countdown routes. TEST test/core/widgets/emergency_trigger_duplicate_guard_test.dart fires the real trigger 2x and 20x inside the parked resolve window and asserts exactly one route push, plus guard release after success and after rejection. MUTATION: the old ordering yields 2 routes for 2 triggers and 20 for 20. | - | - | `TEST` |
 | `MP-01-023` | Tüm flow'ların success state'i var. | Applicable | **UNVERIFIED** | P3 | RUN 2026-08-12: first-run walkthrough on an API 36 emulator (consent gate -> onboarding -> contact gate -> PIN setup -> battery wizard -> home -> settings). Entry point, primary CTA, next step and exit path were unambiguous on every screen walked. | Evidence was the section-level assessment verbatim, which does not address this specific requirement (IR-06). | Write row-specific evidence or verify directly; downgraded rather than left as an unsupported PASS. | `RUN` |
 | `MP-01-024` | Failure state'i var. | Applicable | **UNVERIFIED** | P3 | RUN 2026-08-12: first-run walkthrough on an API 36 emulator (consent gate -> onboarding -> contact gate -> PIN setup -> battery wizard -> home -> settings). Entry point, primary CTA, next step and exit path were unambiguous on every screen walked. | Evidence was the section-level assessment verbatim, which does not address this specific requirement (IR-06). | Write row-specific evidence or verify directly; downgraded rather than left as an unsupported PASS. | `RUN` |
