@@ -8,6 +8,7 @@ import '../di/service_locator.dart';
 import '../security/secure_storage.dart';
 import '../security/secure_storage_keys.dart';
 import 'contact_service.dart';
+import 'database_integrity_service.dart';
 import 'emergency_platform_service.dart';
 import 'local_database_service.dart';
 
@@ -55,6 +56,16 @@ class UserDataExportService {
       'nativeSafetyDiagnostics': await EmergencyPlatformService.instance
           .readNativeSafetyDiagnostics(),
       'consentState': await consentManager.exportConsentLog(),
+      // The user-requested diagnostics stage of the MP-29-017 policy. This is
+      // the one moment a FULL scan is right: the user asked, is watching, and
+      // unbounded time is acceptable -- unlike the connection open path, where
+      // the same scan grows with a table the user controls.
+      'databaseIntegrity': (await DatabaseIntegrityService.scan(
+        database,
+        depth: IntegrityScanDepth.full,
+      )).toMap(),
+      'foreignKeyEnforcement':
+          await DatabaseIntegrityService.foreignKeysEnabled(database),
     };
   }
 

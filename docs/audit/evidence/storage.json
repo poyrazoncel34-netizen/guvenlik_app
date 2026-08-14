@@ -2,7 +2,7 @@
   "verifier": "scripts/audit_evidence/storage.py",
   "verifierVersion": "1.0.0",
   "codeRevision": {
-    "head": "f13d1bafbd2a0d0766851c6a1c1f5fa9649e35b8",
+    "head": "e9156143dea76817828bbb65709e482134bc10b8",
     "dirty": true
   },
   "measuredOn": "2026-08-15",
@@ -35,7 +35,30 @@
         "FOREIGN KEY": 0
       },
       "checkConstraintCount": 0,
-      "constraintStrategy": "column-level NOT NULL/PRIMARY KEY plus validation at the Dart boundary. SQLite CHECK constraints are deliberately absent: a failed CHECK raises inside an insert on the safety timeline, and the emergency path must degrade rather than throw.",
+      "constraintStrategy": "column-level NOT NULL/PRIMARY KEY plus validation at the Dart boundary. SQLite CHECK constraints are deliberately absent: a failed CHECK raises inside an insert on the safety timeline, and the emergency path must degrade rather than throw. What CANNOT throw is VERIFIED instead -- see integrityPolicy.",
+      "integrityPolicy": {
+        "policyFile": "lib/core/services/database_integrity_service.dart",
+        "pragmasUsed": [
+          "foreign_key_check",
+          "foreign_keys",
+          "integrity_check",
+          "quick_check"
+        ],
+        "scanDepths": [
+          "quick",
+          "full"
+        ],
+        "foreignKeysEnabledAtConnect": true,
+        "scanOnEveryOpen": false,
+        "scanAfterMigration": true,
+        "fullScanInUserDiagnostics": true,
+        "declaredForeignKeys": 0,
+        "checksForeignKeysSeparately": true,
+        "coveringTests": [
+          "test/core/services/database_integrity_service_test.dart"
+        ],
+        "note": "integrity_check does NOT report referential problems, so a database can pass it while holding orphaned rows; foreign_key_check is run separately and the test asserts that trap explicitly. The shipped schema declares no foreign keys today (declaredForeignKeys), so that check is a guard against a future relationship rather than a current finding -- which is why foreign_keys is switched ON at connect time: SQLite defaults it OFF per connection, and a key declared later would otherwise be silently unenforced."
+      },
       "transactionSites": 1,
       "transactionBoundary": "the 100-row crash-log cap is enforced on every insert; the insert+prune pair is the only genuine multi-statement write",
       "isolationLevel": "sqflite serialises through a single native connection per database handle, so the effective isolation is SERIALIZABLE. There is no second writer: no backend, no sync, one process.",
@@ -142,7 +165,7 @@
   ],
   "negativeControl": {
     "command": "python3 scripts/audit_evidence/storage.py --negative-control",
-    "mutation": "a hard-coded API key and a DROP TABLE on activity_events",
-    "expected": "hardcodedSecretLiteral and destructiveMigration fire"
+    "mutation": "a hard-coded API key; a DROP TABLE on activity_events; a PRAGMA identifier from a variable; the picked-image byte copy restored; the sanitiser turned into a clone of the source; foreign-key enforcement removed and the integrity scan moved onto the connection open path",
+    "expected": "11 violations across hardcodedSecretLiteral, destructiveMigration, pragmaIdentifierFromVariable, sourceImageBytesCopiedToStorage, sanitizerEditsSourceImage, sanitizerClonesMetadata, pickerBypassesImportBoundary, orientationDroppedNotBaked, foreignKeysNotEnforced, integrityScanOnStartupPath and referentialIntegrityUnchecked"
   }
 }

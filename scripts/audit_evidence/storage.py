@@ -74,6 +74,71 @@ IMAGE_SANITIZER_FILE = "lib/core/services/image_sanitizer_service.dart"
 IMAGE_PICKER_FILE = "lib/screens/fake_call_screen.dart"
 
 
+INTEGRITY_FILE = "lib/core/services/database_integrity_service.dart"
+
+
+def _integrity_policy(root: Path) -> dict:
+    """MP-29-017: what the DB layer actually enforces, and what it verifies.
+
+    Computed. The predecessor of this block was a paragraph of rationale, which
+    the audit correctly called "a design position, not a measurement of
+    integrity".
+    """
+    svc = read_stripped(root / INTEGRITY_FILE) if (root / INTEGRITY_FILE).exists() else ""
+    db_src = _db(root)
+
+    # Pragmas are reached two ways: written literally, and selected by name
+    # into an interpolated `PRAGMA $pragma`. A regex over literals alone
+    # reported two of the four and would have understated the policy.
+    pragmas = sorted(set(
+        re.findall(r"PRAGMA (\w+)", svc)
+        + re.findall(r"'(quick_check|integrity_check|foreign_key_check)'", svc)
+    ))
+    depth_block = re.search(r"enum IntegrityScanDepth\s*\{([^}]*)\}", svc, re.S)
+    depths = (
+        [d.strip() for d in depth_block.group(1).split(",") if d.strip()]
+        if depth_block else []
+    )
+
+    # Where each depth is wired. The claim "not on every open" is only worth
+    # anything if the open path is inspected rather than described.
+    open_block = ""
+    if "_database = await openDatabase(" in db_src:
+        start = db_src.index("_database = await openDatabase(")
+        open_block = db_src[start: db_src.index("return _database!;", start)]
+    upgrade_block = ""
+    if "static Future<void> upgradeSchema(" in db_src:
+        start = db_src.index("static Future<void> upgradeSchema(")
+        end = db_src.find("static Future<void> _addMissingColumns(", start)
+        upgrade_block = db_src[start: end if end > 0 else len(db_src)]
+
+    export_src = read_stripped(root / "lib/core/services/user_data_export_service.dart")
+
+    return {
+        "policyFile": INTEGRITY_FILE if svc else None,
+        "pragmasUsed": pragmas,
+        "scanDepths": depths,
+        "foreignKeysEnabledAtConnect": "PRAGMA foreign_keys = ON" in svc
+                                       and "onConfigure" in open_block,
+        "scanOnEveryOpen": "DatabaseIntegrityService.scan" in open_block,
+        "scanAfterMigration": "DatabaseIntegrityService.scan" in upgrade_block,
+        "fullScanInUserDiagnostics": "IntegrityScanDepth.full" in export_src,
+        "declaredForeignKeys": len(re.findall(r"REFERENCES\s+\w+", db_src)),
+        "checksForeignKeysSeparately": "foreign_key_check" in svc,
+        "coveringTests": ["test/core/services/database_integrity_service_test.dart"],
+        "note": (
+            "integrity_check does NOT report referential problems, so a database "
+            "can pass it while holding orphaned rows; foreign_key_check is run "
+            "separately and the test asserts that trap explicitly. The shipped "
+            "schema declares no foreign keys today (declaredForeignKeys), so that "
+            "check is a guard against a future relationship rather than a "
+            "current finding -- which is why foreign_keys is switched ON at "
+            "connect time: SQLite defaults it OFF per connection, and a key "
+            "declared later would otherwise be silently unenforced."
+        ),
+    }
+
+
 def _stored_extension(sanitizer: str):
     match = re.search(r"extension = '(\w+)'", sanitizer)
     return match.group(1) if match else None
@@ -247,6 +312,43 @@ def measure(root: Path) -> list:
                           "the pixels lays every portrait photo on its side",
             })
 
+    # N. MP-29-017: the integrity policy must exist, must not sit on the open
+    #    path, and must check referential integrity SEPARATELY.
+    policy = _integrity_policy(root)
+    if not policy["policyFile"]:
+        violations.append({"rule": "noIntegrityPolicy", "detail": INTEGRITY_FILE})
+    else:
+        if not policy["foreignKeysEnabledAtConnect"]:
+            violations.append({
+                "rule": "foreignKeysNotEnforced",
+                "detail": "SQLite defaults PRAGMA foreign_keys OFF per connection; "
+                          "any key declared later would be silently unenforced",
+            })
+        if policy["scanOnEveryOpen"]:
+            violations.append({
+                "rule": "integrityScanOnStartupPath",
+                "detail": "a scan whose cost grows with activity_events sits on "
+                          "the connection open path",
+            })
+        if not policy["scanAfterMigration"]:
+            violations.append({
+                "rule": "noPostMigrationIntegrityCheck",
+                "detail": "the one moment the app itself may have damaged the "
+                          "file is unverified",
+            })
+        if not policy["checksForeignKeysSeparately"]:
+            violations.append({
+                "rule": "referentialIntegrityUnchecked",
+                "detail": "integrity_check does not report referential problems, "
+                          "so foreign_key_check must be run separately",
+            })
+        if policy["declaredForeignKeys"] and not policy["foreignKeysEnabledAtConnect"]:
+            violations.append({
+                "rule": "declaredForeignKeysUnenforced",
+                "detail": "the schema declares foreign keys that no connection "
+                          "enforces",
+            })
+
     return violations
 
 
@@ -286,8 +388,10 @@ def build(root: Path) -> dict:
                 "column-level NOT NULL/PRIMARY KEY plus validation at the Dart "
                 "boundary. SQLite CHECK constraints are deliberately absent: a "
                 "failed CHECK raises inside an insert on the safety timeline, and "
-                "the emergency path must degrade rather than throw."
+                "the emergency path must degrade rather than throw. What CANNOT "
+                "throw is VERIFIED instead -- see integrityPolicy."
             ),
+            "integrityPolicy": _integrity_policy(root),
             "transactionSites": txn,
             "transactionBoundary": (
                 "the 100-row crash-log cap is enforced on every insert; the "
@@ -424,9 +528,31 @@ def _mutate(scratch: Path) -> str:
             .replace("bakeOrientation", "_noBake"),
             encoding="utf-8",
         )
+    # MP-29-017: take the integrity policy back out -- drop foreign_key_check,
+    # stop enabling foreign_keys, and move the scan onto the open path.
+    integrity = scratch / INTEGRITY_FILE
+    if integrity.exists():
+        integrity.write_text(
+            integrity.read_text(encoding="utf-8")
+            .replace("PRAGMA foreign_keys = ON", "PRAGMA synchronous = NORMAL")
+            .replace("foreign_key_check", "table_list"),
+            encoding="utf-8",
+        )
+    db_service = scratch / DB
+    if db_service.exists():
+        db_service.write_text(
+            db_service.read_text(encoding="utf-8").replace(
+                "      onCreate: (db, version) => createSchema(db),",
+                "      onCreate: (db, version) => createSchema(db),\n"
+                "      onOpen: (db) => DatabaseIntegrityService.scan(db),",
+            ),
+            encoding="utf-8",
+        )
     return ("a hard-coded API key, a DROP TABLE on activity_events, a PRAGMA "
             "identifier taken from a variable, the picked-image byte copy "
-            "restored, and the sanitiser turned into a clone of the source")
+            "restored, the sanitiser turned into a clone of the source, and "
+            "the integrity policy stripped of foreign-key enforcement while "
+            "its scan is moved onto the connection open path")
 
 
 def main() -> int:
@@ -449,8 +575,17 @@ def main() -> int:
         ],
         extra={"negativeControl": {
             "command": COMMAND + " --negative-control",
-            "mutation": "a hard-coded API key and a DROP TABLE on activity_events",
-            "expected": "hardcodedSecretLiteral and destructiveMigration fire",
+            "mutation": "a hard-coded API key; a DROP TABLE on activity_events; a "
+                        "PRAGMA identifier from a variable; the picked-image byte "
+                        "copy restored; the sanitiser turned into a clone of the "
+                        "source; foreign-key enforcement removed and the integrity "
+                        "scan moved onto the connection open path",
+            "expected": "11 violations across hardcodedSecretLiteral, "
+                        "destructiveMigration, pragmaIdentifierFromVariable, "
+                        "sourceImageBytesCopiedToStorage, sanitizerEditsSourceImage, "
+                        "sanitizerClonesMetadata, pickerBypassesImportBoundary, "
+                        "orientationDroppedNotBaked, foreignKeysNotEnforced, "
+                        "integrityScanOnStartupPath and referentialIntegrityUnchecked",
         }},
     )
     print(f"STORAGE_OK violations={len(violations)} -> {rel(path)}")

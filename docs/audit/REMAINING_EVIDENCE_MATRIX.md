@@ -44,7 +44,7 @@ have meant filing a document under a code archetype to keep the list short.
 | Metric | Count |
 |---|---|
 | Rows in this matrix | 239 |
-| Still `IN_REPO_RESOLVABLE` in the queue | 12 |
+| Still `IN_REPO_RESOLVABLE` in the queue | 11 |
 | Evidence artifacts referenced | 11 |
 | Plan/audit integrity problems | 0 |
 
@@ -279,7 +279,7 @@ have meant filing a document under a code archetype to keep the list short.
 | `MP-29-006` | 29 | Check constraints. | PASS | - | sqflite schema v3 | scripts/audit_evidence/storage.py | `storage.json` → `measurements.schema.constraintStrategy` | hard-coded API key + DROP TABLE + PRAGMA identifier from a variable -> 3 | no | PASS |
 | `MP-29-011` | 29 | Transaction boundaries doğru. | PASS | - | sqflite writes | scripts/audit_evidence/storage.py | `storage.json` → `measurements.schema.transactionBoundary` | hard-coded API key + DROP TABLE + PRAGMA identifier from a variable -> 3 | no | PASS |
 | `MP-29-012` | 29 | Isolation level düşünülmüş. | PASS | - | sqflite connection model | scripts/audit_evidence/storage.py | `storage.json` → `measurements.schema.isolationLevel` | hard-coded API key + DROP TABLE + PRAGMA identifier from a variable -> 3 | no | PASS |
-| `MP-29-017` | 29 | Data integrity DB seviyesinde mümkün olduğunca korunuyor. | PARTIAL | P2 | sqflite schema v3 | scripts/audit_evidence/storage.py | `storage.json` → `measurements.schema.constraintCounts` | hard-coded API key + DROP TABLE + PRAGMA identifier from a variable -> 3 | no | PARTIAL |
+| `MP-29-017` | 29 | Data integrity DB seviyesinde mümkün olduğunca korunuyor. | PASS | - | lib/core/services/database_integrity_service.dart + lib/core/services/local_database_service.dart | scripts/audit_evidence/storage.py | `storage.json` → `measurements.schema.integrityPolicy` | remove foreign-key enforcement and move the integrity scan onto the connection open path -> storage.py 0 -> 11 violations | yes | PASS |
 | `MP-30-001` | 30 | Cache key doğru. | PASS | - | tile + prefs stores | scripts/audit_evidence/storage.py | `storage.json` → `measurements.cache.caches` | hard-coded API key + DROP TABLE + PRAGMA identifier from a variable -> 3 | no | PASS |
 | `MP-30-004` | 30 | TTL doğru. | PASS | - | tile cache | scripts/audit_evidence/storage.py | `storage.json` → `measurements.cache.caches.map tiles.ttl` | hard-coded API key + DROP TABLE + PRAGMA identifier from a variable -> 3 | no | PASS |
 | `MP-30-005` | 30 | Invalidation stratejisi. | PASS | - | tile cache | scripts/audit_evidence/storage.py | `storage.json` → `measurements.cache.caches.map tiles.invalidation` | hard-coded API key + DROP TABLE + PRAGMA identifier from a variable -> 3 | no | PASS |

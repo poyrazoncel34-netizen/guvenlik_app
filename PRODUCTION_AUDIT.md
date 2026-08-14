@@ -76,9 +76,9 @@
 | **MISSING** | **0** |
 | **DUPLICATED** | **0** |
 | **UNACCOUNTED** | **0** |
-| PASS | 776 |
+| PASS | 777 |
 | FAIL | 9 |
-| PARTIAL | 79 |
+| PARTIAL | 78 |
 | BLOCKED | 38 |
 | N/A | 783 |
 | UNVERIFIED | 53 |
@@ -89,7 +89,7 @@
 |---|---|
 | P0 | 0 |
 | P1 | 29 |
-| P2 | 126 |
+| P2 | 125 |
 | P3 | 24 |
 
 ### P0 / P1 register
@@ -160,7 +160,7 @@ Every P0 and P1 individually, so none hides inside an aggregate.
 | 26 | 8 | 0 | 2 | 0 | 5 | 0 |
 | 27 | 20 | 0 | 1 | 0 | 3 | 0 |
 | 28 | 0 | 0 | 0 | 0 | 24 | 0 |
-| 29 | 21 | 0 | 1 | 0 | 9 | 0 |
+| 29 | 22 | 0 | 0 | 0 | 9 | 0 |
 | 30 | 8 | 0 | 0 | 0 | 2 | 0 |
 | 31 | 2 | 0 | 0 | 0 | 18 | 0 |
 | 32 | 22 | 0 | 4 | 0 | 23 | 0 |
@@ -1249,7 +1249,7 @@ Every P0 and P1 individually, so none hides inside an aggregate.
 | `MP-29-014` | Lost update kontrolü. | Partially applicable | **PASS** | - | SRC: phone carries a UNIQUE constraint preventing duplicate inserts, and there is exactly one writer process, so lost updates and lock contention cannot arise. | - | - | `SRC` |
 | `MP-29-015` | Duplicate insert kontrolü. | Partially applicable | **PASS** | - | SRC: phone carries a UNIQUE constraint preventing duplicate inserts, and there is exactly one writer process, so lost updates and lock contention cannot arise. | - | - | `SRC` |
 | `MP-29-016` | Optimistic/pessimistic locking gerekiyorsa. | Partially applicable | **PASS** | - | SRC: phone carries a UNIQUE constraint preventing duplicate inserts, and there is exactly one writer process, so lost updates and lock contention cannot arise. | - | - | `SRC` |
-| `MP-29-017` | Data integrity DB seviyesinde mümkün olduğunca korunuyor. | Partially applicable | **PARTIAL** | P2 | MEASURED, not asserted. Archetype STATIC_CODE. Surface: sqflite schema v3. Verifier `scripts/audit_evidence/storage.py` -> `docs/audit/evidence/storage.json`, property `measurements.schema.constraintCounts` = NOT NULL=11, PRIMARY KEY=4, UNIQUE=1, DEFAULT=1, CHECK=0 ... (6 keys). NEGATIVE CONTROL: hard-coded API key + DROP TABLE + PRAGMA identifier from a variable -> 3. | storage.json measurements.schema.constraintCounts: CHECK = 0 and FOREIGN KEY = 0. Integrity is enforced at the Dart boundary only, so a write bypassing the service layer would not be caught by the database. | The recorded rationale (a failed CHECK throws inside a safety-timeline insert, and the emergency path must degrade rather than throw) is defensible but is a design position, not a measurement of integrity. Decide it explicitly or add CHECK constraints on the non-emergency tables. | `SRC` |
+| `MP-29-017` | Data integrity DB seviyesinde mümkün olduğunca korunuyor. | Partially applicable | **PASS** | - | MEASURED, not asserted. Archetype STATIC_CODE + TEST. Surface: lib/core/services/database_integrity_service.dart + local_database_service.dart. Verifier `scripts/audit_evidence/storage.py` -> `docs/audit/evidence/storage.json`, property `measurements.schema.integrityPolicy`: pragmasUsed = [foreign_key_check, foreign_keys, integrity_check, quick_check], scanDepths = [quick, full], foreignKeysEnabledAtConnect = true, scanOnEveryOpen = false, scanAfterMigration = true, fullScanInUserDiagnostics = true, checksForeignKeysSeparately = true, declaredForeignKeys = 0 (all COMPUTED). Policy: PRAGMA foreign_keys = ON at connect (SQLite defaults it OFF per connection, so a key declared later would be silently unenforced -- the same dead-safeguard shape as the oldVersion < 1 branch); quick_check after a migration; integrity_check + foreign_key_check in the user-triggered KVKK export. Behaviour: `test/core/services/database_integrity_service_test.dart` (14 cases) with the three required fixtures -- healthy accepted, REAL byte damage to a real file detected, foreign-key orphan detected. The suite also ASSERTS the trap: the same orphan passes integrity_check, which is why foreign_key_check is run separately. MEASURED cost of quick_check over activity_events: 1000 rows 191us, 10000 rows 747us, 40000 rows 2412us -- it grows with the growth table, which is the actual argument against scanning at every open, not a guess about latency. NEGATIVE CONTROL: removing foreign-key enforcement and moving the scan onto the open path moves storage.py violations 0 -> 11. | None for what the DB layer can protect without endangering the write path. CHECK constraints remain deliberately absent and that decision is unchanged: a failed CHECK raises inside an insert on the safety timeline, and the emergency path must degrade rather than throw. What cannot be ENFORCED without throwing is now VERIFIED out of band, where a finding is reported instead of raised, and no code path wipes on a finding -- activity_events is real user data. | None in repo. If a foreign key is ever declared, enforcement is already on and foreign_key_check already runs. | `TEST` |
 | `MP-29-018` | Timestamp standardı. | Partially applicable | **PASS** | - | SRC: timestamps are stored as ISO-8601 TEXT (created_at TEXT NOT NULL); the safety path uses absolute epoch deadlines in the native store (android/.../AlarmDeadlineClock.kt), which is what survives a clock change. | - | - | `SRC` |
 | `MP-29-019` | UTC storage stratejisi. | Partially applicable | **PASS** | - | SRC: timestamps are stored as ISO-8601 TEXT (created_at TEXT NOT NULL); the safety path uses absolute epoch deadlines in the native store (android/.../AlarmDeadlineClock.kt), which is what survives a clock change. | - | - | `SRC` |
 | `MP-29-020` | Soft delete gerekiyorsa doğru. | Partially applicable | **PASS** | - | SRC lib/core/services/app_reset_service.dart performs a real hard delete (commit fe83771 'silme gercekten silsin'); no soft-delete tombstone pattern is used, which is the right choice for a privacy-minimising local app. | - | - | `SRC` |

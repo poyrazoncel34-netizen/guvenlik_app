@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 
+import 'database_integrity_service.dart';
+
 class LocalDatabaseService {
   LocalDatabaseService();
 
@@ -35,6 +37,10 @@ class LocalDatabaseService {
     _database = await openDatabase(
       path,
       version: databaseVersion,
+      // Per-connection, constant cost. SQLite defaults foreign_keys OFF, so a
+      // relationship declared later would be silently unenforced -- the same
+      // shape of dead safeguard as the `oldVersion < 1` branch below.
+      onConfigure: DatabaseIntegrityService.configureConnection,
       onCreate: (db, version) => createSchema(db),
       onUpgrade: upgradeSchema,
     );
@@ -112,7 +118,22 @@ class LocalDatabaseService {
         'environment': 'TEXT',
       });
     }
+
+    // A migration is the one moment the app itself may have damaged the file,
+    // it happens once per version, and the user is already waiting. Deliberately
+    // the QUICK check: the full index cross-check is unbounded in the size of
+    // activity_events, and is reserved for the diagnostics path where the user
+    // asked for it. See DatabaseIntegrityService for the whole policy, and
+    // lastMigrationIntegrity for what a failure here does (report, never wipe:
+    // activity_events is real user data).
+    lastMigrationIntegrity = await DatabaseIntegrityService.scan(db);
   }
+
+  /// The report from the most recent migration-time scan, or null when no
+  /// migration ran in this process. Exposed rather than logged-and-forgotten so
+  /// the diagnostics screen can surface a real finding, and so a test can prove
+  /// the scan actually ran.
+  static IntegrityReport? lastMigrationIntegrity;
 
   /// Idempotent `ADD COLUMN`. Re-running a migration must not throw: a user who
   /// hits a half-applied upgrade should end up with a working database, not a

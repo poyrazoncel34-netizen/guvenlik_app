@@ -1766,14 +1766,15 @@
   "MP-29-017": {
     "archetype": "STATIC_CODE",
     "artifact": "storage.json",
-    "disposition": "PARTIAL",
-    "gap": "storage.json measurements.schema.constraintCounts: CHECK = 0 and FOREIGN KEY = 0. Integrity is enforced at the Dart boundary only, so a write bypassing the service layer would not be caught by the database.",
-    "negativeControl": "hard-coded API key + DROP TABLE + PRAGMA identifier from a variable -> 3",
-    "property": "measurements.schema.constraintCounts",
-    "remediated": "no",
-    "remediation": "The recorded rationale (a failed CHECK throws inside a safety-timeline insert, and the emergency path must degrade rather than throw) is defensible but is a design position, not a measurement of integrity. Decide it explicitly or add CHECK constraints on the non-emergency tables.",
-    "surface": "sqflite schema v3",
-    "verifier": "scripts/audit_evidence/storage.py"
+    "disposition": "PASS",
+    "gap": "None for what the DB layer can protect without endangering the write path; what cannot be enforced without throwing is verified out of band.",
+    "negativeControl": "remove foreign-key enforcement and move the integrity scan onto the connection open path -> storage.py 0 -> 11 violations",
+    "property": "measurements.schema.integrityPolicy",
+    "remediated": "yes",
+    "remediation": "None in repo.",
+    "surface": "lib/core/services/database_integrity_service.dart + lib/core/services/local_database_service.dart",
+    "verifier": "scripts/audit_evidence/storage.py",
+    "cite": "The previous evidence was a paragraph of rationale, which the audit correctly called a design position rather than a measurement of integrity. The lifecycle is now measured: quick_check cost over activity_events is 191us at 1000 rows and 2412us at 40000, so the 'not at every open' decision rests on measured growth in the growth table rather than on a guess"
   },
   "MP-30-001": {
     "archetype": "STATIC_CODE",
