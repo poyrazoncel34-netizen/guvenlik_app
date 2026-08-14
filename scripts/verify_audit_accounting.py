@@ -34,6 +34,11 @@ VALID_STATUSES = {"PASS", "FAIL", "PARTIAL", "BLOCKED", "N/A", "UNVERIFIED"}
 VALID_SEVERITIES = {"P0", "P1", "P2", "P3", "-"}
 VALID_METHODS = {"SRC", "RUN", "TEST", "DOC", "NONE", "CMD"}
 
+# The opening of an evidence cell that claims a measured, requirement-specific
+# result. Rows that carry it are held to distinctness; rows that state a shared
+# fact (no AI dependency, no ios/ directory, no server) are not.
+MEASURED_EVIDENCE_MARKER = "MEASURED, not asserted"
+
 SECTION_HEADING = re.compile(r"^##\s+(\d+)\.\s+(.*?)\s*$")
 CHECKBOX = re.compile(r"^\s*-\s\[ \]\s+(.*?)\s*$")
 AUDIT_ROW = re.compile(r"^\|\s*`(MP-(\d+)-(\d+))`\s*\|(.*)$")
@@ -376,9 +381,48 @@ def main() -> int:
     for item in sorted(register - critical):
         problems.append(f"REGISTER_STALE {item} is registered but not P0/P1")
 
+    # ---- MEASURED evidence must be requirement-specific (the IR-06 guard) -
+    #
+    # IR-06 was 135 rows carrying one SECTION-LEVEL sentence that did not answer
+    # the row. `apply_evidence_matrix.py` refuses to GENERATE two identical
+    # evidence strings, which closed that. But it only covers rows it generates,
+    # and this pass proved the gap: three notification rows were written straight
+    # into the audit with `set_audit_row.py`, sharing one sentence, and every
+    # check stayed green. The audit table is what a reader sees, so the
+    # invariant has to hold in the table.
+    #
+    # Scoped deliberately. 662 N/A rows share a genuinely identical FACT -- 76 of
+    # them say "no AI/LLM dependency exists", others "no ios/ or web/ directory",
+    # "no server component". Those requirements really do have one and the same
+    # answer, and writing 76 differently-worded sentences for one fact is exactly
+    # the defect IR-06 warned about, reproduced in different words. Sharing a
+    # true fact is not boilerplate.
+    #
+    # What IS checked: rows whose evidence CLAIMS a measured, requirement-
+    # specific result. Two of those answering with one sentence means at least
+    # one of them was never actually measured.
+    seen_evidence: dict[str, str] = {}
+    duplicated_evidence: list[str] = []
+    for row in rows:
+        evidence = row.get("evidence", "")
+        if not evidence.startswith(MEASURED_EVIDENCE_MARKER):
+            continue
+        first = seen_evidence.get(evidence)
+        if first is not None:
+            duplicated_evidence.append(f"{row['id']} == {first}")
+        else:
+            seen_evidence[evidence] = row["id"]
+    for item in duplicated_evidence:
+        problems.append(
+            f"EVIDENCE_DUPLICATED {item}: both claim a MEASURED, "
+            f"requirement-specific result and answer with the same sentence, so "
+            f"at least one of them was not measured"
+        )
+
     payload = {
         "checklistRequirements": len(requirements),
         "auditRequirements": len(rows),
+        "duplicatedEvidence": len(duplicated_evidence),
         "missing": len(missing),
         "duplicated": len(duplicated),
         "unaccounted": len(unaccounted),

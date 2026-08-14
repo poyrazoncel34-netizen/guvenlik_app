@@ -304,6 +304,27 @@ Nothing moved to `EXTERNAL_BLOCKER` or `PRODUCT_DECISION_REQUIRED` in this pass.
 10. **A device-evidence parser read `100` out of `(y<100)`** and made two different
     measurements look identical.
 
+### The boilerplate metric, stated precisely
+
+"BOILERPLATE EVIDENCE ROWS = 0" needs a definition to be worth anything, and
+measuring it properly turned up one leak of my own.
+
+- **Rows claiming a MEASURED, requirement-specific result: 238, all 238 distinct.**
+  Three notification rows had shared one sentence — written straight into the audit
+  with `set_audit_row.py`, which bypasses the `apply_evidence_matrix.py` duplicate
+  guard. Each now answers its own question: feedback (§11), account-settings
+  reachability (§23), category choice (§26).
+- **Rows sharing a genuinely identical FACT: 662, and that is correct.** 76 N/A rows
+  say "no AI/LLM dependency exists"; others say "no ios/ or web/ directory", "no
+  server component". Those requirements have one and the same answer. Writing 76
+  differently-worded sentences for one fact is the IR-06 defect reproduced in
+  different words, which is exactly what the previous pass warned about.
+
+`verify_audit_accounting.py` now enforces the first and deliberately permits the
+second, and `test/audit_accounting_gate_test.dart` carries both halves: a mutation
+that makes two measured rows share a sentence must fail, and the shared-fact rows
+must not be flagged.
+
 ### Verifier accounting — the 11-vs-10 discrepancy, resolved
 
 The previous report said "11 verifiers, each has `--negative-control`, all 10

@@ -111,6 +111,68 @@ void main() {
       expect(result.stdout.toString(), contains('SECTION_INDEX_DRIFT'));
     });
 
+    test('the verifier detects two MEASURED rows answering with one sentence',
+        () async {
+      // Negative control for the IR-06 guard, and it exists because the gap it
+      // covers was real: apply_evidence_matrix.py refuses to GENERATE duplicate
+      // evidence, but three notification rows were written straight into the
+      // audit with set_audit_row.py sharing one sentence, and every check
+      // stayed green.
+      final directory = await Directory.systemTemp.createTemp(
+        'korubeni-audit-evidence-dup-',
+      );
+      addTearDown(() => directory.delete(recursive: true));
+
+      final original = File('PRODUCTION_AUDIT.md').readAsStringSync();
+      final measured = original
+          .split('\n')
+          .where((line) => line.startsWith('| `MP-') &&
+              line.split('|').length == 11 &&
+              line.split('|')[6].trim().startsWith('MEASURED, not asserted'))
+          .take(2)
+          .toList();
+      expect(measured, hasLength(2),
+          reason: 'harness precondition: the audit must contain at least two '
+              'rows claiming a measured result');
+
+      // Give the second row the first row's evidence cell.
+      final donor = measured[0].split('|')[6];
+      final victim = measured[1];
+      final mutated = File('${directory.path}/mutated.md')
+        ..writeAsStringSync(
+          original.replaceFirst(
+            victim,
+            victim.replaceFirst(victim.split('|')[6], donor),
+          ),
+        );
+
+      final result = await Process.run('python3', <String>[
+        'scripts/verify_audit_accounting.py',
+        '--checklist',
+        'docs/MASTER_PRODUCTION_CHECKLIST.md',
+        '--audit',
+        mutated.path,
+      ]);
+
+      expect(result.exitCode, isNot(0),
+          reason: 'two measured rows sharing one sentence means at least one '
+              'was never measured');
+      expect(result.stdout.toString(), contains('EVIDENCE_DUPLICATED'));
+    });
+
+    test('rows that share a genuinely identical FACT are NOT flagged', () {
+      // The other half of the decision, asserted so a future pass does not
+      // "fix" it by rewording 662 true sentences. 76 N/A rows say "no AI/LLM
+      // dependency exists"; that is one fact with one answer, and writing 76
+      // variants of it is the IR-06 defect reproduced in different words.
+      final audit = File('PRODUCTION_AUDIT.md').readAsStringSync();
+      final shared = RegExp(
+        r'SRC: no AI/LLM dependency exists',
+      ).allMatches(audit).length;
+      expect(shared, greaterThan(10),
+          reason: 'these rows share a true fact on purpose');
+    });
+
     test('the verifier detects a requirement dropped from the audit', () async {
       final directory = await Directory.systemTemp.createTemp(
         'korubeni-audit-accounting-drop-',
