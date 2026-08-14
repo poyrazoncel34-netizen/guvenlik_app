@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../../core/app_colors.dart';
 import '../../core/utils/app_reset_helper.dart';
+import '../../core/widgets/subscription_deletion_notice.dart';
 import '../../core/widgets/escape_dismissible.dart';
 
 class DataDeletionScreen extends StatefulWidget {
@@ -58,13 +59,23 @@ class _DataDeletionScreenState extends State<DataDeletionScreen> {
             ),
           ],
         ),
-        content: Text(
-          'data_delete_confirm_desc'.tr(),
-          style: const TextStyle(
-            color: AppColors.textSecondary,
-            fontSize: 14,
-            height: 1.5,
-          ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'data_delete_confirm_desc'.tr(),
+              style: const TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 14,
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 12),
+            // The last screen before the PIN step, so the subscriber
+            // hears it once more at the point of no return.
+            const SubscriptionDeletionNotice(compact: true),
+          ],
         ),
         actions: [
           TextButton(
@@ -197,6 +208,15 @@ class _DataDeletionScreenState extends State<DataDeletionScreen> {
           _buildDeleteItem('data_delete_item_settings'),
           _buildDeleteItem('data_delete_item_pin'),
           _buildDeleteItem('data_delete_item_location_history'),
+
+          const SizedBox(height: 20),
+
+          // MP-23-015. Every item in the list above is LOCAL, which makes the
+          // page read as a complete account teardown; a Play subscription is
+          // billed by Google and survives both this erase and an uninstall. In
+          // that context saying nothing is not neutral -- the surrounding list
+          // makes the silence read as "and the subscription too".
+          const SubscriptionDeletionNotice(),
 
           const SizedBox(height: 24),
 

@@ -2,7 +2,7 @@
   "verifier": "scripts/audit_evidence/flows.py",
   "verifierVersion": "1.0.0",
   "codeRevision": {
-    "head": "75057473b926340ecf6074ca07bc7a3c8e092390",
+    "head": "cc5c7b1d98b5da580c162d3e398859991a08b0b0",
     "dirty": true
   },
   "measuredOn": "2026-08-15",
@@ -15,7 +15,7 @@
   ],
   "measurements": {
     "screenInventory": {
-      "screenFiles": 35,
+      "screenFiles": 36,
       "screens": [
         "lib/screens/app_root.dart",
         "lib/screens/app_unlock_screen.dart",
@@ -48,6 +48,7 @@
         "lib/screens/settings_legal/data_deletion_screen.dart",
         "lib/screens/settings_legal/data_export_screen.dart",
         "lib/screens/settings_legal/legal_settings_screen.dart",
+        "lib/screens/settings_notifications/notification_categories_screen.dart",
         "lib/screens/settings_page.dart",
         "lib/screens/splash_screen.dart",
         "lib/screens/subscription/paywall_screen.dart",
@@ -142,8 +143,8 @@
       "competitionClaim": "no second filled-and-glowing control shares the home surface with the panic button"
     },
     "forwardPath": {
-      "pushSites": 30,
-      "routeBuilders": 36,
+      "pushSites": 31,
+      "routeBuilders": 37,
       "wizardScreens": [
         "lib/screens/onboarding_screen.dart",
         "lib/screens/battery_optimization_wizard.dart",
@@ -189,6 +190,33 @@
       "extraVerificationBeyondConfirm": {
         "erase all app data": "typed confirmation + PIN, not a single tap",
         "reset the PIN": "current PIN required"
+      },
+      "subscriptionSurvivesDeletion": {
+        "noticeWidget": "lib/core/widgets/subscription_deletion_notice.dart",
+        "localErasePaths": [
+          "lib/screens/settings_legal/data_deletion_screen.dart",
+          "lib/core/utils/app_reset_helper.dart"
+        ],
+        "shownOn": [
+          "lib/screens/settings_legal/data_deletion_screen.dart",
+          "lib/core/utils/app_reset_helper.dart"
+        ],
+        "sitesInDeletionScreen": 2,
+        "trNamesGooglePlay": true,
+        "enNamesGooglePlay": true,
+        "trStatesNotCancelled": true,
+        "enStatesNotCancelled": true,
+        "trCoversUninstall": true,
+        "enCoversUninstall": true,
+        "linksToPlaySubscriptions": true,
+        "offersAnImpossibleCancel": false,
+        "bodyLengths": {
+          "tr": 217,
+          "en": 191
+        },
+        "coveringTests": [
+          "test/screens/subscription_deletion_copy_test.dart"
+        ]
       }
     },
     "interruptionSafety": {
@@ -211,9 +239,9 @@
     },
     "flowStates": {
       "successSurfaces": 57,
-      "failureSurfaces": 77,
+      "failureSurfaces": 81,
       "emptySurfaces": 41,
-      "loadingSurfaces": 40,
+      "loadingSurfaces": 41,
       "timeoutSurfaces": [
         "lib/core/services/app_bootstrap_service.dart:56",
         "lib/core/services/app_bootstrap_service.dart:57",
@@ -349,7 +377,7 @@
       "homeReachableFromEverywhere": "the bottom bar is persistent across destinations; detail screens pop back to it"
     },
     "naming": {
-      "translationKeys": 981,
+      "translationKeys": 1001,
       "localeParityTest": "test/translations_key_parity_test.dart",
       "hardcodedStringGuard": "test/screens/hardcoded_strings_test.dart",
       "oneNamePerConceptClaim": "each concept has exactly one translation key, and the key is the only way a string reaches the screen -- the hardcoded-string guard is what makes that true rather than aspirational"
@@ -371,6 +399,7 @@
         "lib/screens/settings_legal/data_deletion_screen.dart",
         "lib/screens/settings_legal/data_export_screen.dart",
         "lib/screens/settings_legal/legal_settings_screen.dart",
+        "lib/screens/settings_notifications/notification_categories_screen.dart",
         "lib/screens/settings_page.dart"
       ],
       "maxDepthFromRoot": 3,
@@ -412,8 +441,9 @@
         "lib/screens/safe_walk_screen.dart:486",
         "lib/screens/safety_timeline_screen.dart:462",
         "lib/screens/settings_detail_page.dart:357",
-        "lib/screens/settings_legal/data_deletion_screen.dart:233",
+        "lib/screens/settings_legal/data_deletion_screen.dart:253",
         "lib/screens/settings_legal/data_export_screen.dart:220",
+        "lib/screens/settings_notifications/notification_categories_screen.dart:110",
         "lib/screens/splash_screen.dart:440",
         "lib/screens/subscription/paywall_screen.dart:315",
         "lib/screens/subscription/paywall_screen.dart:389",

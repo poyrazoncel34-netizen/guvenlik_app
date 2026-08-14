@@ -76,9 +76,9 @@
 | **MISSING** | **0** |
 | **DUPLICATED** | **0** |
 | **UNACCOUNTED** | **0** |
-| PASS | 781 |
+| PASS | 782 |
 | FAIL | 9 |
-| PARTIAL | 74 |
+| PARTIAL | 73 |
 | BLOCKED | 38 |
 | N/A | 783 |
 | UNVERIFIED | 53 |
@@ -89,7 +89,7 @@
 |---|---|
 | P0 | 0 |
 | P1 | 29 |
-| P2 | 121 |
+| P2 | 120 |
 | P3 | 24 |
 
 ### P0 / P1 register
@@ -154,7 +154,7 @@ Every P0 and P1 individually, so none hides inside an aggregate.
 | 20 | 8 | 0 | 0 | 0 | 3 | 0 |
 | 21 | 1 | 0 | 0 | 0 | 25 | 0 |
 | 22 | 2 | 0 | 1 | 0 | 11 | 0 |
-| 23 | 8 | 0 | 2 | 0 | 5 | 0 |
+| 23 | 9 | 0 | 1 | 0 | 5 | 0 |
 | 24 | 0 | 0 | 0 | 0 | 18 | 0 |
 | 25 | 1 | 0 | 0 | 0 | 13 | 0 |
 | 26 | 10 | 0 | 0 | 0 | 5 | 0 |
@@ -1050,7 +1050,7 @@ Every P0 and P1 individually, so none hides inside an aggregate.
 | `MP-23-012` | Billing settings. | Partially applicable | **PARTIAL** | P2 | SRC lib/screens/subscription/: purchase and restore flow through RevenueCat; billing management itself lives in the Play subscriptions UI. | No in-app billing portal - by design, since Play owns subscription management. | Ensure the paywall links out to the Play subscription settings; verify during the paywall walkthrough proposed in section 13. | `RUN` |
 | `MP-23-013` | Data retention davranışı açık. | Partially applicable | **PASS** | - | DOC docs/kvkk_veri_isleme_envanteri.md plus the in-app KVKK text state retention explicitly (location kept only for the active session, contacts until the user deletes them). RUN confirmed this copy on the consent screen. | - | - | `RUN` |
 | `MP-23-014` | Deletion backend'de gerçekten uygulanıyor. | Partially applicable | **PASS** | - | SRC lib/core/services/app_reset_service.dart with commit fe83771 'fix(kvkk): silme gercekten silsin'; deletion is local and real because there is no backend copy to reconcile. | - | - | `RUN` |
-| `MP-23-015` | Subscription olan kullanıcı account silerken uygun flow görüyor. | Partially applicable | **PARTIAL** | P2 | MEASURED, not asserted. Archetype STATIC_CODE. Surface: account deletion + subscription. Verifier `scripts/audit_evidence/flows.py` -> `docs/audit/evidence/flows.json`, property `measurements.destructiveActions.strongerThanDialog` = lib/screens/app_unlock_screen.dart=forgot_pin_reset_token. NEGATIVE CONTROL: unconfirmed data erase + exit-less screen -> 1 violation. | flows.json shows account deletion erases local data; it does not tell a subscriber that deleting local data does NOT cancel a Play subscription, which is billed by Google and survives the app. | Add that sentence to the deletion confirmation and cover it with the paywall-compliance test. | `SRC` |
+| `MP-23-015` | Subscription olan kullanıcı account silerken uygun flow görüyor. | Partially applicable | **PASS** | - | MEASURED, not asserted. Archetype STATIC_CODE + TEST. Surface: lib/core/widgets/subscription_deletion_notice.dart, shown on BOTH local-erase paths. Verifier `scripts/audit_evidence/flows.py` -> `docs/audit/evidence/flows.json`, property `measurements.destructiveActions.subscriptionSurvivesDeletion`: shownOn = both localErasePaths, sitesInDeletionScreen = 2 (page body + confirmation dialog), trStatesNotCancelled = true, enStatesNotCancelled = true, trCoversUninstall = true, enCoversUninstall = true, linksToPlaySubscriptions = true, offersAnImpossibleCancel = false, bodyLengths tr 217 / en 191 -- all COMPUTED over the real catalogue, not over key existence. The notice deliberately offers NO cancel control: this app cannot cancel a Play subscription, and a control that looked like it could would be a worse lie than the silence. It links to the Play subscriptions screen for this package. Behaviour: `test/screens/subscription_deletion_copy_test.dart` (12 cases against the real tr-TR and en-US catalogues, incl. the 48 dp target and the screen-reader node). NEGATIVE CONTROL: removing the notice from the reset dialog moves flows.py violations 0 -> 7. | None. Every item the deletion screen lists as erased is LOCAL, which made the page read as a complete account teardown; a Play subscription is billed by Google and survives both the erase and an uninstall, so silence there was not neutral. Both erase paths now say so, in Turkish and English, and name the place that can actually cancel. | None in repo. | `TEST` |
 
 ## 24. Search
 

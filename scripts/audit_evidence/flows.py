@@ -239,6 +239,55 @@ def _deep_link_surface(root: Path) -> dict:
     }
 
 
+# Every path that erases local data. A subscriber must hear the same thing on
+# each of them, or the honest path is just the one they did not take.
+LOCAL_ERASE_PATHS = (
+    "lib/screens/settings_legal/data_deletion_screen.dart",
+    "lib/core/utils/app_reset_helper.dart",
+)
+DELETION_NOTICE = "lib/core/widgets/subscription_deletion_notice.dart"
+
+
+def _subscription_deletion_notice(root: Path) -> dict:
+    """MP-23-015: does a subscriber learn that deletion is not cancellation?
+
+    Computed over the real catalogue, not over key existence: the sentence a
+    user reads is the artifact this row is about.
+    """
+    notice = read_stripped(root / DELETION_NOTICE) if (root / DELETION_NOTICE).exists() else ""
+    tr = json.loads((root / "assets" / "translations" / "tr-TR.json")
+                    .read_text(encoding="utf-8"))
+    en = json.loads((root / "assets" / "translations" / "en-US.json")
+                    .read_text(encoding="utf-8"))
+    tr_body = tr.get("subscription_survives_deletion_body", "")
+    en_body = en.get("subscription_survives_deletion_body", "")
+
+    shown_on = [path for path in LOCAL_ERASE_PATHS
+                if "SubscriptionDeletionNotice(" in
+                read_stripped(root / path) if (root / path).exists()]
+
+    return {
+        "noticeWidget": DELETION_NOTICE if notice else None,
+        "localErasePaths": list(LOCAL_ERASE_PATHS),
+        "shownOn": shown_on,
+        "sitesInDeletionScreen": len(re.findall(
+            r"SubscriptionDeletionNotice\(",
+            read_stripped(root / LOCAL_ERASE_PATHS[0])
+            if (root / LOCAL_ERASE_PATHS[0]).exists() else "")),
+        "trNamesGooglePlay": "Google Play" in tr_body,
+        "enNamesGooglePlay": "Google Play" in en_body,
+        "trStatesNotCancelled": "iptal etmez" in tr_body,
+        "enStatesNotCancelled": "does not cancel" in en_body.lower(),
+        "trCoversUninstall": "kaldırmak" in tr_body.lower(),
+        "enCoversUninstall": "uninstall" in en_body.lower(),
+        "linksToPlaySubscriptions": "googlePlaySubscriptionsUrl" in notice,
+        "offersAnImpossibleCancel": any(
+            token in notice for token in ("cancelSubscription", "Purchases.cancel")),
+        "bodyLengths": {"tr": len(tr_body), "en": len(en_body)},
+        "coveringTests": ["test/screens/subscription_deletion_copy_test.dart"],
+    }
+
+
 def _tabs(root: Path) -> list:
     src = read_stripped(root / TAB_FILE) if (root / TAB_FILE).exists() else ""
     return re.findall(r"NavigationDestination\(|BottomNavigationBarItem\(", src)
@@ -402,6 +451,40 @@ def measure(root: Path) -> list:
                           "that cannot be served from a GitHub Pages project site",
             })
 
+    # 7. MP-23-015: erasing local data must not silently imply cancelling a
+    #    Play subscription, which Google bills and which survives an uninstall.
+    notice = _subscription_deletion_notice(root)
+    if not notice["noticeWidget"]:
+        violations.append({"rule": "noSubscriptionDeletionNotice",
+                           "detail": DELETION_NOTICE})
+    else:
+        for path in notice["localErasePaths"]:
+            if path not in notice["shownOn"]:
+                violations.append({
+                    "rule": "eraseePathWithoutSubscriptionNotice",
+                    "detail": f"{path} erases local data without telling a "
+                              f"subscriber that billing continues",
+                })
+        for flag, detail in (
+            ("trStatesNotCancelled", "the Turkish copy does not say the "
+                                     "subscription is NOT cancelled"),
+            ("enStatesNotCancelled", "the English copy does not say the "
+                                     "subscription is NOT cancelled"),
+            ("trCoversUninstall", "the Turkish copy does not cover uninstalling"),
+            ("enCoversUninstall", "the English copy does not cover uninstalling"),
+            ("linksToPlaySubscriptions", "there is no route to the screen that "
+                                         "can actually cancel"),
+        ):
+            if not notice[flag]:
+                violations.append({"rule": "subscriptionDeletionCopyIncomplete",
+                                   "detail": detail})
+        if notice["offersAnImpossibleCancel"]:
+            violations.append({
+                "rule": "appClaimsItCanCancelPlaySubscription",
+                "detail": "a control that looks like it cancels is a worse lie "
+                          "than the silence this row is about",
+            })
+
     return violations
 
 
@@ -485,6 +568,7 @@ def build(root: Path) -> dict:
                 "erase all app data": "typed confirmation + PIN, not a single tap",
                 "reset the PIN": "current PIN required",
             },
+            "subscriptionSurvivesDeletion": _subscription_deletion_notice(root),
         },
         "interruptionSafety": {
             "restorationPolicyTest": "test/state_restoration_policy_test.dart",
@@ -629,6 +713,16 @@ def _mutate(scratch: Path) -> str:
             ),
             encoding="utf-8",
         )
+    # MP-23-015: strip the subscription notice from the reset dialog, which is
+    # the erase path a user is most likely to take.
+    reset = scratch / "lib/core/utils/app_reset_helper.dart"
+    if reset.exists():
+        reset.write_text(
+            reset.read_text(encoding="utf-8").replace(
+                "const SubscriptionDeletionNotice(compact: true),", ""
+            ),
+            encoding="utf-8",
+        )
     second_consumer = scratch / "lib/screens/_early_consumer.dart"
     second_consumer.write_text(
         "import '../core/navigation/pending_destination_service.dart';\n"
@@ -652,7 +746,8 @@ def _mutate(scratch: Path) -> str:
     return ("unconfirmed data erase + a screen with no exit path + an outcome "
             "renamed to 'delivered' + the per-target renderer deleted + a "
             "deep-link destination renamed to 'panic-dial' + a second consumer "
-            "of the parked destination")
+            "of the parked destination + the subscription notice removed from "
+            "the reset dialog")
 
 
 def main() -> int:

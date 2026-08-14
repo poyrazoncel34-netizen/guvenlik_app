@@ -996,5 +996,8 @@
   "notification_status_delivered": "Will be shown",
   "notification_status_channel_muted": "This type is turned off in Android",
   "notification_status_app_blocked": "The app has no notification permission",
-  "notification_status_safety_warning": "With this off you will not see the emergency alert. The app still sends the call request, but nothing appears on screen."
+  "notification_status_safety_warning": "With this off you will not see the emergency alert. The app still sends the call request, but nothing appears on screen.",
+  "subscription_survives_deletion_title": "This will not cancel your subscription",
+  "subscription_survives_deletion_body": "Your KoruBeni Pro subscription is billed by Google Play. Deleting the data here, or uninstalling the app, does not cancel it and billing continues. To cancel, use Google Play > Subscriptions.",
+  "subscription_survives_deletion_action": "Open Google Play subscriptions"
 }

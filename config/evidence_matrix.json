@@ -1691,14 +1691,15 @@
   "MP-23-015": {
     "archetype": "STATIC_CODE",
     "artifact": "flows.json",
-    "disposition": "PARTIAL",
-    "gap": "flows.json shows account deletion erases local data; it does not tell a subscriber that deleting local data does NOT cancel a Play subscription, which is billed by Google and survives the app.",
-    "negativeControl": "unconfirmed data erase + exit-less screen -> 1 violation",
-    "property": "measurements.destructiveActions.strongerThanDialog",
-    "remediated": "no",
-    "remediation": "Add that sentence to the deletion confirmation and cover it with the paywall-compliance test.",
-    "surface": "account deletion + subscription",
-    "verifier": "scripts/audit_evidence/flows.py"
+    "disposition": "PASS",
+    "gap": "None. Both erase paths tell a subscriber that Play billing continues, in TR and EN, and link to the screen that can cancel.",
+    "negativeControl": "remove the notice from the reset dialog -> flows.py 0 -> 7 violations",
+    "property": "measurements.destructiveActions.subscriptionSurvivesDeletion",
+    "remediated": "yes",
+    "remediation": "None in repo.",
+    "surface": "lib/core/widgets/subscription_deletion_notice.dart on both local-erase paths",
+    "verifier": "scripts/audit_evidence/flows.py",
+    "cite": "every item the deletion screen lists as erased is LOCAL, so the page read as a complete account teardown; a Play subscription is billed by Google and survives both the erase and an uninstall, which made the silence read as 'and the subscription too'"
   },
   "MP-26-006": {
     "archetype": "STATIC_CODE",

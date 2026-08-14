@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 
 import '../../screens/splash_screen.dart';
 import '../app_colors.dart';
+import '../widgets/subscription_deletion_notice.dart';
 import '../services/app_reset_service.dart';
 import '../services/emergency_session_contract.dart';
 import '../services/pin_verification_service.dart';
@@ -56,6 +57,11 @@ class AppResetHelper {
                 height: 1.4,
               ),
             ),
+            const SizedBox(height: 14),
+            // MP-23-015. This dialog is the OTHER way local data is erased, and
+            // it lists the same all-local set. A subscriber must hear it on
+            // both paths or the honest one is just the one they did not take.
+            const SubscriptionDeletionNotice(compact: true),
             const SizedBox(height: 28),
             Row(
               children: [

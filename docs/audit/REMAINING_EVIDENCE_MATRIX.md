@@ -44,7 +44,7 @@ have meant filing a document under a code archetype to keep the list short.
 | Metric | Count |
 |---|---|
 | Rows in this matrix | 239 |
-| Still `IN_REPO_RESOLVABLE` in the queue | 7 |
+| Still `IN_REPO_RESOLVABLE` in the queue | 6 |
 | Evidence artifacts referenced | 11 |
 | Plan/audit integrity problems | 0 |
 
@@ -274,7 +274,7 @@ have meant filing a document under a code archetype to keep the list short.
 | `MP-20-004` | 20 | Retry var. | PASS | - | retry surfaces | scripts/audit_evidence/flows.py | `flows.json` → `measurements.offline.retrySites` | unconfirmed data erase + exit-less screen -> 1 violation | no | PASS |
 | `MP-20-005` | 20 | Duplicate oluşmuyor. | PASS | - | duplicate guard | scripts/audit_evidence/flows.py | `flows.json` → `measurements.offline.duplicateGuard` | unconfirmed data erase + exit-less screen -> 1 violation | no | PASS |
 | `MP-23-010` | 23 | Notification preferences. | PASS | - | lib/core/services/notification_preferences_service.dart + lib/screens/settings_notifications/notification_categories_screen.dart | scripts/audit_evidence/interaction.py | `interaction.json` → `measurements.notificationFeedback` | make suppression silent again, remove the muted-safety warning and bypass the destination park -> interaction.py 0 -> 5 violations | yes | PASS |
-| `MP-23-015` | 23 | Subscription olan kullanıcı account silerken uygun flow görüyor. | PARTIAL | P2 | account deletion + subscription | scripts/audit_evidence/flows.py | `flows.json` → `measurements.destructiveActions.strongerThanDialog` | unconfirmed data erase + exit-less screen -> 1 violation | no | PARTIAL |
+| `MP-23-015` | 23 | Subscription olan kullanıcı account silerken uygun flow görüyor. | PASS | - | lib/core/widgets/subscription_deletion_notice.dart on both local-erase paths | scripts/audit_evidence/flows.py | `flows.json` → `measurements.destructiveActions.subscriptionSurvivesDeletion` | remove the notice from the reset dialog -> flows.py 0 -> 7 violations | yes | PASS |
 | `MP-26-006` | 26 | Notification preferences. | PASS | - | lib/core/services/notification_preferences_service.dart + lib/screens/settings_notifications/notification_categories_screen.dart | scripts/audit_evidence/interaction.py | `interaction.json` → `measurements.notificationFeedback` | make suppression silent again, remove the muted-safety warning and bypass the destination park -> interaction.py 0 -> 5 violations | yes | PASS |
 | `MP-29-006` | 29 | Check constraints. | PASS | - | sqflite schema v3 | scripts/audit_evidence/storage.py | `storage.json` → `measurements.schema.constraintStrategy` | hard-coded API key + DROP TABLE + PRAGMA identifier from a variable -> 3 | no | PASS |
 | `MP-29-011` | 29 | Transaction boundaries doğru. | PASS | - | sqflite writes | scripts/audit_evidence/storage.py | `storage.json` → `measurements.schema.transactionBoundary` | hard-coded API key + DROP TABLE + PRAGMA identifier from a variable -> 3 | no | PASS |
