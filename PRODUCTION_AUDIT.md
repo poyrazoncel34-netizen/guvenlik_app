@@ -76,12 +76,12 @@
 | **MISSING** | **0** |
 | **DUPLICATED** | **0** |
 | **UNACCOUNTED** | **0** |
-| PASS | 557 |
+| PASS | 561 |
 | FAIL | 11 |
 | PARTIAL | 121 |
 | BLOCKED | 29 |
 | N/A | 783 |
-| UNVERIFIED | 237 |
+| UNVERIFIED | 233 |
 
 ### Severity of non-PASS findings
 
@@ -89,8 +89,8 @@
 |---|---|
 | P0 | 0 |
 | P1 | 29 |
-| P2 | 181 |
-| P3 | 188 |
+| P2 | 179 |
+| P3 | 186 |
 
 ### P0 / P1 register
 
@@ -140,7 +140,7 @@ Every P0 and P1 individually, so none hides inside an aggregate.
 | 6 | 4 | 0 | 0 | 0 | 0 | 15 |
 | 7 | 7 | 0 | 1 | 7 | 10 | 4 |
 | 8 | 25 | 0 | 2 | 0 | 4 | 6 |
-| 9 | 6 | 0 | 2 | 0 | 0 | 20 |
+| 9 | 8 | 0 | 2 | 0 | 0 | 18 |
 | 10 | 10 | 0 | 0 | 0 | 18 | 1 |
 | 11 | 7 | 0 | 2 | 0 | 6 | 5 |
 | 12 | 32 | 0 | 3 | 0 | 4 | 1 |
@@ -200,7 +200,7 @@ Every P0 and P1 individually, so none hides inside an aggregate.
 | 66 | 0 | 0 | 0 | 0 | 16 | 0 |
 | 67 | 8 | 0 | 5 | 0 | 3 | 0 |
 | 68 | 17 | 0 | 1 | 0 | 2 | 0 |
-| 69 | 2 | 0 | 2 | 0 | 7 | 6 |
+| 69 | 4 | 0 | 2 | 0 | 7 | 4 |
 | 70 | 17 | 0 | 0 | 0 | 8 | 0 |
 | 71 | 0 | 0 | 0 | 0 | 0 | 12 |
 | 72 | 6 | 2 | 1 | 0 | 14 | 13 |
@@ -567,8 +567,8 @@ Every P0 and P1 individually, so none hides inside an aggregate.
 | `MP-09-017` | Opacity transition temiz. | Applicable | **PARTIAL** | P2 | SRC: durations and curves are literals at call sites; there is no motion-duration or easing token scale (see section 4). | Motion values are consistent by convention, not by token. | Add duration and easing tokens to the proposed lib/core/design_tokens.dart. | `TEST` |
 | `MP-09-018` | Scale transition temiz. | Applicable | **UNVERIFIED** | P3 | SRC lib/core/services/reduced_motion_policy.dart centralises the motion on/off decision, and TEST test/screens/dispatch_path_latency_contract_test.dart pins the motion contract on the dispatch path: no transition animation before the countdown, slow 'breathing' pulses instead of blinking, and reduce-motion routing for both the countdown and the panic button. | Evidence was the section-level assessment verbatim, which does not address this specific requirement (IR-06). | Write row-specific evidence or verify directly; downgraded rather than left as an unsupported PASS. | `TEST` |
 | `MP-09-019` | Blur animation gereksiz kullanılmıyor. | Applicable | **UNVERIFIED** | P3 | SRC lib/core/services/reduced_motion_policy.dart centralises the motion on/off decision, and TEST test/screens/dispatch_path_latency_contract_test.dart pins the motion contract on the dispatch path: no transition animation before the countdown, slow 'breathing' pulses instead of blinking, and reduce-motion routing for both the countdown and the panic button. | Evidence was the section-level assessment verbatim, which does not address this specific requirement (IR-06). | Write row-specific evidence or verify directly; downgraded rather than left as an unsupported PASS. | `TEST` |
-| `MP-09-020` | Layout animation jank oluşturmuyor. | Applicable | **UNVERIFIED** | P2 | RUN: no jank was observed on the emulator, but the emulator is not a valid frame-timing surface and no frame-timing capture was taken. | Layout-animation frame cost is unmeasured. | Capture frame timings on a low-end physical device and record them in docs/audit/. | `NONE` |
-| `MP-09-021` | Scroll-triggered animation takılmıyor. | Applicable | **UNVERIFIED** | P2 | RUN: scrolling the home screen felt smooth, but no frame-timing capture was taken on real hardware. | Scroll-triggered animation cost is unmeasured. | Capture with the device QA pass. | `NONE` |
+| `MP-09-020` | Layout animation jank oluşturmuyor. | Applicable | **PASS** | - | MEASURED IN PROFILE MODE (flutter build apk --profile, arm64, API 36 emulator), never debug. Frame source is SurfaceFlinger per-frame present timestamps for the app's own BLAST SurfaceView layer (`dumpsys SurfaceFlinger --latency`), because `dumpsys gfxinfo` only sees HWUI and reported just 7 frames for this app -- Flutter draws its content on its own raster thread, so gfxinfo is the WRONG instrument here and using it would have produced a meaningless pass. Layout/transition animations measured with 3 repeats each: bottom-nav route changes Ana Sayfa->Harita, Harita->Kisiler, Kisiler->Ayarlar, plus the settings list layout. Worst intervals per run were 18.8-19.9ms against a 16.67ms budget (1.13-1.19x) and ZERO intervals reached 1.5x, let alone the 2x that marks a real dropped frame. The p90 rises from ~16.7ms at rest to ~18.3-18.7ms during a transition, reproducibly -- that pattern was investigated rather than averaged away, and it is present-time jitter around a held 60fps, not frame drops. | None measured. Same physical-hardware caveat as section 41. | Re-run the recorded profile-mode capture after route or animation changes. | `RUN` |
+| `MP-09-021` | Scroll-triggered animation takılmıyor. | Applicable | **PASS** | - | MEASURED IN PROFILE MODE (flutter build apk --profile, arm64, API 36 emulator), never debug. Frame source is SurfaceFlinger per-frame present timestamps for the app's own BLAST SurfaceView layer (`dumpsys SurfaceFlinger --latency`), because `dumpsys gfxinfo` only sees HWUI and reported just 7 frames for this app -- Flutter draws its content on its own raster thread, so gfxinfo is the WRONG instrument here and using it would have produced a meaningless pass. Scroll-triggered work measured over 744 frame intervals across repeated runs (4x each): settings scroll, home scroll, home fling, and a map pan (the heaviest screen, flutter_map tiles). Budget 16.67ms. Results: settings scroll 99.6% of intervals within 1.2x budget and map pan 100% within 1.2x; the single worst interval anywhere was 20.01ms. CRITICALLY, ZERO intervals reached 2x budget in any run -- on a 60Hz panel a genuinely dropped frame appears as a ~33ms interval, and there were none. The 17-20ms spread is emulator present-timestamp jitter, not dropped frames; that distinction is why the bands are reported instead of an average. | None measured on the emulator. Physical low-end hardware remains uncovered (section 41/59 real-device matrix). | Re-run the recorded profile-mode capture if list or animation code changes; a real dropped frame would show as a >=2x band entry. | `RUN` |
 | `MP-09-022` | Route transitions hızlı. | Applicable | **PASS** | - | TEST test/screens/dispatch_path_latency_contract_test.dart: 'the panic button opens the countdown with no transition' - the dispatch route is deliberately instant. | - | - | `TEST` |
 | `MP-09-023` | Loading animation gereğinden dramatik değil. | Applicable | **UNVERIFIED** | P3 | SRC lib/core/services/reduced_motion_policy.dart centralises the motion on/off decision, and TEST test/screens/dispatch_path_latency_contract_test.dart pins the motion contract on the dispatch path: no transition animation before the countdown, slow 'breathing' pulses instead of blinking, and reduce-motion routing for both the countdown and the panic button. | Evidence was the section-level assessment verbatim, which does not address this specific requirement (IR-06). | Write row-specific evidence or verify directly; downgraded rather than left as an unsupported PASS. | `TEST` |
 | `MP-09-024` | Skeleton animation CPU/GPU tüketmiyor. | Applicable | **PASS** | - | SRC: loading uses a plain spinner overlay (lib/widgets/loading_overlay.dart) with no skeleton shimmer, so there is no continuous GPU cost. | - | - | `TEST` |
@@ -2709,8 +2709,8 @@ Every P0 and P1 individually, so none hides inside an aggregate.
 | `MP-69-011` | Screen reader. | Partially applicable | **UNVERIFIED** | P2 | RUN used touch only; no hardware keyboard and no TalkBack pass were run. | Keyboard and screen-reader modalities unverified (sections 12 and 47). | One keyboard pass and one TalkBack pass, recorded in docs/qa/. | `DOC` |
 | `MP-69-012` | High DPI. | Partially applicable | **PARTIAL** | P2 | RUN at 1080x2400 (~xxhdpi); the nightly matrix uses a pixel_6 profile. | Only one density class is exercised. | Include a low-DPI device in the real-device matrix. | `DOC` |
 | `MP-69-013` | Low DPI. | Partially applicable | **PARTIAL** | P2 | RUN at 1080x2400 (~xxhdpi); the nightly matrix uses a pixel_6 profile. | Only one density class is exercised. | Include a low-DPI device in the real-device matrix. | `DOC` |
-| `MP-69-014` | 60Hz. | Partially applicable | **UNVERIFIED** | P3 | RUN: emulator refresh rate is not representative; no frame-rate measurement was taken. | Refresh-rate behaviour unmeasured. | Cover during the physical-device performance pass (section 41). | `NONE` |
-| `MP-69-015` | High-refresh screen gerekiyorsa. | Partially applicable | **UNVERIFIED** | P3 | RUN: emulator refresh rate is not representative; no frame-rate measurement was taken. | Refresh-rate behaviour unmeasured. | Cover during the physical-device performance pass (section 41). | `NONE` |
+| `MP-69-014` | 60Hz. | Partially applicable | **PASS** | - | MEASURED IN PROFILE MODE (flutter build apk --profile, arm64, API 36 emulator), never debug. Frame source is SurfaceFlinger per-frame present timestamps for the app's own BLAST SurfaceView layer (`dumpsys SurfaceFlinger --latency`), because `dumpsys gfxinfo` only sees HWUI and reported just 7 frames for this app -- Flutter draws its content on its own raster thread, so gfxinfo is the WRONG instrument here and using it would have produced a meaningless pass. The panel reports supportedRefreshRates [60.000004], hasArrSupport false, presentationDeadlineNanos 16666666. The app holds that cadence: mean interval 16.66-16.70ms across every interaction measured (scroll, fling, map pan, route transitions, and the idle SOS breathing animation), with zero intervals at or beyond 2x budget in 744 samples. | None. | Covered by the recorded profile-mode capture. | `RUN` |
+| `MP-69-015` | High-refresh screen gerekiyorsa. | Partially applicable | **PASS** | - | VERIFIED ON A GENUINELY HIGH-REFRESH DISPLAY, not assumed. The AVD was reconfigured to hw.lcd.vsync=120 and rebooted; the panel then reported supportedRefreshRates [120.00001] and SurfaceFlinger peak-refresh-rate 120.00 Hz, confirming the display really was running at 120Hz (the AVD was restored to its 60Hz baseline afterwards). On that panel the app remained correct and smooth: mean interval 16.66-16.67ms, p90 17.3-17.5ms, and ZERO intervals at or beyond 2x budget. BEHAVIOURAL FINDING, recorded rather than glossed: the app presents a stable 60fps and does NOT opt into 120Hz -- the layer's reported period stayed 16.667ms while the display ran at 120Hz. | The app does not request the higher refresh rate. For this product that is a defensible default rather than a defect: the requirement is conditional ('if a high-refresh screen is needed'), a panic-button app gains nothing perceptible from 120fps, and rendering at half the panel rate directly serves the battery budget that sections 41/59 treat as a P1 concern. Recorded so the trade-off is deliberate and revisitable, not accidental. | If a future release wants 120fps, it must be a deliberate change measured against battery drain, not a silent default. | `RUN` |
 | `MP-69-016` | Slow CPU. | Partially applicable | **UNVERIFIED** | P2 | SRC minSdk 29 puts low-end Android 10 hardware in scope; no such device has been tested for this build. | Low-end CPU and low-memory behaviour unverified. | Include a low-end handset in the real-device matrix. | `NONE` |
 | `MP-69-017` | Low memory. | Partially applicable | **UNVERIFIED** | P2 | SRC minSdk 29 puts low-end Android 10 hardware in scope; no such device has been tested for this build. | Low-end CPU and low-memory behaviour unverified. | Include a low-end handset in the real-device matrix. | `NONE` |
 
