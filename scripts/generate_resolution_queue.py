@@ -182,6 +182,13 @@ SCOPE_OVERRIDES: dict[str, tuple[str, str]] = {
         "Same drill. incident_runbook.md section 3 states the 4h target the "
         "rehearsal will be measured against, and section 8 records that it is unmet.",
     ),
+    "MP-47-011": (
+        "IN_REPO_RESOLVABLE",
+        "Seeding a few hundred activity_events rows and asserting query time plus "
+        "lazy list building is a unit test, not a device measurement. The gap-text "
+        "heuristic reads the word 'exercised' as a runtime marker; the remedy is "
+        "in-repo and should not be filed as runtime work on a word choice.",
+    ),
     "MP-32-040": (
         "PRODUCT_DECISION_REQUIRED",
         "storage.json records the gap precisely: the five gates that run are pattern "
