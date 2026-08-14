@@ -22,6 +22,7 @@ import '../core/services/app_settings_service.dart';
 import '../core/services/consent_gate_service.dart';
 import '../domain/models/activity_event.dart';
 import '../models/consent_record.dart';
+import '../core/widgets/escape_dismissible.dart';
 
 class FakeCallScreen extends StatefulWidget {
   const FakeCallScreen({super.key});
@@ -89,7 +90,8 @@ class _FakeCallScreenState extends State<FakeCallScreen>
     final confirmed = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
+      builder: (ctx) => EscapeDismissible(
+        child: AlertDialog(
         backgroundColor: const Color(0xFF10263A),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Row(
@@ -147,6 +149,7 @@ class _FakeCallScreenState extends State<FakeCallScreen>
             child: Text('fake_call_warning_accept'.tr()),
           ),
         ],
+      ),
       ),
     );
     if (confirmed == true) {

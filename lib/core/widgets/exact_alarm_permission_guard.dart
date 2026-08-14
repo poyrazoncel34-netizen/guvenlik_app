@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import '../app_colors.dart';
 import '../services/emergency_platform_service.dart';
+import 'escape_dismissible.dart';
 
 /// Timed safety sessions and delayed fake calls are not acknowledged unless
 /// Android exact-alarm access is currently available. Opening Settings is not
@@ -27,7 +28,8 @@ Future<bool> requireExactAlarmPermission(BuildContext context) async {
   await showDialog<void>(
     context: context,
     barrierDismissible: false,
-    builder: (dialogContext) => AlertDialog(
+    builder: (dialogContext) => EscapeDismissible(
+        child: AlertDialog(
       backgroundColor: AppColors.cardBg,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       title: Text(
@@ -53,6 +55,7 @@ Future<bool> requireExactAlarmPermission(BuildContext context) async {
         ),
       ],
     ),
+      ),
   );
 
   return false;

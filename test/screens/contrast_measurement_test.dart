@@ -48,7 +48,10 @@ void main() {
 
   group('MP-12-023: text contrast meets WCAG AA (4.5:1)', () {
     final pairs = <String, List<Color>>{
-      'textPrimary on background': [AppColors.textPrimary, AppColors.background],
+      'textPrimary on background': [
+        AppColors.textPrimary,
+        AppColors.background,
+      ],
       'textPrimary on cardBg': [AppColors.textPrimary, AppColors.cardBg],
       'textPrimary on surface': [AppColors.textPrimary, AppColors.surface],
       'textSecondary on background': [
@@ -104,31 +107,38 @@ void main() {
     });
   });
 
-  group('MP-12-025: focus indicator contrast', () {
-    // Measured from rendered pixels, emulator API 36, Settings screen after
-    // Tab x5: focused row background rgb(47,69,89) vs unfocused sibling
-    // rgb(18,43,66).
-    const focusedRow = Color(0xFF2F4559);
-    const unfocusedRow = Color(0xFF122B42);
+  group('MP-12-025: focus indicator contrast — DÜZELTİLDİ', () {
+    // TARİHSEL KAYIT (düzeltme öncesi, aynı emülatörde ölçüldü):
+    // Ayarlar ekranında odaklı satır rgb(47,69,89), odaksız kardeşi
+    // rgb(18,43,66). Bu ÇİFT, WCAG 2.2 SC 2.4.13 (Focus Appearance)
+    // formülüdür — odaklı/odaksız aynı pikseller. Önceki tur bunu 1.4.11
+    // diye etiketlemişti; 1.4.11 göstergeyi KOMŞU renklerle karşılaştırır.
+    // Doğru ölçüm de geçmiyordu: komşulara karşı 1.46:1 ve 1.76:1.
+    const oldFocusedRow = Color(0xFF2F4559);
+    const oldUnfocusedRow = Color(0xFF122B42);
+    const oldNeighbourAbove = Color(0xFF0A1B2A);
 
-    test('MEASURED: the focus highlight is below the WCAG 1.4.11 bar', () {
-      final ratio = contrast(focusedRow, unfocusedRow);
-      // This is a FAILING requirement, asserted as the measured fact so the
-      // number cannot drift unnoticed and so a fix is provably a fix.
+    test(
+      'düzeltme öncesi değerler kayıt altında (her iki ölçüt de kalıyordu)',
+      () {
+        // SC 2.4.13 (odaklı vs odaksız)
+        expect(contrast(oldFocusedRow, oldUnfocusedRow), closeTo(1.46, 0.05));
+        // SC 1.4.11 (gösterge vs komşu) — asıl AA ölçütü
+        expect(contrast(oldFocusedRow, oldNeighbourAbove), closeTo(1.76, 0.05));
+      },
+    );
+
+    test('düzeltilmiş halka artık 1.4.11 barını geçiyor', () {
+      // Render edilmiş piksellerden: dış halka primary, sayfa arka planına
+      // komşu. Ayrıntılı ölçüm ve negatif kontroller:
+      // test/screens/focus_ring_test.dart
       expect(
-        ratio,
-        closeTo(1.46, 0.05),
-        reason:
-            'Measured focus-vs-unfocused contrast. WCAG 1.4.11 requires 3.0 '
-            'for a focus indicator. See MP-12-025 in PRODUCTION_AUDIT.md.',
+        contrast(AppColors.focusRing, AppColors.background),
+        greaterThanOrEqualTo(3.0),
       );
       expect(
-        ratio,
-        lessThan(3.0),
-        reason:
-            'When this finally goes red because the ratio reached 3.0, the '
-            'defect is FIXED — update MP-12-025 to PASS and invert this '
-            'assertion.',
+        contrast(AppColors.focusRingOutline, const Color(0xFF4ED3FF)),
+        greaterThanOrEqualTo(3.0),
       );
     });
   });

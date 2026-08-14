@@ -17,6 +17,7 @@ import '../core/services/pin_verification_service.dart';
 import '../core/services/safety_session_activity_probe.dart';
 import 'settings_legal/legal_settings_screen.dart';
 import 'splash_screen.dart';
+import '../core/widgets/escape_dismissible.dart';
 
 class AppUnlockScreen extends StatefulWidget {
   final VoidCallback onUnlocked;
@@ -396,7 +397,9 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> {
     await showDialog<void>(
       context: context,
       barrierDismissible: false,
-      builder: (ctx) => StatefulBuilder(
+      builder: (ctx) => EscapeDismissible(
+        autofocus: false,
+        child: StatefulBuilder(
         builder: (ctx, setDialogState) => AlertDialog(
           backgroundColor: AppColors.cardBg,
           shape: RoundedRectangleBorder(
@@ -507,6 +510,7 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> {
             ),
           ],
         ),
+      ),
       ),
     );
     confirmController.dispose();

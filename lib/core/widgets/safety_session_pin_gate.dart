@@ -7,6 +7,7 @@ import '../constants/app_constants.dart';
 import '../services/emergency_session_contract.dart';
 import '../services/pin_lockout_service.dart';
 import '../services/pin_verification_service.dart';
+import 'escape_dismissible.dart';
 
 /// Fail-closed PIN gate for any user action that cancels or extends an armed
 /// safety session. The configured PIN never enters widget state; only the
@@ -30,7 +31,10 @@ class SafetySessionPinGate {
       final verified = await showDialog<bool>(
         context: context,
         barrierDismissible: false,
-        builder: (_) => _SafetyPinDialog(service: service),
+        builder: (_) => EscapeDismissible(
+        autofocus: false,
+        child: _SafetyPinDialog(service: service),
+      ),
       );
       return verified == true;
     } on StateError catch (error) {

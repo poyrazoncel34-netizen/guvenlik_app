@@ -7,6 +7,7 @@ import '../app_colors.dart';
 import '../services/app_reset_service.dart';
 import '../services/emergency_session_contract.dart';
 import '../services/pin_verification_service.dart';
+import '../widgets/escape_dismissible.dart';
 
 class AppResetHelper {
   AppResetHelper._();
@@ -137,7 +138,9 @@ class AppResetHelper {
     final verified = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
-      builder: (dialogContext) => StatefulBuilder(
+      builder: (dialogContext) => EscapeDismissible(
+        autofocus: false,
+        child: StatefulBuilder(
         builder: (context, setState) => AlertDialog(
           backgroundColor: AppColors.cardBg,
           shape: RoundedRectangleBorder(
@@ -200,6 +203,7 @@ class AppResetHelper {
             ),
           ],
         ),
+      ),
       ),
     );
     controller.dispose();

@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../../core/app_colors.dart';
 import '../../core/utils/app_reset_helper.dart';
+import '../../core/widgets/escape_dismissible.dart';
 
 class DataDeletionScreen extends StatefulWidget {
   const DataDeletionScreen({super.key});
@@ -26,7 +27,8 @@ class _DataDeletionScreenState extends State<DataDeletionScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
+      builder: (ctx) => EscapeDismissible(
+        child: AlertDialog(
         backgroundColor: AppColors.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Row(
@@ -84,6 +86,7 @@ class _DataDeletionScreenState extends State<DataDeletionScreen> {
             child: Text('data_delete_confirm_button'.tr()),
           ),
         ],
+      ),
       ),
     );
 

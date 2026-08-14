@@ -36,6 +36,14 @@ class AppColors {
   // Card hover/pressed
   static const Color cardHover = Color(0xFF163350);
 
+  // Odak göstergesi (WCAG 1.4.11 / 2.4.13). İKİ TONLU olmasının sebebi ölçüm:
+  // primary koyu yüzeylerde 7.27:1 veriyor ama parlak camgöbeği profil kartında
+  // 1.17:1'e düşüyor; background ise tam tersi (kartta 10.24:1, koyu yüzeyde
+  // 1.21:1). Tek renkli bir halka bu uygulamanın yüzeylerinin tamamını
+  // geçemiyor, iki tonlu halkada her yüzeyde en az biri 3:1 barını aşıyor.
+  static const Color focusRing = primary;
+  static const Color focusRingOutline = background;
+
   // Shimmer renkleri
   static const Color shimmerBase = Color(0xFF1A3550);
   static const Color shimmerHighlight = Color(0xFF2A5070);

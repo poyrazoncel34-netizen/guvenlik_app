@@ -14,6 +14,8 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../core/app_colors.dart';
+import '../core/design_tokens.dart';
+import '../core/widgets/focus_ring.dart';
 import '../core/utils/permission_helper.dart';
 import '../core/constants/app_constants.dart';
 import '../core/services/subscription_gate.dart';
@@ -405,7 +407,10 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Widget _buildProTile(bool isPro) {
-    return InkWell(
+    return FocusRing(
+      borderRadius: BorderRadius.circular(Radii.lg),
+      builder: (node) => InkWell(
+      focusNode: node,
       onTap: () {
         HapticFeedback.lightImpact();
         Navigator.push(
@@ -499,13 +504,17 @@ class _SettingsPageState extends State<SettingsPage> {
           ],
         ),
       ),
+      ),
     );
   }
 
   Widget _buildProfileSection(SettingsProvider provider) {
     return Material(
       color: Colors.transparent,
-      child: InkWell(
+      child: FocusRing(
+        borderRadius: BorderRadius.circular(Radii.xl),
+        builder: (node) => InkWell(
+        focusNode: node,
         borderRadius: BorderRadius.circular(20),
         onTap: () {
           HapticFeedback.lightImpact();
@@ -591,6 +600,7 @@ class _SettingsPageState extends State<SettingsPage> {
             ],
           ),
         ),
+      ),
       ),
     );
   }
@@ -722,7 +732,10 @@ class _SettingsPageState extends State<SettingsPage> {
   }) {
     return Material(
       color: Colors.transparent,
-      child: InkWell(
+      child: FocusRing(
+        borderRadius: BorderRadius.circular(Radii.md),
+        builder: (node) => InkWell(
+        focusNode: node,
         onTap: () {
           HapticFeedback.lightImpact();
           onTap();
@@ -772,6 +785,7 @@ class _SettingsPageState extends State<SettingsPage> {
             ],
           ),
         ),
+      ),
       ),
     );
   }

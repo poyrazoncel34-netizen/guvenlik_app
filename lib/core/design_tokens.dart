@@ -231,3 +231,26 @@ abstract final class DensityTokens {
     return Breakpoints.isNarrow(size) ? Spacing.md : Spacing.lg;
   }
 }
+
+
+/// Odak göstergesi geometrisi — WCAG 1.4.11 (Non-text Contrast, AA) ve
+/// WCAG 2.2 SC 2.4.13 (Focus Appearance).
+///
+/// Bu runglar ÖLÇÜMDEN geldi, tasarımdan değil: API 36 emülatöründe render
+/// edilmiş pikseller okundu. Material'in varsayılan odak kaplaması ayar
+/// satırlarında rgb(47,69,89) veriyordu; komşu renklere karşı 1.46-1.76:1,
+/// yani 3:1 barının altında. Profil kartı ve Pro satırında ise kaplama
+/// çocuğun opak arka planının ALTINDA kaldığı için hiç görünmüyordu (1.00:1).
+abstract final class FocusIndicator {
+  /// Yüksek kontrastlı iç halka kalınlığı.
+  static const double ringWidth = 2;
+
+  /// Dış kontur — iç halkanın görünmediği parlak yüzeyler için.
+  static const double outlineWidth = 2;
+
+  /// SC 2.4.13 alan hesabı için toplam kalınlık.
+  static const double totalWidth = ringWidth + outlineWidth;
+
+  /// WCAG 1.4.11'in gerektirdiği asgari kontrast oranı.
+  static const double minContrast = 3.0;
+}

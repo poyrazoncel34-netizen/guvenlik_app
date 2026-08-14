@@ -9,6 +9,7 @@ import 'package:permission_handler/permission_handler.dart';
 import '../app_colors.dart';
 import '../services/app_settings_service.dart';
 import '../services/battery_optimization_service.dart';
+import '../widgets/escape_dismissible.dart';
 
 enum NotificationPermissionRequestStatus { granted, denied, permanentlyDenied }
 
@@ -257,7 +258,8 @@ class PermissionHelper {
     return showDialog<bool>(
       context: context,
       barrierDismissible: false,
-      builder: (ctx) => Semantics(
+      builder: (ctx) => EscapeDismissible(
+        child: Semantics(
         label: '$title. $message',
         child: AlertDialog(
           backgroundColor: AppColors.cardBg,
@@ -327,6 +329,7 @@ class PermissionHelper {
             ),
           ],
         ),
+      ),
       ),
     );
   }

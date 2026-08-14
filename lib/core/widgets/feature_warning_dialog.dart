@@ -11,6 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../app_colors.dart';
 import '../services/legal_log_service.dart';
+import 'escape_dismissible.dart';
 
 class FeatureWarningHelper {
   FeatureWarningHelper._();
@@ -40,7 +41,8 @@ class FeatureWarningHelper {
     await showDialog<void>(
       context: context,
       barrierDismissible: false,
-      builder: (ctx) => _FeatureWarningDialog(
+      builder: (ctx) => EscapeDismissible(
+        child: _FeatureWarningDialog(
         title: title,
         content: content,
         onAccepted: () async {
@@ -50,6 +52,7 @@ class FeatureWarningHelper {
             feature: featureName,
           );
         },
+      ),
       ),
     );
 

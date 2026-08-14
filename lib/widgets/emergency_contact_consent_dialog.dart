@@ -10,6 +10,7 @@ import '../core/app_colors.dart';
 import '../services/consent_manager.dart';
 import '../models/consent_record.dart';
 import '../core/di/service_locator.dart';
+import '../core/widgets/escape_dismissible.dart';
 
 class EmergencyContactConsentDialog extends StatefulWidget {
   final String contactName;
@@ -36,7 +37,8 @@ class EmergencyContactConsentDialog extends StatefulWidget {
     await showDialog<void>(
       context: context,
       barrierDismissible: false,
-      builder: (_) => EmergencyContactConsentDialog(
+      builder: (_) => EscapeDismissible(
+        child: EmergencyContactConsentDialog(
         contactName: contactName,
         onConfirmed: () {
           confirmed = true;
@@ -46,6 +48,7 @@ class EmergencyContactConsentDialog extends StatefulWidget {
           confirmed = false;
           Navigator.pop(context);
         },
+      ),
       ),
     );
     return confirmed;

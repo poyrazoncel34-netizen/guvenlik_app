@@ -21,6 +21,7 @@ import 'package:easy_localization/easy_localization.dart';
 import '../services/device_security_service.dart';
 import '../core/services/emergency_session_contract.dart';
 import '../core/services/pin_verification_service.dart';
+import '../core/widgets/escape_dismissible.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -156,7 +157,8 @@ class _SplashScreenState extends State<SplashScreen>
       await showDialog<void>(
         context: context,
         barrierDismissible: false,
-        builder: (_) => AlertDialog(
+        builder: (_) => EscapeDismissible(
+        child: AlertDialog(
           title: Text('device_security_warning_title'.tr()),
           content: Text('device_security_warning_body'.tr()),
           actions: [
@@ -166,6 +168,7 @@ class _SplashScreenState extends State<SplashScreen>
             ),
           ],
         ),
+      ),
       );
     }
     if (!mounted) return;

@@ -22,6 +22,7 @@ import '../core/utils/panic_hold_gate.dart';
 import '../screens/contacts_page.dart';
 import '../screens/countdown_screen.dart';
 import '../core/motion.dart';
+import '../core/widgets/escape_dismissible.dart';
 
 class PanicButton extends StatefulWidget {
   const PanicButton({super.key, this.holdClockOverride});
@@ -336,7 +337,8 @@ class _PanicButtonState extends State<PanicButton>
     final confirmed = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
+      builder: (ctx) => EscapeDismissible(
+        child: AlertDialog(
         backgroundColor: AppColors.cardBg,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(
@@ -370,6 +372,7 @@ class _PanicButtonState extends State<PanicButton>
             ),
           ),
         ],
+      ),
       ),
     );
     if (confirmed != true || !mounted) return;
