@@ -33,6 +33,8 @@
 
 import 'package:flutter/widgets.dart';
 
+import 'app_colors.dart';
+
 /// Spacing scale. A 4px base grid; the rungs are the multiples actually used.
 abstract final class Spacing {
   static const double xxs = 4;
@@ -86,6 +88,78 @@ abstract final class Elevation {
   static const double overlay = 8;
 
   static const List<double> scale = <double>[flat, raised, overlay];
+}
+
+/// Shadow scale — the SEPARATE half of MP-03-009.
+///
+/// [Elevation] above covers Material's `elevation:` property, which this app
+/// barely uses (26 of 29 sites are 0). Depth is actually drawn with hand-rolled
+/// `BoxShadow`, and THAT was the convention-not-a-token half of the finding.
+///
+/// MEASURED before this scale existed: 27 `BoxShadow(` sites in lib/, with 14
+/// distinct blur radii (20 x6, 8 x4, 6 x4, 24 x2, 12 x2, then 60/40/30/28/18/
+/// 15/14/10 once each) and five distinct offsets. Grouping them by what they
+/// are FOR, rather than by number, collapses cleanly into four rungs plus two
+/// tinted variants:
+///
+///   resting   neutral, blur 6,  (0,2)  -- list rows and cards at rest
+///   raised    neutral, blur 8,  (0,2)  -- the same surfaces lifted
+///   overlay   black,   blur 24, (0,12) -- sheets floating over the map
+///   brandGlow tinted,  blur 20, (0,8)  -- the primary CTA's coloured glow
+///   tintedCard tinted, blur 14, (0,8)  -- soft category tint on a card
+///
+/// DELIBERATELY NOT TOKENISED: the seven ANIMATED glows (splash logo, onboarding
+/// icon pulse, emergency-call header, map marker) compute `blurRadius` and
+/// `spreadRadius` from an animation value every frame -- `blurRadius: 30 +
+/// (glowValue * 30)`. A static rung cannot express an interpolation, and
+/// flattening them into one would delete motion the app deliberately has. The
+/// point of this scale is consistency, not a lower token count; see the note in
+/// MP-03-009.
+abstract final class Shadows {
+  /// Cards and list rows at rest. The most common neutral shadow in the app.
+  static const List<BoxShadow> resting = <BoxShadow>[
+    BoxShadow(color: AppColors.shadow, blurRadius: 6, offset: Offset(0, 2)),
+  ];
+
+  /// The same neutral surface, lifted one rung.
+  static const List<BoxShadow> raised = <BoxShadow>[
+    BoxShadow(color: AppColors.shadow, blurRadius: 8, offset: Offset(0, 2)),
+  ];
+
+  /// Sheets and panels floating over map tiles, where the background is
+  /// photographic and a neutral-alpha shadow reads better than the token grey.
+  static const List<BoxShadow> overlay = <BoxShadow>[
+    BoxShadow(
+      color: AppColors.shadowOverlay,
+      blurRadius: 24,
+      offset: Offset(0, 12),
+    ),
+  ];
+
+  /// The coloured glow under a primary call to action.
+  static List<BoxShadow> brandGlow(Color color) => <BoxShadow>[
+        BoxShadow(
+          color: color.withValues(alpha: 0.3),
+          blurRadius: 20,
+          offset: const Offset(0, 8),
+        ),
+      ];
+
+  /// A card tinted by its own category colour, far softer than [brandGlow].
+  static List<BoxShadow> tintedCard(Color color) => <BoxShadow>[
+        BoxShadow(
+          color: color.withValues(alpha: 0.08),
+          blurRadius: 14,
+          offset: const Offset(0, 8),
+        ),
+      ];
+
+  /// Every static rung, for the ratchet test.
+  static const List<List<BoxShadow>> staticScale = <List<BoxShadow>>[
+    resting,
+    raised,
+    overlay,
+  ];
 }
 
 /// Icon size scale — the scattered one. Seven rungs cover the real range from

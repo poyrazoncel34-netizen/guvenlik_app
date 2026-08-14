@@ -13,6 +13,7 @@ import '../core/utils/pin_settings_helper.dart';
 import 'edit_profile_screen.dart';
 import 'settings_detail_page.dart';
 import '../presentation/providers/settings_provider.dart';
+import '../core/design_tokens.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -66,13 +67,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       colors: [AppColors.primary, AppColors.primaryLight],
                     ),
                     shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.primary.withValues(alpha: 0.3),
-                        blurRadius: 20,
-                        offset: const Offset(0, 8),
-                      ),
-                    ],
+                    boxShadow: Shadows.brandGlow(AppColors.primary),
                   ),
                   child: const Icon(
                     Icons.person_rounded,

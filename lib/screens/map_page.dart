@@ -19,6 +19,7 @@ import '../core/services/location_service.dart';
 import '../core/utils/map_utils.dart';
 import '../domain/repositories/location_repository.dart';
 import '../core/widgets/escape_dismissible.dart';
+import '../core/design_tokens.dart';
 
 class MapPage extends StatefulWidget {
   final bool isActive;
@@ -562,13 +563,7 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
                 color: AppColors.cardBg,
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(color: AppColors.border),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.18),
-                    blurRadius: 24,
-                    offset: const Offset(0, 12),
-                  ),
-                ],
+                boxShadow: Shadows.overlay,
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,

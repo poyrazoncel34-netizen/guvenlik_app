@@ -12,6 +12,7 @@ import '../core/app_colors.dart';
 import '../core/services/activity_service.dart';
 import '../domain/models/activity_event.dart';
 import '../core/widgets/escape_dismissible.dart';
+import '../core/design_tokens.dart';
 
 class SafetyTimelineScreen extends StatefulWidget {
   const SafetyTimelineScreen({super.key});
@@ -480,13 +481,7 @@ class _SafetyTimelineScreenState extends State<SafetyTimelineScreen> {
           color: AppColors.cardBg,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: AppColors.border),
-          boxShadow: [
-            const BoxShadow(
-              color: AppColors.shadow,
-              blurRadius: 6,
-              offset: Offset(0, 2),
-            ),
-          ],
+          boxShadow: Shadows.resting,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

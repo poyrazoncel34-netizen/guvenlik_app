@@ -12,6 +12,7 @@ import '../../core/app_colors.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/constants/feature_access_matrix.dart';
 import '../../presentation/providers/subscription_provider.dart';
+import '../../core/design_tokens.dart';
 
 class PaywallScreen extends StatefulWidget {
   final String? lockedFeatureTitleKey;
@@ -166,13 +167,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
         ),
         borderRadius: BorderRadius.circular(22),
         border: Border.all(color: AppColors.primary.withValues(alpha: 0.22)),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.08),
-            blurRadius: 18,
-            offset: const Offset(0, 8),
-          ),
-        ],
+        boxShadow: Shadows.tintedCard(AppColors.primary),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -434,13 +429,10 @@ class _PaywallScreenState extends State<PaywallScreen> {
             width: highlighted ? 1.2 : 1,
           ),
           boxShadow: highlighted
-              ? [
-                  BoxShadow(
-                    color: AppColors.accent.withValues(alpha: 0.08),
-                    blurRadius: 14,
-                    offset: const Offset(0, 6),
-                  ),
-                ]
+              // Was offset (0, 6) against its sibling card's (0, 8): the same
+              // intent, drawn 2 px apart in the same file. That 2 px is the
+              // whole of MP-03-009 in miniature, so it moves onto the token.
+              ? Shadows.tintedCard(AppColors.accent)
               : null,
         ),
         child: Column(

@@ -76,9 +76,9 @@
 | **MISSING** | **0** |
 | **DUPLICATED** | **0** |
 | **UNACCOUNTED** | **0** |
-| PASS | 579 |
+| PASS | 580 |
 | FAIL | 9 |
-| PARTIAL | 116 |
+| PARTIAL | 115 |
 | BLOCKED | 29 |
 | N/A | 783 |
 | UNVERIFIED | 222 |
@@ -89,7 +89,7 @@
 |---|---|
 | P0 | 0 |
 | P1 | 29 |
-| P2 | 170 |
+| P2 | 169 |
 | P3 | 177 |
 
 ### P0 / P1 register
@@ -134,7 +134,7 @@ Every P0 and P1 individually, so none hides inside an aggregate.
 |---|---|---|---|---|---|---|
 | 1 | 4 | 0 | 2 | 0 | 8 | 17 |
 | 2 | 0 | 0 | 0 | 0 | 5 | 11 |
-| 3 | 9 | 0 | 1 | 0 | 0 | 21 |
+| 3 | 10 | 0 | 0 | 0 | 0 | 21 |
 | 4 | 23 | 0 | 2 | 0 | 4 | 0 |
 | 5 | 6 | 0 | 1 | 0 | 4 | 14 |
 | 6 | 4 | 0 | 0 | 0 | 0 | 15 |
@@ -302,7 +302,7 @@ Every P0 and P1 individually, so none hides inside an aggregate.
 | `MP-03-006` | Rastgele 13px/17px/21px gibi değerler yok; token sistemi kullanılıyor. | Applicable | **PASS** | - | MEASURED AGAINST THE VALUES THE REQUIREMENT ITSELF NAMES. Across all 706 spacing literals in lib/: **17 px appears ZERO times and 21 px appears ZERO times**. 13 px appears exactly ONCE (paywall_screen.dart:265, `vertical: 13`) -- 0.14% of all spacing. The remaining odd literals are 3 px (x4), 5 px (x3) and 9 px (x1, panic_button.dart:567). Radii are cleaner still: 241 uses, 13 distinct, and the only non-even value is the 999 pill sentinel. A token system is in place (`Spacing`, `Radii`, `Elevation`, `IconSizes`, `TypeScale`) and it is enforced by a ratchet rather than being documentation that rots. | The single 13 px literal is left in place deliberately: changing it is a rendered-pixel change, which CLAUDE.md rule 4 forbids as a drive-by. It is counted here so it cannot multiply unnoticed. | test/core/design_token_ratchet_test.dart counts off-scale values across lib/ and pins the totals. | `SRC` |
 | `MP-03-007` | Component radius'ları tutarlı. | Applicable | **PASS** | - | MEASURED. `BorderRadius.circular` appears 241 times with 13 distinct values. Four rungs carry the overwhelming majority: 12 (72 uses), 14 (55), 16 (42) and 20 (28) -- 197 of 241, i.e. 81.7%. 88.4% sit on the named `Radii` scale. 97.5% are on the 2 px grid; the only non-even value is 999, the deliberate pill sentinel used for chips and the SOS ring. 14 is on the scale as MEASURED reality (61 uses, almost all input fields and their neighbouring cards) rather than as a designed rung, and design_tokens.dart says so explicitly. | 28 uses remain off the named scale (10 px accounts for 11 of them). Pinned, not hidden. | test/core/design_token_ratchet_test.dart builds its allowed set FROM `Radii.scale`, so the test cannot drift from the tokens it enforces. | `SRC` |
 | `MP-03-008` | Border kalınlıkları tutarlı. | Applicable | **PASS** | - | MEASURED specifically for borders rather than inferred from a generic `width:` scan (which would have wrongly swept in container widths). Across lib/ there are 83 `Border.all` / `BorderSide` constructions. 72 of them (86.7%) specify no width at all and therefore take Flutter's 1.0 default. Of the 11 that are explicit: 1.0 (x3), 1.5 (x3), 2.0 (x4) and 4.0 (x1). So the app effectively ships one hairline border weight with a small, deliberate set of heavier variants for emphasis -- four distinct weights across 83 borders. | None. Border weight is the most consistent geometry dimension measured in this section. | The measurement is reproducible from lib/ with the pattern recorded in this row; the widths are palette-independent and carry no token drift risk. | `SRC` |
-| `MP-03-009` | Shadow sistemi tutarlı. | Applicable | **PARTIAL** | P2 | SRC lib/core/app_theme.dart: elevation values 0/4/8 recur consistently, but as literals inside individual component themes rather than a named scale. | Elevation/shadow is a convention, not a token. | Extract an elevation scale into the design-token file proposed in section 4 and reference it from the component themes. | `RUN` |
+| `MP-03-009` | Shadow sistemi tutarlı. | Applicable | **PASS** | - | RESOLVED by measuring first, then deriving. INVENTORY: 27 BoxShadow sites in lib/ with FOURTEEN distinct blur radii (20 x6, 8 x4, 6 x4, 24 x2, 12 x2, then 60/40/30/28/18/15/14/10 once each) and five distinct offsets. Grouping by PURPOSE rather than by number collapses to five rungs in lib/core/design_tokens.dart: resting (neutral, blur 6, 0-2), raised (neutral, blur 8, 0-2), overlay (AppColors.shadowOverlay, blur 24, 0-12, for surfaces over map tiles), brandGlow(color) (alpha 0.3, blur 20, 0-8) and tintedCard(color) (alpha 0.08, blur 14, 0-8). Ten sites migrated. DELIBERATELY NOT FLATTENED: seven shadows are ANIMATED -- they compute blur and spread from an animation value each frame (splash logo breath, onboarding icon pulse, panic-button arming ring, siren colour lerp, emergency-call header) -- and a static rung cannot express an interpolation, so collapsing them would delete motion the app has on purpose. Two further near-misses (home_page blur 12 vs 14, safe_walk blur 12 vs 20) are left rendering exactly as they ship rather than nudged for tidiness. | Elevation/shadow is a convention, not a token. | test/core/shadow_token_ratchet_test.dart: asserts the rungs are distinct and ASCEND in both blur and offset (an overlay that sat closer to the surface than a raised card would invert the hierarchy), that the glow reads stronger than the tint, that the token is actually referenced by at least 8 files (a token nobody uses is worse than the convention it replaced), and that every remaining hand-rolled BoxShadow is named in an allow-list WITH its reason -- with a staleness check so an exemption cannot outlive it. | `TEST` |
 | `MP-03-010` | Elevation mantığı tutarlı. | Applicable | **PASS** | - | MEASURED. `elevation:` appears 29 times in lib/ with only TWO distinct values: 0 (26 uses) and 4 (3 uses). That is 100% on the named `Elevation` scale (flat 0 / raised 4 / overlay 8) in lib/core/design_tokens.dart. The logic is consistent and deliberately flat: this app draws depth with its own `BoxShadow` on dark surfaces rather than with Material elevation, so almost everything is elevation 0 and the raised rung is reserved. | None for elevation. The related SHADOW system is a separate matter and is honestly still PARTIAL under MP-03-009. | test/core/design_token_ratchet_test.dart enumerates the elevation scale from the token file. | `SRC` |
 | `MP-03-011` | Layer hierarchy anlaşılır. | Applicable | **UNVERIFIED** | P3 | RUN 2026-08-12: first-run walkthrough on an API 36 emulator (consent gate -> onboarding -> contact gate -> PIN setup -> battery wizard -> home -> settings). Screens are visually consistent and uncluttered, with one clear primary action; no placeholder copy, lorem ipsum, demo imagery, broken image or missing icon was observed on any captured screen. | Evidence was the section-level assessment verbatim, which does not address this specific requirement (IR-06). | Write row-specific evidence or verify directly; downgraded rather than left as an unsupported PASS. | `RUN` |
 | `MP-03-012` | UI gereksiz kalabalık değil. | Applicable | **UNVERIFIED** | P3 | RUN 2026-08-12: first-run walkthrough on an API 36 emulator (consent gate -> onboarding -> contact gate -> PIN setup -> battery wizard -> home -> settings). Screens are visually consistent and uncluttered, with one clear primary action; no placeholder copy, lorem ipsum, demo imagery, broken image or missing icon was observed on any captured screen. | Evidence was the section-level assessment verbatim, which does not address this specific requirement (IR-06). | Write row-specific evidence or verify directly; downgraded rather than left as an unsupported PASS. | `RUN` |

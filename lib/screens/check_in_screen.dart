@@ -20,6 +20,7 @@ import '../core/widgets/feature_warning_dialog.dart';
 import '../core/widgets/safety_session_pin_gate.dart';
 import '../presentation/providers/subscription_provider.dart';
 import 'contacts_page.dart';
+import '../core/design_tokens.dart';
 // Analytics service removed (offline-first)
 
 class CheckInScreen extends StatefulWidget {
@@ -396,13 +397,7 @@ class _CheckInScreenState extends State<CheckInScreen>
             color: AppColors.cardBg,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: AppColors.border),
-            boxShadow: [
-              const BoxShadow(
-                color: AppColors.shadow,
-                blurRadius: 6,
-                offset: Offset(0, 2),
-              ),
-            ],
+            boxShadow: Shadows.resting,
           ),
           child: Column(
             children: [

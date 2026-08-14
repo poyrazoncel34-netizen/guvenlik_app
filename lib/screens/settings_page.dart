@@ -539,13 +539,7 @@ class _SettingsPageState extends State<SettingsPage> {
               colors: [AppColors.primary, AppColors.primaryLight],
             ),
             borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.primary.withValues(alpha: 0.3),
-                blurRadius: 20,
-                offset: const Offset(0, 8),
-              ),
-            ],
+            boxShadow: Shadows.brandGlow(AppColors.primary),
           ),
           child: Row(
             children: [
@@ -642,13 +636,7 @@ class _SettingsPageState extends State<SettingsPage> {
         color: AppColors.cardBg,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.border),
-        boxShadow: [
-          const BoxShadow(
-            color: AppColors.shadow,
-            blurRadius: 8,
-            offset: Offset(0, 2),
-          ),
-        ],
+        boxShadow: Shadows.raised,
       ),
       child: Column(children: children),
     );

@@ -12,6 +12,7 @@ import '../../core/constants/app_constants.dart';
 import '../../core/services/revenue_cat_service.dart';
 import '../../presentation/providers/subscription_provider.dart';
 import 'paywall_screen.dart';
+import '../../core/design_tokens.dart';
 
 class SubscriptionManagementScreen extends StatefulWidget {
   const SubscriptionManagementScreen({super.key});
@@ -321,13 +322,7 @@ class _SubscriptionManagementScreenState
         color: AppColors.cardBg,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.border),
-        boxShadow: [
-          const BoxShadow(
-            color: AppColors.shadow,
-            blurRadius: 8,
-            offset: Offset(0, 2),
-          ),
-        ],
+        boxShadow: Shadows.raised,
       ),
       child: Column(children: children),
     );

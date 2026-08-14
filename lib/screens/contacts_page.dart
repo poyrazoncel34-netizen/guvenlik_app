@@ -19,6 +19,7 @@ import '../presentation/providers/contacts_provider.dart';
 import '../presentation/providers/home_provider.dart';
 import '../widgets/emergency_contact_consent_dialog.dart';
 import '../core/widgets/escape_dismissible.dart';
+import '../core/design_tokens.dart';
 
 const int _manualContactPhoneInputLimit = 32;
 const int _manualContactNameInputLimit = 60;
@@ -274,13 +275,7 @@ class _ContactsPageState extends State<ContactsPage> {
               color: AppColors.cardBg,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(color: AppColors.border),
-              boxShadow: [
-                const BoxShadow(
-                  color: AppColors.shadow,
-                  blurRadius: 6,
-                  offset: Offset(0, 2),
-                ),
-              ],
+              boxShadow: Shadows.resting,
             ),
             child: Row(
               children: [

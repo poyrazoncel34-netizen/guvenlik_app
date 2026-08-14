@@ -24,6 +24,11 @@ class AppColors {
   static const Color border = Color(0xFF1D3B54);
   static const Color shadow = Color(0x40000000);
 
+  /// Shadow for surfaces floating over photographic map tiles, where the token
+  /// grey reads too heavy. Measured from the value map_page.dart already
+  /// shipped: black at 18% (0x2E), against `shadow`'s 25%.
+  static const Color shadowOverlay = Color(0x2E000000);
+
   // Glassmorphism renkler
   static const Color glass = Color(0x1AFFFFFF);
   static const Color glassLight = Color(0x0DFFFFFF);
