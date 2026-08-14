@@ -27,9 +27,9 @@ never typed by hand — they come from `python3 scripts/verify_audit_accounting.
 | **P1 remaining (total)** | **29** |
 | **P1 remaining (in-repo)** | **0** — all 29 are external; see `EXTERNAL_LAUNCH_BLOCKERS.md` |
 | **Unresolved internal findings from the latest review** | **0** — R2-01 … R2-12 all closed, each with mutation evidence |
-| **Findings opened and closed by our OWN device pass** | **1** (D-2, below) — a previously "device-verified" row that was not actually fixed |
+| **Findings opened and closed by our OWN device passes** | **6** — D-2 (below) plus five from the 2026-08-14 restoration / touch-target / layout pass |
 | **Unresolved external blockers** | **87 requirement IDs in 9 categories** (`EXTERNAL_LAUNCH_BLOCKERS.md`) |
-| **Suite** | 1252 passed / 0 failed (`flutter test --no-pub`) |
+| **Suite** | 1299 passed / 0 failed (`flutter test --no-pub`) |
 | **Analyzer** | No issues found (`flutter analyze --no-fatal-infos`) |
 | **Worktree** | see `git status`; the security gates refuse to run on a dirty tree |
 
@@ -43,20 +43,20 @@ AUDIT_ACCOUNTING_PASS checklist=1738 audit=1738 missing=0 duplicated=0 unaccount
 
 | Status | Count |
 |---|---|
-| PASS | 568 |
-| FAIL | 11 |
-| PARTIAL | 117 |
+| PASS | 580 |
+| FAIL | 9 |
+| PARTIAL | 115 |
 | BLOCKED | 29 |
 | N/A | 783 |
-| UNVERIFIED | 230 |
+| UNVERIFIED | 222 |
 | **TOTAL** | **1738** |
 
 | Severity | Count |
 |---|---|
 | P0 | 0 |
 | P1 | 29 |
-| P2 | 172 |
-| P3 | 186 |
+| P2 | 169 |
+| P3 | 177 |
 
 ### Resolution queue
 
@@ -64,11 +64,15 @@ AUDIT_ACCOUNTING_PASS checklist=1738 audit=1738 missing=0 duplicated=0 unaccount
 
 | Scope | Count |
 |---|---|
-| `IN_REPO_RESOLVABLE` | 246 |
+| `IN_REPO_RESOLVABLE` | 234 |
 | `RUNTIME_VERIFIABLE_NOW` | **0** |
 | `EXTERNAL_BLOCKER` | 91 |
 | `PRODUCT_DECISION_REQUIRED` | 50 |
-| **Total unresolved** | **387** |
+| **Total unresolved** | **375** |
+
+**Every in-repo FAIL is now closed: the `FAIL / IN_REPO` cell of the queue is 0.**
+The two that were open (`MP-72-001`, `MP-72-015`) are resolved below. The nine
+remaining FAILs are all external or product-decision.
 
 Product decisions are grouped into **nine actual questions** in
 `PRODUCT_DECISIONS_REQUIRED.md`, not 50 repetitive ones.
@@ -194,17 +198,20 @@ The `/data` partition fills at ~91 % — uninstall old APKs before reinstalling.
 
 ## Next action
 
-`RUNTIME_VERIFIABLE_NOW` is **0**. Everything that needed the app running has been run.
-The remaining in-repo work is the **246 `IN_REPO_RESOLVABLE`** rows, of which 177 are
-UNVERIFIED — mostly the IR-06 boilerplate-evidence downgrades. They concentrate in
-sections 3 (31), 9 (20), 1 (19), 5 (15) and 6 (15).
+`RUNTIME_VERIFIABLE_NOW` is **0** and `FAIL / IN_REPO` is **0**. The remaining
+in-repo work is the **234 `IN_REPO_RESOLVABLE`** rows, of which **169 are
+UNVERIFIED** — overwhelmingly the IR-06 boilerplate-evidence downgrades. They
+concentrate in sections 3 (21), 9 (20), 1 (19), 6 (15) and 5 (15).
 
-Write requirement-specific evidence one row at a time. Do **not** close a row by pasting a
-new, differently-worded blanket sentence across a section — that is what created IR-06.
-Several section-3 rows are now genuinely measurable against `lib/core/design_tokens.dart`
-and its ratchet, so they can carry real counts instead of prose.
+Write requirement-specific evidence one row at a time. Do **not** close a row by
+pasting a new, differently-worded blanket sentence across a section — that is
+what created IR-06. Sections 14, 19 and 4 are the worked example.
 
----
+**This session did not start that cluster.** It spent its budget on the four
+concrete defects below, three of which were only findable by running the app.
+That is a deliberate ordering — a boilerplate row rewritten while the app
+crashes on resume is evidence about the wrong thing — but it means the
+convergence exit condition (`IN_REPO_RESOLVABLE = 0`) is **not met**.
 
 ## Device-verification pass, 2026-08-14 (a11y / performance / lifecycle)
 
@@ -308,3 +315,82 @@ rate; under 100% CPU starvation it drops 16.1% of frames while staying functiona
 3. **Save action unreachable behind the keyboard.** Confirmed on an API 36 emulator; that
    button is the only way to register an emergency contact, so a user who could not find
    the scroll gesture ended up with no panic flow at all.
+
+
+---
+
+## Device-verification pass, 2026-08-14 (state restoration / touch targets / layout)
+
+Two write-ups: `docs/audit/device-verification-2026-08-14-state-restoration.md`
+and `docs/audit/device-verification-2026-08-14-touch-targets.md`. Emulator
+`Medium_Phone_API_36.1`, API 36. **Every finding here came from running the app;
+none of them was visible in source review, and two of them contradicted evidence
+this file previously carried.**
+
+### 1. "Unsubmitted input does not survive process death" was a defect, not a limitation
+
+The previous pass recorded it as an accepted limitation. Flutter has a
+first-class mechanism for it; the app simply had not adopted one. Losing a
+half-typed emergency contact is not cosmetic — `OnboardingContactStep` is the
+only gate that can complete onboarding.
+
+Now restorable: the contact name/phone drafts and the phone verdict, the
+onboarding page index (a restored draft the user cannot see is the same as no
+restoration), and the tab index. Deliberately NOT restorable: PIN buffers and
+the destructive-reset confirmation.
+
+**Verified with the real procedure** — `adb shell am kill` on a backgrounded
+process, which preserves saved instance state, NOT `force-stop`, which is user
+termination and would have made any build look broken. PID 11431 → gone → 11843,
+both fields back, zero framework errors. The **device negative control** is the
+same procedure on the stashed pre-change tree: fields empty, page index lost.
+
+### 2. Enabling restoration exposed a crash, and the fix was architectural
+
+The obvious one-liner — `restorationScopeId` on the root `MaterialApp` — bricked
+the app: 28 framework errors within 10 s of returning from `am kill`, crash
+screen instead of the app. `WidgetsApp` gives its Navigator
+`restorationScopeId: 'nav'` unconditionally, so state restoration turns on ROUTE
+restoration too — and this app destroyed its own initial route four times over
+with `pushReplacement`/`pushAndRemoveUntil`. The restored history came back
+empty and `assert(_history.isNotEmpty)` fired.
+
+Two shortcuts were measured and rejected: restorable pushes (would have put a
+restored route ON TOP of the PIN gate) and moving the bucket below the Navigator
+(stopped the crash **and** stopped restoring — a configuration that avoids
+crashing by doing nothing). The fix removes the precondition violation:
+`home:` is now the `AppRoot` shell, which swaps destinations as STATE.
+`AppRoot._destination` is deliberately not restorable, so a process death
+re-runs the whole decision including the PIN gate — **confirmed on device**: a
+kill from the Settings tab came back to the unlock screen, and the tab index
+appeared only after the PIN.
+
+### 3. One of the two "23.2 dp touch targets" was a measurement artifact
+
+`uiautomator` reports the CLIPPED rect. The "Yasal Bilgiler & KVKK" row reads
+371.4 × 23.2 dp at the scroll-viewport edge and **371.4 × 74.3 dp** fully
+visible; a "Detayı Gör" button reads 26.3 dp and 48.0 dp in the same run. The
+sweep tool now marks edge-touching nodes UNMEASURED. `touch_target_geometry_test.dart`
+carried the wrong number and has been corrected.
+
+The real ones were fixed to 48 dp without enlarging any artwork — and a **new**
+defect surfaced: the offline banner was 24.0 dp **and entirely under the system
+status bar**; taps at y = 10/31/55/62 all failed to open its dialog. Not small,
+*unreachable*. Now 67.0 dp and confirmed activating.
+
+The harness had its own bug worth remembering: `SemanticsNode.rect` is in the
+node's LOCAL space, so a `Transform.scale(0.85)` switch reported a compliant
+48 dp there while the device said 40.8. The device was right.
+
+### 4. MP-72-001's recorded root cause was impossible, and the real one was elsewhere
+
+A `ConstrainedBox(minHeight:)` inside a `SingleChildScrollView` cannot raise a
+RenderFlex overflow — the scroll view hands its child an unbounded vertical
+constraint. That is why the earlier negative control never reproduced. Asserted
+now, so nobody re-tests it.
+
+The real overflow was found by stressing density 560 **with** font scale 2.0 and
+scanning screenshots for Flutter's yellow overflow stripe: the Terms version
+line had no `Expanded` (its KVKK twin, thirty lines away, did). The measured
+matrix then widened the finding — either axis alone reproduces it, and only the
+shipping default is clean, so this was never a large-display edge case.
