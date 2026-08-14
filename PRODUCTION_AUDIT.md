@@ -76,9 +76,9 @@
 | **MISSING** | **0** |
 | **DUPLICATED** | **0** |
 | **UNACCOUNTED** | **0** |
-| PASS | 565 |
+| PASS | 567 |
 | FAIL | 11 |
-| PARTIAL | 119 |
+| PARTIAL | 117 |
 | BLOCKED | 29 |
 | N/A | 783 |
 | UNVERIFIED | 231 |
@@ -89,7 +89,7 @@
 |---|---|
 | P0 | 0 |
 | P1 | 29 |
-| P2 | 175 |
+| P2 | 173 |
 | P3 | 186 |
 
 ### P0 / P1 register
@@ -143,7 +143,7 @@ Every P0 and P1 individually, so none hides inside an aggregate.
 | 9 | 8 | 0 | 2 | 0 | 0 | 18 |
 | 10 | 10 | 0 | 0 | 0 | 18 | 1 |
 | 11 | 7 | 0 | 2 | 0 | 6 | 5 |
-| 12 | 32 | 0 | 3 | 0 | 4 | 1 |
+| 12 | 34 | 0 | 1 | 0 | 4 | 1 |
 | 13 | 6 | 0 | 1 | 0 | 1 | 10 |
 | 14 | 15 | 0 | 0 | 0 | 7 | 0 |
 | 15 | 5 | 0 | 0 | 0 | 1 | 7 |
@@ -699,8 +699,8 @@ Every P0 and P1 individually, so none hides inside an aggregate.
 | `MP-12-027` | Text scaling. | Applicable | **PASS** | - | SRC lib/main.dart appTextScaler() preserves system font scaling to 200%; TEST test/main_text_scaling_test.dart pins it. | - | - | `TEST` |
 | `MP-12-028` | Color-independent information. | Applicable | **PASS** | - | RUN: readiness chips and the offline banner pair colour with an icon and a text label, so no state is colour-only. | - | - | `TEST` |
 | `MP-12-029` | High Contrast/forced colors mümkünse test edilmiş. | Applicable | **UNVERIFIED** | P3 | RUN: Android high-contrast mode was not enabled during the walkthrough. | High-contrast rendering unverified. | Enable high-contrast text in emulator accessibility settings and re-capture the primary screens. | `TEST` |
-| `MP-12-030` | Touch target yeterince büyük. | Applicable | **PARTIAL** | P2 | TEST test/screens/accessibility_guidelines_test.dart + test/screens/countdown_accessibility_test.dart: guideline matchers now cover all four promised screens against the REAL tr-TR catalogue, with negative controls proving the matchers reject an unlabelled and a 12x12 target. | Tap-target sizes are asserted in a widget harness, not measured on device; contrast is still unasserted. | Add contrast assertions; run one TalkBack pass on hardware. | `TEST` |
-| `MP-12-031` | Interactive element'lar birbirine aşırı yakın değil. | Applicable | **PARTIAL** | P2 | Same four-screen matcher coverage as MP-12-030. | Same limits. | As above. | `TEST` |
+| `MP-12-030` | Touch target yeterince büyük. | Applicable | **PASS** | - | MEASURED ON DEVICE from the REAL interaction bounds, not icon sizes: every clickable node's `bounds` was read from the accessibility tree across Home, Map, Contacts, Settings (scrolled to the end) and the legal screens, then converted at dpr 2.625. Most targets are comfortably over 48 dp (bottom nav 99 x 66, settings rows 369.5 x 72, legal back button exactly 48 x 48). THREE fall under 48 dp and were checked against WCAG 2.2 SC 2.5.8 (AA, 24 x 24) rather than the Material guideline: the 'Yasal Bilgiler & KVKK' row at 371.4 x 23.2 dp, the offline banner at 411.4 x 24.0 dp, and the settings switches at 51.0 x 28.2 / 51.0 x 40.8 dp. THE HIT AREA WAS PROVEN EMPIRICALLY, not inferred from the semantic box: tapping the 23.2 dp row at its semantic top activated it, while taps 20 px above and at its bottom edge did NOT -- so the real target equals the reported bounds, neither padded larger nor smaller. That row is 0.8 dp under the 24 dp minimum, so the SC 2.5.8 SPACING EXCEPTION was evaluated: the nearest horizontally-overlapping target is 56.0 dp away and the next 69.0 dp, far beyond the 24 dp the exception requires, so it passes on spacing. The switches clear 24 dp outright. The contact-consent modal checkbox (22.1 dp) likewise passes on spacing, its nearest target being 47.6 dp away. | Two targets are under the 24 dp minimum and pass ONLY via the spacing exception; that is recorded and counted in the test, not smoothed over. They are also under the 44 dp of SC 2.5.5 (AAA), which this project does not claim. | test/screens/touch_target_geometry_test.dart -- 18 cases. It implements SC 2.5.8 including the spacing exception, carries a harness sanity check proving the rule actually discriminates (a small crowded target FAILS, a small well-spaced one passes), and pins the exact set of undersized targets so that layout tightening breaks the build. | `RUN` |
+| `MP-12-031` | Interactive element'lar birbirine aşırı yakın değil. | Applicable | **PASS** | - | MEASURED alongside MP-12-030 from real bounds. For every target under 48 dp the vertical gap to the nearest horizontally-overlapping neighbour was computed: 56.0 dp and 69.0 dp around the 'Yasal Bilgiler & KVKK' row, 47.6 dp between the contact-consent checkbox and the Iptal/Ekle buttons, ~45 dp around the settings switches. The narrowest spacing measured anywhere is 45 dp against a 24 dp AA bar. | None. | test/screens/touch_target_geometry_test.dart pins the measured spacings; any layout change that brings two targets within 24 dp turns it red. | `RUN` |
 | `MP-12-032` | Drag gerektiren işlem için alternatif var. | N/A | **N/A** | - | SRC: no drag interaction exists (see section 10). | - | Not applicable. | `SRC` |
 | `MP-12-033` | Multi-touch zorunlu değil. | Applicable | **PASS** | - | RUN: every interaction this session was a single tap; no multi-touch gesture is required anywhere. | - | - | `TEST` |
 | `MP-12-034` | Hover-only özellik yok. | Applicable | **PASS** | - | SRC: the product ships to touch-only Android; no feature is reachable by hover alone. | - | - | `TEST` |
