@@ -18,11 +18,11 @@
 
 | Fact | Value |
 |---|---|
-| **VERIFIED IMPLEMENTATION REVISION** — the tree every `TEST`/`CMD`/`RUN` result in the *Baseline commands* table below was produced against | `1950237` (branch `feat/tutundurma-ucretsiz-prova`). Superseded `ef40178` when the RER-01..05 remediation changed `lib/`, `test/`, `scripts/`, `assets/`, `config/` and `store/` |
-| **Evidence artifacts under `docs/audit/evidence/`** | all 12 measured at `1950237` with `dirty: false`, the same revision as the table below. Verify with `codeRevision.verifiedCodeRevision` in any artifact, or mechanically with `python3 scripts/verify_evidence_provenance.py`, which checks each `treeHash` against `git rev-parse <rev>^{tree}` and fails if the twelve disagree |
-| **FINAL DOCUMENTATION HEAD** — the commit that carries this file's current text | later by construction: committing a document changes the tree, so no file can name the commit that contains it. Commits after `1950237` add only regenerated artifacts under `docs/audit/evidence/` and `.md` text — no `lib/`, `android/`, `test/`, `scripts/`, `assets/` or `config/` file. **The measured surface at the final head is therefore byte-identical to `1950237`**, which is why results produced at either are attributable to the same tree; `git diff 1950237..HEAD -- lib android test scripts assets config` is empty |
+| **VERIFIED IMPLEMENTATION REVISION** — the tree every `TEST`/`CMD`/`RUN` result in the *Baseline commands* table below was produced against | `c855a4b` (branch `feat/tutundurma-ucretsiz-prova`). Superseded `1950237` when the CERT-01..09 remediation changed `lib/`, `test/`, `scripts/`, `config/` and `docs/`. **Every row of that table was re-run at this revision** — see the correction note above the table |
+| **Evidence artifacts under `docs/audit/evidence/`** | all 12 measured at `b171e93` with `dirty: false`, one commit below the table's revision because the artifacts ARE that commit's content. Verify with `codeRevision.verifiedCodeRevision` in any artifact, or mechanically with `python3 scripts/verify_evidence_provenance.py`, which checks each `treeHash` against `git rev-parse <rev>^{tree}` and fails if the twelve disagree. Their CONTENT is checked separately by `python3 scripts/verify_evidence_reproducibility.py`, which regenerates the eleven Python artifacts and fails on any measurement drift (CERT-09) |
+| **FINAL DOCUMENTATION HEAD** — the commit that carries this file's current text | later by construction: committing a document changes the tree, so no file can name the commit that contains it. Commits after `c855a4b` add only `.md` text — no `lib/`, `android/`, `test/`, `scripts/`, `assets/` or `config/` file. **The measured surface at the final head is therefore byte-identical to `c855a4b`**, which is why results produced at either are attributable to the same tree; `git diff c855a4b..HEAD -- lib android test scripts assets config` is empty |
 | **Worktree at verification time** | clean (`git status --porcelain` empty). The secret scan refuses to run otherwise, and since FIR-04 the evidence verifiers refuse to *emit* otherwise |
-| Verification date | 2026-08-15 |
+| Verification date | 2026-08-16 |
 
 > **Why three facts and not one.** An artifact cannot name the commit that contains it.
 > Pretending otherwise produced the previous state: eleven artifacts stamped with a
@@ -62,7 +62,17 @@
 > tests and a 733-file secret scan; both were measurements of an older tree. Every number
 > below was produced by running the command on the clean verified implementation revision.
 >
-> **Re-measured again 2026-08-15 against the RER-01..05 revision.** More importantly, the
+> **Re-measured again 2026-08-16 against the CERT-01..09 revision `c855a4b`, and the column
+> heading corrected.** Certification finding CERT-07: the heading still read
+> *"Result at `ef40178`"* while the provenance block two screens above asserted every row had
+> been produced at a later revision, and two rows had demonstrably not been re-run — the test
+> count said 1643 where the tree produced 1651, and the secret scan said 846 text files where
+> it produced 853. Worse, three rows invoked verifiers that did not exist at `ef40178`, so one
+> heading could not have been true of all of them. Every row below was re-executed at
+> `c855a4b` and the heading now names it. This is the same defect the provenance section
+> above says it exists to prevent, caught one layer further down.
+>
+> **Re-measured 2026-08-15 against the RER-01..05 revision.** More importantly, the
 > table is now SEQUENTIALLY reproducible. It was not before (RER-02): running
 > `flutter test` re-emitted `docs/audit/evidence/text_scale.json` on every invocation, so
 > the tree was dirty immediately afterwards and `scan_release_secrets.py --require-clean`
@@ -73,27 +83,29 @@
 > that exact order. `scripts/verify_repository_convergence.sh` runs it and fails if any link
 > breaks; the numbers below come from that run, not from separate invocations.
 
-| Command | Result at `ef40178` |
+| Command | Result at `c855a4b` |
 |---|---|
-| `flutter analyze --no-fatal-infos` | **No issues found!** (2.3s) |
-| `flutter test --no-pub` | **1643 passed / 0 failed** |
+| `flutter analyze --no-fatal-infos` | **No issues found!** (2.8s) |
+| `flutter test --no-pub` | **1656 passed / 0 failed** |
 | `dart scripts/verify_critical_coverage.dart` | **CRITICAL_COVERAGE_PASS** -- all 5 critical safety files >=90% (99.18 / 95.04 / 94.87 / 90.81 / 93.08) |
 | `bash scripts/audit_dependencies_osv.sh --output <path>` | **OSV_EVIDENCE_PASS** -- 197 pub + 203 maven queries, `findingCount: 0` |
-| `python3 scripts/scan_release_secrets.py --require-clean --output <path>` | **RELEASE_SECRET_SCAN_PASS** -- 846 text + 46 binary files, 0 findings |
+| `python3 scripts/scan_release_secrets.py --require-clean --output <path>` | **RELEASE_SECRET_SCAN_PASS** -- 858 text + 46 binary files, 0 findings |
 | `python3 scripts/verify_release_change_classification.py --config config/release_change_classification.json --output <path>` | **RELEASE_CHANGE_CLASSIFICATION_PASS**, `classified_paths=0` on a clean tree |
 | `python3 scripts/verify_audit_accounting.py` | **AUDIT_ACCOUNTING_PASS** -- checklist=1738 audit=1738 missing=0 duplicated=0 unaccounted=0 sections=80 launchMatrix=24 |
-| `python3 scripts/verify_absence_claims.py` | **ABSENCE_CLAIMS_PASS** -- 46 registered absence claims across the evidence, gap and remediation cells, none refuted by the tree (FIR-03 + RER-03) |
+| `python3 scripts/verify_absence_claims.py` | **ABSENCE_CLAIMS_PASS** -- 51 registered absence claims across the evidence, gap and remediation cells, none refuted by the tree (FIR-03 + RER-03 + CERT-05, which widened the imperative list and made it case-insensitive) |
 | `python3 scripts/verify_absence_claims.py --negative-control` | **NEGATIVE_CONTROL_PASS** -- 3/3 controls fire: `REFUTED_ABSENCE_CLAIM` on the evidence cell AND on a remediation cell, plus `STALE_REPO_REFERENCE` on an imperative naming an existing document |
-| `python3 scripts/verify_resolution_classification.py` | **RESOLUTION_CLASSIFICATION_PASS** -- unresolved=160 inRepo=0 runtime=0 external=110 product=50, and `RESOLUTION_QUEUE.md` is byte-identical to what the generator produces from this audit |
-| `python3 scripts/verify_evidence_provenance.py` | **EVIDENCE_PROVENANCE_PASS** -- 12 artifacts, one shared revision, `dirty:false`, every `treeHash` checked against `git rev-parse <rev>^{tree}` |
-| `dart run scripts/verify_alert_outcome_consumption.dart` | **ALERT_OUTCOME_CONSUMPTION_PASS** -- 172 files, 3 resolved targets, 7 live sites, 0 dropped outcomes (RER-04) |
-| `dart run scripts/verify_alert_outcome_consumption.dart --negative-control` | **NEGATIVE_CONTROL_PASS** -- 6/6 dropped forms flagged including the hoisted receiver the old rule never enumerated; 2 consumed forms correctly unflagged |
+| `python3 scripts/verify_resolution_classification.py` | **RESOLUTION_CLASSIFICATION_PASS** -- unresolved=145 inRepo=0 runtime=0 external=110 product=35, and `RESOLUTION_QUEUE.md` is byte-identical to what the generator produces from this audit |
+| `python3 scripts/verify_evidence_provenance.py` | **EVIDENCE_PROVENANCE_PASS** -- 12 artifacts, one shared revision (`b171e93`), `dirty:false`, every `treeHash` checked against `git rev-parse <rev>^{tree}` |
+| `python3 scripts/verify_evidence_reproducibility.py` | **EVIDENCE_REPRODUCIBILITY_PASS** -- 11 Python artifacts regenerated from the tree with zero measurement drift. NEW (CERT-09): provenance checks the STAMP, this checks the NUMBERS. On its first real run it caught three artifacts left stale by the `main_navigation.dart` fix |
+| `python3 scripts/verify_evidence_reproducibility.py --negative-control` | **NEGATIVE_CONTROL_PASS** -- a hand-edited measurement fires `MEASUREMENT_DRIFT`; this is exactly the mutation the provenance gate passes |
+| `dart run scripts/verify_alert_outcome_consumption.dart` | **ALERT_OUTCOME_CONSUMPTION_PASS** -- 172 files, 3 resolved targets, 7 live sites, 0 tear-offs, 0 dropped outcomes (RER-04 + CERT-08) |
+| `dart run scripts/verify_alert_outcome_consumption.dart --negative-control` | **NEGATIVE_CONTROL_PASS** -- 6/6 dropped forms flagged including the hoisted receiver the old rule never enumerated; 2 consumed forms correctly unflagged; 1 tear-off reported, which the docstring used to promise and did not deliver (CERT-08) |
 | `./scripts/verify_repository_convergence.sh` | see below -- runs the sequential chain and every gate in this table's lower half |
 | `ANDROID_SERIAL=<serial> ./scripts/phase3_incoming_call_preflight.sh` | **INCOMING_CALL_PREFLIGHT_FAIL** on the emulator, HONESTLY: telephony emulation reached `mCallState=1 (RINGING)`, but the countdown could not be armed because the SOS button is entitlement-locked. That is the external dependency `MP-41-017` names, now measured rather than asserted (`docs/qa/incoming-call-preflight-2026-08-15.md`) |
 | 11 x `python3 scripts/audit_evidence/<v>.py --negative-control` | **11/11 NEGATIVE_CONTROL_PASS**, each asserting its named rules fire rather than a total count (FIR-06) |
-| `dart format --output=none --set-exit-if-changed lib/ test/` | **154 of 467 files would change** -- no format gate in CI (deliberate, see MP-27-003). The count rose with the file count; the policy is unchanged |
-| `flutter build apk --debug --flavor play --target-platform android-arm64` | **Built successfully** (`app-play-debug.apk`), 2026-08-12 against `fe83771` -- HISTORICAL, not re-run |
-| App runtime | **Launched and driven on emulator**, 2026-08-12 against `fe83771` -- HISTORICAL. Later device runs are recorded per-row in `docs/audit/device-verification-*.md` |
+| `dart format --output=none --set-exit-if-changed lib/ test/` | **157 of 469 files would change** -- no format gate in CI (deliberate, see MP-27-003). The count rose with the file count; the policy is unchanged |
+| `flutter build apk --debug --flavor play --target-platform android-arm64` | **Built successfully** (`app-play-debug.apk`), re-run 2026-08-16 for the visual-polish pass and again for the banner fix |
+| App runtime | **Launched and driven on an API 36 emulator, 2026-08-16**, from a CLEAN install through the full onboarding to all four tabs, in both the offline and online states. That pass found and then verified the fix for the banner occlusion (MP-72-031) and closed 8 of the 13 section-72 polish items. Recorded in `docs/audit/device-verification-2026-08-16-visual-polish.md`; earlier device runs are recorded per-row in the other `docs/audit/device-verification-*.md` files |
 
 ---
 ## Result summary
