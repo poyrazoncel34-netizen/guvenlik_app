@@ -203,97 +203,76 @@
       ],
       "why": "No session with real participants is recorded anywhere. Five unassisted humans cannot be obtained from a repository (E7)."
     },
-    "MP-72-002": {
-      "claim": "no golden-image suite",
-      "refutedBy": [
-        "grep:test:matchesGoldenFile"
-      ],
-      "why": "Same repository rule as MP-46-028: goldens are forbidden, so no image baseline exists to diff a polish pass against."
-    },
-    "MP-72-004": {
-      "claim": "no golden-image suite",
-      "refutedBy": [
-        "grep:test:matchesGoldenFile"
-      ],
-      "why": "Same repository rule as MP-46-028: goldens are forbidden, so no image baseline exists to diff a polish pass against."
-    },
-    "MP-72-005": {
-      "claim": "no golden-image suite",
-      "refutedBy": [
-        "grep:test:matchesGoldenFile"
-      ],
-      "why": "Same repository rule as MP-46-028: goldens are forbidden, so no image baseline exists to diff a polish pass against."
-    },
-    "MP-72-006": {
-      "claim": "no golden-image suite",
-      "refutedBy": [
-        "grep:test:matchesGoldenFile"
-      ],
-      "why": "Same repository rule as MP-46-028: goldens are forbidden, so no image baseline exists to diff a polish pass against."
-    },
-    "MP-72-007": {
-      "claim": "no golden-image suite",
-      "refutedBy": [
-        "grep:test:matchesGoldenFile"
-      ],
-      "why": "Same repository rule as MP-46-028: goldens are forbidden, so no image baseline exists to diff a polish pass against."
-    },
-    "MP-72-008": {
-      "claim": "no golden-image suite",
-      "refutedBy": [
-        "grep:test:matchesGoldenFile"
-      ],
-      "why": "Same repository rule as MP-46-028: goldens are forbidden, so no image baseline exists to diff a polish pass against."
-    },
-    "MP-72-009": {
-      "claim": "no golden-image suite",
-      "refutedBy": [
-        "grep:test:matchesGoldenFile"
-      ],
-      "why": "Same repository rule as MP-46-028: goldens are forbidden, so no image baseline exists to diff a polish pass against."
-    },
-    "MP-72-010": {
-      "claim": "no golden-image suite",
-      "refutedBy": [
-        "grep:test:matchesGoldenFile"
-      ],
-      "why": "Same repository rule as MP-46-028: goldens are forbidden, so no image baseline exists to diff a polish pass against."
-    },
-    "MP-72-011": {
-      "claim": "no golden-image suite",
-      "refutedBy": [
-        "grep:test:matchesGoldenFile"
-      ],
-      "why": "Same repository rule as MP-46-028: goldens are forbidden, so no image baseline exists to diff a polish pass against."
-    },
-    "MP-72-012": {
-      "claim": "no golden-image suite",
-      "refutedBy": [
-        "grep:test:matchesGoldenFile"
-      ],
-      "why": "Same repository rule as MP-46-028: goldens are forbidden, so no image baseline exists to diff a polish pass against."
-    },
-    "MP-72-013": {
-      "claim": "no golden-image suite",
-      "refutedBy": [
-        "grep:test:matchesGoldenFile"
-      ],
-      "why": "Same repository rule as MP-46-028: goldens are forbidden, so no image baseline exists to diff a polish pass against."
-    },
-    "MP-72-014": {
-      "claim": "no golden-image suite",
-      "refutedBy": [
-        "grep:test:matchesGoldenFile"
-      ],
-      "why": "Same repository rule as MP-46-028: goldens are forbidden, so no image baseline exists to diff a polish pass against."
-    },
-    "MP-72-016": {
-      "claim": "no golden-image suite",
-      "refutedBy": [
-        "grep:test:matchesGoldenFile"
-      ],
-      "why": "Same repository rule as MP-46-028: goldens are forbidden, so no image baseline exists to diff a polish pass against."
-    },
+    "MP-72-002": [
+      {
+        "field": "remediation",
+        "claim": "Include this item in the real-device QA matrix run",
+        "refutedBy": [],
+        "why": "The matrix is written and this item was measured on the emulator on 2026-08-16 with no defect found; the remainder is how a 1 px border rasterises on a real panel. The named document is the INSTRUCTION SHEET for work that happens outside this repository, not a deliverable this cell is asking someone to write. It exists precisely so the external run has a script to follow; its existence therefore does not make the cell stale. Registered when WORK_PHRASES was widened (CERT-05)."
+      },
+      {
+        "field": "evidence",
+        "claim": "no defect here at this density",
+        "refutedBy": [],
+        "why": "The 2026-08-16 emulator pass found no 1 px border inconsistency at 420 dpi. Nothing in the repository can refute an observation about rendered pixels; what would refute it is a real panel showing one, which is why the row stays UNVERIFIED rather than PASS."
+      }
+    ],
+    "MP-72-006": [
+      {
+        "field": "remediation",
+        "claim": "Include this item in the real-device QA matrix run",
+        "refutedBy": [],
+        "why": "Measured on the emulator 2026-08-16, no defect; sub-pixel baseline drift needs a real panel. The named document is the INSTRUCTION SHEET for work that happens outside this repository, not a deliverable this cell is asking someone to write. It exists precisely so the external run has a script to follow; its existence therefore does not make the cell stale. Registered when WORK_PHRASES was widened (CERT-05)."
+      },
+      {
+        "field": "evidence",
+        "claim": "no defect here at this density",
+        "refutedBy": [],
+        "why": "Same pass, baselines aligned in every row inspected. Only a real panel can resolve sub-pixel baseline drift, so the claim is bounded to the density it was measured at."
+      }
+    ],
+    "MP-72-013": [
+      {
+        "field": "remediation",
+        "claim": "Include a device from a different density bucket",
+        "refutedBy": [],
+        "why": "Measured clean in the xxhdpi bucket 2026-08-16; blurriness is by definition a wrong-bucket symptom and this device has one bucket. The named document is the INSTRUCTION SHEET for work that happens outside this repository, not a deliverable this cell is asking someone to write. It exists precisely so the external run has a script to follow; its existence therefore does not make the cell stale. Registered when WORK_PHRASES was widened (CERT-05)."
+      },
+      {
+        "field": "evidence",
+        "claim": "no defect here at this density",
+        "refutedBy": [],
+        "why": "Every glyph rendered crisply in the single (xxhdpi) density bucket this device has. A different bucket is what would refute it, and no repository file can stand in for one."
+      }
+    ],
+    "MP-72-014": [
+      {
+        "field": "remediation",
+        "claim": "Include a device from a different density bucket",
+        "refutedBy": [],
+        "why": "Same single-bucket limit as MP-72-013. The named document is the INSTRUCTION SHEET for work that happens outside this repository, not a deliverable this cell is asking someone to write. It exists precisely so the external run has a script to follow; its existence therefore does not make the cell stale. Registered when WORK_PHRASES was widened (CERT-05)."
+      },
+      {
+        "field": "evidence",
+        "claim": "no defect here at this density",
+        "refutedBy": [],
+        "why": "Same single-bucket limit as MP-72-013."
+      }
+    ],
+    "MP-72-016": [
+      {
+        "field": "remediation",
+        "claim": "Include this item in the real-device QA matrix run",
+        "refutedBy": [],
+        "why": "Measured with no banding 2026-08-16; banding depends on panel bit depth and dithering, which an emulator framebuffer does not reproduce. The named document is the INSTRUCTION SHEET for work that happens outside this repository, not a deliverable this cell is asking someone to write. It exists precisely so the external run has a script to follow; its existence therefore does not make the cell stale. Registered when WORK_PHRASES was widened (CERT-05)."
+      },
+      {
+        "field": "evidence",
+        "claim": "no defect here at this density",
+        "refutedBy": [],
+        "why": "No banding in the two gradient surfaces at 420 dpi. Banding depends on panel bit depth and dithering; an emulator framebuffer cannot exhibit or refute it."
+      }
+    ],
     "MP-74-007": {
       "claim": "no purchase outcome was observed",
       "refutedBy": [],
@@ -313,13 +292,21 @@
       ],
       "why": "No server, no accounts and no WebView, so the classes of critical finding this row asks about have no surface here. MFA and App Signing state live in the consoles (E4)."
     },
-    "MP-77-013": {
-      "claim": "no fixed delay, no transition animation, haptics not awaited",
-      "refutedBy": [
-        "grep:docs/audit:panic-press-to-dial ms|dial gecikmesi ms"
-      ],
-      "why": "The phrase is a list of properties the structural test ENFORCES, not a claim that a document is missing. What is genuinely absent is a numeric panic-press-to-dial timing from physical hardware, which is device-only by the project rules (E2)."
-    },
+    "MP-77-013": [
+      {
+        "claim": "no fixed delay, no transition animation, haptics not awaited",
+        "refutedBy": [
+          "grep:docs/audit:panic-press-to-dial ms|dial gecikmesi ms"
+        ],
+        "why": "The phrase is a list of properties the structural test ENFORCES, not a claim that a document is missing. What is genuinely absent is a numeric panic-press-to-dial timing from physical hardware, which is device-only by the project rules (E2)."
+      },
+      {
+        "field": "remediation",
+        "claim": "Execute store/REAL_DEVICE_QA_MATRIX.md and record timings",
+        "refutedBy": [],
+        "why": "The matrix is written; the panic-press-to-dial budget must be measured on physical hardware. The named document is the INSTRUCTION SHEET for work that happens outside this repository, not a deliverable this cell is asking someone to write. It exists precisely so the external run has a script to follow; its existence therefore does not make the cell stale. Registered when WORK_PHRASES was widened (CERT-05)."
+      }
+    ],
     "MP-78-001": [
       {
         "claim": "with no SDK required",
@@ -361,6 +348,84 @@
         "refutedBy": [],
         "why": "The absent thing is post-launch production data, which cannot exist before a rollout and which no repository edit can create. The observability_and_slo.md reference in the same cell is a satisfied citation -- it already names the owner and the 24h/72h/7-day cadence -- and the cell says so, which is the FIR-03 correction rather than a fresh request."
       }
-    ]
+    ],
+    "MP-40-023": {
+      "field": "remediation",
+      "claim": "Execute the existing real-device QA matrix",
+      "refutedBy": [],
+      "why": "The matrix is written. What is open is EXECUTING it on a low-end handset and recording the memory figure. The named document is the INSTRUCTION SHEET for work that happens outside this repository, not a deliverable this cell is asking someone to write. It exists precisely so the external run has a script to follow; its existence therefore does not make the cell stale. Registered when WORK_PHRASES was widened (CERT-05)."
+    },
+    "MP-46-013": {
+      "field": "remediation",
+      "claim": "verify manually against the internal-test track",
+      "refutedBy": [],
+      "why": "The billing checklist is written. What is open is running it against a Play internal-test account. The named document is the INSTRUCTION SHEET for work that happens outside this repository, not a deliverable this cell is asking someone to write. It exists precisely so the external run has a script to follow; its existence therefore does not make the cell stale. Registered when WORK_PHRASES was widened (CERT-05)."
+    },
+    "MP-49-009": {
+      "field": "remediation",
+      "claim": "note it in store/BILLING_RELEASE_CHECKLIST.md",
+      "refutedBy": [],
+      "why": "The note cannot be written until the RevenueCat dashboard has been inspected, which is the external half. The file exists as the place to record the answer, not as the answer. The named document is the INSTRUCTION SHEET for work that happens outside this repository, not a deliverable this cell is asking someone to write. It exists precisely so the external run has a script to follow; its existence therefore does not make the cell stale. Registered when WORK_PHRASES was widened (CERT-05)."
+    },
+    "MP-50-014": {
+      "field": "remediation",
+      "claim": "What remains is the REHEARSAL, which needs the Play internal-test track",
+      "refutedBy": [],
+      "why": "The runbook half is DONE and the cell now says so (CERT-03). What remains is the rehearsal on the Play internal-test track. The named document is the INSTRUCTION SHEET for work that happens outside this repository, not a deliverable this cell is asking someone to write. It exists precisely so the external run has a script to follow; its existence therefore does not make the cell stale. Registered when WORK_PHRASES was widened (CERT-05)."
+    },
+    "MP-50-015": {
+      "field": "remediation",
+      "claim": "What remains is the REHEARSAL, which needs the Play internal-test track",
+      "refutedBy": [],
+      "why": "Same as MP-50-014: documentation done, rehearsal external. The named document is the INSTRUCTION SHEET for work that happens outside this repository, not a deliverable this cell is asking someone to write. It exists precisely so the external run has a script to follow; its existence therefore does not make the cell stale. Registered when WORK_PHRASES was widened (CERT-05)."
+    },
+    "MP-50-016": {
+      "field": "remediation",
+      "claim": "What remains is the REHEARSAL, which needs the Play internal-test track",
+      "refutedBy": [],
+      "why": "Same as MP-50-014: documentation done, rehearsal external. The named document is the INSTRUCTION SHEET for work that happens outside this repository, not a deliverable this cell is asking someone to write. It exists precisely so the external run has a script to follow; its existence therefore does not make the cell stale. Registered when WORK_PHRASES was widened (CERT-05)."
+    },
+    "MP-53-003": {
+      "field": "remediation",
+      "claim": "record the date in the table at the top of docs/release/dr_and_key_custody.md",
+      "refutedBy": [],
+      "why": "The DR document exists and has the table. The DATE cannot be recorded until Play App Signing enrolment and MFA are confirmed in the console, which is the external half. The named document is the INSTRUCTION SHEET for work that happens outside this repository, not a deliverable this cell is asking someone to write. It exists precisely so the external run has a script to follow; its existence therefore does not make the cell stale. Registered when WORK_PHRASES was widened (CERT-05)."
+    },
+    "MP-54-001": {
+      "field": "remediation",
+      "claim": "Verify against DOC store/BILLING_RELEASE_CHECKLIST.md",
+      "refutedBy": [],
+      "why": "Price, currency and tax live in Play Console. The checklist is the script for verifying them there. The named document is the INSTRUCTION SHEET for work that happens outside this repository, not a deliverable this cell is asking someone to write. It exists precisely so the external run has a script to follow; its existence therefore does not make the cell stale. Registered when WORK_PHRASES was widened (CERT-05)."
+    },
+    "MP-54-002": {
+      "field": "remediation",
+      "claim": "Verify against DOC store/BILLING_RELEASE_CHECKLIST.md",
+      "refutedBy": [],
+      "why": "Same as MP-54-001. The named document is the INSTRUCTION SHEET for work that happens outside this repository, not a deliverable this cell is asking someone to write. It exists precisely so the external run has a script to follow; its existence therefore does not make the cell stale. Registered when WORK_PHRASES was widened (CERT-05)."
+    },
+    "MP-54-003": {
+      "field": "remediation",
+      "claim": "Verify against DOC store/BILLING_RELEASE_CHECKLIST.md",
+      "refutedBy": [],
+      "why": "Same as MP-54-001. The named document is the INSTRUCTION SHEET for work that happens outside this repository, not a deliverable this cell is asking someone to write. It exists precisely so the external run has a script to follow; its existence therefore does not make the cell stale. Registered when WORK_PHRASES was widened (CERT-05)."
+    },
+    "MP-59-029": {
+      "field": "remediation",
+      "claim": "ensure the declarations submitted match store/permissions_declaration_notes.md",
+      "refutedBy": [],
+      "why": "The notes are written. What is open is Google's decision on the submitted declarations, which no repository file can settle. The named document is the INSTRUCTION SHEET for work that happens outside this repository, not a deliverable this cell is asking someone to write. It exists precisely so the external run has a script to follow; its existence therefore does not make the cell stale. Registered when WORK_PHRASES was widened (CERT-05)."
+    },
+    "MP-59-030": {
+      "field": "remediation",
+      "claim": "Execute store/REAL_DEVICE_QA_MATRIX.md on physical devices",
+      "refutedBy": [],
+      "why": "The matrix is written; executing it needs physical hardware. The named document is the INSTRUCTION SHEET for work that happens outside this repository, not a deliverable this cell is asking someone to write. It exists precisely so the external run has a script to follow; its existence therefore does not make the cell stale. Registered when WORK_PHRASES was widened (CERT-05)."
+    },
+    "MP-76-012": {
+      "field": "remediation",
+      "claim": "record the baseline during the first staged rollout",
+      "refutedBy": [],
+      "why": "There is no support-volume baseline to record until a rollout exists. The runbook is the place it will be recorded, not the missing thing. The named document is the INSTRUCTION SHEET for work that happens outside this repository, not a deliverable this cell is asking someone to write. It exists precisely so the external run has a script to follow; its existence therefore does not make the cell stale. Registered when WORK_PHRASES was widened (CERT-05)."
+    }
   }
 }

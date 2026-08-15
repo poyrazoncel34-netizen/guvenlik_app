@@ -65,6 +65,23 @@ below -- so the rule ties requirement ID + field + claimed absence + the exact
 path being tested, and decides without reading English. On the tree that
 introduced it, it fired on exactly the two rows that were wrong.
 
+The bound of that rule, stated because certification found it (CERT-01/02)
+--------------------------------------------------------------------------
+The rule can only fire on a remediation that NAMES A FILE. It is structurally
+blind to one that asks for a FACT or a BEHAVIOUR the repository already has:
+
+    MP-67-001..004  "Name Play Console vitals as the alerting source and set a
+                     checking cadence"   -- both already in observability_and_slo.md
+                                            and incident_runbook.md section 2
+    MP-23-012       "Ensure the paywall links out to the Play subscription
+                     settings"           -- already implemented at two call sites
+
+Neither names a path or a DOC_ALIASES phrase, so no widening of WORK_PHRASES
+reaches them; deciding them needs someone to read the sentence and go look.
+That is a real limit, and it is written here rather than left for a reader to
+discover the way this pass did. What the widening below DOES buy is the class
+that names a file and was missed on a technicality.
+
 Usage:
     python3 scripts/verify_absence_claims.py
     python3 scripts/verify_absence_claims.py --negative-control
@@ -100,6 +117,15 @@ ABSENCE_PHRASES = [
 
 # Imperatives that ask a future engineer to PRODUCE something. A remediation is
 # stale exactly when the thing it asks for is already in the tree.
+#
+# Widened after certification (CERT-05). The list used to hold eight verbs and
+# was matched CASE-SENSITIVELY, while the absence check one line below it used
+# `re.I`. `MP-50-012` said "... and document that in the rollout runbook" in
+# lower case, naming a live DOC_ALIASES target, and slipped through on the
+# capital letter alone. The verbs the audit actually uses in unresolved
+# remediations were counted rather than guessed: Run 17, Add 14, Confirm 8,
+# Verify 7, Include 7, Name 4, Rehearse 4, Document 3, Measure 2, plus single
+# uses of Ensure, Cover, Require, Introduce and Adopt.
 WORK_PHRASES = [
     r"\bDocument\b",
     r"\bAdd\b",
@@ -109,6 +135,16 @@ WORK_PHRASES = [
     r"\bExtend\b",
     r"\bAuthor\b",
     r"\bPublish\b",
+    r"\bDefine\b",
+    r"\bRecord\b",
+    r"\bNote\b",
+    r"\bInclude\b",
+    r"\bIntroduce\b",
+    r"\bRequire\b",
+    r"\bCover\b",
+    r"\bAdopt\b",
+    r"\bEnsure\b",
+    r"\bName\b",
 ]
 
 # Prose names the audit uses for repository documents, mapped to the file each
@@ -194,7 +230,9 @@ def claims_needing_registration(rows: dict, repo: Path | None = None) -> list:
             claims_absence = any(
                 re.search(p, text, re.I) for p in ABSENCE_PHRASES
             )
-            asks_for_work = any(re.search(p, text) for p in WORK_PHRASES)
+            # `re.I`, matching the absence check above it. The asymmetry was
+            # not a decision; it was a missing flag (CERT-05).
+            asks_for_work = any(re.search(p, text, re.I) for p in WORK_PHRASES)
             if not (claims_absence or asks_for_work):
                 continue
             if referenced_existing_artifact(base, text):

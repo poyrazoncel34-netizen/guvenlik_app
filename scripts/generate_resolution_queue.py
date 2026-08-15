@@ -42,44 +42,15 @@ SCOPE_OVERRIDES: dict[str, tuple[str, str]] = {
         "An indeterminate payment outcome only occurs against a real billing "
         "backend (E1).",
     ),
-    # --- misclassified by the gap-text heuristic; corrected by hand ----------
-    # An emulator HAS a hardware keyboard and a measurable pixel grid, so these
-    # are verifiable in this environment. Filing them as external would have
-    # been using EXTERNAL_BLOCKER as a place to put work.
-    **{
-        f"MP-12-{i:03d}": (
-            "RUNTIME_VERIFIABLE_NOW",
-            "Keyboard operability is verifiable with the emulator's hardware "
-            "keyboard; no physical device is required to reach a real verdict.",
-        )
-        for i in range(1, 10)
-    },
-    "MP-08-003": ("RUNTIME_VERIFIABLE_NOW", "Focus visibility is observable with the emulator's hardware keyboard."),
-    "MP-08-004": ("RUNTIME_VERIFIABLE_NOW", "Focus order is observable with the emulator's hardware keyboard."),
-    "MP-08-015": ("RUNTIME_VERIFIABLE_NOW", "Keyboard-driven operation is observable on the emulator."),
-    "MP-12-017": (
-        "IN_REPO_RESOLVABLE",
-        "`Semantics(header: true)` on screen titles is a source change with a "
-        "widget-test assertion. Nothing external is involved.",
-    ),
-    "MP-12-030": ("RUNTIME_VERIFIABLE_NOW", "Tap-target geometry is measurable on the emulator at a known density."),
-    "MP-09-020": ("RUNTIME_VERIFIABLE_NOW", "Frame cost is measurable on the emulator."),
-    **{
-        f"MP-27-{i:03d}": (
-            "RUNTIME_VERIFIABLE_NOW",
-            "Memory and listener-leak behaviour is observable on the emulator.",
-        )
-        for i in (10, 11, 12)
-    },
-    "MP-40-022": ("RUNTIME_VERIFIABLE_NOW", "Memory consumption is measurable on the emulator."),
-    **{
-        f"MP-41-{i:03d}": (
-            "RUNTIME_VERIFIABLE_NOW",
-            "Cold/warm start is measurable on the emulator; a physical-device "
-            "number is better evidence but is not required for a verdict.",
-        )
-        for i in (1, 2, 3)
-    },
+    # NOTE (2026-08-16, CERT review): 23 entries were removed from this map
+    # because every row they named had reached PASS. They were the emulator-
+    # verifiable accessibility, keyboard, memory and startup rows
+    # (MP-08-003/004/015, MP-09-020, MP-12-001..009, MP-12-017, MP-12-030,
+    # MP-27-010..012, MP-40-022, MP-41-001..003, MP-47-011). An override for a
+    # resolved row is inert, but this map is the only place the repository
+    # still records an IN_REPO_RESOLVABLE or RUNTIME_VERIFIABLE_NOW judgement,
+    # so leaving dead ones here makes it read as though that work is still
+    # queued. Pruned deliberately rather than left to rot.
     # --- deliberate product scope, not an external dependency ---------------
     **{
         f"MP-07-{i:03d}": (
@@ -163,6 +134,22 @@ SCOPE_OVERRIDES: dict[str, tuple[str, str]] = {
         "A numeric performance-regression gate needs a physical-device baseline to "
         "be a threshold rather than a record of emulator jitter.",
     ),
+    # --- 2026-08-16 visual-polish pass: 8 of the 13 section-72 items closed on
+    # --- the emulator, these 5 did not, and each names WHY a panel is the
+    # --- remainder rather than a missing pass. Recorded in
+    # --- docs/audit/device-verification-2026-08-16-visual-polish.md.
+    **{
+        rid: (
+            "EXTERNAL_BLOCKER",
+            "Measured on the API 36 emulator at 420 dpi on 2026-08-16 with no "
+            "defect found. The irreducible remainder is a physical PANEL: 1 px "
+            "rasterisation, sub-pixel baselines, a second density bucket and "
+            "gradient dithering are all properties of real hardware, not of a "
+            "framebuffer. Same reasoning as MP-69-012/013 -- the logical "
+            "surface is measurable here, the physical one is not.",
+        )
+        for rid in ("MP-72-002", "MP-72-006", "MP-72-013", "MP-72-014", "MP-72-016")
+    },
     "MP-69-012": (
         "EXTERNAL_BLOCKER",
         "text_scale.json covers six logical viewports including the density-560 "
@@ -181,13 +168,6 @@ SCOPE_OVERRIDES: dict[str, tuple[str, str]] = {
         "EXTERNAL_BLOCKER",
         "Same drill. incident_runbook.md section 3 states the 4h target the "
         "rehearsal will be measured against, and section 8 records that it is unmet.",
-    ),
-    "MP-47-011": (
-        "IN_REPO_RESOLVABLE",
-        "Seeding a few hundred activity_events rows and asserting query time plus "
-        "lazy list building is a unit test, not a device measurement. The gap-text "
-        "heuristic reads the word 'exercised' as a runtime marker; the remedy is "
-        "in-repo and should not be filed as runtime work on a word choice.",
     ),
     "MP-32-040": (
         "PRODUCT_DECISION_REQUIRED",
