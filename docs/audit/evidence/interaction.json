@@ -2,9 +2,9 @@
   "verifier": "scripts/audit_evidence/interaction.py",
   "verifierVersion": "1.0.0",
   "codeRevision": {
-    "verifiedCodeRevision": "ef40178ce7d41241baad26350aa3a242a0ba2d11",
+    "verifiedCodeRevision": "c8c1388836242452acccddd428df817eeb46c84e",
     "dirty": false,
-    "treeHash": "0aa600f9a9748fa1e49cd11c10f78db324ba4b99",
+    "treeHash": "6d9d4d1a2f0b5b624b008c7ab0b65fe43e2458ed",
     "dirtyPaths": [],
     "note": "verifiedCodeRevision is the commit whose measured surface produced this artifact. A later commit may CONTAIN this file; that is the documentation head, and the two are distinguished in PRODUCTION_AUDIT.md. Changes under docs/audit/evidence/ are this package's own output and do not make the measured tree dirty."
   },
@@ -142,9 +142,10 @@
         {
           "site": "lib/screens/safe_walk_screen.dart:238",
           "consumesOutcome": true,
-          "statementPrefix": "final outcome = await"
+          "statementPrefix": "final outcome ="
         }
       ],
+      "alertEnumerationBoundary": "syntactic, receiver-agnostic; authoritative enumeration is scripts/verify_alert_outcome_consumption.dart (element-resolved, transitive wrapper fixpoint)",
       "silencedSafetySurfaceWarned": true,
       "tapRoutesThroughDestinationPark": true,
       "payloadAllowlist": [
@@ -302,6 +303,7 @@
       "notificationFeedback.safetyCriticalCategories",
       "notificationFeedback.perChannelSettingsDeepLink",
       "notificationFeedback.postReportsPermissionDenied",
+      "notificationFeedback.alertEnumerationBoundary",
       "notificationFeedback.payloadAllowlist",
       "notificationFeedback.coveringTests",
       "undo",
