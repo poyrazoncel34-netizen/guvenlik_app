@@ -14,6 +14,26 @@ import '../core/widgets/escape_dismissible.dart';
 class ConnectivityBanner extends StatefulWidget {
   const ConnectivityBanner({super.key});
 
+  /// Vertical padding above and below the banner's content row.
+  ///
+  /// Public because the shell has to reserve exactly this much space; two
+  /// copies of one number is how the banner and the page beneath it came to
+  /// disagree in the first place.
+  static const double verticalPadding = 12;
+
+  /// Height of the content row. The tallest child is the leading
+  /// [IconSizes.dense] glyph -- the 13 px label and the [IconSizes.inline]
+  /// trailing glyph are both shorter -- so the row measures exactly this.
+  static const double contentHeight = IconSizes.dense;
+
+  /// How much vertical space the banner occupies BELOW the status bar.
+  ///
+  /// The pages behind it already start below the status bar (their own
+  /// SafeArea consumes that inset), so the shell must reserve this, not the
+  /// banner's full painted height. Reserving the inset twice would push every
+  /// page down by the status bar a second time.
+  static const double reservedHeight = verticalPadding * 2 + contentHeight;
+
   @override
   State<ConnectivityBanner> createState() => _ConnectivityBannerState();
 }
@@ -88,15 +108,21 @@ class _ConnectivityBannerState extends State<ConnectivityBanner>
           // status bar, which is both the Android minimum and the first
           // version of this control a thumb can actually hit.
           padding: EdgeInsets.only(
-            top: statusBarInset + 12,
-            bottom: 12,
+            top: statusBarInset + ConnectivityBanner.verticalPadding,
+            bottom: ConnectivityBanner.verticalPadding,
             left: 16,
             right: 16,
           ),
           decoration: BoxDecoration(
             color: AppColors.warning.withValues(alpha: 0.9),
           ),
-          child: Row(
+          // Explicit height so the shell's reservation and the banner's own
+          // geometry cannot drift apart. It equals what the row already
+          // measured intrinsically (the dense leading glyph is the tallest
+          // child), so this pins the current appearance rather than changing it.
+          child: SizedBox(
+            height: ConnectivityBanner.contentHeight,
+            child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const Icon(
@@ -120,6 +146,7 @@ class _ConnectivityBannerState extends State<ConnectivityBanner>
                 size: IconSizes.inline,
               ),
             ],
+          ),
           ),
         ),
       ),

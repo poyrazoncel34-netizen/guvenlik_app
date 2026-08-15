@@ -20,6 +20,7 @@ import 'contacts_page.dart';
 import 'map_page.dart';
 import 'pin_setup_screen.dart';
 import 'settings_page.dart';
+import '../core/services/connectivity_service.dart';
 import '../core/services/emergency_session_contract.dart';
 import '../core/services/pin_verification_service.dart';
 import '../core/navigation/deep_link_channel.dart';
@@ -77,9 +78,25 @@ class _MainNavigationState extends State<MainNavigation>
   /// implies no spatial relationship between four unrelated destinations.
   late final Animation<double> _tabFade;
 
+  /// Whether the offline banner is currently occupying the top of the shell.
+  ///
+  /// Read from the SAME source the banner itself listens to
+  /// ([ConnectivityService.instance]) rather than plumbed down from it: two
+  /// widgets deriving one fact from one stream cannot disagree, whereas a
+  /// callback from the banner to its parent could arrive a frame late and
+  /// reintroduce exactly the overlap this reservation exists to remove.
+  bool _isOffline = false;
+  StreamSubscription<bool>? _connectivitySubscription;
+
   @override
   void initState() {
     super.initState();
+    _isOffline = !ConnectivityService.instance.isOnline;
+    _connectivitySubscription = ConnectivityService.instance.onStatusChange
+        .listen((bool isOnline) {
+          if (!mounted || isOnline == !_isOffline) return;
+          setState(() => _isOffline = !isOnline);
+        });
     _tabFadeController = AnimationController(
       vsync: this,
       duration: Motion.base,
@@ -161,6 +178,7 @@ class _MainNavigationState extends State<MainNavigation>
 
   @override
   void dispose() {
+    _connectivitySubscription?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     PendingDestinationService.instance.removeListener(_onPendingDestination);
     _tabFadeController.removeListener(_swapAtTrough);
@@ -263,20 +281,33 @@ class _MainNavigationState extends State<MainNavigation>
     return Scaffold(
       body: Stack(
         children: [
-          // IndexedStack is kept on purpose: every page stays in the tree, so
-          // the crossfade costs no page state and MapPage's isActive contract
-          // is unchanged -- it still flips exactly once per tab change, now at
-          // the trough instead of on the tap.
-          FadeTransition(
-            opacity: _tabFade,
-            child: IndexedStack(
-              index: _selectedIndex,
-              children: [
-                const HomePage(),
-                MapPage(isActive: _selectedIndex == 1),
-                const ContactsPage(),
-                const SettingsPage(),
-              ],
+          // The banner below is a Positioned OVERLAY, so it occupies no layout
+          // space. Measured on an API 36 emulator 2026-08-16: with the banner
+          // visible the top ~42 dp of every tab was covered -- on Home that hid
+          // more than half of the "Hos Geldiniz" heading, and the same heading
+          // rendered fully the moment the banner went away. The pages have to
+          // reserve the space the overlay takes, and the reservation comes from
+          // the banner's own constants so the two cannot drift apart.
+          AnimatedPadding(
+            duration: Motion.base,
+            padding: EdgeInsets.only(
+              top: _isOffline ? ConnectivityBanner.reservedHeight : 0,
+            ),
+            // IndexedStack is kept on purpose: every page stays in the tree, so
+            // the crossfade costs no page state and MapPage's isActive contract
+            // is unchanged -- it still flips exactly once per tab change, now at
+            // the trough instead of on the tap.
+            child: FadeTransition(
+              opacity: _tabFade,
+              child: IndexedStack(
+                index: _selectedIndex,
+                children: [
+                  const HomePage(),
+                  MapPage(isActive: _selectedIndex == 1),
+                  const ContactsPage(),
+                  const SettingsPage(),
+                ],
+              ),
             ),
           ),
           // Offline mode banner at top
