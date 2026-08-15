@@ -2,8 +2,11 @@
   "verifier": "scripts/audit_evidence/layout.py",
   "verifierVersion": "1.0.0",
   "codeRevision": {
-    "head": "d84b6588bad747a2aa7b0aba0113014867ed2683",
-    "dirty": true
+    "verifiedCodeRevision": "8b7abfb8bdfda37d4f802ed3de37039f32f48dca",
+    "dirty": false,
+    "treeHash": "aa5e3240bba22a91752043388e800ad2d974c61f",
+    "dirtyPaths": [],
+    "note": "verifiedCodeRevision is the commit whose measured surface produced this artifact. A later commit may CONTAIN this file; that is the documentation head, and the two are distinguished in PRODUCTION_AUDIT.md. Changes under docs/audit/evidence/ are this package's own output and do not make the measured tree dirty."
   },
   "measuredOn": "2026-08-15",
   "command": "python3 scripts/audit_evidence/layout.py",

@@ -1,6 +1,14 @@
 {
   "verifier": "test/screens/layout_size_matrix_test.dart",
-  "verifierVersion": "1.0.0",
+  "verifierVersion": "1.1.0",
+  "codeRevision": {
+    "verifiedCodeRevision": "8b7abfb8bdfda37d4f802ed3de37039f32f48dca",
+    "dirty": false,
+    "treeHash": "aa5e3240bba22a91752043388e800ad2d974c61f",
+    "dirtyPaths": [],
+    "note": "verifiedCodeRevision is the commit whose measured surface produced this artifact. A later commit may CONTAIN this file; that is the documentation head, and the two are distinguished in PRODUCTION_AUDIT.md. Changes under docs/audit/evidence/ are this package's own output and do not make the measured tree dirty."
+  },
+  "measuredOn": "2026-08-15",
   "command": "flutter test test/screens/layout_size_matrix_test.dart --no-pub",
   "method": "framework RenderFlex error capture via tester.takeException(); the debug overflow stripe is deliberately NOT the instrument",
   "locale": "tr-TR (the shipped payload, not invented test copy)",
@@ -872,5 +880,31 @@
       "overflowed": true,
       "error": "A RenderFlex overflowed by 2573 pixels on the right."
     }
-  ]
+  ],
+  "propertyClasses": {
+    "criterion": "ENFORCED = an assertion in this file fails when the property changes. CENSUS = a recorded fact with no assertion behind it.",
+    "rulesEmitted": [
+      "cellOverflowed"
+    ],
+    "rulesUnderNegativeControl": [
+      "cellOverflowed"
+    ],
+    "enforcedProperties": [
+      "cellsOverflowing",
+      "cells"
+    ],
+    "censusProperties": [
+      "locale",
+      "textScaleCeiling",
+      "textScaleCeilingSource",
+      "viewports",
+      "surfaces",
+      "cellsMeasured",
+      "negativeControls"
+    ]
+  },
+  "baseline": {
+    "violationCount": 0,
+    "semantics": "cellsOverflowing is the violation count. 0 means every measured cell fitted; the in-file negative control proves the instrument can report otherwise (an inflexible Row with the shipped tr-TR copy at scale 2.0 overflows by 2573 px)."
+  }
 }
