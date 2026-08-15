@@ -18,9 +18,9 @@
 
 | Fact | Value |
 |---|---|
-| **VERIFIED IMPLEMENTATION REVISION** — the tree every `TEST`/`CMD`/`RUN` result in the *Baseline commands* table below was produced against | `ef40178` (branch `feat/tutundurma-ucretsiz-prova`) |
-| **Evidence artifacts under `docs/audit/evidence/`** | all 12 measured at `ef40178` with `dirty: false`, the same revision as the table below. Verify with `codeRevision.verifiedCodeRevision` in any artifact |
-| **FINAL DOCUMENTATION HEAD** — the commit that carries this file's current text | later by construction: committing a document changes the tree, so no file can name the commit that contains it. That commit adds only regenerated artifacts under `docs/audit/evidence/` and `.md` text — no `lib/`, `android/`, `test/`, `scripts/`, `assets/` or `config/` file. **The measured surface at the final head is therefore byte-identical to `ef40178`**, which is why results produced at either are attributable to the same tree; `git diff ef40178..HEAD -- lib android test scripts assets config` is empty |
+| **VERIFIED IMPLEMENTATION REVISION** — the tree every `TEST`/`CMD`/`RUN` result in the *Baseline commands* table below was produced against | `1950237` (branch `feat/tutundurma-ucretsiz-prova`). Superseded `ef40178` when the RER-01..05 remediation changed `lib/`, `test/`, `scripts/`, `assets/`, `config/` and `store/` |
+| **Evidence artifacts under `docs/audit/evidence/`** | all 12 measured at `1950237` with `dirty: false`, the same revision as the table below. Verify with `codeRevision.verifiedCodeRevision` in any artifact, or mechanically with `python3 scripts/verify_evidence_provenance.py`, which checks each `treeHash` against `git rev-parse <rev>^{tree}` and fails if the twelve disagree |
+| **FINAL DOCUMENTATION HEAD** — the commit that carries this file's current text | later by construction: committing a document changes the tree, so no file can name the commit that contains it. Commits after `1950237` add only regenerated artifacts under `docs/audit/evidence/` and `.md` text — no `lib/`, `android/`, `test/`, `scripts/`, `assets/` or `config/` file. **The measured surface at the final head is therefore byte-identical to `1950237`**, which is why results produced at either are attributable to the same tree; `git diff 1950237..HEAD -- lib android test scripts assets config` is empty |
 | **Worktree at verification time** | clean (`git status --porcelain` empty). The secret scan refuses to run otherwise, and since FIR-04 the evidence verifiers refuse to *emit* otherwise |
 | Verification date | 2026-08-15 |
 
