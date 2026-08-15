@@ -83,7 +83,8 @@ after them on the same install is not clean evidence.
 
 1. **Phase 0 — fresh install & guards:** A1 → A2 → **A3 (empty-target guard, BEFORE any contact is configured)**.
 2. **Phase 1 — contacts & target validation:** B1 → B2 → B3 → B4 → B5.
-3. **Phase 2 — emergency call paths (prompt-level permission states):** C1 → C2 → C3 → C4.
+3. **Phase 2 — emergency call paths (prompt-level permission states):** C1 → C2 → C3 → C4 →
+   C5 → C6 → C7 (the incoming-call interruption family; needs a THIRD phone as the caller).
 4. **Phase 3 — sessions & timers:** D1 → D6.
 5. **Phase 4 — notifications & locale:** E1 → E6.
 6. **Phase 5 — Doze / OEM reliability:** F1 → F4.
@@ -125,6 +126,130 @@ after them on the same install is not clean evidence.
 | C2 | NEEDS_REAL_DEVICE_TEST | CALL_PHONE denied ACTION_DIAL fallback | Deny CALL_PHONE; try long-running sessions and a visible Panic countdown | Check-In/Safe Walk are not armed. Panic remains a foreground countdown and opens the dialer only from the visible Activity; no automatic/background claim | ☐P ☐F | ☐P ☐F | ☐P ☐F | |
 | C3 | NEEDS_REAL_DEVICE_TEST | Native Telecom request failure fallback | Where safely forceable, make the native Telecom request fail | An actionable TTL-bounded notification opens ACTION_DIAL **for the user's target number** after user tap, or a visible failure is surfaced; never `112` | ☐P ☐F | ☐P ☐F | ☐P ☐F | |
 | C4 | NEEDS_REAL_DEVICE_TEST | No SIM / airplane mode | Enable airplane mode or remove SIM; start SOS with the test-safe number | Visible dialer/manual/failure state; app never silently fails; no crash | ☐P ☐F | ☐P ☐F | ☐P ☐F | |
+| C5 | NEEDS_REAL_DEVICE_TEST | Incoming call during armed countdown — REJECT | Arm Panic; while the countdown is visibly running, place a call from the third phone; reject it; return to the app | Countdown continues against its ORIGINAL deadline (no reset to 10, no second countdown); at most one dispatch occurs; PIN cancel gate still required | ☐P ☐F | ☐P ☐F | ☐P ☐F | Expanded case below; C5–C7 are one interruption family |
+| C6 | NEEDS_REAL_DEVICE_TEST | Incoming call during armed countdown — ACCEPT, deadline elapses during the call | Arm Panic; place a call from the third phone; ANSWER it; stay on the call past the 10 s deadline; hang up; return to the app | Dispatch happens exactly once (Dart or native claim, never both); the app shows a typed outcome, never a false "completed"; ledger and result surface agree | ☐P ☐F | ☐P ☐F | ☐P ☐F | Answering may block the outbound request — a typed failure is a PASS, a silent success is a FAIL |
+| C7 | NEEDS_REAL_DEVICE_TEST | Incoming call inside the final-3 s dispatch window | Arm Panic; time the incoming call to land with ≤3 s remaining, i.e. inside the claim race | Exactly one Telecom request per generation in normal execution; any duplicate is recorded against the declared request/terminal-commit window; no missed dispatch | ☐P ☐F | ☐P ☐F | ☐P ☐F | Hardest timing row; run it last of the three |
+
+#### C5–C7 expanded case — incoming phone call while the emergency countdown is armed
+
+Written as an executable case because the interruption crosses four subsystems at once
+(Android Telecom, the Dart countdown, the native AlarmManager claim, and the PIN cancel
+gate) and a table cell cannot carry the fail criteria for that.
+
+**Design facts this case is written against** (verify against the tree, do not assume):
+
+- The panic countdown is **deadline-driven, not tick-decrementing**:
+  `_startDartCountdownTimer` polls every 200 ms and derives the remaining seconds from
+  `CountdownClock.secondsUntil(_armedDeadline)` (`lib/screens/countdown_screen.dart`).
+  A pause therefore cannot make the countdown drift or restart — it recomputes.
+- `CountdownScreen` is deliberately **not** a `WidgetsBindingObserver`. It reacts to no
+  lifecycle callback; the wall-clock deadline plus the native session is the authority.
+  This case exists to prove that design on hardware, not to assume it.
+- The native AlarmManager session is armed **before** the Dart timer starts, and both race
+  the same deadline. `EmergencySessionCoordinator` documents an at-least-once durable
+  CLAIMED state: `submittedInProcess` blocks a second Telecom request for the same
+  generation **within one process**, while a crash between Telecom accepting and the
+  terminal commit is a declared, irreducible duplicate window.
+- Panic countdown audio is **haptic only** (`HapticService.countdownTick`). There is no
+  siren and no audio player in this path — do not record a siren observation here.
+
+**PRECONDITIONS**
+
+1. Signed release AAB from the internal-testing track (§1.2 preflight already `PASS_PREFLIGHT_ONLY`).
+2. Pro entitlement active; PIN configured; primary emergency contact set to the **second**
+   test phone; CALL_PHONE granted; notifications allowed; exact-alarm access granted.
+3. A **third** phone able to call the device under test. The second phone stays the
+   emergency target and must never be the caller — otherwise the two roles collide.
+4. Device unlocked, app foreground, screen on, no other safety session active.
+5. Starting alarm/ring volume recorded, and Do-Not-Disturb OFF (DnD suppresses the incoming
+   call and voids the case).
+
+**STEPS**
+
+1. Arm Panic from an explicit user action and confirm the countdown is visibly running.
+2. From the third phone, place a voice call to the device under test:
+   - **C5** with roughly 6–8 s remaining, then **reject**.
+   - **C6** with roughly 6–8 s remaining, then **answer** and stay connected past the
+     deadline, then hang up.
+   - **C7** with ≤3 s remaining (repeat until the timing actually lands; a mistimed
+     attempt is discarded, not recorded as a pass).
+3. In every variant, return to the app and observe without touching anything for 5 s.
+4. Then attempt to cancel; then inspect the safety timeline.
+
+**EXPECTED UI STATE**
+
+- The incoming-call UI takes the foreground; the countdown screen is backgrounded. No crash,
+  no ANR, no black or blank frame on return.
+- On return the countdown screen (or its successor surface) is shown, with **one** countdown
+  visible. Two stacked countdown routes is a FAIL.
+- Safety controls — cancel affordance and the PIN entry it leads to — are reachable and hit
+  their ≥48 dp target after the interruption.
+
+**EXPECTED COUNTDOWN STATE**
+
+- The remaining seconds on return equal `original deadline − now`, within one tick.
+- Never resets to 10. Never jumps backwards. Never runs two timers (visible as a
+  double-speed decrement or duplicate haptic ticks).
+- If the deadline passed while the app was backgrounded, the countdown does not "resume" —
+  the dispatch path has already been entered exactly once by whichever contender claimed.
+
+**EXPECTED AUDIO/HAPTIC STATE**
+
+- Haptic ticks may be suppressed by the platform while the call UI owns the foreground; that
+  is acceptable. Duplicate or double-rate ticking on return is NOT.
+- Ring/alarm volume is unchanged by the app at the end of the case.
+- No siren is expected in this path; if one is heard, that is a defect against the design
+  facts above and must be recorded.
+
+**EXPECTED APP LIFECYCLE BEHAVIOR**
+
+- The app moves to `inactive`/`paused` and is expected to survive as a process. If the OEM
+  kills it, the native alarm remains the authority — record which contender fired.
+- No autonomous navigation happens because of the interruption: an incoming call must not
+  push, pop, or replace a route on its own.
+- The foreground-service/wakelock scope must not widen. A wakelock still held after the case
+  ends is a FAIL.
+
+**EXPECTED POST-CALL STATE**
+
+- **Exactly one** dispatch per armed generation in normal execution. If a duplicate appears,
+  it must be attributable to the declared request/terminal-commit crash window and recorded
+  as such — never rounded down to "fine".
+- The result surface shows a **typed** outcome. If the outbound request was blocked because a
+  call was active (the realistic C6 outcome), the app must say so as a definite failure or an
+  explicit unconfirmed state, and offer the manual-call affordance.
+- **No false completed state.** A "completed / handed off" claim with no corresponding
+  Telecom request is the most serious failure this case can find.
+- The safety timeline records the session once, with the outcome that actually occurred.
+- **No lost security gate:** cancelling still demands the correct PIN plus native
+  acknowledgment. Returning from a call must never leave a PIN-less cancel, and must never
+  land the user inside the tab shell without passing consent → onboarding → PIN unlock.
+
+**FAIL CRITERIA** (any one of these fails the row)
+
+| # | Failure |
+|---|---|
+| 1 | Countdown resets, jumps, or drifts more than one tick from the original deadline |
+| 2 | Two countdowns run, or a second countdown route is stacked |
+| 3 | Two Telecom requests for one generation outside the declared crash window |
+| 4 | No dispatch at all after the deadline passed during the call |
+| 5 | A "completed"/"handed off" claim with no observed request on the second phone |
+| 6 | Cancel becomes possible without the correct PIN, or the PIN gate is skipped on return |
+| 7 | The tab shell is reachable after the interruption without passing its gates |
+| 8 | Crash, ANR, or a wakelock still held after the case ends |
+| 9 | The emergency target changes, or `112` appears as an auto-call target at any point |
+
+**EVIDENCE TO CAPTURE**
+
+1. Screen recording of the whole case from arm to post-call state (redact the number).
+2. Second-phone photo/recording showing whether a request arrived, with wall-clock time.
+3. `adb logcat` excerpt around the deadline, filtered to the emergency tags, showing which
+   contender claimed the generation.
+4. Post-case screenshot of the safety timeline entry.
+5. The countdown value observed at the moment of return, against the recorded arm time.
+6. Device, Android version, build versionName/versionCode, track, and DnD state.
+7. For C7 only: the actual remaining-seconds value when the call landed, so the timing is
+   auditable rather than asserted.
 
 ### D — Sessions & timers (Pro active)
 
