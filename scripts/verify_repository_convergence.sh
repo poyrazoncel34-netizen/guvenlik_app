@@ -112,7 +112,8 @@ gate audit-accounting-numbers bash -c '
 # 2. Cozulmemis satirlarin siniflandirmasi
 # ---------------------------------------------------------------------------
 printf -- '\n-- cozum kuyrugu siniflandirmasi --\n'
-gate resolution-queue-classification python3 scripts/verify_resolution_classification.py
+gate resolution-queue-classification         python3 scripts/verify_resolution_classification.py
+gate resolution-queue-classification-control python3 scripts/verify_resolution_classification.py --negative-control
 
 # ---------------------------------------------------------------------------
 # 3. Bayat yokluk/remediation iddialari
@@ -125,49 +126,18 @@ gate absence-claims-control  python3 scripts/verify_absence_claims.py --negative
 # 4. Bildirim cagri-yeri anlamsal kapisi (RER-04)
 # ---------------------------------------------------------------------------
 printf -- '\n-- bildirim sonucu tuketimi --\n'
-gate alert-outcome-consumption dart run scripts/verify_alert_outcome_consumption.dart
+gate alert-outcome-consumption         dart run scripts/verify_alert_outcome_consumption.dart
+# Bu kontrol SAYIMI sinar. Yerini aldigi kuralin kontrolu BILINEN bir cagri
+# yerini mutasyona ugratiyordu, yani tuketim mantigini sinayip sayimi hic
+# sinamiyordu -- RER-04 tam olarak oradan gecti.
+gate alert-outcome-consumption-control dart run scripts/verify_alert_outcome_consumption.dart --negative-control
 
 # ---------------------------------------------------------------------------
 # 5. Kanit provenance / butunlugu
 # ---------------------------------------------------------------------------
 printf -- '\n-- kanit butunlugu --\n'
-gate evidence-provenance bash -c '
-  fail=0
-  head_rev="$(git rev-parse HEAD)"
-  for artifact in docs/audit/evidence/*.json; do
-    python3 - "$artifact" "$head_rev" <<PYEOF || fail=1
-import json, sys
-path, head = sys.argv[1], sys.argv[2]
-with open(path, encoding="utf-8") as handle:
-    data = json.load(handle)
-rev = data.get("codeRevision")
-if not isinstance(rev, dict):
-    print(f"{path}: no codeRevision block"); raise SystemExit(1)
-if rev.get("dirty") is not False:
-    print(f"{path}: stamped dirty={rev.get(\"dirty\")}"); raise SystemExit(1)
-if not rev.get("verifiedCodeRevision") or rev.get("verifiedCodeRevision") == "unknown":
-    print(f"{path}: no verified revision"); raise SystemExit(1)
-if not rev.get("treeHash"):
-    print(f"{path}: no treeHash"); raise SystemExit(1)
-PYEOF
-  done
-  exit $fail
-'
-
-# Damgalanan revizyonun gercekten var oldugu ve tree hash uyustugu.
-gate evidence-revision-resolves bash -c '
-  fail=0
-  for artifact in docs/audit/evidence/*.json; do
-    rev="$(python3 -c "import json,sys; print(json.load(open(sys.argv[1],encoding=\"utf-8\"))[\"codeRevision\"][\"verifiedCodeRevision\"])" "$artifact")"
-    tree="$(python3 -c "import json,sys; print(json.load(open(sys.argv[1],encoding=\"utf-8\"))[\"codeRevision\"][\"treeHash\"])" "$artifact")"
-    actual="$(git rev-parse "${rev}^{tree}" 2>/dev/null || echo MISSING)"
-    if [[ "$actual" != "$tree" ]]; then
-      echo "$artifact: treeHash $tree != git tree of $rev ($actual)"
-      fail=1
-    fi
-  done
-  exit $fail
-'
+gate evidence-provenance         python3 scripts/verify_evidence_provenance.py
+gate evidence-provenance-control python3 scripts/verify_evidence_provenance.py --negative-control
 
 # ---------------------------------------------------------------------------
 # 6. Sirali uretilebilirlik: TEMIZ -> TEST -> TEMIZ -> TARAMA (RER-02)

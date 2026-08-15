@@ -300,7 +300,25 @@ class _ReturnsIdentifier extends RecursiveAstVisitor<void> {
   }
 }
 
-Future<int> run(String root, {required bool asJson}) async {
+/// Analyses `lib/` and returns every invocation whose resolved target is the
+/// alert method or anything in its wrapper chain.
+///
+/// Shared by the real run and the negative control so the control cannot drift
+/// into testing a different rule than the one that ships.
+Future<List<AlertInvocation>> collect(String root) async {
+  final result = await _analyse(root);
+  return result.tracked;
+}
+
+class _Analysis {
+  _Analysis(this.tracked, this.unresolved, this.filesAnalyzed, this.targets);
+  final List<AlertInvocation> tracked;
+  final List<String> unresolved;
+  final int filesAnalyzed;
+  final Set<String> targets;
+}
+
+Future<_Analysis> _analyse(String root) async {
   final collection = AnalysisContextCollection(includedPaths: <String>[root]);
   final all = <AlertInvocation>[];
   final unresolved = <String>[];
@@ -340,6 +358,16 @@ Future<int> run(String root, {required bool asJson}) async {
 
   final tracked = all.where((i) => targets.contains(i.target)).toList()
     ..sort((a, b) => a.site.compareTo(b.site));
+  return _Analysis(tracked, unresolved, filesAnalyzed, targets);
+}
+
+Future<int> run(String root, {required bool asJson}) async {
+  final analysis = await _analyse(root);
+  final tracked = analysis.tracked;
+  final unresolved = analysis.unresolved;
+  final filesAnalyzed = analysis.filesAnalyzed;
+  final targets = analysis.targets;
+
   final violations = <Map<String, Object?>>[
     for (final invocation in tracked.where((i) => i.isDropped))
       <String, Object?>{
@@ -396,7 +424,151 @@ Future<int> run(String root, {required bool asJson}) async {
   return 0;
 }
 
+/// The six dropped-outcome forms this rule must catch, plus two that it must
+/// NOT flag.
+///
+/// Why the probe is written into `lib/` rather than a fixture directory: the
+/// element model can only resolve `NotificationService` for a file that is part
+/// of this package. A fixture outside it would resolve to nothing, and a
+/// control that cannot resolve its own probe proves nothing.
+const String _probePath = 'lib/_alert_outcome_negative_control.dart';
+
+const String _probeSource = '''
+// TEMPORARY negative-control probe. Written and deleted by
+// scripts/verify_alert_outcome_consumption.dart --negative-control.
+import 'core/services/dispatch_outcome.dart';
+import 'core/services/notification_service.dart';
+import 'core/services/safety_alert_dispatch.dart';
+
+class AlertOutcomeNegativeControlProbe {
+  void bareCall() {
+    NotificationService.instance.showEmergencyAlert(id: 1, title: 'a', body: 'b');
+  }
+
+  Future<void> awaitedDropped() async {
+    await NotificationService.instance.showEmergencyAlert(id: 2, title: 'a', body: 'b');
+  }
+
+  Future<void> hoistedReceiverAwaited() async {
+    final svc = NotificationService.instance;
+    await svc.showEmergencyAlert(id: 3, title: 'a', body: 'b');
+  }
+
+  void hoistedReceiverBare() {
+    final svc = NotificationService.instance;
+    svc.showEmergencyAlert(id: 4, title: 'a', body: 'b');
+  }
+
+  Future<void> wrapperDiscards() async {
+    await SafetyAlertDispatch.postWarning(id: 5, title: 'a', body: 'b');
+  }
+
+  void asyncClosureSwallows() {
+    final Future<void> Function() closure = () async {
+      final svc = NotificationService.instance;
+      await svc.showEmergencyAlert(id: 6, title: 'a', body: 'b');
+    };
+    closure();
+  }
+
+  // MUST NOT be flagged: consumed.
+  Future<DispatchTargetOutcome> consumed() async {
+    final outcome = await NotificationService.instance
+        .showEmergencyAlert(id: 7, title: 'a', body: 'b');
+    return outcome;
+  }
+
+  // MUST NOT be flagged: handed to a pipeline callback.
+  Future<DispatchTargetOutcome> Function() pipeline() =>
+      () => NotificationService.instance
+          .showEmergencyAlert(id: 8, title: 'a', body: 'b');
+}
+''';
+
+/// Runs the rule against the probe and asserts every form is caught.
+///
+/// This exercises the ENUMERATION, which is exactly what the rule this replaces
+/// never had a control for: its control mutated a KNOWN call site, so it tested
+/// the consumption logic and could never have discovered that a hoisted
+/// receiver was not enumerated at all.
+Future<int> negativeControl(String root) async {
+  final probe = File('$root/$_probePath');
+  if (probe.existsSync()) {
+    stdout.writeln(
+      'NEGATIVE_CONTROL_FAIL alert_outcome: $_probePath already exists; '
+      'refusing to overwrite it',
+    );
+    return 1;
+  }
+
+  const List<String> mustCatch = <String>[
+    'bareCall',
+    'awaitedDropped',
+    'hoistedReceiverAwaited',
+    'hoistedReceiverBare',
+    'wrapperDiscards',
+    'asyncClosureSwallows',
+  ];
+
+  List<AlertInvocation> tracked;
+  try {
+    probe.writeAsStringSync(_probeSource);
+    tracked = await collect(root);
+  } finally {
+    if (probe.existsSync()) probe.deleteSync();
+  }
+
+  if (File('$root/$_probePath').existsSync()) {
+    stdout.writeln('NEGATIVE_CONTROL_FAIL alert_outcome: probe not removed');
+    return 1;
+  }
+
+  final probeSites =
+      tracked.where((i) => i.site.startsWith('lib/_alert_outcome')).toList();
+  final dropped = probeSites.where((i) => i.isDropped).length;
+  final consumed = probeSites.where((i) => !i.isDropped).length;
+
+  // Six dropped forms, and the two legitimate ones untouched. The probe's
+  // `wrapperDiscards` call resolves to SafetyAlertDispatch.postWarning, so
+  // catching it also proves the wrapper fixpoint is live.
+  final problems = <String>[];
+  if (dropped != mustCatch.length) {
+    problems.add(
+      'expected ${mustCatch.length} dropped forms, found $dropped',
+    );
+  }
+  if (consumed != 2) {
+    problems.add('expected exactly 2 consumed forms, found $consumed');
+  }
+  if (!probeSites.any((i) => i.target.endsWith('postWarning'))) {
+    problems.add('the wrapper fixpoint did not reach SafetyAlertDispatch');
+  }
+
+  if (problems.isNotEmpty) {
+    stdout.writeln('NEGATIVE_CONTROL_FAIL alert_outcome');
+    for (final problem in problems) {
+      stdout.writeln('- $problem');
+    }
+    for (final site in probeSites) {
+      stdout.writeln('  ${site.site} ${site.target} -> ${site.consumption.name}');
+    }
+    return 1;
+  }
+
+  stdout.writeln(
+    'NEGATIVE_CONTROL_PASS alert_outcome: $dropped/${mustCatch.length} dropped '
+    'forms flagged (bare, awaited, hoisted-awaited, hoisted-bare, wrapper '
+    'discard, async-closure swallow), $consumed consumed forms not flagged, '
+    'wrapper fixpoint reached SafetyAlertDispatch.postWarning; probe removed',
+  );
+  return 0;
+}
+
 Future<void> main(List<String> args) async {
   final root = Directory.current.path;
+  if (args.contains('--negative-control')) {
+    exitCode = await negativeControl(root);
+    return;
+  }
   exitCode = await run(root, asJson: args.contains('--json'));
 }
