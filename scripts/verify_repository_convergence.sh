@@ -138,6 +138,12 @@ gate alert-outcome-consumption-control dart run scripts/verify_alert_outcome_con
 printf -- '\n-- kanit butunlugu --\n'
 gate evidence-provenance         python3 scripts/verify_evidence_provenance.py
 gate evidence-provenance-control python3 scripts/verify_evidence_provenance.py --negative-control
+# Provenance kapisi yalnizca DAMGAYI dogrular. Sertifikasyon (CERT-09) bunun
+# yetmedigini gosterdi: flows.json icindeki bir OLCUMU elle degistirip damgayi
+# birakmak provenance kapisini yesil birakti. Bu kapi 11 python artifact'ini
+# yeniden uretir ve provenance disindaki her anahtari karsilastirir.
+gate evidence-reproducibility         python3 scripts/verify_evidence_reproducibility.py
+gate evidence-reproducibility-control python3 scripts/verify_evidence_reproducibility.py --negative-control
 
 # ---------------------------------------------------------------------------
 # 6. Sirali uretilebilirlik: TEMIZ -> TEST -> TEMIZ -> TARAMA (RER-02)
