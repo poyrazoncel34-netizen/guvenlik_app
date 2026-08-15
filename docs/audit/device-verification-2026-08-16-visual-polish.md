@@ -110,11 +110,21 @@ cihaz gecisi** ile yapildi.
   zaten durum cubugunun altinda basliyor, dolayisiyla inset'i ikinci kez
   saymak her sayfayi fazladan asagi iterdi.
 
-**Cihaz dogrulamasi (2026-08-16, ayni AVD, ucak modu ACIK, temiz kurulum):**
-banner gorunur durumdayken `Hos Geldiniz` basligi **tam ve kirpilmamis**
-goruntuleniyor; sayfanin tamami banner'in ayirdigi yukseklik kadar asagi
-kaymis durumda. Duzeltme oncesi ayni durumun yakalamasi ile yan yana
-konuldugunda tek fark budur.
+**Cihaz dogrulamasi (2026-08-16, ayni AVD, ucak modu ACIK):** banner gorunur
+durumdayken **dort sekmenin dordunde de** ust icerik tam ve kirpilmamis:
+
+| Sekme | Ust oge | Duzeltme oncesi | Duzeltme sonrasi |
+|---|---|---|---|
+| Ana Sayfa | `Hos Geldiniz` basligi | ust ~%55'i banner altinda | **tam** |
+| Kisiler | `Acil Kisiler` baslik cubugu | ortuluyordu | **tam** |
+| Harita | `Harita` baslik hapi | ortuluyordu | **tam**, bosluk ya da hizalama kaymasi yok |
+| Ayarlar | `Ayarlar` basligi | ortuluyordu | **tam** |
+
+Harita ozellikle kontrol edildi: tam ekran bir yuzey oldugu icin ayrilan
+yuksekligin orada bir bosluk birakma riski vardi; birakmiyor. Ilk kosumda
+yalnizca Ana Sayfa dogrulanmisti ve satir da yalnizca onu iddia ediyordu;
+kalan uc sekme, iddiayi genisletmek icin degil, **kabuk capinda bir degisikligin
+tek sekmede dogrulanmasi yeterli sayilmasin diye** ayrica kosuldu.
 
 Regresyon testi: `test/screens/connectivity_banner_reserves_space_test.dart`.
 Testin sabitledigi sey duzeltmenin kendisi degil, onu dogru kilan OZELLIK'tir:
