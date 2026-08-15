@@ -15,7 +15,7 @@ A summary that says "9 blockers" and a queue that says "87 requirements" are bot
 must never be written as if one contradicted the other. The categories below carry every
 one of the 87 IDs; no ID appears in two categories.
 
-Generated against verified code revision `273864f`. Regenerate the ID lists with
+Generated against verified implementation revision `45b7f57` (2026-08-15; the previous stamp said `273864f`, 43 commits earlier -- FIR-05). Regenerate the ID lists with
 `python3 scripts/generate_resolution_queue.py` and read them out of `RESOLUTION_QUEUE.md`
 (`EXTERNAL_BLOCKER` scope).
 

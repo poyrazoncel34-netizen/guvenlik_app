@@ -138,8 +138,39 @@ def target_exists(repo: Path, target: str) -> bool:
     return heading in path.read_text(encoding="utf-8")
 
 
-def check(repo: Path, audit: Path, registry_path: Path) -> list:
+# A path a row cites as evidence. Restricted to the four repository-internal
+# trees whose files are named in full; `android/.../Foo.kt` is an established
+# abbreviation in this document and is deliberately not matched.
+CITED_PATH = re.compile(
+    r"\b((?:lib|test|scripts|config)/[A-Za-z0-9_./-]+\.(?:dart|py|json|sh|yaml))"
+)
+
+
+def missing_cited_paths(audit: Path) -> list:
+    """Rows whose evidence cites a repository file that does not exist.
+
+    The mirror image of a stale absence claim: a row can rot either by denying
+    something present or by pointing at something gone. `MP-15-013` cited
+    `auth_gate.dart` as proof of the returning-user path -- a file that never
+    took part in that decision and was deleted as dead code (FIR-07).
+    """
     problems = []
+    for line in audit.read_text(encoding="utf-8").splitlines():
+        match = ROW.match(line)
+        if not match:
+            continue
+        for cited in sorted(set(CITED_PATH.findall(match.group(2)))):
+            if not (audit.parent / cited).exists():
+                problems.append(
+                    f"CITED_PATH_MISSING {match.group(1)}: evidence names "
+                    f"{cited}, which does not exist. Re-point the row at what "
+                    f"actually carries the behaviour."
+                )
+    return problems
+
+
+def check(repo: Path, audit: Path, registry_path: Path) -> list:
+    problems = missing_cited_paths(audit)
     rows = audit_rows(audit)
     registry = json.loads(registry_path.read_text(encoding="utf-8"))
     entries = registry["claims"]

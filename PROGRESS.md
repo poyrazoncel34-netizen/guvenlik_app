@@ -19,16 +19,17 @@ never typed by hand — they come from `python3 scripts/verify_audit_accounting.
 
 | Question | Answer |
 |---|---|
-| **Verified code revision** | `HEAD` of this branch — suite, analyzer, gates, the release chain and one emulator pass all run against it |
-| **Current phase** | Repository convergence: the 14 remaining `IN_REPO_RESOLVABLE` rows were executed. **`IN_REPO_RESOLVABLE` is 0.** |
-| **Latest independent review** | `INDEPENDENT_REVIEW_ROUND_2.md`, 2026-08-13, verdict **REVIEW FAILED — REMEDIATION REQUIRED**; all 12 findings closed |
+| **VERIFIED IMPLEMENTATION REVISION** | `45b7f57` — suite, analyzer, gates and all 12 evidence artifacts were produced against this clean tree |
+| **FINAL DOCUMENTATION HEAD** | later by construction: a document cannot name the commit that contains it. It changes only `.md` and `config/`, never a measured surface (see `PRODUCTION_AUDIT.md` § Evidence provenance) |
+| **Current phase** | Final remediation of `FINAL_INDEPENDENT_REVIEW.md`. All 8 findings closed; see `FINAL_REMEDIATION_REGISTER.md` |
+| **Latest independent review** | `FINAL_INDEPENDENT_REVIEW.md`, 2026-08-15, verdict **FINAL INDEPENDENT REVIEW FAILED — REMEDIATION REQUIRED**; 3 P2 + 5 P3 findings, all 8 closed, plus 7 further defects this remediation found itself |
 | **P0 remaining (total)** | **0** |
 | **P0 remaining (in-repo)** | **0** |
 | **P1 remaining (total)** | **29** |
 | **P1 remaining (in-repo)** | **0** — all 29 are external; see `EXTERNAL_LAUNCH_BLOCKERS.md` |
 | **Unresolved internal findings from the latest review** | **0** |
-| **Unresolved external blockers** | **87 requirement IDs in 9 categories** (`EXTERNAL_LAUNCH_BLOCKERS.md`) |
-| **Suite** | 1599 passed / 0 failed (`flutter test --no-pub`) |
+| **Unresolved external blockers** | **9 categories** (`EXTERNAL_LAUNCH_BLOCKERS.md`) |
+| **Suite** | 1643 passed / 0 failed (`flutter test --no-pub`) |
 | **Analyzer** | No issues found (`flutter analyze --no-fatal-infos`) |
 | **Release chain** | `scripts/verify_release.sh` → `LOCAL_CANDIDATE_PASS` (5/5 code+smoke gates, 16 KB alignment green). The production AAB still refuses to build without a real `goog_` RevenueCat key — a deliberate gate, and the standing external blocker |
 | **Worktree** | see `git status`; the security gates refuse to run on a dirty tree |
@@ -43,20 +44,29 @@ AUDIT_ACCOUNTING_PASS checklist=1738 audit=1738 missing=0 duplicated=0 unaccount
 
 | Status | Count |
 |---|---|
-| PASS | 792 |
-| FAIL | 9 |
-| PARTIAL | 67 |
+| PASS | 799 |
+| FAIL | 2 |
+| PARTIAL | 69 |
 | BLOCKED | 38 |
 | N/A | 779 |
-| UNVERIFIED | 53 |
+| UNVERIFIED | 51 |
 | **TOTAL** | **1738** |
 
 | Severity | Count |
 |---|---|
 | P0 | 0 |
 | P1 | 29 |
-| P2 | 119 |
+| P2 | 112 |
 | P3 | 19 |
+
+> **FAIL 9 → 2 (2026-08-15, FIR-03).** Seven rows asserted the absence of documents
+> this repository contains — a severity ladder, response targets, three DR runbooks,
+> and a postmortem substitution their own remediation had asked for. They were
+> re-verified against the tree, not re-graded to make a number move: two remain
+> PARTIAL because something genuinely remains, and the two surviving FAILs
+> (`MP-46-028` visual regression, `MP-46-030` TalkBack) had their claims checked and
+> found TRUE. `scripts/verify_absence_claims.py` now fails the build if any row
+> claims something is missing that is present.
 
 ### Resolution queue
 
@@ -66,12 +76,16 @@ AUDIT_ACCOUNTING_PASS checklist=1738 audit=1738 missing=0 duplicated=0 unaccount
 |---|---|
 | `IN_REPO_RESOLVABLE` | **0** |
 | `RUNTIME_VERIFIABLE_NOW` | **0** |
-| `EXTERNAL_BLOCKER` | 112 |
-| `PRODUCT_DECISION_REQUIRED` | 55 |
-| **Total unresolved** | **167** |
+| `EXTERNAL_BLOCKER` | 110 |
+| `PRODUCT_DECISION_REQUIRED` | 50 |
+| **Total unresolved** | **160** |
 
 **Every in-repo row is closed: the whole `IN_REPO` column of the queue is 0.**
-The nine remaining FAILs are all external or product-decision.
+This number was **falsified once already** — `FINAL_INDEPENDENT_REVIEW.md` proved it
+false by finding three legitimate in-repo defects behind it. It is re-asserted here
+only after a targeted re-verification of every unresolved row whose evidence asserts
+an absence: 44 such claims are now registered in `config/absence_claims.json`, each
+naming what would refute it, and the check that reads them is part of the suite.
 
 Product decisions are grouped into **nine actual questions** in
 `PRODUCT_DECISIONS_REQUIRED.md`, not 50 repetitive ones.
@@ -338,17 +352,50 @@ verifiers. The truth then: 10 Python verifiers, 11 artifacts. The truth now:
   fail: a fixed-width box narrower than its text overflows") and is demonstrated.
 - **12 verifiers, 12 artifacts, 12/12 negative controls.**
 
+## Final remediation pass, 2026-08-15 (FIR-01 … FIR-08)
+
+`FINAL_INDEPENDENT_REVIEW.md` returned **FAILED — REMEDIATION REQUIRED** against
+`6407901`: 3 P2 and 5 P3 findings, and one conclusion that mattered more than the
+count — **`IN_REPO_RESOLVABLE = 0` was false.** Full register:
+`FINAL_REMEDIATION_REGISTER.md`. All eight are RESOLVED.
+
+The three that falsified the convergence claim, and what each really was:
+
+1. **FIR-01** was not a copy defect. The panic path decided the user's claim from
+   the phone result alone, so a dispatch that handed off four targets told the user
+   *"Hiçbir işlem tamamlanmadı"* — on `MP-01-027`, the requirement whose entire
+   purpose is that outcomes must not collapse. The fix makes the claim a function of
+   the ledger, and `EmergencyFailureCopy` has no public constructor, so the two
+   cannot be paired incorrectly again.
+2. **FIR-02** was a verifier that could not see what it vouched for: a substring
+   test cannot observe a dropped return value. Two live safety notifications were
+   discarding their outcome; a **third** turned up while fixing them.
+3. **FIR-03** was the audit lying to itself. Seven rows asserted the absence of
+   documents the repository contains, including a severity ladder another row cites
+   as PASS. Re-verifying the unresolved rows found **two more** of the same kind.
+
+**What this pass changed about how the repository can be wrong.** Every one of the
+three was invisible to the existing gates, so each fix ships a gate:
+`alertOutcomeDiscardedAtCallSite` enumerates call sites instead of grepping for a
+string; `verify_absence_claims.py` fails when a row claims something is missing that
+is present; `ungatedTabShellConstruction` bounds who may build the tab shell; and
+negative controls now assert **per rule** rather than by total count, so a control
+can no longer be cited as evidence for eighteen properties it never touched.
+
 ## Next action
 
 Convergence is met in the repository sense only. **This is not a launch readiness
-claim.** 167 requirements remain unresolved and every one of them is external or a
-product decision: 112 `EXTERNAL_BLOCKER`, 55 `PRODUCT_DECISION_REQUIRED`. The
+claim.** 160 requirements remain unresolved and every one of them is external or a
+product decision: 110 `EXTERNAL_BLOCKER`, 50 `PRODUCT_DECISION_REQUIRED`. The
 production AAB still cannot be built here, by design — the Play release refuses a
-placeholder RevenueCat key.
+placeholder RevenueCat key, and the last reviewer confirmed it refuses the smoke key
+and a missing key too.
 
-A fresh independent review is the right next step, and it should attack the new
-verifiers first: `a11y_platform.py` and the new rules inside `flows.py`,
-`storage.py` and `interaction.py` are the least-reviewed evidence in the repository.
+**A fresh independent review by a different reviewer is required**, and this claim
+should be treated as unproven until then: it has been falsified once. Attack the
+newest evidence first — `emergency_result_policy.dart` and its join tests,
+`verify_absence_claims.py` and the 44 claims it registers, the `propertyClasses`
+classification, and the tab-shell construction rules in `flows.py`.
 
 ## Device-verification pass, 2026-08-14 (a11y / performance / lifecycle)
 
