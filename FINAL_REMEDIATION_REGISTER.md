@@ -11,8 +11,8 @@
 | Fact | Value |
 |---|---|
 | Reviewed HEAD | `6407901` (worktree clean, confirmed before any change) |
-| **VERIFIED IMPLEMENTATION REVISION** | `45b7f57` |
-| **FINAL DOCUMENTATION HEAD** | the commit carrying this file; it changes only `.md` and `config/` |
+| **VERIFIED IMPLEMENTATION REVISION** | `98a287d` |
+| **FINAL DOCUMENTATION HEAD** | the commit carrying this file; it adds only regenerated evidence artifacts and `.md` text |
 | Remediation date | 2026-08-15 |
 
 ---
@@ -164,12 +164,12 @@
   own output rather than the surface it measures — otherwise only the first
   verifier of a run could ever emit. `layout_size_matrix_test.dart` gained the same
   block and the same refusal. The self-reference problem is modelled, not wished
-  away: **VERIFIED IMPLEMENTATION REVISION** `45b7f57` vs **FINAL DOCUMENTATION
+  away: **VERIFIED IMPLEMENTATION REVISION** `98a287d` vs **FINAL DOCUMENTATION
   HEAD**, stated in `PRODUCTION_AUDIT.md`.
 - **NEGATIVE CONTROL.** Running any verifier on a dirty tree prints
   `REFUSING_TO_EMIT` and writes nothing (observed for all 11 plus the Dart one).
 - **OBJECTIVE EVIDENCE.** 12/12 artifacts carry
-  `verifiedCodeRevision = 8b7abfb…`, `dirty: false`, `measuredOn: 2026-08-15`.
+  `verifiedCodeRevision = 98a287d…`, `dirty: false`, `measuredOn: 2026-08-15`.
 - **FINAL CLASSIFICATION:** RESOLVED.
 
 ---
@@ -181,14 +181,14 @@
   later — verbatim the R2-08 defect the section above it exists to explain.
 - **IMPLEMENTATION CHANGE.** Three facts recorded separately and measured, not
   inherited: verified implementation revision, the evidence artifacts' revision,
-  and the final documentation head. Every baseline command re-run at `45b7f57` and
-  its real result recorded: **1643** tests (was 1139), **845** text files scanned
+  and the final documentation head. Every baseline command re-run at `98a287d` and
+  its real result recorded: **1643** tests (was 1139), **846** text files scanned
   (was 733), **154 of 467** files unformatted (was 63 of 388), coverage per file,
   plus two rows the table did not have (absence claims, negative controls).
   Historical entries are labelled HISTORICAL rather than deleted. `MP-33-001`'s
   733-file surface and `EXTERNAL_LAUNCH_BLOCKERS.md`'s `273864f` stamp corrected.
 - **OBJECTIVE EVIDENCE.** Every number in the table is reproducible by running the
-  command in the same row on `45b7f57`.
+  command in the same row on `98a287d`.
 - **FINAL CLASSIFICATION:** RESOLVED.
 
 ---

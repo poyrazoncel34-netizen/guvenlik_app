@@ -19,8 +19,8 @@ never typed by hand — they come from `python3 scripts/verify_audit_accounting.
 
 | Question | Answer |
 |---|---|
-| **VERIFIED IMPLEMENTATION REVISION** | `45b7f57` — suite, analyzer, gates and all 12 evidence artifacts were produced against this clean tree |
-| **FINAL DOCUMENTATION HEAD** | later by construction: a document cannot name the commit that contains it. It changes only `.md` and `config/`, never a measured surface (see `PRODUCTION_AUDIT.md` § Evidence provenance) |
+| **VERIFIED IMPLEMENTATION REVISION** | `98a287d` — suite, analyzer, gates and all 12 evidence artifacts were produced against this clean tree |
+| **FINAL DOCUMENTATION HEAD** | later by construction: a document cannot name the commit that contains it. It adds only regenerated evidence artifacts and `.md` text — no measured surface (see `PRODUCTION_AUDIT.md` § Evidence provenance) |
 | **Current phase** | Final remediation of `FINAL_INDEPENDENT_REVIEW.md`. All 8 findings closed; see `FINAL_REMEDIATION_REGISTER.md` |
 | **Latest independent review** | `FINAL_INDEPENDENT_REVIEW.md`, 2026-08-15, verdict **FINAL INDEPENDENT REVIEW FAILED — REMEDIATION REQUIRED**; 3 P2 + 5 P3 findings, all 8 closed, plus 7 further defects this remediation found itself |
 | **P0 remaining (total)** | **0** |
