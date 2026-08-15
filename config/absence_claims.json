@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "note": "Every non-PASS audit row whose evidence asserts an absence is registered here with what would refute it. scripts/verify_absence_claims.py fails if a refuting target exists, or if a registered phrase has drifted out of its row. Written after the final independent review found seven FAIL rows asserting the absence of documents this repository contains (FIR-03).",
+  "note": "Every non-PASS audit row whose evidence asserts an absence is registered here with what would refute it. scripts/verify_absence_claims.py fails if a refuting target exists, or if a registered phrase has drifted out of its row. Written after the final independent review found seven FAIL rows asserting the absence of documents this repository contains (FIR-03). A row may carry MORE THAN ONE claim -- one per canonical cell -- in which case its value is a LIST of field-tagged entries. `field` is \"evidence\" when omitted, which is what the 44 entries written before the gap/remediation scan existed all mean.",
   "claims": {
     "MP-27-023": {
       "claim": "no runtime",
@@ -15,6 +15,18 @@
         "grep:.github/workflows:semgrep|github/codeql-action|codeql-analysis"
       ],
       "why": "ci.yml mentions CodeQL only in `sudo rm -rf /opt/hostedtoolcache/CodeQL`, which frees runner disk space and runs no analysis. No dataflow/taint scanner is configured."
+    },
+    "MP-32-046": {
+      "field": "remediation",
+      "claim": "no telemetry",
+      "refutedBy": [],
+      "why": "The absence is real and deliberate: no analytics, no crash SDK and no developer backend ship in this app, so no telemetry channel exists to carry an audit trail off the device. The runbook named in the same cell is cited as ALREADY SATISFIED, not requested -- section 6 documents the local-export dependency, and the cell now says so explicitly. What stays open is the D-6 owner decision, which no repository edit can close."
+    },
+    "MP-32-047": {
+      "field": "remediation",
+      "claim": "no telemetry",
+      "refutedBy": [],
+      "why": "Same cell text and same reasoning as MP-32-046: the telemetry absence is a deliberate KVKK posture, and the incident-runbook reference is a satisfied citation rather than an outstanding request. Registered separately because the two rows are graded independently."
     },
     "MP-41-010": {
       "claim": "no ",
@@ -56,14 +68,23 @@
       ],
       "why": "Verified at this revision: lib/ contains no remote-config client, no flag store and no flag service; every gate is keyed on subscription entitlement or device capability, both local facts. flows.py measures this as flagLikeSites = []."
     },
-    "MP-53-012": {
-      "claim": "is genuinely absent",
-      "refutedBy": [
-        "store/status.html",
-        "store/durum.html"
-      ],
-      "why": "No status page exists and none is planned: the product has no server whose state one could report. The DR runbooks the row previously denied DO exist and the row now cites them; only the rollout rehearsal remains, and it needs the Play track (E1/E5)."
-    },
+    "MP-53-012": [
+      {
+        "claim": "is genuinely absent",
+        "refutedBy": [
+          "store/status.html",
+          "store/durum.html"
+        ],
+        "why": "No status page exists and none is planned: the product has no server whose state one could report. The DR runbooks the row previously denied DO exist and the row now cites them; only the rollout rehearsal remains, and it needs the Play track (E1/E5).",
+        "field": "evidence"
+      },
+      {
+        "field": "gap",
+        "claim": "No status page",
+        "refutedBy": [],
+        "why": "There is no server, no account system and no backend service, so there is no service state a status page could report -- the absence is structural, not an omission. The incident_runbook.md reference in the same cell is a citation of section 8, which records the roll-forward drill as NOT rehearsed; citing an honest negative record is the opposite of a stale claim."
+      }
+    ],
     "MP-63-005": {
       "claim": "there is no third system to scope",
       "refutedBy": [
@@ -299,20 +320,47 @@
       ],
       "why": "The phrase is a list of properties the structural test ENFORCES, not a claim that a document is missing. What is genuinely absent is a numeric panic-press-to-dial timing from physical hardware, which is device-only by the project rules (E2)."
     },
-    "MP-78-001": {
-      "claim": "with no SDK required",
-      "refutedBy": [],
-      "why": "The phrase states that Play Console needs no SDK, not that something is missing. The real gap is post-launch data, which cannot exist before a rollout (E6)."
-    },
-    "MP-78-002": {
-      "claim": "with no SDK required",
-      "refutedBy": [],
-      "why": "The phrase states that Play Console needs no SDK, not that something is missing. The real gap is post-launch data, which cannot exist before a rollout (E6)."
-    },
-    "MP-78-003": {
-      "claim": "with no SDK required",
-      "refutedBy": [],
-      "why": "The phrase states that Play Console needs no SDK, not that something is missing. The real gap is post-launch data, which cannot exist before a rollout (E6)."
-    }
+    "MP-78-001": [
+      {
+        "claim": "with no SDK required",
+        "refutedBy": [],
+        "why": "The phrase states that Play Console needs no SDK, not that something is missing. The real gap is post-launch data, which cannot exist before a rollout (E6).",
+        "field": "evidence"
+      },
+      {
+        "field": "remediation",
+        "claim": "the data does not exist until a rollout does",
+        "refutedBy": [],
+        "why": "The absent thing is post-launch production data, which cannot exist before a rollout and which no repository edit can create. The observability_and_slo.md reference in the same cell is a satisfied citation -- it already names the owner and the 24h/72h/7-day cadence -- and the cell says so, which is the FIR-03 correction rather than a fresh request."
+      }
+    ],
+    "MP-78-002": [
+      {
+        "claim": "with no SDK required",
+        "refutedBy": [],
+        "why": "The phrase states that Play Console needs no SDK, not that something is missing. The real gap is post-launch data, which cannot exist before a rollout (E6).",
+        "field": "evidence"
+      },
+      {
+        "field": "remediation",
+        "claim": "the data does not exist until a rollout does",
+        "refutedBy": [],
+        "why": "The absent thing is post-launch production data, which cannot exist before a rollout and which no repository edit can create. The observability_and_slo.md reference in the same cell is a satisfied citation -- it already names the owner and the 24h/72h/7-day cadence -- and the cell says so, which is the FIR-03 correction rather than a fresh request."
+      }
+    ],
+    "MP-78-003": [
+      {
+        "claim": "with no SDK required",
+        "refutedBy": [],
+        "why": "The phrase states that Play Console needs no SDK, not that something is missing. The real gap is post-launch data, which cannot exist before a rollout (E6).",
+        "field": "evidence"
+      },
+      {
+        "field": "remediation",
+        "claim": "the data does not exist until a rollout does",
+        "refutedBy": [],
+        "why": "The absent thing is post-launch production data, which cannot exist before a rollout and which no repository edit can create. The observability_and_slo.md reference in the same cell is a satisfied citation -- it already names the owner and the 24h/72h/7-day cadence -- and the cell says so, which is the FIR-03 correction rather than a fresh request."
+      }
+    ]
   }
 }

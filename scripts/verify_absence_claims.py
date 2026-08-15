@@ -26,8 +26,11 @@ unchecked claim behind a green check.
 Instead it works from a REGISTRY. Every non-PASS row whose evidence contains an
 absence phrase must appear in `config/absence_claims.json` with:
 
-  claim      - the exact phrase, quoted from the row. If the row's evidence
-               changes so the phrase is gone, the entry is stale and this fails.
+  field      - which canonical cell the claim lives in: "evidence" (default),
+               "gap" or "remediation". A claim is checked against THAT cell, so
+               an entry cannot drift onto a different sentence and keep passing.
+  claim      - the exact phrase, quoted from the row. If the cell changes so the
+               phrase is gone, the entry is stale and this fails.
   refutedBy  - repository paths (optionally `path#heading`) whose EXISTENCE would
                make the claim false. Empty means the claim is about something
                outside the repository (a device pass, a Play account, a human
@@ -36,6 +39,31 @@ absence phrase must appear in `config/absence_claims.json` with:
 
 The check then fails if any `refutedBy` target exists. A row that says a document
 is absent, in a tree that contains it, is a defect -- whatever else is true.
+
+Why the gap and remediation cells are scanned too (RER-03)
+----------------------------------------------------------
+The first version read `cells[4]` -- the evidence cell -- and nothing else. That
+is one third of the surface a stale claim can live on. `MP-32-046` and
+`MP-32-047` both carried the remediation "Document explicitly in the
+incident-response runbook that post-incident evidence depends on the user
+submitting their local log", against a tree whose `docs/release/incident_runbook.md`
+section 6 already said exactly that. A reader following either remediation would
+have written a sentence the repository already carried. No absence phrase in the
+evidence cell could ever have caught it, because the defect was an IMPERATIVE in
+the remediation cell.
+
+Scanning every cell for every absence-shaped word would have produced ~90 rows
+needing registration, of which the reviewer's own hand-review found one real
+defect. Ceremony at that ratio is not verification -- it is boilerplate, and this
+audit's value rests on not having any.
+
+So the gap and remediation cells use a NARROWER, higher-signal rule
+(`STALE_REPO_REFERENCE`): a claim of absence, or an imperative asking for work,
+that NAMES A REPOSITORY ARTEFACT WHICH EXISTS. The referent is resolved
+deterministically -- either a cited path, or a prose alias from `DOC_ALIASES`
+below -- so the rule ties requirement ID + field + claimed absence + the exact
+path being tested, and decides without reading English. On the tree that
+introduced it, it fired on exactly the two rows that were wrong.
 
 Usage:
     python3 scripts/verify_absence_claims.py
@@ -70,6 +98,41 @@ ABSENCE_PHRASES = [
     r"\bnever written",
 ]
 
+# Imperatives that ask a future engineer to PRODUCE something. A remediation is
+# stale exactly when the thing it asks for is already in the tree.
+WORK_PHRASES = [
+    r"\bDocument\b",
+    r"\bAdd\b",
+    r"\bCreate\b",
+    r"\bWrite\b",
+    r"\bImplement\b",
+    r"\bExtend\b",
+    r"\bAuthor\b",
+    r"\bPublish\b",
+]
+
+# Prose names the audit uses for repository documents, mapped to the file each
+# one denotes. This is what lets a claim be resolved to a PATH without parsing
+# English: the row says "the incident-response runbook", the map says which file
+# that is, and the tree says whether it exists.
+DOC_ALIASES = {
+    r"incident[- ]response runbook|incident runbook": "docs/release/incident_runbook.md",
+    r"real[- ]device QA matrix|device QA matrix|QA matrix": "store/REAL_DEVICE_QA_MATRIX.md",
+    r"master production checklist": "docs/MASTER_PRODUCTION_CHECKLIST.md",
+    r"DR and key custody|key custody": "docs/release/dr_and_key_custody.md",
+    r"production audit": "PRODUCTION_AUDIT.md",
+    r"rollout runbook|staged[- ]rollout": "docs/release/incident_runbook.md",
+    r"manual smoke test": "store/MANUAL_SMOKE_TEST_SCRIPT.md",
+    r"play submission": "docs/play-submission.md",
+    r"handover": "docs/HANDOVER.md",
+    r"changelog": "CHANGELOG.md",
+}
+
+# The canonical 9-column row: ID | Requirement | Appl. | Status | Sev | Evidence
+# | Gap | Remediation | Verif. Indices are into the cells AFTER the ID.
+FIELD_INDEX = {"evidence": 4, "gap": 5, "remediation": 6}
+DEFAULT_FIELD = "evidence"
+
 RESOLVED = {"PASS", "N/A"}
 
 
@@ -82,22 +145,75 @@ def audit_rows(audit: Path) -> dict:
         cells = [cell.strip() for cell in match.group(2).split("|")]
         if len(cells) < 6:
             continue
+        if len(cells) < 7:
+            continue
         rows[match.group(1)] = {
             "requirement": cells[0],
             "status": cells[2].replace("*", "").strip(),
-            "evidence": cells[4],
+            **{name: cells[i] for name, i in FIELD_INDEX.items()},
         }
     return rows
 
 
-def claims_needing_registration(rows: dict) -> list:
+def referenced_existing_artifact(repo: Path, text: str) -> str | None:
+    """The repository file this text names, if the tree actually contains it.
+
+    Two deterministic forms: a cited path (`lib/...dart`, `docs/...md`) and a
+    prose alias from DOC_ALIASES. Returns the path, or None when the text names
+    nothing the repository has -- in which case there is nothing to be stale
+    ABOUT and the row is left alone.
+    """
+    for cited in CITED_DOC_PATH.findall(text):
+        if (repo / cited).exists():
+            return cited
+    for pattern, path in DOC_ALIASES.items():
+        if re.search(pattern, text, re.I) and (repo / path).exists():
+            return path
+    return None
+
+
+def claims_needing_registration(rows: dict, repo: Path | None = None) -> list:
+    """Every (requirement id, field) pair that must carry a registry entry.
+
+    EVIDENCE keeps the original contract: any absence phrase needs registration,
+    because the evidence cell is what a reader treats as fact.
+
+    GAP and REMEDIATION use the narrower STALE_REPO_REFERENCE rule described in
+    the module docstring: a claim of absence, or an imperative asking for work,
+    that names a repository artefact the tree already contains.
+    """
+    base = repo or REPO
     out = []
     for rid, row in sorted(rows.items()):
         if row["status"] in RESOLVED:
             continue
         if any(re.search(p, row["evidence"], re.I) for p in ABSENCE_PHRASES):
-            out.append(rid)
+            out.append((rid, "evidence"))
+        for field in ("gap", "remediation"):
+            text = row.get(field, "")
+            claims_absence = any(
+                re.search(p, text, re.I) for p in ABSENCE_PHRASES
+            )
+            asks_for_work = any(re.search(p, text) for p in WORK_PHRASES)
+            if not (claims_absence or asks_for_work):
+                continue
+            if referenced_existing_artifact(base, text):
+                out.append((rid, field))
     return out
+
+
+def registry_entries(registry: dict, rid: str) -> list:
+    """Normalises the two accepted shapes into a list of field-tagged entries.
+
+    A row with one claim stays a plain object (44 of them predate the field
+    model and are all `evidence`); a row whose gap AND remediation both carry a
+    claim becomes a list. Both are read the same way here.
+    """
+    raw = registry.get(rid)
+    if raw is None:
+        return []
+    items = raw if isinstance(raw, list) else [raw]
+    return [{**item, "field": item.get("field", DEFAULT_FIELD)} for item in items]
 
 
 def target_exists(repo: Path, target: str) -> bool:
@@ -145,6 +261,13 @@ CITED_PATH = re.compile(
     r"\b((?:lib|test|scripts|config)/[A-Za-z0-9_./-]+\.(?:dart|py|json|sh|yaml))"
 )
 
+# A DOCUMENT path a gap or remediation cell names. Wider than CITED_PATH because
+# the stale-remediation class is about prose deliverables (`docs/`, `store/`),
+# not source files.
+CITED_DOC_PATH = re.compile(
+    r"\b((?:docs|store|config|scripts)/[A-Za-z0-9_./-]+\.(?:md|json|sh|py))"
+)
+
 
 def missing_cited_paths(audit: Path) -> list:
     """Rows whose evidence cites a repository file that does not exist.
@@ -175,71 +298,213 @@ def check(repo: Path, audit: Path, registry_path: Path) -> list:
     registry = json.loads(registry_path.read_text(encoding="utf-8"))
     entries = registry["claims"]
 
-    needed = claims_needing_registration(rows)
-    for rid in needed:
-        if rid not in entries:
+    for rid, field in claims_needing_registration(rows, repo):
+        registered = {e["field"] for e in registry_entries(entries, rid)}
+        if field in registered:
+            continue
+        if field == "evidence":
             problems.append(
                 f"UNREGISTERED_ABSENCE_CLAIM {rid}: its evidence asserts an "
                 f"absence but no entry names what would refute it. Add one to "
                 f"{registry_path.name}."
             )
+        else:
+            artefact = referenced_existing_artifact(repo, rows[rid][field])
+            problems.append(
+                f"STALE_REPO_REFERENCE {rid} [{field}]: the cell claims an "
+                f"absence or asks for work while naming {artefact}, which "
+                f"EXISTS. Either the work is already done and the cell must say "
+                f"so, or register the claim in {registry_path.name} with the "
+                f"field set to {field!r} and say why it is still open."
+            )
 
-    for rid, entry in sorted(entries.items()):
+    for rid in sorted(entries):
         row = rows.get(rid)
         if row is None:
             problems.append(f"UNKNOWN_ROW {rid}: registered but not in the audit.")
             continue
-        if entry["claim"] not in row["evidence"]:
-            problems.append(
-                f"STALE_REGISTRY_ENTRY {rid}: the registered phrase "
-                f"{entry['claim']!r} no longer appears in the row's evidence, so "
-                f"nothing here is checking the claim the row now makes."
-            )
-        for target in entry.get("refutedBy", []):
-            if target_exists(repo, target):
+        for entry in registry_entries(entries, rid):
+            field = entry["field"]
+            if field not in FIELD_INDEX:
                 problems.append(
-                    f"REFUTED_ABSENCE_CLAIM {rid}: the row asserts "
-                    f"{entry['claim']!r}, but {target} EXISTS. Re-grade the row "
-                    f"against the tree instead of restating the claim."
+                    f"UNKNOWN_FIELD {rid}: {field!r} is not one of "
+                    f"{sorted(FIELD_INDEX)}."
                 )
-        if not entry.get("refutedBy") and not entry.get("why"):
-            problems.append(
-                f"UNJUSTIFIED_CLAIM {rid}: no refuting path and no reason given."
-            )
+                continue
+            cell = row[field]
+            if entry["claim"] not in cell:
+                problems.append(
+                    f"STALE_REGISTRY_ENTRY {rid} [{field}]: the registered "
+                    f"phrase {entry['claim']!r} no longer appears in the row's "
+                    f"{field} cell, so nothing here is checking the claim the "
+                    f"row now makes."
+                )
+            for target in entry.get("refutedBy", []):
+                if target_exists(repo, target):
+                    problems.append(
+                        f"REFUTED_ABSENCE_CLAIM {rid} [{field}]: the row asserts "
+                        f"{entry['claim']!r}, but {target} EXISTS. Re-grade the "
+                        f"row against the tree instead of restating the claim."
+                    )
+            if not entry.get("refutedBy") and not entry.get("why"):
+                problems.append(
+                    f"UNJUSTIFIED_CLAIM {rid} [{field}]: no refuting path and "
+                    f"no reason given."
+                )
     return problems
 
 
-def negative_control(repo: Path, audit: Path, registry_path: Path) -> int:
-    """Registers a claim refuted by a file that certainly exists."""
+def _control_registered_claim_refuted(
+    repo: Path, audit: Path, registry_path: Path, field: str
+) -> tuple:
+    """Registers a claim, on `field`, refuted by a file that certainly exists.
+
+    Run for `evidence` AND for a gap/remediation cell, because the whole point of
+    RER-03 is that a rule which only ever ran against one cell proved nothing
+    about the other two.
+    """
     registry = json.loads(registry_path.read_text(encoding="utf-8"))
     rows = audit_rows(audit)
-    victim = next(iter(sorted(claims_needing_registration(rows))), None)
+    victim = next(
+        (
+            rid
+            for rid, row in sorted(rows.items())
+            if row["status"] not in RESOLVED and row.get(field, "").strip()
+        ),
+        None,
+    )
     if victim is None:
-        print("NEGATIVE_CONTROL_FAIL absence_claims: no absence claim to mutate")
-        return 1
+        return (field, False, f"no unresolved row has a non-empty {field} cell")
     baseline = check(repo, audit, registry_path)
     registry["claims"][victim] = {
-        "claim": rows[victim]["evidence"][:40],
+        "field": field,
+        "claim": rows[victim][field][:40],
         "refutedBy": ["PRODUCTION_AUDIT.md"],
         "why": "negative control",
     }
-    scratch = registry_path.parent / "_absence_claims_control.json"
+    scratch = registry_path.parent / f"_absence_claims_control_{field}.json"
     scratch.write_text(json.dumps(registry, indent=2), encoding="utf-8")
     try:
         mutated = check(repo, audit, scratch)
     finally:
         scratch.unlink()
-    fired = [p for p in mutated if p.startswith("REFUTED_ABSENCE_CLAIM")]
+    fired = [
+        problem
+        for problem in mutated
+        if problem.startswith("REFUTED_ABSENCE_CLAIM") and f"[{field}]" in problem
+    ]
     if not fired or len(mutated) <= len(baseline):
+        return (
+            field,
+            False,
+            f"a {field} claim refuted by an existing file did not fire "
+            f"({len(baseline)} -> {len(mutated)})",
+        )
+    return (
+        field,
+        True,
+        f"REFUTED_ABSENCE_CLAIM fired on {victim} [{field}]; problems "
+        f"{len(baseline)} -> {len(mutated)}",
+    )
+
+
+def _control_stale_repo_reference(
+    repo: Path, audit: Path, registry_path: Path
+) -> tuple:
+    """Mutates a REMEDIATION cell to demand work that the tree already contains.
+
+    This is the RER-03 defect reproduced deliberately: an imperative naming an
+    existing document, with nothing registered against it. It exercises the
+    ENUMERATION rule, which the refuted-claim controls above never touch --
+    they mutate the registry, so they can only ever prove the consumption half.
+    """
+    baseline = check(repo, audit, registry_path)
+    rows = audit_rows(audit)
+    registry = json.loads(registry_path.read_text(encoding="utf-8"))
+    victim = next(
+        (
+            rid
+            for rid, row in sorted(rows.items())
+            if row["status"] not in RESOLVED
+            and "remediation"
+            not in {e["field"] for e in registry_entries(registry["claims"], rid)}
+        ),
+        None,
+    )
+    if victim is None:
+        return ("staleRepoReference", False, "no unregistered unresolved row to mutate")
+
+    injected = (
+        "Document explicitly in the incident-response runbook that post-incident "
+        "evidence depends on the user submitting their local log."
+    )
+    lines = audit.read_text(encoding="utf-8").splitlines(keepends=True)
+    out, patched = [], False
+    for line in lines:
+        match = ROW.match(line)
+        if match and match.group(1) == victim and not patched:
+            cells = match.group(2).split("|")
+            if len(cells) >= 7:
+                cells[6] = f" {injected} "
+                line = f"| `{victim}` |" + "|".join(cells)
+                if not line.endswith("\n"):
+                    line += "\n"
+                patched = True
+        out.append(line)
+    if not patched:
+        return ("staleRepoReference", False, f"could not patch {victim}'s remediation")
+
+    scratch = audit.parent / "PRODUCTION_AUDIT._control.md"
+    scratch.write_text("".join(out), encoding="utf-8")
+    try:
+        mutated = check(repo, scratch, registry_path)
+    finally:
+        scratch.unlink()
+    fired = [
+        problem
+        for problem in mutated
+        if problem.startswith(f"STALE_REPO_REFERENCE {victim} [remediation]")
+    ]
+    if not fired or len(mutated) <= len(baseline):
+        return (
+            "staleRepoReference",
+            False,
+            f"an imperative naming an existing document did not fire on {victim} "
+            f"({len(baseline)} -> {len(mutated)})",
+        )
+    return (
+        "staleRepoReference",
+        True,
+        f"STALE_REPO_REFERENCE fired on {victim} [remediation]; problems "
+        f"{len(baseline)} -> {len(mutated)}",
+    )
+
+
+def negative_control(repo: Path, audit: Path, registry_path: Path) -> int:
+    """Three controls, one per rule this verifier actually enforces.
+
+    A single control over one cell was how the evidence-only blind spot survived
+    review: the control mutated a known evidence claim, so it exercised the
+    consumption logic and never the enumeration, and never the other two cells.
+    """
+    results = [
+        _control_registered_claim_refuted(repo, audit, registry_path, "evidence"),
+        _control_registered_claim_refuted(repo, audit, registry_path, "remediation"),
+        _control_stale_repo_reference(repo, audit, registry_path),
+    ]
+    failed = [r for r in results if not r[1]]
+    for name, ok, message in results:
+        print(f"  [{'PASS' if ok else 'FAIL'}] {name}: {message}")
+    if failed:
         print(
-            "NEGATIVE_CONTROL_FAIL absence_claims: a claim refuted by an "
-            "existing file did not fire (%d -> %d)" % (len(baseline), len(mutated))
+            "NEGATIVE_CONTROL_FAIL absence_claims: "
+            f"{len(failed)} of {len(results)} controls did not fire"
         )
         return 1
     print(
-        "NEGATIVE_CONTROL_PASS absence_claims: a claim refuted by an existing "
-        "file moved problems %d -> %d; rule fired: REFUTED_ABSENCE_CLAIM"
-        % (len(baseline), len(mutated))
+        f"NEGATIVE_CONTROL_PASS absence_claims: {len(results)}/{len(results)} controls "
+        "fired -- REFUTED_ABSENCE_CLAIM on the evidence and remediation cells, "
+        "STALE_REPO_REFERENCE on an imperative naming an existing document"
     )
     return 0
 
