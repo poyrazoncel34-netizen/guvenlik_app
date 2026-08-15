@@ -92,6 +92,12 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
   mocktail: ^0.3.0
+  # Dev-only. Powers scripts/verify_alert_outcome_consumption.dart, which resolves
+  # emergency-alert call sites through the ELEMENT MODEL rather than by matching a
+  # receiver spelling. Ships nothing: dev_dependencies are absent from the AAB, so
+  # this touches neither R8 keep rules nor 16KB alignment. Already present in the
+  # resolution as a transitive dependency of flutter_test.
+  analyzer: ^8.4.1
   # Host-side (in-memory) sqflite for unit-testing DB-backed logic.
   sqflite_common_ffi: ^2.3.3
   flutter_launcher_icons: ^0.13.1

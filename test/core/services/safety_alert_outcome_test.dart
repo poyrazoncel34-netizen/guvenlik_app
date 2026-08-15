@@ -243,13 +243,27 @@ void main() {
   });
 
   group('no live call site discards the outcome (source contract)', () {
-    test('every showEmergencyAlert invocation in lib/ is consumed', () {
-      // The whole safety-alert posting surface: the raw API AND the shared
-      // wrapper. Enumerating only the raw API would let a future call site
-      // hide a dropped outcome one indirection away.
+    test('no syntactically visible showEmergencyAlert invocation in lib/ '
+        'discards its outcome', () {
+      // RER-04. This test used to be named "every ... is consumed" and anchored
+      // on `NotificationService.instance.showEmergencyAlert` -- one receiver
+      // spelling. The hoisted form
+      //
+      //     final svc = NotificationService.instance;
+      //     await svc.showEmergencyAlert(...);
+      //
+      // was therefore never ENUMERATED, so the word "every" was carried by a
+      // check that could not have found the counterexample. The anchor is now
+      // the METHOD NAME, receiver-agnostic.
+      //
+      // The claim this test makes is deliberately the smaller one: nothing
+      // SYNTACTICALLY VISIBLE drops an outcome. The element-resolved
+      // enumeration -- which follows the wrapper chain to a fixpoint and
+      // reports invocations it cannot resolve instead of skipping them -- is
+      // `scripts/verify_alert_outcome_consumption.dart`, run by
+      // `scripts/verify_repository_convergence.sh`.
       final anchor = RegExp(
-        r'(?:NotificationService\.instance\.showEmergencyAlert'
-        r'|SafetyAlertDispatch\.postWarning)\(',
+        r'(?:\.showEmergencyAlert|SafetyAlertDispatch\.postWarning)\(',
       );
       final unconsumed = <String>[];
       var found = 0;
@@ -266,9 +280,14 @@ void main() {
             head.lastIndexOf('{'),
             head.lastIndexOf('}'),
           ].reduce((a, b) => a > b ? a : b);
+          // The anchor starts at `.showEmergencyAlert`, so the receiver
+          // expression is at the tail of the statement and would mask the
+          // `=` / `return` / `=>` that decides consumption. Strip it: what
+          // matters is what precedes the receiver, not its spelling.
           final statement = head
               .substring(boundary + 1)
               .replaceAll(RegExp(r'//[^\n]*'), '')
+              .replaceAll(RegExp(r'[\w$.]+\s*$'), '')
               .trim();
           final consumed =
               RegExp(r'(?:=|return|=>)\s*(?:await)?\s*$').hasMatch(statement);
@@ -283,6 +302,34 @@ void main() {
       expect(unconsumed, isEmpty,
           reason: 'a safety alert whose typed outcome is thrown away is '
               'indistinguishable from one the OS displayed: $unconsumed');
+    });
+
+    test('the element-resolved verifier exists and is the authoritative '
+        'enumeration', () {
+      // The honest half of RER-04: the regex above states a smaller claim, and
+      // something else must carry the bigger one. If this file is deleted, the
+      // repository is back to claiming "every" from a substring match.
+      final verifier =
+          File('scripts/verify_alert_outcome_consumption.dart');
+      expect(verifier.existsSync(), isTrue,
+          reason: 'the authoritative enumeration must exist');
+      final src = verifier.readAsStringSync();
+      expect(src, contains('package:analyzer/dart/ast/visitor.dart'),
+          reason: 'it must resolve the AST, not match text');
+      expect(src, contains('node.methodName.element'),
+          reason: 'enumeration must go through the element model, so the '
+              'receiver spelling cannot change what is found');
+      expect(src, contains('escapesViaReturn'),
+          reason: 'the wrapper chain must be followed, not assumed');
+      expect(src, contains('unresolvedAlertLikeInvocation'),
+          reason: 'what it cannot resolve must be reported, not skipped');
+
+      // And the convergence gate must actually run it.
+      final gate = File('scripts/verify_repository_convergence.sh');
+      expect(gate.existsSync(), isTrue);
+      expect(gate.readAsStringSync(),
+          contains('verify_alert_outcome_consumption.dart'),
+          reason: 'a verifier nothing runs proves nothing');
     });
 
     test('the Safe Walk warning is neither an un-awaited Future nor a bare '

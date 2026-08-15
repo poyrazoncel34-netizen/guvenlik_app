@@ -71,15 +71,40 @@ def _fields(root: Path) -> list:
 
 
 NOTIFICATION_SERVICE = "lib/core/services/notification_service.dart"
+
+# RER-04. The anchor used to be `NotificationService\.instance\.showEmergencyAlert`
+# -- a substring match on ONE receiver spelling. It is now receiver-agnostic: the
+# method name is the anchor, and the receiver is whatever precedes it. That is
+# what makes the hoisted form
+#
+#     final svc = NotificationService.instance;
+#     await svc.showEmergencyAlert(...);
+#
+# visible to this rule at all; before, it was not flagged because it was never
+# ENUMERATED.
 ALERT_POST_CALL = re.compile(
-    r"(?:NotificationService\.instance\.showEmergencyAlert"
-    r"|SafetyAlertDispatch\.postWarning)\("
+    r"(?:\.showEmergencyAlert|SafetyAlertDispatch\.postWarning)\("
 )
 
 
 def _alert_call_sites(root: Path) -> list:
-    """Every LIVE `showEmergencyAlert` invocation, and whether its typed outcome
-    is consumed.
+    """Every syntactically visible `showEmergencyAlert` invocation, and whether
+    its typed outcome is consumed.
+
+    Boundary, stated exactly (RER-04)
+    ---------------------------------
+    This rule is SYNTACTIC. It matches the method name regardless of receiver,
+    which covers every spelling a refactor realistically produces, and it reads
+    the statement the call sits in. It cannot resolve an element, so it cannot
+    see a call reached through an interface, a `Function` value or a receiver
+    whose type is only known after resolution, and it cannot follow a wrapper
+    chain across files.
+
+    The AUTHORITATIVE check is `scripts/verify_alert_outcome_consumption.dart`,
+    which resolves the actual invoked element and computes the wrapper chain to
+    a fixpoint. This one is kept as a cheap, dependency-free cross-check that
+    runs inside the evidence package; the word "every" belongs to the Dart
+    verifier, not to this function.
 
     The property this replaces was `"suppressedByUserSetting" in service` -- a
     substring test over ONE file. It proved a string existed. It could not, even
@@ -104,6 +129,12 @@ def _alert_call_sites(root: Path) -> list:
             head = src[: match.start()]
             boundary = max(head.rfind(";"), head.rfind("{"), head.rfind("}"))
             statement = head[boundary + 1 :]
+            # The anchor now begins at `.showEmergencyAlert`, so the RECEIVER
+            # expression sits at the tail of `statement` and would hide the
+            # `=` / `return` / `=>` the consumption test looks for. Strip it:
+            # what decides consumption is what precedes the receiver, not how
+            # the receiver is spelled -- which is the entire point of RER-04.
+            statement = re.sub(r"[\w$.]+\s*$", "", statement)
             consumed = bool(re.search(
                 r"(?:=\s*$|=\s*await\s*$|return\s+(?:await\s+)?$"
                 r"|run:\s*\(\)\s*=>\s*$|\(\)\s*=>\s*$)",
@@ -161,9 +192,15 @@ def _notification_surface(root: Path, sites) -> dict:
         "perChannelSettingsDeepLink": "openNotificationChannelSettings" in prefs,
         "postReportsSuppression": "suppressedByUserSetting" in service,
         "postReportsPermissionDenied": "permissionDenied" in service,
-        # ENFORCED (alertOutcomeDiscardedAtCallSite): every live call site, with
-        # its own verdict -- not a substring over one file.
+        # ENFORCED (alertOutcomeDiscardedAtCallSite): every syntactically
+        # visible call site, receiver-agnostic, with its own verdict. The
+        # element-resolved enumeration that carries the word "every" lives in
+        # scripts/verify_alert_outcome_consumption.dart.
         "alertCallSites": _alert_call_sites(root),
+        "alertEnumerationBoundary":
+            "syntactic, receiver-agnostic; authoritative enumeration is "
+            "scripts/verify_alert_outcome_consumption.dart (element-resolved, "
+            "transitive wrapper fixpoint)",
         "silencedSafetySurfaceWarned": "isSilencedSafetySurface" in screen,
         "tapRoutesThroughDestinationPark":
             "PendingDestinationService.instance.submitDestination" in service,
