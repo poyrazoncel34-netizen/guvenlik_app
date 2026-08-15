@@ -251,6 +251,26 @@ gate) and a table cell cannot carry the fail criteria for that.
 7. For C7 only: the actual remaining-seconds value when the call landed, so the timing is
    auditable rather than asserted.
 
+**BEFORE running this on hardware, run the instrumentation preflight**
+
+```bash
+ANDROID_SERIAL=<serial> ./scripts/phase3_incoming_call_preflight.sh
+```
+
+It machine-checks the four preconditions this case depends on — intended APK installed,
+app process alive, countdown genuinely armed (read from the device-protected session
+store, NOT from the screen), and the simulated call actually reaching Android's call
+state. `PASS_PREFLIGHT_ONLY` semantics apply: it passes no row.
+
+The emulator run of 2026-08-15 is recorded in
+[docs/qa/incoming-call-preflight-2026-08-15.md](../docs/qa/incoming-call-preflight-2026-08-15.md).
+Telephony emulation reached `mCallState=1 (RINGING)` and released the line cleanly, but the
+countdown could NOT be armed: the SOS button is entitlement-locked and the native session
+store is never created. That is correct fail-closed behaviour, and it is exactly the
+external dependency `MP-41-017` names — a licensed Play internal-test account. Test Mode
+was deliberately NOT used as a substitute: it starts the Dart timer without arming the
+native session, so a screenshot from it would not satisfy "countdown genuinely armed".
+
 ### D — Sessions & timers (Pro active)
 
 | ID | Gate | Scenario | Steps | Expected | PIX | SAM | XIA | Notes |
