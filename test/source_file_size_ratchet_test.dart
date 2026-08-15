@@ -30,7 +30,7 @@ void main() {
   // trim the file or make updating this ledger a conscious part of the commit.
   const acceptedOversize = <String, int>{
     'lib/screens/home_page.dart': 1276,
-    'lib/screens/countdown_screen.dart': 1228,
+    'lib/screens/countdown_screen.dart': 1081,
     'lib/screens/contacts_page.dart': 1153,
     'lib/screens/map_page.dart': 885,
     'lib/core/services/emergency_platform_service.dart': 867,

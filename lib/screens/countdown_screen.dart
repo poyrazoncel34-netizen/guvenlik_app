@@ -2,7 +2,6 @@
 // GERİ SAYIM EKRANI – DRAMATIC UX (Gradient arc, pulsating glow, scale bounce)
 // ============================================================================
 
-import '../core/design_tokens.dart';
 import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
@@ -19,6 +18,7 @@ import '../core/services/call_service.dart';
 import '../core/services/android_intent_service.dart';
 import '../core/services/pin_lockout_service.dart';
 import '../domain/models/activity_event.dart';
+import '../core/widgets/emergency_failure_dialog.dart';
 import 'emergency_call_screen.dart';
 import '../core/services/foreground_service.dart';
 import '../core/services/countdown_announcement.dart';
@@ -28,6 +28,7 @@ import '../core/services/dispatch_ledger_recorder.dart';
 import '../core/services/emergency_bookkeeping.dart';
 import '../core/services/emergency_dispatch_pipeline.dart';
 import '../core/services/emergency_platform_service.dart';
+import '../core/services/emergency_result_policy.dart';
 import '../core/services/emergency_session_contract.dart';
 import '../core/services/panic_arm_policy.dart';
 import '../core/services/pin_verification_service.dart';
@@ -240,10 +241,14 @@ class _CountdownScreenState extends State<CountdownScreen>
       // is best-effort and must not delay the fail-closed rejection UI.
       unawaited(KoruBeniForegroundService.stop(owner: _foregroundOwner));
       if (!mounted) return;
-      await _showBlockingFailure(
-        title: 'emergency_total_failure_title'.tr(),
-        body: PanicArmPolicy.blockedMessageKey(armResult).tr(),
+      await EmergencyFailureDialog.show(
+        context,
+        copy: EmergencyResultPolicy.failureCopy(
+          reason: EmergencyFailureReason.armRejected,
+          bodyKeyOverride: PanicArmPolicy.blockedMessageKey(armResult),
+        ),
         phoneNumber: '',
+        popHostOnDismiss: true,
       );
       return;
     }
@@ -312,10 +317,13 @@ class _CountdownScreenState extends State<CountdownScreen>
       unawaited(KoruBeniForegroundService.stop(owner: _foregroundOwner));
       if (mounted) {
         final primaryNumber = _emergencyContact?.phone ?? '';
-        await _showBlockingFailure(
-          title: 'emergency_total_failure_title'.tr(),
-          body: 'emergency_total_failure_body'.tr(),
+        await EmergencyFailureDialog.show(
+          context,
+          copy: EmergencyResultPolicy.failureCopy(
+            reason: EmergencyFailureReason.dispatchThrew,
+          ),
           phoneNumber: primaryNumber,
+          popHostOnDismiss: true,
         );
       }
     }
@@ -367,13 +375,22 @@ class _CountdownScreenState extends State<CountdownScreen>
 
     final calledNumber = primaryNumber ?? '';
 
-    if (callResult.isFailed) {
+    // The claim shown to the user is derived from the call result AND the
+    // ledger. Branching on the phone result alone is what let a dispatch that
+    // handed off four targets report "no action completed" (MP-01-027).
+    final decision = EmergencyResultPolicy.decide(
+      callResult: callResult,
+      ledger: ledger,
+    );
+    if (decision.surface == EmergencyResultSurface.blockingFailure) {
       unawaited(KoruBeniForegroundService.stop(owner: _foregroundOwner));
-      if (mounted) {
-        await _showBlockingFailure(
-          title: 'emergency_total_failure_title'.tr(),
-          body: 'emergency_total_failure_body'.tr(),
+      final failureCopy = decision.failureCopy;
+      if (mounted && failureCopy != null) {
+        await EmergencyFailureDialog.show(
+          context,
+          copy: failureCopy,
           phoneNumber: calledNumber,
+          popHostOnDismiss: true,
         );
       }
       return;
@@ -404,176 +421,18 @@ class _CountdownScreenState extends State<CountdownScreen>
         _isNavigating = false;
         _handoffToEmergencyScreen = false;
         if (mounted) {
-          await _showBlockingFailure(
-            title: 'emergency_total_failure_title'.tr(),
-            body: 'emergency_total_failure_body'.tr(),
+          await EmergencyFailureDialog.show(
+            context,
+            copy: EmergencyResultPolicy.failureCopy(
+              reason: EmergencyFailureReason.resultScreenUnavailable,
+              ledger: ledger,
+            ),
             phoneNumber: calledNumber,
+            popHostOnDismiss: true,
           );
         }
       }
     }
-  }
-
-  /// Shows a FULLSCREEN BLOCKING failure dialog. User MUST interact.
-  /// No silent dismissal. No snackbar. This is the fail-safe.
-  Future<void> _showBlockingFailure({
-    required String title,
-    required String body,
-    required String phoneNumber,
-    String? emergencyMessage,
-  }) async {
-    await showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => PopScope(
-        canPop: false,
-        child: AlertDialog(
-          backgroundColor: const Color(0xFF1C1C1E),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 72,
-                height: 72,
-                decoration: BoxDecoration(
-                  color: AppColors.emergency.withValues(alpha: 0.2),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.error_rounded,
-                  color: AppColors.emergency,
-                  size: 42,
-                ),
-              ),
-              const SizedBox(height: 16),
-              // Heading of the blocking failure surface (MP-12-017).
-              Semantics(
-                header: true,
-                child: Text(title, textAlign: TextAlign.center, style: const
-                    TextStyle(fontSize: 20, fontWeight: FontWeight.w900,
-                        color: Colors.white)),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                body,
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: Colors.white70,
-                  height: 1.5,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              if (phoneNumber.isNotEmpty) ...[
-                const SizedBox(height: 18),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    phoneNumber,
-                    style: const TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.white,
-                      letterSpacing: 1.5,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ],
-              if (emergencyMessage != null) ...[
-                const SizedBox(height: 12),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.05),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: SelectableText(
-                    emergencyMessage,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: Colors.white60,
-                      height: 1.4,
-                    ),
-                  ),
-                ),
-              ],
-            ],
-          ),
-          actions: [
-            if (phoneNumber.isNotEmpty)
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: () async {
-                    await AndroidIntentService.openDialer(phoneNumber);
-                  },
-                  icon: const Icon(Icons.call, size: IconSizes.action),
-                  label: Text(
-                    'emergency_manual_call_now'.tr(),
-                    style: const TextStyle(fontWeight: FontWeight.w700),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.emergency,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                ),
-              ),
-            if (emergencyMessage != null)
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: () {
-                    Clipboard.setData(ClipboardData(text: emergencyMessage));
-                    ScaffoldMessenger.of(ctx).showSnackBar(
-                      SnackBar(
-                        content: Text('emergency_message_copied'.tr()),
-                        backgroundColor: AppColors.success,
-                      ),
-                    );
-                  },
-                  icon: const Icon(Icons.copy, size: IconSizes.listItem),
-                  label: Text('emergency_copy_message'.tr()),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.white70,
-                    side: const BorderSide(color: Colors.white24),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                ),
-              ),
-            const SizedBox(height: 4),
-            SizedBox(
-              width: double.infinity,
-              child: TextButton(
-                onPressed: () {
-                  Navigator.pop(ctx);
-                  Navigator.pop(context);
-                },
-                child: Text(
-                  'emergency_dismiss'.tr(),
-                  style: const TextStyle(color: Colors.white70, fontSize: 13),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 
   @override
@@ -824,12 +683,22 @@ class _CountdownScreenState extends State<CountdownScreen>
                                 ),
                                 const SizedBox(width: 16),
                                 Expanded(
-                                  child: Text(
-                                    "countdown_warning_title".tr(),
-                                    style: const TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w800,
-                                      color: AppColors.textPrimary,
+                                  // The screen's own heading (MP-12-017).
+                                  // Until FIR-01 moved the blocking-failure
+                                  // dialog out of this file, the only
+                                  // `header: true` here belonged to that
+                                  // dialog -- a heading the screen reader can
+                                  // only reach once the dispatch has already
+                                  // failed. The countdown itself had none.
+                                  child: Semantics(
+                                    header: true,
+                                    child: Text(
+                                      "countdown_warning_title".tr(),
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w800,
+                                        color: AppColors.textPrimary,
+                                      ),
                                     ),
                                   ),
                                 ),

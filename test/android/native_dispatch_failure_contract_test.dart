@@ -98,7 +98,7 @@ void main() {
       ).readAsStringSync();
       final executeStart = source.indexOf('Future<void> _executeEmergency()');
       final executeEnd = source.indexOf(
-        'Future<void> _showBlockingFailure(',
+        '  @override\n  void dispose() {',
         executeStart,
       );
       expect(executeStart, isNot(-1));
@@ -119,7 +119,7 @@ void main() {
       final failedIndex = executeBody.indexOf('EmergencyCallResult.failed');
       expect(dialIndex, isNot(-1));
       expect(failedIndex, greaterThan(dialIndex));
-      expect(executeBody, contains('_showBlockingFailure'));
+      expect(executeBody, contains('EmergencyFailureDialog.show'));
     });
   });
 }

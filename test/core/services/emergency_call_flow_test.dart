@@ -39,7 +39,7 @@ void main() {
 
       // 4. Shows blocking failure screen if ALL calls fail
       expect(
-        content.contains('_showBlockingFailure'),
+        content.contains('EmergencyFailureDialog.show'),
         isTrue,
         reason:
             'countdown_screen must show blocking failure when all calls fail',

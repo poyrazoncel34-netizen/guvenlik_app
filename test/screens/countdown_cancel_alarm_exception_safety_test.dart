@@ -45,7 +45,7 @@ void main() {
     final executeStart = screen.indexOf('Future<void> _executeEmergency()');
     expect(executeStart, isNot(-1), reason: '_executeEmergency was renamed');
     final executeEnd = screen.indexOf(
-      'Future<void> _showBlockingFailure',
+      '  @override\n  void dispose() {',
       executeStart,
     );
     expect(executeEnd, greaterThan(executeStart));
@@ -58,7 +58,7 @@ void main() {
   test('the screen performs no emergency bookkeeping of its own', () {
     final executeStart = screen.indexOf('Future<void> _executeEmergency()');
     final executeEnd = screen.indexOf(
-      'Future<void> _showBlockingFailure',
+      '  @override\n  void dispose() {',
       executeStart,
     );
     final body = screen.substring(executeStart, executeEnd);

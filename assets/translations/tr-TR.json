@@ -999,5 +999,7 @@
   "notification_status_safety_warning": "Bu kapalıyken acil durum uyarısını göremezsiniz. Uygulama arama isteğini yine de gönderir, ama ekranda bir uyarı çıkmaz.",
   "subscription_survives_deletion_title": "Aboneliğiniz bu işlemle iptal olmaz",
   "subscription_survives_deletion_body": "KoruBeni Pro aboneliğinizi Google Play faturalandırır. Buradaki verileri silmek ya da uygulamayı kaldırmak aboneliği iptal etmez; ücretlendirme devam eder. İptal etmek için Google Play > Abonelikler bölümünü kullanın.",
-  "subscription_survives_deletion_action": "Google Play aboneliklerini aç"
+  "subscription_survives_deletion_action": "Google Play aboneliklerini aç",
+  "emergency_partial_failure_title": "Arama başlatılamadı, bazı adımlar tamamlandı",
+  "emergency_partial_failure_body": "Arama başlatılamadı. Aşağıdaki numarayı manuel arayın. Hangi adımın tamamlandığı aşağıda listelenmiştir."
 }
