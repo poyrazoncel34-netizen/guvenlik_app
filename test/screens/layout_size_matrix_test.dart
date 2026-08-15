@@ -434,7 +434,164 @@ void main() {
     }
   }
 
+  /// The whole artifact, given the two run-dependent values.
+  ///
+  /// Split out so ONE function defines the file in both modes. Two builders --
+  /// one that writes and one that checks -- is how a checker comes to accept a
+  /// shape the writer no longer produces.
+  Map<String, Object?> artifactPayload({
+    required Map<String, Object?> revision,
+    required String measuredOn,
+  }) {
+    final int cells = _results.where((Map<String, Object?> r) =>
+        !(r['surface']! as String).startsWith('NEGATIVE')).length;
+    final int overflowing = _results
+        .where((Map<String, Object?> r) =>
+            !(r['surface']! as String).startsWith('NEGATIVE') &&
+            r['overflowed'] == true)
+        .length;
+    return <String, Object?>{
+      'verifier': 'test/screens/layout_size_matrix_test.dart',
+      'verifierVersion': '1.2.0',
+      'codeRevision': revision,
+      'measuredOn': measuredOn,
+      'command': 'flutter test test/screens/layout_size_matrix_test.dart --no-pub',
+      'updateCommand':
+          'UPDATE_AUDIT_EVIDENCE=1 flutter test '
+          'test/screens/layout_size_matrix_test.dart --no-pub',
+      'writePolicy':
+          'An ordinary test run VERIFIES this file and writes nothing. The '
+          'artifact is regenerated only under UPDATE_AUDIT_EVIDENCE=1, which is '
+          'how running the suite stopped dirtying the worktree and breaking the '
+          'secret scan that follows it (RER-02).',
+      'method':
+          'framework RenderFlex error capture via tester.takeException(); '
+          'the debug overflow stripe is deliberately NOT the instrument',
+      'locale': 'tr-TR (the shipped payload, not invented test copy)',
+      'textScaleCeiling': 2.0,
+      'textScaleCeilingSource': 'appTextScaler in lib/main.dart',
+      'viewports': kViewports.map(
+          (String k, Size v) => MapEntry<String, Object>(
+              k, <String, double>{'width': v.width, 'height': v.height})),
+      'surfaces': kSurfaces.keys.toList(),
+      'cellsMeasured': cells,
+      'cellsOverflowing': overflowing,
+      'negativeControls': _results
+          .where((Map<String, Object?> r) =>
+              (r['surface']! as String).startsWith('NEGATIVE'))
+          .toList(),
+      'cells': _results,
+      'propertyClasses': <String, Object?>{
+        'criterion':
+            'ENFORCED = an assertion in this file fails when the property '
+            'changes. CENSUS = a recorded fact with no assertion behind it.',
+        'rulesEmitted': <String>['cellOverflowed'],
+        'rulesUnderNegativeControl': <String>['cellOverflowed'],
+        'enforcedProperties': <String>['cellsOverflowing', 'cells'],
+        'censusProperties': <String>[
+          'locale',
+          'textScaleCeiling',
+          'textScaleCeilingSource',
+          'viewports',
+          'surfaces',
+          'cellsMeasured',
+          'negativeControls',
+        ],
+      },
+      'baseline': <String, Object?>{
+        'violationCount': overflowing,
+        'semantics':
+            'cellsOverflowing is the violation count. 0 means every measured '
+            'cell fitted; the in-file negative control proves the instrument '
+            'can report otherwise (an inflexible Row with the shipped tr-TR '
+            'copy at scale 2.0 overflows by 2573 px).',
+      },
+    };
+  }
+
+  /// The two values that legitimately differ between two runs of the same tree:
+  /// which commit was checked out, and what day it was. Everything else is a
+  /// MEASUREMENT and must not move without the measured surface moving.
+  Map<String, Object?> withoutProvenance(Map<String, Object?> payload) =>
+      Map<String, Object?>.from(payload)
+        ..remove('codeRevision')
+        ..remove('measuredOn');
+
+  /// RER-02: an ordinary `flutter test` must leave the worktree exactly as it
+  /// found it.
+  ///
+  /// This file used to re-emit its artifact on EVERY run, stamped with the
+  /// current HEAD. One test file therefore dirtied the tree, and
+  /// `scan_release_secrets.py --require-clean` -- which does not share
+  /// `common.py`'s exemption for `docs/audit/evidence/` -- refused immediately
+  /// afterwards. Two cleanliness predicates in one repository disagreed, and the
+  /// documented baseline sequence could not be executed in order without an
+  /// undocumented `git checkout`.
+  ///
+  /// The fix is the golden-file convention, not a weaker scanner: verify by
+  /// default, regenerate only when asked. `UPDATE_AUDIT_EVIDENCE=1` is the
+  /// explicit intent, and it is the SAME flag the Python evidence package reads,
+  /// so the repository has one convention rather than two.
+  final bool updatingEvidence =
+      Platform.environment['UPDATE_AUDIT_EVIDENCE'] == '1';
+
+  test('text-scale evidence matches the committed artifact', () {
+    final File out = File(kArtifact);
+    if (updatingEvidence) {
+      // Update mode regenerates below; verifying against the file this run is
+      // about to replace would be a guaranteed, meaningless failure.
+      return;
+    }
+    expect(
+      out.existsSync(),
+      isTrue,
+      reason:
+          '$kArtifact is missing. Regenerate it with:\n'
+          '  UPDATE_AUDIT_EVIDENCE=1 flutter test '
+          'test/screens/layout_size_matrix_test.dart --no-pub',
+    );
+
+    final Map<String, Object?> committed =
+        (jsonDecode(out.readAsStringSync()) as Map<String, dynamic>)
+            .cast<String, Object?>();
+    // A live measurement needs no provenance to be compared: the point is
+    // whether the MEASURED surface still produces the committed numbers.
+    final Map<String, Object?> measured = artifactPayload(
+      revision: const <String, Object?>{},
+      measuredOn: '',
+    );
+
+    const JsonEncoder encoder = JsonEncoder.withIndent('  ');
+    final Map<String, Object?> expectedBody = withoutProvenance(committed);
+    final Map<String, Object?> actualBody = withoutProvenance(measured);
+
+    // Report the FIRST differing key rather than dumping two 91-cell blobs.
+    // A diff nobody reads is a diff nobody acts on.
+    final Set<String> keys = <String>{...expectedBody.keys, ...actualBody.keys};
+    final List<String> drifted = keys
+        .where((String k) =>
+            encoder.convert(expectedBody[k]) != encoder.convert(actualBody[k]))
+        .toList()
+      ..sort();
+
+    expect(
+      drifted,
+      isEmpty,
+      reason:
+          'The measured text-scale evidence no longer matches $kArtifact.\n'
+          'Drifted keys: ${drifted.join(', ')}\n'
+          'If the change is INTENDED, regenerate the artifact deliberately:\n'
+          '  UPDATE_AUDIT_EVIDENCE=1 flutter test '
+          'test/screens/layout_size_matrix_test.dart --no-pub\n'
+          'If it is not intended, a shipped surface changed how it lays out.',
+    );
+  });
+
   tearDownAll(() {
+    if (!updatingEvidence) {
+      // The whole point of RER-02: an ordinary run writes NOTHING.
+      return;
+    }
     final File out = File(kArtifact);
     if (!out.parent.existsSync()) return;
     final Map<String, Object?> revision = codeRevision();
@@ -449,63 +606,12 @@ void main() {
       );
       return;
     }
-    final int cells = _results.where((Map<String, Object?> r) =>
-        !(r['surface']! as String).startsWith('NEGATIVE')).length;
-    final int overflowing = _results
-        .where((Map<String, Object?> r) =>
-            !(r['surface']! as String).startsWith('NEGATIVE') &&
-            r['overflowed'] == true)
-        .length;
-    out.writeAsStringSync(
-      '''${const JsonEncoder.withIndent('  ').convert(<String, Object?>{
-        'verifier': 'test/screens/layout_size_matrix_test.dart',
-        'verifierVersion': '1.1.0',
-        'codeRevision': revision,
-        'measuredOn': DateTime.now().toIso8601String().split('T').first,
-        'command': 'flutter test test/screens/layout_size_matrix_test.dart --no-pub',
-        'method':
-            'framework RenderFlex error capture via tester.takeException(); '
-            'the debug overflow stripe is deliberately NOT the instrument',
-        'locale': 'tr-TR (the shipped payload, not invented test copy)',
-        'textScaleCeiling': 2.0,
-        'textScaleCeilingSource': 'appTextScaler in lib/main.dart',
-        'viewports': kViewports.map(
-            (String k, Size v) => MapEntry<String, Object>(
-                k, <String, double>{'width': v.width, 'height': v.height})),
-        'surfaces': kSurfaces.keys.toList(),
-        'cellsMeasured': cells,
-        'cellsOverflowing': overflowing,
-        'negativeControls': _results
-            .where((Map<String, Object?> r) =>
-                (r['surface']! as String).startsWith('NEGATIVE'))
-            .toList(),
-        'cells': _results,
-        'propertyClasses': <String, Object?>{
-          'criterion':
-              'ENFORCED = an assertion in this file fails when the property '
-              'changes. CENSUS = a recorded fact with no assertion behind it.',
-          'rulesEmitted': <String>['cellOverflowed'],
-          'rulesUnderNegativeControl': <String>['cellOverflowed'],
-          'enforcedProperties': <String>['cellsOverflowing', 'cells'],
-          'censusProperties': <String>[
-            'locale',
-            'textScaleCeiling',
-            'textScaleCeilingSource',
-            'viewports',
-            'surfaces',
-            'cellsMeasured',
-            'negativeControls',
-          ],
-        },
-        'baseline': <String, Object?>{
-          'violationCount': overflowing,
-          'semantics':
-              'cellsOverflowing is the violation count. 0 means every measured '
-              'cell fitted; the in-file negative control proves the instrument '
-              'can report otherwise (an inflexible Row with the shipped tr-TR '
-              'copy at scale 2.0 overflows by 2573 px).',
-        },
-      })}\n''',
+    final String body = const JsonEncoder.withIndent('  ').convert(
+      artifactPayload(
+        revision: revision,
+        measuredOn: DateTime.now().toIso8601String().split('T').first,
+      ),
     );
+    out.writeAsStringSync('$body\n');
   });
 }
