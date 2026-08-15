@@ -2,9 +2,9 @@
   "verifier": "scripts/audit_evidence/assets.py",
   "verifierVersion": "1.0.0",
   "codeRevision": {
-    "verifiedCodeRevision": "98a287dfde927025f9b7d0f57e2e924e4af4c692",
+    "verifiedCodeRevision": "ef40178ce7d41241baad26350aa3a242a0ba2d11",
     "dirty": false,
-    "treeHash": "f92b741609696aeef9b9b41d196823a54ba1d0dd",
+    "treeHash": "0aa600f9a9748fa1e49cd11c10f78db324ba4b99",
     "dirtyPaths": [],
     "note": "verifiedCodeRevision is the commit whose measured surface produced this artifact. A later commit may CONTAIN this file; that is the documentation head, and the two are distinguished in PRODUCTION_AUDIT.md. Changes under docs/audit/evidence/ are this package's own output and do not make the measured tree dirty."
   },
