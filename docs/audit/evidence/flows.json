@@ -2,13 +2,13 @@
   "verifier": "scripts/audit_evidence/flows.py",
   "verifierVersion": "1.0.0",
   "codeRevision": {
-    "verifiedCodeRevision": "19502378e61751a17101cfb7e907f0c1a1cae280",
+    "verifiedCodeRevision": "b171e937958803d0f44b8ca64bf0afe9338ef3f7",
     "dirty": false,
-    "treeHash": "0799b128914f0ff1f5deb4dba683522b3889bee2",
+    "treeHash": "fd23f3929ab490615c1535c5eccb63231868bb40",
     "dirtyPaths": [],
     "note": "verifiedCodeRevision is the commit whose measured surface produced this artifact. A later commit may CONTAIN this file; that is the documentation head, and the two are distinguished in PRODUCTION_AUDIT.md. Changes under docs/audit/evidence/ are this package's own output and do not make the measured tree dirty."
   },
-  "measuredOn": "2026-08-15",
+  "measuredOn": "2026-08-16",
   "command": "python3 scripts/audit_evidence/flows.py",
   "surfaces": [
     "lib/screens/**",
@@ -249,8 +249,8 @@
     "interruptionSafety": {
       "restorationPolicyTest": "test/state_restoration_policy_test.dart",
       "restorationScopeSites": [
-        "lib/screens/main_navigation.dart:39",
-        "lib/screens/main_navigation.dart:57",
+        "lib/screens/main_navigation.dart:40",
+        "lib/screens/main_navigation.dart:58",
         "lib/screens/onboarding/onboarding_contact_step.dart:38",
         "lib/screens/onboarding/onboarding_contact_step.dart:65",
         "lib/screens/onboarding_screen.dart:38",
@@ -635,16 +635,22 @@
         "lib/screens/home_page.dart:123",
         "lib/screens/home_page.dart:124",
         "lib/screens/home_page.dart:126",
-        "lib/screens/main_navigation.dart:291",
+        "lib/screens/main_navigation.dart:94",
+        "lib/screens/main_navigation.dart:95",
+        "lib/screens/main_navigation.dart:294",
+        "lib/screens/main_navigation.dart:322",
         "lib/screens/map_page.dart:360",
         "lib/widgets/connectivity_banner.dart:14",
         "lib/widgets/connectivity_banner.dart:15",
-        "lib/widgets/connectivity_banner.dart:18",
-        "lib/widgets/connectivity_banner.dart:18",
-        "lib/widgets/connectivity_banner.dart:21",
-        "lib/widgets/connectivity_banner.dart:21",
-        "lib/widgets/connectivity_banner.dart:40",
-        "lib/widgets/connectivity_banner.dart:45"
+        "lib/widgets/connectivity_banner.dart:38",
+        "lib/widgets/connectivity_banner.dart:38",
+        "lib/widgets/connectivity_banner.dart:41",
+        "lib/widgets/connectivity_banner.dart:41",
+        "lib/widgets/connectivity_banner.dart:60",
+        "lib/widgets/connectivity_banner.dart:65",
+        "lib/widgets/connectivity_banner.dart:111",
+        "lib/widgets/connectivity_banner.dart:112",
+        "lib/widgets/connectivity_banner.dart:124"
       ],
       "retrySites": [
         "lib/core/network/osm_tile_cache_client.dart:45",

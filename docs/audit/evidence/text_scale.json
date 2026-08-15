@@ -2,13 +2,13 @@
   "verifier": "test/screens/layout_size_matrix_test.dart",
   "verifierVersion": "1.2.0",
   "codeRevision": {
-    "verifiedCodeRevision": "19502378e61751a17101cfb7e907f0c1a1cae280",
+    "verifiedCodeRevision": "b171e937958803d0f44b8ca64bf0afe9338ef3f7",
     "dirty": false,
-    "treeHash": "0799b128914f0ff1f5deb4dba683522b3889bee2",
+    "treeHash": "fd23f3929ab490615c1535c5eccb63231868bb40",
     "dirtyPaths": [],
     "note": "verifiedCodeRevision is the commit whose measured surface produced this artifact. A later commit may CONTAIN this file; that is the documentation head, and the two are distinguished in PRODUCTION_AUDIT.md. Changes under docs/audit/evidence/ are this package's own output and do not make the measured tree dirty."
   },
-  "measuredOn": "2026-08-15",
+  "measuredOn": "2026-08-16",
   "command": "flutter test test/screens/layout_size_matrix_test.dart --no-pub",
   "updateCommand": "UPDATE_AUDIT_EVIDENCE=1 flutter test test/screens/layout_size_matrix_test.dart --no-pub",
   "writePolicy": "An ordinary test run VERIFIES this file and writes nothing. The artifact is regenerated only under UPDATE_AUDIT_EVIDENCE=1, which is how running the suite stopped dirtying the worktree and breaking the secret scan that follows it (RER-02).",

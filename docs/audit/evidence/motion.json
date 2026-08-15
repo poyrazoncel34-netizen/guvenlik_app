@@ -2,13 +2,13 @@
   "verifier": "scripts/audit_evidence/motion.py",
   "verifierVersion": "1.0.0",
   "codeRevision": {
-    "verifiedCodeRevision": "19502378e61751a17101cfb7e907f0c1a1cae280",
+    "verifiedCodeRevision": "b171e937958803d0f44b8ca64bf0afe9338ef3f7",
     "dirty": false,
-    "treeHash": "0799b128914f0ff1f5deb4dba683522b3889bee2",
+    "treeHash": "fd23f3929ab490615c1535c5eccb63231868bb40",
     "dirtyPaths": [],
     "note": "verifiedCodeRevision is the commit whose measured surface produced this artifact. A later commit may CONTAIN this file; that is the documentation head, and the two are distinguished in PRODUCTION_AUDIT.md. Changes under docs/audit/evidence/ are this package's own output and do not make the measured tree dirty."
   },
-  "measuredOn": "2026-08-15",
+  "measuredOn": "2026-08-16",
   "command": "python3 scripts/audit_evidence/motion.py",
   "surfaces": [
     "lib/core/motion.dart",
@@ -243,8 +243,8 @@
       "sites": [
         "lib/screens/home_page.dart:970",
         "lib/screens/home_page.dart:971",
-        "lib/screens/main_navigation.dart:297",
-        "lib/screens/main_navigation.dart:298"
+        "lib/screens/main_navigation.dart:328",
+        "lib/screens/main_navigation.dart:329"
       ],
       "count": 4,
       "animatedBlurCount": 0,
@@ -284,11 +284,11 @@
         "fast": 3,
         "slow": 6,
         "enter": 5,
-        "base": 13,
+        "base": 14,
         "exit": 1,
         "settle": 1
       },
-      "totalReferences": 29
+      "totalReferences": 30
     }
   },
   "violations": [],
