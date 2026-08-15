@@ -182,6 +182,91 @@ void main() {
     expect(texts, contains(catalogue['dispatch_outcome_permission_denied']));
   });
 
+  /// RER-05, rendered. The policy test proves the decision; this proves the
+  /// user is not shown "Hicbir islem tamamlanmadi" over a list that says
+  /// "belirsiz" next to every row.
+  testWidgets('unknown-only ledger never renders the absolute claim',
+      (tester) async {
+    final catalogue = _catalogue();
+    final ledger = DispatchOutcomeLedger(dispatchId: 'unknown-only');
+    DispatchLedgerRecorder.recordCallTargets(
+      ledger,
+      EmergencyCallResult.failed('+905001234567'),
+    );
+    // Every bookkeeping target came back unconfirmed: the app does not know
+    // that they failed, and must not say that they did.
+    for (final target in const <DispatchTarget>[
+      DispatchTarget.alertNotification,
+      DispatchTarget.safetyTimeline,
+      DispatchTarget.offlineQueue,
+      DispatchTarget.haptic,
+    ]) {
+      ledger.recordOutcome(target, DispatchTargetOutcome.handoffUnconfirmed);
+    }
+    expect(ledger.reachedCount, 0);
+    expect(ledger.unknownCount, 4);
+
+    final copy = EmergencyResultPolicy.decide(
+      callResult: EmergencyCallResult.failed('+905001234567'),
+      ledger: ledger,
+    ).failureCopy;
+    await pumpDialog(tester, copy!);
+
+    final texts = renderedText(tester);
+    expect(
+      texts,
+      isNot(contains(catalogue['emergency_total_failure_title'])),
+      reason: 'four targets may well have succeeded; "Hicbir islem '
+          'tamamlanmadi" is a claim this app cannot support',
+    );
+    expect(
+      texts,
+      isNot(contains(catalogue['emergency_partial_failure_title'])),
+      reason: 'and nothing is KNOWN to have completed either, so "bazi '
+          'adimlar tamamlandi" would be the opposite lie',
+    );
+    expect(
+      texts,
+      contains(catalogue['emergency_unconfirmed_failure_title']),
+      reason: 'the honest third claim',
+    );
+    // The headline and the list must agree: the rows say "belirsiz".
+    expect(texts, contains(catalogue['dispatch_outcome_unconfirmed']));
+    // The user still gets the thing that actually helps.
+    expect(find.text('+905001234567'), findsOneWidget);
+    expect(find.text(catalogue['emergency_manual_call_now']!), findsOneWidget);
+  });
+
+  /// The complement: with nothing unknown, the absolute claim is still allowed,
+  /// so RER-05 narrowed the claim rather than abolishing it.
+  testWidgets('definite-failure-only ledger still renders the absolute claim',
+      (tester) async {
+    final catalogue = _catalogue();
+    final ledger = DispatchOutcomeLedger(dispatchId: 'definite-only');
+    DispatchLedgerRecorder.recordCallTargets(
+      ledger,
+      EmergencyCallResult.failed('+905001234567'),
+    );
+    ledger.recordOutcome(DispatchTarget.alertNotification,
+        DispatchTargetOutcome.permissionDenied);
+    ledger.recordOutcome(DispatchTarget.safetyTimeline,
+        DispatchTargetOutcome.platformRejected);
+    expect(ledger.reachedCount, 0);
+    expect(ledger.unknownCount, 0);
+
+    final copy = EmergencyResultPolicy.decide(
+      callResult: EmergencyCallResult.failed('+905001234567'),
+      ledger: ledger,
+    ).failureCopy;
+    await pumpDialog(tester, copy!);
+
+    expect(
+      renderedText(tester),
+      contains(catalogue['emergency_total_failure_title']),
+      reason: 'nothing reached and nothing unknown: the absolute claim is TRUE',
+    );
+  });
+
   testWidgets('the manual-call affordance survives the change', (tester) async {
     final catalogue = _catalogue();
     final copy = EmergencyResultPolicy.decide(

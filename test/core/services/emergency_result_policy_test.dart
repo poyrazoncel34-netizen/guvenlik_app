@@ -247,7 +247,14 @@ void main() {
       );
     });
 
-    test('an unconfirmed target is not a reached one', () async {
+    test('an unconfirmed target is neither reached nor a licence for the '
+        'absolute claim (RER-05)', () async {
+      // This test previously asserted the OPPOSITE -- `isTrue` -- reasoning
+      // that "unknown is neither reached nor a licence to deny it happened".
+      // That is right about the LEDGER and wrong about a HEADLINE: the app
+      // cannot know the alert failed, so it must not say nothing completed.
+      // dispatch_outcome.dart already stated the rule this now obeys, namely
+      // that an unconfirmed handoff is "never rendered as either".
       final execution = await runPanicDispatch(
         callResult: EmergencyCallResult.failed('+905001234567'),
         steps: [
@@ -257,15 +264,89 @@ void main() {
       );
       expect(execution.ledger.unknownCount, 1);
       expect(execution.ledger.reachedCount, 0);
+
+      final copy = EmergencyResultPolicy.decide(
+        callResult: execution.result,
+        ledger: execution.ledger,
+      ).failureCopy!;
       expect(
-        EmergencyResultPolicy.decide(
-          callResult: execution.result,
-          ledger: execution.ledger,
-        ).failureCopy!.claimsNothingCompleted,
-        isTrue,
-        reason: 'unknown is neither reached nor a licence to deny it happened; '
-            'the ledger is still rendered beside the copy',
+        copy.claimsNothingCompleted,
+        isFalse,
+        reason: 'an unknown target makes "nothing completed" unprovable',
       );
+      expect(
+        copy.titleKey,
+        EmergencyResultPolicy.unconfirmedFailureTitleKey,
+        reason: 'and it is not the partial copy either: nothing is KNOWN to '
+            'have completed, so "some steps completed" would be equally false',
+      );
+    });
+
+    /// The four ledgers the policy must distinguish, stated as a table so a
+    /// future edit has to change a row rather than reinterpret a sentence.
+    test('RER-05 policy table: absolute claim iff reached==0 AND unknown==0',
+        () async {
+      final cases = <String, (List<DispatchTargetOutcome>, bool)>{
+        'reached=0 unknown=0, definite failures > 0': (
+          <DispatchTargetOutcome>[
+            DispatchTargetOutcome.permissionDenied,
+            DispatchTargetOutcome.platformRejected,
+          ],
+          true,
+        ),
+        'reached=0 unknown>0': (
+          <DispatchTargetOutcome>[
+            DispatchTargetOutcome.handoffUnconfirmed,
+            DispatchTargetOutcome.permissionDenied,
+          ],
+          false,
+        ),
+        'reached>0 unknown=0': (
+          <DispatchTargetOutcome>[
+            DispatchTargetOutcome.handoffAccepted,
+            DispatchTargetOutcome.permissionDenied,
+          ],
+          false,
+        ),
+        'reached>0 unknown>0': (
+          <DispatchTargetOutcome>[
+            DispatchTargetOutcome.handoffAccepted,
+            DispatchTargetOutcome.handoffUnconfirmed,
+          ],
+          false,
+        ),
+      };
+
+      for (final entry in cases.entries) {
+        final (outcomes, mayClaimAbsolute) = entry.value;
+        final ledger = DispatchOutcomeLedger(dispatchId: entry.key);
+        for (var i = 0; i < outcomes.length; i++) {
+          ledger.recordOutcome(
+            DispatchTarget.values[i % DispatchTarget.values.length],
+            outcomes[i],
+          );
+        }
+        final copy = EmergencyResultPolicy.failureCopy(
+          reason: EmergencyFailureReason.callFailed,
+          ledger: ledger,
+        );
+        expect(
+          copy.claimsNothingCompleted,
+          mayClaimAbsolute,
+          reason: '${entry.key}: reached=${ledger.reachedCount} '
+              'unknown=${ledger.unknownCount}',
+        );
+        if (!mayClaimAbsolute) {
+          expect(
+            copy.titleKey,
+            ledger.reachedCount == 0
+                ? EmergencyResultPolicy.unconfirmedFailureTitleKey
+                : EmergencyResultPolicy.partialFailureTitleKey,
+            reason: '${entry.key}: the qualified copy must match which of the '
+                'two qualified claims is actually true',
+          );
+        }
+      }
     });
   });
 
@@ -323,22 +404,58 @@ void main() {
   });
 
   group('the invariant itself', () {
-    test('supportsTotalFailureClaim is exactly "no target reached"', () {
+    test('supportsTotalFailureClaim is exactly "nothing reached AND nothing '
+        'unknown"', () {
       expect(EmergencyResultPolicy.supportsTotalFailureClaim(null), isTrue);
 
       final empty = DispatchOutcomeLedger(dispatchId: 'e');
       expect(EmergencyResultPolicy.supportsTotalFailureClaim(empty), isTrue);
 
+      // Exhaustive over the vocabulary: a REACHED target forbids the absolute
+      // claim because it is false, and an UNKNOWN target forbids it because it
+      // is unprovable. Both are "not a licence", for different reasons, and
+      // the second is what RER-05 added.
       for (final value in DispatchTargetOutcome.values) {
         final ledger = DispatchOutcomeLedger(dispatchId: value.name)
           ..recordOutcome(DispatchTarget.alertNotification, value);
+        final forbidden =
+            value.reachability == DispatchReachability.reached ||
+            value.reachability == DispatchReachability.unknown;
         expect(
           EmergencyResultPolicy.supportsTotalFailureClaim(ledger),
-          value.reachability != DispatchReachability.reached,
-          reason: 'only a REACHED target may forbid the absolute claim; '
-              '${value.name} is ${value.reachability.name}',
+          !forbidden,
+          reason: 'a ${value.reachability.name} target (${value.name}) must '
+              '${forbidden ? 'forbid' : 'permit'} the absolute claim',
         );
       }
+    });
+
+    /// NEGATIVE CONTROL for RER-05. The old guard is re-implemented verbatim
+    /// here and asserted to be WRONG on the unknown-only ledger. If someone
+    /// reverts `supportsTotalFailureClaim` to `reachedCount == 0`, the
+    /// assertions above go red -- and this test says exactly what the reverted
+    /// expression would be, so the failure is self-explaining rather than a
+    /// puzzle.
+    test('NEGATIVE CONTROL — the old reachedCount-only guard permits the '
+        'claim this policy now forbids', () {
+      final unknownOnly = DispatchOutcomeLedger(dispatchId: 'unknown-only')
+        ..recordOutcome(DispatchTarget.alertNotification,
+            DispatchTargetOutcome.handoffUnconfirmed)
+        ..recordOutcome(DispatchTarget.safetyTimeline,
+            DispatchTargetOutcome.handoffUnconfirmed);
+
+      // The guard as it was written before RER-05.
+      bool oldGuard(DispatchOutcomeLedger? l) => l == null || l.reachedCount == 0;
+
+      expect(oldGuard(unknownOnly), isTrue,
+          reason: 'the old guard DID permit the absolute claim here — that is '
+              'the defect, reproduced');
+      expect(EmergencyResultPolicy.supportsTotalFailureClaim(unknownOnly),
+          isFalse,
+          reason: 'the current guard must not');
+      expect(oldGuard(unknownOnly),
+          isNot(EmergencyResultPolicy.supportsTotalFailureClaim(unknownOnly)),
+          reason: 'if these two ever agree on this ledger, the fix is gone');
     });
   });
 }

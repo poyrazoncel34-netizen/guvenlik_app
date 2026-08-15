@@ -16,9 +16,36 @@
 /// ------------------------------------------------------
 /// **User-facing emergency outcome copy must agree with the ledger.** An
 /// absolute "nothing completed" claim is permitted ONLY when no target was
-/// reached. [EmergencyFailureCopy] cannot be built any other way -- it has no
-/// public constructor, so a caller cannot pair total-failure copy with a ledger
-/// that contradicts it.
+/// reached AND no target's fate is unknown. [EmergencyFailureCopy] cannot be
+/// built any other way -- it has no public constructor, so a caller cannot pair
+/// total-failure copy with a ledger that contradicts it.
+///
+/// Why `unknownCount` is part of the guard (RER-05)
+/// -----------------------------------------------
+/// The guard used to read `reachedCount == 0` alone, and a test asserted that
+/// an unknown-only ledger DOES support the absolute claim, reasoning that
+/// "unknown is neither reached nor a licence to deny it happened". That
+/// reasoning is right about the ledger and wrong about a headline. With four
+/// targets returning [DispatchTargetOutcome.handoffUnconfirmed] the user was
+/// shown "Hicbir islem tamamlanmadi" over four targets that may well have
+/// succeeded -- while the rows underneath correctly read "belirsiz". A headline
+/// that contradicts its own list is the exact defect MP-01-027 exists to
+/// remove, and it also contradicted `dispatch_outcome.dart`, which states that
+/// an unconfirmed handoff is "Neither success nor failure -- and never rendered
+/// as either".
+///
+/// So there are THREE claims, not two, and each is true of a different ledger:
+///
+/// | reached | unknown | claim                                    |
+/// |---------|---------|------------------------------------------|
+/// | 0       | 0       | absolute: nothing completed              |
+/// | 0       | > 0     | unconfirmed: nothing is KNOWN to have    |
+/// | > 0     | any     | partial: some steps did complete         |
+///
+/// The middle row is why a third copy pair exists. Reusing the partial copy
+/// there would have said "bazi adimlar tamamlandi" ("some steps completed")
+/// over a ledger where nothing is known to have completed -- trading a false
+/// negative claim for a false positive one.
 ///
 /// Why a policy rather than a branch in each screen
 /// -----------------------------------------------
@@ -89,7 +116,9 @@ class EmergencyFailureCopy {
   final String bodyKey;
 
   /// True when the copy asserts that NO action completed. Only ever true when
-  /// [ledger] is null (nothing was attempted) or records no reached target.
+  /// [ledger] is null (nothing was attempted), or records neither a reached
+  /// target nor an unknown one -- an unknown target makes the absolute claim
+  /// unprovable, not merely impolite.
   final bool claimsNothingCompleted;
 
   /// The per-target ledger to render beside the copy, so reached and
@@ -121,11 +150,23 @@ abstract final class EmergencyResultPolicy {
       'emergency_partial_failure_title';
   static const String partialFailureBodyKey = 'emergency_partial_failure_body';
 
+  /// Honest claim for a ledger that reached nothing but does not KNOW that it
+  /// failed either. Neither "nothing completed" nor "some steps completed" is
+  /// true of this ledger; both would be a guess presented as a fact.
+  static const String unconfirmedFailureTitleKey =
+      'emergency_unconfirmed_failure_title';
+  static const String unconfirmedFailureBodyKey =
+      'emergency_unconfirmed_failure_body';
+
   /// The invariant in one expression: an absolute "nothing completed" claim is
-  /// supported only by a ledger that reached nothing (or by no ledger at all,
-  /// which means no target was attempted).
+  /// supported only by a ledger that reached nothing AND left nothing unknown
+  /// (or by no ledger at all, which means no target was attempted).
+  ///
+  /// Both counts are required. `reachedCount == 0` alone permits the absolute
+  /// claim over a ledger of pure unknowns, which is a statement the app cannot
+  /// support -- see the table in this library's header comment.
   static bool supportsTotalFailureClaim(DispatchOutcomeLedger? ledger) =>
-      ledger == null || ledger.reachedCount == 0;
+      ledger == null || (ledger.reachedCount == 0 && ledger.unknownCount == 0);
 
   /// The copy for a blocking failure surface.
   ///
@@ -148,9 +189,17 @@ abstract final class EmergencyResultPolicy {
     };
 
     if (!supportsTotalFailureClaim(effectiveLedger)) {
+      // Nothing reached, but something is unknown: say exactly that. Saying
+      // "some steps completed" here would be as false as saying "none did".
+      final bool nothingKnownToHaveCompleted =
+          effectiveLedger != null && effectiveLedger.reachedCount == 0;
       return EmergencyFailureCopy._(
-        titleKey: partialFailureTitleKey,
-        bodyKey: partialFailureBodyKey,
+        titleKey: nothingKnownToHaveCompleted
+            ? unconfirmedFailureTitleKey
+            : partialFailureTitleKey,
+        bodyKey: nothingKnownToHaveCompleted
+            ? unconfirmedFailureBodyKey
+            : partialFailureBodyKey,
         claimsNothingCompleted: false,
         ledger: effectiveLedger,
       );
