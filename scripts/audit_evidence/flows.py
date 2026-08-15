@@ -98,7 +98,7 @@ def _landing_surfaces(root: Path) -> list:
         return []
     src = read_stripped(splash)
     return sorted(set(re.findall(r"\b(MainNavigation|HomePage|OnboardingScreen|"
-                                 r"UnifiedConsentScreen|AppUnlockScreen|AuthGate)\b", src)))
+                                 r"UnifiedConsentScreen|AppUnlockScreen)\b", src)))
 
 
 def _sites(root: Path, pattern: str, files=None) -> list:
@@ -171,6 +171,55 @@ def _per_target_outcome_surface(root: Path) -> dict:
         "partialPredicateSites": partial_predicate,
         "unprovableOutcomeNames": unprovable,
     }
+
+
+# The ONLY production files allowed to construct the post-gate tab shell.
+#
+# MP-26-008's security argument is that gate ordering is a property of
+# CONSTRUCTION ORDER, not of a conditional: nothing can reach the tab shell
+# because nothing builds it before the gates. That argument is only as strong
+# as the set of construction sites, and it was quietly false --
+# `lib/screens/auth_gate.dart` built `const MainNavigation()` unconditionally.
+# It had zero consumers, so it was unreachable rather than exploitable, but it
+# was a ready-made bypass one import away from use, and no rule noticed. The
+# file is deleted; this rule is what stops the next one.
+TAB_SHELL = "MainNavigation"
+TAB_SHELL_DECLARATION = "lib/screens/main_navigation.dart"
+GATED_TAB_SHELL_SITES = {
+    # Every branch here sits after the consent -> onboarding -> PIN decision.
+    "lib/screens/splash_screen.dart": ("legalAccepted", "_hasConfiguredPin"),
+    # Reached only from the onboarding completion handler.
+    "lib/screens/onboarding_screen.dart": ("onCompleted",),
+}
+
+
+def _tab_shell_sites(root: Path) -> list:
+    """Every production construction of the tab shell, and whether it is gated.
+
+    Comments are stripped first: this file and the audit both DESCRIBE the
+    deleted bypass, and a scan that reads prose as code would report the
+    description as the defect.
+    """
+    sites = []
+    for path in dart_files(root):
+        name = rel(path, root)
+        if name == TAB_SHELL_DECLARATION:
+            continue
+        src = read_stripped(path)
+        for match in re.finditer(r"\b%s\(\)" % TAB_SHELL, src):
+            head = src[: match.start()]
+            preconditions = GATED_TAB_SHELL_SITES.get(name)
+            sites.append({
+                "site": f"{name}:{head.count(chr(10)) + 1}",
+                "file": name,
+                "approved": preconditions is not None,
+                # A site is gated only if every precondition the file is
+                # approved for appears BEFORE it.
+                "gated": bool(preconditions) and all(
+                    marker in head for marker in preconditions
+                ),
+            })
+    return sites
 
 
 DEEP_LINK_MODEL = "lib/core/navigation/app_destination.dart"
@@ -479,6 +528,22 @@ def measure(root: Path) -> list:
                 "detail": "the parser reaches a Navigator or a BuildContext, so "
                           "a link could route before the gates",
             })
+
+    # The construction-order argument, enforced instead of asserted.
+    for site in _tab_shell_sites(root):
+        if not site["approved"]:
+            violations.append({
+                "rule": "ungatedTabShellConstruction",
+                "detail": f"{site['site']} builds {TAB_SHELL} outside the "
+                          f"approved gate chain; every construction must sit "
+                          f"after consent -> onboarding -> PIN",
+            })
+        elif not site["gated"]:
+            violations.append({
+                "rule": "tabShellBuiltBeforeItsGate",
+                "detail": f"{site['site']} builds {TAB_SHELL} before the gate "
+                          f"decision its file is approved for",
+            })
         for scheme in links["manifestSchemes"]:
             if scheme in {"http", "https"}:
                 violations.append({
@@ -593,11 +658,13 @@ def build(root: Path) -> dict:
             "startupOrderContract": "test/main_startup_init_order_test.dart",
         },
         "entryPoints": {
-            "coldStartRoute": "SplashScreen -> AuthGate -> MainNavigation",
+            "coldStartRoute": "SplashScreen -> (consent | onboarding | PIN) "
+                              "-> MainNavigation",
             "gates": ["legal/consent gate", "onboarding", "PIN gate"],
+            # ENFORCED (ungatedTabShellConstruction / tabShellBuiltBeforeItsGate)
+            "tabShellConstructionSites": _tab_shell_sites(root),
             "gateFiles": ["lib/screens/legal/unified_consent_screen.dart",
                           "lib/screens/onboarding_screen.dart",
-                          "lib/screens/auth_gate.dart",
                           "lib/screens/app_unlock_screen.dart"],
             "externalEntryPoints": {
                 "home-screen widget": "android/.../quickaccess",
@@ -845,17 +912,55 @@ def _mutate(scratch: Path) -> str:
             ),
             encoding="utf-8",
         )
+    # FIR-07: put the deleted bypass back. A production file that builds the tab
+    # shell with no gate in front of it is exactly what auth_gate.dart was.
+    bypass = scratch / "lib/screens/_revived_auth_gate.dart"
+    bypass.write_text(
+        "import 'package:flutter/material.dart';\n"
+        "import 'main_navigation.dart';\n"
+        "class RevivedAuthGate extends StatelessWidget {\n"
+        "  const RevivedAuthGate({super.key});\n"
+        "  @override\n"
+        "  Widget build(BuildContext context) => const MainNavigation();\n"
+        "}\n",
+        encoding="utf-8",
+    )
+    # ... and move an APPROVED site in front of its own gate, which the
+    # allow-list alone would not catch.
+    splash = scratch / "lib/screens/splash_screen.dart"
+    if splash.exists():
+        src = splash.read_text(encoding="utf-8")
+        anchor = "  Future<void> _decideAndAdvance() async {"
+        if anchor not in src:
+            anchor = "  @override\n  void initState() {"
+        assert anchor in src, "mutation anchor gone -- the control would be vacuous"
+        src = src.replace(
+            anchor,
+            anchor + "\n    final Widget premature = const MainNavigation();\n"
+                     "    debugPrint('$premature');",
+            1,
+        )
+        splash.write_text(src, encoding="utf-8")
     return ("unconfirmed data erase + a screen with no exit path + an outcome "
             "renamed to 'delivered' + the per-target renderer deleted + a "
             "deep-link destination renamed to 'panic-dial' + a second consumer "
             "of the parked destination + the subscription notice removed from "
             "the reset dialog + the timeline's scroll anchor unregistered and "
-            "the two-phase restore broken")
+            "the two-phase restore broken + a revived gate-less tab-shell "
+            "constructor + an approved site moved in front of its own gate")
 
 
 def main() -> int:
     if main_guard(sys.argv):
-        return run_negative_control("flows", _mutate, measure)
+        return run_negative_control(
+            "flows", _mutate, measure,
+            expect_rules=[
+                "ungatedTabShellConstruction",
+                "tabShellBuiltBeforeItsGate",
+                "multipleDestinationConsumers",
+                "deepLinkDestinationPerformsSafetyAction",
+            ],
+        )
     violations = measure(REPO)
     path = emit(
         "flows.json",

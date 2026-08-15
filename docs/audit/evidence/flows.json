@@ -2,7 +2,7 @@
   "verifier": "scripts/audit_evidence/flows.py",
   "verifierVersion": "1.0.0",
   "codeRevision": {
-    "head": "c6d197d35a185b03a9d1b83cab17bcf7f06a08e5",
+    "head": "74fd88379ca934e1713874ac22d16901386a30dd",
     "dirty": true
   },
   "measuredOn": "2026-08-15",
@@ -15,11 +15,10 @@
   ],
   "measurements": {
     "screenInventory": {
-      "screenFiles": 36,
+      "screenFiles": 35,
       "screens": [
         "lib/screens/app_root.dart",
         "lib/screens/app_unlock_screen.dart",
-        "lib/screens/auth_gate.dart",
         "lib/screens/battery_optimization_wizard.dart",
         "lib/screens/check_in_screen.dart",
         "lib/screens/contacts_page.dart",
@@ -58,16 +57,41 @@
       "startupOrderContract": "test/main_startup_init_order_test.dart"
     },
     "entryPoints": {
-      "coldStartRoute": "SplashScreen -> AuthGate -> MainNavigation",
+      "coldStartRoute": "SplashScreen -> (consent | onboarding | PIN) -> MainNavigation",
       "gates": [
         "legal/consent gate",
         "onboarding",
         "PIN gate"
       ],
+      "tabShellConstructionSites": [
+        {
+          "site": "lib/screens/onboarding_screen.dart:161",
+          "file": "lib/screens/onboarding_screen.dart",
+          "approved": true,
+          "gated": true
+        },
+        {
+          "site": "lib/screens/splash_screen.dart:228",
+          "file": "lib/screens/splash_screen.dart",
+          "approved": true,
+          "gated": true
+        },
+        {
+          "site": "lib/screens/splash_screen.dart:232",
+          "file": "lib/screens/splash_screen.dart",
+          "approved": true,
+          "gated": true
+        },
+        {
+          "site": "lib/screens/splash_screen.dart:235",
+          "file": "lib/screens/splash_screen.dart",
+          "approved": true,
+          "gated": true
+        }
+      ],
       "gateFiles": [
         "lib/screens/legal/unified_consent_screen.dart",
         "lib/screens/onboarding_screen.dart",
-        "lib/screens/auth_gate.dart",
         "lib/screens/app_unlock_screen.dart"
       ],
       "externalEntryPoints": {
@@ -155,9 +179,9 @@
     "exitPaths": {
       "popSites": 76,
       "popScopeSites": [
+        "lib/core/widgets/emergency_failure_dialog.dart:35",
         "lib/screens/app_unlock_screen.dart:196",
-        "lib/screens/countdown_screen.dart:428",
-        "lib/screens/countdown_screen.dart:749",
+        "lib/screens/countdown_screen.dart:608",
         "lib/screens/emergency_call_screen.dart:127",
         "lib/screens/legal_disclaimer_screen.dart:93",
         "lib/screens/pin_setup_screen.dart:156",
@@ -263,7 +287,7 @@
       }
     },
     "flowStates": {
-      "successSurfaces": 57,
+      "successSurfaces": 59,
       "failureSurfaces": 81,
       "emptySurfaces": 42,
       "loadingSurfaces": 41,
@@ -378,6 +402,7 @@
         ],
         "renderingFiles": [
           "lib/core/widgets/dispatch_outcome_list.dart",
+          "lib/core/widgets/emergency_failure_dialog.dart",
           "lib/screens/emergency_call_screen.dart"
         ],
         "partialPredicateSites": [
@@ -402,7 +427,7 @@
       "homeReachableFromEverywhere": "the bottom bar is persistent across destinations; detail screens pop back to it"
     },
     "naming": {
-      "translationKeys": 1001,
+      "translationKeys": 1005,
       "localeParityTest": "test/translations_key_parity_test.dart",
       "hardcodedStringGuard": "test/screens/hardcoded_strings_test.dart",
       "oneNamePerConceptClaim": "each concept has exactly one translation key, and the key is the only way a string reaches the screen -- the hardcoded-string guard is what makes that true rather than aspirational"
@@ -463,7 +488,7 @@
         "lib/screens/oem_background_guide_screen.dart:98",
         "lib/screens/onboarding/onboarding_contact_step.dart:337",
         "lib/screens/onboarding/onboarding_contact_step.dart:488",
-        "lib/screens/safe_walk_screen.dart:487",
+        "lib/screens/safe_walk_screen.dart:512",
         "lib/screens/safety_timeline_screen.dart:489",
         "lib/screens/settings_detail_page.dart:358",
         "lib/screens/settings_legal/data_deletion_screen.dart:254",
@@ -528,7 +553,7 @@
         "lib/core/services/activity_service.dart:17",
         "lib/core/services/activity_service.dart:95",
         "lib/core/services/check_in_expiry_coordinator.dart:27",
-        "lib/core/services/check_in_service.dart:169",
+        "lib/core/services/check_in_service.dart:170",
         "lib/core/services/contact_service.dart:65",
         "lib/core/services/contact_service.dart:159",
         "lib/core/services/contact_service.dart:194",

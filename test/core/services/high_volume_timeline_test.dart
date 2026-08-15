@@ -81,11 +81,19 @@ void main() {
       // ignore: avoid_print
       print('MP-47-011 full-table query (rows -> us): $timings');
       // Recorded, not thresholded on an absolute number -- that would be a CI
-      // flake rather than a contract. What IS asserted is that the cost grows
-      // no worse than proportionally: a 100x table must not cost 1000x.
+      // flake rather than a contract.
+      //
+      // Read this bound for exactly what it is. A 100x table is compared
+      // against a ratio ceiling of 1000x, so it tolerates growth up to ~10x
+      // WORSE than proportional before going red. It is a catastrophe guard,
+      // not a proof of linearity: it catches a quadratic blow-up (ratio ~10000
+      // at these tiers) and would not catch n^1.5. The measured ratio is ~2x,
+      // so the headroom is deliberate -- wall-clock timing on shared CI is
+      // noisy, and a tight bound here would fail for reasons that have nothing
+      // to do with the query. Complexity is not claimed from a stopwatch.
       expect(timings[10000]! / timings[100]!, lessThan(1000),
-          reason: 'super-linear growth would mean the query degrades in a way '
-              'the user eventually feels');
+          reason: 'a catastrophic (quadratic or worse) blow-up would mean the '
+              'query degrades in a way the user eventually feels');
     });
 
     test('a filtered read stays cheap at the maximum tier', () async {

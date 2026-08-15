@@ -78,8 +78,6 @@ void main() {
         'SplashScreen, the consent screen, onboarding, the unlock screen and '
         'the tab shell, each of which carries its own heading. A heading here '
         'would announce ABOVE the real one on every screen in the app.',
-    'lib/screens/auth_gate.dart':
-        'Pure router widget — contains no Text at all.',
     'lib/screens/splash_screen.dart':
         'Transient brand screen with no navigable content; it is replaced '
         'before a screen reader could navigate it by heading.',

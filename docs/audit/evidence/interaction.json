@@ -2,7 +2,7 @@
   "verifier": "scripts/audit_evidence/interaction.py",
   "verifierVersion": "1.0.0",
   "codeRevision": {
-    "head": "c6d197d35a185b03a9d1b83cab17bcf7f06a08e5",
+    "head": "51e2b082c35ecdc455157802b214926985f04134",
     "dirty": true
   },
   "measuredOn": "2026-08-15",
@@ -24,7 +24,7 @@
       "enabledFalseSites": [],
       "disabledMechanism": "a condition yielding null into the callback, plus ThemeData's disabled colours",
       "selectableTextSites": [
-        "lib/screens/countdown_screen.dart:499",
+        "lib/core/widgets/emergency_failure_dialog.dart:118",
         "lib/screens/emergency_call_screen.dart:204",
         "lib/screens/legal/kvkk_disclosure_screen.dart:148",
         "lib/screens/legal/terms_of_service_screen.dart:140",
@@ -74,7 +74,7 @@
       "why": "CLAUDE.md rule 2 forbids biometric unlock because an attacker can force a face; a password manager that fills the PIN reintroduces exactly that class of coerced unlock. The PIN is deliberately the one credential no other system can supply."
     },
     "feedbackChannels": {
-      "snackBarSites": 57,
+      "snackBarSites": 59,
       "hapticSites": 79,
       "hapticKinds": [
         "heavyImpact",
@@ -115,6 +115,33 @@
       "perChannelSettingsDeepLink": true,
       "postReportsSuppression": true,
       "postReportsPermissionDenied": true,
+      "alertCallSites": [
+        {
+          "site": "lib/core/services/check_in_service.dart:512",
+          "consumesOutcome": true,
+          "statementPrefix": "Future<DispatchTargetOutcome> _showGraceNotification() =>"
+        },
+        {
+          "site": "lib/core/services/check_in_service.dart:597",
+          "consumesOutcome": true,
+          "statementPrefix": "\n          DispatchTarget.alertNotification,\n          () =>"
+        },
+        {
+          "site": "lib/core/services/emergency_bookkeeping.dart:54",
+          "consumesOutcome": true,
+          "statementPrefix": "  target: DispatchTarget.alertNotification,\n      run: () =>"
+        },
+        {
+          "site": "lib/core/services/safety_alert_dispatch.dart:32",
+          "consumesOutcome": true,
+          "statementPrefix": "final outcome = await"
+        },
+        {
+          "site": "lib/screens/safe_walk_screen.dart:238",
+          "consumesOutcome": true,
+          "statementPrefix": "final outcome = await"
+        }
+      ],
       "silencedSafetySurfaceWarned": true,
       "tapRoutesThroughDestinationPark": true,
       "payloadAllowlist": [
@@ -129,11 +156,11 @@
     },
     "undo": {
       "undoSites": [
-        "lib/screens/check_in_screen.dart:100",
-        "lib/screens/check_in_screen.dart:177",
+        "lib/screens/check_in_screen.dart:126",
+        "lib/screens/check_in_screen.dart:203",
         "lib/screens/home_page.dart:602",
-        "lib/screens/safe_walk_screen.dart:118",
-        "lib/screens/safe_walk_screen.dart:168",
+        "lib/screens/safe_walk_screen.dart:124",
+        "lib/screens/safe_walk_screen.dart:174",
         "lib/widgets/panic_button.dart:304"
       ],
       "mechanism": "confirmation-before-destruction rather than undo-after",
@@ -181,7 +208,7 @@
   ],
   "negativeControl": {
     "command": "python3 scripts/audit_evidence/interaction.py --negative-control",
-    "mutation": "give the PIN field password autofill; add an unlabelled field; make notification suppression silent again; remove the muted-safety warning; let a notification tap bypass the destination park",
-    "expected": "5 violations: pinFieldOffersAutofill, unlabelledTextField, suppressedNotificationLooksLikeSuccess, mutedSafetyChannelUnflagged and notificationTapBypassesGateModel"
+    "mutation": "give the PIN field password autofill; add an unlabelled field; make notification suppression silent again; remove the muted-safety warning; let a notification tap bypass the destination park; drop the typed outcome at the Safe Walk alert call site",
+    "expected": "6 violations, asserted PER RULE: pinFieldOffersAutofill, unlabelledTextField, suppressedNotificationLooksLikeSuccess, mutedSafetyChannelUnflagged, notificationTapBypassesGateModel and alertOutcomeDiscardedAtCallSite"
   }
 }
