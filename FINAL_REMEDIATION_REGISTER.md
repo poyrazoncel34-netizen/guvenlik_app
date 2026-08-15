@@ -283,3 +283,5 @@ Recorded because they belong to the same defect classes and were fixed here.
 | 5 | `flows.py` published a false cold-start route naming the dead `AuthGate` | FIR-07 |
 | 6 | `assets.py`'s control ran against a scratch tree with no `pubspec.yaml`, producing a phantom baseline violation | FIR-06 |
 | 7 | The release-change classifier rejected `FINAL_INDEPENDENT_REVIEW.md` — the rule's own comment says a new reviewer report must never fail the gate by existing | FIR-01 commit |
+| 8 | `MP-78-001..003` and `MP-76-007` asked, as remediation, for an owner, a cadence and halt thresholds that `observability_and_slo.md` and `incident_runbook.md` §2 already carry | FIR-03 sweep |
+| 9 | `MP-15-013` cited `auth_gate.dart` as evidence for the returning-user path — a file that never took part in that decision and is now deleted | FIR-07 sweep |
