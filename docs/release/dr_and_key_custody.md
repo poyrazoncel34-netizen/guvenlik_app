@@ -27,6 +27,32 @@ Under the duress threat model a cloud copy of a victim's emergency contacts is a
 not an asset. The onboarding copy already sets this expectation ("PIN'i sıfırlayacak bir
 sunucu yok"). **Do not "fix" this by enabling backup.**
 
+### 1.1 Hostile deletion of the source repository (MP-53-006)
+
+The row this answers asked for one of two facts to be confirmed and written down: an
+off-platform mirror, or a retained local clone. **The answer is the retained local clone,
+and there is no third-platform mirror.** Both halves are recorded here so a reader does not
+have to guess which one is true.
+
+| Fact | Value |
+|---|---|
+| Canonical remote | `origin` → `github.com/poyrazoncel34-netizen/guvenlik_app.git` |
+| Retained local clone | Yes — the maintainer's working copy, a full clone (~30 MiB pack) carrying complete history, every branch and every tag |
+| Off-platform mirror (GitLab/Codeberg/S3/…) | **None.** Deliberate: a second hosting account is a second credential to defend, and git already makes every clone a complete replica |
+| Recovery from hostile deletion of the GitHub repo | `git push` the retained clone to a new remote. History, tags and release provenance survive intact, because a git clone is a backup by construction — not a copy of the tip |
+
+**What a clone does NOT restore**, and where each is handled instead:
+
+- GitHub Actions secrets (`KEYSTORE_BASE64`, `STORE_PASSWORD`, `KEY_PASSWORD`, `KEY_ALIAS`,
+  `REVENUECAT_ANDROID_API_KEY`) — §6.
+- The upload keystore itself — §3. It lives outside the repository on purpose.
+- The Play Console and RevenueCat accounts — §4. Neither is repository state.
+
+**Residual risk, stated rather than mitigated.** If the GitHub account and the maintainer's
+machine are lost in the same event, the source is gone. That is accepted: the asset this
+product exists to protect is the user's data, which never leaves their device (§1) and is
+therefore not reachable by an attack on this project's infrastructure at all.
+
 ---
 
 ## 2. Key custody model

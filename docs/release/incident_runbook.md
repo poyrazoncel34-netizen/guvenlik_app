@@ -123,3 +123,37 @@ Her S1/S2 olayindan sonra bu bes soru yanitlanir ve `docs/audit/` altina
 | Anahtar kurtarma | `docs/release/dr_and_key_custody.md` |
 
 Prova edilmemis bir prosedur, prova edilmis gibi sunulmuyor.
+
+---
+
+## 9. Calisma zamani kontrolu: kademeli yayilim (MP-50-012, MP-75-016, MP-27-023)
+
+**Bu projede calisma zamani ozellik bayragi (feature flag) YOKTUR** ve olmayacak: uzaktan
+bayrak bir backend demektir (CLAUDE.md kural 1), derleme zamanindaki bir bayrak ise bir
+olay sirasinda hicbir ise yaramaz. Bu bir eksiklik degil, kayitli bir urun kararidir
+(`PRODUCT_DECISIONS_REQUIRED.md` D-7).
+
+Onun yerine elde ne oldugu burada yaziyor, cunku "bayrak yok" cumlesi tek basina bir olay
+sirasinda kimseye yardim etmez.
+
+**Mevcut calisma zamani kontrolu: Play kademeli yayilim yuzdesi.** Kullanilabilir tek
+gercek mekanizma budur ve olay proseduru onu bir bayrak gibi kullanir.
+
+| Soru | Cevap |
+|---|---|
+| Ne yapar | Yeni surumun **kac kullaniciya dagitildigini** belirler: %1 → %10 → %50 → %100 (bkz. §3 adim 5) |
+| Nasil kapatilir | Play Console → Production → **Halt rollout** (§3 adim 1) |
+| Ne kadar hizli | Dakikalar; inceleme gerektirmez |
+| **Neyi yapamaz** | **Zaten guncellemis bir cihazda hicbir seyi geri almaz veya kapatmaz.** Yalnizca YENI dagitimi durdurur |
+| Kimi korur | Henuz guncellememis kullanicilari |
+
+**Bu yuzden esik tablosu (§2) bayragin yerini tutan seydir.** Gercek bir bayrakla "kotu
+ozelligi kapat" denirdi; burada "yayilimi durdur ve ileri sar" denir. Ikisi ayni sey degil
+ve bu belge bunlari ayni seymis gibi yazmiyor.
+
+**Odeme icin ayri ve daha guclu bir kontrol vardir** — §4. RevenueCat offering'ini "current"
+olmaktan cikarmak, zaten guncellemis cihazlarda da aninda etkilidir. Yani odeme, kademeli
+yayilimin aksine, gercekten uzaktan kapatilabilir.
+
+**Degismez:** ne kademeli yayilim ne de odeme kapatma acil cagri yolunu etkiler.
+`canUseEmergencyFeature` ticari yetkilendirmeden ayridir (§4).
