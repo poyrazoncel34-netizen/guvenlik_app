@@ -391,9 +391,64 @@ void main() {
     });
   });
 
+  /// The provenance block every artifact under `docs/audit/evidence/` carries.
+  ///
+  /// This one used to carry NONE -- no `codeRevision`, no `measuredOn` -- while
+  /// the eleven Python artifacts beside it carried a stale, dirty one (FIR-04).
+  /// The contract in `scripts/audit_evidence/common.py` is the same here: name
+  /// the CLEAN commit whose measured surface produced the file, refuse to stamp
+  /// a dirty tree as if it were a commit, and let the documentation commit that
+  /// CONTAINS this file be a later one, recorded in PRODUCTION_AUDIT.md.
+  Map<String, Object?> codeRevision() {
+    String git(List<String> args) =>
+        (Process.runSync('git', args).stdout as String).trim();
+    try {
+      final String head = git(<String>['rev-parse', 'HEAD']);
+      final String tree = git(<String>['rev-parse', 'HEAD^{tree}']);
+      final List<String> dirty = git(<String>['status', '--porcelain'])
+          .split('\n')
+          .where((String line) => line.trim().isNotEmpty)
+          .map((String line) => line.substring(2).trim())
+          .where((String path) => !path.startsWith('docs/audit/evidence/'))
+          .toList()
+        ..sort();
+      return <String, Object?>{
+        'verifiedCodeRevision': head.isEmpty ? 'unknown' : head,
+        'dirty': dirty.isNotEmpty,
+        'treeHash': tree.isEmpty ? null : tree,
+        'dirtyPaths': dirty.take(20).toList(),
+        'note':
+            'verifiedCodeRevision is the commit whose measured surface produced '
+            'this artifact. A later commit may CONTAIN this file; that is the '
+            'documentation head, and the two are distinguished in '
+            'PRODUCTION_AUDIT.md. Changes under docs/audit/evidence/ are this '
+            "package's own output and do not make the measured tree dirty.",
+      };
+    } on ProcessException {
+      return <String, Object?>{
+        'verifiedCodeRevision': 'unknown',
+        'dirty': null,
+        'treeHash': null,
+        'dirtyPaths': <String>[],
+      };
+    }
+  }
+
   tearDownAll(() {
     final File out = File(kArtifact);
     if (!out.parent.existsSync()) return;
+    final Map<String, Object?> revision = codeRevision();
+    if (revision['dirty'] == true) {
+      // Same refusal the Python verifiers make: an artifact stamped with a
+      // dirty tree names no commit, so nobody could reproduce it. The test
+      // itself still passed; only the authoritative stamp is withheld.
+      // ignore: avoid_print
+      print(
+        'REFUSING_TO_EMIT text_scale.json: worktree dirty outside '
+        'docs/audit/evidence/ (${(revision['dirtyPaths']! as List<Object?>).take(5).join(', ')})',
+      );
+      return;
+    }
     final int cells = _results.where((Map<String, Object?> r) =>
         !(r['surface']! as String).startsWith('NEGATIVE')).length;
     final int overflowing = _results
@@ -404,7 +459,9 @@ void main() {
     out.writeAsStringSync(
       '''${const JsonEncoder.withIndent('  ').convert(<String, Object?>{
         'verifier': 'test/screens/layout_size_matrix_test.dart',
-        'verifierVersion': '1.0.0',
+        'verifierVersion': '1.1.0',
+        'codeRevision': revision,
+        'measuredOn': DateTime.now().toIso8601String().split('T').first,
         'command': 'flutter test test/screens/layout_size_matrix_test.dart --no-pub',
         'method':
             'framework RenderFlex error capture via tester.takeException(); '
@@ -423,6 +480,31 @@ void main() {
                 (r['surface']! as String).startsWith('NEGATIVE'))
             .toList(),
         'cells': _results,
+        'propertyClasses': <String, Object?>{
+          'criterion':
+              'ENFORCED = an assertion in this file fails when the property '
+              'changes. CENSUS = a recorded fact with no assertion behind it.',
+          'rulesEmitted': <String>['cellOverflowed'],
+          'rulesUnderNegativeControl': <String>['cellOverflowed'],
+          'enforcedProperties': <String>['cellsOverflowing', 'cells'],
+          'censusProperties': <String>[
+            'locale',
+            'textScaleCeiling',
+            'textScaleCeilingSource',
+            'viewports',
+            'surfaces',
+            'cellsMeasured',
+            'negativeControls',
+          ],
+        },
+        'baseline': <String, Object?>{
+          'violationCount': overflowing,
+          'semantics':
+              'cellsOverflowing is the violation count. 0 means every measured '
+              'cell fitted; the in-file negative control proves the instrument '
+              'can report otherwise (an inflexible Row with the shipped tr-TR '
+              'copy at scale 2.0 overflows by 2573 px).',
+        },
       })}\n''',
     );
   });

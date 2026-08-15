@@ -27,10 +27,21 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from common import (  # noqa: E402
-    REPO, dart_files, emit, main_guard, read_stripped, rel, run_negative_control,
+    REPO, dart_files, emit, main_guard, read_stripped, rel, property_classes, run_negative_control,
 )
 
 VERSION = "1.0.0"
+# The rules this verifier's negative control demonstrably trips. Anything
+# emitted but absent here is guarded by a rule NO mutation has exercised,
+# and the artifact says so rather than implying coverage (FIR-06).
+CONTROLLED_RULES = [
+    "pinFieldOffersAutofill",
+    "unlabelledTextField",
+    "suppressedNotificationLooksLikeSuccess",
+    "mutedSafetyChannelUnflagged",
+    "notificationTapBypassesGateModel",
+    "alertOutcomeDiscardedAtCallSite",
+]
 COMMAND = "python3 scripts/audit_evidence/interaction.py"
 
 # Every text field the user types into, and what it must declare.
@@ -448,6 +459,7 @@ def main() -> int:
             ],
         )
     violations = measure(REPO)
+    measurements_payload = build(REPO)
     path = emit(
         "interaction.json",
         verifier="scripts/audit_evidence/interaction.py",
@@ -456,14 +468,18 @@ def main() -> int:
         surfaces=["lib/screens/**", "lib/widgets/**", "lib/core/widgets/**",
                   "lib/core/utils/validators.dart",
                   "lib/core/utils/emergency_number_validator.dart"],
-        measurements=build(REPO),
+        measurements=measurements_payload,
         violations=violations,
         exclusions=[
             {"what": "the numeric PIN keypad",
              "why": "it is a custom grid of buttons, not a TextField; its behaviour is "
                     "covered by the PIN lockout and duress tests instead"},
         ],
-        extra={"negativeControl": {
+        extra={
+            "propertyClasses": property_classes(
+                measurements_payload, Path(__file__), CONTROLLED_RULES,
+            ),
+            "negativeControl": {
             "command": COMMAND + " --negative-control",
             "mutation": "give the PIN field password autofill; add an unlabelled "
                         "field; make notification suppression silent again; "

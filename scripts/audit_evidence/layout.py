@@ -27,10 +27,16 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from common import (  # noqa: E402
-    REPO, dart_files, emit, main_guard, read_stripped, rel, run_negative_control,
+    REPO, dart_files, emit, main_guard, read_stripped, rel, property_classes, run_negative_control,
 )
 
 VERSION = "1.0.0"
+# The rules this verifier's negative control demonstrably trips. Anything
+# emitted but absent here is guarded by a rule NO mutation has exercised,
+# and the artifact says so rather than implying coverage (FIR-06).
+CONTROLLED_RULES = [
+    "unevenHorizontalPadding",
+]
 COMMAND = "python3 scripts/audit_evidence/layout.py"
 
 SYM = re.compile(r"EdgeInsets\.symmetric\(\s*horizontal:\s*([0-9.]+)\s*,\s*vertical:\s*([0-9.]+)")
@@ -368,8 +374,14 @@ def _mutate(scratch: Path) -> str:
 
 def main() -> int:
     if main_guard(sys.argv):
-        return run_negative_control("layout", _mutate, measure)
+        return run_negative_control(
+            "layout", _mutate, measure,
+            expect_rules=[
+                "unevenHorizontalPadding",
+            ],
+        )
     violations = measure(REPO)
+    measurements_payload = build(REPO)
     path = emit(
         "layout.json",
         verifier="scripts/audit_evidence/layout.py",
@@ -377,14 +389,18 @@ def main() -> int:
         command=COMMAND,
         surfaces=["lib/screens/**", "lib/widgets/**", "lib/core/widgets/**",
                   "lib/core/design_tokens.dart"],
-        measurements=build(REPO),
+        measurements=measurements_payload,
         violations=violations,
         exclusions=[
             {"what": "EdgeInsets built from an expression rather than a literal",
              "why": "its value is a runtime function of the viewport; the token that "
                     "produces it (DensityTokens) is measured instead"},
         ],
-        extra={"negativeControl": {
+        extra={
+            "propertyClasses": property_classes(
+                measurements_payload, Path(__file__), CONTROLLED_RULES,
+            ),
+            "negativeControl": {
             "command": COMMAND + " --negative-control",
             "mutation": "two EdgeInsets.only gutters with left/right differing by >4dp",
             "expected": "unevenHorizontalPadding fires",

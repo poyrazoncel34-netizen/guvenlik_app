@@ -35,10 +35,17 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from common import (  # noqa: E402
     REPO, composite, contrast_ratio, dart_files, emit, main_guard, parse_argb,
-    read_stripped, rel, relative_luminance, run_negative_control,
+    read_stripped, rel, relative_luminance, property_classes, run_negative_control,
 )
 
 VERSION = "1.0.0"
+# The rules this verifier's negative control demonstrably trips. Anything
+# emitted but absent here is guarded by a rule NO mutation has exercised,
+# and the artifact says so rather than implying coverage (FIR-06).
+CONTROLLED_RULES = [
+    "semanticRolesCollapseUnderCVD",
+    "textContrastBelowAA",
+]
 COMMAND = "python3 scripts/audit_evidence/color.py"
 
 COLOR_DECL = re.compile(r"static const Color (\w+) = Color\((0x[0-9A-Fa-f]{8})\)")
@@ -457,8 +464,15 @@ def _mutate(scratch: Path) -> str:
 
 def main() -> int:
     if main_guard(sys.argv):
-        return run_negative_control("color", _mutate, measure)
+        return run_negative_control(
+            "color", _mutate, measure,
+            expect_rules=[
+                "semanticRolesCollapseUnderCVD",
+                "textContrastBelowAA",
+            ],
+        )
     violations = measure(REPO)
+    measurements_payload = build(REPO)
     path = emit(
         "color.json",
         verifier="scripts/audit_evidence/color.py",
@@ -466,7 +480,7 @@ def main() -> int:
         command=COMMAND,
         surfaces=["lib/core/app_colors.dart", "lib/core/app_theme.dart",
                   f"lib/**/*.dart ({len(dart_files(REPO))} files) for usage counts"],
-        measurements=build(REPO),
+        measurements=measurements_payload,
         violations=violations,
         exclusions=[
             {"what": "colour pairs the app never renders together",
@@ -475,7 +489,22 @@ def main() -> int:
             {"what": "the unreachable light ThemeData",
              "why": "measured separately under MP-04-015; it renders to no user today"},
         ],
-        extra={"negativeControl": {
+        baseline_semantics=(
+            "5 violations, and they are REAL OPEN FINDINGS, not noise. Two text "
+            "pairs miss WCAG AA (emergency on cardBg 4.43:1; the same colour on "
+            "its own 25% tint 3.97:1) and the text input's resting boundary "
+            "(1.50:1) and fill (1.13:1) miss SC 1.4.11's 3.0. All four are "
+            "recorded against MP-06-014, which is graded PARTIAL and names the "
+            "measured minimal fix (#FF6B6B clears both text cases). They stay "
+            "open because every fix is a rendered-pixel change to the brand "
+            "palette, which CLAUDE.md rule 4 reserves to the owner -- so this "
+            "verifier is deliberately red, and the audit says the same thing."
+        ),
+        extra={
+            "propertyClasses": property_classes(
+                measurements_payload, Path(__file__), CONTROLLED_RULES,
+            ),
+            "negativeControl": {
             "command": COMMAND + " --negative-control",
             "mutation": "unreadable secondary text, a red 'success', and a card surface "
                         "merged into the page ground",

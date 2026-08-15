@@ -2,7 +2,7 @@
   "verifier": "scripts/audit_evidence/assets.py",
   "verifierVersion": "1.0.0",
   "codeRevision": {
-    "head": "c6d197d35a185b03a9d1b83cab17bcf7f06a08e5",
+    "head": "d84b6588bad747a2aa7b0aba0113014867ed2683",
     "dirty": true
   },
   "measuredOn": "2026-08-15",
@@ -147,12 +147,55 @@
     }
   },
   "violations": [],
+  "baseline": {
+    "violationCount": 0,
+    "semantics": "0 violations: every rule this verifier emits is currently satisfied by the measured tree."
+  },
   "exclusions": [
     {
       "what": "translation JSON payloads",
       "why": "they are content, measured by copy.json; their presence is proven by the app failing to start without them"
     }
   ],
+  "propertyClasses": {
+    "criterion": "ENFORCED = the property's name is read by measure(), the function that emits violations. CENSUS = a computed fact with no violation rule behind it; it is credible because it is derived and reproducible at a named revision, NOT because a mutation moved it.",
+    "rulesEmitted": [
+      "demoAssetShipped",
+      "materialIconFontNotDeclared",
+      "referencedAssetMissing"
+    ],
+    "rulesUnderNegativeControl": [
+      "demoAssetShipped",
+      "referencedAssetMissing"
+    ],
+    "rulesEmittedWithoutControl": [
+      "materialIconFontNotDeclared"
+    ],
+    "enforcedProperties": [],
+    "censusProperties": [
+      "declaredAssets",
+      "declaredAssets.onDisk",
+      "declaredAssets.untrackedLocalJunk",
+      "declaredAssets.onDiskCount",
+      "declaredAssets.referencedFromDart",
+      "declaredAssets.referencedCount",
+      "declaredAssets.unreferencedOnDisk",
+      "declaredAssets.demoMarkersSearched",
+      "declaredAssets.demoAssetsFound",
+      "declaredAssets.webDoubledPrefixNote",
+      "iconography",
+      "iconography.materialIconsDeclared",
+      "iconography.distinctGlyphs",
+      "iconography.totalGlyphSites",
+      "iconography.mostUsed",
+      "iconography.customIconFonts",
+      "iconography.whyNoMissingGlyph",
+      "iconography.dynamicIconLookupSites",
+      "launcherIcons",
+      "launcherIcons.androidResources",
+      "launcherIcons.count"
+    ]
+  },
   "negativeControl": {
     "command": "python3 scripts/audit_evidence/assets.py --negative-control",
     "mutation": "reference an asset that is not on disk and ship a demo_ image",

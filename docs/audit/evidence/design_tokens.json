@@ -2,7 +2,7 @@
   "verifier": "scripts/audit_evidence/tokens.py",
   "verifierVersion": "1.0.0",
   "codeRevision": {
-    "head": "c6d197d35a185b03a9d1b83cab17bcf7f06a08e5",
+    "head": "d84b6588bad747a2aa7b0aba0113014867ed2683",
     "dirty": true
   },
   "measuredOn": "2026-08-15",
@@ -12,7 +12,7 @@
     "lib/core/motion.dart",
     "lib/core/app_theme.dart",
     "lib/main.dart",
-    "lib/**/*.dart (170 files)"
+    "lib/**/*.dart (172 files)"
   ],
   "measurements": {
     "adoption": {
@@ -69,6 +69,7 @@
             "lib/core/utils/app_reset_helper.dart",
             "lib/core/utils/pin_settings_helper.dart",
             "lib/core/widgets/dispatch_outcome_list.dart",
+            "lib/core/widgets/emergency_failure_dialog.dart",
             "lib/core/widgets/exact_alarm_permission_guard.dart",
             "lib/core/widgets/readiness_card.dart",
             "lib/core/widgets/subscription_deletion_notice.dart",
@@ -77,7 +78,6 @@
             "lib/screens/battery_optimization_wizard.dart",
             "lib/screens/check_in_screen.dart",
             "lib/screens/contacts_page.dart",
-            "lib/screens/countdown_screen.dart",
             "lib/screens/edit_profile_screen.dart",
             "lib/screens/emergency_call_screen.dart",
             "lib/screens/fake_call_screen.dart",
@@ -212,12 +212,94 @@
     }
   },
   "violations": [],
+  "baseline": {
+    "violationCount": 0,
+    "semantics": "0 violations: every rule this verifier emits is currently satisfied by the measured tree."
+  },
   "exclusions": [
     {
       "what": "the token file and motion.dart themselves",
       "why": "a definition referencing its own rungs is not adoption; counting it is how a zero-consumer scale reports as adopted"
     }
   ],
+  "propertyClasses": {
+    "criterion": "ENFORCED = the property's name is read by measure(), the function that emits violations. CENSUS = a computed fact with no violation rule behind it; it is credible because it is derived and reproducible at a named revision, NOT because a mutation moved it.",
+    "rulesEmitted": [
+      "tokenScaleHasNoConsumer"
+    ],
+    "rulesUnderNegativeControl": [
+      "tokenScaleHasNoConsumer"
+    ],
+    "rulesEmittedWithoutControl": [],
+    "enforcedProperties": [
+      "adoption.byScale.Spacing.consumerCount",
+      "adoption.byScale.Radii.consumerCount",
+      "adoption.byScale.Elevation.consumerCount",
+      "adoption.byScale.Shadows.consumerCount",
+      "adoption.byScale.IconSizes.consumerCount",
+      "adoption.byScale.TypeScale.consumerCount",
+      "adoption.byScale.ZLayer.consumerCount",
+      "adoption.byScale.Breakpoints.consumerCount",
+      "adoption.byScale.DensityTokens.consumerCount",
+      "adoption.byScale.FocusIndicator.consumerCount",
+      "adoption.byScale.Motion.consumerCount"
+    ],
+    "censusProperties": [
+      "adoption",
+      "adoption.scalesDefined",
+      "adoption.scalesWithAtLeastOneConsumer",
+      "adoption.byScale",
+      "adoption.byScale.Spacing",
+      "adoption.byScale.Spacing.references",
+      "adoption.byScale.Spacing.consumerFiles",
+      "adoption.byScale.Radii",
+      "adoption.byScale.Radii.references",
+      "adoption.byScale.Radii.consumerFiles",
+      "adoption.byScale.Elevation",
+      "adoption.byScale.Elevation.references",
+      "adoption.byScale.Elevation.consumerFiles",
+      "adoption.byScale.Shadows",
+      "adoption.byScale.Shadows.references",
+      "adoption.byScale.Shadows.consumerFiles",
+      "adoption.byScale.IconSizes",
+      "adoption.byScale.IconSizes.references",
+      "adoption.byScale.IconSizes.consumerFiles",
+      "adoption.byScale.TypeScale",
+      "adoption.byScale.TypeScale.references",
+      "adoption.byScale.TypeScale.consumerFiles",
+      "adoption.byScale.ZLayer",
+      "adoption.byScale.ZLayer.references",
+      "adoption.byScale.ZLayer.consumerFiles",
+      "adoption.byScale.Breakpoints",
+      "adoption.byScale.Breakpoints.references",
+      "adoption.byScale.Breakpoints.consumerFiles",
+      "adoption.byScale.DensityTokens",
+      "adoption.byScale.DensityTokens.references",
+      "adoption.byScale.DensityTokens.consumerFiles",
+      "adoption.byScale.FocusIndicator",
+      "adoption.byScale.FocusIndicator.references",
+      "adoption.byScale.FocusIndicator.consumerFiles",
+      "adoption.byScale.Motion",
+      "adoption.byScale.Motion.references",
+      "adoption.byScale.Motion.consumerFiles",
+      "adoption.zeroConsumerScales",
+      "adoption.principle",
+      "adoption.consequence",
+      "adoption.notDoneAndWhy",
+      "themes",
+      "themes.darkDeclarations",
+      "themes.lightDeclarations",
+      "themes.componentThemesDeclared",
+      "themes.componentThemeCount",
+      "themes.wiredInMain",
+      "themes.themeSelectorScreen",
+      "themes.themeSelectorTest",
+      "ratchet",
+      "ratchet.test",
+      "ratchet.buildsAllowedSetFromTokenFile",
+      "ratchet.shadowTest"
+    ]
+  },
   "negativeControl": {
     "command": "python3 scripts/audit_evidence/tokens.py --negative-control",
     "mutation": "strip every Radii consumer reference",

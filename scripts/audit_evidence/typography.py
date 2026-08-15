@@ -30,10 +30,18 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from common import (  # noqa: E402
-    REPO, dart_files, emit, main_guard, read_stripped, rel, run_negative_control,
+    REPO, dart_files, emit, main_guard, read_stripped, rel, property_classes, run_negative_control,
 )
 
 VERSION = "1.0.0"
+# The rules this verifier's negative control demonstrably trips. Anything
+# emitted but absent here is guarded by a rule NO mutation has exercised,
+# and the artifact says so rather than implying coverage (FIR-06).
+CONTROLLED_RULES = [
+    "belowMinimumType",
+    "lineHeightTooTight",
+    "measureTooLong",
+]
 COMMAND = "python3 scripts/audit_evidence/typography.py"
 
 # The type scale named in lib/core/design_tokens.dart. Read from source rather
@@ -409,9 +417,17 @@ def _mutate(scratch: Path) -> str:
 
 def main() -> int:
     if main_guard(sys.argv):
-        return run_negative_control("typography", _mutate, measure)
+        return run_negative_control(
+            "typography", _mutate, measure,
+            expect_rules=[
+                "belowMinimumType",
+                "lineHeightTooTight",
+                "measureTooLong",
+            ],
+        )
     measurements = build(REPO)
     violations = measure(REPO)
+    measurements_payload = measurements
     path = emit(
         "typography.json",
         verifier="scripts/audit_evidence/typography.py",
@@ -420,7 +436,7 @@ def main() -> int:
         surfaces=[f"lib/**/*.dart ({len(dart_files(REPO))} files)",
                   "lib/core/design_tokens.dart (TypeScale)",
                   "lib/core/app_theme.dart", "pubspec.yaml (fonts section)"],
-        measurements=measurements,
+        measurements=measurements_payload,
         violations=violations,
         exclusions=[
             {"what": "comments and doc comments",
@@ -429,7 +445,11 @@ def main() -> int:
             {"what": "test/ and android/ sources",
              "why": "neither renders type to a user"},
         ],
-        extra={"negativeControl": {
+        extra={
+            "propertyClasses": property_classes(
+                measurements_payload, Path(__file__), CONTROLLED_RULES,
+            ),
+            "negativeControl": {
             "command": COMMAND + " --negative-control",
             "mutation": "a second font family plus a 7px / 1.05-line-height style",
             "expected": "violations rise above baseline",

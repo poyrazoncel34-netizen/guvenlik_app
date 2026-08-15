@@ -37,10 +37,19 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from common import (  # noqa: E402
-    REPO, dart_files, emit, main_guard, read_stripped, rel, run_negative_control,
+    REPO, dart_files, emit, main_guard, read_stripped, rel, property_classes, run_negative_control,
 )
 
 VERSION = "1.0.0"
+# The rules this verifier's negative control demonstrably trips. Anything
+# emitted but absent here is guarded by a rule NO mutation has exercised,
+# and the artifact says so rather than implying coverage (FIR-06).
+CONTROLLED_RULES = [
+    "ungatedTabShellConstruction",
+    "tabShellBuiltBeforeItsGate",
+    "multipleDestinationConsumers",
+    "deepLinkDestinationPerformsSafetyAction",
+]
 COMMAND = "python3 scripts/audit_evidence/flows.py"
 
 # The five destinations the bottom navigation exposes, in shipped order.
@@ -962,6 +971,7 @@ def main() -> int:
             ],
         )
     violations = measure(REPO)
+    measurements_payload = build(REPO)
     path = emit(
         "flows.json",
         verifier="scripts/audit_evidence/flows.py",
@@ -969,14 +979,18 @@ def main() -> int:
         command=COMMAND,
         surfaces=["lib/screens/**", "lib/core/utils/**", "lib/core/widgets/**",
                   "assets/translations/tr-TR.json"],
-        measurements=build(REPO),
+        measurements=measurements_payload,
         violations=violations,
         exclusions=[
             {"what": "the two Android quick-access surfaces",
              "why": "they submit an intent and hand off to the Flutter arm boundary; "
                     "their own UI is a system widget this app does not lay out"},
         ],
-        extra={"negativeControl": {
+        extra={
+            "propertyClasses": property_classes(
+                measurements_payload, Path(__file__), CONTROLLED_RULES,
+            ),
+            "negativeControl": {
             "command": COMMAND + " --negative-control",
             "mutation": "remove the confirmation from 'erase all app data'; add a "
                         "screen with no exit path; rename the handoffAccepted "

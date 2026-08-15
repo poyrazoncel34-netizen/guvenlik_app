@@ -20,10 +20,28 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from common import (  # noqa: E402
-    REPO, dart_files, emit, main_guard, read_stripped, rel, run_negative_control,
+    REPO, dart_files, emit, main_guard, read_stripped, rel, property_classes, run_negative_control,
 )
 
 VERSION = "1.0.0"
+# The rules this verifier's negative control demonstrably trips. Anything
+# emitted but absent here is guarded by a rule NO mutation has exercised,
+# and the artifact says so rather than implying coverage (FIR-06).
+CONTROLLED_RULES = [
+    "destructiveMigration",
+    "foreignKeysNotEnforced",
+    "growthTableUntested",
+    "hardcodedSecretLiteral",
+    "integrityScanOnStartupPath",
+    "orientationDroppedNotBaked",
+    "pickerBypassesImportBoundary",
+    "pragmaIdentifierFromVariable",
+    "referentialIntegrityUnchecked",
+    "sanitizerClonesMetadata",
+    "sanitizerEditsSourceImage",
+    "sourceImageBytesCopiedToStorage",
+    "tileVolumeUncounted",
+]
 COMMAND = "python3 scripts/audit_evidence/storage.py"
 
 DB = "lib/core/services/local_database_service.dart"
@@ -705,8 +723,26 @@ def _mutate(scratch: Path) -> str:
 
 def main() -> int:
     if main_guard(sys.argv):
-        return run_negative_control("storage", _mutate, measure)
+        return run_negative_control(
+            "storage", _mutate, measure,
+            expect_rules=[
+                "destructiveMigration",
+                "foreignKeysNotEnforced",
+                "growthTableUntested",
+                "hardcodedSecretLiteral",
+                "integrityScanOnStartupPath",
+                "orientationDroppedNotBaked",
+                "pickerBypassesImportBoundary",
+                "pragmaIdentifierFromVariable",
+                "referentialIntegrityUnchecked",
+                "sanitizerClonesMetadata",
+                "sanitizerEditsSourceImage",
+                "sourceImageBytesCopiedToStorage",
+                "tileVolumeUncounted",
+            ],
+        )
     violations = measure(REPO)
+    measurements_payload = build(REPO)
     path = emit(
         "storage.json",
         verifier="scripts/audit_evidence/storage.py",
@@ -714,14 +750,18 @@ def main() -> int:
         command=COMMAND,
         surfaces=[DB, "lib/core/services/**", "lib/core/network/**",
                   "lib/screens/settings_legal/data_export_screen.dart", "pubspec.yaml"],
-        measurements=build(REPO),
+        measurements=measurements_payload,
         violations=violations,
         exclusions=[
             {"what": "the legacy `contacts` table",
              "why": "it is kept EMPTY by design; constraints on a table with no rows "
                     "protect nothing, and resurrecting it is forbidden"},
         ],
-        extra={"negativeControl": {
+        extra={
+            "propertyClasses": property_classes(
+                measurements_payload, Path(__file__), CONTROLLED_RULES,
+            ),
+            "negativeControl": {
             "command": COMMAND + " --negative-control",
             "mutation": "a hard-coded API key; a DROP TABLE on activity_events; a "
                         "PRAGMA identifier from a variable; the picked-image byte "

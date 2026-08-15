@@ -34,10 +34,17 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from common import (  # noqa: E402
-    REPO, dart_files, emit, main_guard, read_stripped, rel, run_negative_control,
+    REPO, dart_files, emit, main_guard, read_stripped, rel, property_classes, run_negative_control,
 )
 
 VERSION = "1.0.0"
+# The rules this verifier's negative control demonstrably trips. Anything
+# emitted but absent here is guarded by a rule NO mutation has exercised,
+# and the artifact says so rather than implying coverage (FIR-06).
+CONTROLLED_RULES = [
+    "undisposedAnimationController",
+    "unjustifiedInfiniteAnimation",
+]
 COMMAND = "python3 scripts/audit_evidence/motion.py"
 
 # An AnimationController that is created must be disposed, or it keeps ticking
@@ -379,8 +386,15 @@ def _mutate(scratch: Path) -> str:
 
 def main() -> int:
     if main_guard(sys.argv):
-        return run_negative_control("motion", _mutate, measure)
+        return run_negative_control(
+            "motion", _mutate, measure,
+            expect_rules=[
+                "undisposedAnimationController",
+                "unjustifiedInfiniteAnimation",
+            ],
+        )
     violations = measure(REPO)
+    measurements_payload = build(REPO)
     path = emit(
         "motion.json",
         verifier="scripts/audit_evidence/motion.py",
@@ -388,7 +402,7 @@ def main() -> int:
         command=COMMAND,
         surfaces=["lib/core/motion.dart", "lib/core/services/reduced_motion_policy.dart",
                   f"lib/**/*.dart ({len(dart_files(REPO))} files)"],
-        measurements=build(REPO),
+        measurements=measurements_payload,
         violations=violations,
         exclusions=[
             {"what": "Duration values above 600ms",
@@ -397,7 +411,11 @@ def main() -> int:
             {"what": "implicit Material transitions the framework owns",
              "why": "the app does not set them, so measuring them grades Flutter, not this app"},
         ],
-        extra={"negativeControl": {
+        extra={
+            "propertyClasses": property_classes(
+                measurements_payload, Path(__file__), CONTROLLED_RULES,
+            ),
+            "negativeControl": {
             "command": COMMAND + " --negative-control",
             "mutation": "an undisposed, purposeless infinite spin added to a settings screen",
             "expected": "unjustifiedInfiniteAnimation and undisposedAnimationController fire",

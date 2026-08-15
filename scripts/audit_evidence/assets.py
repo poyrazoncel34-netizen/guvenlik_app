@@ -19,10 +19,17 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from common import (  # noqa: E402
-    REPO, dart_files, emit, main_guard, read_stripped, rel, run_negative_control,
+    REPO, dart_files, emit, main_guard, read_stripped, rel, property_classes, run_negative_control,
 )
 
 VERSION = "1.0.0"
+# The rules this verifier's negative control demonstrably trips. Anything
+# emitted but absent here is guarded by a rule NO mutation has exercised,
+# and the artifact says so rather than implying coverage (FIR-06).
+CONTROLLED_RULES = [
+    "demoAssetShipped",
+    "referencedAssetMissing",
+]
 COMMAND = "python3 scripts/audit_evidence/assets.py"
 
 # Words that mark an asset as a stand-in rather than production content.
@@ -166,8 +173,15 @@ def _mutate(scratch: Path) -> str:
 
 def main() -> int:
     if main_guard(sys.argv):
-        return run_negative_control("assets", _mutate, measure)
+        return run_negative_control(
+            "assets", _mutate, measure,
+            expect_rules=[
+                "demoAssetShipped",
+                "referencedAssetMissing",
+            ],
+        )
     violations = measure(REPO)
+    measurements_payload = build(REPO)
     path = emit(
         "assets.json",
         verifier="scripts/audit_evidence/assets.py",
@@ -175,14 +189,18 @@ def main() -> int:
         command=COMMAND,
         surfaces=["assets/**", "lib/**/*.dart", "pubspec.yaml",
                   "android/app/src/main/res/**"],
-        measurements=build(REPO),
+        measurements=measurements_payload,
         violations=violations,
         exclusions=[
             {"what": "translation JSON payloads",
              "why": "they are content, measured by copy.json; their presence is proven "
                     "by the app failing to start without them"},
         ],
-        extra={"negativeControl": {
+        extra={
+            "propertyClasses": property_classes(
+                measurements_payload, Path(__file__), CONTROLLED_RULES,
+            ),
+            "negativeControl": {
             "command": COMMAND + " --negative-control",
             "mutation": "reference an asset that is not on disk and ship a demo_ image",
             "expected": "referencedAssetMissing and demoAssetShipped fire",

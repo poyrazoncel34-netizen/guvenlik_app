@@ -30,9 +30,19 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from common import REPO, emit, main_guard, rel, run_negative_control  # noqa: E402
+from common import (  # noqa: E402
+    REPO, emit, main_guard, property_classes, rel, run_negative_control,
+)  # noqa: E402
 
 VERSION = "1.0.0"
+# The rules this verifier's negative control demonstrably trips. Anything
+# emitted but absent here is guarded by a rule NO mutation has exercised,
+# and the artifact says so rather than implying coverage (FIR-06).
+CONTROLLED_RULES = [
+    "blameLanguage",
+    "confirmationDoesNotNameItsObject",
+    "translationLengthDivergence",
+]
 COMMAND = "python3 scripts/audit_evidence/copy.py"
 
 # Blame language: second person + fault. Turkish and English forms of "you did
@@ -267,15 +277,23 @@ def _mutate(scratch: Path) -> str:
 
 def main() -> int:
     if main_guard(sys.argv):
-        return run_negative_control("copy", _mutate, measure)
+        return run_negative_control(
+            "copy", _mutate, measure,
+            expect_rules=[
+                "blameLanguage",
+                "confirmationDoesNotNameItsObject",
+                "translationLengthDivergence",
+            ],
+        )
     violations = measure(REPO)
+    measurements_payload = build(REPO)
     path = emit(
         "copy.json",
         verifier="scripts/audit_evidence/copy.py",
         version=VERSION,
         command=COMMAND,
         surfaces=["assets/translations/tr-TR.json", "assets/translations/en-US.json"],
-        measurements=build(REPO),
+        measurements=measurements_payload,
         violations=violations,
         exclusions=[
             {"what": "the long-form legal texts in lib/constants/legal_texts.dart",
@@ -283,7 +301,11 @@ def main() -> int:
                     "wording is governed by scripts/bump_legal.sh and pinned by the "
                     "legal policy tests"},
         ],
-        extra={"negativeControl": {
+        extra={
+            "propertyClasses": property_classes(
+                measurements_payload, Path(__file__), CONTROLLED_RULES,
+            ),
+            "negativeControl": {
             "command": COMMAND + " --negative-control",
             "mutation": "blame language, a raw exception name, and a confirmation that "
                         "names nothing",

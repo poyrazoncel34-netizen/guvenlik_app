@@ -25,10 +25,16 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from common import (  # noqa: E402
-    REPO, dart_files, emit, main_guard, read_stripped, rel, run_negative_control,
+    REPO, dart_files, emit, main_guard, read_stripped, rel, property_classes, run_negative_control,
 )
 
 VERSION = "1.0.0"
+# The rules this verifier's negative control demonstrably trips. Anything
+# emitted but absent here is guarded by a rule NO mutation has exercised,
+# and the artifact says so rather than implying coverage (FIR-06).
+CONTROLLED_RULES = [
+    "tokenScaleHasNoConsumer",
+]
 COMMAND = "python3 scripts/audit_evidence/tokens.py"
 
 SCALES = ("Spacing", "Radii", "Elevation", "Shadows", "IconSizes", "TypeScale",
@@ -154,8 +160,14 @@ def _mutate(scratch: Path) -> str:
 
 def main() -> int:
     if main_guard(sys.argv):
-        return run_negative_control("tokens", _mutate, measure)
+        return run_negative_control(
+            "tokens", _mutate, measure,
+            expect_rules=[
+                "tokenScaleHasNoConsumer",
+            ],
+        )
     violations = measure(REPO)
+    measurements_payload = build(REPO)
     path = emit(
         "design_tokens.json",
         verifier="scripts/audit_evidence/tokens.py",
@@ -163,14 +175,18 @@ def main() -> int:
         command=COMMAND,
         surfaces=[TOKEN_FILE, MOTION_FILE, "lib/core/app_theme.dart", "lib/main.dart",
                   f"lib/**/*.dart ({len(dart_files(REPO))} files)"],
-        measurements=build(REPO),
+        measurements=measurements_payload,
         violations=violations,
         exclusions=[
             {"what": "the token file and motion.dart themselves",
              "why": "a definition referencing its own rungs is not adoption; counting "
                     "it is how a zero-consumer scale reports as adopted"},
         ],
-        extra={"negativeControl": {
+        extra={
+            "propertyClasses": property_classes(
+                measurements_payload, Path(__file__), CONTROLLED_RULES,
+            ),
+            "negativeControl": {
             "command": COMMAND + " --negative-control",
             "mutation": "strip every Radii consumer reference",
             "expected": "Radii joins the zero-consumer list",
