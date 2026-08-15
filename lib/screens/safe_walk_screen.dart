@@ -2,6 +2,8 @@
 // GÜVENLİ YÜRÜYÜŞ EKRANI
 // ============================================================================
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -13,10 +15,11 @@ import '../core/services/activity_service.dart';
 import '../core/services/check_in_expiry_coordinator.dart';
 import '../core/services/check_in_service.dart';
 import '../core/services/contact_service.dart';
+import '../core/services/dispatch_outcome.dart';
 import '../core/services/emergency_session_contract.dart';
 import '../core/services/pin_verification_service.dart';
 import '../core/utils/emergency_number_validator.dart';
-import '../core/services/notification_service.dart';
+import '../core/services/safety_alert_dispatch.dart';
 import '../core/utils/permission_helper.dart';
 // Analytics service removed (offline-first)
 import '../core/constants/app_constants.dart';
@@ -83,7 +86,10 @@ class _SafeWalkScreenState extends State<SafeWalkScreen> {
         : (_selectedMinutes * 60 * 0.1).round();
     if (!_preWarningFired && remaining <= warningThreshold && remaining > 0) {
       _preWarningFired = true;
-      _firePreExpiryWarning();
+      // Explicitly fire-and-forget: this runs from a ticker callback that
+      // cannot await. _firePreExpiryWarning handles its own failures, so the
+      // Future carries no unhandled error (FIR-02).
+      unawaited(_firePreExpiryWarning());
     }
   }
 
@@ -215,14 +221,33 @@ class _SafeWalkScreenState extends State<SafeWalkScreen> {
     );
   }
 
-  void _firePreExpiryWarning() {
+  /// The pre-expiry warning: the user's last cue before a Safe Walk session
+  /// escalates to a call.
+  ///
+  /// The notification's typed outcome used to be discarded -- the call was
+  /// neither awaited nor `unawaited()`, and nothing captured its result, so a
+  /// warning the user had switched off looked exactly like one Android
+  /// displayed (FIR-02). It is now consumed: the haptic goes out first because
+  /// it survives a revoked POST_NOTIFICATIONS grant, and when the notification
+  /// did NOT reach the user the screen says so itself, in the same SnackBar
+  /// idiom this file already uses for arm and cancel failures.
+  Future<void> _firePreExpiryWarning() async {
     // Haptic alert
     HapticFeedback.heavyImpact();
     // Local notification (works even when screen is off)
-    NotificationService.instance.showEmergencyAlert(
+    final outcome = await SafetyAlertDispatch.postWarning(
       id: 200,
       title: 'safe_walk_pre_warning_title'.tr(),
       body: 'safe_walk_pre_warning_body'.tr(),
+    );
+    if (outcome.reachability == DispatchReachability.reached) return;
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('safe_walk_pre_warning_undelivered'.tr()),
+        backgroundColor: AppColors.warning,
+        behavior: SnackBarBehavior.floating,
+      ),
     );
   }
 

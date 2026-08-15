@@ -60,6 +60,52 @@ def _fields(root: Path) -> list:
 
 
 NOTIFICATION_SERVICE = "lib/core/services/notification_service.dart"
+ALERT_POST_CALL = re.compile(
+    r"(?:NotificationService\.instance\.showEmergencyAlert"
+    r"|SafetyAlertDispatch\.postWarning)\("
+)
+
+
+def _alert_call_sites(root: Path) -> list:
+    """Every LIVE `showEmergencyAlert` invocation, and whether its typed outcome
+    is consumed.
+
+    The property this replaces was `"suppressedByUserSetting" in service` -- a
+    substring test over ONE file. It proved a string existed. It could not, even
+    in principle, observe a caller throwing the returned value away, and two
+    callers did exactly that: the Check-In grace warning awaited the Future and
+    dropped the result inside `catch (_) { // Notification not critical }`, and
+    the Safe Walk pre-expiry warning neither awaited it nor marked it
+    `unawaited()`. Both are safety warnings. Both read as "posted" when the OS
+    had suppressed them.
+
+    Consumption is judged from the text between the start of the statement and
+    the call: an assignment, a `return`, a `run:`/`() =>` handed to the ledger
+    recorder or the dispatch pipeline. A bare `await ...;` statement is NOT
+    consumption, and neither is a bare call.
+    """
+    sites = []
+    for path in dart_files(root):
+        src = read_stripped(path)
+        for match in ALERT_POST_CALL.finditer(src):
+            # The statement this call belongs to, back to the previous `;`,
+            # `{`, `}` or `=>` -- enough to see an assignment or a return.
+            head = src[: match.start()]
+            boundary = max(head.rfind(";"), head.rfind("{"), head.rfind("}"))
+            statement = head[boundary + 1 :]
+            consumed = bool(re.search(
+                r"(?:=\s*$|=\s*await\s*$|return\s+(?:await\s+)?$"
+                r"|run:\s*\(\)\s*=>\s*$|\(\)\s*=>\s*$)",
+                statement.strip() + ("" if statement.endswith(" ") else ""),
+            )) or bool(re.search(
+                r"(?:=|return|=>)\s*(?:await\s+)?$", statement.strip()
+            ))
+            sites.append({
+                "site": f"{rel(path, root)}:{head.count(chr(10)) + 1}",
+                "consumesOutcome": consumed,
+                "statementPrefix": statement.strip()[-60:],
+            })
+    return sites
 NOTIFICATION_PREFS = "lib/core/services/notification_preferences_service.dart"
 NOTIFICATION_SCREEN = (
     "lib/screens/settings_notifications/notification_categories_screen.dart"
@@ -104,6 +150,9 @@ def _notification_surface(root: Path, sites) -> dict:
         "perChannelSettingsDeepLink": "openNotificationChannelSettings" in prefs,
         "postReportsSuppression": "suppressedByUserSetting" in service,
         "postReportsPermissionDenied": "permissionDenied" in service,
+        # ENFORCED (alertOutcomeDiscardedAtCallSite): every live call site, with
+        # its own verdict -- not a substring over one file.
+        "alertCallSites": _alert_call_sites(root),
         "silencedSafetySurfaceWarned": "isSilencedSafetySurface" in screen,
         "tapRoutesThroughDestinationPark":
             "PendingDestinationService.instance.submitDestination" in service,
@@ -186,6 +235,16 @@ def measure(root: Path) -> list:
                 "detail": "posting returns without distinguishing a suppressed "
                           "alert from a delivered one",
             })
+        # A typed outcome nobody reads is the same defect one layer out.
+        for site in notifications["alertCallSites"]:
+            if not site["consumesOutcome"]:
+                violations.append({
+                    "rule": "alertOutcomeDiscardedAtCallSite",
+                    "detail": f"{site['site']} calls showEmergencyAlert and "
+                              f"discards the returned outcome, so a suppressed "
+                              f"safety alert is indistinguishable from a posted "
+                              f"one at that site",
+                })
         if not notifications["silencedSafetySurfaceWarned"]:
             violations.append({
                 "rule": "mutedSafetyChannelUnflagged",
@@ -349,6 +408,18 @@ def _mutate(scratch: Path) -> str:
             ),
             encoding="utf-8",
         )
+    # FIR-02: put a dropped-outcome call site back. This is the exact shape the
+    # substring property could not see -- the alert is posted, the typed result
+    # is thrown away, and a suppressed safety warning reads as a delivered one.
+    safe_walk = scratch / "lib" / "screens" / "safe_walk_screen.dart"
+    if safe_walk.exists():
+        src = safe_walk.read_text(encoding="utf-8")
+        anchor = "final outcome = await SafetyAlertDispatch.postWarning("
+        assert anchor in src, "mutation anchor gone -- the control would be vacuous"
+        safe_walk.write_text(
+            src.replace(anchor, "SafetyAlertDispatch.postWarning(", 1),
+            encoding="utf-8",
+        )
     screen = scratch / NOTIFICATION_SCREEN
     if screen.exists():
         screen.write_text(
@@ -359,12 +430,23 @@ def _mutate(scratch: Path) -> str:
         )
     return ("a PIN field offering password autofill + an unlabelled text field + "
             "notification suppression made silent again + the muted-safety "
-            "warning removed + a tap that bypasses the destination park")
+            "warning removed + a tap that bypasses the destination park + a "
+            "safety-alert call site that discards its typed outcome")
 
 
 def main() -> int:
     if main_guard(sys.argv):
-        return run_negative_control("interaction", _mutate, measure)
+        return run_negative_control(
+            "interaction", _mutate, measure,
+            expect_rules=[
+                "pinFieldOffersAutofill",
+                "unlabelledTextField",
+                "suppressedNotificationLooksLikeSuccess",
+                "mutedSafetyChannelUnflagged",
+                "notificationTapBypassesGateModel",
+                "alertOutcomeDiscardedAtCallSite",
+            ],
+        )
     violations = measure(REPO)
     path = emit(
         "interaction.json",
@@ -386,11 +468,13 @@ def main() -> int:
             "mutation": "give the PIN field password autofill; add an unlabelled "
                         "field; make notification suppression silent again; "
                         "remove the muted-safety warning; let a notification tap "
-                        "bypass the destination park",
-            "expected": "5 violations: pinFieldOffersAutofill, "
+                        "bypass the destination park; drop the typed outcome at "
+                        "the Safe Walk alert call site",
+            "expected": "6 violations, asserted PER RULE: pinFieldOffersAutofill, "
                         "unlabelledTextField, suppressedNotificationLooksLikeSuccess, "
-                        "mutedSafetyChannelUnflagged and "
-                        "notificationTapBypassesGateModel",
+                        "mutedSafetyChannelUnflagged, "
+                        "notificationTapBypassesGateModel and "
+                        "alertOutcomeDiscardedAtCallSite",
         }},
     )
     print(f"INTERACTION_OK violations={len(violations)} -> {rel(path)}")

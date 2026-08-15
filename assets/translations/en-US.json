@@ -1001,5 +1001,7 @@
   "subscription_survives_deletion_body": "Your KoruBeni Pro subscription is billed by Google Play. Deleting the data here, or uninstalling the app, does not cancel it and billing continues. To cancel, use Google Play > Subscriptions.",
   "subscription_survives_deletion_action": "Open Google Play subscriptions",
   "emergency_partial_failure_title": "Call not started, some steps completed",
-  "emergency_partial_failure_body": "The call could not be started. Call the number below manually. Which steps completed is listed below."
+  "emergency_partial_failure_body": "The call could not be started. Call the number below manually. Which steps completed is listed below.",
+  "safe_walk_pre_warning_undelivered": "The warning notification could not be shown. Notifications may be off; remember to tap \"I am safe\" before the timer ends.",
+  "check_in_grace_alert_undelivered": "The warning notification could not be shown. Notifications may be off; if you do not confirm before the timer ends, your emergency contact will be called."
 }

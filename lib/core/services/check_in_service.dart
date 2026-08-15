@@ -26,6 +26,7 @@ import '../services/foreground_service.dart';
 import '../services/haptic_service.dart';
 import '../services/local_logger_service.dart';
 import '../services/notification_service.dart';
+import '../services/safety_alert_dispatch.dart';
 import '../utils/emergency_number_validator.dart';
 
 /// Shared session controller for the check-in / safe-walk dead-man's-switch.
@@ -483,26 +484,36 @@ class CheckInService extends ChangeNotifier {
     await _persistState();
     if (_sideEffectsEnabled) {
       await _bestEffort(_startBackgroundProtection);
-      await _bestEffort(_showGraceNotification);
+      // The grace alert's outcome is RECORDED, not dropped. It used to go
+      // through _bestEffort, whose bare catch turned "the user switched this
+      // off" into the same silence as "Android displayed it" (FIR-02).
+      _lastGraceAlertOutcome = await _showGraceNotification();
     }
     _startGraceTicker();
     notifyListeners();
   }
 
-  Future<void> _showGraceNotification() async {
-    try {
-      // NOTE (SPEC §0 K8 / §3.7): wording is the deferred text step. Both
-      // sessions reuse the existing 60s-grace copy here; the lock-screen native
-      // notification already carries session-correct wording.
-      await NotificationService.instance.showEmergencyAlert(
+  /// The outcome of the most recent grace warning, or null before one was
+  /// attempted. Read by the Check-In screen so a suppressed warning is visible
+  /// where the user is looking (MP-11-014).
+  DispatchTargetOutcome? get graceAlertOutcome => _lastGraceAlertOutcome;
+  DispatchTargetOutcome? _lastGraceAlertOutcome;
+
+  /// Posts the 60-second grace warning and REPORTS what happened to it.
+  ///
+  /// The user's last cue before the session escalates to a call. It used to sit
+  /// in `catch (_) { // Notification not critical }`, which discarded the typed
+  /// outcome at the one moment it mattered; see [SafetyAlertDispatch].
+  ///
+  /// NOTE (SPEC §0 K8 / §3.7): wording is the deferred text step. Both sessions
+  /// reuse the existing 60s-grace copy here; the lock-screen native
+  /// notification already carries session-correct wording.
+  Future<DispatchTargetOutcome> _showGraceNotification() =>
+      SafetyAlertDispatch.postWarning(
         id: _alertNotificationId,
         title: "check_in_notification_title".tr(),
         body: "check_in_notification_body".tr(),
       );
-    } catch (_) {
-      // Notification not critical
-    }
-  }
 
   Future<void> _triggerEmergency() async {
     if (_emergencyInProgress) return;
@@ -728,7 +739,10 @@ class CheckInService extends ChangeNotifier {
     _armedTarget = snapshot.target ?? _armedTarget;
     await _reconcileWithClock();
     if (_sideEffectsEnabled && _isGracePeriod) {
-      await _bestEffort(_showGraceNotification);
+      // Second entry into the grace warning (native told us the grace window
+      // opened). Same rule as the Dart-side entry: the outcome is recorded,
+      // never dropped into a best-effort bare catch (FIR-02).
+      _lastGraceAlertOutcome = await _showGraceNotification();
     }
   }
 

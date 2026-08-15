@@ -25,6 +25,14 @@ Contract every verifier in this package obeys
     measurement code over a deliberately broken copy of the input and asserts it
     reports violations. A verifier that cannot be shown to fail is worse than no
     verifier, because it launders an unproven claim into a green artifact.
+6.  A negative control names the RULES it trips (``expect_rules``), and each of
+    them must strictly increase. A control is therefore evidence about those
+    rules and nothing else. Measurements with no violation rule behind them are
+    CENSUS values: their credibility comes from being computed from the tree and
+    reproducible at a named revision, not from a mutation. Each verifier
+    declares which of its cited properties are ENFORCED and which are CENSUS in
+    its ``propertyClasses`` block, and no artifact may claim a control proves a
+    property no rule guards.
 """
 
 from __future__ import annotations
@@ -187,12 +195,21 @@ def composite(fg_argb: tuple, bg_rgb: tuple) -> tuple:
 # ---------------------------------------------------------------------------
 # negative-control harness
 # ---------------------------------------------------------------------------
-def run_negative_control(name: str, mutate, measure) -> int:
+def run_negative_control(name: str, mutate, measure, expect_rules=None) -> int:
     """Applies [mutate] to a scratch copy of the tree, then asserts [measure] fails.
 
     ``mutate`` receives a temp directory containing a copy of ``lib/`` (and
     whatever else the verifier asked for) and introduces the defect.
     ``measure`` receives the same directory and returns the violation list.
+
+    ``expect_rules`` names the RULES the mutation is supposed to trip. Without
+    it this harness only compared TOTAL violation counts, which is why the
+    audit's boilerplate "the negative control shows the verifier can report the
+    opposite" was overstated: a verifier exposing nineteen cited properties and
+    guarding one of them with a rule would satisfy a total-count check while
+    proving nothing about the other eighteen (FIR-06). With it, each named rule
+    must strictly increase, so the control demonstrates THAT rule firing rather
+    than some rule firing.
     """
     import shutil
     import tempfile
@@ -221,9 +238,40 @@ def run_negative_control(name: str, mutate, measure) -> int:
             % (name, description, len(mutated), len(baseline))
         )
         return 1
+
+    def _by_rule(violations):
+        counts = {}
+        for violation in violations:
+            rule = violation.get("rule", "<unnamed>")
+            counts[rule] = counts.get(rule, 0) + 1
+        return counts
+
+    before, after = _by_rule(baseline), _by_rule(mutated)
+    if expect_rules:
+        missed = [
+            rule for rule in expect_rules
+            if after.get(rule, 0) <= before.get(rule, 0)
+        ]
+        if missed:
+            print(
+                "NEGATIVE_CONTROL_FAIL %s: mutation %r did not trip %s. Totals "
+                "moved %d -> %d, but a total that moves proves only that SOME "
+                "rule fired." % (name, description, missed, len(baseline), len(mutated))
+            )
+            return 1
+    fired = sorted(
+        "%s %d->%d" % (rule, before.get(rule, 0), after[rule])
+        for rule in after
+        if after[rule] > before.get(rule, 0)
+    )
+    if before:
+        print(
+            "NEGATIVE_CONTROL_BASELINE %s: %d pre-existing violation(s): %s"
+            % (name, len(baseline), sorted(before.items()))
+        )
     print(
-        "NEGATIVE_CONTROL_PASS %s: mutation %r moved violations %d -> %d"
-        % (name, description, len(baseline), len(mutated))
+        "NEGATIVE_CONTROL_PASS %s: mutation %r moved violations %d -> %d; rules "
+        "fired: %s" % (name, description, len(baseline), len(mutated), fired)
     )
     return 0
 

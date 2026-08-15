@@ -35,6 +35,12 @@ enum LocalWarningCode {
   safetySessionDispatchUnknown('safety_session_dispatch_unknown'),
   safetySessionDialerFallback('safety_session_dialer_fallback'),
 
+  /// A safety WARNING notification (Check-In grace, Safe Walk pre-expiry) did
+  /// not reach the user: switched off in app settings, or POST_NOTIFICATIONS
+  /// revoked. The code carries no channel, no session and no contact -- only
+  /// the fact that a warning surface was unavailable when it mattered.
+  safetyAlertNotDelivered('safety_alert_not_delivered'),
+
   /// A quick-access panic request arrived with no root navigator mounted, so
   /// there was no surface to open a countdown on OR to explain the refusal on.
   quickPanicNavigatorUnavailable('quick_panic_navigator_unavailable');

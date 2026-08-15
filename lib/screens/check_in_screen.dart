@@ -11,6 +11,7 @@ import '../core/app_colors.dart';
 import '../core/constants/app_constants.dart';
 import '../core/services/check_in_service.dart';
 import '../core/services/contact_service.dart';
+import '../core/services/dispatch_outcome.dart';
 import '../core/services/emergency_session_contract.dart';
 import '../core/services/pin_verification_service.dart';
 import '../core/utils/emergency_number_validator.dart';
@@ -79,7 +80,32 @@ class _CheckInScreenState extends State<CheckInScreen>
 
   void _onServiceChanged() {
     if (mounted) setState(() {});
+    _announceUndeliveredGraceAlert();
   }
+
+  /// Tells the user when the grace WARNING did not reach them.
+  ///
+  /// The service now reports that alert's typed outcome instead of dropping it
+  /// (FIR-02). Suppressed or permission-denied means the lock-screen cue the
+  /// grace period depends on never appeared; if this screen is open, it is the
+  /// one place the user can still learn that in time.
+  void _announceUndeliveredGraceAlert() {
+    final outcome = _service.graceAlertOutcome;
+    if (outcome == null) return;
+    if (outcome.reachability == DispatchReachability.reached) return;
+    if (_graceAlertWarningShown) return;
+    _graceAlertWarningShown = true;
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('check_in_grace_alert_undelivered'.tr()),
+        backgroundColor: AppColors.warning,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  bool _graceAlertWarningShown = false;
 
   Future<bool> _hasEmergencyContact() async {
     try {

@@ -1001,5 +1001,7 @@
   "subscription_survives_deletion_body": "KoruBeni Pro aboneliğinizi Google Play faturalandırır. Buradaki verileri silmek ya da uygulamayı kaldırmak aboneliği iptal etmez; ücretlendirme devam eder. İptal etmek için Google Play > Abonelikler bölümünü kullanın.",
   "subscription_survives_deletion_action": "Google Play aboneliklerini aç",
   "emergency_partial_failure_title": "Arama başlatılamadı, bazı adımlar tamamlandı",
-  "emergency_partial_failure_body": "Arama başlatılamadı. Aşağıdaki numarayı manuel arayın. Hangi adımın tamamlandığı aşağıda listelenmiştir."
+  "emergency_partial_failure_body": "Arama başlatılamadı. Aşağıdaki numarayı manuel arayın. Hangi adımın tamamlandığı aşağıda listelenmiştir.",
+  "safe_walk_pre_warning_undelivered": "Uyarı bildirimi gösterilemedi. Bildirimler kapalı olabilir; süre dolmadan \"Güvendeyim\" demeyi unutmayın.",
+  "check_in_grace_alert_undelivered": "Uyarı bildirimi gösterilemedi. Bildirimler kapalı olabilir; süre dolmadan onay vermezseniz acil kişiniz aranacak."
 }
