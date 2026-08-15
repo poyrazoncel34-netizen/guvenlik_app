@@ -36,10 +36,19 @@
 // CAN: any receiver spelling; the wrapper chain, transitively, to a fixpoint;
 //      assignment, return, callback hand-off, argument passing, `unawaited`,
 //      `.ignore()`, and a dropped expression statement.
-// CANNOT: a call reached only through a dynamic receiver or a `Function` value
-//      whose target the element model cannot resolve. Such a call is REPORTED
-//      as `unresolvedAlertLikeInvocation` rather than silently skipped, so the
-//      blind spot is visible instead of assumed empty.
+// CANNOT: follow the outcome once the method becomes a Function VALUE, or a
+//      call made through a dynamic receiver. Neither is silently skipped. A
+//      dynamic receiver is reported as `unresolvedAlertLikeInvocation`; a
+//      tear-off (`final f = svc.showEmergencyAlert; await f(...)`) is reported
+//      as `alertOutcomeTearOff`.
+//
+//      The tear-off rule was added after certification (CERT-08) found the
+//      docstring overclaiming: `f(...)` parses as a FunctionExpressionInvocation
+//      and the tear-off itself as a PropertyAccess, so neither reached
+//      `visitMethodInvocation` and the outcome was dropped with nothing
+//      reported at all. The dynamic-receiver half of the promise was real; the
+//      Function-value half was not, and a blind spot that is asserted to be
+//      visible is worse than one that is admitted.
 //
 // Usage:
 //   dart run scripts/verify_alert_outcome_consumption.dart
@@ -54,6 +63,7 @@ import 'package:analyzer/dart/analysis/analysis_context_collection.dart';
 import 'package:analyzer/dart/analysis/results.dart';
 import 'package:analyzer/dart/ast/ast.dart';
 import 'package:analyzer/dart/ast/visitor.dart';
+import 'package:analyzer/dart/element/element.dart';
 
 /// The method whose typed outcome must never be dropped.
 const String kRootTarget = 'NotificationService.showEmergencyAlert';
@@ -132,6 +142,33 @@ class _InvocationCollector extends RecursiveAstVisitor<void> {
   final CompilationUnit unit;
   final List<AlertInvocation> invocations = <AlertInvocation>[];
   final List<String> unresolved = <String>[];
+
+  /// `Type.method` -> site, for every place the tracked method is referenced
+  /// WITHOUT being invoked. Filtered against the resolved target set later, so
+  /// an unrelated tear-off elsewhere in `lib/` costs nothing here.
+  final List<MapEntry<String, String>> tearOffs = <MapEntry<String, String>>[];
+
+  void _recordTearOff(Element? element, AstNode node) {
+    if (element is! ExecutableElement) return;
+    final owner = element.enclosingElement?.name;
+    if (owner == null) return;
+    // A tear-off is a REFERENCE that is not the callee of an invocation.
+    final AstNode? parent = node.parent;
+    if (parent is MethodInvocation && identical(parent.methodName, node)) return;
+    tearOffs.add(MapEntry<String, String>('$owner.${element.name}', _at(node.offset)));
+  }
+
+  @override
+  void visitPropertyAccess(PropertyAccess node) {
+    super.visitPropertyAccess(node);
+    _recordTearOff(node.propertyName.element, node.propertyName);
+  }
+
+  @override
+  void visitPrefixedIdentifier(PrefixedIdentifier node) {
+    super.visitPrefixedIdentifier(node);
+    _recordTearOff(node.identifier.element, node.identifier);
+  }
 
   String _at(int offset) =>
       '$relativePath:${unit.lineInfo.getLocation(offset).lineNumber}';
@@ -311,17 +348,27 @@ Future<List<AlertInvocation>> collect(String root) async {
 }
 
 class _Analysis {
-  _Analysis(this.tracked, this.unresolved, this.filesAnalyzed, this.targets);
+  _Analysis(
+    this.tracked,
+    this.unresolved,
+    this.filesAnalyzed,
+    this.targets,
+    this.tearOffs,
+  );
   final List<AlertInvocation> tracked;
   final List<String> unresolved;
   final int filesAnalyzed;
   final Set<String> targets;
+
+  /// Tear-offs of a tracked target: the outcome leaves this analysis there.
+  final List<MapEntry<String, String>> tearOffs;
 }
 
 Future<_Analysis> _analyse(String root) async {
   final collection = AnalysisContextCollection(includedPaths: <String>[root]);
   final all = <AlertInvocation>[];
   final unresolved = <String>[];
+  final tearOffs = <MapEntry<String, String>>[];
   var filesAnalyzed = 0;
 
   for (final context in collection.contexts) {
@@ -339,6 +386,7 @@ Future<_Analysis> _analyse(String root) async {
       result.unit.accept(collector);
       all.addAll(collector.invocations);
       unresolved.addAll(collector.unresolved);
+      tearOffs.addAll(collector.tearOffs);
     }
   }
 
@@ -358,7 +406,11 @@ Future<_Analysis> _analyse(String root) async {
 
   final tracked = all.where((i) => targets.contains(i.target)).toList()
     ..sort((a, b) => a.site.compareTo(b.site));
-  return _Analysis(tracked, unresolved, filesAnalyzed, targets);
+  final trackedTearOffs = tearOffs
+      .where((e) => targets.contains(e.key))
+      .toList()
+    ..sort((a, b) => a.value.compareTo(b.value));
+  return _Analysis(tracked, unresolved, filesAnalyzed, targets, trackedTearOffs);
 }
 
 Future<int> run(String root, {required bool asJson}) async {
@@ -367,6 +419,7 @@ Future<int> run(String root, {required bool asJson}) async {
   final unresolved = analysis.unresolved;
   final filesAnalyzed = analysis.filesAnalyzed;
   final targets = analysis.targets;
+  final tearOffs = analysis.tearOffs;
 
   final violations = <Map<String, Object?>>[
     for (final invocation in tracked.where((i) => i.isDropped))
@@ -375,6 +428,17 @@ Future<int> run(String root, {required bool asJson}) async {
         'site': invocation.site,
         'target': invocation.target,
         'detail': invocation.detail,
+      },
+    for (final tearOff in tearOffs)
+      <String, Object?>{
+        'rule': 'alertOutcomeTearOff',
+        'site': tearOff.value,
+        'target': tearOff.key,
+        'detail':
+            'the alert method is referenced as a Function VALUE here. Once it '
+            'is a value this analysis cannot follow where its outcome goes, so '
+            'the site is reported rather than assumed safe. Call it directly, '
+            'or consume the outcome at the tear-off site.',
       },
     for (final site in unresolved)
       <String, Object?>{
@@ -394,6 +458,9 @@ Future<int> run(String root, {required bool asJson}) async {
         'verifier': 'scripts/verify_alert_outcome_consumption.dart',
         'filesAnalyzed': filesAnalyzed,
         'resolvedTargets': targets.toList()..sort(),
+        'tearOffs': tearOffs
+            .map((e) => <String, String>{'target': e.key, 'site': e.value})
+            .toList(),
         'invocations': tracked.map((i) => i.toJson()).toList(),
         'violations': violations,
       }),
@@ -413,7 +480,8 @@ Future<int> run(String root, {required bool asJson}) async {
 
   stdout.writeln(
     'ALERT_OUTCOME_CONSUMPTION_PASS files=$filesAnalyzed '
-    'targets=${targets.length} sites=${tracked.length} violations=0',
+    'targets=${targets.length} sites=${tracked.length} '
+    'tearOffs=${tearOffs.length} violations=0',
   );
   for (final invocation in tracked) {
     stdout.writeln(
@@ -471,6 +539,11 @@ class AlertOutcomeNegativeControlProbe {
     closure();
   }
 
+  Future<void> tearOffThenInvoke() async {
+    final f = NotificationService.instance.showEmergencyAlert;
+    await f(id: 9, title: 'a', body: 'b');
+  }
+
   // MUST NOT be flagged: consumed.
   Future<DispatchTargetOutcome> consumed() async {
     final outcome = await NotificationService.instance
@@ -511,9 +584,12 @@ Future<int> negativeControl(String root) async {
   ];
 
   List<AlertInvocation> tracked;
+  List<MapEntry<String, String>> tearOffs;
   try {
     probe.writeAsStringSync(_probeSource);
-    tracked = await collect(root);
+    final analysis = await _analyse(root);
+    tracked = analysis.tracked;
+    tearOffs = analysis.tearOffs;
   } finally {
     if (probe.existsSync()) probe.deleteSync();
   }
@@ -543,6 +619,17 @@ Future<int> negativeControl(String root) async {
   if (!probeSites.any((i) => i.target.endsWith('postWarning'))) {
     problems.add('the wrapper fixpoint did not reach SafetyAlertDispatch');
   }
+  // CERT-08: the tear-off form used to be missed in BOTH directions -- not
+  // flagged, and not reported as a blind spot either. The control now proves
+  // the rule fires, so the docstring's promise is tested rather than asserted.
+  final probeTearOffs =
+      tearOffs.where((e) => e.value.startsWith('lib/_alert_outcome')).toList();
+  if (probeTearOffs.length != 1) {
+    problems.add(
+      'expected exactly 1 tear-off of a tracked target, found '
+      '${probeTearOffs.length}',
+    );
+  }
 
   if (problems.isNotEmpty) {
     stdout.writeln('NEGATIVE_CONTROL_FAIL alert_outcome');
@@ -559,6 +646,7 @@ Future<int> negativeControl(String root) async {
     'NEGATIVE_CONTROL_PASS alert_outcome: $dropped/${mustCatch.length} dropped '
     'forms flagged (bare, awaited, hoisted-awaited, hoisted-bare, wrapper '
     'discard, async-closure swallow), $consumed consumed forms not flagged, '
+    '${probeTearOffs.length} tear-off reported (CERT-08), '
     'wrapper fixpoint reached SafetyAlertDispatch.postWarning; probe removed',
   );
   return 0;
