@@ -211,12 +211,16 @@ Generated against verified code revision `273864f`. Regenerate the ID lists with
   human checking Play Console on a cadence. Roll-forward has never been rehearsed because
   Play forbids rolling *back* to a lower `versionCode`, so the only true rollback is a
   roll-forward release.
-- **Required environment.** Play Console; a scheduled human owner for the cadence.
-- **Procedure.** Rehearse a roll-forward on the internal-test track (ship a deliberate
-  regression, then ship the fix, and time it); write the on-call cadence into
-  `docs/release/observability_and_slo.md` and name an owner.
-- **PASS criterion.** A timed roll-forward rehearsal exists, and the alerting cadence has a
-  named owner with a documented check.
+- **Required environment.** Play Console with an internal-test track.
+- **Procedure.** Rehearse a roll-forward on the internal-test track: ship a deliberate
+  regression, then ship the fix, and time it.
+- **Already written, and NOT part of this blocker (corrected 2026-08-15, FIR-03).** The
+  cadence and its owner exist: `docs/release/observability_and_slo.md` names the owner and
+  the 24h/72h/7-day check, and `docs/release/incident_runbook.md` §2 names the owner again
+  with the daily-for-72-hours vitals cadence and four numeric halt thresholds. The earlier
+  text asked for work this repository had already done. `MP-53-012`'s repository half
+  (`dr_and_key_custody.md` §3–§5) is likewise complete; only the rehearsal is external.
+- **PASS criterion.** A timed roll-forward rehearsal exists.
 - **Evidence to capture.** The rehearsal timing record and the signed cadence.
 - **Launch impact.** **Not blocking**, but the absence of any automated signal means a
   regression is found by users first. That consequence should be an explicit owner

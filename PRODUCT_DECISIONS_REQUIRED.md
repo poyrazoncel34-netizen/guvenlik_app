@@ -95,29 +95,48 @@ scope).
   is the only item here with an externally imposed clock.
 - **Blocked?** Yes.
 
-## D-5 — What is the support channel, actually?
+## D-5 — Is an email inbox the support channel, or is a ticket system needed?
 
-- **Requirement IDs (4):** `MP-65-004`, `MP-65-005`, `MP-65-006`, `MP-65-007`
-- **Current behaviour.** Support is an unmanaged email inbox
+> **Revised 2026-08-15 (FIR-03).** This entry previously read *"there is no
+> ticket identity, no owner, no severity ladder and no stated response
+> expectation"* and marked **Option B** as the open decision. Option B was
+> already written — `docs/release/incident_runbook.md` §1, §2 and §6 — one day
+> after this entry, and the entry was never revisited. The stale text hid
+> completed work behind an owner decision, so `MP-65-005`, `MP-65-006` and
+> `MP-65-007` are now graded PASS against the runbook and only the tooling
+> question below remains open.
+
+- **Requirement IDs (1):** `MP-65-004`
+- **Current behaviour.** Intake is the support e-mail
   (`korubeni.destek@gmail.com`, which also appears in the KVKK texts as the data
-  controller contact). There is no ticket identity, no owner, no severity
-  ladder and no stated response expectation.
-- **Why engineering cannot decide.** Ticketing, ownership and response times are
-  operational commitments with cost, and KVKK gives the address a legal role —
-  a data-subject request arriving there has statutory deadlines.
-- **Option A — adopt a help desk.** Any ticketing tool; gives ticket IDs,
-  ownership and measurable response times.
-- **Option B — keep email, add a written policy (recommended minimum).** Name an
-  owner, define severity levels (P1 = cannot place an emergency call), state
-  response targets, and record where KVKK requests are logged.
-- **Engineering already done.** Nothing here needs code. Option B is a document
-  that can be written the moment the owner names the commitments.
-- **Blocked?** Yes, on the commitments themselves.
+  controller contact) plus the Play Console review queue. Both carry a written
+  response expectation of 3 business days (`incident_runbook.md` §6), the owner
+  is named (§2, sole developer, with the reason a rotation is deliberately not
+  written), and severity is an S1–S4 ladder with per-level target first response
+  (§1). What does NOT exist is a ticket SYSTEM: no per-report identifier, no
+  queue state, no ageing view.
+- **Why engineering cannot decide.** A help desk is a recurring cost and a third
+  system to administer; whether the report volume justifies it is the owner's
+  call, not a repository fact. KVKK also gives the address a legal role — a
+  data-subject request arriving there has statutory deadlines.
+- **Option A — adopt a help desk.** Ticket IDs, ownership per report, and
+  measurable response times, at the cost of another system.
+- **Option B — keep e-mail plus the written policy (current state).** Already in
+  effect; nothing further to write.
+- **Engineering already done.** Option B in full. Nothing here needs code.
+- **Blocked?** Only on Option A vs B. The written policy that used to be the
+  blocking half is committed.
 
 ## D-6 — Does this product accept having no telemetry?
 
-- **Requirement IDs (7):** `MP-75-012`, `MP-75-013`, `MP-75-014`, `MP-77-015`,
-  `MP-79-012`, `MP-79-013`, `MP-32-046`+`MP-32-047` (log centralisation)
+- **Requirement IDs (5):** `MP-75-012`, `MP-75-013`, `MP-75-014`, `MP-77-015`,
+  `MP-32-046`+`MP-32-047` (log centralisation)
+
+> **Revised 2026-08-15 (FIR-03).** `MP-79-012` and `MP-79-013` were listed here
+> and graded FAIL on a remediation — *"make that substitution explicit in the
+> postmortem template"* — that `docs/release/incident_runbook.md` §7 item 3
+> already carries. They are now PASS and are no longer part of this decision.
+> The standing decision below is unchanged and still real.
 - **Current behaviour.** No analytics, no crash SDK, no dashboard, no alerting.
   Logging is entirely local and never leaves the device. This is a deliberate
   privacy choice for a duress product and is stated in the KVKK texts. The
