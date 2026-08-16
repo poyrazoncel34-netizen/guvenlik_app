@@ -240,9 +240,9 @@
       },
       {
         "field": "evidence",
-        "claim": "no defect here at this density",
+        "claim": "found no banding in any of them",
         "refutedBy": [],
-        "why": "No banding in the two gradient surfaces at 420 dpi. Banding depends on panel bit depth and dithering; an emulator framebuffer cannot exhibit or refute it."
+        "why": "The 2026-08-16 emulator pass showed no banding on the gradient surfaces it captured. Nothing in the repository can refute an observation about rendered pixels; what would refute it is a real panel showing banding, which is why the row stays UNVERIFIED. Re-registered 2026-08-16 (CERT2-04) when the cell was corrected to name the full 20-site gradient inventory instead of implying the inspected set was the whole set."
       }
     ],
     "MP-74-007": {
