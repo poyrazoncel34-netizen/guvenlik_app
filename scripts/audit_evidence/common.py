@@ -370,7 +370,11 @@ def run_negative_control(name: str, mutate, measure, expect_rules=None) -> int:
         # forced-colour write-up, store/ for the manual smoke script). A
         # baseline that is already red hides whether the mutation did anything,
         # and a mutation that cannot reach its target proves nothing.
-        for extra in ("assets", "test", "docs", "store", "config"):
+        # "android/app/src/main/res" is a PATH, not a top-level directory, on
+        # purpose: assets.py's density-bucket rule (CERT2-01) reads the res
+        # tree, but copying all of android/ would drag in android/build/.
+        for extra in ("assets", "test", "docs", "store", "config",
+                      "android/app/src/main/res"):
             src = REPO / extra
             if src.exists():
                 shutil.copytree(src, scratch / extra, dirs_exist_ok=True)
