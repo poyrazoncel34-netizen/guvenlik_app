@@ -2,9 +2,9 @@
   "verifier": "scripts/audit_evidence/tokens.py",
   "verifierVersion": "1.0.0",
   "codeRevision": {
-    "verifiedCodeRevision": "9eeca04246eca779bad66e5ff3d27e407ab01911",
+    "verifiedCodeRevision": "ec8b4e7042ce23f266bb361e4a1c3d3726231e9b",
     "dirty": false,
-    "treeHash": "c110d05814c7f1a9717b2d1d175b225690abcddd",
+    "treeHash": "b5f2b818fdf00eacba7bf5e0842bcfa076604b8d",
     "dirtyPaths": [],
     "note": "verifiedCodeRevision is the commit whose measured surface produced this artifact. A later commit may CONTAIN this file; that is the documentation head, and the two are distinguished in PRODUCTION_AUDIT.md. Changes under docs/audit/evidence/ are this package's own output and do not make the measured tree dirty."
   },
@@ -23,7 +23,7 @@
       "scalesWithAtLeastOneConsumer": 11,
       "byScale": {
         "Spacing": {
-          "references": 31,
+          "references": 29,
           "consumerFiles": [
             "lib/core/app_theme.dart",
             "lib/core/widgets/dispatch_outcome_list.dart",
@@ -34,7 +34,7 @@
           "consumerCount": 5
         },
         "Radii": {
-          "references": 27,
+          "references": 19,
           "consumerFiles": [
             "lib/core/app_theme.dart",
             "lib/core/widgets/dispatch_outcome_list.dart",
@@ -46,7 +46,7 @@
           "consumerCount": 6
         },
         "Elevation": {
-          "references": 10,
+          "references": 5,
           "consumerFiles": [
             "lib/core/app_theme.dart"
           ],
@@ -178,7 +178,7 @@
       "notDoneAndWhy": "TypeScale remains unmigrated and that is deliberate: it covers 329 inline fontSize sites and the honest fix is a TextTheme, which is a real refactor rather than a rename -- MP-04-004 is PARTIAL for exactly that. IconSizes is DONE, and WHY it had failed before is the useful part: the invented scale omitted 18 dp (24 sites) and 22 dp (19 sites), the two most common sizes after 20, so adopting it would have moved 43 rendered icons -- a visual change CLAUDE.md rule 4 reserves to the owner. Rebuilding the scale from the census made the migration pixel-neutral: 139 of 162 sites now read a role, and the remaining 23 are one-offs enumerated in IconSizes.documentedExceptions and guarded by test/core/icon_size_migration_test.dart."
     },
     "themes": {
-      "darkDeclarations": 4,
+      "darkDeclarations": 2,
       "lightDeclarations": 0,
       "componentThemesDeclared": [
         "appBarTheme",
@@ -198,7 +198,7 @@
         ],
         [
           "theme",
-          "AppTheme.lightTheme"
+          "AppTheme.darkTheme"
         ],
         [
           "themeMode",

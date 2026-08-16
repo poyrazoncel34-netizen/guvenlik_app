@@ -2,9 +2,9 @@
   "verifier": "scripts/audit_evidence/motion.py",
   "verifierVersion": "1.0.0",
   "codeRevision": {
-    "verifiedCodeRevision": "9eeca04246eca779bad66e5ff3d27e407ab01911",
+    "verifiedCodeRevision": "ec8b4e7042ce23f266bb361e4a1c3d3726231e9b",
     "dirty": false,
-    "treeHash": "c110d05814c7f1a9717b2d1d175b225690abcddd",
+    "treeHash": "b5f2b818fdf00eacba7bf5e0842bcfa076604b8d",
     "dirtyPaths": [],
     "note": "verifiedCodeRevision is the commit whose measured surface produced this artifact. A later commit may CONTAIN this file; that is the documentation head, and the two are distinguished in PRODUCTION_AUDIT.md. Changes under docs/audit/evidence/ are this package's own output and do not make the measured tree dirty."
   },

@@ -2,9 +2,9 @@
   "verifier": "scripts/audit_evidence/typography.py",
   "verifierVersion": "1.0.0",
   "codeRevision": {
-    "verifiedCodeRevision": "9eeca04246eca779bad66e5ff3d27e407ab01911",
+    "verifiedCodeRevision": "ec8b4e7042ce23f266bb361e4a1c3d3726231e9b",
     "dirty": false,
-    "treeHash": "c110d05814c7f1a9717b2d1d175b225690abcddd",
+    "treeHash": "b5f2b818fdf00eacba7bf5e0842bcfa076604b8d",
     "dirtyPaths": [],
     "note": "verifiedCodeRevision is the commit whose measured surface produced this artifact. A later commit may CONTAIN this file; that is the documentation head, and the two are distinguished in PRODUCTION_AUDIT.md. Changes under docs/audit/evidence/ are this package's own output and do not make the measured tree dirty."
   },
@@ -20,7 +20,7 @@
     "fontFamily": {
       "declaredFamilies": {},
       "indirectFamilyReferences": {
-        "_fontFamily": 2
+        "_fontFamily": 1
       },
       "indirectResolution": "every `fontFamily:` reference in lib/ is the identifier `_fontFamily`, declared `static const String? _fontFamily = null` in lib/core/app_theme.dart -- i.e. the platform face",
       "themeFamilyConstant": "_fontFamily = null (lib/core/app_theme.dart)",
@@ -43,22 +43,22 @@
         "hero": 34.0
       },
       "distinctSizesInUse": 21,
-      "totalSizeSites": 329,
-      "onScaleSites": 252,
-      "onScalePercent": 76.6,
+      "totalSizeSites": 324,
+      "onScaleSites": 249,
+      "onScalePercent": 76.9,
       "distribution": {
         "9.0": 1,
         "10.0": 3,
         "11.0": 12,
         "12.0": 49,
         "13.0": 62,
-        "14.0": 52,
-        "15.0": 33,
-        "16.0": 41,
+        "14.0": 51,
+        "15.0": 32,
+        "16.0": 40,
         "17.0": 13,
-        "18.0": 19,
+        "18.0": 18,
         "19.0": 2,
-        "20.0": 12,
+        "20.0": 11,
         "22.0": 10,
         "24.0": 5,
         "26.0": 5,
@@ -102,15 +102,15 @@
         "1.1": 1,
         "1.3": 2,
         "1.35": 6,
-        "1.4": 40,
+        "1.4": 39,
         "1.45": 11,
         "1.5": 32,
         "1.6": 4,
         "1.65": 1
       },
-      "sitesWithExplicitHeight": 98,
-      "atOrAbove1_3": 96,
-      "atOrAbove1_3Percent": 98.0,
+      "sitesWithExplicitHeight": 97,
+      "atOrAbove1_3": 95,
+      "atOrAbove1_3Percent": 97.9,
       "minimum": 1.0,
       "flutterDefaultWhenAbsent": "the font's own metric ratio (~1.16 for Roboto)"
     },
@@ -121,16 +121,16 @@
         "-0.5": 9,
         "-0.4": 1,
         "-0.3": 2,
-        "-0.2": 4,
-        "-0.1": 2,
+        "-0.2": 3,
+        "-0.1": 1,
         "0.5": 2,
         "0.8": 1,
         "1.0": 2,
         "1.5": 1,
         "2.0": 3
       },
-      "sites": 29,
-      "negativeTrackingSites": 20,
+      "sites": 27,
+      "negativeTrackingSites": 18,
       "positiveTrackingSites": 9,
       "extremeTrackingSites": 0
     },
@@ -156,15 +156,15 @@
     },
     "weightDistribution": {
       "distribution": {
-        "w600": 63,
-        "w800": 75,
+        "w600": 60,
+        "w800": 74,
         "w700": 97,
         "w900": 11,
         "w500": 13
       },
-      "totalWeightedSites": 259,
-      "heavySites": 183,
-      "heavyPercent": 70.7,
+      "totalWeightedSites": 255,
+      "heavySites": 182,
+      "heavyPercent": 71.4,
       "distinctWeights": 5
     },
     "uppercase": {
