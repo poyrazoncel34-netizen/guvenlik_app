@@ -291,7 +291,9 @@ class _MainNavigationState extends State<MainNavigation>
           AnimatedPadding(
             duration: Motion.base,
             padding: EdgeInsets.only(
-              top: _isOffline ? ConnectivityBanner.reservedHeight : 0,
+              top: _isOffline
+                  ? ConnectivityBanner.reservedHeightFor(context)
+                  : 0,
             ),
             // IndexedStack is kept on purpose: every page stays in the tree, so
             // the crossfade costs no page state and MapPage's isActive contract

@@ -4,6 +4,7 @@
 
 import '../core/design_tokens.dart';
 import 'dart:async';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../core/app_colors.dart';
@@ -21,10 +22,34 @@ class ConnectivityBanner extends StatefulWidget {
   /// disagree in the first place.
   static const double verticalPadding = 12;
 
-  /// Height of the content row. The tallest child is the leading
-  /// [IconSizes.dense] glyph -- the 13 px label and the [IconSizes.inline]
-  /// trailing glyph are both shorter -- so the row measures exactly this.
-  static const double contentHeight = IconSizes.dense;
+  /// Font size of the banner label.
+  static const double labelFontSize = 13;
+
+  /// Line box of the label as a multiple of [labelFontSize].
+  ///
+  /// Roboto's own metrics (ascent 0.927 + descent 0.244) put a rendered line at
+  /// about 1.17x the font size; 1.2 is that, rounded up, so the box is never
+  /// shorter than the glyphs it holds.
+  static const double labelLineHeightFactor = 1.2;
+
+  /// Floor of the content row: the leading [IconSizes.dense] glyph.
+  ///
+  /// Icons do not scale with the text scaler, so at text scale 1.0 the glyph is
+  /// the tallest child (13 x 1.2 = 15.6 dp of label against a 16 dp icon) and
+  /// this floor is what the row measures.
+  static const double minContentHeight = IconSizes.dense;
+
+  /// Height of the content row AT THE CURRENT TEXT SCALE.
+  ///
+  /// This used to be the [minContentHeight] constant. That was correct only at
+  /// text scale 1.0: `main.dart` preserves Android font scaling to 2.0x, and at
+  /// 1.5x the label needs 23.4 dp, so a fixed 16 dp box stopped being a record
+  /// of the row's intrinsic height and became a clip -- the label was cut off
+  /// mid-glyph while the page beneath it stayed correctly positioned (CERT2-03).
+  static double contentHeightFor(BuildContext context) => math.max(
+    minContentHeight,
+    MediaQuery.textScalerOf(context).scale(labelFontSize) * labelLineHeightFactor,
+  );
 
   /// How much vertical space the banner occupies BELOW the status bar.
   ///
@@ -32,7 +57,11 @@ class ConnectivityBanner extends StatefulWidget {
   /// SafeArea consumes that inset), so the shell must reserve this, not the
   /// banner's full painted height. Reserving the inset twice would push every
   /// page down by the status bar a second time.
-  static const double reservedHeight = verticalPadding * 2 + contentHeight;
+  ///
+  /// Derived from [contentHeightFor] rather than duplicated, so the shell's
+  /// reservation follows the label when the user scales text up.
+  static double reservedHeightFor(BuildContext context) =>
+      verticalPadding * 2 + contentHeightFor(context);
 
   @override
   State<ConnectivityBanner> createState() => _ConnectivityBannerState();
@@ -117,11 +146,10 @@ class _ConnectivityBannerState extends State<ConnectivityBanner>
             color: AppColors.warning.withValues(alpha: 0.9),
           ),
           // Explicit height so the shell's reservation and the banner's own
-          // geometry cannot drift apart. It equals what the row already
-          // measured intrinsically (the dense leading glyph is the tallest
-          // child), so this pins the current appearance rather than changing it.
+          // geometry cannot drift apart -- both read contentHeightFor(context),
+          // so there is one number, and it tracks the text scaler.
           child: SizedBox(
-            height: ConnectivityBanner.contentHeight,
+            height: ConnectivityBanner.contentHeightFor(context),
             child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -135,7 +163,7 @@ class _ConnectivityBannerState extends State<ConnectivityBanner>
                 'offline_banner_text'.tr(),
                 style: const TextStyle(
                   color: Colors.white,
-                  fontSize: 13,
+                  fontSize: ConnectivityBanner.labelFontSize,
                   fontWeight: FontWeight.w700,
                 ),
               ),

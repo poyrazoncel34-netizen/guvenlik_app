@@ -15,6 +15,8 @@
 // the full painted height would push every page down by the status-bar inset a
 // second time, because the pages already start below it.
 
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guvenlik_app/core/design_tokens.dart';
@@ -22,26 +24,68 @@ import 'package:guvenlik_app/widgets/connectivity_banner.dart';
 
 void main() {
   group('MP-72-031 — the offline banner reserves the space it paints', () {
-    test('reservedHeight is the padded content row, excluding the status bar', () {
-      expect(
-        ConnectivityBanner.reservedHeight,
-        ConnectivityBanner.verticalPadding * 2 + ConnectivityBanner.contentHeight,
-        reason:
-            'the shell reserves this number; if it stops being the banner\'s '
-            'own geometry the two drift apart and the overlap returns',
+    testWidgets('reserved height is the padded content row at ANY text scale', (
+      tester,
+    ) async {
+      for (final double scale in <double>[1.0, 1.3, 1.5, 2.0]) {
+        late BuildContext ctx;
+        await tester.pumpWidget(
+          MediaQuery(
+            data: MediaQueryData(textScaler: TextScaler.linear(scale)),
+            child: Builder(
+              builder: (BuildContext c) {
+                ctx = c;
+                return const SizedBox.shrink();
+              },
+            ),
+          ),
+        );
+        final double content = ConnectivityBanner.contentHeightFor(ctx);
+        expect(
+          ConnectivityBanner.reservedHeightFor(ctx),
+          ConnectivityBanner.verticalPadding * 2 + content,
+          reason:
+              'the shell reserves this number; if it stops being the banner\'s '
+              'own geometry the two drift apart and the overlap returns',
+        );
+        expect(
+          content,
+          greaterThanOrEqualTo(
+            ConnectivityBanner.labelFontSize *
+                scale *
+                ConnectivityBanner.labelLineHeightFactor,
+          ),
+          reason:
+              'CERT2-03: a fixed 16 dp row clipped the label at 1.5x. The row '
+              'must be at least as tall as the scaled line box.',
+        );
+        expect(ConnectivityBanner.reservedHeightFor(ctx), greaterThan(0));
+      }
+    });
+
+    testWidgets('at text scale 1.0 the icon is still the floor', (
+      tester,
+    ) async {
+      late BuildContext ctx;
+      await tester.pumpWidget(
+        MediaQuery(
+          data: const MediaQueryData(),
+          child: Builder(
+            builder: (BuildContext c) {
+              ctx = c;
+              return const SizedBox.shrink();
+            },
+          ),
+        ),
       );
       expect(
-        ConnectivityBanner.contentHeight,
+        ConnectivityBanner.contentHeightFor(ctx),
         IconSizes.dense,
         reason:
-            'the leading glyph is the tallest child of the content row, so the '
-            'row measures exactly this. Pinning it is what makes the explicit '
-            'SizedBox a record of the current appearance rather than a change '
-            'to it.',
+            'the fix must not move a single pixel at the default scale: the '
+            'leading glyph is still the tallest child there (13 x 1.2 = 15.6 '
+            'against a 16 dp icon)',
       );
-      // A reservation of zero would make this whole mechanism a no-op while
-      // every other assertion here still passed.
-      expect(ConnectivityBanner.reservedHeight, greaterThan(0));
     });
 
     testWidgets('the banner paints status-bar inset PLUS the reserved height', (
@@ -77,12 +121,49 @@ void main() {
       );
       expect(resolved.bottom, ConnectivityBanner.verticalPadding);
       expect(
-        resolved.top + ConnectivityBanner.contentHeight + resolved.bottom -
+        resolved.top +
+            ConnectivityBanner.contentHeightFor(
+              tester.element(find.byType(_PaddingProbe)),
+            ) +
+            resolved.bottom -
             inset,
-        ConnectivityBanner.reservedHeight,
+        ConnectivityBanner.reservedHeightFor(
+          tester.element(find.byType(_PaddingProbe)),
+        ),
         reason:
             'painted height below the status bar must equal exactly what the '
             'shell reserves, or the page is either overlapped or over-indented',
+      );
+    });
+
+    // The original test pinned the banner's own geometry and nothing else, so
+    // the half of the fix that actually removes the overlap -- the SHELL
+    // reserving the space -- was never asserted. A source contract rather than
+    // a render: mounting MainNavigation pulls in get_it, connectivity and four
+    // real pages, and this is the one fact that has to stay true (CERT2-03).
+    test('the shell reserves the banner height while offline', () {
+      final String shell = File(
+        'lib/screens/main_navigation.dart',
+      ).readAsStringSync();
+
+      expect(
+        shell.contains('ConnectivityBanner.reservedHeightFor(context)'),
+        isTrue,
+        reason:
+            'the shell must reserve the banner geometry from the banner itself; '
+            'a hard-coded number is how the two drifted apart before',
+      );
+      expect(
+        RegExp(r'top:\s*_isOffline').hasMatch(shell),
+        isTrue,
+        reason: 'the reservation must be conditional on the offline state',
+      );
+      expect(
+        shell.contains('ConnectivityBanner.reservedHeight,'),
+        isFalse,
+        reason:
+            'the fixed-scale constant no longer exists; using it would pin the '
+            'reservation at text scale 1.0 while the banner grew',
       );
     });
   });
@@ -114,7 +195,7 @@ class _PaddingProbe extends StatelessWidget {
         top: statusBarInset + ConnectivityBanner.verticalPadding,
         bottom: ConnectivityBanner.verticalPadding,
       ),
-      child: const SizedBox(height: ConnectivityBanner.contentHeight),
+      child: SizedBox(height: ConnectivityBanner.contentHeightFor(context)),
     );
   }
 }
