@@ -1,10 +1,10 @@
 {
   "verifier": "scripts/audit_evidence/assets.py",
-  "verifierVersion": "1.0.0",
+  "verifierVersion": "1.1.0",
   "codeRevision": {
-    "verifiedCodeRevision": "b171e937958803d0f44b8ca64bf0afe9338ef3f7",
+    "verifiedCodeRevision": "e55f08a96242032771449bf7b82ca3f784f73de0",
     "dirty": false,
-    "treeHash": "fd23f3929ab490615c1535c5eccb63231868bb40",
+    "treeHash": "6116b596565da194e2cecec3055fb6a87736c335",
     "dirtyPaths": [],
     "note": "verifiedCodeRevision is the commit whose measured surface produced this artifact. A later commit may CONTAIN this file; that is the documentation head, and the two are distinguished in PRODUCTION_AUDIT.md. Changes under docs/audit/evidence/ are this package's own output and do not make the measured tree dirty."
   },
@@ -147,6 +147,185 @@
         "android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png"
       ],
       "count": 11
+    },
+    "densityBuckets": {
+      "families": [
+        {
+          "family": "drawable-night/android12splash.png",
+          "buckets": {
+            "mdpi": "android/app/src/main/res/drawable-night-mdpi/android12splash.png",
+            "hdpi": "android/app/src/main/res/drawable-night-hdpi/android12splash.png",
+            "xhdpi": "android/app/src/main/res/drawable-night-xhdpi/android12splash.png",
+            "xxhdpi": "android/app/src/main/res/drawable-night-xxhdpi/android12splash.png",
+            "xxxhdpi": "android/app/src/main/res/drawable-night-xxxhdpi/android12splash.png"
+          },
+          "pixelSizes": {
+            "mdpi": [
+              288,
+              288
+            ],
+            "hdpi": [
+              432,
+              432
+            ],
+            "xhdpi": [
+              576,
+              576
+            ],
+            "xxhdpi": [
+              864,
+              864
+            ],
+            "xxxhdpi": [
+              1152,
+              1152
+            ]
+          }
+        },
+        {
+          "family": "drawable/android12splash.png",
+          "buckets": {
+            "mdpi": "android/app/src/main/res/drawable-mdpi/android12splash.png",
+            "hdpi": "android/app/src/main/res/drawable-hdpi/android12splash.png",
+            "xhdpi": "android/app/src/main/res/drawable-xhdpi/android12splash.png",
+            "xxhdpi": "android/app/src/main/res/drawable-xxhdpi/android12splash.png",
+            "xxxhdpi": "android/app/src/main/res/drawable-xxxhdpi/android12splash.png"
+          },
+          "pixelSizes": {
+            "mdpi": [
+              288,
+              288
+            ],
+            "hdpi": [
+              432,
+              432
+            ],
+            "xhdpi": [
+              576,
+              576
+            ],
+            "xxhdpi": [
+              864,
+              864
+            ],
+            "xxxhdpi": [
+              1152,
+              1152
+            ]
+          }
+        },
+        {
+          "family": "drawable/ic_launcher_foreground.png",
+          "buckets": {
+            "mdpi": "android/app/src/main/res/drawable-mdpi/ic_launcher_foreground.png",
+            "hdpi": "android/app/src/main/res/drawable-hdpi/ic_launcher_foreground.png",
+            "xhdpi": "android/app/src/main/res/drawable-xhdpi/ic_launcher_foreground.png",
+            "xxhdpi": "android/app/src/main/res/drawable-xxhdpi/ic_launcher_foreground.png",
+            "xxxhdpi": "android/app/src/main/res/drawable-xxxhdpi/ic_launcher_foreground.png"
+          },
+          "pixelSizes": {
+            "mdpi": [
+              108,
+              108
+            ],
+            "hdpi": [
+              162,
+              162
+            ],
+            "xhdpi": [
+              216,
+              216
+            ],
+            "xxhdpi": [
+              324,
+              324
+            ],
+            "xxxhdpi": [
+              432,
+              432
+            ]
+          }
+        },
+        {
+          "family": "drawable/splash.png",
+          "buckets": {
+            "mdpi": "android/app/src/main/res/drawable-mdpi/splash.png",
+            "hdpi": "android/app/src/main/res/drawable-hdpi/splash.png",
+            "xhdpi": "android/app/src/main/res/drawable-xhdpi/splash.png",
+            "xxhdpi": "android/app/src/main/res/drawable-xxhdpi/splash.png",
+            "xxxhdpi": "android/app/src/main/res/drawable-xxxhdpi/splash.png"
+          },
+          "pixelSizes": {
+            "mdpi": [
+              288,
+              288
+            ],
+            "hdpi": [
+              432,
+              432
+            ],
+            "xhdpi": [
+              576,
+              576
+            ],
+            "xxhdpi": [
+              864,
+              864
+            ],
+            "xxxhdpi": [
+              1152,
+              1152
+            ]
+          }
+        },
+        {
+          "family": "mipmap/ic_launcher.png",
+          "buckets": {
+            "mdpi": "android/app/src/main/res/mipmap-mdpi/ic_launcher.png",
+            "hdpi": "android/app/src/main/res/mipmap-hdpi/ic_launcher.png",
+            "xhdpi": "android/app/src/main/res/mipmap-xhdpi/ic_launcher.png",
+            "xxhdpi": "android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png",
+            "xxxhdpi": "android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png"
+          },
+          "pixelSizes": {
+            "mdpi": [
+              48,
+              48
+            ],
+            "hdpi": [
+              72,
+              72
+            ],
+            "xhdpi": [
+              96,
+              96
+            ],
+            "xxhdpi": [
+              144,
+              144
+            ],
+            "xxxhdpi": [
+              192,
+              192
+            ]
+          }
+        }
+      ],
+      "familyCount": 5,
+      "densityMultipliers": {
+        "ldpi": 0.75,
+        "mdpi": 1.0,
+        "hdpi": 1.5,
+        "xhdpi": 2.0,
+        "xxhdpi": 3.0,
+        "xxxhdpi": 4.0
+      },
+      "tolerancePx": 1,
+      "optionalBuckets": [
+        "ldpi"
+      ],
+      "bundledRasterAssetCount": 2,
+      "why": "MP-72-013/014. Every raster this app ships is an Android res variant; the Flutter asset bundle declares no images at all, and the only runtime image is a user-picked file. So 'blurry' and 'wrong resolution' reduce to whether each bucket is its baseline scaled by the bucket multiplier, which is arithmetic over committed files rather than a property of a panel."
     }
   },
   "violations": [],
@@ -163,18 +342,24 @@
   "propertyClasses": {
     "criterion": "ENFORCED = the property's name is read by measure(), the function that emits violations. CENSUS = a computed fact with no violation rule behind it; it is credible because it is derived and reproducible at a named revision, NOT because a mutation moved it.",
     "rulesEmitted": [
+      "assetBucketMissing",
+      "assetDensityMismatch",
       "demoAssetShipped",
       "materialIconFontNotDeclared",
       "referencedAssetMissing"
     ],
     "rulesUnderNegativeControl": [
+      "assetBucketMissing",
+      "assetDensityMismatch",
       "demoAssetShipped",
       "referencedAssetMissing"
     ],
     "rulesEmittedWithoutControl": [
       "materialIconFontNotDeclared"
     ],
-    "enforcedProperties": [],
+    "enforcedProperties": [
+      "densityBuckets"
+    ],
     "censusProperties": [
       "declaredAssets",
       "declaredAssets.onDisk",
@@ -196,12 +381,25 @@
       "iconography.dynamicIconLookupSites",
       "launcherIcons",
       "launcherIcons.androidResources",
-      "launcherIcons.count"
+      "launcherIcons.count",
+      "densityBuckets.families",
+      "densityBuckets.familyCount",
+      "densityBuckets.densityMultipliers",
+      "densityBuckets.densityMultipliers.ldpi",
+      "densityBuckets.densityMultipliers.mdpi",
+      "densityBuckets.densityMultipliers.hdpi",
+      "densityBuckets.densityMultipliers.xhdpi",
+      "densityBuckets.densityMultipliers.xxhdpi",
+      "densityBuckets.densityMultipliers.xxxhdpi",
+      "densityBuckets.tolerancePx",
+      "densityBuckets.optionalBuckets",
+      "densityBuckets.bundledRasterAssetCount",
+      "densityBuckets.why"
     ]
   },
   "negativeControl": {
     "command": "python3 scripts/audit_evidence/assets.py --negative-control",
-    "mutation": "reference an asset that is not on disk and ship a demo_ image",
-    "expected": "referencedAssetMissing and demoAssetShipped fire"
+    "mutation": "reference an asset that is not on disk, ship a demo_ image, leave an xxhdpi launcher icon at mdpi resolution and delete the xxxhdpi bucket",
+    "expected": "referencedAssetMissing, demoAssetShipped, assetDensityMismatch and assetBucketMissing fire"
   }
 }

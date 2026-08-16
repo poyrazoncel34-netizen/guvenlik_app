@@ -231,34 +231,6 @@
         "why": "Same pass, baselines aligned in every row inspected. Only a real panel can resolve sub-pixel baseline drift, so the claim is bounded to the density it was measured at."
       }
     ],
-    "MP-72-013": [
-      {
-        "field": "remediation",
-        "claim": "Include a device from a different density bucket",
-        "refutedBy": [],
-        "why": "Measured clean in the xxhdpi bucket 2026-08-16; blurriness is by definition a wrong-bucket symptom and this device has one bucket. The named document is the INSTRUCTION SHEET for work that happens outside this repository, not a deliverable this cell is asking someone to write. It exists precisely so the external run has a script to follow; its existence therefore does not make the cell stale. Registered when WORK_PHRASES was widened (CERT-05)."
-      },
-      {
-        "field": "evidence",
-        "claim": "no defect here at this density",
-        "refutedBy": [],
-        "why": "Every glyph rendered crisply in the single (xxhdpi) density bucket this device has. A different bucket is what would refute it, and no repository file can stand in for one."
-      }
-    ],
-    "MP-72-014": [
-      {
-        "field": "remediation",
-        "claim": "Include a device from a different density bucket",
-        "refutedBy": [],
-        "why": "Same single-bucket limit as MP-72-013. The named document is the INSTRUCTION SHEET for work that happens outside this repository, not a deliverable this cell is asking someone to write. It exists precisely so the external run has a script to follow; its existence therefore does not make the cell stale. Registered when WORK_PHRASES was widened (CERT-05)."
-      },
-      {
-        "field": "evidence",
-        "claim": "no defect here at this density",
-        "refutedBy": [],
-        "why": "Same single-bucket limit as MP-72-013."
-      }
-    ],
     "MP-72-016": [
       {
         "field": "remediation",

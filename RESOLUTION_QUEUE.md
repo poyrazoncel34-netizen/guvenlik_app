@@ -24,17 +24,17 @@ external system, device, account or product decision is.
 
 | Metric | Count |
 |---|---|
-| Unresolved requirements queued | 145 |
+| Unresolved requirements queued | 143 |
 | IN_REPO_RESOLVABLE | 0 |
 | RUNTIME_VERIFIABLE_NOW | 0 |
-| EXTERNAL_BLOCKER | 110 |
+| EXTERNAL_BLOCKER | 108 |
 | PRODUCT_DECISION_REQUIRED | 35 |
 
 | Status | IN_REPO | RUNTIME | EXTERNAL | PRODUCT |
 |---|---|---|---|---|
 | FAIL | 0 | 0 | 1 | 1 |
 | PARTIAL | 0 | 0 | 40 | 22 |
-| UNVERIFIED | 0 | 0 | 43 | 0 |
+| UNVERIFIED | 0 | 0 | 41 | 0 |
 | BLOCKED | 0 | 0 | 26 | 12 |
 
 ## Queue
@@ -184,10 +184,8 @@ not already carry.
 | 137 | `MP-04-015` | P3 | PARTIAL | `PRODUCT_DECISION_REQUIRED` | Dark theme tanımlıysa tam. | design_tokens.json measurements.themes.wiredInMain: main.dart passes theme: AppTheme.lightTheme AND themeMode: ThemeMode.dark. The light theme is fully maintained (8 component themes) and completely u | Ship light mode or delete the light theme. Leaving it is the only option that lets a maintained-but-unrendered theme rot silently, and this is an owner's decision. |
 | 138 | `MP-72-002` | P3 | UNVERIFIED | `EXTERNAL_BLOCKER` | 1px border inconsistencies. | The remainder is a real panel, not a missing pass. Same reasoning as MP-69-012/013: the logical surface is measurable here, the physical one is not. How a 1 px border RASTERISES is a property of the p | Include this item in the real-device QA matrix run; nothing further is closable in-repo. |
 | 139 | `MP-72-006` | P3 | UNVERIFIED | `EXTERNAL_BLOCKER` | Text baseline mismatch. | The remainder is a real panel, not a missing pass. Same reasoning as MP-69-012/013: the logical surface is measurable here, the physical one is not. Sub-pixel baseline drift is below what a 420 dpi em | Include this item in the real-device QA matrix run; nothing further is closable in-repo. |
-| 140 | `MP-72-013` | P3 | UNVERIFIED | `EXTERNAL_BLOCKER` | Blurry assets. | The remainder is a real panel, not a missing pass. Same reasoning as MP-69-012/013: the logical surface is measurable here, the physical one is not. Only one density bucket exists on this device, and  | Include a device from a different density bucket in the real-device QA matrix; nothing further is closable in-repo. |
-| 141 | `MP-72-014` | P3 | UNVERIFIED | `EXTERNAL_BLOCKER` | Wrong resolution. | The remainder is a real panel, not a missing pass. Same reasoning as MP-69-012/013: the logical surface is measurable here, the physical one is not. Same single-bucket limit as item 13. | Include a device from a different density bucket in the real-device QA matrix; nothing further is closable in-repo. |
-| 142 | `MP-72-016` | P3 | UNVERIFIED | `EXTERNAL_BLOCKER` | Gradient banding. | The remainder is a real panel, not a missing pass. Same reasoning as MP-69-012/013: the logical surface is measurable here, the physical one is not. Banding is a function of the panel bit depth and it | Include this item in the real-device QA matrix run; nothing further is closable in-repo. |
-| 143 | `MP-41-022` | P3 | BLOCKED | `EXTERNAL_BLOCKER` | Device thermal throttling. | The irreducible remainder needs a system, device or account outside this repository. What COULD be measured here was, and is cited above. | See EXTERNAL_LAUNCH_BLOCKERS.md; nothing further is closable in-repo. |
-| 144 | `MP-64-018` | P3 | BLOCKED | `EXTERNAL_BLOCKER` | Budget alert. | The irreducible remainder needs a system, device or account outside this repository. What COULD be measured here was, and is cited above. | See EXTERNAL_LAUNCH_BLOCKERS.md; nothing further is closable in-repo. |
-| 145 | `MP-64-019` | P3 | BLOCKED | `EXTERNAL_BLOCKER` | Anomaly detection. | The irreducible remainder needs a system, device or account outside this repository. What COULD be measured here was, and is cited above. | See EXTERNAL_LAUNCH_BLOCKERS.md; nothing further is closable in-repo. |
+| 140 | `MP-72-016` | P3 | UNVERIFIED | `EXTERNAL_BLOCKER` | Gradient banding. | The remainder is a real panel, not a missing pass. Same reasoning as MP-69-012/013: the logical surface is measurable here, the physical one is not. Banding is a function of the panel bit depth and it | Include this item in the real-device QA matrix run; nothing further is closable in-repo. |
+| 141 | `MP-41-022` | P3 | BLOCKED | `EXTERNAL_BLOCKER` | Device thermal throttling. | The irreducible remainder needs a system, device or account outside this repository. What COULD be measured here was, and is cited above. | See EXTERNAL_LAUNCH_BLOCKERS.md; nothing further is closable in-repo. |
+| 142 | `MP-64-018` | P3 | BLOCKED | `EXTERNAL_BLOCKER` | Budget alert. | The irreducible remainder needs a system, device or account outside this repository. What COULD be measured here was, and is cited above. | See EXTERNAL_LAUNCH_BLOCKERS.md; nothing further is closable in-repo. |
+| 143 | `MP-64-019` | P3 | BLOCKED | `EXTERNAL_BLOCKER` | Anomaly detection. | The irreducible remainder needs a system, device or account outside this repository. What COULD be measured here was, and is cited above. | See EXTERNAL_LAUNCH_BLOCKERS.md; nothing further is closable in-repo. |
 

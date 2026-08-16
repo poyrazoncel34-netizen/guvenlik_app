@@ -134,22 +134,39 @@ SCOPE_OVERRIDES: dict[str, tuple[str, str]] = {
         "A numeric performance-regression gate needs a physical-device baseline to "
         "be a threshold rather than a record of emulator jitter.",
     ),
-    # --- 2026-08-16 visual-polish pass: 8 of the 13 section-72 items closed on
-    # --- the emulator, these 5 did not, and each names WHY a panel is the
-    # --- remainder rather than a missing pass. Recorded in
+    # --- 2026-08-16 visual-polish pass. Measured on the API 36 emulator at 420
+    # --- dpi with no defect found; what remains for these three is a physical
+    # --- PANEL. Recorded in
     # --- docs/audit/device-verification-2026-08-16-visual-polish.md.
-    **{
-        rid: (
-            "EXTERNAL_BLOCKER",
-            "Measured on the API 36 emulator at 420 dpi on 2026-08-16 with no "
-            "defect found. The irreducible remainder is a physical PANEL: 1 px "
-            "rasterisation, sub-pixel baselines, a second density bucket and "
-            "gradient dithering are all properties of real hardware, not of a "
-            "framebuffer. Same reasoning as MP-69-012/013 -- the logical "
-            "surface is measurable here, the physical one is not.",
-        )
-        for rid in ("MP-72-002", "MP-72-006", "MP-72-013", "MP-72-014", "MP-72-016")
-    },
+    #
+    # NOTE (CERT2-01): MP-72-013 and MP-72-014 used to be in this group on the
+    # argument that "a second density bucket" is hardware. That was inverted --
+    # the DEVICE has one bucket, the REPOSITORY has all five -- and the two rows
+    # are now measured by assets.py's `densityBuckets` rule and graded PASS. An
+    # override is the one place a human judgement escapes every gate
+    # (verify_resolution_classification.py imports this classifier), so a wrong
+    # one is invisible. Each remaining entry therefore states its OWN physical
+    # remainder rather than sharing a paragraph.
+    "MP-72-002": (
+        "EXTERNAL_BLOCKER",
+        "Border WIDTHS are consistent and checkable here (19 sites at the "
+        "default 1.0, one deliberate 1.5 on the PIN keypad). What is left is how "
+        "a hairline RASTERISES on a real panel's subpixel layout, which a "
+        "framebuffer does not reproduce. Same shape as MP-69-012/013.",
+    ),
+    "MP-72-006": (
+        "EXTERNAL_BLOCKER",
+        "Baselines aligned in every row inspected at 420 dpi. Sub-pixel baseline "
+        "drift is below what an emulator capture can resolve; it is a panel "
+        "property, not a source property.",
+    ),
+    "MP-72-016": (
+        "EXTERNAL_BLOCKER",
+        "Banding is a function of panel bit depth and its dithering, neither of "
+        "which an emulator framebuffer reproduces. The 20 gradient sites in lib/ "
+        "are enumerated in the audit row so the inspected set is not mistaken "
+        "for the whole set (CERT2-04).",
+    ),
     "MP-69-012": (
         "EXTERNAL_BLOCKER",
         "text_scale.json covers six logical viewports including the density-560 "

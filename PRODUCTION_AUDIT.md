@@ -123,12 +123,12 @@
 | **MISSING** | **0** |
 | **DUPLICATED** | **0** |
 | **UNACCOUNTED** | **0** |
-| PASS | 814 |
+| PASS | 816 |
 | FAIL | 2 |
 | PARTIAL | 62 |
 | BLOCKED | 38 |
 | N/A | 779 |
-| UNVERIFIED | 43 |
+| UNVERIFIED | 41 |
 
 ### Severity of non-PASS findings
 
@@ -137,7 +137,7 @@
 | P0 | 0 |
 | P1 | 29 |
 | P2 | 105 |
-| P3 | 11 |
+| P3 | 9 |
 
 ### P0 / P1 register
 
@@ -250,7 +250,7 @@ Every P0 and P1 individually, so none hides inside an aggregate.
 | 69 | 7 | 0 | 2 | 0 | 7 | 1 |
 | 70 | 17 | 0 | 0 | 0 | 8 | 0 |
 | 71 | 0 | 0 | 0 | 0 | 0 | 12 |
-| 72 | 17 | 0 | 0 | 0 | 14 | 5 |
+| 72 | 19 | 0 | 0 | 0 | 14 | 3 |
 | 73 | 9 | 0 | 0 | 0 | 2 | 1 |
 | 74 | 4 | 0 | 2 | 0 | 2 | 1 |
 | 75 | 9 | 0 | 6 | 0 | 3 | 0 |
@@ -2860,8 +2860,8 @@ Every P0 and P1 individually, so none hides inside an aggregate.
 | `MP-72-010` | Button label centering. | Applicable | **PASS** | - | RUN 2026-08-16, systematic polish pass on a CLEAN install, API 36 emulator at 1080x2400 / 420 dpi, 8 surfaces walked end to end and each capture inspected item by item. Recorded in `docs/audit/device-verification-2026-08-16-visual-polish.md`. Button label centring: checked on the filled primary, the outlined secondary and the text tertiary, with and without a leading icon - the icon+label group is optically centred in every case, including the three-button stack in the battery wizard. | None found in the pass. | None in repo. | `RUN` |
 | `MP-72-011` | Avatar cropping. | Applicable | **PASS** | - | RUN 2026-08-16, systematic polish pass on a CLEAN install, API 36 emulator at 1080x2400 / 420 dpi, 8 surfaces walked end to end and each capture inspected item by item. Recorded in `docs/audit/device-verification-2026-08-16-visual-polish.md`. Avatar cropping: the circular avatar on the Contacts card and the profile avatar on Settings both render their glyph fully inside the circle with no clipping at the arc. | None found in the pass. | None in repo. | `RUN` |
 | `MP-72-012` | Image aspect ratio. | Applicable | **PASS** | - | RUN 2026-08-16, systematic polish pass on a CLEAN install, API 36 emulator at 1080x2400 / 420 dpi, 8 surfaces walked end to end and each capture inspected item by item. Recorded in `docs/audit/device-verification-2026-08-16-visual-polish.md`. Image aspect ratio: the product ships no photographic asset - every graphic is a vector icon or a drawn shape - so there is no raster aspect ratio to distort. Verified against the captures rather than assumed. | None found in the pass. | None in repo. | `RUN` |
-| `MP-72-013` | Blurry assets. | Applicable | **UNVERIFIED** | P3 | RUN 2026-08-16, systematic polish pass on a CLEAN install, API 36 emulator at 1080x2400 / 420 dpi, recorded in `docs/audit/device-verification-2026-08-16-visual-polish.md`. The pass found no defect here at this density. Every glyph and shape rendered crisply in the xxhdpi (420 dpi) bucket. | The remainder is a real panel, not a missing pass. Same reasoning as MP-69-012/013: the logical surface is measurable here, the physical one is not. Only one density bucket exists on this device, and blurriness is by definition a wrong-bucket symptom. | Include a device from a different density bucket in the real-device QA matrix; nothing further is closable in-repo. | `RUN` |
-| `MP-72-014` | Wrong resolution. | Applicable | **UNVERIFIED** | P3 | RUN 2026-08-16, systematic polish pass on a CLEAN install, API 36 emulator at 1080x2400 / 420 dpi, recorded in `docs/audit/device-verification-2026-08-16-visual-polish.md`. The pass found no defect here at this density. No upscaled or downscaled asset was visible at 420 dpi. | The remainder is a real panel, not a missing pass. Same reasoning as MP-69-012/013: the logical surface is measurable here, the physical one is not. Same single-bucket limit as item 13. | Include a device from a different density bucket in the real-device QA matrix; nothing further is closable in-repo. | `RUN` |
+| `MP-72-013` | Blurry assets. | Applicable | **PASS** | - | MEASURED, not asserted. Archetype STATIC_CODE. Verifier `scripts/audit_evidence/assets.py` -> `docs/audit/evidence/assets.json`, property `densityBuckets` (ENFORCED). The bundled Flutter asset list declares NO images at all (pubspec `assets:` is one translation JSON, two WAVs and a notices TXT) and the only runtime raster in `lib/` is `Image.file` on a user-picked photo, so every raster this app ships is an Android res variant. All 5 families are present in all 5 density buckets at exactly their multiplier: launcher 48/72/96/144/192, splash and android12splash 288/432/576/864/1152 (light and night), foreground 108/162/216/324/432 -- generated from a 2048x2048 source, so upscaling, the only thing that renders blurry, is arithmetically impossible. NEGATIVE CONTROL: leaving an xxhdpi launcher icon at mdpi resolution trips `assetDensityMismatch`, deleting the xxxhdpi bucket trips `assetBucketMissing`. RE-GRADED 2026-08-16 (CERT2-01): previously forced EXTERNAL by a SCOPE_OVERRIDE arguing that a second density bucket is hardware. That is inverted -- the DEVICE has one bucket, the REPOSITORY has all five, and their correctness is arithmetic over committed files. | None. | None in repo. | `SRC` |
+| `MP-72-014` | Wrong resolution. | Applicable | **PASS** | - | MEASURED, not asserted. Archetype STATIC_CODE. Same verifier and property as MP-72-013: `scripts/audit_evidence/assets.py` -> `docs/audit/evidence/assets.json`, `densityBuckets` (ENFORCED). "Wrong resolution" is the same measurement read the other way: every density-qualified raster is compared against its own mdpi baseline scaled by the bucket multiplier, with 1 px of rounding slack, and no variant deviates. 5 families x 5 buckets, 0 violations. NEGATIVE CONTROL: an xxhdpi icon left at mdpi resolution trips `assetDensityMismatch`. RE-GRADED 2026-08-16 (CERT2-01). | None. | None in repo. | `SRC` |
 | `MP-72-015` | Shadow clipping. | Applicable | **PASS** | - | RESOLVED with MP-72-001. Measured matrix (test/screens/unlock_screen_density_overflow_test.dart, one pump per test so takeException cannot drain across cells): default 411.4x914.3 at scale 1.0 CLEAN; default at scale 2.0 OVERFLOW; density-560 308.6x685.7 at scale 1.0 OVERFLOW; density 560 at scale 2.0 OVERFLOW. Either axis alone reproduces it, so this was never a large-display edge case -- every user at the app's maximum text scale hit it. Only the shipping default is clean, which is exactly why previous single-configuration walkthroughs passed. After the fix the device shows zero overflow at density 560 + font_scale 2.0. | The density-560 clipping on the unlock screen is an open defect with an unestablished root cause. | Close together with MP-72-001. | `RUN` |
 | `MP-72-016` | Gradient banding. | Applicable | **UNVERIFIED** | P3 | RUN 2026-08-16, systematic polish pass on a CLEAN install, API 36 emulator at 1080x2400 / 420 dpi, recorded in `docs/audit/device-verification-2026-08-16-visual-polish.md`. The pass found no defect here at this density. The two gradient surfaces (the battery-wizard badge and the profile card) showed no banding in the capture. | The remainder is a real panel, not a missing pass. Same reasoning as MP-69-012/013: the logical surface is measurable here, the physical one is not. Banding is a function of the panel bit depth and its dithering; an emulator framebuffer cannot reproduce either. | Include this item in the real-device QA matrix run; nothing further is closable in-repo. | `RUN` |
 | `MP-72-017` | Scrollbar. | N/A | **N/A** | - | SRC: scrollbars are Android overlay-style and transient, there is no text caret outside standard Material fields, no cursor concept exists on touch, and no hover transition is reachable on a touch-only device. Focus ring is covered in section 12. | - | Not applicable to a touch-only Android target. | `SRC` |
