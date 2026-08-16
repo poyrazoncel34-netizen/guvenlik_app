@@ -136,10 +136,18 @@ final RegExp _setsIdentifier = RegExp(
 /// a suppression: if the reason stops being true the entry has to change.
 const Map<String, String> kNoSpinnerJustified = <String, String>{
   'lib/core/widgets/safety_session_pin_gate.dart::_verificationInProgress':
-      'Local keystore comparison, not I/O with observable latency. The flag '
-      'exists to block a double submit (_submit returns early while it is '
-      'set), and a progress spinner inside a duress PIN dialog would leak '
-      'timing about verification rather than help the user.',
+      'The control is a dialog action, and its loading affordance is the '
+      'dialog going inert: the TextField takes enabled: !_verificationInProgress '
+      'and BOTH actions null their onPressed while the work runs, so the state '
+      'is visible without a second indicator. The flag also blocks a double '
+      'submit (_submit returns early while it is set). '
+      'CORRECTED 2026-08-16 (CERT2-06): this entry used to claim the work was '
+      '"not I/O with observable latency". That was false -- _submit awaits '
+      'PinVerificationService.verify(), which reads flutter_secure_storage '
+      'under an explicit .timeout(), and then awaits two more PinLockoutService '
+      'reads and a write. The behaviour was always right; the recorded reason '
+      'was not, and this map is contracted to hold reasons rather than '
+      'suppressions.',
   'lib/screens/legal/consent_management_screen.dart::_loading':
       'The control is a Switch, not a button. Its loading affordance is the '
       'disabled state: both onTap and onChanged are nulled while the write is '
