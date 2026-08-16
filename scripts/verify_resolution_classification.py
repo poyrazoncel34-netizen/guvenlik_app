@@ -56,7 +56,37 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO / "scripts"))
 
+# Every manual scope override, pinned.
+#
+# An override is the one judgement in this system that no gate can contradict:
+# classify() applies it BEFORE anything is counted, so this verifier's
+# "inRepo=0 runtime=0" is computed from the override's own output. CERT2-01 was
+# exactly that failure -- MP-72-013/014 sat as EXTERNAL on the argument that a
+# second density bucket is hardware, which is backwards (the DEVICE has one
+# bucket, the REPOSITORY has all five), and eighteen green gates could not say
+# so.
+#
+# Pinning the set does NOT make any entry correct. It makes ADDING one a visible
+# diff that a reviewer has to approve on purpose, instead of a line in a dict
+# that silently moves a row out of the work queue. When this list and
+# SCOPE_OVERRIDES disagree, the fix is to justify the new entry in review and
+# then update this list -- never to sync it blindly.
+PINNED_OVERRIDES = frozenset({
+    "MP-02-016", "MP-03-013", "MP-04-015", "MP-06-014",
+    "MP-07-004", "MP-07-005", "MP-07-006", "MP-07-007",
+    "MP-07-008", "MP-07-011", "MP-07-014", "MP-07-015",
+    "MP-27-023", "MP-32-040", "MP-41-004", "MP-41-006",
+    "MP-41-009", "MP-41-010", "MP-41-011", "MP-46-028",
+    "MP-46-030", "MP-46-031", "MP-47-013", "MP-47-014",
+    "MP-50-012", "MP-54-023", "MP-54-024", "MP-59-018",
+    "MP-59-022", "MP-59-023", "MP-59-029", "MP-69-012",
+    "MP-69-013", "MP-72-002", "MP-72-006", "MP-72-016",
+    "MP-74-005", "MP-74-007", "MP-75-016", "MP-77-022",
+    "MP-80-017",
+})
+
 from generate_resolution_queue import (  # noqa: E402
+    SCOPE_OVERRIDES,
     STATUS_ORDER,
     classify,
     parse_rows,
@@ -82,6 +112,25 @@ def check(audit: Path, queue: Path) -> tuple:
         return ["NO_ROWS_PARSED: the audit produced no unresolved rows"], Counter()
 
     counts = Counter(row["scope"] for row in rows)
+
+    # The override set is pinned, so a new hand-decided scope cannot enter
+    # silently. See PINNED_OVERRIDES for why this is a review aid and not a
+    # correctness check.
+    actual_overrides = frozenset(SCOPE_OVERRIDES)
+    for rid in sorted(actual_overrides - PINNED_OVERRIDES):
+        problems.append(
+            f"UNPINNED_SCOPE_OVERRIDE {rid}: a manual override was added that "
+            f"no reviewer has signed off. An override is applied before this "
+            f"gate counts anything, so it can move a row out of the work queue "
+            f"without any gate disagreeing. Justify it in review, then add it "
+            f"to PINNED_OVERRIDES."
+        )
+    for rid in sorted(PINNED_OVERRIDES - actual_overrides):
+        problems.append(
+            f"STALE_PINNED_OVERRIDE {rid}: pinned but no longer in "
+            f"SCOPE_OVERRIDES. If the row was resolved, drop it from "
+            f"PINNED_OVERRIDES in the same commit."
+        )
 
     for scope in IN_REPO_SCOPES:
         for row in sorted(
