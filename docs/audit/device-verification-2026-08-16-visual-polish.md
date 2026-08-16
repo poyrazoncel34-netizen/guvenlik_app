@@ -137,3 +137,44 @@ PIN belirleme ile PIN tekrar ekranlari arasinda tus takimi dikey olarak kayiyor,
 cunku iki ekranin aciklama metni farkli uzunlukta. Islevsel bir sorun degil ve
 listedeki 13 maddeden hicbirine girmiyor; ayni kontrolun iki adimi arasindaki
 konum kaymasi olarak buraya not edildi.
+
+## Metin olcegi bulgusu ve duzeltmesi (CERT2-03, 2026-08-16)
+
+Bagimsiz sertifikasyon gecisi banner duzeltmesini **1.5x metin olceginde** yeniden
+kostu ve bir kusur buldu: banner'in KENDI etiketi (`Cevrimdisi Mod`) alttan
+yaklasik %40 kirpiliyordu. Sebep, duzeltmenin getirdigi sabit yukseklikti --
+`SizedBox(height: IconSizes.dense)` = 16 dp. Yorum satiri "en uzun cocuk oncu
+glif" diyordu; bu YALNIZCA olcek 1.0'da dogru. `main.dart` Android font
+olceklemesini 2.0x'e kadar koruyor ve 13 px etiket 1.5x'te ~23.4 dp istiyor, yani
+kutu bir kayit olmaktan cikip kirpici haline geliyordu.
+
+Sayfanin konumu her iki olcekte de DOGRUYDU; kirpilan sey banner'in kendi
+icerigiydi.
+
+Duzeltme: `contentHeightFor(context)` / `reservedHeightFor(context)` metin
+olceginden turer, kabuk de ayni fonksiyonu okur. Olcek 1.0'da tek piksel
+degismez (13 x 1.2 = 15.6 < 16 dp ikon tabani).
+
+| Olcek | Duzeltme oncesi | Duzeltme sonrasi |
+|---|---|---|
+| 1.0 | etiket tam | **tam** (piksel ayni) |
+| 1.5 | etiket alttan ~%40 kirpik | **tam**, `Hos Geldiniz` de tam |
+
+## Kanit saglamasi — YAPI PARMAK IZI ZORUNLU
+
+Bu gecis sirasinda gercek bir tuzak yasandi: sertifikasyon once cihazda KURULU
+olan yapiyi kostu, o yapi `d223d95` duzeltmesinden **4 saat once** kurulmustu ve
+duzeltme ONCESI kusuru aynen uretti. Kusur koda degil, bayat APK'ya aitti.
+
+Bu yuzden bundan sonra her cihaz dogrulama notu su alanlari tasir; yoksa
+"cihazda dogrulandi" cumlesi dogrulanabilir degildir:
+
+| Alan | Bu kayit icin |
+|---|---|
+| AVD | `Medium_Phone_API_36.1` (ilk gecis), `KoruBeni_API36_16k_ctrl` (CERT2-03 tekrar kosumu) |
+| Yogunluk | 1080x2400, 420 dpi |
+| Olculen commit | `d223d95` (banner duzeltmesi), CERT2-03 kosumu icin duzeltme sonrasi agac |
+| APK kurulum zamani | `adb shell dumpsys package <id> \| grep lastUpdateTime` ile teyit edilir |
+| Yontem | `flutter build apk --debug --flavor play` -> `adb install -r` -> ekran yakalama |
+
+Kural: **olculen commit ile kurulu APK'nin zamani celisiyorsa kayit gecersizdir.**

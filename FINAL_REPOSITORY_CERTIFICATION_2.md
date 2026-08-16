@@ -269,11 +269,17 @@ On the AVD matching the documented configuration, the installed build predated t
 hours, and **no build artifact in the tree contains the fix**. Running that installed build
 reproduced the *pre-fix* defect exactly (heading ~55% covered) — which is how this was detected.
 
-**Important correction in the builder's favour:** after rebuilding from HEAD and reinstalling, the
-fix is **genuine and correct**. See the four-tab result below. The substance of MP-72-031 holds;
-what is unsupported is the *provenance* of the recorded device evidence on this AVD. Two other AVDs
-exist (`KoruBeni_API37_16k`, `Medium_Phone_API_36.1`) and were not booted, so a different AVD cannot
-be excluded.
+**Corrected after remediation (2026-08-16).** The caveat above resolved in the builder's favour.
+`docs/audit/device-verification-2026-08-16-visual-polish.md` names its AVD as
+`Medium_Phone_API_36.1`, which is **not** the AVD I booted (`KoruBeni_API36_16k_ctrl`). The stale
+install I hit was therefore on a different emulator, and nothing here shows the builder's run was
+stale. Rebuilding from HEAD also confirmed the fix is **genuine and correct** (see the four-tab
+result below), so the substance of MP-72-031 holds.
+
+What remains, and what this finding is now reduced to: device-verification notes carried **no build
+fingerprint**, so a stale-APK run is indistinguishable from a real regression — a trap I fell into
+and had to detect via `lastUpdateTime`. That gap is real regardless of who ran what, and it is what
+the remediation closes.
 
 **Why the gate missed it.** Device evidence is prose. `verify_evidence_provenance.py` and
 `verify_evidence_reproducibility.py` govern the twelve JSON artifacts under
