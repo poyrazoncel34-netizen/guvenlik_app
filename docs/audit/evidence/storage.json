@@ -2,9 +2,9 @@
   "verifier": "scripts/audit_evidence/storage.py",
   "verifierVersion": "1.0.0",
   "codeRevision": {
-    "verifiedCodeRevision": "b171e937958803d0f44b8ca64bf0afe9338ef3f7",
+    "verifiedCodeRevision": "a4dca54ba2f317764ebcaf0c0cfb2ade70eef43d",
     "dirty": false,
-    "treeHash": "fd23f3929ab490615c1535c5eccb63231868bb40",
+    "treeHash": "43557626226e1079cbb1f6d89e66e1b8dba3f104",
     "dirtyPaths": [],
     "note": "verifiedCodeRevision is the commit whose measured surface produced this artifact. A later commit may CONTAIN this file; that is the documentation head, and the two are distinguished in PRODUCTION_AUDIT.md. Changes under docs/audit/evidence/ are this package's own output and do not make the measured tree dirty."
   },
