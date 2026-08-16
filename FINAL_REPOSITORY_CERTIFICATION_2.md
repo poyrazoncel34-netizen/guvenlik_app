@@ -607,3 +607,37 @@ Non-blocking but recorded: CERT2-04, CERT2-05, CERT2-06.
 
 This certification concerns the repository only. It is not, and must not be read as, a statement
 that the application is launch-ready.
+
+---
+
+## REMEDIATION RECORD (added after the verdict, at the owner's instruction)
+
+The verdict above stands **as a statement about `175eba5`** and is not edited. What follows is
+what changed afterwards, on the same branch.
+
+| ID | Severity | Closed by | Verification |
+|---|---|---|---|
+| CERT2-01 | CRITICAL | `assets.py` gained an ENFORCED `densityBuckets` rule (`assetDensityMismatch`, `assetBucketMissing`); MP-72-013/014 regraded PASS on that measurement; both overrides deleted | Negative control fires all four rules from a 0 baseline; 5 families x 5 buckets, 0 violations |
+| CERT2-02 | CRITICAL | `'frame'` marker made whole-word (it was matching "framebuffer"); `PINNED_OVERRIDES` added so a manual override cannot enter silently | Rogue-override probe turns the gate red; restoring returns it green. Narrow marker fix changes 0 rows |
+| CERT2-03 | HIGH | Banner height derives from `contentHeightFor(context)` / `reservedHeightFor(context)`; shell reads the same function | Red-green verified (old constant fails the new test at 16.0 < 20.28); confirmed on device at 1.5x — label renders in full, heading still correctly offset |
+| CERT2-04 | MEDIUM | MP-72-016 evidence now names all **20** gradient sites across 15 files and states the inspected set was smaller | Absence-claims registry re-registered against the corrected phrase |
+| CERT2-05 | MEDIUM | Device-verification notes must now carry AVD, density, measured commit and the `lastUpdateTime` check; rule added to `.claude/rules/common/testing.md` | Basis corrected in the finding itself — see the note there |
+| CERT2-06 | LOW | PIN-gate spinner exemption reason rewritten to the true one | `button_loading_state_test.dart` green |
+
+**Post-remediation state**
+
+- Accounting: 1738 = 1738, 0 missing / duplicated / unaccounted / mismatched.
+- Status: **PASS 816** (was 814), UNVERIFIED 41 (was 43), P3 unresolved 9 (was 11), FAIL still exactly 2.
+- `RESOLUTION_CLASSIFICATION_PASS unresolved=143 inRepo=0 runtime=0 external=108 product=35` — and
+  the two rows that made those zeros false are now PASS by measurement, not by override.
+- Convergence guard: **18/18 PASS**. `flutter analyze` clean, full suite green, worktree clean.
+
+**What is deliberately NOT closed.** The three remaining MP-72 overrides (002, 006, 016) still carry
+their rows entirely — removing them drops those three to `IN_REPO_RESOLVABLE` on the heuristic. That
+is inherent to the override mechanism, and I certified those three as genuinely panel-bound: hairline
+rasterisation, sub-pixel baselines, and panel bit depth plus dithering. `PINNED_OVERRIDES` does not
+make them correct; it makes the next one a reviewed diff. MP-46-028 and MP-46-030 remain FAIL by
+design — an owner policy reversal and real TalkBack hardware respectively.
+
+This record does not upgrade the repository to launch-ready. Physical device, Play Console,
+RevenueCat sandbox, MFA state and Play policy review remain outside it.

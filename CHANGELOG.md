@@ -19,6 +19,9 @@ Surumleme: `pubspec.yaml` 1.0.0+1'de SABITTIR; gercek `versionCode`
   soyleyen bir onay var.
 - Erisim ayarlari altindaki tasma kusuru kapatildi.
 - Dokunma hedefleri 48 dp'ye cikarildi; erisilemez cevrimdisi banneri onarildi.
+- Cevrimdisi banneri sayfa basligini ortuyordu; artik kapladigi yeri ayiriyor.
+- Buyuk yazi tipi olceginde (1.5x ve uzeri) cevrimdisi banneri kendi
+  etiketini alttan kirpiyordu; banner artik metin olcegiyle birlikte buyuyor.
 - Arka plan kilidi hic tetiklenmiyordu (`AppLifecycleState.inactive` donus
   yolunda da tetikleniyor ve sayaci sifirliyordu).
 
