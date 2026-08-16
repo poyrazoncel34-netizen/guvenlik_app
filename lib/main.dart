@@ -254,7 +254,7 @@ class KoruBeniApp extends StatelessWidget {
           restorationScopeId: 'korubeni',
           debugShowCheckedModeBanner: false,
           title: 'KoruBeni',
-          theme: AppTheme.lightTheme,
+          theme: AppTheme.darkTheme,
           builder: (context, child) {
             final mediaQuery = MediaQuery.of(context);
             return MediaQuery(

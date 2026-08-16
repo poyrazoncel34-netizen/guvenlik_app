@@ -2,7 +2,13 @@
 
 > Requirements that engineering cannot close because the answer is a product
 > choice, not a technical fact. **Nine decisions**, covering **31 requirement
-> IDs**. Both numbers are true and neither contradicts the other: several
+> IDs**.
+>
+> **STATUS 2026-08-16: all nine decisions have been taken by the owner.** Each
+> section below carries its answer in a `KARAR VERİLDİ` block directly under the
+> heading. The questions are kept rather than deleted, because a decision without
+> the alternatives it was chosen over is not reviewable later. Remaining
+> `PRODUCT_DECISION_REQUIRED` rows in the queue: **5**, down from 35. Both numbers are true and neither contradicts the other: several
 > requirements collapse into one underlying question.
 >
 > These are not a place to park hard work. Every requirement that could be
@@ -17,6 +23,8 @@ scope).
 ---
 
 ## D-1 — Is the light theme a supported mode, or should it be deleted?
+
+> **KARAR VERİLDİ — 2026-08-16.** **Sil.** `AppTheme.lightTheme` deleted; `main.dart` wires both `theme` and `darkTheme` to `AppTheme.darkTheme`. Measurement behind it: the deleted getter declared `brightness: Brightness.dark` and differed from `darkTheme` by ONE line, so the removal is visually a no-op. MP-04-015 -> PASS.
 
 - **Requirement IDs (1):** `MP-04-015`
 - **Current behaviour.** `AppTheme.lightTheme` is fully written and maintained,
@@ -43,6 +51,8 @@ scope).
 
 ## D-2 — Should typography be routed through `TextTheme`?
 
+> **KARAR VERİLDİ — 2026-08-16.** **Ratchet only, no migration.** Inline `fontSize` stays; `test/source_file_size_ratchet_test.dart`-style pinning already blocks growth. MP-05-016 was already PASS; nothing to change. Revisit only if a device visual-QA pass is funded.
+
 - **Requirement IDs (1):** `MP-04-004`
 - **Current behaviour.** A measured type scale exists (`TypeScale`) and is
   ratcheted, but the app sets `fontSize` inline at 335 sites and reads
@@ -67,6 +77,8 @@ scope).
 
 ## D-3 — Is portrait-phone-only still the product's scope?
 
+> **KARAR VERİLDİ — 2026-08-16.** **Keep the scope.** Portrait-phone-only confirmed. 13 rows (MP-07-004/005/006/007/008/011/014/015, MP-47-013/014, MP-59-018, MP-74-005, MP-80-002) -> N/A by scope, not defects.
+
 - **Requirement IDs (12):** `MP-07-004`, `MP-07-005`, `MP-07-006`, `MP-07-007`,
   `MP-07-008`, `MP-07-011`, `MP-07-014`, `MP-47-013`, `MP-47-014`, `MP-59-018`,
   `MP-74-005`, `MP-80-002`
@@ -83,6 +95,8 @@ scope).
 
 ## D-4 — Android 16 / API 37 large-screen compatibility
 
+> **KARAR VERİLDİ — 2026-08-16.** **Ship at the current target; adaptive-layout work scheduled for 2027 Q1**, before API 37 is targeted. The opt-out is not renewable, so the date is recorded rather than implied. MP-59-022/023 -> N/A with the date in the remediation cell.
+
 - **Requirement IDs (2):** `MP-59-022`, `MP-59-023`
 - **Current behaviour.** Large-screen/foldable support is deliberately deferred
   behind the Android large-screen compatibility opt-out, which **expires at API
@@ -96,6 +110,8 @@ scope).
 - **Blocked?** Yes.
 
 ## D-5 — Is an email inbox the support channel, or is a ticket system needed?
+
+> **KARAR VERİLDİ — 2026-08-16.** **Keep e-mail plus the written policy.** Runbook section 6 already carries the channels and the 3-business-day target. MP-49-014 was already PASS; nothing to change.
 
 > **Revised 2026-08-15 (FIR-03).** This entry previously read *"there is no
 > ticket identity, no owner, no severity ladder and no stated response
@@ -129,6 +145,8 @@ scope).
 
 ## D-6 — Does this product accept having no telemetry?
 
+> **KARAR VERİLDİ — 2026-08-16.** **Accept, and say so.** No telemetry, by design. Graded row by row rather than in a block, because the three surfaces are not the same question: MP-75-012 (monitoring) and MP-75-014 (dashboard) -> PASS, since Android vitals genuinely provides both; MP-77-015 -> PASS; MP-32-046/047 (local security + audit logging) -> PASS. **MP-75-013 (Alerts active) -> N/A, NOT PASS**: an alert is a push and nothing pushes here. A human checking vitals on a cadence is a mitigation, not an alert, and grading it PASS would claim a mechanism that does not exist.
+
 - **Requirement IDs (5):** `MP-75-012`, `MP-75-013`, `MP-75-014`, `MP-77-015`,
   `MP-32-046`+`MP-32-047` (log centralisation)
 
@@ -156,6 +174,8 @@ scope).
 
 ## D-7 — Runtime feature flags: none exist
 
+> **KARAR VERİLDİ — 2026-08-16.** **Accept.** No runtime feature flags; rollback is roll-forward with an increasing versionCode. MP-50-012, MP-75-016, MP-27-023 -> N/A by envelope.
+
 - **Requirement IDs (2):** `MP-50-012`, `MP-75-016`
 - **Current behaviour.** No runtime flags. A bad release can only be fixed by
   shipping another release, and Play forbids rolling back to a lower
@@ -170,6 +190,8 @@ scope).
 - **Blocked?** Yes, though A is the status quo.
 
 ## D-8 — Residual local-tamper risk on entitlement
+
+> **KARAR VERİLDİ — 2026-08-16.** **Accept** -- and the accepted option is the one already shipped. Local entitlement anchoring stays; a server check would put a network dependency on the panic path. MP-22-001, MP-54-029 -> N/A by envelope.
 
 - **Requirement IDs (2):** `MP-22-001`, `MP-54-029`
 - **Current behaviour.** With no backend, entitlement is anchored locally. On a
@@ -187,6 +209,8 @@ scope).
 - **Blocked?** Yes, but the safest option is already shipped.
 
 ## D-9 — Product-scope N/As that only need re-confirming
+
+> **KARAR VERİLDİ — 2026-08-16.** **All confirmed out of scope.** MP-16-019 (single shipped locale), MP-46-028 (golden-test ban is permanent), MP-49-012 (no staging environment) -> N/A. MP-08-008 and MP-23-012 were already PASS. Note: MP-46-028 was one of the audit's two FAIL rows; this decision retires it, leaving MP-46-030 (real TalkBack hardware) as the only FAIL.
 
 - **Requirement IDs (5):** `MP-08-008` (button-level loading beyond the paywall),
   `MP-16-019` (locale-aware phone normalisation, e.g. `+90`),

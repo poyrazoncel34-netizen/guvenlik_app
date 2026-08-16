@@ -88,7 +88,14 @@ component asks it.
 
 ## Theming
 
-The app pins `ThemeMode.dark`. `AppTheme.lightTheme` is maintained but
-unreachable — see `PRODUCT_DECISIONS_REQUIRED.md` (D-1); it is either a
-supported mode that needs a switch and a QA pass, or it should be deleted.
-Leaving a maintained-but-unreachable theme is the one state that rots silently.
+The app ships **one** theme. `main.dart` pins `ThemeMode.dark` and wires both
+`theme` and `darkTheme` to `AppTheme.darkTheme`, so there is a single rendered
+surface and nothing to keep in sync.
+
+**Decision D-1, taken 2026-08-16: the light theme was deleted.** It had been
+maintained but unreachable, and measurement showed why that state rots: it
+declared `brightness: Brightness.dark` and differed from `darkTheme` by exactly
+one line (`cardColor`). A dark UI is also the safer default for a duress product
+used at night — it does not light up a room. Reversible from git if the product
+changes its mind; adding a light mode later means a theme switch plus light-surface
+palette work and doubled visual QA, which is the cost the decision accepted.

@@ -2,31 +2,12 @@
   "schemaVersion": 1,
   "note": "Every non-PASS audit row whose evidence asserts an absence is registered here with what would refute it. scripts/verify_absence_claims.py fails if a refuting target exists, or if a registered phrase has drifted out of its row. Written after the final independent review found seven FAIL rows asserting the absence of documents this repository contains (FIR-03). A row may carry MORE THAN ONE claim -- one per canonical cell -- in which case its value is a LIST of field-tagged entries. `field` is \"evidence\" when omitted, which is what the 44 entries written before the gap/remediation scan existed all mean.",
   "claims": {
-    "MP-27-023": {
-      "claim": "no runtime",
-      "refutedBy": [
-        "grep:lib:RemoteConfig|FeatureFlagService|FlagStore|firebase_remote_config"
-      ],
-      "why": "Verified at this revision: lib/ contains no remote-config client, no flag store and no flag service; every gate is keyed on subscription entitlement or device capability, both local facts. flows.py measures this as flagLikeSites = []."
-    },
     "MP-32-040": {
       "claim": "no taint-analysis SAST",
       "refutedBy": [
         "grep:.github/workflows:semgrep|github/codeql-action|codeql-analysis"
       ],
       "why": "ci.yml mentions CodeQL only in `sudo rm -rf /opt/hostedtoolcache/CodeQL`, which frees runner disk space and runs no analysis. No dataflow/taint scanner is configured."
-    },
-    "MP-32-046": {
-      "field": "remediation",
-      "claim": "no telemetry",
-      "refutedBy": [],
-      "why": "The absence is real and deliberate: no analytics, no crash SDK and no developer backend ship in this app, so no telemetry channel exists to carry an audit trail off the device. The runbook named in the same cell is cited as ALREADY SATISFIED, not requested -- section 6 documents the local-export dependency, and the cell now says so explicitly. What stays open is the D-6 owner decision, which no repository edit can close."
-    },
-    "MP-32-047": {
-      "field": "remediation",
-      "claim": "no telemetry",
-      "refutedBy": [],
-      "why": "Same cell text and same reasoning as MP-32-046: the telemetry absence is a deliberate KVKK posture, and the incident-runbook reference is a satisfied citation rather than an outstanding request. Registered separately because the two rows are graded independently."
     },
     "MP-41-010": {
       "claim": "no ",
@@ -37,13 +18,6 @@
       "claim": "no ",
       "refutedBy": [],
       "why": "The claim is about a PHYSICAL panel and GPU, which the repository cannot contain. Emulator measurement is recorded and its limit is stated in the row (E2)."
-    },
-    "MP-46-028": {
-      "claim": "no golden/screenshot test exists",
-      "refutedBy": [
-        "grep:test:matchesGoldenFile"
-      ],
-      "why": "Golden tests are forbidden by .claude/rules/dart/testing.md; no golden invocation exists anywhere under test/."
     },
     "MP-46-030": {
       "claim": "TalkBack",
@@ -60,13 +34,6 @@
         "grep:docs/audit:TalkBack pass"
       ],
       "why": "No TalkBack session is recorded under docs/qa/ or docs/audit/. A physical screen-reader pass is external (E8). The keyboard modality, which the earlier wording also denied, IS recorded and is now graded PASS on MP-47-017 / MP-69-010."
-    },
-    "MP-50-012": {
-      "claim": "no runtime",
-      "refutedBy": [
-        "grep:lib:RemoteConfig|FeatureFlagService|FlagStore|firebase_remote_config"
-      ],
-      "why": "Verified at this revision: lib/ contains no remote-config client, no flag store and no flag service; every gate is keyed on subscription entitlement or device capability, both local facts. flows.py measures this as flagLikeSites = []."
     },
     "MP-53-012": [
       {
@@ -249,13 +216,6 @@
       "claim": "no purchase outcome was observed",
       "refutedBy": [],
       "why": "An indeterminate payment outcome only occurs against real Play billing (E1)."
-    },
-    "MP-75-016": {
-      "claim": "no runtime",
-      "refutedBy": [
-        "grep:lib:RemoteConfig|FeatureFlagService|FlagStore|firebase_remote_config"
-      ],
-      "why": "Verified at this revision: lib/ contains no remote-config client, no flag store and no flag service; every gate is keyed on subscription entitlement or device capability, both local facts. flows.py measures this as flagLikeSites = []."
     },
     "MP-77-009": {
       "claim": "No auth/tenant/RCE surface exists",

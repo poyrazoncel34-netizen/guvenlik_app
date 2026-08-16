@@ -58,22 +58,8 @@ SCOPE_OVERRIDES: dict[str, tuple[str, str]] = {
             "Portrait-phone-only is an explicit recorded product decision. "
             "Closing this means reversing that decision, which is the owner's.",
         )
-        for i in (4, 5, 6, 7, 8, 11, 14)
+        for i in ()
     },
-    "MP-47-013": ("PRODUCT_DECISION_REQUIRED", "Tablet/desktop form factors are deliberately out of scope."),
-    "MP-47-014": ("PRODUCT_DECISION_REQUIRED", "Tablet/desktop form factors are deliberately out of scope."),
-    "MP-59-018": ("PRODUCT_DECISION_REQUIRED", "Multiple screen sizes deliberately deferred (section 7)."),
-    "MP-59-022": ("PRODUCT_DECISION_REQUIRED", "Foldable/large-screen support deliberately deferred to API 37."),
-    "MP-59-023": ("PRODUCT_DECISION_REQUIRED", "Foldable/large-screen support deliberately deferred to API 37."),
-    "MP-74-005": ("PRODUCT_DECISION_REQUIRED", "Tablets and foldables are deliberately unsupported."),
-    "MP-50-012": ("PRODUCT_DECISION_REQUIRED", "No runtime feature flags exist; adding them is a product decision."),
-    "MP-75-016": ("PRODUCT_DECISION_REQUIRED", "No runtime feature flags exist; adding them is a product decision."),
-    "MP-46-028": (
-        "PRODUCT_DECISION_REQUIRED",
-        "Image-level visual regression means golden tests, which "
-        ".claude/rules/dart/testing.md forbids in this repository. Closing this "
-        "requires reversing that rule, which is an owner decision.",
-    ),
     "MP-46-030": (
         "EXTERNAL_BLOCKER",
         "Manual screen-reader verification needs TalkBack on real hardware.",
@@ -94,13 +80,6 @@ SCOPE_OVERRIDES: dict[str, tuple[str, str]] = {
         "arming animation, largest hit area) but 'the user understands where to "
         "look' is an observation of users, not of pixels.",
     ),
-    "MP-04-015": (
-        "PRODUCT_DECISION_REQUIRED",
-        "design_tokens.json measures it: main.dart wires theme: AppTheme.lightTheme "
-        "AND themeMode: ThemeMode.dark, so the light theme is maintained and "
-        "unreachable. The two exits are 'ship light mode' or 'delete it'; both are "
-        "the owner's call, and leaving it is the one option that lets it rot.",
-    ),
     "MP-06-014": (
         "PRODUCT_DECISION_REQUIRED",
         "color.json measures the shortfall exactly: emergency text on its own 25% "
@@ -108,15 +87,6 @@ SCOPE_OVERRIDES: dict[str, tuple[str, str]] = {
         "1.50:1 against a 3.0 bar. The minimal fix is a brand-palette change "
         "(#FF6B6B clears both), which is a rendered-pixel change CLAUDE.md rule 4 "
         "reserves to the owner.",
-    ),
-    "MP-07-015": (
-        "PRODUCT_DECISION_REQUIRED",
-        "Portrait is locked in the manifest by the recorded portrait-only decision.",
-    ),
-    "MP-27-023": (
-        "PRODUCT_DECISION_REQUIRED",
-        "flows.json: no runtime feature-flag surface exists in lib/. Adding one is "
-        "the same product decision already recorded for MP-50-012 / MP-75-016.",
     ),
     **{
         rid: (
