@@ -196,6 +196,25 @@ PRODUCT_MARKERS = (
     "by design", "accepted with rationale", "support is an unmanaged email inbox",
 )
 
+# Markers that must match as WHOLE WORDS.
+#
+# "frame" is why this exists (CERT2-02). As a bare substring it matched
+# "framebuffer" -- inside gap text that was arguing the OPPOSITE, namely that an
+# emulator FRAMEBUFFER cannot reproduce a physical panel. So a row whose gap
+# said "this needs hardware" was classified RUNTIME_VERIFIABLE_NOW on the
+# strength of six letters. Everything else stays a substring on purpose, because
+# the stems are doing real work: "deliberate" has to keep catching
+# "deliberately", and making the whole table word-anchored reclassified four
+# unrelated rows.
+WHOLE_WORD_MARKERS = frozenset({"frame"})
+
+
+def marker_hit(marker: str, blob: str) -> bool:
+    if marker in WHOLE_WORD_MARKERS:
+        return re.search(r"(?<!\w)" + re.escape(marker) + r"(?!\w)", blob) is not None
+    return marker in blob
+
+
 STATUS_ORDER = {"FAIL": 1, "PARTIAL": 2, "UNVERIFIED": 3, "BLOCKED": 4}
 SEVERITY_ORDER = {"P0": 0, "P1": 1, "P2": 2, "P3": 3, "-": 4}
 
@@ -237,13 +256,13 @@ def classify(row: dict) -> tuple[str, str]:
     if row["status"] == "BLOCKED":
         return "EXTERNAL_BLOCKER", "recorded as BLOCKED in the audit"
     for marker in EXTERNAL_MARKERS:
-        if marker in blob:
+        if marker_hit(marker, blob):
             return "EXTERNAL_BLOCKER", f"gap names an external dependency: {marker!r}"
     for marker in PRODUCT_MARKERS:
-        if marker in blob:
+        if marker_hit(marker, blob):
             return "PRODUCT_DECISION_REQUIRED", f"gap names a policy constraint: {marker!r}"
     for marker in RUNTIME_MARKERS:
-        if marker in blob:
+        if marker_hit(marker, blob):
             return "RUNTIME_VERIFIABLE_NOW", f"gap names a runtime measurement: {marker!r}"
     return "IN_REPO_RESOLVABLE", "no external dependency recorded in the gap"
 
