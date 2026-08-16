@@ -2,9 +2,9 @@
   "verifier": "scripts/audit_evidence/tokens.py",
   "verifierVersion": "1.0.0",
   "codeRevision": {
-    "verifiedCodeRevision": "a4dca54ba2f317764ebcaf0c0cfb2ade70eef43d",
+    "verifiedCodeRevision": "9eeca04246eca779bad66e5ff3d27e407ab01911",
     "dirty": false,
-    "treeHash": "43557626226e1079cbb1f6d89e66e1b8dba3f104",
+    "treeHash": "c110d05814c7f1a9717b2d1d175b225690abcddd",
     "dirtyPaths": [],
     "note": "verifiedCodeRevision is the commit whose measured surface produced this artifact. A later commit may CONTAIN this file; that is the documentation head, and the two are distinguished in PRODUCTION_AUDIT.md. Changes under docs/audit/evidence/ are this package's own output and do not make the measured tree dirty."
   },
