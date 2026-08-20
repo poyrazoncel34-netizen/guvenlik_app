@@ -63,7 +63,14 @@ gate() {
     local code=$?
     RESULTS+=("FAIL  $name (exit $code)")
     printf '  [FAIL] %s (exit %d)\n' "$name" "$code"
-    sed 's/^/         | /' "$log" | head -25
+    # Pipe-free ON PURPOSE. This line used to be `sed ... | head -25`, and with
+    # `set -Eeuo pipefail` a log larger than the 64KB pipe buffer made `head`
+    # close the pipe early, `sed` take SIGPIPE, and the WHOLE SCRIPT abort with
+    # exit 141 -- before the remaining gates ran and before the summary or the
+    # REPOSITORY_CONVERGENCE_FAIL marker was ever printed. `flutter test` always
+    # produces such a log, so the one path this script exists to report was the
+    # one path it could not report. It had only ever been observed green.
+    sed -n '1,25s/^/         | /p' "$log"
     FAILED=1
   fi
 }
