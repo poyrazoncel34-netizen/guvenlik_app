@@ -29,7 +29,10 @@ class _RealTrAssetLoader extends AssetLoader {
           as Map<String, dynamic>;
 }
 
-final DateTime kNow = DateTime(2026, 8, 13, 12);
+// TIME BASE -- relative on purpose; every anchor below is derived from it with
+// `subtract`, so a pinned calendar date would age the derived states out of the
+// windows their test names claim.
+final DateTime kNow = DateTime.now();
 
 SubscriptionAccessState _state(
   SubscriptionAccessStatus status, {

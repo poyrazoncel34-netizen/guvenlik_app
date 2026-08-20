@@ -30,7 +30,12 @@ SubscriptionAccessState offlineSubscriber(Duration age, {DateTime? now}) {
 }
 
 void main() {
-  final now = DateTime(2026, 8, 13, 12);
+  // TIME BASE -- relative on purpose. Every scenario below states an AGE
+  // ("8 days offline"), and the grace-bounded members resolve against the real
+  // wall clock unless an explicit `now:` is passed. A pinned calendar date
+  // silently re-labels those ages as the suite ages, so the base tracks the
+  // clock and each case keeps meaning what its name says.
+  final now = DateTime.now();
 
   group('the reproduced transition', () {
     test('3 days offline: a paying subscriber can still arm', () {

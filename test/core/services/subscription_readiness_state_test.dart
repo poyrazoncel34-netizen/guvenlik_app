@@ -193,7 +193,7 @@ void main() {
       at(
         SubscriptionAccessStatus.unavailable,
         verified: true,
-        verifiedAt: DateTime(2026, 8, 23, 12),
+        verifiedAt: now.add(const Duration(days: 10)),
       ),
       readiness: SubscriptionReadiness.entitledUnverifiable,
       // Documented policy: a wrong device clock must never remove SOS from a
@@ -227,7 +227,7 @@ void main() {
     _Scenario(
       'N corroborated prior entitlement restored',
       const SubscriptionAccessState.uninitialized().withRestoredProAnchor(
-        DateTime(2026, 8, 13, 6),
+        ago(const Duration(hours: 6)),
         corroborated: true,
       ),
       readiness: SubscriptionReadiness.entitledUnverifiable,

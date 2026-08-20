@@ -21,7 +21,14 @@ SubscriptionAccessState offlineSubscriber(Duration age, {required DateTime now})
     );
 
 void main() {
-  final now = DateTime(2026, 8, 13, 12);
+  // TIME BASE -- must stay relative. A fixed calendar date here is a time bomb:
+  // every scenario below states an age ("offline 3 days"), but the authorization
+  // getters resolve the offline-grace window against the REAL wall clock, so a
+  // pinned `now` pins only half of each scenario and the anchor drifts further
+  // into the past every day the suite is not run. This file failed on
+  // 2026-08-20 for exactly that reason -- `DateTime(2026, 8, 13, 12)` had aged
+  // past the 7-day grace and turned "3 days offline" into "grace expired".
+  final now = DateTime.now();
 
   group('1. active subscriber, online verification', () {
     test('confirmed active authorizes the emergency action', () {
