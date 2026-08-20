@@ -2,13 +2,6 @@
   "schemaVersion": 1,
   "note": "Every non-PASS audit row whose evidence asserts an absence is registered here with what would refute it. scripts/verify_absence_claims.py fails if a refuting target exists, or if a registered phrase has drifted out of its row. Written after the final independent review found seven FAIL rows asserting the absence of documents this repository contains (FIR-03). A row may carry MORE THAN ONE claim -- one per canonical cell -- in which case its value is a LIST of field-tagged entries. `field` is \"evidence\" when omitted, which is what the 44 entries written before the gap/remediation scan existed all mean.",
   "claims": {
-    "MP-32-040": {
-      "claim": "no taint-analysis SAST",
-      "refutedBy": [
-        "grep:.github/workflows:semgrep|github/codeql-action|codeql-analysis"
-      ],
-      "why": "ci.yml mentions CodeQL only in `sudo rm -rf /opt/hostedtoolcache/CodeQL`, which frees runner disk space and runs no analysis. No dataflow/taint scanner is configured."
-    },
     "MP-41-010": {
       "claim": "no ",
       "refutedBy": [],
@@ -358,6 +351,13 @@
       "claim": "record the baseline during the first staged rollout",
       "refutedBy": [],
       "why": "There is no support-volume baseline to record until a rollout exists. The runbook is the place it will be recorded, not the missing thing. The named document is the INSTRUCTION SHEET for work that happens outside this repository, not a deliverable this cell is asking someone to write. It exists precisely so the external run has a script to follow; its existence therefore does not make the cell stale. Registered when WORK_PHRASES was widened (CERT-05)."
+    },
+    "MP-32-040": {
+      "claim": "no Dart analyzer",
+      "refutedBy": [
+        "grep:.github/workflows:language: \\[.*dart"
+      ],
+      "why": "D-11 (2026-08-20) made CodeQL real: .github/workflows/codeql.yml runs dataflow/taint analysis on java-kotlin and actions. The absence the row still asserts is a DIFFERENT one and it is upstream -- CodeQL publishes no Dart analyzer, so no configuration in this repository can extend dataflow analysis to the Dart surface (~87% of the code by line). The refutation is this repository's own CodeQL matrix naming dart as a language, which becomes possible only once upstream ships it. The previous entry registered 'no taint-analysis SAST', which D-11 refuted in fact rather than in wording, and was retired with it."
     }
   }
 }

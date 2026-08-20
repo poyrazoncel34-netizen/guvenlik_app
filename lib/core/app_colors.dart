@@ -22,6 +22,25 @@ class AppColors {
   static const Color textPrimary = Color(0xFFF3F7FF);
   static const Color textSecondary = Color(0xFF9BB0C7);
   static const Color border = Color(0xFF1D3B54);
+
+  /// The text input's IDENTIFYING boundary (WCAG 2.1 SC 1.4.11, bar 3:1).
+  ///
+  /// Split from [border] on purpose -- KARAR D-10 (2026-08-20). One token used
+  /// to serve two roles that pull in opposite directions, and the conflict is
+  /// provable rather than a matter of taste:
+  ///   * SC 1.4.11 wants the input boundary LIGHT enough to clear 3:1 against
+  ///     [background], which requires relative luminance >= 0.1305;
+  ///   * [focusRing] (= [primary], L = 0.4773) has to stay 3:1 clear of the
+  ///     surfaces it sits beside, and [border] is one of them
+  ///     (test/screens/focus_ring_test.dart), which caps that tone at <= 0.1258.
+  /// 0.1305 > 0.1258, so NO colour of any hue satisfies both. Lightening
+  /// [border] would have bought SC 1.4.11 by breaking the focus indicator.
+  ///
+  /// Splitting the token removes the contradiction instead of trading one
+  /// failure for another: [border] keeps its dark tone next to focus rings, and
+  /// inputs get a boundary that actually identifies them (3.60:1 against
+  /// [background]). Used ONLY by InputDecorationTheme.
+  static const Color inputBorder = Color(0xFF3A76A8);
   static const Color shadow = Color(0x40000000);
 
   /// Shadow for surfaces floating over photographic map tiles, where the token

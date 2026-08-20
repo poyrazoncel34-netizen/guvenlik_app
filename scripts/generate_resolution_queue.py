@@ -80,14 +80,6 @@ SCOPE_OVERRIDES: dict[str, tuple[str, str]] = {
         "arming animation, largest hit area) but 'the user understands where to "
         "look' is an observation of users, not of pixels.",
     ),
-    "MP-06-014": (
-        "PRODUCT_DECISION_REQUIRED",
-        "color.json measures the shortfall exactly: emergency text on its own 25% "
-        "tint is 3.97:1 against a 4.5 bar, and the text input's resting boundary is "
-        "1.50:1 against a 3.0 bar. The minimal fix is a brand-palette change "
-        "(#FF6B6B clears both), which is a rendered-pixel change CLAUDE.md rule 4 "
-        "reserves to the owner.",
-    ),
     **{
         rid: (
             "EXTERNAL_BLOCKER",
@@ -157,11 +149,14 @@ SCOPE_OVERRIDES: dict[str, tuple[str, str]] = {
         "rehearsal will be measured against, and section 8 records that it is unmet.",
     ),
     "MP-32-040": (
-        "PRODUCT_DECISION_REQUIRED",
-        "storage.json records the gap precisely: the five gates that run are pattern "
-        "and type checks, not dataflow analysis. Adding Semgrep or CodeQL adds a "
-        "third-party analysis service to a project whose envelope forbids a "
-        "developer backend and analytics -- that boundary is the owner's to move.",
+        "EXTERNAL_BLOCKER",
+        "No longer an owner decision: D-11 (2026-08-20) took it and CodeQL now runs "
+        "on java-kotlin and actions, covering the native safety kernel. What is left "
+        "is the Dart surface -- ~87% of the code by line -- and CodeQL ships no Dart "
+        "analyzer. That is an upstream tool gap, not work this repository can do or a "
+        "boundary the owner can move. The prior reason claimed the envelope forbids "
+        "third-party analysis; that conflated the PRODUCT runtime envelope with CI "
+        "tooling and D-11 corrected it.",
     ),
 }
 

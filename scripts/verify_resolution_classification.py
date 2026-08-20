@@ -72,7 +72,7 @@ sys.path.insert(0, str(REPO / "scripts"))
 # SCOPE_OVERRIDES disagree, the fix is to justify the new entry in review and
 # then update this list -- never to sync it blindly.
 PINNED_OVERRIDES = frozenset({
-    "MP-02-016", "MP-03-013", "MP-06-014",
+    "MP-02-016", "MP-03-013",
             "MP-32-040", "MP-41-004", "MP-41-006",
     "MP-41-009", "MP-41-010", "MP-41-011",     "MP-46-030", "MP-46-031",     "MP-54-023", "MP-54-024",     "MP-59-029", "MP-69-012",
     "MP-69-013", "MP-72-002", "MP-72-006", "MP-72-016",

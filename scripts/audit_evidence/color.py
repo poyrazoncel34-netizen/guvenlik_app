@@ -81,10 +81,11 @@ TEXT_PAIRS = [
 # manufacture a failure WCAG does not assert; exempting a text input's boundary
 # would hide one it does.
 NON_TEXT_PAIRS = [
-    ("border", "background", "TEXT INPUT resting boundary on the page ground "
-                             "(InputDecorationTheme.enabledBorder)"),
-    ("surface", "background", "TEXT INPUT fill on the page ground "
-                              "(InputDecorationTheme.fillColor, filled: true)"),
+    # The token the theme ACTUALLY sets on enabledBorder. It was `border` until
+    # D-10 split the two roles apart; measuring `border` here would now grade a
+    # tone no input draws.
+    ("inputBorder", "background", "TEXT INPUT resting boundary on the page ground "
+                                  "(InputDecorationTheme.enabledBorder)"),
     ("primary", "background", "text input FOCUSED boundary on the page ground"),
     ("focusRing", "cardBg", "focus ring inner tone on a card"),
     ("focusRingOutline", "primary", "focus ring outline against its own inner tone"),
@@ -92,6 +93,17 @@ NON_TEXT_PAIRS = [
 
 # Decorative separations: measured for the record, never graded against 3:1.
 SURFACE_SEPARATIONS = [
+    # The input FILL. Graded against 3:1 until D-10, which was stricter than SC
+    # 1.4.11 asks: the criterion wants the information REQUIRED TO IDENTIFY the
+    # component, and a control with a boundary that clears 3:1 is identified by
+    # that boundary -- its interior fill is not independently required. This
+    # module's own scopeNote already said so ("a text input's boundary is" the
+    # component), while the graded list contradicted it by grading a fill.
+    # Reclassified only because `inputBorder` now clears the bar at 3.60:1; if
+    # that boundary ever drops below 3:1 the input loses its identification and
+    # this pair has to come back.
+    ("surface", "background", "TEXT INPUT fill on the page ground "
+                              "(InputDecorationTheme.fillColor, filled: true)"),
     ("cardBg", "background", "card surface against the page ground"),
     ("surface", "background", "sheet against the page ground"),
     ("border", "cardBg", "card outline on a card"),
@@ -490,15 +502,24 @@ def main() -> int:
              "why": "measured separately under MP-04-015; it renders to no user today"},
         ],
         baseline_semantics=(
-            "5 violations, and they are REAL OPEN FINDINGS, not noise. Two text "
-            "pairs miss WCAG AA (emergency on cardBg 4.43:1; the same colour on "
-            "its own 25% tint 3.97:1) and the text input's resting boundary "
-            "(1.50:1) and fill (1.13:1) miss SC 1.4.11's 3.0. All four are "
-            "recorded against MP-06-014, which is graded PARTIAL and names the "
-            "measured minimal fix (#FF6B6B clears both text cases). They stay "
-            "open because every fix is a rendered-pixel change to the brand "
-            "palette, which CLAUDE.md rule 4 reserves to the owner -- so this "
-            "verifier is deliberately red, and the audit says the same thing."
+            "3 violations, and they are REAL OPEN FINDINGS, not noise. All three "
+            "are the same colour: emergency on cardBg (4.43:1), on its own 25% "
+            "tint (3.97:1) and on a 12% tint over cardBg (3.99:1), against AA's "
+            "4.5. All three clear the large-text bar of 3.0. KARAR D-10 "
+            "(2026-08-20) ACCEPTS them as recorded residual risk; this verifier "
+            "is therefore deliberately red and the audit says the same thing.\n"
+            "SC 1.4.11 is no longer among them: D-10 introduced AppColors."
+            "inputBorder (3.60:1) so the text input's boundary now identifies it, "
+            "and the fill moved to the ungraded separations because a control "
+            "identified by its boundary does not additionally need its interior "
+            "to clear 3:1.\n"
+            "The fix this file used to name -- #FF6B6B -- was REFUTED by "
+            "measurement on 2026-08-20 and must not be reinstated. It does not "
+            "clear the binding case (emergency@25% comes to 4.35:1, not the 4.70 "
+            "once claimed), and it collapses colour-vision separation: "
+            "warning|emergency falls to 20.2 under tritanopia and 35.0 under "
+            "deuteranopia against a bar of 40, where #FF4D4D holds 55.8. It would "
+            "have traded an AA miss for a worse failure in a safety app."
         ),
         extra={
             "propertyClasses": property_classes(

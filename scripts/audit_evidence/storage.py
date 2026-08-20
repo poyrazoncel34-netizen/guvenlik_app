@@ -617,9 +617,13 @@ def build(root: Path) -> dict:
                 "mobileStandard": "scripts/verify_masvs_assessment.py",
             },
             "sastGap": (
-                "no taint-analysis SAST (Semgrep/CodeQL) runs on this repository; "
-                "the linters above are pattern and type checks, not dataflow "
-                "analysis. Recorded as the measured limit, not restated as coverage."
+                "CodeQL (.github/workflows/codeql.yml, decision D-11) runs "
+                "dataflow/taint analysis on java-kotlin and actions, covering the "
+                "native safety kernel. The Dart surface is NOT covered -- CodeQL "
+                "ships no Dart analyzer -- and Dart is ~87% of the code by line "
+                "(39578 Dart lines vs 6110 Kotlin). The other linters above remain "
+                "pattern and type checks. Recorded as the measured limit, not "
+                "restated as coverage."
             ),
             "mutationHarness": "scripts/run_safety_mutations.py",
             "criticalCoverageGate": "scripts/verify_critical_coverage.dart",

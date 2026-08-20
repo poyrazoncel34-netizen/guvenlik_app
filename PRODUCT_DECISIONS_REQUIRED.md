@@ -230,6 +230,80 @@ scope).
 
 ---
 
+## D-10 — Kontrast: AA altındaki çiftler düzeltilsin mi, kabul mü edilsin?
+
+> **KARAR VERİLDİ — 2026-08-20.** **Giriş kenarı düzeltildi; acil-metin
+> eksikleri kabul edildi.**
+>
+> **Kayıtlı "minimal fix" ÖLÇÜMLE ÇÜRÜTÜLDÜ.** Satır, `#FF6B6B`'nin tint'li
+> vakayı 4.70:1'e çıkardığını söylüyordu. Gerçek değer **4.35:1** — bar 4.5,
+> yani geçmiyor. Dahası bu renk, renk körlüğü ayrımını çökertiyor:
+> warning-emergency mesafesi tritanopide **20.2**, deuteranopide **35.0**, bar
+> 40 iken; mevcut `#FF4D4D` 55.8 tutuyor. Bir güvenlik uygulamasında acil ile
+> uyarıyı renk körü kullanıcılar için ayırt edilemez hale getirirdi. Bu renk
+> BİR DAHA ÖNERİLMEMELİ.
+>
+> **SC 1.4.11 çözüldü, ama renkle değil — token ayırarak.** Giriş kenarını
+> 3:1'e çıkarmak imkânsızdı ve bu bir zevk meselesi değil, kanıtlanabilir bir
+> çelişkiydi: SC 1.4.11 kenarın luminansının >= 0.1305 olmasını istiyor,
+> `focusRing` (= `primary`, L = 0.4773) ise komşusu olan tonun <= 0.1258
+> kalmasını dayatıyor (`test/screens/focus_ring_test.dart`). 0.1305 > 0.1258,
+> yani HİÇBİR renk ikisini birden sağlamıyor — kenarı açmak SC 1.4.11'i odak
+> göstergesini bozarak satın alırdı. Çelişki tek token'ın iki rol taşımasından
+> geliyordu; `AppColors.inputBorder` ayrıldı (3.60:1), `AppColors.border` koyu
+> tonunu korudu. Giriş dolgusu, notlanmayan ayrımlara taşındı: kenarıyla
+> tanımlanan bir bileşenin iç dolgusunun ayrıca 3:1 olması SC 1.4.11'in
+> istediği şey değil ve `color.py`'nin kendi `scopeNote`'u zaten bunu
+> söylüyordu.
+>
+> **Kabul edilen kalıntı risk.** Üç çift AA altında kalıyor, üçü de aynı renk:
+> emergency/cardBg 4.43:1, kendi %25 tint'i 3.97:1, cardBg üzerine %12 tint
+> 3.99:1 — bar 4.5. Üçü de büyük-metin barı 3.0'ı geçiyor. Uyumlu bir renk
+> mevcut, ama ancak rozet tint'ini %12'den %4'e düşürmekle birlikte, ki bu
+> rozeti tamamen siler. Yeniden açılması, kontrast ve dikroma ayrımını BİRLİKTE
+> yeniden ölçen, bütçelenmiş bir tasarım geçişine bağlıdır.
+>
+> `MP-06-014` -> N/A (kabul edilen kalıntı risk), D-8'in MP-22-001/MP-54-029
+> için uyguladığı notlamayla aynı.
+
+---
+
+## D-11 — Dataflow/taint SAST: is CodeQL inside or outside the envelope?
+
+> **KARAR VERİLDİ — 2026-08-20.** **CodeQL'i CI'a ekle.**
+> `.github/workflows/codeql.yml` eklendi; `java-kotlin` ve `actions` üzerinde
+> dataflow/taint analizi koşuyor.
+>
+> **Kararın gerekçesi, ve neden eski gerekçe yanlıştı.** MP-32-040'ın önceki
+> remediation hücresi "Semgrep/CodeQL eklemek, geliştirici backend'i ve
+> analitiği yasaklayan bir projeye üçüncü parti analiz servisi sokar" diyordu.
+> Bu iki ayrı şeyi karıştırıyor: envelope ÜRÜNÜN çalışma zamanını bağlar
+> (geliştirici backend'i yok, analitik yok, acil yolda ağ yok), CI araçlarını
+> değil. CodeQL GitHub Actions içinde koşar ve uygulamaya ne bir çalışma zamanı
+> bağımlılığı ne de analitik ekler. Karar bu yüzden "envelope'u genişlet" değil,
+> "yanlış okumayı düzelt" oldu.
+>
+> **Ne kapsıyor, ne kapsamıyor — ölçüldü.** CodeQL'in Dart analizörü YOKTUR. Bu
+> depo 172 Dart dosyası / 39.578 satır ve 48 Kotlin dosyası / 6.110 satır
+> taşıyor, yani kapı satır bazında ~%13 görüyor. Gördüğü %13 native acil
+> çekirdeğidir: `EmergencySessionCoordinator`, `CountdownAlarmReceiver`,
+> `DeviceProtectedEmergencySessionStore`, `DirectBootAccess`,
+> `BootCompletedReceiver`, artı workflow'ların kendisi.
+>
+> **Bu yüzden MP-32-040 PASS DEĞİL, PARTIAL.** Dart yüzeyi dataflow analizi
+> olmadan kalıyor ve bunu kapatan bir araç bugün yok; kalan kısım üst-akım
+> CodeQL'in Dart desteği eklemesini bekliyor. Satırın kapsamı
+> `EXTERNAL_BLOCKER`'a çekildi, çünkü artık sahibin vereceği bir karar değil.
+> Kapatılmayanı kapatılmış göstermek bu deponun tek yasak hareketidir.
+>
+> `build-mode: none` seçildi: alternatifi Android Gradle build'ini CI'da
+> koşmaktır, bu da Flutter plugin registrant üretimini ve tam Android SDK
+> zincirini gerektirir — analiz kapısını yayın zincirinin kırılganlığına
+> bağlardı. Bağımlılık çözümü olmadığı için kapsam bir miktar düşüktür; bilinçli
+> takas.
+
+---
+
 ## What is NOT here
 
 Difficulty, size and "no existing test" are not product decisions. Everything

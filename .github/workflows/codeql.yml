@@ -1,0 +1,67 @@
+name: CodeQL
+
+# Dataflow / taint analizi -- MP-32-040, KARAR D-11 (2026-08-20).
+#
+# Neden CI'da, uygulamada degil
+# -----------------------------
+# Envelope URUNUN calisma zamanini baglar: gelistirici backend'i yok, analitik
+# yok, acil yolda ag yok. CodeQL GitHub Actions icinde kosar; uygulamaya ne bir
+# calisma zamani bagimliligi ne de analitik ekler. MP-32-040'in eski gerekcesi
+# ("envelope ucuncu parti analiz servisini yasakliyor") bu iki seyi
+# karistiriyordu ve D-11 ile duzeltildi.
+#
+# NE KAPSAR, NE KAPSAMAZ -- acikca
+# --------------------------------
+# CodeQL'in Dart analizoru YOKTUR. Bu depo 172 Dart dosyasi / 39.578 satir ve
+# 48 Kotlin dosyasi / 6.110 satir tasiyor, yani bu kapi satir bazinda ~%13'u
+# gorur. Gordugu %13 native acil cekirdegidir: EmergencySessionCoordinator,
+# CountdownAlarmReceiver, DeviceProtectedEmergencySessionStore, DirectBootAccess,
+# BootCompletedReceiver. Dart tarafi dataflow analizi olmadan kalir ve bunu
+# kapatan bir arac bugun mevcut degildir. MP-32-040 bu yuzden PASS degil,
+# kapsami adiyla anilan bir satir olarak notlanir -- kapatilmayan seyi
+# kapatilmis gibi gostermek bu deponun tek yasak hareketi.
+#
+# build-mode: none
+# ----------------
+# java-kotlin icin kaynak-temelli mod secildi. Alternatifi Android Gradle
+# build'ini CI'da kosmaktir; bu Flutter plugin registrant uretimini ve tam
+# Android SDK zincirini gerektirir, yani analiz kapisini yayin zincirinin
+# kirilganligina baglardi. Bagimlilik cozumu olmadigi icin kapsam bir miktar
+# dusuktur; bu bilincli bir takas.
+
+permissions:
+  contents: read
+  security-events: write
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "17 3 * * 1"
+
+jobs:
+  analyze:
+    name: analyze (${{ matrix.language }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [java-kotlin, actions]
+
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@f3712979fa5f215279b101dd0a2e3bdfb4353324 # v3.37.7
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: none
+
+      - name: Analyze
+        uses: github/codeql-action/analyze@f3712979fa5f215279b101dd0a2e3bdfb4353324 # v3.37.7
+        with:
+          category: "/language:${{ matrix.language }}"
