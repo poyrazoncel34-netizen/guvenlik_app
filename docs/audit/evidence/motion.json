@@ -2,13 +2,13 @@
   "verifier": "scripts/audit_evidence/motion.py",
   "verifierVersion": "1.0.0",
   "codeRevision": {
-    "verifiedCodeRevision": "ec8b4e7042ce23f266bb361e4a1c3d3726231e9b",
+    "verifiedCodeRevision": "0d0ee678a60c981476b05ec65feed70c4dd11e9f",
     "dirty": false,
-    "treeHash": "b5f2b818fdf00eacba7bf5e0842bcfa076604b8d",
+    "treeHash": "386302ed54af54dbfe92f5adcc9b54b04c4597e6",
     "dirtyPaths": [],
     "note": "verifiedCodeRevision is the commit whose measured surface produced this artifact. A later commit may CONTAIN this file; that is the documentation head, and the two are distinguished in PRODUCTION_AUDIT.md. Changes under docs/audit/evidence/ are this package's own output and do not make the measured tree dirty."
   },
-  "measuredOn": "2026-08-16",
+  "measuredOn": "2026-08-20",
   "command": "python3 scripts/audit_evidence/motion.py",
   "surfaces": [
     "lib/core/motion.dart",
