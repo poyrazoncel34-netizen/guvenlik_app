@@ -38,6 +38,22 @@ import 'package:flutter_test/flutter_test.dart';
 /// testing nothing of the sort. A silently self-disabling anti-forgery test is
 /// worse than a red one.
 ///
+/// What this does NOT catch, stated plainly
+/// ---------------------------------------
+/// `_stripComments` removes everything after `//` on a line, including a `//`
+/// that sits inside a string literal. A URL in a string therefore truncates the
+/// rest of that line, so a violation written AFTER a URL on the SAME line is
+/// missed. Measured on 2026-08-20: not currently active -- no clock-coupled
+/// member and no executable date literal is lost this way anywhere in `test/`.
+///
+/// This is deliberately not fixed. A string-aware scanner has to model Dart's
+/// `'''` multi-line strings, and this repository embeds Dart samples inside
+/// them -- the negative control below is itself such a sample. Getting that
+/// wrong turns a silent miss into a FALSE POSITIVE, which is the worse
+/// direction for a drift catcher: a red test that should be green teaches
+/// people to weaken the rule. The miss direction leaves the real failing test
+/// as the backstop, which is how this defect was found in the first place.
+///
 /// The rule
 /// --------
 /// A test file must not combine a hardcoded calendar date with a grace-bounded
@@ -125,6 +141,40 @@ void main() {
         }
       ''';
       expect(_violations(commented), isEmpty);
+    });
+
+    test('no new injectable-clock member enters lib/ unnoticed', () {
+      // The detector knows about ONE service. That is a deliberate scope, not
+      // an oversight -- but it is only safe while the set of services that can
+      // resolve a window against the wall clock stays the set it was written
+      // for. Pinning the FILES (not the semantics) costs nothing and forces a
+      // human to ask "does the detector need widening?" the moment a new one
+      // appears. Same idiom as PINNED_OVERRIDES in
+      // scripts/verify_resolution_classification.py: an addition becomes a
+      // visible diff instead of a silent gap.
+      const known = <String>{
+        'lib/core/services/countdown_clock.dart',
+        'lib/core/services/offline_queue_service.dart',
+        'lib/core/services/rehearsal_record_service.dart',
+        'lib/core/services/subscription_access_state.dart',
+        'lib/screens/safety_timeline_screen.dart',
+      };
+      final found = Directory('lib')
+          .listSync(recursive: true)
+          .whereType<File>()
+          .where((f) => f.path.endsWith('.dart'))
+          .where((f) => f.readAsStringSync().contains('?? DateTime.now()'))
+          .map((f) => f.path)
+          .toSet();
+      expect(
+        found,
+        known,
+        reason:
+            'A service gained or lost an injectable clock. If it can resolve a '
+            'window against DateTime.now(), decide whether tests anchoring it '
+            'to a calendar date need the same protection as '
+            'SubscriptionAccessState, then update this set on purpose.',
+      );
     });
 
     test('the clock-coupled member list is still complete', () {
