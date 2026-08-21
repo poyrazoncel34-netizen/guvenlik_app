@@ -62,7 +62,15 @@ SCOPE_OVERRIDES: dict[str, tuple[str, str]] = {
     },
     "MP-46-030": (
         "EXTERNAL_BLOCKER",
-        "Manual screen-reader verification needs TalkBack on real hardware.",
+        "The emulator half is DONE and measured (2026-08-21: TalkBack 16.0.0 bound "
+        "and speaking on API 36.1, 56 touch targets measured, none confirmed under "
+        "48dp -- docs/audit/device-verification-2026-08-21-talkback.md). The prior "
+        "reason said screen-reader verification needs real hardware FULL STOP, which "
+        "was too strong: the semantics half runs fine on a Play Store system image, "
+        "and saying otherwise hid work this repository could do (the CERT2-01 "
+        "lesson). What is genuinely external is narrower: real touch-gesture "
+        "recognition, OEM TalkBack variants, and the panic flow, which no pass can "
+        "reach without a Play internal-test licensed tester.",
     ),
 
     # --- 2026-08-14 convergence pass: reclassified WITH the measurement that

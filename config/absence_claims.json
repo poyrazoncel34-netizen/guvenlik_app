@@ -13,20 +13,20 @@
       "why": "The claim is about a PHYSICAL panel and GPU, which the repository cannot contain. Emulator measurement is recorded and its limit is stated in the row (E2)."
     },
     "MP-46-030": {
-      "claim": "TalkBack",
+      "claim": "physical hardware",
+      "field": "gap",
       "refutedBy": [
-        "grep:docs/qa:TalkBack",
-        "grep:docs/audit:TalkBack pass"
+        "grep:docs/audit:TalkBack pass on a physical device"
       ],
-      "why": "No TalkBack session is recorded under docs/qa/ or docs/audit/. A physical screen-reader pass is external (E8). The keyboard modality, which the earlier wording also denied, IS recorded and is now graded PASS on MP-47-017 / MP-69-010."
+      "why": "A TalkBack pass HAS been run and recorded on 2026-08-21 (AVD KoruBeni_API36_16k_ctrl, TalkBack 16.0.0.777931756, commit b87b74a, 56 touch targets measured, none confirmed under 48dp). The earlier claim of 'no TalkBack pass' is refuted in fact and was retired. What each of these rows still asserts is narrower and genuinely outside this tree: no pass on PHYSICAL hardware. Real touch-gesture recognition and OEM TalkBack variants are properties of a device, and the panic flow additionally needs a Play internal-test licensed tester. The refutation would be a recorded pass that names a physical device."
     },
     "MP-47-018": {
-      "claim": "TalkBack",
+      "claim": "physical hardware",
+      "field": "gap",
       "refutedBy": [
-        "grep:docs/qa:TalkBack",
-        "grep:docs/audit:TalkBack pass"
+        "grep:docs/audit:TalkBack pass on a physical device"
       ],
-      "why": "No TalkBack session is recorded under docs/qa/ or docs/audit/. A physical screen-reader pass is external (E8). The keyboard modality, which the earlier wording also denied, IS recorded and is now graded PASS on MP-47-017 / MP-69-010."
+      "why": "A TalkBack pass HAS been run and recorded on 2026-08-21 (AVD KoruBeni_API36_16k_ctrl, TalkBack 16.0.0.777931756, commit b87b74a, 56 touch targets measured, none confirmed under 48dp). The earlier claim of 'no TalkBack pass' is refuted in fact and was retired. What each of these rows still asserts is narrower and genuinely outside this tree: no pass on PHYSICAL hardware. Real touch-gesture recognition and OEM TalkBack variants are properties of a device, and the panic flow additionally needs a Play internal-test licensed tester. The refutation would be a recorded pass that names a physical device."
     },
     "MP-53-012": [
       {
@@ -60,12 +60,12 @@
       "why": "Intake is the support e-mail plus the Play review queue. The channel, the owner, the severity ladder and the response expectation ARE written (incident_runbook.md §1/§2/§6); only the tooling question is open, and it is an owner decision (D-5)."
     },
     "MP-69-011": {
-      "claim": "TalkBack",
+      "claim": "physical hardware",
+      "field": "gap",
       "refutedBy": [
-        "grep:docs/qa:TalkBack",
-        "grep:docs/audit:TalkBack pass"
+        "grep:docs/audit:TalkBack pass on a physical device"
       ],
-      "why": "No TalkBack session is recorded under docs/qa/ or docs/audit/. A physical screen-reader pass is external (E8). The keyboard modality, which the earlier wording also denied, IS recorded and is now graded PASS on MP-47-017 / MP-69-010."
+      "why": "A TalkBack pass HAS been run and recorded on 2026-08-21 (AVD KoruBeni_API36_16k_ctrl, TalkBack 16.0.0.777931756, commit b87b74a, 56 touch targets measured, none confirmed under 48dp). The earlier claim of 'no TalkBack pass' is refuted in fact and was retired. What each of these rows still asserts is narrower and genuinely outside this tree: no pass on PHYSICAL hardware. Real touch-gesture recognition and OEM TalkBack variants are properties of a device, and the panic flow additionally needs a Play internal-test licensed tester. The refutation would be a recorded pass that names a physical device."
     },
     "MP-71-001": {
       "claim": "No usability testing with real users is recorded",
@@ -358,6 +358,30 @@
         "grep:.github/workflows:language: \\[.*dart"
       ],
       "why": "D-11 (2026-08-20) made CodeQL real: .github/workflows/codeql.yml runs dataflow/taint analysis on java-kotlin and actions. The absence the row still asserts is a DIFFERENT one and it is upstream -- CodeQL publishes no Dart analyzer, so no configuration in this repository can extend dataflow analysis to the Dart surface (~87% of the code by line). The refutation is this repository's own CodeQL matrix naming dart as a language, which becomes possible only once upstream ships it. The previous entry registered 'no taint-analysis SAST', which D-11 refuted in fact rather than in wording, and was retired with it."
+    },
+    "MP-59-024": {
+      "claim": "physical hardware",
+      "field": "gap",
+      "refutedBy": [
+        "grep:docs/audit:TalkBack pass on a physical device"
+      ],
+      "why": "A TalkBack pass HAS been run and recorded on 2026-08-21 (AVD KoruBeni_API36_16k_ctrl, TalkBack 16.0.0.777931756, commit b87b74a, 56 touch targets measured, none confirmed under 48dp). The earlier claim of 'no TalkBack pass' is refuted in fact and was retired. What each of these rows still asserts is narrower and genuinely outside this tree: no pass on PHYSICAL hardware. Real touch-gesture recognition and OEM TalkBack variants are properties of a device, and the panic flow additionally needs a Play internal-test licensed tester. The refutation would be a recorded pass that names a physical device."
+    },
+    "MP-74-006": {
+      "claim": "physical hardware",
+      "field": "gap",
+      "refutedBy": [
+        "grep:docs/audit:TalkBack pass on a physical device"
+      ],
+      "why": "A TalkBack pass HAS been run and recorded on 2026-08-21 (AVD KoruBeni_API36_16k_ctrl, TalkBack 16.0.0.777931756, commit b87b74a, 56 touch targets measured, none confirmed under 48dp). The earlier claim of 'no TalkBack pass' is refuted in fact and was retired. What each of these rows still asserts is narrower and genuinely outside this tree: no pass on PHYSICAL hardware. Real touch-gesture recognition and OEM TalkBack variants are properties of a device, and the panic flow additionally needs a Play internal-test licensed tester. The refutation would be a recorded pass that names a physical device."
+    },
+    "MP-77-005": {
+      "claim": "physical hardware",
+      "field": "gap",
+      "refutedBy": [
+        "grep:docs/audit:TalkBack pass on a physical device"
+      ],
+      "why": "A TalkBack pass HAS been run and recorded on 2026-08-21 (AVD KoruBeni_API36_16k_ctrl, TalkBack 16.0.0.777931756, commit b87b74a, 56 touch targets measured, none confirmed under 48dp). The earlier claim of 'no TalkBack pass' is refuted in fact and was retired. What each of these rows still asserts is narrower and genuinely outside this tree: no pass on PHYSICAL hardware. Real touch-gesture recognition and OEM TalkBack variants are properties of a device, and the panic flow additionally needs a Play internal-test licensed tester. The refutation would be a recorded pass that names a physical device."
     }
   }
 }
