@@ -622,7 +622,7 @@ class _OnboardingContactStepState extends State<OnboardingContactStep>
       fillColor: AppColors.cardBg,
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: AppColors.border),
+        borderSide: const BorderSide(color: AppColors.inputBorder),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
