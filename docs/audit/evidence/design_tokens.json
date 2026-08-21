@@ -2,13 +2,13 @@
   "verifier": "scripts/audit_evidence/tokens.py",
   "verifierVersion": "1.0.0",
   "codeRevision": {
-    "verifiedCodeRevision": "0d0ee678a60c981476b05ec65feed70c4dd11e9f",
+    "verifiedCodeRevision": "16767875f0eb8883e76bf22d51731678c98e8f9b",
     "dirty": false,
-    "treeHash": "386302ed54af54dbfe92f5adcc9b54b04c4597e6",
+    "treeHash": "516d4d439ad92f19c5619971d5901e2e23a1650f",
     "dirtyPaths": [],
     "note": "verifiedCodeRevision is the commit whose measured surface produced this artifact. A later commit may CONTAIN this file; that is the documentation head, and the two are distinguished in PRODUCTION_AUDIT.md. Changes under docs/audit/evidence/ are this package's own output and do not make the measured tree dirty."
   },
-  "measuredOn": "2026-08-20",
+  "measuredOn": "2026-08-21",
   "command": "python3 scripts/audit_evidence/tokens.py",
   "surfaces": [
     "lib/core/design_tokens.dart",
