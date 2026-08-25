@@ -6,12 +6,13 @@
 
 class LegalTexts {
   // ── Sürüm Numaraları ──────────────────────────────────────────────────────
-  static const String termsVersion = '3.1.0';
+  static const String termsVersion = '4.0.0';
   static const String kvkkVersion = '3.4.0';
-  static const String lastUpdated = '21 Mayıs 2026';
-  static const String lastUpdatedEn = 'May 21, 2026';
-  // KVKK/Gizlilik/Aydınlatma belgeleri kendi revizyon tarihini taşır;
-  // Kullanım Şartları (termsVersion) içerik değişmediği için lastUpdated'ı korur.
+  static const String lastUpdated = '25 Ağustos 2026';
+  static const String lastUpdatedEn = 'August 25, 2026';
+  // Her belge kendi revizyon tarihini taşır: lastUpdated Kullanım Şartları'na,
+  // lastUpdatedKvkk ise KVKK/Aydınlatma belgelerine aittir. v4.0.0'da Kullanım
+  // Şartları'nın gövdesi yeniden yazıldığı için lastUpdated de birlikte taşındı.
   static const String lastUpdatedKvkk = '19 Temmuz 2026';
   static const String lastUpdatedKvkkEn = 'July 19, 2026';
 
@@ -21,99 +22,202 @@ class LegalTexts {
 KULLANIM SÖZLEŞMESİ (SON KULLANICI LİSANS SÖZLEŞMESİ — EULA)
 Sürüm $termsVersion | Son Güncelleme: $lastUpdated
 
-Bu Kullanım Sözleşmesi ("Sözleşme"), KoruBeni ("Geliştirici") ile uygulamayı indiren ve kullanan kişi ("Kullanıcı") arasında akdedilmektedir. Uygulamayı kullanarak bu Sözleşme'nin tüm koşullarını okuduğunuzu, anladığınızı ve kabul ettiğinizi beyan etmiş olursunuz.
+──────────────────────────────────────
+1. TARAFLAR, KONU VE KABUL
+──────────────────────────────────────
+Bu Kullanım Sözleşmesi ("Sözleşme"), KoruBeni uygulamasını ("Uygulama") geliştiren taraf ("Geliştirici") ile Uygulamayı cihazına kuran ve kullanan gerçek kişi ("Kullanıcı") arasında akdedilir.
+
+Kullanıcı, Uygulamayı kurarak ve kullanarak bu Sözleşme'yi okuduğunu, anladığını ve tüm hükümleriyle kabul ettiğini beyan eder. Kullanıcı, herhangi bir hükmü kabul etmiyorsa Uygulamayı kullanmamalı ve cihazından kaldırmalıdır.
+
+6502 Sayılı Tüketicinin Korunması Hakkında Kanun kapsamında bilgilendirme: KoruBeni temel ücretsiz kullanım ve Google Play üzerinden yönetilen isteğe bağlı KoruBeni Pro aboneliği sunabilir. Panik/SOS, güvenli yürüyüş/check-in, ses tuşu tetikleyici ve güvenlik geçmişi gibi araçlar Pro ile açılabilir. Acil kişi yönetimi, siren ve test modu bu sürümde ücretsizdir. KoruBeni profesyonel bir güvenlik hizmeti, acil müdahale servisi veya mesleki güvenlik çözümü DEĞİLDİR. Herhangi bir hizmet seviyesi taahhüdü verilmemektedir.
 
 ──────────────────────────────────────
-1. UYGULAMANIN AMACI VE KAPSAMI
+2. TANIMLAR
 ──────────────────────────────────────
-KoruBeni, kişisel güvenlik farkındalığını desteklemek amacıyla geliştirilmiş bir Android yardımcı uygulamadır. Uygulama temel ücretsiz kullanım sunabilir. Panik/SOS, güvenli yürüyüş/check-in, ses tuşu tetikleyici, test modu ve güvenlik geçmişi gibi ek araçlar isteğe bağlı KoruBeni Pro aboneliğiyle açılabilir. Acil kişi yönetimi ve siren bu sürümde ücretsiz araçlardır.
-
-6502 Sayılı Tüketicinin Korunması Hakkında Kanun kapsamında bilgilendirme: KoruBeni temel ücretsiz kullanım ve Google Play üzerinden yönetilen isteğe bağlı Pro abonelik sunabilir. Profesyonel güvenlik hizmeti, acil müdahale servisi veya herhangi bir mesleki güvenlik çözümü DEĞİLDİR. Herhangi bir hizmet seviyesi taahhüdü verilmemektedir.
-
-──────────────────────────────────────
-2. YAŞ SINIRI
-──────────────────────────────────────
-Bu uygulamayı kullanmak için 18 yaşından büyük olmanız gerekmektedir. Bu sürümde 18 yaş altı kullanım desteklenmez. Kullanıcı, yaş beyanının doğruluğundan münhasıran kendisi sorumludur.
+• Arama girişimi: Uygulamanın, cihazın işletim sistemine bir telefon araması başlatma talebi iletmesidir. Talebin işletim sistemi tarafından yerine getirilip getirilmeyeceği, aramanın kurulup kurulmayacağı ve karşı tarafın yanıt verip vermeyeceği bu tanımın DIŞINDADIR.
+• Yardımcı araç: Kullanıcının kendi güvenlik planını uygulamasına destek olan, ancak bu planın yerine geçmeyen cihaz içi yazılımdır.
+• Prova (Test Modu): Kullanıcının, gerçek arama yapılmaksızın akışın kendi cihazında çalışıp çalışmadığını doğrulamasını sağlayan işlevdir.
+• Cihaz koşulları: İşletim sistemi sürümü ve ayarları, üretici pil yönetimi, uyku (Doze) modu, izin durumları, şebeke ve operatör durumu, şarj seviyesi, ses profili, depolama ve benzeri, Geliştiricinin kontrolü dışındaki tüm etkenlerdir.
 
 ──────────────────────────────────────
-3. SORUMLULUK REDDİ (DİSCLAIMER)
+3. EDİMİN KAPSAMI VE NİTELİĞİ
 ──────────────────────────────────────
-• Bu uygulama profesyonel güvenlik hizmeti, acil servis veya polis hizmetinin yerini ALMAZ ve ALMAYACAKTIR.
-• Acil durumlarda 112'yi aramak KULLANICININ SORUMLULUĞUNDADIR. Uygulama yalnızca yardımcı bir araçtır.
-• Uygulama; arama bağlantısını, konum doğruluğunu veya bildirim teslimatını garanti ETMEZ.
-• Ağ sorunları, cihaz ayarları, operatör kaynaklı aksaklıklar veya pil tükenmesi nedeniyle yaşanan gecikmeler ve iletim hatalarından GELİŞTİRİCİ SORUMLU TUTULAMAZ.
-• GPS donanımının doğruluk payından kaynaklanan konum hatalarından geliştirici sorumlu değildir.
+3.1. Geliştiricinin bu Sözleşme kapsamındaki edimi, Uygulamanın Kullanıcının cihazına kurulabilir halde sunulmasından ve belgelenen işlevleri ÖZENLE yerine getirmeye çalışmasından ibarettir.
+
+3.2. Bu Sözleşme bir SONUÇ BORCU doğurmaz. Geliştirici; Kullanıcının güvenliğinin sağlanacağını, bir zararın önleneceğini, bir aramanın kurulacağını, bir bildirimin teslim edileceğini, bir konumun doğru olacağını veya herhangi bir işlevin belirli bir sürede tamamlanacağını TAAHHÜT ETMEMEKTEDİR.
+
+3.3. Uygulama bir YARDIMCI ARAÇTIR. Sözleşmenin konusu bir güvenlik sonucu değil, bir araçtır. Taahhüt edilmemiş bir sonucun gerçekleşmemesi, sözleşmeye aykırılık teşkil etmez.
+
+3.4. Kullanıcı; acil durumlarda birincil ve asli yolun 112 Acil Çağrı Merkezi'ni aramak olduğunu, Uygulamanın bu yolun yerine geçmediğini ve geçmeyeceğini kabul eder.
 
 ──────────────────────────────────────
-4. KULLANICI SORUMLULUKLARI
+4. UYGULAMANIN YAPMADIĞI ŞEYLER
 ──────────────────────────────────────
-Kullanıcı aşağıdakileri kabul eder:
-• Uygulamayı yalnızca yasal amaçlarla ve iyi niyetle kullanacağını,
-• Uygulamayı kötüye kullanmayacağını, sahte acil durum bildirimi yapmayacağını,
-• Üçüncü kişilerin haklarını ihlal etmeyeceğini,
-• Uygulama aracılığıyla gerçekleştirilen tüm eylemlerden münhasıran kendisinin sorumlu olduğunu,
-• Türk Ceza Kanunu başta olmak üzere yürürlükteki tüm mevzuata uyacağını.
+Kullanıcı, Uygulamanın aşağıdakileri YAPMADIĞINI bilerek kullandığını kabul eder:
+• Resmî bir acil servis, kolluk kuvveti veya 112 hizmeti DEĞİLDİR; bunlara bağlı değildir.
+• Bir alarm izleme merkezi, çağrı merkezi veya insanlı müdahale hizmeti İÇERMEZ.
+• Kullanıcı adına kimseyi olay yerine YÖNLENDİRMEZ ve müdahale organize ETMEZ.
+• Fiziksel koruma, caydırıcılık veya güvenlik garantisi SAĞLAMAZ.
+• Kullanıcıyı arka planda TAKİP ETMEZ; konum yalnızca Kullanıcının başlattığı oturumda kullanılır.
+• Geliştiriciye ait herhangi bir sunucuya acil durum verisi GÖNDERMEZ; Geliştirici hiçbir acil durumdan HABERDAR OLMAZ ve olamaz.
+• Kurulumdan sonra Geliştirici tarafından İZLENMEZ, DENETLENMEZ veya bakımı ÜSTLENİLMEZ.
 
 ──────────────────────────────────────
-5. SAHTE ÇAĞRI ÖZELLİĞİ
+5. BELGELENMİŞ ÇALIŞMA SINIRLARI
 ──────────────────────────────────────
-Sahte çağrı özelliği YALNIZCA kişisel güvenlik amaçlı tasarlanmıştır (örn. tacizden kaçmak için ortamdan uzaklaşma). Bu özelliğin dolandırıcılık, taciz, başkasını yanıltma veya herhangi bir suç eyleminde kullanılması YASALARA AYKIRIDIR. Söz konusu kötüye kullanımlardan doğan TÜM HUKUKİ VE CEZAİ SORUMLULUK KULLANICIYA AİTTİR.
+5.1. Uygulama, cihaz koşullarına bağlı bir yazılımdır. Aşağıdaki durumlar Uygulamanın bilinen, belgelenmiş ve kabul edilmiş çalışma sınırlarıdır; bunlar ayıp, kusur veya eksik ifa SAYILMAZ:
+
+a) İşletim sisteminin uyku (Doze) modunda arka plan işlerini geciktirmesi veya durdurması;
+b) Cihaz üreticisinin pil yönetimi yazılımının Uygulamayı sonlandırması veya kısıtlaması;
+c) Şebeke, operatör veya baz istasyonu kaynaklı arama kurulamaması ya da gecikmesi;
+d) Aranan kişinin yanıt vermemesi, meşgul olması veya ulaşılamaz olması;
+e) Cihazın şarjının bitmesi, kapanması veya donanım arızası;
+f) Kullanıcının gerekli izinleri (telefon, konum, bildirim, alarm) vermemesi veya geri alması;
+g) İşletim sistemi güncellemesinin izinleri, alarmları veya arka plan davranışını değiştirmesi;
+h) Cihaz kilitliyken işletim sisteminin uyguladığı kısıtlamalar;
+i) Cihaz ses profili, sessiz mod veya ses seviyesi nedeniyle sirenin duyulmaması;
+j) GPS donanımının doğruluk payından kaynaklanan konum sapmaları;
+k) İnternet bağlantısı bulunmaması nedeniyle harita karolarının yüklenememesi;
+l) Üçüncü taraf hizmetlerinin (harita sağlayıcı, uygulama mağazası, ödeme altyapısı) kesintisi veya sonlanması;
+m) İşletim sisteminin yeni bir sürümünün mevcut davranışı değiştirmesi;
+n) Bildirim tesliminin işletim sistemi tarafından geciktirilmesi veya engellenmesi;
+o) Sahte çağrı işlevinin cihaz içi bir simülasyon olması ve gerçek arama başlatmaması;
+p) Uygulamanın mağazadan kaldırılması veya hizmetin sonlandırılması.
+
+5.2. Kullanıcı, bu sınırların kendisine sözleşme öncesinde açıkça bildirildiğini ve Uygulamadan beklentisini bu sınırlar dahilinde oluşturduğunu kabul eder.
 
 ──────────────────────────────────────
-6. KONUM OTURUMU
+6. KULLANICININ DOĞRULAMA YÜKÜMLÜLÜĞÜ
 ──────────────────────────────────────
-• Konum verisi yalnızca kullanıcının açıkça tetiklemesiyle harita/konum oturumu için kullanılır.
-• Gösterilen konumun doğruluğu GPS donanımına bağlıdır; geliştirici tarafından garanti edilmez.
-• Konum alınamazsa uygulama sahte koordinat göstermez. Çevrimiçi harita karoları OpenStreetMap bağlantısı gerektirir.
+6.1. Uygulama, Kullanıcının akışın KENDİ CİHAZINDA çalışıp çalışmadığını gerçek arama yapılmaksızın doğrulamasını sağlayan ücretsiz bir Prova (Test Modu) işlevi sunar.
+
+6.2. Kullanıcı; kurulumdan sonra, her önemli cihaz veya işletim sistemi değişikliğinden sonra ve düzenli aralıklarla Provayı çalıştırmayı KENDİ YÜKÜMLÜLÜĞÜ olarak kabul eder.
+
+6.3. Kullanıcı, Uygulamanın hazırlık durumu uyarılarını (eksik izinler, pil optimizasyonu, eksik acil kişi ve benzeri) dikkate almayı kabul eder.
+
+6.4. Provayı çalıştırmamış veya hazırlık uyarılarını dikkate almamış olan Kullanıcı, kendi cihazında doğrulanmamış bir kuruluma güvenmiş sayılır.
 
 ──────────────────────────────────────
-7. ACİL DURUM KİŞİLERİ VE ÜÇÜNCÜ KİŞİ HAKLARI
+7. KULLANICININ BEYAN VE TAAHHÜTLERİ
 ──────────────────────────────────────
-• Kullanıcı, acil durum kişisi olarak eklediği kişilerin ad ve telefon numarası bilgilerini kaydetme ve bu kişileri acil durumda arama yetkisine sahip olduğunu beyan eder.
-• Bu kişilerin KVKK kapsamındaki haklarından kullanıcı sorumludur. Kişilerin rızasının alınması kullanıcının yükümlülüğündedir.
-• Acil durum kişisi olarak eklenen üçüncü kişiler, KVKK Madde 11 kapsamındaki haklarını korubeni.destek@gmail.com adresine başvurarak kullanabilir. Geliştirici, başvuru üzerine ilgili veriyi kullanıcıya bildirerek silinmesini talep edecektir.
+Kullanıcı, Uygulamayı kullanarak aşağıdakileri açıkça beyan ve taahhüt eder:
+7.1. 18 yaşını doldurduğunu ve tam fiil ehliyetine sahip olduğunu;
+7.2. Acil durumlarda ÖNCELİKLE 112'yi arayacağını, Uygulamayı 112'nin alternatifi olarak kullanmayacağını;
+7.3. Madde 5'te sayılan çalışma sınırlarını okuduğunu ve anladığını;
+7.4. Provayı kendi cihazında çalıştırarak kurulumunu doğrulama yükümlülüğünün kendisinde olduğunu;
+7.5. Kendi güvenlik planından, bulunduğu ortamı ve riskleri değerlendirmekten ve alacağı önlemlerden MÜNHASIRAN kendisinin sorumlu olduğunu;
+7.6. Uygulamanın varlığına güvenerek, aksi halde girmeyeceği bir riske girmeyeceğini;
+7.7. Acil durum kişisi olarak eklediği kişilerin açık rızasını ÖNCEDEN aldığını;
+7.8. Cihazının fiziksel güvenliğinden, PIN'inin gizliliğinden ve işletim sistemi güncellemelerinden kendisinin sorumlu olduğunu;
+7.9. Uygulamayı yalnızca hukuka uygun amaçlarla kullanacağını.
 
 ──────────────────────────────────────
-8. GARANTİ REDDİ
+8. KULLANICININ MÜNHASIR SORUMLULUĞU
 ──────────────────────────────────────
-Uygulama "OLDUĞU GİBİ" (AS IS) sunulmaktadır. Kesintisiz, hatasız veya belirli bir amaca uygun çalışacağına dair HİÇBİR GARANTİ verilmemektedir. Uygulama herhangi bir zamanda önceden bildirim yapılmaksızın değiştirilebilir, güncellenebilir veya hizmet durdurulabilir.
+Aşağıdaki hususlar MÜNHASIRAN Kullanıcının sorumluluğundadır:
+a) Acil durumda 112'yi aramak veya aramamak yönündeki kararı ve bu kararın sonuçları;
+b) Kendi güvenlik planı, risk değerlendirmesi ve bulunduğu ortama ilişkin tercihleri;
+c) Uygulamanın kendi cihazında çalıştığını doğrulaması;
+d) Cihaz izinlerinin verilmesi ve korunması;
+e) Cihazın şarjlı, açık ve çalışır durumda tutulması;
+f) Acil durum kişilerinin doğru, güncel ve ulaşılabilir olması;
+g) Acil durum kişilerinin rızasının alınmış olması;
+h) Uygulama aracılığıyla gerçekleştirdiği tüm arama, siren, sahte çağrı ve paylaşım eylemleri;
+i) Uygulamanın kötüye kullanılmasından doğan her türlü hukuki ve cezai sonuç;
+j) Uygulamanın PIN ile korunması ve PIN'in üçüncü kişilerle paylaşılmaması.
 
 ──────────────────────────────────────
-9. SORUMLULUK SINIRLANDIRMASI
+9. ACİL DURUM KİŞİLERİ VE ÜÇÜNCÜ KİŞİLER
 ──────────────────────────────────────
-Geliştirici; uygulamanın kullanımından veya kullanılamamasından kaynaklanan doğrudan, dolaylı, arızi, özel veya sonuç olarak ortaya çıkan HİÇBİR ZARARDAN (can kaybı, maddi kayıp, veri kaybı dahil) sorumlu tutulamaz. Bu sınırlama, TBK m.115 uyarınca ağır kusur ve kasıt hallerini kapsamamaktadır.
+9.1. Kullanıcı, acil durum kişisi olarak eklediği kişilerin kişisel verilerini Uygulamaya girmeden önce bu kişilerin açık rızasını aldığını taahhüt eder.
 
-Geliştiricinin toplam sorumluluğu, kullanıcının talep tarihinden önceki son 12 (on iki) ay içinde Google Play üzerinden KoruBeni Pro için ödediği toplam bedeli aşamaz. Ücretli aboneliği olmayan kullanıcılar için bu tutar 0 TL'dir.
+9.2. Bu taahhüdün ihlali nedeniyle Geliştiriciye yöneltilecek her türlü talep, şikâyet, idari yaptırım ve yargılama gideri bakımından Kullanıcı, Geliştiriciye rücu sorumluluğunu kabul eder.
 
-──────────────────────────────────────
-10. TAZMİN (INDEMNIFICATION)
-──────────────────────────────────────
-Kullanıcı, uygulamanın kullanımından kaynaklanan üçüncü kişi talep, dava veya zararlarından geliştiricinin zarar görmemesini sağlamayı ve doğacak makul avukatlık ücretleri dahil tüm zararları tazmin etmeyi kabul eder.
+9.3. Acil durum kişisi olarak eklenen üçüncü kişiler, KVKK Madde 11 kapsamındaki haklarını korubeni.destek@gmail.com adresine başvurarak kullanabilir.
 
 ──────────────────────────────────────
-11. MÜCBİR SEBEP
+10. YAŞ SINIRI
 ──────────────────────────────────────
-Doğal afet, savaş, salgın hastalık, internet/telekomünikasyon altyapısı kesintisi, enerji kesintisi, devlet kısıtlamaları veya kontrol dışı benzeri olaylar ("mücbir sebep") nedeniyle uygulamanın çalışmaması veya gecikmesinden geliştirici sorumlu tutulamaz.
+10.1. Uygulama yalnızca 18 yaşını doldurmuş kişilerin kullanımı içindir.
+
+10.2. 18 yaşından küçük bir kişinin Uygulamayı kullanması halinde, bu kullanımdan ve sonuçlarından o kişinin veli veya vasisi sorumludur.
+
+10.3. Geliştirici, 18 yaşından küçük olduğunu tespit ettiği kullanıcıların erişimini sonlandırma hakkını saklı tutar.
 
 ──────────────────────────────────────
-12. FİKRİ MÜLKİYET
+11. KÖTÜYE KULLANIM YASAĞI
 ──────────────────────────────────────
-Uygulama ve içerdiği tüm fikri mülkiyet hakları KoruBeni'ye aittir. Kullanıcıya yalnızca kişisel, devredilemez, münhasır olmayan bir kullanım lisansı verilmektedir.
+11.1. Sahte çağrı işlevi YALNIZCA kişisel güvenlik amaçlıdır (örneğin tacizden uzaklaşmak için ortamdan ayrılma). Dolandırıcılık, taciz, başkasını yanıltma veya herhangi bir suç eyleminde kullanılması YASAKTIR.
+
+11.2. Uygulamanın 112 veya kolluk kuvvetlerine asılsız ihbar amacıyla kullanılması YASAKTIR ve idari ya da cezai yaptırıma tabidir.
+
+11.3. Uygulamanın bir başkasını rızası dışında izlemek veya takip etmek amacıyla kullanılması YASAKTIR.
+
+11.4. Bu yasakların ihlalinden doğan TÜM HUKUKİ VE CEZAİ SORUMLULUK KULLANICIYA AİTTİR.
 
 ──────────────────────────────────────
-13. UYGULANACAK HUKUK VE YETKİLİ MAHKEME
+12. KONUM OTURUMU
 ──────────────────────────────────────
-Bu Sözleşme Türkiye Cumhuriyeti hukukuna tabidir. Bu Sözleşme'den doğan uyuşmazlıklarda İzmir Mahkemeleri ve İcra Daireleri yetkilidir.
+• Konum verisi yalnızca Kullanıcının açıkça tetiklemesiyle harita/konum oturumu için kullanılır.
+• Gösterilen konumun doğruluğu GPS donanımına bağlıdır ve Geliştirici tarafından garanti edilmez.
+• Konum alınamazsa Uygulama sahte koordinat göstermez. Çevrimiçi harita karoları OpenStreetMap bağlantısı gerektirir.
 
 ──────────────────────────────────────
-14. BÖLÜNEBİLİRLİK
+13. GARANTİ REDDİ
 ──────────────────────────────────────
-Bu Sözleşme'nin herhangi bir hükmünün yetkili mahkeme tarafından geçersiz veya uygulanamaz ilan edilmesi halinde, Sözleşme'nin geri kalan hükümleri tam olarak yürürlükte kalmaya devam eder.
+13.1. Uygulama "OLDUĞU GİBİ" (AS IS) ve "MEVCUT HALİYLE" (AS AVAILABLE) sunulmaktadır.
+
+13.2. Geliştirici, Uygulamanın kesintisiz, hatasız veya belirli bir amaca uygun çalışacağına dair zımni dahil hiçbir garanti vermez.
+
+13.3. Uygulama önceden bildirim yapılmaksızın değiştirilebilir, güncellenebilir veya sonlandırılabilir.
+
+13.4. Bu madde, tüketici mevzuatından doğan ve sözleşmeyle bertaraf edilemeyen haklarınızı etkilemez.
 
 ──────────────────────────────────────
-15. SÖZLEŞME DEĞİŞİKLİKLERİ
+14. SORUMLULUK
 ──────────────────────────────────────
-Geliştirici bu Sözleşme'yi dilediği zaman güncelleme hakkını saklı tutar. Güncellemeler uygulamada yayımlandığında devam eden kullanım yeni koşulların kabulü anlamına gelir. Önemli değişikliklerde uygulama yeniden onay isteyecektir.
+14.1. Geliştiricinin sorumluluğu, ancak kendi kusurunun bulunduğu hallerde ve Madde 3'te tanımlanan edim kapsamı çerçevesinde doğar.
+
+14.2. Madde 5'te sayılan belgelenmiş çalışma sınırlarından kaynaklanan durumlar Geliştiricinin kusuru sayılmaz.
+
+14.3. Kullanıcının Madde 6'daki doğrulama yükümlülüğünü yerine getirmemesi, doğan zararda kendi kusuru olarak değerlendirilir.
+
+14.4. Geliştiricinin sorumlu tutulduğu hallerde toplam sorumluluğu, Kullanıcının talep tarihinden önceki son on iki (12) ay içinde Google Play üzerinden KoruBeni Pro için ödediği toplam bedeli aşamaz. Ücretli aboneliği bulunmayan Kullanıcı bakımından bu tutar sıfırdır.
+
+14.5. Bu maddedeki sınırlamalar; Geliştiricinin kastı, ağır ihmali ve tüketici mevzuatından doğan emredici sorumluluğu bakımından UYGULANMAZ.
+
+──────────────────────────────────────
+15. TAZMİN VE RÜCU
+──────────────────────────────────────
+15.1. Kullanıcı; kendi hukuka aykırı fiilinden, bu Sözleşme'yi ihlalinden veya Madde 9 kapsamındaki rıza taahhüdüne aykırılığından doğan ve Geliştiriciye yöneltilen üçüncü kişi taleplerinden Geliştiriciyi tazmin etmeyi kabul eder.
+
+15.2. Bu yükümlülük, Geliştiricinin kendi kusurundan doğan talepleri KAPSAMAZ.
+
+──────────────────────────────────────
+16. MÜCBİR SEBEP VE ÜÇÜNCÜ TARAF BAĞIMLILIKLARI
+──────────────────────────────────────
+16.1. Doğal afet, savaş, salgın hastalık, telekomünikasyon veya enerji altyapısı kesintisi, siber saldırı, devlet kısıtlamaları ve benzeri kontrol dışı olaylardan Geliştirici sorumlu tutulamaz.
+
+16.2. Uygulama; işletim sistemi, uygulama mağazası, ödeme altyapısı ve harita sağlayıcısı gibi üçüncü taraf hizmetlere bağımlıdır. Bu hizmetlerin politika değişikliği, kesintisi veya sonlanması Geliştiricinin kontrolünde değildir.
+
+──────────────────────────────────────
+17. FİKRİ MÜLKİYET
+──────────────────────────────────────
+Uygulama ve içerdiği tüm fikri mülkiyet hakları Geliştiriciye aittir. Kullanıcıya yalnızca kişisel, devredilemez ve münhasır olmayan bir kullanım lisansı verilmektedir.
+
+──────────────────────────────────────
+18. UYGULANACAK HUKUK VE UYUŞMAZLIK ÇÖZÜMÜ
+──────────────────────────────────────
+18.1. Bu Sözleşme Türkiye Cumhuriyeti hukukuna tabidir.
+
+18.2. Tüketici sıfatını haiz Kullanıcı, 6502 Sayılı Kanun uyarınca parasal sınırlara göre KENDİ YERLEŞİM YERİNDEKİ Tüketici Hakem Heyeti'ne veya Tüketici Mahkemesi'ne başvurabilir. Bu hak sözleşmeyle sınırlandırılamaz.
+
+──────────────────────────────────────
+19. BÖLÜNEBİLİRLİK VE DEĞİŞİKLİKLER
+──────────────────────────────────────
+19.1. Herhangi bir hükmün geçersiz sayılması halinde, Sözleşme'nin diğer hükümleri yürürlükte kalır. Geçersiz hüküm, tarafların amacına en yakın geçerli hükümle ikame edilmiş sayılır.
+
+19.2. Geliştirici bu Sözleşme'yi güncelleyebilir. Esaslı değişikliklerde Uygulama yeniden onay ister. Onay verilmemesi halinde Kullanıcı Uygulamayı kullanmaya devam edemez.
 
 İletişim: korubeni.destek@gmail.com
 ''';
@@ -124,99 +228,202 @@ Geliştirici bu Sözleşme'yi dilediği zaman güncelleme hakkını saklı tutar
 TERMS OF SERVICE (END USER LICENSE AGREEMENT — EULA)
 Version $termsVersion | Last Updated: $lastUpdatedEn
 
-This Terms of Service Agreement ("Agreement") is entered into between KoruBeni ("Developer") and the individual downloading and using the application ("User"). By using the application, you declare that you have read, understood, and accepted all terms of this Agreement.
+──────────────────────────────────────
+1. PARTIES, SUBJECT AND ACCEPTANCE
+──────────────────────────────────────
+This Terms of Service Agreement ("Agreement") is entered into between the party developing the KoruBeni application (the "Application") ("Developer") and the natural person installing and using the Application ("User").
+
+By installing and using the Application, the User declares that they have read, understood and accepted this Agreement in full. A User who does not accept any provision must not use the Application and must remove it from their device.
+
+Notice under Consumer Protection Law No. 6502: KoruBeni may offer basic free functionality and an optional KoruBeni Pro subscription managed through Google Play. Tools such as Panic/SOS, safe walk/check-in, volume trigger and safety history may unlock with Pro. Emergency contact management, siren and test mode are free in this release. KoruBeni is NOT a professional security service, an emergency response service, or a professional security solution. No service level commitment is provided.
 
 ──────────────────────────────────────
-1. PURPOSE AND SCOPE
+2. DEFINITIONS
 ──────────────────────────────────────
-KoruBeni is an Android utility application developed to support personal safety awareness. The app may offer basic free functionality. Additional tools such as Panic/SOS, safe walk/check-in, volume trigger, test mode, and safety history may unlock with the optional KoruBeni Pro subscription. Emergency contact management and siren are free tools in this release.
-
-Notice under Consumer Protection Law No. 6502: KoruBeni may offer basic free functionality and an optional Pro subscription managed through Google Play. It is NOT a professional security service, emergency response service, or any professional security solution. No service level commitment is provided.
-
-──────────────────────────────────────
-2. AGE RESTRICTION
-──────────────────────────────────────
-You must be at least 18 years old to use this application. Under-18 use is not supported in this release. The User is solely responsible for the accuracy of their age declaration.
+• Call attempt: the Application submitting a request to the device operating system to place a telephone call. Whether the operating system fulfils that request, whether the call is established, and whether the other party answers are OUTSIDE this definition.
+• Auxiliary tool: on-device software that supports the User in carrying out their own safety plan but does not replace that plan.
+• Rehearsal (Test Mode): the function allowing the User to verify, without placing a real call, whether the flow works on their own device.
+• Device conditions: operating system version and settings, manufacturer battery management, sleep (Doze) mode, permission states, network and carrier status, charge level, sound profile, storage and all similar factors outside the Developer's control.
 
 ──────────────────────────────────────
-3. DISCLAIMER
+3. SCOPE AND NATURE OF THE OBLIGATION
 ──────────────────────────────────────
-• This application does NOT and WILL NOT replace professional security services, emergency services, or police services.
-• Calling 112 in emergency situations IS THE USER'S RESPONSIBILITY. The app is only an auxiliary tool.
-• The application does NOT guarantee call connection, location accuracy, or notification delivery.
-• The Developer CANNOT BE HELD RESPONSIBLE for delays and delivery failures due to network issues, device settings, carrier outages, or battery depletion.
-• The Developer is not responsible for location errors arising from GPS hardware inaccuracy.
+3.1. The Developer's obligation under this Agreement consists of making the Application available for installation on the User's device and endeavouring, WITH DUE CARE, to perform the documented functions.
+
+3.2. This Agreement creates NO OBLIGATION OF RESULT. The Developer does NOT UNDERTAKE that the User's safety will be secured, that any harm will be prevented, that a call will be established, that a notification will be delivered, that a location will be accurate, or that any function will complete within a given time.
+
+3.3. The Application is an AUXILIARY TOOL. The subject of this Agreement is a tool, not a safety outcome. The non-occurrence of a result that was never undertaken does not constitute a breach of this Agreement.
+
+3.4. The User accepts that the primary and principal course of action in an emergency is to call the 112 Emergency Call Centre, and that the Application neither replaces nor will replace that course of action.
 
 ──────────────────────────────────────
-4. USER RESPONSIBILITIES
+4. WHAT THE APPLICATION DOES NOT DO
 ──────────────────────────────────────
-The User agrees to:
-• Use the application only for lawful purposes and in good faith,
-• Not misuse the application or make false emergency notifications,
-• Not violate the rights of third parties,
-• Be solely responsible for all actions performed through the application,
-• Comply with all applicable laws including the Turkish Penal Code.
+The User accepts that they use the Application knowing that it does NOT do the following:
+• It is NOT an official emergency service, law enforcement body or 112 service, and is not connected to any of them.
+• It does NOT include an alarm monitoring centre, call centre or human response service.
+• It does NOT direct anyone to a scene on the User's behalf and does NOT organise any response.
+• It does NOT provide physical protection, deterrence or any safety guarantee.
+• It does NOT track the User in the background; location is used only within a session the User starts.
+• It does NOT send emergency data to any server belonging to the Developer; the Developer is NOT and cannot be AWARE of any emergency.
+• After installation it is NOT monitored, supervised or maintained by the Developer.
 
 ──────────────────────────────────────
-5. FAKE CALL FEATURE
+5. DOCUMENTED OPERATING LIMITS
 ──────────────────────────────────────
-The fake call feature is designed ONLY for personal safety purposes (e.g., leaving a situation to escape harassment). Using this feature for fraud, harassment, deception of others, or any criminal act IS ILLEGAL. ALL LEGAL AND CRIMINAL RESPONSIBILITY for such misuse BELONGS TO THE USER.
+5.1. The Application is software dependent on device conditions. The following are known, documented and accepted operating limits of the Application; they do NOT constitute a defect, fault or deficient performance:
+
+a) The operating system delaying or stopping background work in sleep (Doze) mode;
+b) The device manufacturer's battery management software terminating or restricting the Application;
+c) A call failing or being delayed due to the network, carrier or base station;
+d) The called person not answering, being busy or being unreachable;
+e) The device running out of charge, powering off, or hardware failure;
+f) The User not granting, or revoking, the required permissions (phone, location, notification, alarm);
+g) An operating system update changing permissions, alarms or background behaviour;
+h) Restrictions applied by the operating system while the device is locked;
+i) The siren not being heard due to the device sound profile, silent mode or volume level;
+j) Location deviations arising from the accuracy margin of GPS hardware;
+k) Map tiles failing to load because there is no internet connection;
+l) Interruption or discontinuation of third-party services (map provider, application store, payment infrastructure);
+m) A new operating system version changing existing behaviour;
+n) Notification delivery being delayed or blocked by the operating system;
+o) The fake call function being an on-device simulation that does not place a real call;
+p) The Application being removed from the store or the service being discontinued.
+
+5.2. The User accepts that these limits were expressly disclosed to them before contracting and that their expectations of the Application are formed within these limits.
 
 ──────────────────────────────────────
-6. LOCATION SESSION
+6. THE USER'S VERIFICATION DUTY
 ──────────────────────────────────────
-• Location data is used for map/location sessions only when explicitly triggered by the user.
+6.1. The Application provides a free Rehearsal (Test Mode) function allowing the User to verify, without placing a real call, whether the flow works ON THEIR OWN DEVICE.
+
+6.2. The User accepts as THEIR OWN DUTY to run the Rehearsal after installation, after every significant device or operating system change, and at regular intervals.
+
+6.3. The User accepts to take account of the Application's readiness warnings (missing permissions, battery optimisation, missing emergency contact and the like).
+
+6.4. A User who has not run the Rehearsal or has disregarded the readiness warnings is deemed to have relied on an installation that was not verified on their own device.
+
+──────────────────────────────────────
+7. THE USER'S DECLARATIONS AND UNDERTAKINGS
+──────────────────────────────────────
+By using the Application, the User expressly declares and undertakes:
+7.1. That they are at least 18 years old and have full legal capacity;
+7.2. That they will call 112 FIRST in an emergency and will not use the Application as an alternative to 112;
+7.3. That they have read and understood the operating limits listed in Article 5;
+7.4. That the duty to verify their installation by running the Rehearsal on their own device rests with them;
+7.5. That they are SOLELY responsible for their own safety plan, for assessing their environment and risks, and for the precautions they take;
+7.6. That they will not, in reliance on the existence of the Application, take a risk they would not otherwise take;
+7.7. That they obtained the express consent of the persons they add as emergency contacts IN ADVANCE;
+7.8. That they are responsible for the physical security of their device, the confidentiality of their PIN, and operating system updates;
+7.9. That they will use the Application only for lawful purposes.
+
+──────────────────────────────────────
+8. THE USER'S EXCLUSIVE RESPONSIBILITY
+──────────────────────────────────────
+The following are the EXCLUSIVE responsibility of the User:
+a) The decision whether or not to call 112 in an emergency, and the consequences of that decision;
+b) Their own safety plan, risk assessment and choices regarding the environment they are in;
+c) Verifying that the Application works on their own device;
+d) Granting and preserving device permissions;
+e) Keeping the device charged, powered on and operational;
+f) The emergency contacts being correct, current and reachable;
+g) The consent of the emergency contacts having been obtained;
+h) All call, siren, fake call and sharing actions performed through the Application;
+i) Any and all civil and criminal consequences arising from misuse of the Application;
+j) Protecting the Application with a PIN and not sharing that PIN with third parties.
+
+──────────────────────────────────────
+9. EMERGENCY CONTACTS AND THIRD PARTIES
+──────────────────────────────────────
+9.1. The User undertakes that they obtained the express consent of the persons added as emergency contacts before entering their personal data into the Application.
+
+9.2. The User accepts recourse liability towards the Developer for any claim, complaint, administrative sanction and litigation cost directed at the Developer as a result of a breach of this undertaking.
+
+9.3. Third parties added as emergency contacts may exercise their rights under KVKK Article 11 by contacting korubeni.destek@gmail.com.
+
+──────────────────────────────────────
+10. AGE RESTRICTION
+──────────────────────────────────────
+10.1. The Application is intended solely for use by persons who are at least 18 years old.
+
+10.2. Where a person under 18 uses the Application, the parent or legal guardian of that person is responsible for that use and its consequences.
+
+10.3. The Developer reserves the right to terminate access for users it determines to be under 18.
+
+──────────────────────────────────────
+11. PROHIBITION OF MISUSE
+──────────────────────────────────────
+11.1. The fake call function is ONLY for personal safety purposes (for example, leaving a situation to escape harassment). Using it for fraud, harassment, deception of others or any criminal act is PROHIBITED.
+
+11.2. Using the Application to make a false report to 112 or to law enforcement is PROHIBITED and is subject to administrative or criminal sanction.
+
+11.3. Using the Application to monitor or track another person without their consent is PROHIBITED.
+
+11.4. ALL CIVIL AND CRIMINAL LIABILITY arising from a breach of these prohibitions BELONGS TO THE USER.
+
+──────────────────────────────────────
+12. LOCATION SESSION
+──────────────────────────────────────
+• Location data is used for a map/location session only when expressly triggered by the User.
 • The accuracy of the displayed location depends on GPS hardware and is not guaranteed by the Developer.
-• If location cannot be obtained, the app does not show fake coordinates. Online map tiles require OpenStreetMap connectivity.
+• If location cannot be obtained, the Application does not display fabricated coordinates. Online map tiles require an OpenStreetMap connection.
 
 ──────────────────────────────────────
-7. EMERGENCY CONTACTS AND THIRD-PARTY RIGHTS
+13. DISCLAIMER OF WARRANTIES
 ──────────────────────────────────────
-• The User declares that they have the authority to save and call the persons added as emergency contacts in an emergency.
-• The User is responsible for the rights of these persons under applicable privacy laws.
-• Third parties added as emergency contacts may exercise their rights under KVKK Article 11 by contacting korubeni.destek@gmail.com. The Developer will notify the relevant user and request deletion of the data.
+13.1. The Application is provided "AS IS" and "AS AVAILABLE".
+
+13.2. The Developer gives no warranty, including any implied warranty, that the Application will operate uninterrupted, error-free or fit for a particular purpose.
+
+13.3. The Application may be changed, updated or discontinued without prior notice.
+
+13.4. This Article does not affect your rights arising from consumer legislation that cannot be excluded by contract.
 
 ──────────────────────────────────────
-8. DISCLAIMER OF WARRANTIES
+14. LIABILITY
 ──────────────────────────────────────
-The application is provided "AS IS". NO WARRANTY of any kind is given that it will operate without interruption, error-free, or fit for a particular purpose. The application may be changed, updated, or service discontinued at any time without prior notice.
+14.1. The Developer's liability arises only where the Developer is at fault and within the scope of the obligation defined in Article 3.
+
+14.2. Situations arising from the documented operating limits listed in Article 5 do not constitute fault of the Developer.
+
+14.3. The User's failure to perform the verification duty in Article 6 is assessed as the User's own contributory fault in any resulting damage.
+
+14.4. Where the Developer is held liable, total liability shall not exceed the total amount paid by the User through Google Play for KoruBeni Pro in the twelve (12) months preceding the claim. For a User without a paid subscription this amount is zero.
+
+14.5. The limitations in this Article do NOT APPLY to the Developer's intent, gross negligence, or mandatory liability arising from consumer legislation.
 
 ──────────────────────────────────────
-9. LIMITATION OF LIABILITY
+15. INDEMNIFICATION AND RECOURSE
 ──────────────────────────────────────
-The Developer shall not be liable for any direct, indirect, incidental, special, or consequential DAMAGES (including loss of life, financial loss, or data loss) arising from use or inability to use the application. This limitation does NOT cover cases of gross negligence or intentional misconduct in accordance with TBK Article 115.
+15.1. The User agrees to indemnify the Developer against third-party claims directed at the Developer arising from the User's own unlawful act, breach of this Agreement, or breach of the consent undertaking in Article 9.
 
-The Developer's total liability shall not exceed the total amount paid by the User through Google Play for KoruBeni Pro in the 12 (twelve) months preceding the claim. For users without a paid subscription, this amount is 0 TL.
-
-──────────────────────────────────────
-10. INDEMNIFICATION
-──────────────────────────────────────
-The User agrees to indemnify and hold the Developer harmless from any third-party claims, lawsuits, or damages arising from the use of the application, including reasonable attorney fees.
+15.2. This obligation does NOT COVER claims arising from the Developer's own fault.
 
 ──────────────────────────────────────
-11. FORCE MAJEURE
+16. FORCE MAJEURE AND THIRD-PARTY DEPENDENCIES
 ──────────────────────────────────────
-The Developer shall not be liable for any failure or delay in the operation of the application caused by natural disasters, war, pandemics, internet/telecommunications infrastructure outages, power outages, government restrictions, or similar events beyond the Developer's control ("force majeure").
+16.1. The Developer cannot be held liable for natural disasters, war, epidemics, telecommunications or energy infrastructure outages, cyber attacks, governmental restrictions and similar events beyond its control.
+
+16.2. The Application depends on third-party services such as the operating system, the application store, the payment infrastructure and the map provider. Policy changes, interruption or discontinuation of these services are outside the Developer's control.
 
 ──────────────────────────────────────
-12. INTELLECTUAL PROPERTY
+17. INTELLECTUAL PROPERTY
 ──────────────────────────────────────
-The application and all intellectual property rights contained therein belong to KoruBeni. The User is granted only a personal, non-transferable, non-exclusive license to use the application.
+The Application and all intellectual property rights contained therein belong to the Developer. The User is granted only a personal, non-transferable, non-exclusive licence to use it.
 
 ──────────────────────────────────────
-13. GOVERNING LAW AND JURISDICTION
+18. GOVERNING LAW AND DISPUTE RESOLUTION
 ──────────────────────────────────────
-This Agreement is governed by the laws of the Republic of Turkey. The courts and enforcement offices of İzmir shall have jurisdiction over disputes arising from this Agreement.
+18.1. This Agreement is governed by the laws of the Republic of Turkey.
+
+18.2. A User who qualifies as a consumer may, according to the monetary thresholds under Law No. 6502, apply to the Consumer Arbitration Committee or the Consumer Court AT THEIR OWN PLACE OF RESIDENCE. This right cannot be restricted by contract.
 
 ──────────────────────────────────────
-14. SEVERABILITY
+19. SEVERABILITY AND AMENDMENTS
 ──────────────────────────────────────
-If any provision of this Agreement is found to be invalid or unenforceable by a competent court, the remaining provisions shall continue in full force and effect.
+19.1. If any provision is held invalid, the remaining provisions of this Agreement remain in force. The invalid provision is deemed replaced by the valid provision closest to the parties' intent.
 
-──────────────────────────────────────
-15. AMENDMENTS
-──────────────────────────────────────
-The Developer reserves the right to update this Agreement at any time. Continued use after updates are published in the application constitutes acceptance of the new terms. For material changes, the application will request re-consent.
+19.2. The Developer may update this Agreement. For material changes the Application will request re-consent. If consent is not given, the User may not continue to use the Application.
 
 Contact: korubeni.destek@gmail.com
 ''';

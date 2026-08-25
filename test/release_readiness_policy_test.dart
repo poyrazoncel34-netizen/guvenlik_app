@@ -469,11 +469,11 @@ void main() {
     );
 
     test('canonical legal text versions stay pinned', () {
-      expect(LegalTexts.termsVersion, '3.1.0');
+      expect(LegalTexts.termsVersion, '4.0.0');
       expect(LegalTexts.kvkkVersion, '3.4.0');
       // Terms date is unchanged (content unchanged); KVKK/privacy carry their
       // own revision date after the first-responder claim removal.
-      expect(LegalTexts.lastUpdated, '21 Mayıs 2026');
+      expect(LegalTexts.lastUpdated, '25 Ağustos 2026');
       expect(LegalTexts.lastUpdatedKvkk, '19 Temmuz 2026');
 
       final disclosure = File('store/aydinlatma_metni.html').readAsStringSync();

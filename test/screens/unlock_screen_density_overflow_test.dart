@@ -117,13 +117,13 @@ class _VersionLine extends StatelessWidget {
           if (flexible)
             const Expanded(
               child: Text(
-                'Sürüm 3.1.0 — 21 Mayıs 2026',
+                'Sürüm 4.0.0 — 25 Ağustos 2026',
                 style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
               ),
             )
           else
             const Text(
-              'Sürüm 3.1.0 — 21 Mayıs 2026',
+              'Sürüm 4.0.0 — 25 Ağustos 2026',
               style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
             ),
         ],
