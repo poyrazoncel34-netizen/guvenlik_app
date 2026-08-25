@@ -88,7 +88,7 @@
       "reason": "CI, evidence, security, audit, or release-governance source. SECURITY.md is the published vulnerability-disclosure channel and CHANGELOG.md is the source for the Play 'what's new' text, so both are release governance rather than product source."
     },
     {
-      "pattern": "^(?:\\.gh-pages-publish/|assets/legal/|lib/constants/legal_texts\\.dart$|docs/(?:kvkk_|play-|play_|verbis_|veri_ihlali_)|store/(?!screenshots/android/(?:generate_|premium_app_store/README)))",
+      "pattern": "^(?:\\.gh-pages-publish/|assets/legal/|lib/constants/legal_texts\\.dart$|docs/(?:legal/|kvkk_|play-|play_|verbis_|veri_ihlali_)|store/(?!screenshots/android/(?:generate_|premium_app_store/README)))",
       "category": "legal",
       "commitGroup": "05-legal-store",
       "reason": "Candidate-facing legal, Play declaration, billing, QA, or store material."
