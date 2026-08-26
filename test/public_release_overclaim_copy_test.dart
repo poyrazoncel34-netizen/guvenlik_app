@@ -57,6 +57,15 @@ void main() {
         File('store/aydinlatma_metni.html'),
         File('store/app_store_privacy_labels.md'),
         File('store/QA_SENARYOLAR.md'),
+        // Sozlesme aynasi buraya v4 calismasinda eklendi: taranmiyordu, oysa
+        // kullanicinin ve Play incelemecisinin actigi yayimlanmis sayfa bu.
+        File('store/kullanim_sartlari.html'),
+        // Yayimlanan aynalar da taranir: store/ duzeltilip mirror
+        // senkronlanmazsa kullaniciya giden metin eski kalir.
+        ...Directory('.gh-pages-publish')
+            .listSync()
+            .whereType<File>()
+            .where((f) => f.path.endsWith('.html')),
       ];
       const forbiddenFragments = [
         'ilk müdahale',
@@ -76,6 +85,28 @@ void main() {
         'en güvenilir yoludur',
         'otomatik arama, yardım çağırmanın',
         'face id / parmak izi ile iptal',
+        // --- SONUC VAADI (v4) -------------------------------------------
+        // Sozlesme Madde 3.2 hicbir sonuc taahhut etmiyor. Magaza metni
+        // TKHK m.61 uyarinca sozlesmenin PARCASI oldugu icin, orada verilen
+        // bir sonuc vaadi sozlesmedeki reddi gecersiz kilar: mahkeme
+        // celiskiyi tuketici lehine yorumlar.
+        'sizi korur',
+        'seni korur',
+        'güvende olursunuz',
+        'güvende tutar',
+        'keeps you safe',
+        'will protect you',
+        'polisi arar',
+        'polise bildirir',
+        'calls the police',
+        'notifies the police',
+        // --- DEVLET BAGLANTISI IMASI (v4) --------------------------------
+        // Play "Requirements for apps that communicate government
+        // information": resmi acil numaralardan bahseden uygulamalar bu
+        // politikaya tabi ve bagli OLMADIKLARINI acikca belirtmeli.
+        'resmi acil servis uygulaması',
+        'official emergency service app',
+        'kades ile entegre',
       ];
 
       final violations = <String>[];
@@ -89,6 +120,47 @@ void main() {
       }
 
       expect(violations, isEmpty);
+    });
+
+    test('acil numaradan bahseden her kamuya acik metin bagimsizlik beyani tasir', () {
+      // Google Play, resmi acil servis numaralarindan (112, 911 vb.) bahseden
+      // uygulamalari "apps that communicate government information" politikasi
+      // kapsamina aliyor ve bagli olmayan uygulamalar icin sunu sart kosuyor:
+      // "Make it clear that the app doesn't represent a government or
+      // political entity."
+      //
+      // Bu kapi eklenmeden once store/google_play_listing.md 112'den
+      // bahsediyor ama hicbir bagimsizlik beyani tasimiyordu.
+      final files = [
+        File('store/play_store_listing_tr.md'),
+        File('store/play_store_listing_en.md'),
+        File('store/google_play_listing.md'),
+        File('store/kullanim_sartlari.html'),
+      ];
+      // Yuzeyler ayni seyi farkli soyluyor; herhangi biri yeterli.
+      const acceptedNotices = [
+        'bağımsız bir uygulamadır',
+        'is an independent application',
+        'bunlara bağlı değildir',
+        'is not connected to any of them',
+      ];
+
+      final violations = <String>[];
+      for (final file in files) {
+        final text = file.readAsStringSync();
+        if (!text.contains('112')) continue;
+        final lower = text.toLowerCase();
+        final hasNotice =
+            acceptedNotices.any((n) => lower.contains(n.toLowerCase()));
+        if (!hasNotice) violations.add(file.path);
+      }
+
+      expect(
+        violations,
+        isEmpty,
+        reason: 'Acil numaradan bahsedip bagimsizlik beyani tasimayan metin: '
+            '${violations.join(", ")}',
+      );
     });
   });
 }

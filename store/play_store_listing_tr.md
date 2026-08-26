@@ -11,7 +11,7 @@ Hesap açmanız gerekmez, kayıt olmanız gerekmez. Verileriniz cihazınızda ka
 
 Panik akışının tamamını, gerçek arama yapmayan Test Modu ile ücretsiz prova edebilirsiniz. Kurulumunuzun çalıştığını ihtiyacınız olmadan önce görürsünüz.
 
-⚠️ ÖNEMLİ: KoruBeni resmi bir acil servis değildir ve 112'nin yerine geçmez. Gerçek bir acil durumda lütfen önce 112'yi arayın. KoruBeni yalnızca tamamlayıcı bir araçtır ve fiziksel koruma sağlamaz.
+⚠️ ÖNEMLİ: KoruBeni resmi bir acil servis değildir ve 112'nin yerine geçmez. KoruBeni bağımsız bir uygulamadır; herhangi bir kamu kurumu, kolluk birimi veya resmi acil servisle bağlantılı değildir ve bunları temsil etmez. Gerçek bir acil durumda lütfen önce 112'yi arayın. KoruBeni yalnızca tamamlayıcı bir araçtır ve fiziksel koruma sağlamaz.
 
 ★ ÜCRETSİZ ÖZELLİKLER ★
 
@@ -72,4 +72,4 @@ Kurulumunuzu bugün yapın ve Test Modu ile provasını çalıştırın — 60 s
 **Privacy Policy URL:** https://poyrazoncel34-netizen.github.io/guvenlik_app/privacy_policy.html
 
 **Hedef anahtar kelimeler (Play'de serbest metin tag alani yoktur; bu liste uzun aciklamadaki dogal yogunlugu yonlendirir):**
-panik butonu, acil durum butonu, kadın güvenliği, kişisel güvenlik, sahte arama, sahte çağrı, siren, acil yardım, güvenli yürüyüş, gece güvenliği
+panik butonu, acil durum butonu, kadın güvenliği, kişisel güvenlik, sahte arama, sahte çağrı, siren, güvenli yürüyüş, gece güvenliği

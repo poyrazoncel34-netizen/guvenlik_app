@@ -10,7 +10,7 @@ Panik butonu, sahte çağrı, siren. Hesap yok, verileriniz cihazınızda kalır
 
 Panik butonu, sahte çağrı ve siren tek uygulamada. KoruBeni, acil bir durumda güvendiğiniz tek kişiye ulaşmayı önceden planlamanızı ve bu akışın provasını yapmanızı sağlayan bir kişisel güvenlik uygulamasıdır. Hesap gerekmez, verileriniz cihazınızda kalır.
 
-⚠️ ÖNEMLİ: Bu uygulama profesyonel güvenlik hizmeti yerine geçmez. Acil durumlarda her zaman 112'yi arayın.
+⚠️ ÖNEMLİ: Bu uygulama profesyonel güvenlik hizmeti yerine geçmez. KoruBeni bağımsız bir uygulamadır; herhangi bir kamu kurumu, kolluk birimi veya resmi acil servisle bağlantılı değildir ve bunları temsil etmez. Acil durumlarda her zaman 112'yi arayın.
 
 Ücretsiz: panik akışının Test Modu provası (gerçek arama yapılmaz), konum oturumu, sahte çağrı, siren, acil kişi yönetimi, plan notu ve güvenlik geçmişi.
 
