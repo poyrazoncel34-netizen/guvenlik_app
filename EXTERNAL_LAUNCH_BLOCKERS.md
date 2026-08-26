@@ -84,7 +84,7 @@ Generated against verified implementation revision `ef40178` (2026-08-15; the pr
 
 ---
 
-## E3 — Google Play policy review (sensitive permissions + `specialUse` FGS)
+## E3 — Google Play policy review (sensitive permissions)
 
 - **Requirement IDs (2):** `MP-62-020`, `MP-77-023`
 - **Severity:** P1.
@@ -93,11 +93,43 @@ Generated against verified implementation revision `ef40178` (2026-08-15; the pr
   it does; it cannot prove they are *accepted*.
 - **Required environment.** Play Console with the app in review.
 - **Procedure.** Submit the CALL_PHONE and REQUEST_IGNORE_BATTERY_OPTIMIZATIONS
-  declarations plus the `specialUse` foreground-service declaration and its required demo
-  video; respond to any reviewer follow-up.
-- **PASS criterion.** Play accepts all three declarations without a policy warning.
-- **Evidence to capture.** The Console decision screens and the submitted demo video URL.
+  declarations; respond to any reviewer follow-up. **There is no foreground-service
+  declaration to submit** — see the correction below.
+- **PASS criterion.** Play accepts both declarations without a policy warning, and the
+  App content page shows no foreground-service declaration for this app.
+- **Evidence to capture.** The Console decision screens for both permissions, plus a
+  screenshot showing the foreground-service section is empty.
 - **Launch impact.** **Blocking.** A rejected declaration removes the ability to dial.
+
+### Correction (2026-08-26): there is no `specialUse` foreground service
+
+This section previously instructed the operator to submit "the `specialUse`
+foreground-service declaration and its required demo video". That work does not exist and
+submitting it would declare a subsystem the app does not ship.
+
+Verified in this repository:
+
+- `android/app/src/main/AndroidManifest.xml` contains **no** `FOREGROUND_SERVICE`
+  permission at all, and no `foregroundServiceType`. Its two `<service>` entries are a
+  `tools:node="remove"` of Geolocator's location service and the Quick Settings tile.
+- No `startForeground` call exists in `android/app/src/main/kotlin/`.
+- Two tests actively enforce the absence and are green:
+  `test/core/services/foreground_service_type_test.dart` and
+  `test/core/android_platform_audit_test.dart`
+  (`expect(manifest, isNot(contains('FOREGROUND_SERVICE_SPECIAL_USE')))`).
+- `lib/core/services/foreground_service.dart` keeps its legacy filename but no longer
+  starts a service: its header records that the old plugin FGS "leaked a static partial
+  wakelock and allowed one safety session to stop another", and that deadline reliability
+  "now comes from native exact + inexact AlarmManager paths". The class owns only the
+  user-visible ongoing status notification.
+
+`store/release_checklist.md` already carried the correct operator action and this section
+contradicted it: *"Bundle has no FGS permission/service; any stale `specialUse` Console
+draft **is removed**"* (line 40) and *"Foreground service removal | CODE_DONE"* (line 99).
+
+**The real operator action is the opposite of what this section used to say:** if a
+`specialUse` draft still exists in the Play Console from an earlier attempt, **delete it**.
+A declaration that does not match the uploaded bundle is itself a policy risk.
 
 ---
 

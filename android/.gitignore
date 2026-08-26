@@ -3,6 +3,9 @@
 /local.properties
 GeneratedPluginRegistrant.java
 .cxx/
+# Kotlin 2.x derleyici oturum/onbellek dizini. Gradle her kosuda uretir ve
+# ignore edilmezse release siniflandirma kapisi kendi build'imiz yuzunden kirilir.
+.kotlin/
 
 # Remember to never publicly share your keystore.
 # See https://flutter.dev/to/reference-keystore
