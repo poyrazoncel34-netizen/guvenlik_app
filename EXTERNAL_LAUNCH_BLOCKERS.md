@@ -8,26 +8,37 @@
 
 | Metric | Value |
 |---|---|
-| Blocked requirement IDs | **87** |
+| Blocked requirement IDs | **109** |
 | External blocker categories | **9** |
 
-A summary that says "9 blockers" and a queue that says "87 requirements" are both true and
+A summary that says "9 blockers" and a queue that says "109 requirements" are both true and
 must never be written as if one contradicted the other. The categories below carry every
 one of the 87 IDs; no ID appears in two categories.
 
-Generated against verified implementation revision `ef40178` (2026-08-15; the previous stamp said `273864f`, 43 commits earlier -- FIR-05). Regenerate the ID lists with
-`python3 scripts/generate_resolution_queue.py` and read them out of `RESOLUTION_QUEUE.md`
-(`EXTERNAL_BLOCKER` scope).
+Reconciled against `ce371b2` (2026-08-27). The previous stamp said `ef40178`
+(2026-08-15) and the ID lists had drifted twelve days behind the queue: the header
+claimed 87 IDs while the body carried 76, thirty queued requirements appeared in no
+category at all (four of them P1), and seven already-resolved IDs were still listed.
+
+Regenerate the queue with `python3 scripts/generate_resolution_queue.py`, then bring
+the ID lists here in line with it (`EXTERNAL_BLOCKER` scope). **The drift can no
+longer pass silently:** `test/release_external_blockers_parity_test.dart` fails when
+a queued requirement is described nowhere, when a listed ID has left the queue, when
+one ID is counted under two categories, or when a stated count does not match its
+own list.
 
 ---
 
 ## E1 — Play billing lifecycle (RevenueCat sandbox + Play internal-test account)
 
-- **Requirement IDs (21):** `MP-13-014`, `MP-46-013`, `MP-47-006`, `MP-47-007`,
-  `MP-49-009`, `MP-54-001`, `MP-54-002`, `MP-54-003`, `MP-54-004`, `MP-54-005`,
-  `MP-54-006`, `MP-54-007`, `MP-54-008`, `MP-54-018`, `MP-54-019`, `MP-54-020`,
-  `MP-54-021`, `MP-54-022`, `MP-55-006`, `MP-55-008`, `MP-55-009`, `MP-55-010`,
-  `MP-73-010`
+- **Requirement IDs (26):**
+  `MP-13-014`, `MP-46-013`, `MP-47-006`, `MP-47-007`, `MP-49-009`,
+  `MP-54-001`, `MP-54-002`, `MP-54-003`, `MP-54-004`, `MP-54-005`,
+  `MP-54-006`, `MP-54-007`, `MP-54-008`, `MP-54-018`, `MP-54-019`,
+  `MP-54-020`, `MP-54-021`, `MP-54-022`, `MP-54-023`, `MP-54-024`,
+  `MP-55-006`, `MP-55-008`, `MP-55-009`, `MP-55-010`, `MP-73-010`,
+  `MP-74-007`
+
 - **Severity:** P1 for the `MP-54-*` / `MP-73-010` set, P2 otherwise.
 - **Why the repository cannot answer it.** A debug build carries a placeholder RevenueCat
   key, so `ensureInitialized()` returns false and every purchase path ends at the
@@ -59,8 +70,13 @@ Generated against verified implementation revision `ef40178` (2026-08-15; the pr
 
 ## E2 — Physical Android hardware (Doze, OEM battery managers, real telephony)
 
-- **Requirement IDs (9):** `MP-40-023`, `MP-41-017`, `MP-41-021`, `MP-59-027`,
-  `MP-59-030`, `MP-75-007`, `MP-77-001`, `MP-77-013`, `MP-45-005`
+- **Requirement IDs (24):**
+  `MP-40-023`, `MP-41-004`, `MP-41-005`, `MP-41-006`, `MP-41-007`,
+  `MP-41-009`, `MP-41-010`, `MP-41-011`, `MP-41-017`, `MP-41-018`,
+  `MP-41-021`, `MP-41-022`, `MP-45-005`, `MP-46-031`, `MP-59-027`,
+  `MP-59-030`, `MP-69-012`, `MP-69-013`, `MP-72-002`, `MP-72-006`,
+  `MP-72-016`, `MP-75-007`, `MP-77-001`, `MP-77-013`
+
 - **Severity:** P1 for `MP-41-017`, `MP-41-021`, `MP-59-027`, `MP-59-030`, `MP-77-001`,
   `MP-77-013`; P2 otherwise.
 - **Why the repository cannot answer it.** `.claude/rules/common/performance.md` states it
@@ -86,7 +102,9 @@ Generated against verified implementation revision `ef40178` (2026-08-15; the pr
 
 ## E3 — Google Play policy review (sensitive permissions)
 
-- **Requirement IDs (2):** `MP-62-020`, `MP-77-023`
+- **Requirement IDs (3):**
+  `MP-59-029`, `MP-62-020`, `MP-77-023`
+
 - **Severity:** P1.
 - **Why the repository cannot answer it.** Compliance with Play policy is a decision Google
   makes. The repository can only prove the declarations are *present and consistent*, which
@@ -135,8 +153,10 @@ A declaration that does not match the uploaded bundle is itself a policy risk.
 
 ## E4 — Account security and key custody (Play Console + GitHub)
 
-- **Requirement IDs (7):** `MP-48-006`, `MP-48-007`, `MP-48-008`, `MP-53-003`,
-  `MP-53-006`, `MP-63-006`, `MP-77-009`
+- **Requirement IDs (8):**
+  `MP-48-006`, `MP-48-007`, `MP-48-008`, `MP-53-003`, `MP-63-004`,
+  `MP-63-005`, `MP-63-006`, `MP-77-009`
+
 - **Severity:** P1 for `MP-53-003`, `MP-63-006`, `MP-77-009`; P2 otherwise.
 - **Why the repository cannot answer it.** MFA status, branch-protection settings and Play
   App Signing *enrolment* are account facts. The runbook for all of them is already written
@@ -174,9 +194,11 @@ A declaration that does not match the uploaded bundle is itself a policy risk.
 
 ## E6 — Post-launch operational data (nothing to measure before launch)
 
-- **Requirement IDs (14):** `MP-44-035`, `MP-76-007`, `MP-76-012`, `MP-77-024`,
-  `MP-78-001`, `MP-78-002`, `MP-78-003`, `MP-78-005`, `MP-78-010`, `MP-78-020`,
-  `MP-78-021`, `MP-78-022`, `MP-50-014`, `MP-50-015`
+- **Requirement IDs (14):**
+  `MP-44-035`, `MP-50-014`, `MP-50-015`, `MP-76-007`, `MP-76-012`,
+  `MP-77-024`, `MP-78-001`, `MP-78-002`, `MP-78-003`, `MP-78-005`,
+  `MP-78-010`, `MP-78-020`, `MP-78-021`, `MP-78-022`
+
 - **Severity:** P1 for `MP-77-024` (canary), P2 otherwise.
 - **Why the repository cannot answer it.** Crash rate, support volume, activation funnel,
   canary health and rollback-in-anger all require a released build with real users. They
@@ -196,7 +218,11 @@ A declaration that does not match the uploaded bundle is itself a policy risk.
 
 ## E7 — Real-user usability testing (5 unassisted participants)
 
-- **Requirement IDs (12):** `MP-71-001` … `MP-71-012`
+- **Requirement IDs (14):**
+  `MP-02-016`, `MP-03-013`, `MP-71-001`, `MP-71-002`, `MP-71-003`,
+  `MP-71-004`, `MP-71-005`, `MP-71-006`, `MP-71-007`, `MP-71-008`,
+  `MP-71-009`, `MP-71-010`, `MP-71-011`, `MP-71-012`
+
 - **Severity:** P2.
 - **Why the repository cannot answer it.** The checklist asks for five real users given no
   help. No amount of in-repo work substitutes for that, and no emulator run does either.
@@ -214,8 +240,10 @@ A declaration that does not match the uploaded bundle is itself a policy risk.
 
 ## E8 — Screen-reader (TalkBack) verification on hardware
 
-- **Requirement IDs (8):** `MP-46-030`, `MP-47-017`, `MP-47-018`, `MP-59-024`,
-  `MP-69-010`, `MP-69-011`, `MP-74-006`, `MP-77-005`
+- **Requirement IDs (6):**
+  `MP-46-030`, `MP-47-018`, `MP-59-024`, `MP-69-011`, `MP-74-006`,
+  `MP-77-005`
+
 - **Severity:** P2.
 - **Why the repository cannot answer it.** The in-repo accessibility suite asserts semantic
   labels, roles, target geometry and real localized copy — and it is genuinely good — but
@@ -234,10 +262,13 @@ A declaration that does not match the uploaded bundle is itself a policy risk.
 
 ## E9 — Operational tooling that does not exist by design
 
-- **Requirement IDs (14):** `MP-32-044`, `MP-49-004`, `MP-53-012`, `MP-53-014`,
-  `MP-67-001`, `MP-67-002`, `MP-67-003`, `MP-67-004`, `MP-75-015`, `MP-77-016`,
-  `MP-77-020`, `MP-59-027` *(see E2; listed there)*, `MP-76-007` *(see E6; listed there)*
+- **Requirement IDs (14):**
+  `MP-32-040`, `MP-32-044`, `MP-42-025`, `MP-49-004`, `MP-50-016`,
+  `MP-53-012`, `MP-53-014`, `MP-64-018`, `MP-64-019`, `MP-75-015`,
+  `MP-77-016`, `MP-77-020`, `MP-77-022`, `MP-80-017`
 - **Severity:** P2.
+- **Cross-referenced elsewhere.** MP-59-027 is counted in E2 and MP-76-007 in E6;
+  the same ID is never listed under two categories.
 - **Why the repository cannot answer it.** There is no server, no telemetry and no alerting
   pipeline — deliberately (CLAUDE.md rule 1, and no analytics by policy). "Alerting" is a
   human checking Play Console on a cadence. Roll-forward has never been rehearsed because
