@@ -12,13 +12,14 @@ kullanıcıya devredilebileceği azami sınırı, Türk mevzuatına dayandırara
 
 ## 0. Önce dürüst cevap: tavan nerede?
 
-**%100 devir hukuken mümkün değil.** Üç ayrı emredici hüküm bunu kesiyor:
+**%100 devir hukuken mümkün değil.** İki emredici hüküm bunu kesin olarak kesiyor,
+bir üçüncüsü ise koşullu:
 
-| Engel | Kaynak | Etkisi |
-|---|---|---|
-| Kast ve ağır ihmal | TBK m.115 | Önceden yapılan sorumsuzluk anlaşması **kesin hükümsüz**. Sözleşmeyle aşılamaz. |
-| Ölüm/yaralanma sorumluluğunu kaldıran şartlar | Haksız Şartlar Yönetmeliği | Tüketici sözleşmesinde **kesin hükümsüz**, hâkim resen atar. |
-| Ayıplı malın yol açtığı ölüm/yaralanma | Ayıplı Malın Neden Olduğu Zararlardan Sorumluluk Hakkında Yönetmelik | Üretici **kusuru aranmaksızın** tazminle yükümlü. Kusursuz sorumluluk. |
+| Engel | Kaynak | Etkisi | Kesinlik |
+|---|---|---|---|
+| Kast ve ağır ihmal | TBK m.115 | Önceden yapılan sorumsuzluk anlaşması **kesin hükümsüz**. Sözleşmeyle aşılamaz. | **Kesin** |
+| Ölüm/yaralanma sorumluluğunu kaldıran şartlar | Haksız Şartlar Yönetmeliği EK-1 (a) | Tüketici sözleşmesinde **kesin hükümsüz**, hâkim resen atar. | **Kesin** |
+| Ayıplı ürünün yol açtığı ölüm/yaralanma | **7223 s. Ürün Güvenliği ve Teknik Düzenlemeler Kanunu m.6** | Üretici kusuru aranmaksızın tazminle yükümlü. | **Koşullu — muhtemelen kapsam dışı** |
 
 Bu üçü sözleşmeyle kapatılamaz. Ama **hiçbiri kendiliğinden tetiklenmez.** Üçünün de
 bir tetikleyicisi var ve tetikleyiciyi kapatmak mümkün:
@@ -26,6 +27,42 @@ bir tetikleyicisi var ve tetikleyiciyi kapatmak mümkün:
 - TBK m.115 → tetikleyici **ağır ihmal**. Mühendislik disipliniyle kapatılır.
 - Haksız Şartlar → tetikleyici **sorumluluğu kaldıran şart yazmış olmak**. Yazmayarak kapatılır.
 - Kusursuz sorumluluk → tetikleyici **AYIP**. Belgelenmiş davranışla kapatılır.
+
+### Üçüncü satırın düzeltilmesi (2026-08-26)
+
+Bu belgenin ilk hali kusursuz sorumluluğun dayanağı olarak **2003 tarihli "Ayıplı Malın
+Neden Olduğu Zararlardan Sorumluluk Hakkında Yönetmelik"i** gösteriyordu. Yanlıştı ve
+web doğrulamasında yakalandı:
+
+1. O yönetmelik **mülga 4077** sayılı Kanun'un 4. ve 31. maddelerine dayanıyor. 6502
+   **Geçici m.1** onu yalnızca *"bu Kanunda öngörülen yönetmelikler yürürlüğe girinceye
+   kadar ve bu Kanuna aykırı olmayan hükümleri"* ile ayakta tutuyor — kalıcı bir zemin değil.
+2. Kusursuz sorumluluğun güncel dayanağı **7223 sayılı Kanun (12.03.2020) m.6**: imalatçı
+   ve ithalatçı "zararı gidermekle yükümlü"; doktrin bunu kusursuz sorumluluk sayıyor.
+3. Ancak 7223 m.3(1)(s) **"ürün"ü "her türlü madde, müstahzar veya eşya"** olarak
+   tanımlıyor — fiziksel. Fiziksel taşıyıcıya (CD, flash bellek) kayıtlı yazılım ürün
+   sayılıyor; **yalnızca dijital dağıtılan mobil uygulamalar ve hizmetler kapsam dışı
+   kalıyor.** Play üzerinden dağıtılan KoruBeni bu ikinci gruba giriyor.
+
+**Sonuç:** bugün itibarıyla kusursuz ürün sorumluluğunun KoruBeni'ye uzanması
+**muhtemel değil.** Bu bir yorum meselesidir ve avukat teyidi gerektirir — belgenin ilk
+hali bu satırda fazla karamsardı.
+
+**İleriye dönük risk.** AB **Ürün Sorumluluğu Direktifi 2024/2853** (yürürlük 09.12.2024)
+yazılımı açıkça "ürün" tanımına aldı ve **09.12.2026'dan sonra** piyasaya sürülenlere
+uygulanıyor. Türkiye 7223'ü AB uyumu kapsamında çıkarmıştı; yönün buraya doğru olması
+bekleniyor. Yani **bugün kapsam dışı, orta vadede muhtemelen içeride.**
+
+**Sözleşme bu düzeltmeden etkilenmiyor.** Madde 5 ayıbın *kendisini* hedeflediği için
+her iki rejimde de doğru savunmadır; ayıp hem TKHK m.8 hem 7223 bakımından tetikleyicidir.
+
+### Fiilen işleyen rejim
+
+Düzeltme sonrası gerçek tablo şu: uygulama TKHK m.3 bakımından **"mal"dır** (tanım
+yazılımı açıkça sayıyor), dolayısıyla **ayıp** rejimi işler — ama ayıbın yaptırımı
+sözleşmeseldir (iade, onarım, bedel indirimi), yani **para seviyesindedir** ve Madde
+14.4'teki tavanla sınırlıdır. Bedensel zarar tazminatı ise genel hükümlere (TBK m.49 /
+m.112) gider ve **kusur arar** — Madde 3, 5, 6 ve 14 tam olarak orada çalışır.
 
 **Bu analizin tezi:** korumanın kaynağı sözleşme metni değil, **ayıp yokluğunun
 ispatlanabilirliğidir.** Sözleşme dördüncü sırada gelir.
@@ -91,7 +128,7 @@ Sekiz mekanizma. Her senaryo bunlardan bir veya birkaçına dayanır.
 | Kod | Mekanizma | Ne yapar | Dayanak |
 |---|---|---|---|
 | **M1** | **Edim daraltma** | Borcu *sonuç borcu* değil *özen borcu* olarak tanımlar. Vekil, sonucun gerçekleşmemesinden **aksi kararlaştırılmış olsa bile** sorumlu tutulamaz. | TBK vekâlet hükümleri; özen borcu doktrini |
-| **M2** | **Ayıp tanımını önceden kapatma** | Bir davranış önceden ve açıkça belgelenmişse, "makul beklenti"nin dışında kalmaz → ayıp değildir → ne TKHK ayıp rejimi ne kusursuz sorumluluk tetiklenir | TKHK m.8 ("makul olarak beklediği fayda") |
+| **M2** | **Ayıp tanımını önceden kapatma** | Bir davranış önceden ve açıkça belgelenmişse, "makul beklenti"nin dışında kalmaz → ayıp değildir → TKHK ayıp rejimi tetiklenmez (7223 kusursuz sorumluluğu da, kapsama girdiği varsayılsa dahi, aynı sebeple tetiklenmez) | TKHK m.8 ("makul olarak beklediği fayda") |
 | **M3** | **Kullanıcı doğrulama yükü** | Test Modu ile kullanıcı, ifanın kendi cihazında çalıştığını **kendi kontrol eder**. Kontrol imkânı verilmiş ve kullanılmamışsa zarar görenin kusuru doğar | TBK m.52 (zarar görenin kusuru → tazminat indirilir veya **tamamen kaldırılır**) |
 | **M4** | **Bilgilendirilmiş kabul + ispat kaydı** | Kullanıcının sınırlamayı bildiğini ispatlar. İspat yükü sende olduğu için (TKHK m.10, HGK içtihadı) bu mekanizma olmadan diğerlerinin hiçbiri mahkemede kullanılamaz | TKHK m.10; HGK illiyet içtihadı |
 | **M5** | **Yaş kapısı** | 18 altı kullanıcıya karşı EULA'nın hiçbir hükmü işlemez. Yaş kapısı sözleşmenin ayakta kalma şartıdır | TMK m.11, m.16 |
@@ -232,7 +269,10 @@ Bu, tezin doğrulanmasıdır: zırh sözleşme değil, ayıpsızlığın ispatı
 
 - TBK m.115-116 sorumsuzluk anlaşmaları — Erdem&Erdem, Aktaş Hukuk
 - Tüketici Sözleşmelerindeki Haksız Şartlar Hakkında Yönetmelik — mevzuat.gov.tr
-- Ayıplı Malın Neden Olduğu Zararlardan Sorumluluk Hakkında Yönetmelik — mevzuat.gov.tr
+- 7223 s. Ürün Güvenliği ve Teknik Düzenlemeler Kanunu (12.03.2020) — m.3(1)(s), m.6
+- AB Ürün Sorumluluğu Direktifi 2024/2853 — yazılımı ürün sayar, 09.12.2026'dan sonra
+- ~~Ayıplı Malın Neden Olduğu Zararlardan Sorumluluk Hakkında Yönetmelik~~ — dayanağı
+  mülga 4077; 6502 Geçici m.1 ile sınırlı ayakta. Bkz. §0 düzeltme notu.
 - TKHK m.3/h, m.8, m.10, m.61, m.73/5 — 6502 sayılı Kanun
 - Yargıtay 3. HD Manavgat alarm kararı (2025) — AA, 2025
 - Yargıtay HGK illiyet bağı içtihadı — eyavuz.av.tr derlemesi
