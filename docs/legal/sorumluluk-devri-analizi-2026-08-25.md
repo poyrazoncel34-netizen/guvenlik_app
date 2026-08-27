@@ -265,6 +265,46 @@ Bu, tezin doğrulanmasıdır: zırh sözleşme değil, ayıpsızlığın ispatı
 
 ---
 
+## 6.5 AÇIK SORU — mesafeli sözleşme yükümlülükleri (2026-08-27'de bulundu)
+
+Bu analiz boyunca **hiç incelenmemiş** bir alan: Pro aboneliği bir **mesafeli
+sözleşme** kuruyor ve Mesafeli Sözleşmeler Yönetmeliği kendi yükümlülüklerini
+getiriyor. Depoda bu konuda hiçbir şey yok — `cayma`, `mesafeli` veya
+`ön bilgilendirme` ifadeleri sözleşmede, mağaza metninde ve çevirilerde geçmiyor.
+
+**Neden hemen hüküm yazılmadı:** yükümlülüğün kimde olduğu belirsiz.
+
+- Google'ın Türkçe yardım sayfası: *"Satın alma işlemleri uygulamanın
+  geliştiricisinden yapılır"* ve vergiden çoğu yerde geliştirici sorumlu.
+  Google yalnızca **AB/BK KDV'si** bakımından merchant of record.
+- Bu okumaya göre Türk tüketicisine karşı **sağlayıcı sensin** ve ön
+  bilgilendirme yükümlülüğü sende.
+- Ancak fiyat, yenileme koşulu, iptal ve iade akışını **Google'ın kendi satın
+  alma ekranı** gösteriyor ve iadeyi Google yürütüyor. Ön bilgilendirmenin bir
+  kısmı fiilen platform tarafından veriliyor.
+
+Yanlış tarafa yazmak iki yönde de zarar verir: olmayan bir yükümlülüğü
+üstlenmek, ya da olanı eksik yerine getirmek.
+
+**Avukata sorulacak (4. soru):**
+
+1. Play üzerinden satılan abonelikte, Türk tüketicisine karşı **sağlayıcı
+   geliştirici mi, Google mı?**
+2. Sağlayıcı geliştiriciyse, uygulamanın kendisi hangi **ön bilgilendirmeyi**
+   vermek zorunda?
+3. Cayma hakkı: Yönetmelik *"elektronik ortamda anında ifa edilen hizmetler
+   veya anında teslim edilen gayrimaddi mallar"* için cayma hakkı öngörmüyor —
+   ama ön bilgilendirmede **bunun açıkça belirtilmesi** gerekiyor. Bu beyan
+   nerede yapılmalı: sözleşmede mi, paywall'da mı, mağaza metninde mi?
+
+**Bulunma biçimi kayda değer:** bu boşluk bir teste veya denetime takılmadı.
+"Hukuksal tarafta her şeyden emin miyiz?" sorusu üzerine, daha önce hiç
+bakılmamış bir mevzuata bakılarak bulundu. Aynı yöntemle bulunabilecek başka
+alanlar olabilir; e-ticaret mevzuatı (ETBİS) ve ticari elektronik ileti (İYS)
+bu turda incelenmedi.
+
+---
+
 ## 7. Kaynaklar
 
 - TBK m.115-116 sorumsuzluk anlaşmaları — Erdem&Erdem, Aktaş Hukuk
