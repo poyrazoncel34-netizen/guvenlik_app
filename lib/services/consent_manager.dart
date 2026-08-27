@@ -9,6 +9,7 @@
 
 import 'dart:convert';
 import 'dart:io';
+import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -287,6 +288,7 @@ class ConsentManager {
       osVersion: _getOsVersion(),
       deviceModel: _getDeviceModel(),
       consentTextVersion: _getConsentTextVersion(consentType),
+      consentTextHash: _getConsentTextHash(consentType, locale ?? 'tr'),
       locale: locale ?? 'tr',
     );
 
@@ -384,5 +386,28 @@ class ConsentManager {
       default:
         return LegalTexts.kvkkVersion;
     }
+  }
+
+  /// Kabul aninda GOSTERILEN metnin SHA-256 ozeti.
+  ///
+  /// Surum pini ve icerik testleri DEPODAKI metni dogrular; bu hash ise
+  /// kullanicinin gordugu metni kayda gecirir. Ikisi ayri sorulardir ve
+  /// uyusmazlikta ikincisi sorulur.
+  ///
+  /// Dil onemlidir: kullanici hangi dildeki metni gorduyse onun ozeti alinir.
+  /// Uzun metni olmayan riza turleri (yas, konum, sahte cagri vb.) bos doner --
+  /// ozetlenecek bir sozlesme metni yoktur.
+  String _getConsentTextHash(String consentType, String locale) {
+    final String? text = switch (consentType) {
+      ConsentRecord.typeTerms => locale == 'tr'
+          ? LegalTexts.termsOfServiceTr
+          : LegalTexts.termsOfServiceEn,
+      ConsentRecord.typeKvkk => locale == 'tr'
+          ? LegalTexts.kvkkDisclosureTr
+          : LegalTexts.kvkkDisclosureEn,
+      _ => null,
+    };
+    if (text == null) return '';
+    return sha256.convert(utf8.encode(text)).toString();
   }
 }

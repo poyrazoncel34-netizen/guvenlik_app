@@ -21,6 +21,17 @@ class ConsentRecord {
   final String osVersion;
   final String deviceModel;
   final String consentTextVersion;
+
+  /// Kabul aninda GOSTERILEN metnin SHA-256 ozeti.
+  ///
+  /// Surum tek basina "kullanici v4.0.0'i kabul etti"yi kanitlar; hash ise
+  /// "v4.0.0 SU baytlardan olusuyordu"yu kanitlar. Testler depodaki metni
+  /// dogrular, kullanicinin ekraninda goruneni degil -- bu alan o boslugu
+  /// kapatir. Uzun metni olmayan riza turlerinde bos kalir.
+  ///
+  /// Bu alan sonradan eklendi; ONCEKI kayitlarda bulunmaz ve bos okunur.
+  final String consentTextHash;
+
   final String locale;
 
   const ConsentRecord({
@@ -31,6 +42,7 @@ class ConsentRecord {
     required this.osVersion,
     required this.deviceModel,
     required this.consentTextVersion,
+    this.consentTextHash = '',
     required this.locale,
   });
 
@@ -42,6 +54,7 @@ class ConsentRecord {
     'osVersion': osVersion,
     'deviceModel': deviceModel,
     'consentTextVersion': consentTextVersion,
+    'consentTextHash': consentTextHash,
     'locale': locale,
   };
 
@@ -53,6 +66,7 @@ class ConsentRecord {
     osVersion: json['osVersion'] as String? ?? '',
     deviceModel: json['deviceModel'] as String? ?? '',
     consentTextVersion: json['consentTextVersion'] as String? ?? '',
+    consentTextHash: json['consentTextHash'] as String? ?? '',
     locale: json['locale'] as String? ?? 'tr',
   );
 }
