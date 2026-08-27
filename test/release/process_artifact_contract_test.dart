@@ -41,6 +41,43 @@ void main() {
     });
   });
 
+  test('the KVKK breach procedure still carries what its rows cite', () {
+    _requires('docs/veri_ihlali_bildirimi_proseduru.md', <String, String>{
+      'MP-67-013 (procedure with timelines)': '## 5. İhlal Müdahale Prosedürü',
+      'MP-67-013 (72-hour deadline)': 'en geç 72 saat',
+      // KVKK m.12/5 has NO risk threshold -- unlike GDPR. The first version of
+      // this document told the operator to assess "whether notification is
+      // required", which is a discretion the statute does not grant. A missed
+      // notification is a separate offence (2026: 256.357 - 17.092.242 TL).
+      'no-threshold rule (statute, not GDPR)': 'hiçbir risk eşiği yoktur',
+      // A procedure that cannot be executed at 3am is not a procedure.
+      'MP-67-013 (actual channel)': 'ihlalbildirim.kvkk.gov.tr',
+      'MP-67-013 (form decision)': '2019/10',
+      'data-subject notice minimum elements': '2019/271',
+      // CLAUDE.md rule 1 forbids claiming 100% offline behaviour; the document
+      // claimed it while its own section named RevenueCat and Play Billing.
+      'CLAUDE.md rule 1 (no total-offline claim)': '"tamamen çevrimdışı" DEĞİLDİR',
+      'processor breach is a real vector here': 'Üçüncü Taraf (Veri İşleyen) Nezdinde İhlal',
+    });
+  });
+
+  test('the VERBIS exemption note still carries its current legal basis', () {
+    _requires('docs/verbis_muafiyet_notu.md', <String, String>{
+      // The note cited decision "2018/32" and a 25M TL threshold. The base
+      // decision is 2018/87 and the threshold moved to 100M TL in 2023/1154 --
+      // the note was three years stale on the number that decides the outcome.
+      'MP-62-018 (current threshold decision)': '2023/1154',
+      'MP-62-018 (base decision)': '2018/87',
+      // The decisive rule for a natural person who keeps no balance sheet.
+      'strongest basis': 'yalnızca yıllık çalışan sayısı',
+      // App-development income is ticari kazanc, not serbest meslek kazanci --
+      // confirmed by the 5510 m.4/1-(b) treatment. Resting the exemption on a
+      // wrong basis puts the exemption itself in play during an inspection.
+      'rejected basis is named, not silently dropped': 'KULLANILMIYOR',
+      'CLAUDE.md rule 1 (no total-offline claim)': '"tamamen çevrimdışı" DEĞİLDİR',
+    });
+  });
+
   test('SECURITY.md still publishes a disclosure channel and its scope', () {
     _requires('SECURITY.md', <String, String>{
       'MP-32-049 (dedicated address)': 'korubeni.security@gmail.com',

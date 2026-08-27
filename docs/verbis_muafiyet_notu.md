@@ -2,8 +2,8 @@
 
 **Veri Sorumlusu:** Poyraz Öncel — Bireysel Yazılım Geliştirici
 **İletişim:** korubeni.destek@gmail.com
-**Son Güncelleme:** 2026-03-19
-**Versiyon:** 3.0.0
+**Son Güncelleme:** 2026-08-27
+**Versiyon:** 4.0.0
 
 ---
 
@@ -15,31 +15,58 @@ Veri Sorumluları Sicili (VERBİS), KVKK m.16 uyarınca Kişisel Verileri Koruma
 
 ## 2. Muafiyet Gerekçesi
 
-Kişisel Verileri Koruma Kurulu'nun **2018/32 sayılı kararı** ve ilgili düzenlemeler kapsamında aşağıdaki kategoriler VERBİS kayıt yükümlülüğünden muaf tutulmuştur:
+> **Bu bölüm 2026-08-27'de düzeltildi.** Önceki sürüm dayanak olarak "2018/32 sayılı
+> karar" ve "25 milyon TL" eşiğini gösteriyordu. Karar numarası yanlıştı ve eşik üç yıl
+> bayattı. Ayrıca muafiyet gerekçesi olarak "serbest meslek erbabı" statüsü ileri
+> sürülüyordu; bu da yanlıştır (aşağıda 2.3).
 
-### 2.1 Yıllık Çalışan Sayısı Kriteri
-- **Koşul:** Yıllık çalışan sayısı 50'den az olan gerçek veya tüzel kişi veri sorumluları (yıllık mali bilanço toplamı 25 milyon TL'den az olması kaydıyla)
-- **KoruBeni durumu:** Poyraz Öncel bireysel geliştiricidir, çalışan sayısı **sıfırdır** ✓
+Kurul kararlarının zinciri:
 
-### 2.2 Dernek, Vakıf ve Sendika Muafiyeti
+| Karar | Tarih / RG | Ne yaptı |
+|---|---|---|
+| **2018/87** | 19.07.2018 | İstisna çerçevesi: <50 çalışan **ve** <25 milyon TL bilanço |
+| **2023/1154** | RG 25.07.2023, 32259 | Bilanço eşiğini **25 milyon → 100 milyon TL** yaptı |
+| **2025/1572** | RG 01.10.2025, 33034 | Ana faaliyeti özel nitelikli veri işleme olan **mikro işletmelere** istisna: <10 çalışan **ve** <10 milyon TL |
+
+### 2.1 Çalışan sayısı ve bilanço kriteri
+- **Koşul:** Yıllık çalışan sayısı 50'den az **ve** yıllık mali bilanço toplamı
+  **100 milyon TL'den az** (2023/1154 ile güncel tutar). Kriterler kümülatiftir.
+- **KoruBeni durumu:** çalışan sayısı **sıfırdır** ✓
+
+### 2.2 Bilanço tutmayanlar için belirleyici kural
+- **Bilanço esasına göre defter tutmayanlar** için "yıllık mali bilanço toplamı" verisi
+  bulunmadığından, istisnanın tespitinde **yalnızca yıllık çalışan sayısı** kriteri esas
+  alınır.
+- **KoruBeni durumu:** GVK mükerrer 20/B kapsamında gerçek kişi olarak bilanço esasına
+  göre defter tutulmayacaktır; dolayısıyla tek ölçüt çalışan sayısıdır ve o **sıfırdır** ✓
+- **Muafiyetin en sağlam dayanağı budur.**
+
+### 2.3 "Serbest meslek erbabı" gerekçesi KULLANILMIYOR — ve nedeni
+- Önceki sürüm bireysel yazılım geliştiriciyi "serbest meslek erbabı" sayıp muafiyet
+  gerekçesi yapıyordu. Bu **yanlıştır.**
+- VERBİS'teki ilgili istisna avukat, noter ve mali müşavir gibi **kendi özel kanunlarına
+  tabi** meslekleri kapsar; yazılım geliştiriciliği bu listede değildir.
+- Dahası, mobil uygulama geliştiriciliğinden elde edilen kazanç **ticari kazançtır**,
+  serbest meslek kazancı değil. Bunu SGK muamelesi de teyit eder: GVK mük. 20/B
+  kapsamında vergi mükellefiyeti açılınca doğan sigortalılık **5510 m.4/1-(b)**
+  (esnaf/ticari) statüsüdür.
+- Yanlış bir gerekçeye dayanan muafiyet, denetimde muafiyetin kendisini tartışmaya açar.
+  Doğru gerekçe 2.1 ve 2.2'dir; onlar zaten yeterlidir.
+
+### 2.4 Dernek, vakıf, sendika ve noterlik muafiyetleri
 - Uygulanamaz — bireysel geliştirici
-
-### 2.3 Noterlik Muafiyeti
-- Uygulanamaz
-
-### 2.4 Serbest Meslek Erbabı / Avukat / Mali Müşavir Muafiyeti
-- **Koşul:** Serbest meslek faaliyeti kapsamında kişisel veri işleyenler
-- **KoruBeni durumu:** Bireysel yazılım geliştirici olarak serbest meslek erbabı statüsündedir ✓
 
 ---
 
 ## 3. Ek Gerekçeler
 
 ### 3.1 Veri İşleme Hacmi
-- Uygulama tamamen çevrimdışı çalışır
-- Hiçbir sunucuda kişisel veri toplanmaz veya saklanmaz
-- Tüm veri yalnızca kullanıcının kendi cihazında kalır
-- Geliştirici olarak kişisel verilere **erişim imkânı bulunmamaktadır**
+- **Acil arama akışı** geliştirici backend'i olmadan çalışır. Uygulama bir bütün olarak
+  "tamamen çevrimdışı" DEĞİLDİR — proje kuralı bu iddiayı yasaklar (CLAUDE.md kural 1).
+- Geliştiriciye ait hiçbir sunucuda kişisel veri toplanmaz veya saklanmaz
+- Acil kişiler, güvenlik geçmişi ve PIN yalnızca kullanıcının kendi cihazında kalır
+- Geliştirici olarak bu verilere **erişim imkânı bulunmamaktadır**
+- İsteğe bağlı katmanların ağ davranışı 3.2'de ayrıca sayılır
 
 ### 3.2 Üçüncü Taraf / Sağlayıcı Davranışı
 - Geliştirici tarafından işletilen bir backend'e kişisel veri aktarımı yapılmaz
@@ -58,10 +85,16 @@ Kişisel Verileri Koruma Kurulu'nun **2018/32 sayılı kararı** ve ilgili düze
 
 Poyraz Öncel, KoruBeni uygulamasının veri sorumlusu olarak aşağıdaki gerekçelerle VERBİS kayıt yükümlülüğünden **muaf** olduğunu değerlendirmektedir:
 
-1. **Bireysel geliştirici** — Yıllık çalışan sayısı 0, mali bilanço 25M TL altında
-2. **Serbest meslek erbabı** statüsü
-3. **Tamamen çevrimdışı mimari** — Geliştirici kişisel verilere erişim imkânına sahip değildir
-4. **Backend aktarımı yok** — Geliştirici sunucusuna kişisel veri gönderilmez; harita, Google Play Billing ve RevenueCat sağlayıcılarının teknik ağ davranışları ayrı değerlendirilir
+1. **Çalışan sayısı sıfırdır** — 2018/87 çerçevesindeki <50 çalışan koşulu sağlanır
+2. **Bilanço esasına göre defter tutulmaz** — bu halde istisnanın tespitinde yalnızca
+   çalışan sayısı esas alınır; ikinci bir eşik tartışması doğmaz *(en sağlam dayanak)*
+3. **Ana faaliyet özel nitelikli veri işleme değildir** — tıbbi profil özelliği
+   kaldırılmıştır; kalan tek referans eski veriyi silen tek seferlik temizlik servisidir
+   (`medical_data_cleanup_service.dart`) ve aydınlatma metni sağlık verisi saymaz
+4. **Geliştirici backend'ine aktarım yok** — harita, Google Play Billing ve RevenueCat
+   sağlayıcılarının teknik ağ davranışları 3.2'de ayrıca sayılır ve gizlenmez
+
+**Kullanılmayan gerekçe:** "serbest meslek erbabı" statüsü — bkz. 2.3.
 
 ---
 
@@ -71,13 +104,22 @@ Poyraz Öncel, KoruBeni uygulamasının veri sorumlusu olarak aşağıdaki gerek
 
 2. **Kurul kararları değişebilir.** VERBİS muafiyet kriterleri Kişisel Verileri Koruma Kurulu tarafından güncellenebilir. Bu değerlendirme düzenli olarak gözden geçirilmelidir.
 
-3. **Şüphe halinde kayıt.** Muafiyet durumunda tereddüt oluşursa, ihtiyati olarak VERBİS kaydı yaptırılması önerilir. Kayıt ücretsizdir ve ek bir yükümlülük getirmez.
+3. **Daha temel bir soru açık:** bu uygulamada veri sorumlusu geliştirici mi, kullanıcı
+   mı? Veri cihazdan çıkmıyor ve geliştiricinin erişimi yok; sıfat, "işleme amaç ve
+   vasıtalarını kim belirliyor" ölçütüne bağlıdır (Kurul kararı **2020/71**). Bu belge,
+   sıfatın geliştiricide olduğu ihtiyatlı varsayımıyla yazılmıştır. Avukat teyidi
+   alınmalıdır; cevap "kullanıcı" çıkarsa bu değerlendirme büyük ölçüde konusuz kalır.
+
+4. **Şüphe halinde kayıt.** Muafiyet durumunda tereddüt oluşursa, ihtiyati olarak VERBİS kaydı yaptırılması önerilir. Kayıt ücretsizdir ve ek bir yükümlülük getirmez.
 
 ---
 
 ## 6. Referanslar
 
 - KVKK m.16 — Veri Sorumluları Sicili
-- Kişisel Verileri Koruma Kurulu 2018/32 sayılı karar — VERBİS kayıt yükümlülüğünden muafiyet
-- Kişisel Verileri Koruma Kurulu 2018/68 sayılı karar — Muafiyet kriterleri detaylandırması
+- Kurul kararı **2018/87** (19.07.2018) — istisna çerçevesi (<50 çalışan, <25 milyon TL)
+- Kurul kararı **2023/1154** (RG 25.07.2023, 32259) — bilanço eşiği 100 milyon TL'ye çıktı
+- Kurul kararı **2025/1572** (RG 01.10.2025, 33034) — mikro işletme istisnası
+- Kurul kararı **2020/71** (30.01.2020) — veri sorumlusu / veri işleyen tespiti
+- `docs/veri_ihlali_bildirimi_proseduru.md` — muafiyetin KALDIRMADIĞI bildirim yükümlülüğü
 - VERBİS Rehberi — kvkk.gov.tr
