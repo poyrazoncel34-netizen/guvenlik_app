@@ -305,6 +305,88 @@ bu turda incelenmedi.
 
 ---
 
+## 6.6 Kişisel risk taraması (2026-09-02)
+
+"Uygulama sahibine sıkıntı yaratacak her şeyi bul" talebi üzerine, o güne kadar
+**hiç bakılmamış** dört alan tarandı. İkisi temiz çıktı, ikisi gerçek risk.
+
+### 6.6.1 Marka çakışması — TEMİZ (ölçüldü)
+
+TÜRKPATENT resmî marka veritabanı sorgulandı (turkpatent.gov.tr, Marka Araştırma):
+
+| Sorgu | Kapsam | Sonuç |
+|---|---|---|
+| `korubeni` | içinde geçen, tüm sınıflar | **1 kayıt** |
+| `koru beni` | içinde geçen, tüm sınıflar | **Sonuç bulunamadı** |
+
+Tek kayıt: **2023/084955 — "korubeni sonsuz iyilik"**, sahibi SEFA ORÇUN EĞİLLİ,
+başvuru 02.07.2023, **Nice sınıfı 35** (reklamcılık, iş yönetimi, mağazacılık).
+
+**Engellemiyor.** SMK m.6/1 koruması için hem işaretlerin hem de **mal/hizmetlerin**
+benzer olması gerekir. Bu uygulamanın sınıfları 9 (yazılım) ve 42 (yazılım
+geliştirme); sınıf 35 ile benzer değildir. Sınıf aşan koruma yalnızca tanınmış
+markalara tanınır (m.6/5) ve bu marka tanınmış değildir.
+
+Google Play araması da yapıldı: `korubeni` ve `"koru beni"` için **aynı adlı uygulama
+yok** (sonuçlar "Korusu", "Koru Ailem", "Koru Sigorta" gibi alakasız kayıtlar).
+
+**Kalan soru (marka vekiline):** "KoruBeni" tescil edilebilir mi? Bir güvenlik
+uygulaması için "beni koru" amacı tarif ediyor olabilir ve SMK m.5/1-b (ayırt
+edicilikten yoksunluk) ile m.5/1-c (tanımlayıcılık) tescili engelleyebilir. Tescil
+edilemezse **başkalarının aynı adı kullanmasını da engelleyemezsin.**
+
+### 6.6.2 Play mağazasında TAM ADRESİN YAYIMLANMASI — GERÇEK RİSK
+
+Play Console yardım sayfası, doğrulanmış hesap bilgileri için birebir şunu diyor:
+
+> *"Merchant accounts must **show their full address on Google Play**. The address
+> used is the one taken from the Google payments profile."*
+
+İletişim adı, e-postası ve telefonu gizli kalır — **ama uygulama içi satın alma
+sunan her hesap "merchant account"tur ve ödeme profilindeki tam adres mağazada
+herkese açık gösterilir.** Pro aboneliği bu şartı doğuruyor.
+
+Kişisel hesapta ödeme profilindeki adres **ev adresidir.**
+
+**Bu, bu üründe hukuki değil FİZİKSEL bir risktir.** Kullanıcı kitlesi şiddet ve
+tacizden kaçan kişiler. Mağduru bu uygulamayı kullanan bir failin, geliştiricinin
+ev adresine iki dokunuşla ulaşabilmesi kabul edilebilir bir tasarım değildir.
+
+**Azaltma:** ödeme profilinde ev adresi yerine bir **işyeri adresi** kullanmak
+(mali müşavir adresi, sanal ofis veya kurulacak tüzel kişiliğin merkezi). GVK
+mükerrer 20/B için vergi dairesine zaten bir adres bildirilecek; ikisi birlikte
+planlanmalıdır. Bu, tüzel kişilik kararının hukuki olmayan, doğrudan güvenlikle
+ilgili bir gerekçesidir ve analiz boyunca gözden kaçmıştı.
+
+### 6.6.3 ETBİS kayıt yükümlülüğü — MUHTEMELEN GEREKLİ
+
+E-ticaret mevzuatı bu analizde hiç incelenmemişti. Kural:
+
+- Kendi elektronik ticaret ortamında (kendi sitesi veya **mobil uygulaması**)
+  faaliyet gösteren hizmet sağlayıcılar ETBİS'e kayıt olur.
+- **Muafiyet yalnızca Türkiye'deki** bir aracı hizmet sağlayıcı/pazaryeri üzerinden
+  satış yapanlara tanınır.
+- **Yurt dışında yerleşik** aracı hizmet sağlayıcı üzerinden sözleşme yapanlar
+  kayıt olmalıdır.
+
+Google Play'in muhatabı **Google Ireland Ltd.** — yurt dışında yerleşik. Her iki
+okuma da kayıt yönünde işaret ediyor; muafiyet Türk pazaryerlerine özgü.
+
+İdari para cezası **34.000 TL'ye kadar**. Mali müşavire sorulmalı.
+
+### 6.6.4 Play geliştirici kimlik doğrulaması — SON TARİH HESAP BAZLI
+
+> *"If Google can't verify your developer information or your contact information,
+> your developer presence and apps **may be removed from Google Play**, and you won't
+> be able to republish your app until you've verified your information."*
+
+Son tarih hesaba özeldir ve Play Console'da **60 gün önceden** görünür. Kişisel
+hesap için resmî kimlik belgesi, doğrulanmış e-posta ve Android cihaz doğrulaması
+isteniyor. **Play Console'da kendi hesabının tarihine bakılmalıdır** — kaçırılması
+uygulamanın kaldırılması demek.
+
+---
+
 ## 7. Kaynaklar
 
 - TBK m.115-116 sorumsuzluk anlaşmaları — Erdem&Erdem, Aktaş Hukuk
