@@ -98,6 +98,21 @@ class DeviceProtectedEmergencySessionStore(context: Context) : EmergencySessionS
 
     override fun write(envelope: EmergencySessionEnvelope): Boolean {
         val prefix = prefix(envelope.token.slot)
+        // Journal on the TRANSITION into a terminal state, not on every write
+        // of an already-terminal envelope. expireFallback() (up to 24h later)
+        // and consumeFallbackTarget() legitimately re-write the SAME terminal
+        // state to drop the retained target; appending again there resurrects
+        // an outcome the user already acknowledged and hands it back from
+        // pendingOutcomes() as if it were new. A genuine change of terminal
+        // state IS new information and still journals.
+        val storedState = LifecycleState.fromWire(
+            prefs.getString(key(prefix, "lifecycleState"), null),
+        )
+        val sameTerminalStateRewrite = storedState != null &&
+            storedState.isTerminal &&
+            storedState == envelope.lifecycleState &&
+            prefs.getString(key(prefix, "randomId"), null) == envelope.token.randomId &&
+            prefs.getLong(key(prefix, "generation"), -1L) == envelope.token.generation
         val editor = prefs.edit()
         prefs.all.keys.filter { it.startsWith(prefix) }.forEach(editor::remove)
         editor
@@ -125,7 +140,7 @@ class DeviceProtectedEmergencySessionStore(context: Context) : EmergencySessionS
             .putLong(key(prefix, "mainDurationMs"), envelope.mainDurationMs)
             .putString(key(prefix, "graceWarningOutcome"), envelope.graceWarningOutcome)
             .putString(key(prefix, "preWarningOutcome"), envelope.preWarningOutcome)
-        EmergencyTerminalJournal.append(editor, envelope)
+        if (!sameTerminalStateRewrite) EmergencyTerminalJournal.append(editor, envelope)
         return try {
             editor.commit()
         } catch (_: RuntimeException) {

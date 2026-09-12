@@ -22,6 +22,19 @@ object EmergencyNotificationHelper {
     const val COUNTDOWN_DISPATCH_FAILED_NOTIFICATION_ID = 7304
     const val SAFE_WALK_NOTIFICATION_ID = 7305
 
+    // One warning id per session kind, so a re-posted warning REPLACES the
+    // previous one instead of stacking, and so the poster and cancel() cannot
+    // drift apart and leave a stale "your time is nearly up" behind.
+    const val CHECK_IN_WARNING_NOTIFICATION_ID = 9999
+    const val SAFE_WALK_WARNING_NOTIFICATION_ID = 9998
+
+    fun warningNotificationId(kind: SessionKind): Int =
+        if (kind == SessionKind.SAFE_WALK) {
+            SAFE_WALK_WARNING_NOTIFICATION_ID
+        } else {
+            CHECK_IN_WARNING_NOTIFICATION_ID
+        }
+
     fun ensureChannels(context: Context) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
             return

@@ -34,10 +34,14 @@ object NativeNotificationText {
         }
     }
 
-    fun preWarning(context: Context): NotificationCopy =
-        if (context.resources.configuration.locales[0].language == "tr")
-            NotificationCopy("Güvenli Yürüyüş", "Süren dolmak üzere. Güvendeysen süreyi yenile.")
-        else NotificationCopy("Safe Walk", "Your time is nearly up. Renew the timer if you are safe.")
+    /// Safe-Walk's lead-time warning.
+    ///
+    /// This used to read `configuration.locales[0]` -- the DEVICE locale -- while
+    /// every other copy here resolves the app's own persisted language. On a
+    /// phone set to English with the app defaulting to Turkish, the pre-warning
+    /// arrived in English and the grace warning for the SAME session arrived in
+    /// Turkish moments later.
+    fun preWarning(context: Context): NotificationCopy = strings(context).safeWalkPreWarning
 
     fun graceStarted(
         context: Context,
@@ -169,6 +173,7 @@ object NativeNotificationText {
         val checkInGraceStarted: NotificationCopy,
         val checkInExpired: NotificationCopy,
         val safeWalkGraceStarted: NotificationCopy,
+        val safeWalkPreWarning: NotificationCopy,
         val safeWalkExpired: NotificationCopy,
         val checkInBootGraceStarted: NotificationCopy,
         val checkInBootExpired: NotificationCopy,
@@ -199,6 +204,10 @@ object NativeNotificationText {
         safeWalkGraceStarted = NotificationCopy(
             title = "Safe Walk timed out",
             body = "Please confirm that you are safe.",
+        ),
+        safeWalkPreWarning = NotificationCopy(
+            "Safe Walk",
+            "Your time is nearly up. Renew the timer if you are safe.",
         ),
         safeWalkExpired = NotificationCopy(
             title = "Safe Walk emergency",
@@ -260,6 +269,10 @@ object NativeNotificationText {
         safeWalkGraceStarted = NotificationCopy(
             title = "Güvenli yürüyüş süresi doldu",
             body = "Lütfen güvende olduğunuzu onaylayın.",
+        ),
+        safeWalkPreWarning = NotificationCopy(
+            "Güvenli Yürüyüş",
+            "Süren dolmak üzere. Güvendeysen süreyi yenile.",
         ),
         safeWalkExpired = NotificationCopy(
             title = "Güvenli yürüyüş acil durumu",

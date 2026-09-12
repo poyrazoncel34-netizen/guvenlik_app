@@ -1,6 +1,7 @@
 package com.poyrazoncel.korubeni.emergency
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertThrows
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -790,6 +791,40 @@ class EmergencySessionCoordinatorTest {
         assertEquals(0, posts)
         assertEquals("posted", fixture.coordinator.warn(token, false))
         assertEquals(token, fixture.store.current?.token)
+        assertEquals(1, posts)
+    }
+
+    @Test
+    fun `warning claim committed then process death still warns on redelivery`() {
+        // The claim write SUCCEEDS and the process dies before the post. The
+        // durable outcome is left at "unknown", which is a CLAIM, not a result.
+        // Treating it as terminal (the way a dispatch claim is) would swallow
+        // the warning for this generation forever: the re-scheduled alarm fires
+        // warn() again and the idempotency check would short-circuit. A missed
+        // warning is the exact defect the native warning exists to prevent.
+        val store = FakeStore(crashAfterWritesAt = setOf(3))
+        var posts = 0
+        val poster = EmergencyWarningPoster { _, _ -> posts++; true }
+        val first = Fixture(store = store, warningPoster = poster)
+        val token = (first.coordinator.arm(validArmRequest(randomId = "warn-crash")) as ArmResult.Armed).token
+        first.advanceTo(now + 60_000L)
+        assertThrows(SimulatedProcessDeath::class.java) {
+            first.coordinator.warn(token, false)
+        }
+        assertEquals(0, posts)
+        assertEquals("unknown", store.current?.graceWarningOutcome)
+
+        // A fresh process picks up the same durable session and the alarm is
+        // redelivered. The user must still get the warning.
+        val restored = Fixture(store = store, warningPoster = poster)
+        restored.advanceTo(now + 60_000L)
+        assertEquals("posted", restored.coordinator.warn(token, false))
+        assertEquals(1, posts)
+        assertEquals(token, store.current?.token)
+        // Still no call: a warning must never reach the final dispatch.
+        assertEquals(0, restored.calls.targets.size)
+        // And once it is a real result, it stays terminal -- no repeat storm.
+        assertEquals("posted", restored.coordinator.warn(token, false))
         assertEquals(1, posts)
     }
 

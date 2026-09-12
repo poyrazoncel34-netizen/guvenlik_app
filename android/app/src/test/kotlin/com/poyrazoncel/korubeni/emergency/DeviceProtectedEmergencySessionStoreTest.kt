@@ -114,6 +114,49 @@ class DeviceProtectedEmergencySessionStoreTest {
         assertTrue(store.pendingOutcomes().isEmpty())
     }
 
+    @Test
+    fun `acknowledged outcome is not resurrected by a later fallback rewrite`() {
+        // expireFallback() fires up to 24h after dispatch and consumeFallback-
+        // Target() fires when the user taps the fallback notification. Both
+        // re-write the SAME terminal envelope to drop the retained target. The
+        // journal used to append on every terminal write, so either one handed
+        // an already-acknowledged incident back from pendingOutcomes() as if it
+        // were new -- a day later, with no new information.
+        val store = DeviceProtectedEmergencySessionStore(context)
+        val terminal = armedEnvelope().copy(
+            lifecycleState = LifecycleState.REQUEST_FAILED,
+            fallbackOutcome = FallbackOutcome.POSTED,
+            fallbackExpiresAtMs = 1_800_000_090_000L,
+        )
+        assertTrue(store.write(terminal))
+        assertEquals(1, store.pendingOutcomes().size)
+
+        assertTrue(store.acknowledgeOutcome(terminal.token))
+        assertTrue(store.pendingOutcomes().isEmpty())
+
+        // Exactly what expireFallback() writes: same terminal state, target
+        // dropped, fallback marked expired.
+        assertTrue(
+            store.write(
+                terminal.copy(
+                    target = "",
+                    fallbackOutcome = FallbackOutcome.EXPIRED,
+                    fallbackExpiresAtMs = 0L,
+                ),
+            ),
+        )
+        assertTrue(
+            "an acknowledged outcome must stay acknowledged",
+            store.pendingOutcomes().isEmpty(),
+        )
+
+        // A genuine change of terminal state is still new information.
+        assertTrue(
+            store.write(terminal.copy(lifecycleState = LifecycleState.REQUEST_SUBMITTED_UNCONFIRMED)),
+        )
+        assertEquals(1, store.pendingOutcomes().size)
+    }
+
     private fun armedEnvelope() = EmergencySessionEnvelope(
         token = SessionToken(
             protocolVersion = EMERGENCY_PROTOCOL_VERSION,

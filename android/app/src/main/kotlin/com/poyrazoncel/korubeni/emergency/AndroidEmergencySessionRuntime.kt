@@ -27,7 +27,7 @@ object EmergencySessionRuntime {
                 val copy = if (preWarning) NativeNotificationText.preWarning(appContext) else NativeNotificationText.graceStarted(appContext, envelope.token.kind.wireValue)
                 EmergencyNotificationHelper.showAlert(
                     context = appContext,
-                    id = if (envelope.token.kind == SessionKind.SAFE_WALK) 9998 else 9999,
+                    id = EmergencyNotificationHelper.warningNotificationId(envelope.token.kind),
                     title = copy.title,
                     body = copy.body,
                     triggerType = "safetySessionWarning",
@@ -263,7 +263,7 @@ class AndroidEmergencySessionAlarmScheduler(
             manager.cancel(pendingIntent(token, false, action))
         }
         (context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager)
-            ?.cancel(if (token.kind == SessionKind.SAFE_WALK) 9998 else 9999)
+            ?.cancel(EmergencyNotificationHelper.warningNotificationId(token.kind))
     }
 
     private fun scheduleWarning(manager: AlarmManager, token: SessionToken, at: Long, action: String) {

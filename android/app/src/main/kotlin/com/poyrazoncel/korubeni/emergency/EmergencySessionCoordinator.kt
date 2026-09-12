@@ -182,7 +182,17 @@ class EmergencySessionCoordinator(
         if (wallClockMs() < deadline || wallClockMs() >= current.finalDeadlineMs ||
             (preWarning && wallClockMs() >= current.mainDeadlineMs)) return@synchronized "stale"
         val previous = if (preWarning) current.preWarningOutcome else current.graceWarningOutcome
-        if (previous != "notAttempted") return@synchronized previous
+        // "unknown" is a CLAIM, not a result: it means the durable claim
+        // committed but we never learned what the post did -- typically because
+        // the process died in that window, or the completing write failed.
+        // Treating it as terminal (as a dispatch claim is treated) permanently
+        // swallows the warning for this generation, which is the exact defect
+        // the native warning exists to prevent. Retrying is safe: the warning
+        // reuses ONE notification id per kind, so Android REPLACES it instead
+        // of stacking, and warn() can never reach the final dispatch.
+        if (previous != "notAttempted" && previous != "unknown") {
+            return@synchronized previous
+        }
         val claimed = if (preWarning) current.copy(preWarningOutcome = "unknown")
             else current.copy(graceWarningOutcome = "unknown")
         if (!store.write(claimed)) return@synchronized "unknown"
