@@ -160,7 +160,15 @@ void main() {
     ).readAsStringSync();
 
     expect(workflow, contains('environment: production'));
-    expect(workflow, contains('git verify-tag'));
+    expect(workflow, contains('./scripts/verify_release_tag.sh'));
+    final tagTrust = Process.runSync('python3', [
+      'scripts/test_release_tag_trust.py',
+    ]);
+    expect(
+      tagTrust.exitCode,
+      0,
+      reason: '${tagTrust.stdout}\n${tagTrust.stderr}',
+    );
     expect(workflow, contains('git merge-base --is-ancestor'));
     expect(workflow, contains('umask 077'));
     expect(workflow, contains('chmod 600 "\$KEYSTORE_OUT"'));

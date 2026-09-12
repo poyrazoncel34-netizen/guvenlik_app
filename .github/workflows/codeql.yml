@@ -21,13 +21,20 @@ name: CodeQL
 # kapsami adiyla anilan bir satir olarak notlanir -- kapatilmayan seyi
 # kapatilmis gibi gostermek bu deponun tek yasak hareketi.
 #
-# build-mode: none
-# ----------------
-# java-kotlin icin kaynak-temelli mod secildi. Alternatifi Android Gradle
-# build'ini CI'da kosmaktir; bu Flutter plugin registrant uretimini ve tam
-# Android SDK zincirini gerektirir, yani analiz kapisini yayin zincirinin
-# kirilganligina baglardi. Bagimlilik cozumu olmadigi icin kapsam bir miktar
-# dusuktur; bu bilincli bir takas.
+# build-mode: manual (F11)
+# ------------------------
+# build-mode: none Kotlin dosyalarini veritabanina ALMIYOR; GitHub bunu acikca
+# belgeliyor, yani yukaridaki %13 fiilen 0 idi. Kotlin artik izlenen bir Android
+# derlemesiyle cikariliyor: bu Flutter plugin registrant uretimini ve tam Android
+# SDK zincirini gerektirir, bu yuzden analiz kapisi yayin zincirinin
+# kirilganligina bagli hale gelir -- bilincli takas. `actions` kaynak-temelli
+# modda kalir.
+#
+# Coordinator/receiver kaynaklarinin gercekten cikarildigi, CodeQL
+# veritabani/log'undan DOGRULANMADAN native analiz kapsami iddia edilemez.
+# Bu workflow metninde manual/autobuild yazmasi kanit degildir.
+env:
+  FLUTTER_VERSION: "3.38.9"
 
 permissions:
   contents: read
@@ -50,7 +57,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: [java-kotlin, actions]
+        include:
+          - language: java-kotlin
+            build-mode: manual
+          - language: actions
+            build-mode: none
 
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
@@ -59,7 +70,31 @@ jobs:
         uses: github/codeql-action/init@f3712979fa5f215279b101dd0a2e3bdfb4353324 # v3.37.7
         with:
           languages: ${{ matrix.language }}
-          build-mode: none
+          build-mode: ${{ matrix.build-mode }}
+
+      - name: Setup Java
+        if: matrix.language == 'java-kotlin'
+        uses: actions/setup-java@c1e323688fd81a25caa38c78aa6df2d33d3e20d9 # v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Flutter
+        if: matrix.language == 'java-kotlin'
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+
+      - name: Generate locked Flutter plugin registration
+        if: matrix.language == 'java-kotlin'
+        run: flutter pub get --enforce-lockfile
+
+      - name: Trace Android Kotlin compilation
+        if: matrix.language == 'java-kotlin'
+        working-directory: android
+        run: ./gradlew :app:assemblePlayDebug --no-daemon --no-build-cache --rerun-tasks --console=plain -Pkotlin.compiler.execution.strategy=in-process
 
       - name: Analyze
         uses: github/codeql-action/analyze@f3712979fa5f215279b101dd0a2e3bdfb4353324 # v3.37.7

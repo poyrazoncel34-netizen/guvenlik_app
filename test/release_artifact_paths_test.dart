@@ -57,13 +57,15 @@ void main() {
       );
       expect(buildScript, contains(r'${REVENUECAT_ANDROID_API_KEY:-}'));
 
-      expect(fastfile, contains('--flavor play'));
-      expect(fastfile, contains('--target-platform android-arm64'));
+      expect(fastfile, contains('CI-only release policy'));
+      final boundary = Process.runSync('ruby', [
+        'scripts/test_fastlane_release_boundary.rb',
+      ]);
       expect(
-        fastfile,
-        isNot(contains('--target-platform android-arm64,android-x64')),
+        boundary.exitCode,
+        0,
+        reason: '${boundary.stdout}\n${boundary.stderr}',
       );
-      expect(fastfile, contains("ENV.fetch('REVENUECAT_ANDROID_API_KEY')"));
       expect(fastfile, isNot(contains('ENCRYPTION_KEY')));
     });
 

@@ -39,6 +39,10 @@ jobs:
           java-version: '17'
 
       - name: Verify signed annotated tag and main ancestry
+        env:
+          # Public trust, configured by the production owner. Empty is fail-closed.
+          RELEASE_TAG_GPG_PUBLIC_KEYS: ${{ vars.RELEASE_TAG_GPG_PUBLIC_KEYS }}
+          RELEASE_TAG_SSH_ALLOWED_SIGNERS: ${{ vars.RELEASE_TAG_SSH_ALLOWED_SIGNERS }}
         run: |
           set -euo pipefail
           TAG_REF="refs/tags/${GITHUB_REF_NAME}"
@@ -46,7 +50,7 @@ jobs:
             echo "::error title=Unsigned release ref::Production releases require a signed annotated tag."
             exit 1
           fi
-          git verify-tag "$GITHUB_REF_NAME"
+          ./scripts/verify_release_tag.sh "$GITHUB_REF_NAME"
           TAG_COMMIT="$(git rev-list -n 1 "$TAG_REF")"
           git merge-base --is-ancestor "$TAG_COMMIT" origin/main || {
             echo "::error title=Release commit is not on main::Refusing to build a production artifact from an unmerged commit."
