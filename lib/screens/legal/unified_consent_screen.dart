@@ -17,7 +17,7 @@ import '../../services/consent_manager.dart';
 import '../../models/consent_record.dart';
 import '../../core/di/service_locator.dart';
 import '../../widgets/consent_checkbox_widget.dart';
-import '../onboarding_screen.dart';
+import '../app_root.dart';
 
 class UnifiedConsentScreen extends StatefulWidget {
   const UnifiedConsentScreen({super.key, this.onAccepted});
@@ -65,8 +65,14 @@ class _UnifiedConsentScreenState extends State<UnifiedConsentScreen> {
       final locale = context.locale.languageCode;
       final prefs = await SharedPreferences.getInstance();
 
+      Future<void> requireCommit(Future<bool> write) async {
+        if (!await write) {
+          throw const ConsentStorageException('consent preference rejected');
+        }
+      }
+
       await cm.grantConsent('age_verification', locale: locale);
-      await prefs.setBool(AppConstants.prefAgeVerified, true);
+      await requireCommit(prefs.setBool(AppConstants.prefAgeVerified, true));
 
       await cm.grantConsent(ConsentRecord.typeTerms, locale: locale);
       await cm.grantConsent(ConsentRecord.typeKvkk, locale: locale);
@@ -87,12 +93,18 @@ class _UnifiedConsentScreenState extends State<UnifiedConsentScreen> {
       await recordOptional(ConsentRecord.typeProfile, _consentProfile);
       await recordOptional(ConsentRecord.typeFakeCall, _consentFakeCall);
 
-      await prefs.setBool(AppConstants.prefConsentLocation, _consentLocation);
-      await prefs.setBool(
-        AppConstants.prefConsentEmergencyContacts,
-        _consentEmergencyContacts,
+      await requireCommit(
+        prefs.setBool(AppConstants.prefConsentLocation, _consentLocation),
       );
-      await prefs.setBool(AppConstants.prefConsentProfile, _consentProfile);
+      await requireCommit(
+        prefs.setBool(
+          AppConstants.prefConsentEmergencyContacts,
+          _consentEmergencyContacts,
+        ),
+      );
+      await requireCommit(
+        prefs.setBool(AppConstants.prefConsentProfile, _consentProfile),
+      );
 
       await cm.markLegalVersionsAccepted();
 
@@ -105,7 +117,7 @@ class _UnifiedConsentScreenState extends State<UnifiedConsentScreen> {
         unawaited(
           Navigator.of(context).pushReplacement(
             PageRouteBuilder(
-              pageBuilder: (context, animation, _) => const OnboardingScreen(),
+              pageBuilder: (context, animation, _) => const AppRoot(),
               transitionsBuilder: (context, animation, _, child) =>
                   FadeTransition(opacity: animation, child: child),
               transitionDuration: Motion.slow,
@@ -113,9 +125,19 @@ class _UnifiedConsentScreenState extends State<UnifiedConsentScreen> {
           ),
         );
       }
-    } on Exception catch (_) {
-      if (mounted) setState(() => _loading = false);
-      rethrow;
+    } catch (_) {
+      // Legacy SharedPreferences updates its cache before disk acknowledges.
+      // Discard that optimistic value after a rejected publish marker.
+      try {
+        await (await SharedPreferences.getInstance()).reload();
+      } catch (_) {
+        // Stay on this screen even when recovery cannot read the disk.
+      }
+      if (!mounted) return;
+      setState(() => _loading = false);
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('legal_save_failed'.tr())));
     }
   }
 
@@ -160,7 +182,11 @@ class _UnifiedConsentScreenState extends State<UnifiedConsentScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Icon(Icons.shield_rounded, size: IconSizes.illustration, color: AppColors.primary),
+        const Icon(
+          Icons.shield_rounded,
+          size: IconSizes.illustration,
+          color: AppColors.primary,
+        ),
         const SizedBox(height: 12),
         // Screen heading (MP-12-017).
         Semantics(

@@ -33,6 +33,7 @@ class SensitiveActionPinGate {
         return SafetySessionPinGate.verify(
           context,
           verificationService: service,
+          enforceLockout: true,
         );
       case PinState.loading:
       case PinState.readFailed:

@@ -79,7 +79,7 @@ void main() {
     final mainSource = File('lib/main.dart').readAsStringSync();
     expect(
       mainSource,
-      contains('SensitiveTempFileService.purgeStaleExports()'),
+      contains('SensitiveTempFileService.purgeStaleExports,'),
     );
 
     for (final path in <String>[

@@ -6,7 +6,7 @@ void main() {
   test('main awaits fail-closed critical bootstrap without eager billing', () {
     final source = File('lib/main.dart').readAsStringSync();
 
-    final bootstrapIdx = source.indexOf('AppBootstrapService.production()');
+    final bootstrapIdx = source.indexOf('AppBootstrapService.production(');
 
     expect(
       bootstrapIdx,
@@ -14,6 +14,14 @@ void main() {
       reason: 'Critical bootstrap must complete before runApp.',
     );
     expect(source, contains('if (!criticalBootstrap.isReady)'));
+    expect(
+      source,
+      contains(
+        "CriticalBootstrapStep('localization', EasyLocalization.ensureInitialized)",
+      ),
+    );
+    expect(source, contains("CriticalBootstrapStep('localePreferences'"));
+    expect(source, contains('await initializeBestEffortServices(services)'));
     expect(source, contains('ErrorWidget.builder('));
     expect(
       source,

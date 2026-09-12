@@ -4,6 +4,28 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:guvenlik_app/core/services/app_bootstrap_service.dart';
 
 void main() {
+  testWidgets('production preliminary localization is bounded before DI', (
+    tester,
+  ) async {
+    final never = Completer<void>();
+    CriticalBootstrapResult? result;
+    unawaited(
+      AppBootstrapService.production(
+        preliminarySteps: [
+          CriticalBootstrapStep('localization', () => never.future),
+        ],
+      ).initializeCritical().then((value) => result = value),
+    );
+    await tester.pump();
+    expect(result, isNull);
+    await tester.pump(const Duration(seconds: 5));
+    expect(result?.isReady, isFalse);
+    expect(result?.reasonCode, 'localizationTimeout');
+    never.completeError(StateError('synthetic late localization failure'));
+    await tester.pump();
+    expect(tester.takeException(), isNull);
+  });
+
   test('critical bootstrap executes every step in declared order', () async {
     final order = <String>[];
     final service = AppBootstrapService(

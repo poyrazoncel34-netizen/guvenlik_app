@@ -44,6 +44,8 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen>
     with TickerProviderStateMixin, WidgetsBindingObserver {
+  NavigatorState? _startupNavigator;
+
   late AnimationController _logoController;
   late AnimationController _textController;
   late AnimationController _shimmerController;
@@ -67,9 +69,10 @@ class _SplashScreenState extends State<SplashScreen>
       vsync: this,
       duration: const Duration(milliseconds: 900),
     );
-    _logoScale = Tween<double>(begin: 0.5, end: 1.0).animate(
-      CurvedAnimation(parent: _logoController, curve: Motion.enter),
-    );
+    _logoScale = Tween<double>(
+      begin: 0.5,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _logoController, curve: Motion.enter));
     _logoFade = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
         parent: _logoController,
@@ -170,17 +173,17 @@ class _SplashScreenState extends State<SplashScreen>
         context: context,
         barrierDismissible: false,
         builder: (_) => EscapeDismissible(
-        child: AlertDialog(
-          title: Text('device_security_warning_title'.tr()),
-          content: Text('device_security_warning_body'.tr()),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text('btn_continue'.tr()),
-            ),
-          ],
+          child: AlertDialog(
+            title: Text('device_security_warning_title'.tr()),
+            content: Text('device_security_warning_body'.tr()),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text('btn_continue'.tr()),
+              ),
+            ],
+          ),
         ),
-      ),
       );
     }
     if (!mounted) return;
@@ -189,8 +192,6 @@ class _SplashScreenState extends State<SplashScreen>
     final legalAccepted =
         (prefs.getBool(AppConstants.prefLegalDisclaimerAccepted) ?? false) ||
         (prefs.getBool(AppConstants.prefLegalAcceptedV1) ?? false);
-    final onboardingDone =
-        prefs.getBool(AppConstants.prefOnboardingDone) ?? false;
 
     // Versiyon kontrolü: kaydedilen legal sürümler mevcut sürümden farklıysa
     // yeniden onay akışına yönlendir
@@ -215,27 +216,39 @@ class _SplashScreenState extends State<SplashScreen>
       );
     }
 
-    final hasConfiguredPin = await _hasConfiguredPin();
-    if (!mounted) return;
-
-    final Widget nextScreen;
     if (!legalAccepted || needsReConsent) {
-      nextScreen = UnifiedConsentScreen(
-        onAccepted: () => _goTo(const OnboardingScreen()),
-      );
-    } else if (!onboardingDone) {
-      nextScreen = OnboardingScreen(
-        onCompleted: () => _goTo(const MainNavigation()),
-      );
-    } else if (hasConfiguredPin) {
-      nextScreen = AppUnlockScreen(
-        onUnlocked: () => _goTo(const MainNavigation()),
+      _goTo(
+        UnifiedConsentScreen(
+          onAccepted: () {
+            unawaited(_continueStartup());
+          },
+        ),
       );
     } else {
-      nextScreen = const MainNavigation();
+      await _continueStartup();
     }
+  }
 
-    _goTo(nextScreen);
+  Future<void> _continueStartup({bool pinVerified = false}) async {
+    // Re-read durable state after consent. A partial reset may have removed
+    // onboarding flags while the PIN and sensitive data still survive.
+    final prefs = await SharedPreferences.getInstance();
+    final onboardingDone =
+        prefs.getBool(AppConstants.prefOnboardingDone) ?? false;
+    final hasConfiguredPin = await _hasConfiguredPin();
+    if (!pinVerified && hasConfiguredPin) {
+      _goTo(
+        AppUnlockScreen(
+          onUnlocked: () {
+            unawaited(_continueStartup(pinVerified: true));
+          },
+        ),
+      );
+    } else if (!onboardingDone) {
+      _goTo(OnboardingScreen(onCompleted: () => _goTo(const MainNavigation())));
+    } else {
+      _goTo(const MainNavigation());
+    }
   }
 
   /// Shows [destination] through [AppRoot] when this splash is hosted by it,
@@ -246,8 +259,9 @@ class _SplashScreenState extends State<SplashScreen>
       advance(destination);
       return;
     }
-    if (!mounted) return;
-    Navigator.of(context).pushReplacement(
+    final navigator = _startupNavigator;
+    if (navigator == null || !navigator.mounted) return;
+    navigator.pushReplacement(
       PageRouteBuilder(
         pageBuilder: (context, animation, secondaryAnimation) => destination,
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
@@ -278,6 +292,9 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    // Standalone startup replaces Splash itself; subsequent consent/PIN
+    // callbacks must use the surviving Navigator, not its disposed context.
+    _startupNavigator = Navigator.of(context);
     // This screen already suppressed its one-shot logo and text animations under
     // reduce-motion, but started the shimmer sweep and glow pulse with `..repeat()`
     // cascades in initState -- so the two ambient loops ran anyway, on the very

@@ -24,7 +24,7 @@ void main() {
   test('verification is delegated to PinVerificationService', () {
     expect(
       source,
-      contains('PinVerificationService.instance.verify('),
+      contains('SensitiveActionPinGate.ensure(context)'),
       reason:
           'Only PinVerificationService knows the stored record format. A local '
           'comparison against the typed digits can never match a PBKDF2 hash.',
@@ -48,18 +48,14 @@ void main() {
     );
   });
 
-  test('an unreadable PIN fails closed instead of allowing the wipe', () {
-    expect(
-      source,
-      contains('PinState.absent'),
-      reason: 'Only a genuinely absent PIN may skip verification.',
-    );
-    expect(
-      source,
-      contains('if (pinState != PinState.configured) {'),
-      reason:
-          'readFailed must not be treated as "no PIN configured": that would '
-          'let a keystore fault open a destructive wipe.',
-    );
+  test('reset uses the shared fail-closed sensitive gate before wiping', () {
+    final gate = source.indexOf('await _verifyPinIfConfigured(context)');
+    final refusal = source.indexOf('if (!pinVerified) return;');
+    final wipe = source.indexOf('await AppResetService.clearLocalData()');
+    expect(gate, greaterThanOrEqualTo(0));
+    expect(refusal, greaterThan(gate));
+    expect(wipe, greaterThan(refusal));
+    // Storage faults and verifier calls are behavior-tested in
+    // sensitive_action_pin_gate_test.dart; this checks reset wiring only.
   });
 }

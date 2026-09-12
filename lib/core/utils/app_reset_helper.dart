@@ -1,6 +1,5 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import '../design_tokens.dart';
 import '../../screens/splash_screen.dart';
@@ -8,7 +7,7 @@ import '../app_colors.dart';
 import '../widgets/subscription_deletion_notice.dart';
 import '../services/app_reset_service.dart';
 import '../services/emergency_session_contract.dart';
-import '../services/pin_verification_service.dart';
+import '../widgets/sensitive_action_pin_gate.dart';
 import '../widgets/escape_dismissible.dart';
 
 class AppResetHelper {
@@ -126,96 +125,6 @@ class AppResetHelper {
     );
   }
 
-  static Future<bool> _verifyPinIfConfigured(BuildContext context) async {
-    // PinVerificationService owns the stored record's format. What is on disk is
-    // a salted PBKDF2 hash, so comparing it literally against the four digits the
-    // user typed can never match -- that is what silently blocked this dialog.
-    final pinState = await PinVerificationService.instance.loadState();
-    if (pinState == PinState.absent) {
-      return true;
-    }
-    // A PIN that exists but cannot be read must not open a destructive wipe.
-    // Fail closed; Android Settings can still clear the app's data.
-    if (pinState != PinState.configured) {
-      return false;
-    }
-    if (!context.mounted) return false;
-
-    final controller = TextEditingController();
-    var errorVisible = false;
-    var verifying = false;
-    final verified = await showDialog<bool>(
-      context: context,
-      barrierDismissible: false,
-      builder: (dialogContext) => EscapeDismissible(
-        autofocus: false,
-        child: StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          backgroundColor: AppColors.cardBg,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
-          ),
-          title: Text(
-            'reset_pin_verify_title'.tr(),
-            style: const TextStyle(
-              color: AppColors.textPrimary,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-          content: TextField(
-            controller: controller,
-            autofocus: true,
-            obscureText: true,
-            keyboardType: TextInputType.number,
-            inputFormatters: [
-              FilteringTextInputFormatter.digitsOnly,
-              LengthLimitingTextInputFormatter(4),
-            ],
-            decoration: InputDecoration(
-              hintText: 'reset_pin_verify_hint'.tr(),
-              errorText: errorVisible ? 'settings_pin_wrong'.tr() : null,
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext, false),
-              child: Text(
-                'settings_cancel'.tr(),
-                style: const TextStyle(color: AppColors.textSecondary),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                // PBKDF2 verification is not instant; a second tap while the
-                // first is in flight would pop the dialog twice.
-                if (verifying) return;
-                verifying = true;
-                final result = await PinVerificationService.instance.verify(
-                  controller.text,
-                );
-                verifying = false;
-                if (!dialogContext.mounted) return;
-                if (result.matches) {
-                  Navigator.pop(dialogContext, true);
-                  return;
-                }
-                setState(() => errorVisible = true);
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.emergency,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: Text('reset_pin_verify_confirm'.tr()),
-            ),
-          ],
-        ),
-      ),
-      ),
-    );
-    controller.dispose();
-    return verified == true;
-  }
+  static Future<bool> _verifyPinIfConfigured(BuildContext context) =>
+      SensitiveActionPinGate.ensure(context);
 }

@@ -88,6 +88,11 @@ class AppResetService {
       allDeleted = false;
     }
 
+    // Credentials are a commit boundary, not another best-effort deletion.
+    // Preserve them for retry and for startup gating after partial prefs loss.
+
+    if (!allDeleted) return WipeResult.unknown;
+
     var secureStorageDeleted = false;
     try {
       await store.clearSecureStorage();

@@ -14,7 +14,7 @@ import 'package:flutter_test/flutter_test.dart';
 /// Files allowed to build the post-gate tab shell, and the gate markers that
 /// must appear BEFORE every construction in that file.
 const _approvedSites = <String, List<String>>{
-  // Every branch sits after the consent -> onboarding -> PIN decision.
+  // Every branch sits after the consent -> PIN -> onboarding decision.
   'lib/screens/splash_screen.dart': ['legalAccepted', '_hasConfiguredPin'],
   // Reached only from the onboarding completion handler.
   'lib/screens/onboarding_screen.dart': ['onCompleted'],
@@ -98,7 +98,7 @@ void main() {
             'still expects it: $references');
   });
 
-  test('the splash gate chain still reads consent -> onboarding -> PIN', () {
+  test('the splash gate chain still reads consent -> PIN -> onboarding', () {
     final splash = _stripComments(
       File('lib/screens/splash_screen.dart').readAsStringSync(),
     );
@@ -107,9 +107,9 @@ void main() {
     final pin = splash.indexOf('AppUnlockScreen');
     final shell = splash.lastIndexOf('const MainNavigation()');
     expect(consent, isNot(-1));
-    expect(onboarding, greaterThan(consent));
-    expect(pin, greaterThan(onboarding));
-    expect(shell, greaterThan(pin),
+    expect(pin, greaterThan(consent));
+    expect(onboarding, greaterThan(pin));
+    expect(shell, greaterThan(onboarding),
         reason: 'the unconditional branch must be the LAST option, after every '
             'gate has been consulted');
   });

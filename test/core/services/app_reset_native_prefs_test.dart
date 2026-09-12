@@ -143,7 +143,7 @@ void main() {
       expect(result, WipeResult.unknown);
       expect(
         localStore.operations,
-        ['preferences', 'database', 'files', 'secureStorage'],
+        ['preferences', 'database', 'files'],
         reason:
             'Deletion is best-effort across every local store before retry, '
             'and the credential store is always last: the PIN is what keeps '
@@ -178,17 +178,6 @@ void main() {
     final result = await AppResetService.clearLocalData(localStore: localStore);
 
     expect(result, WipeResult.unknown);
-    expect(
-      localStore.operations.last,
-      'secureStorage',
-      reason:
-          'Every failed boundary above must still be covered by the PIN, so '
-          'the credential store may only be cleared once they are done.',
-    );
-    expect(
-      localStore.operations.indexOf('secureStorage'),
-      greaterThan(localStore.operations.indexOf('database')),
-      reason: 'A surviving database must never outlive its PIN.',
-    );
+    expect(localStore.operations, isNot(contains('secureStorage')));
   });
 }

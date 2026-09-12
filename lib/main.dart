@@ -25,6 +25,7 @@ import 'core/widgets/app_privacy_shield.dart';
 import 'core/services/local_logger_service.dart';
 import 'core/services/sensitive_temp_file_service.dart';
 import 'core/services/app_bootstrap_service.dart';
+import 'core/services/best_effort_startup.dart';
 import 'core/constants/feature_access_matrix.dart';
 import 'core/config/app_environment.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -40,24 +41,20 @@ void main() async {
   }
 
   AppEnvironment.validateReleaseConfiguration(isReleaseMode: kReleaseMode);
-  await EasyLocalization.ensureInitialized();
-
-  // Dil seçimi kaldırıldı — eski persisted non-Turkish locale'i temizle
-  // böylece startLocale: tr_TR her zaman geçerli olur.
-  final prefs = await SharedPreferences.getInstance();
-  final storedLocale = prefs.getString('locale');
-  if (storedLocale != null && storedLocale != 'tr_TR') {
-    await prefs.remove('locale');
-  }
-
   // 0) ErrorWidget.builder MUST be set BEFORE runApp so ANY error is caught
   ErrorWidget.builder = (FlutterErrorDetails details) {
     assert(() {
       debugPrint('ErrorWidget caught: ${details.exception}');
       return true;
     }());
-    final errorTitle = 'error_title'.tr();
-    final errorRestart = 'error_restart'.tr();
+    final translatedTitle = 'error_title'.tr();
+    final errorTitle = translatedTitle == 'error_title'
+        ? 'Uygulama başlatılamadı'
+        : translatedTitle;
+    final translatedRestart = 'error_restart'.tr();
+    final errorRestart = translatedRestart == 'error_restart'
+        ? 'Lütfen uygulamayı kapatıp yeniden açın.'
+        : translatedRestart;
     return MaterialApp(
       home: Scaffold(
         backgroundColor: const Color(0xFF0A1B2A),
@@ -104,8 +101,20 @@ void main() async {
     );
   };
 
-  final criticalBootstrap = await AppBootstrapService.production()
-      .initializeCritical();
+  final criticalBootstrap = await AppBootstrapService.production(
+    preliminarySteps: [
+      CriticalBootstrapStep('localization', EasyLocalization.ensureInitialized),
+      CriticalBootstrapStep('localePreferences', () async {
+        final prefs = await SharedPreferences.getInstance();
+        final storedLocale = prefs.getString('locale');
+        if (storedLocale != null && storedLocale != 'tr_TR') {
+          if (!await prefs.remove('locale')) {
+            throw StateError('LOCALE_RESET_FAILED');
+          }
+        }
+      }),
+    ],
+  ).initializeCritical();
   if (!criticalBootstrap.isReady) {
     runApp(
       ErrorWidget.builder(
@@ -124,23 +133,23 @@ void main() async {
   try {
     FeatureAccessMatrix.debugPrintMatrix();
 
-    final services = <Future<void>>[
+    final services = <Future<void> Function()>[
       // KVKK Md.7 — purge orphaned medical-profile data from removed feature.
       // Best-effort (internally try/catch); runs concurrently so it never
       // blocks the emergency / notification startup path.
-      MedicalDataCleanupService.purgeIfNeeded(),
-      OfflineQueueService.instance.initialize(),
-      AtomicStorageService.instance.checkIntegrity(),
-      HapticService.initialize(),
-      ConnectivityService.instance.initialize(),
-      LocalLoggerService.instance.initialize(),
-      SensitiveTempFileService.purgeStaleExports(),
+      MedicalDataCleanupService.purgeIfNeeded,
+      OfflineQueueService.instance.initialize,
+      AtomicStorageService.instance.checkIntegrity,
+      HapticService.initialize,
+      ConnectivityService.instance.initialize,
+      LocalLoggerService.instance.initialize,
+      SensitiveTempFileService.purgeStaleExports,
     ];
     if (!kIsWeb) {
-      services.add(NotificationService.instance.initialize());
-      services.add(KoruBeniForegroundService.configure());
+      services.add(NotificationService.instance.initialize);
+      services.add(KoruBeniForegroundService.configure);
     }
-    await Future.wait(services);
+    await initializeBestEffortServices(services);
   } catch (_) {
     // Non-critical initialization failures remain degraded local features.
   }

@@ -38,8 +38,11 @@ class AppBootstrapService {
     this.timeout = const Duration(seconds: 5),
   }) : _criticalSteps = List<CriticalBootstrapStep>.unmodifiable(criticalSteps);
 
-  factory AppBootstrapService.production() => AppBootstrapService(
+  factory AppBootstrapService.production({
+    List<CriticalBootstrapStep> preliminarySteps = const [],
+  }) => AppBootstrapService(
     criticalSteps: <CriticalBootstrapStep>[
+      ...preliminarySteps,
       CriticalBootstrapStep('di', setupServiceLocator),
       CriticalBootstrapStep('migration', DataMigrationService.migrate),
       CriticalBootstrapStep('pin', _verifyPinStorageReadable),

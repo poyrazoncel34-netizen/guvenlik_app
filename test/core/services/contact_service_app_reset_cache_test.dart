@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/services.dart';
+// ignore: depend_on_referenced_packages
+import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guvenlik_app/core/di/service_locator.dart';
 import 'package:guvenlik_app/core/security/secure_storage.dart';
@@ -15,6 +17,17 @@ import 'contact_service_test_support.dart';
 
 /// KVKK Md.7 (§10.6): "Delete my data" must also drop the in-memory warm cache,
 /// otherwise the emergency path could keep serving a contact after deletion.
+class _TestPaths extends PathProviderPlatform {
+  _TestPaths(this.root);
+  final Directory root;
+  @override
+  Future<String> getApplicationDocumentsPath() async => root.path;
+  @override
+  Future<String> getTemporaryPath() async => root.path;
+  @override
+  Future<String> getApplicationSupportPath() async => root.path;
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   initContactServiceTestFfi();
@@ -22,11 +35,16 @@ void main() {
   const channel = MethodChannel('com.poyrazoncel.korubeni/emergency_platform');
 
   late FakeSecureStorage secure;
+  late Directory files;
+  late PathProviderPlatform originalPaths;
   late FakeLocalDatabaseService db;
 
   setUp(() async {
     SharedPreferences.setMockInitialValues(<String, Object>{});
     await serviceLocator.reset();
+    files = await Directory.systemTemp.createTemp("reset-synthetic-");
+    originalPaths = PathProviderPlatform.instance;
+    PathProviderPlatform.instance = _TestPaths(files);
     secure = FakeSecureStorage();
     db = FakeLocalDatabaseService();
     serviceLocator.registerSingleton<SecureStorage>(secure);
@@ -45,6 +63,8 @@ void main() {
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(channel, null);
     ContactService.resetCache();
+    PathProviderPlatform.instance = originalPaths;
+    await files.delete(recursive: true);
     await serviceLocator.reset();
   });
 

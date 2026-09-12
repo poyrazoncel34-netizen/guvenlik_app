@@ -57,13 +57,17 @@ class PinLockoutService {
     return seconds > maxLockoutSeconds ? maxLockoutSeconds : seconds;
   }
 
-  final SecureStorage _secureStorage = serviceLocator<SecureStorage>();
+  SecureStorage get _secureStorage => serviceLocator<SecureStorage>();
 
   Future<PinLockoutState> getState() async {
     final failedRaw = await _secureStorage.read(key: _failedAttemptsKey);
     final lockedUntilRaw = await _secureStorage.read(key: _lockedUntilKey);
     final failedAttempts = int.tryParse(failedRaw ?? '') ?? 0;
     final lockedUntilMs = int.tryParse(lockedUntilRaw ?? '');
+    if ((failedRaw != null && (int.tryParse(failedRaw) == null || failedAttempts < 0)) ||
+        (lockedUntilRaw != null && lockedUntilMs == null)) {
+      throw StateError('PIN counter unavailable');
+    }
     final lockedUntil = lockedUntilMs == null
         ? null
         : DateTime.fromMillisecondsSinceEpoch(lockedUntilMs);

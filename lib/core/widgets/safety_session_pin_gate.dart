@@ -20,6 +20,7 @@ class SafetySessionPinGate {
   static Future<bool> verify(
     BuildContext context, {
     PinVerificationService? verificationService,
+    bool enforceLockout = false,
   }) async {
     if (_dialogInProgress) return false;
     _dialogInProgress = true;
@@ -33,18 +34,18 @@ class SafetySessionPinGate {
         barrierDismissible: false,
         builder: (_) => EscapeDismissible(
         autofocus: false,
-        child: _SafetyPinDialog(service: service),
+        child: _SafetyPinDialog(service: service, enforceLockout: enforceLockout),
       ),
       );
       return verified == true;
-    } on StateError catch (error) {
+    } on StateError catch (_) {
       // Dependency not wired. Fail closed: an unverified PIN must never be
       // reported as verified, because the caller uses that answer to cancel or
       // extend an armed session.
-      debugPrint('SafetySessionPinGate: verification unavailable: $error');
+      debugPrint('SafetySessionPinGate: verification unavailable');
       return false;
-    } on Exception catch (error) {
-      debugPrint('SafetySessionPinGate: verification failed: $error');
+    } on Exception catch (_) {
+      debugPrint('SafetySessionPinGate: verification failed');
       return false;
     } finally {
       _dialogInProgress = false;
@@ -53,7 +54,9 @@ class SafetySessionPinGate {
 }
 
 class _SafetyPinDialog extends StatefulWidget {
-  const _SafetyPinDialog({required this.service});
+  const _SafetyPinDialog({required this.service, required this.enforceLockout});
+
+  final bool enforceLockout;
 
   final PinVerificationService service;
 
@@ -64,6 +67,7 @@ class _SafetyPinDialog extends StatefulWidget {
 class _SafetyPinDialogState extends State<_SafetyPinDialog> {
   final TextEditingController _controller = TextEditingController();
   bool _errorVisible = false;
+  String? _policyError;
   bool _verificationInProgress = false;
 
   @override
@@ -101,12 +105,63 @@ class _SafetyPinDialogState extends State<_SafetyPinDialog> {
     setState(() {
       _verificationInProgress = true;
       _errorVisible = false;
+      _policyError = null;
     });
+    if (widget.enforceLockout) {
+      try {
+        final state = await PinLockoutService.instance.getState();
+        if (state.isLocked) {
+          if (mounted) {
+            setState(() {
+              _verificationInProgress = false;
+              _policyError = 'brute_force_locked'.tr(
+                namedArgs: {'seconds': '${state.remainingSeconds}'},
+              );
+            });
+          }
+          return;
+        }
+      } catch (_) {
+        // An unreadable counter cannot prove the attempt is allowed. Keep the
+        // modal open and say so, rather than silently verifying unthrottled.
+        if (mounted) {
+          setState(() {
+            _verificationInProgress = false;
+            _policyError = 'pin_state_read_failed'.tr();
+          });
+        }
+        return;
+      }
+      try {
+        // Reserve this attempt durably before comparing the candidate. A disk
+        // failure must not provide an uncounted guess on each reopened modal.
+        await PinLockoutService.instance.registerFailure();
+      } catch (_) {
+        // The attempt could not be debited, so it must not be spent. Deny the
+        // whole action instead of leaving an unmetered retry in the dialog.
+        if (mounted) Navigator.pop(context, false);
+        return;
+      }
+    }
     final result = await widget.service.verify(_controller.text);
     if (result.state == PinState.configured && result.matches) {
       // Clear the counter the same way the unlock screen does, so a legitimate
       // cancel does not leave the user one mistake away from a locked app.
-      await _recordLockout(reset: true);
+      if (widget.enforceLockout) {
+        try {
+          await PinLockoutService.instance.reset();
+        } catch (_) {
+          if (mounted) {
+            setState(() {
+              _verificationInProgress = false;
+              _policyError = 'pin_state_read_failed'.tr();
+            });
+          }
+          return;
+        }
+      } else {
+        await _recordLockout(reset: true);
+      }
       if (!mounted) return;
       Navigator.pop(context, true);
       return;
@@ -120,7 +175,9 @@ class _SafetyPinDialogState extends State<_SafetyPinDialog> {
     // mistypes under stress must never be locked out of their own cancel.
     // Recording still closes the real hole -- unlimited attempts that left no
     // trace anywhere. Matches countdown_screen's treatment of the same trade.
-    await _recordLockout(reset: false);
+    if (!widget.enforceLockout) {
+      await _recordLockout(reset: false);
+    }
     if (!mounted) return;
     _controller.clear();
     setState(() {
@@ -155,7 +212,7 @@ class _SafetyPinDialogState extends State<_SafetyPinDialog> {
         ],
         decoration: InputDecoration(
           hintText: 'reset_pin_verify_hint'.tr(),
-          errorText: _errorVisible ? 'settings_pin_wrong'.tr() : null,
+          errorText: _policyError ?? (_errorVisible ? 'settings_pin_wrong'.tr() : null),
         ),
       ),
       actions: [
