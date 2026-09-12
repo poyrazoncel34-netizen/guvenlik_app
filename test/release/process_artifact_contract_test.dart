@@ -28,8 +28,8 @@ void main() {
   test('the incident runbook still carries what its rows cite', () {
     _requires('docs/release/incident_runbook.md', <String, String>{
       'MP-45-011 (severity model)': '## 1. Siddet modeli',
-      'MP-50-019 (halt thresholds)': 'Crash-free session rate',
-      'MP-50-019 (ANR threshold)': '> %0.47',
+      'MP-50-019 (canonical halt thresholds)': 'PRODUCTION_ROLLOUT_RUNBOOK.md',
+      'MP-50-019 (unresolved decision is visible)': 'OPERATOR_DECISION_PENDING',
       'MP-50-020 (halt procedure)': '## 3. Yayilimi durdurma proseduru',
       'MP-67-009 (payment disable)': '## 4. Odemeyi devre disi birakma',
       'MP-65-015 (escalation)': '## 5. Guvenlik ve kotuye kullanim bildirim kanali',
@@ -93,7 +93,7 @@ void main() {
   });
 
   test('the definition of done names the three things that were missing', () {
-    _requires('.claude/rules/common/development-workflow.md', <String, String>{
+    _requires('docs/release/development_standard.md', <String, String>{
       'MP-80-003 (accessibility)': '**Accessibility** named, not assumed',
       'MP-80-009 (schema/migration)': '**Error handling and schema**',
       'MP-80-016 (rollout)': '**Rollout**',
