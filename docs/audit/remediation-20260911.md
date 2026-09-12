@@ -60,14 +60,50 @@ pending that had in fact landed, and claimed one action that cannot be shown:
 | R-04 | `safety_session_pin_lockout_test` had its file-wide bare-catch assertion NARROWED to a substring window to accommodate the new policy catches | File-wide guarantee restored: bare catches are pinned to exactly three and each must sit inside the `enforceLockout` branch. Mutation-checked — injecting a bare catch outside the guard fails the test |
 | R-05 | `CheckInProjectionStore`, holding logic extracted from a critical file, was outside the 90% critical-coverage list | Added to `verify_critical_coverage.dart` and `critical_coverage_gate_test.dart` |
 
+## New findings from this round's own review (N-)
+
+These are NOT in the F01-F17 list. Two came out of an independent Kotlin review
+of this round's own F02/F07 code; one came out of running the build on a booted
+emulator. Every fix below was mutation-checked: the fix was reverted and the new
+test was confirmed to fail.
+
+| ID | Finding | Severity as verified | Fix |
+|---|---|---|---|
+| N-01 | All three notification channels were created with unguarded `.tr()` from the pre-runApp startup block, where the EasyLocalization delegate has not loaded the bundle yet, so `.tr()` returns the KEY. Android persists a channel's name on first creation, so the user sees `notification_channel_emergency_name` in system settings -- for the channel the grace warning posts to. Observed in the running build's own log on a booted emulator (API 36, commit 29757f5). Pre-existing, not a regression from this round | HIGH (user-visible, emergency notification surface) | Literal fallbacks via `_safeChannelTr`, the pattern `foreground_service.dart` already used for its own channel |
+| N-02 | `warn()` committed the durable claim as `"unknown"` and only then posted. Because the idempotency check passed only `"notAttempted"`, a process death after the claim commit left the outcome permanently `"unknown"`, and the redelivered alarm returned it without ever posting. `reconcile()` never inspects warning outcomes. The warning was lost for that generation -- the exact defect the native warning exists to prevent | HIGH (missed warning) | `"unknown"` is a CLAIM, not a result, and is retryable. Safe: one notification id per kind means Android replaces rather than stacks, and `warn()` can never reach the final dispatch |
+| N-03 | `EmergencyTerminalJournal.append` ran on every terminal `store.write()`. `expireFallback()` (up to 24h later) and `consumeFallbackTarget()` re-write the same terminal envelope to drop the retained target, which re-offered an already-acknowledged outcome from `pendingOutcomes()` | MEDIUM, **not** the HIGH it was reported as: `ActivityService.logEvent` uses `ConflictAlgorithm.ignore` keyed on `eventId`, so no duplicate history row and no re-dial could result. What broke was the "acknowledged stays acknowledged" contract | Journal on the TRANSITION into a terminal state; re-writing the same terminal state does not append, while a genuine change of terminal state still does |
+| N-04 | `NativeNotificationText.preWarning()` read the DEVICE locale while every other copy in that file resolves the app's own persisted language. On an English phone with the app defaulting to Turkish, the Safe-Walk pre-warning arrived in English and the grace warning for the same session arrived in Turkish minutes later | MEDIUM (user-visible inconsistency) | Routed through the same `Strings`/`resolveLanguage` path as every other notification copy |
+| N-05 | Warning notification ids 9998/9999 were duplicated as magic literals in the poster and in `cancel()`. Changing one and not the other would stop `cancel()` dismissing the warning, leaving "your time is nearly up" on screen after the session ended | MEDIUM (latent) | Unified under `EmergencyNotificationHelper.warningNotificationId(kind)` |
+
+Reviewed and deliberately NOT changed, with reasons: `pendingOutcomes` /
+`acknowledgeOutcome` do not take the coordinator's `PROCESS_LOCK`, but no
+`android:process` is declared for any emergency component, so this is a single
+process, SharedPreferences' own locking prevents corruption, and the N-03 fix
+removes the resurrection path that made the missing lock reachable.
+`CountdownAlarmReceiver` was not given a defensive action check: warning alarms
+are never scheduled for PANIC today and `claimAndDispatch`'s own deadline guard
+holds, so this is not an active bug. The real `AlarmManager` PendingIntent
+identity behaviour for GRACE/PRE_WARNING cancellation cannot be proven in a unit
+test and was added to the F13 device-verification inventory instead of being
+asserted here.
+
+One finding raised against F06 was checked and NOT confirmed: the future-anchor
+plausibility guard was reported as "removed, not relocated". It is present and
+intact in `lib/core/services/subscription_access_state.dart` -- unchanged by
+this diff, which is why it is not visible in it: `canArmWithinOfflineGrace`
+returns false and `remainingOfflineGrace` returns `Duration.zero` for a future
+anchor, while the safety path deliberately checks presence only. That asymmetry
+is the recorded owner decision of 2026-08-13 and is pinned by Scenario K in
+`subscription_readiness_state_test.dart` plus the F06 cold-start test.
+
 ## Verification runs
 
 | Check | Result |
 |---|---|
 | `flutter analyze --no-fatal-infos` | **No issues found** (exit 0) |
-| `flutter test --no-pub` | **1815 passed, 0 failed** (exit 0) |
+| `flutter test --no-pub` | **1817 passed, 0 failed** (exit 0) |
 | `flutter test --coverage` + `dart scripts/verify_critical_coverage.dart` | **CRITICAL_COVERAGE_PASS**; every critical file ≥ 90% (contract 99.18, platform 94.99, parser 100.00, pin 96.15, check-in 91.71, projection store 96.30, contact 93.08); threshold unchanged at 90 |
-| `./gradlew :app:testPlayDebugUnitTest` | **BUILD SUCCESSFUL**; 92 Kotlin tests, 0 failures, 0 errors, 0 skipped |
+| `./gradlew :app:testPlayDebugUnitTest` | **BUILD SUCCESSFUL**; 94 Kotlin tests, 0 failures, 0 errors, 0 skipped |
 | `./gradlew :app:assemblePlayDebug` | **BUILD SUCCESSFUL** (F11 prerequisite) |
 | `flutter pub get --enforce-lockfile` | exit 0; no dependency change |
 | `ruby scripts/test_fastlane_release_boundary.rb` | 55 assertions, 0 failures (F10) |
