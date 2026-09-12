@@ -48,27 +48,43 @@ class NotificationService {
         .resolvePlatformSpecificImplementation<
           AndroidFlutterLocalNotificationsPlugin
         >();
+    // Channels are created from the pre-runApp startup block, which runs
+    // BEFORE the EasyLocalization delegate has loaded the asset bundle, so
+    // `.tr()` here returns the KEY. Android then persists that key as the
+    // channel's visible name, and the user sees
+    // "notification_channel_emergency_name" in system settings for the very
+    // channel the grace warning posts to (N-01). foreground_service.dart
+    // already guards its own channel this way; this mirrors it.
     await androidImplementation?.createNotificationChannel(
       AndroidNotificationChannel(
         kEmergencyAlertsChannelId,
-        'notification_channel_emergency_name'.tr(),
-        description: 'notification_channel_emergency_desc'.tr(),
+        _safeChannelTr('notification_channel_emergency_name', 'Acil Bildirimler'),
+        description: _safeChannelTr(
+          'notification_channel_emergency_desc',
+          'Kritik guvenlik ve check-in bildirimleri',
+        ),
         importance: Importance.max,
       ),
     );
     await androidImplementation?.createNotificationChannel(
       AndroidNotificationChannel(
         kServiceStatusChannelId,
-        'notification_channel_service_name'.tr(),
-        description: 'notification_channel_service_desc'.tr(),
+        _safeChannelTr('notification_channel_service_name', 'Servis Durumu'),
+        description: _safeChannelTr(
+          'notification_channel_service_desc',
+          'Arka plan guvenlik servis durumu',
+        ),
         importance: Importance.low,
       ),
     );
     await androidImplementation?.createNotificationChannel(
       AndroidNotificationChannel(
         kGeneralNotificationsChannelId,
-        'notification_channel_general_name'.tr(),
-        description: 'notification_channel_general_desc'.tr(),
+        _safeChannelTr('notification_channel_general_name', 'Genel Bildirimler'),
+        description: _safeChannelTr(
+          'notification_channel_general_desc',
+          'Genel uygulama bildirimleri',
+        ),
         importance: Importance.defaultImportance,
       ),
     );
@@ -279,5 +295,20 @@ class NotificationService {
   /// Reset notification count (call when user opens app).
   void resetNotificationCount() {
     _activeNotificationCount = 0;
+  }
+}
+
+/// Returns [fallback] when the translation bundle is not loaded yet.
+///
+/// `.tr()` echoes the key back when the delegate has no bundle, and a channel
+/// name is persisted by Android on first creation -- so an unguarded lookup
+/// permanently labels a channel with a raw key.
+String _safeChannelTr(String key, String fallback) {
+  try {
+    final translated = key.tr();
+    if (translated == key || translated.isEmpty) return fallback;
+    return translated;
+  } catch (_) {
+    return fallback;
   }
 }
