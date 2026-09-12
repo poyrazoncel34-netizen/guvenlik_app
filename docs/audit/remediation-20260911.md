@@ -101,8 +101,8 @@ is the recorded owner decision of 2026-08-13 and is pinned by Scenario K in
 | Check | Result |
 |---|---|
 | `flutter analyze --no-fatal-infos` | **No issues found** (exit 0) |
-| `flutter test --no-pub` | **1817 passed, 0 failed** (exit 0) |
-| `flutter test --coverage` + `dart scripts/verify_critical_coverage.dart` | **CRITICAL_COVERAGE_PASS**; every critical file ≥ 90% (contract 99.18, platform 94.99, parser 100.00, pin 96.15, check-in 91.71, projection store 96.30, contact 93.08); threshold unchanged at 90 |
+| `flutter test --no-pub` | **1816 passed, 0 failed** (exit 0), on the final commit and again in a tracked-only clean clone |
+| `flutter test --coverage` + `dart scripts/verify_critical_coverage.dart` | **CRITICAL_COVERAGE_PASS**; every critical file ≥ 90% (contract 100.00, platform 94.99, parser 100.00, pin 96.15, check-in 91.71, projection store 96.30, contact 93.08); threshold unchanged at 90 |
 | `./gradlew :app:testPlayDebugUnitTest` | **BUILD SUCCESSFUL**; 94 Kotlin tests, 0 failures, 0 errors, 0 skipped |
 | `./gradlew :app:assemblePlayDebug` | **BUILD SUCCESSFUL** (F11 prerequisite) |
 | `flutter pub get --enforce-lockfile` | exit 0; no dependency change |
