@@ -60,8 +60,8 @@ uptime SLO, because there is no service to be up.
 | | |
 |---|---|
 | **SLI** | Crash-free session rate, and ANR rate, per release, from Play Console vitals |
-| **Objective and halt decision** | See the single proposed procedure in `store/PRODUCTION_ROLLOUT_RUNBOOK.md` §§4–6; OPERATOR_DECISION_PENDING |
-| **Owner / cadence** | Actual named owner and cadence approval required before release; `docs/release/operations_decision_pending.md` records the unresolved historical conflict |
+| **Objective and halt decision** | The single canonical procedure in `store/PRODUCTION_ROLLOUT_RUNBOOK.md` §§4–6; OPERATOR_DECISION_RESOLVED 2026-09-12 by the owner |
+| **Owner / cadence** | Thresholds and cadence are approved; a named staffed owner/backup and an actual rehearsal are still required before release. `docs/release/operations_threshold_decision.md` records the decision and the superseded historical values |
 
 ### SLO-2 — Dispatch latency (per release, hardware-verified)
 

@@ -29,7 +29,7 @@ void main() {
     _requires('docs/release/incident_runbook.md', <String, String>{
       'MP-45-011 (severity model)': '## 1. Siddet modeli',
       'MP-50-019 (canonical halt thresholds)': 'PRODUCTION_ROLLOUT_RUNBOOK.md',
-      'MP-50-019 (unresolved decision is visible)': 'OPERATOR_DECISION_PENDING',
+      'MP-50-019 (threshold decision is recorded)': 'OPERATOR_DECISION_RESOLVED',
       'MP-50-020 (halt procedure)': '## 3. Yayilimi durdurma proseduru',
       'MP-67-009 (payment disable)': '## 4. Odemeyi devre disi birakma',
       'MP-65-015 (escalation)': '## 5. Guvenlik ve kotuye kullanim bildirim kanali',

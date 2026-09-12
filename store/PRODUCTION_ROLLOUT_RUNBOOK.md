@@ -1,9 +1,12 @@
 # KoruBeni Production Rollout and Incident Runbook
 
-Status: `OPERATOR_DECISION_PENDING` for numeric stop thresholds and observation
-cadence. This is the single proposed canonical procedure; historical conflicting
-values are recorded in `docs/release/operations_decision_pending.md`. A real owner
-must approve the decision before launch. No conflicting legacy runbook authorizes
+Status: `OPERATOR_DECISION_RESOLVED` (2026-09-12, owner) for the numeric stop
+thresholds and observation cadence in §§4-6. This is the single canonical
+procedure; the superseded historical values are recorded in
+`docs/release/operations_threshold_decision.md`. Threshold approval is not a launch
+approval: a named staffed owner/backup and an actual two-operator rehearsal are
+still required, and a confirmed safety defect blocks launch regardless of any
+metric. No conflicting legacy runbook authorizes
 release. The written procedure is locally prepared. Every dashboard, device, billing,
 and production observation remains `NEEDS_OPERATOR_ACTION` until evidence is
 attached. This document does not authorize a release by itself.

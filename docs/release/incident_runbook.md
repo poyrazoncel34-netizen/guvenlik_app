@@ -29,11 +29,15 @@ Bu urunde **cagrilma yolunu geciktiren veya engelleyen her sey S1'dir.**
 
 ## 2. Yayilimi durdurma esikleri
 
-The single procedure and proposed numeric thresholds are in
+The single procedure and its numeric thresholds are in
 [PRODUCTION_ROLLOUT_RUNBOOK.md](../../store/PRODUCTION_ROLLOUT_RUNBOOK.md), sections 4–6.
-**OPERATOR_DECISION_PENDING:** historical thresholds/cadences conflict; see
-[operations_decision_pending.md](operations_decision_pending.md). Do not use this
-old runbook as an independent release or stop-threshold authorization.
+**OPERATOR_DECISION_RESOLVED (2026-09-12, owner):** the rollout runbook's values
+are the approved ones; the thresholds this file used to state are superseded and
+recorded in [operations_threshold_decision.md](operations_threshold_decision.md). Do
+not use this old runbook as an independent release or stop-threshold
+authorization. Approving thresholds is NOT the same as having rehearsed them:
+the named owner/backup, the two-operator tabletop and any measured recovery time
+remain open.
 
 ## 3. Yayilimi durdurma proseduru
 
