@@ -1,6 +1,8 @@
+> Canonical Console package: [PLAY_CONSOLE_COPY_PASTE_PACK.md](PLAY_CONSOLE_COPY_PASTE_PACK.md). This file is a synchronized reference; resolve any drift in the canonical package before submission.
+
 # Play Store Listing - Kopyala Yapıştır
 
-Store presence → Store listing alanlarına bu metinleri kopyalayın.
+Store presence → Store listing için kanonik PLAY_CONSOLE_COPY_PASTE_PACK.md paketinin onaylı bölümünü kullanın.
 
 ---
 
@@ -21,10 +23,10 @@ KoruBeni: Panik Butonu, Siren
 
 **Short description (80 karakter):**
 ```
-Panik butonu, sahte çağrı, siren. Hesap yok, verileriniz cihazınızda kalır.
+Ücretsiz sahte çağrı, siren ve prova. Pro ile panik, check-in, güvenli yürüyüş.
 ```
 
-**Full description:** [play_store_listing_tr.md](play_store_listing_tr.md) içindeki "Full Description" bölümünü kopyalayın.
+**Full description:** [Canonical Console package](PLAY_CONSOLE_COPY_PASTE_PACK.md) bölüm 2.
 
 ---
 

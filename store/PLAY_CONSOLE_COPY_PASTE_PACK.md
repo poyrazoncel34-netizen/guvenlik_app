@@ -2,7 +2,7 @@
 
 Source scope: `store/DATA_SAFETY_FORM.md`, `docs/play_console_declarations.md`, `store/permissions_declaration_notes.md`, `store/CONTENT_RATING_ANSWERS.md`, `store/play_store_listing_tr.md`, `store/STORE_LISTING_COPY_PASTE.md`, `lib/core/constants/app_constants.dart`.
 
-Use this pack as Play Console entry text. Keep final URLs, product IDs, RevenueCat offering IDs, screenshots, and signed build status verified before submission.
+This is the canonical prepared Play Console package. Other listing files are synchronized references; use this package for entry text after human approval. Keep final URLs, product IDs, RevenueCat offering IDs, screenshots, and signed build status verified before submission.
 
 Status rule: this pack is CODE_DONE copy preparation only. Play Console forms are `PLAY_CONSOLE`; RevenueCat setup is `REVENUECAT`; signed AAB work is `SIGNING`; live URL/store operations are `NEEDS_OPERATOR_ACTION`; real-device QA is `NEEDS_REAL_DEVICE_TEST`; uncertain legal/policy claims are `NEEDS_OWNER_REVIEW` or `UNKNOWN` until resolved.
 
@@ -11,7 +11,7 @@ Data Safety track nuance: internal testing may be exempt from the Data Safety se
 External gates to record in the release tracker:
 
 ```text
-PLAY_CONSOLE: Data Safety, Content Rating, Target Audience, FGS declaration, exact alarm declaration if requested, CALL_PHONE/sensitive permission declaration, pre-launch report.
+PLAY_CONSOLE: Data Safety, Content Rating, Target Audience, confirmation of FGS absence, exact alarm declaration if requested, CALL_PHONE/sensitive permission declaration, pre-launch report.
 REVENUECAT: dashboard app, entitlement, current offering, monthly/annual packages, purchase/restore/cancel/expired/no-offering/network evidence.
 SIGNING: real signing config, pinned upload-certificate fingerprint, signed AAB build, signed AAB upload. RevenueCat Android public SDK key is a client identifier; never substitute an `sk_` server secret.
 NEEDS_REAL_DEVICE_TEST: API29/API36/16 KB, Pixel/Samsung/Xiaomi, dual-SIM and low-memory evidence; notification/exact denial, Direct Boot, no SIM and billing sandbox.
@@ -73,7 +73,7 @@ KoruBeni: Panik Butonu, Siren
 **Short description**
 
 ```text
-Panik butonu, sahte çağrı, siren. Hesap yok, verileriniz cihazınızda kalır.
+Ücretsiz sahte çağrı, siren ve prova. Pro ile panik, check-in, güvenli yürüyüş.
 ```
 
 **Full description**
@@ -83,7 +83,7 @@ KoruBeni, konum durumunuzu görmenize, cihaz içi sahte çağrı simülasyonu ç
 
 KoruBeni ücretsiz temel güvenlik araçları sunar. Panik/SOS, güvenli yürüyüş, check-in ve gelişmiş güvenlik otomasyonları KoruBeni Pro ile kullanılabilir.
 
-⚠️ ÖNEMLİ: KoruBeni resmi bir acil servis değildir ve 112'nin yerine geçmez. Gerçek bir acil durumda lütfen önce 112'yi arayın. KoruBeni yalnızca tamamlayıcı bir araçtır ve fiziksel koruma sağlamaz.
+⚠️ ÖNEMLİ: KoruBeni bağımsız bir uygulamadır, kamu kurumlarına bağlı değildir; resmi bir acil servis değildir ve 112'nin yerine geçmez. Gerçek bir acil durumda lütfen önce 112'yi arayın. KoruBeni yalnızca tamamlayıcı bir araçtır ve fiziksel koruma sağlamaz.
 
 ★ ÜCRETSİZ ÖZELLİKLER ★
 
@@ -99,6 +99,9 @@ Yüksek sesli alarm ile çevrenizdeki insanların dikkatini çekin.
 ◉ Acil Kişiler
 Rehberinizden güvenilir kişileri yerel olarak kaydedin ve yönetin.
 
+◉ Güvenlik Geçmişi ve Test Modu
+Güvenlik geçmişi/plan notu ve gerçek arama yapmayan Test Modu ücretsizdir. Prova şebekeyi, numaranın erişilebilirliğini veya karşı taraf yanıtını ölçmez.
+
 ★ KORUBENİ PRO İLE AÇILAN ÖZELLİKLER ★
 
 ◉ Panik/SOS Butonu
@@ -110,11 +113,8 @@ Gece veya güvensiz ortamlarda yardımcı check-in oturumu başlatın. Arka plan
 ◉ Check-in
 Belirlediğiniz süre sonunda kontrol akışı başlatan yardımcı check-in oturumları kullanın.
 
-◉ Güvenlik Geçmişi
-Uygulama içi güvenlik olaylarınızı cihazda yerel olarak görün.
-
-◉ Ses Tuşu Tetikleyici ve Test Modu
-Pro kullanıcılar için gelişmiş güvenlik otomasyonlarını ve gerçek arama yapmadan test akışını kullanın.
+◉ Ses Tuşu Tetikleyici
+Pro kapsamında panik akışını tetikleyen ses tuşu ve ilgili gelişmiş otomasyonlar.
 
 KoruBeni Pro isteğe bağlı bir aboneliktir. Satın alma, yenileme, iptal ve geri yükleme işlemleri Google Play üzerinden yönetilir.
 
@@ -127,10 +127,10 @@ KoruBeni Pro isteğe bağlı bir aboneliktir. Satın alma, yenileme, iptal ve ge
 
 ★ GİZLİLİK ★
 
-• KoruBeni'nin bulut hesabı yoktur. Tüm verileriniz cihazınızda kalır.
+• KoruBeni'nin geliştirici hesabı veya backend'i yoktur. Kişiler, PIN ve güvenlik geçmişi yerel saklanır; çevrimiçi harita ve abonelik sağlayıcıları teknik veri işler.
 • Arka planda konum izlemiyoruz. Konum yalnızca siz bir oturum başlattığınızda kullanılır.
 • Verilerinizi hiçbir reklam ağıyla veya veri komisyoncusuyla paylaşmıyoruz; satmıyoruz.
-• Pro abonelik için Google Play Billing aracılığıyla yalnızca satın alma geçmişi tutulur.
+• Google Play Billing ve RevenueCat satın alma/üyelik durumu, anonim uygulama kullanıcı kimliği ve teknik cihaz/uygulama bilgilerini işler. Kart bilgileri uygulamada saklanmaz.
 • Harita ve Play Billing sağlayıcılarının kendi teknik ağ davranışları olabilir.
 
 KoruBeni — Ücretsiz konum oturumu ve sahte çağrı; Pro ile ek güvenlik araçları.
@@ -176,6 +176,9 @@ Draw attention with a loud alarm.
 ◉ Emergency Contacts
 Save and manage trusted contacts locally on your device.
 
+◉ Safety History and Test Mode
+Local history/plan notes and rehearsal are free. Rehearsal makes no real call and cannot verify network coverage, number reachability or an answer.
+
 ★ UNLOCKED WITH KORUBENI PRO ★
 
 ◉ Panic/SOS Button
@@ -187,11 +190,8 @@ Start a helper check-in session during night or unsafe situations. Background be
 ◉ Check-in
 Use timed check-in sessions that start a follow-up flow when the timer expires.
 
-◉ Safety History
-View local in-app safety events on your device.
-
-◉ Volume Trigger and Test Mode
-Use advanced safety automations and test the flow without placing a real call.
+◉ Volume Trigger
+Use Pro safety automation to trigger the panic flow.
 
 KoruBeni Pro is optional. Purchases, renewals, cancellations, and restore operations are managed through Google Play.
 
@@ -275,9 +275,9 @@ Location:
 Personal info:
 - Optional profile name: local-only, for profile personalization.
 - Optional photos/images: local-only, user-selected fake-call avatar if image picker is used.
-- Email address: not collected.
+- Optional profile email: stored locally; not sent to a developer backend.
 - Phone number: not collected by developer. Emergency contact numbers are chosen from the device and stored locally unless the user invokes Android telephony.
-- User IDs: not collected by developer; no auth backend.
+- RevenueCat processes an anonymous app-user identifier for subscriptions; no developer auth backend.
 
 Contacts:
 - Accessed so the user can choose emergency contacts.
@@ -480,7 +480,7 @@ Fear / Horror:
 
 Dangerous activities:
 - Simulated gambling: None
-- Unrestricted web access: No. The app does not open an external browser.
+- External links: the user can open legal/support/subscription links in platform applications; complete the Console questionnaire for this actual behavior.
 - User-generated content: No.
 - Shares location: No automatic sharing. Location is processed for emergency/location session when user triggers it.
 
@@ -489,7 +489,7 @@ Other:
 - Personal information shared: No automatic app-to-contact sharing. Emergency calls may expose the caller's phone number through the phone network; location is processed for the emergency/map session when user triggers it.
 
 Expected result:
-Usually PEGI 3 / Everyone or Everyone 10+ equivalent. Complete the questionnaire, obtain the certificate, and save it in Play Console.
+Do not predict a rating. Complete the questionnaire, obtain the actual certificate, and save it in Play Console.
 
 Target audience:
 Intended for adults / 18+. Do not enter Designed for Families unless the product decision changes and the app/legal/store copy is reworked.
@@ -561,10 +561,38 @@ Deleting the app or clearing app storage removes on-device data. It does not can
 [ ] Data Safety submitted for closed/open/production, or Play Console internal-testing exemption evidence saved
 [ ] Content Rating submitted
 [ ] Target Audience submitted
-[ ] FGS / exact alarm / battery optimization declarations submitted if required
+[ ] FGS absence and exact alarm / battery optimization declarations reviewed as required
 [ ] RevenueCat products/offering configured
 [ ] License tester monthly/annual purchase, restore, cancel/manage tested
 [ ] Signed AAB produced and uploaded
 [ ] Real-device QA matrix passed on API29/API36/16 KB, Pixel/Samsung/Xiaomi, dual-SIM and low-memory physical devices
 [ ] Play Console production access screen checked; if the personal-account policy applies, 12 opted-in testers / 14 continuous days completed
 ```
+
+## Trial and price decision
+
+The first release offers no free trial (trial yok). Monthly/annual prices and currency come from the current Play/RevenueCat offering; no live price or product mapping is certified by this package. Sandbox requires an explicitly verified license tester and a test-payment UI; stop if a real charge is shown.
+
+## Runtime parity anchors
+
+`lib/core/constants/feature_access_matrix.dart`, `android/app/src/main/AndroidManifest.xml`, `lib/constants/legal_texts.dart`, `lib/core/network/osm_tile_cache_client.dart`, and the locked purchases_flutter SDK are the behavior sources. No custom FGS, READ_CONTACTS, background location or biometric unlock. OSM tile requests disclose IP/User-Agent and requested viewport; RevenueCat/Play have their own processing/retention. Reset clears local data after confirmed completion and does not cancel subscriptions or erase provider history. Data Safety classification and cross-border/legal approval remain human Console acceptance.
+
+### Auditable feature matrix
+
+These technical IDs are for operator parity review, not customer-facing listing text.
+
+| Runtime feature | Tier |
+|---|---|
+| location | FREE |
+| fakeCall | FREE |
+| siren | FREE |
+| contacts | FREE |
+| emergencyContactAdd | FREE |
+| emergencyContactSelect | FREE |
+| testMode | FREE |
+| timeline | FREE |
+| panic | PRO |
+| safeWalk | PRO |
+| checkIn | PRO |
+| volumeTrigger | PRO |
+| advancedAutomation | PRO |

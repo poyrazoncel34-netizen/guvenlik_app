@@ -1,6 +1,10 @@
 # KoruBeni Production Rollout and Incident Runbook
 
-Status: `CODE_DONE` as an operator procedure. Every dashboard, device, billing,
+Status: `OPERATOR_DECISION_PENDING` for numeric stop thresholds and observation
+cadence. This is the single proposed canonical procedure; historical conflicting
+values are recorded in `docs/release/operations_decision_pending.md`. A real owner
+must approve the decision before launch. No conflicting legacy runbook authorizes
+release. The written procedure is locally prepared. Every dashboard, device, billing,
 and production observation remains `NEEDS_OPERATOR_ACTION` until evidence is
 attached. This document does not authorize a release by itself.
 

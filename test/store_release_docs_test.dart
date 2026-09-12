@@ -1,10 +1,29 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:guvenlik_app/core/constants/feature_access_matrix.dart';
 
 void main() {
   group('store release documentation gates', () {
-    const trShort = 'Panik butonu, sahte çağrı, siren. Hesap yok, verileriniz cihazınızda kalır.';
+    const trShort =
+        'Ücretsiz sahte çağrı, siren ve prova. Pro ile panik, check-in, güvenli yürüyüş.';
+
+    test('canonical Console matrix equals every runtime feature tier', () {
+      final copy = File(
+        'store/PLAY_CONSOLE_COPY_PASTE_PACK.md',
+      ).readAsStringSync();
+      final rows = RegExp(r'\| (\w+) \| (FREE|PRO) \|').allMatches(copy);
+      final actual = {for (final row in rows) row.group(1)!: row.group(2)!};
+      final expected = {
+        for (final entry in FeatureAccessMatrix.entries.values)
+          entry.feature.name: entry.isFree ? 'FREE' : 'PRO',
+      };
+      expect(actual, expected);
+      expect(copy, contains('trial yok'));
+      expect(copy, contains('OSM tile requests disclose IP/User-Agent'));
+      expect(copy, isNot(contains('Tüm verileriniz cihazınızda kalır')));
+      expect(copy, isNot(contains('yalnızca satın alma geçmişi tutulur')));
+    });
 
     test('short descriptions are consistent and within Play limits', () {
       expect(trShort.runes.length <= 80, isTrue);

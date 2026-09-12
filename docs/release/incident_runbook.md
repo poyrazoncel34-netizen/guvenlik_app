@@ -29,33 +29,19 @@ Bu urunde **cagrilma yolunu geciktiren veya engelleyen her sey S1'dir.**
 
 ## 2. Yayilimi durdurma esikleri
 
-Bunlar yazili esiklerdir; "kotu gorunuyorsa durdur" bir esik degildir.
-
-| Metrik | Kaynak | DURDUR esigi |
-|---|---|---|
-| Crash-free session rate | Play Console -> Android vitals | **< %99.0** |
-| ANR rate | Play Console -> Android vitals | **> %0.47** (Play'in "kotu davranis" esigi) |
-| S1 kullanici raporu | destek e-postasi | **>= 1** |
-| Play politika ihlali | Console bildirimi | **herhangi biri** |
-
-**Sahip:** depo sahibi (tek gelistirici). Bu bir kisidir ve baska kimse yoktur;
-"on-call rotasyonu" yazmak, olmayan bir ekibi belgelemek olurdu.
-
-**Kadans:** yayilimin ilk 72 saatinde gunde bir kez Android vitals kontrolu;
-sonrasinda haftada bir. Bu kadans tam da telemetri OLMADIGI icin gereklidir.
+The single procedure and proposed numeric thresholds are in
+[PRODUCTION_ROLLOUT_RUNBOOK.md](../../store/PRODUCTION_ROLLOUT_RUNBOOK.md), sections 4–6.
+**OPERATOR_DECISION_PENDING:** historical thresholds/cadences conflict; see
+[operations_decision_pending.md](operations_decision_pending.md). Do not use this
+old runbook as an independent release or stop-threshold authorization.
 
 ## 3. Yayilimi durdurma proseduru
 
-1. Play Console -> Production -> **Halt rollout**. Bu, yeni kullanicilara
-   dagitimi durdurur; **zaten guncellemis kullanicilari geri almaz.**
-2. Kok nedeni bul ve duzelt.
-3. `scripts/verify_release.sh` — tam zincir, gercek cikis kodlariyla.
-4. versionCode artan yeni bir AAB yayinla (kod tag'den turer; bkz. release.yml).
-5. Yayilimi %1 -> %10 -> %50 -> %100 kademelendir.
-
-**Sure hedefi:** durdurmadan yeni surumun incelemeye girmesine kadar **4 saat**.
-Bu hedef prova edilmemistir; prova edildiginde bu satir olculen sureyle
-degistirilecek (MP-80-017).
+Use the canonical runbook's first-release/update distinction and forward hotfix
+procedure. First releases cannot rely on a previous release or staged rollback.
+A confirmed safety defect prevents launch; for an existing release the actual
+operator follows the available Console controls. No four-hour recovery time or
+operator availability has been measured. Prova status remains PROVA EDILMEDI.
 
 ## 4. Odemeyi devre disi birakma (MP-67-009)
 
@@ -95,9 +81,7 @@ Devre disi birakma yollari, en hizlidan en yavasa:
 | Play Console yorumlari | ilk temas | 3 is gunu |
 | Destek e-postasi (store listeleme) | teshis | 3 is gunu |
 
-Teshis, telemetri olmadigi icin **kullanicinin kendi yerel gunlugunu disari
-aktarmasina** dayanir: Ayarlar -> Yasal -> Verilerimi Disari Aktar (JSON).
-Destek yanitinin ilk adimi her zaman bu aktarimi istemektir.
+First diagnosis requests only app version, Android/device model, approximate incident time, reproduction steps and an allowlisted local error code if available. Do not ask for a full user-data export, raw database, screenshots containing contacts, or free-form diagnostic payloads. Do not collect names, phone numbers, email, PINs or coordinates. User data export remains a separate voluntary personal-data-copy feature, not a support prerequisite. If the user cannot safely obtain a code, proceed with the non-personal reproduction description. No new telemetry is introduced.
 
 ## 7. Postmortem sablonu (MP-79-001..005)
 
@@ -141,7 +125,7 @@ gercek mekanizma budur ve olay proseduru onu bir bayrak gibi kullanir.
 
 | Soru | Cevap |
 |---|---|
-| Ne yapar | Yeni surumun **kac kullaniciya dagitildigini** belirler: %1 → %10 → %50 → %100 (bkz. §3 adim 5) |
+| Ne yapar | Yeni surumun **kac kullaniciya dagitildigini** belirler: Kanonik runbook §4; owner approval pending |
 | Nasil kapatilir | Play Console → Production → **Halt rollout** (§3 adim 1) |
 | Ne kadar hizli | Dakikalar; inceleme gerektirmez |
 | **Neyi yapamaz** | **Zaten guncellemis bir cihazda hicbir seyi geri almaz veya kapatmaz.** Yalnizca YENI dagitimi durdurur |
@@ -152,7 +136,7 @@ ozelligi kapat" denirdi; burada "yayilimi durdur ve ileri sar" denir. Ikisi ayni
 ve bu belge bunlari ayni seymis gibi yazmiyor.
 
 **Odeme icin ayri ve daha guclu bir kontrol vardir** — §4. RevenueCat offering'ini "current"
-olmaktan cikarmak, zaten guncellemis cihazlarda da aninda etkilidir. Yani odeme, kademeli
+olmaktan cikarmanin istemciye ulasma zamani SDK cache/ag davranisina baglidir; aninda teslim garantisi yoktur. Yani odeme, kademeli
 yayilimin aksine, gercekten uzaktan kapatilabilir.
 
 **Degismez:** ne kademeli yayilim ne de odeme kapatma acil cagri yolunu etkiler.

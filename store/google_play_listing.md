@@ -1,14 +1,16 @@
+> Canonical Console package: [PLAY_CONSOLE_COPY_PASTE_PACK.md](PLAY_CONSOLE_COPY_PASTE_PACK.md). This file is a synchronized reference; resolve any drift in the canonical package before submission.
+
 # Google Play Store Listing — KoruBeni
 
 ## Uygulama Adı (29/30)
 KoruBeni: Panik Butonu, Siren
 
-## Kısa Açıklama (75/80 karakter)
-Panik butonu, sahte çağrı, siren. Hesap yok, verileriniz cihazınızda kalır.
+## Kısa Açıklama (79/80 karakter)
+Ücretsiz sahte çağrı, siren ve prova. Pro ile panik, check-in, güvenli yürüyüş.
 
 ## Uzun Açıklama
 
-Panik butonu, sahte çağrı ve siren tek uygulamada. KoruBeni, acil bir durumda güvendiğiniz tek kişiye ulaşmayı önceden planlamanızı ve bu akışın provasını yapmanızı sağlayan bir kişisel güvenlik uygulamasıdır. Hesap gerekmez, verileriniz cihazınızda kalır.
+Panik butonu, sahte çağrı ve siren tek uygulamada. KoruBeni, acil bir durumda güvendiğiniz tek kişiye ulaşmayı önceden planlamanızı ve bu akışın provasını yapmanızı sağlayan bir kişisel güvenlik uygulamasıdır. Geliştirici hesabı gerekmez. Kişiler/PIN/geçmiş yerel saklanır; çevrimiçi harita ve RevenueCat/Play teknik veri işler.
 
 ⚠️ ÖNEMLİ: Bu uygulama profesyonel güvenlik hizmeti yerine geçmez. KoruBeni bağımsız bir uygulamadır; herhangi bir kamu kurumu, kolluk birimi veya resmi acil servisle bağlantılı değildir ve bunları temsil etmez. Acil durumlarda her zaman 112'yi arayın.
 
