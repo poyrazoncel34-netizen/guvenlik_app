@@ -12,6 +12,12 @@ class CheckInAlarmReceiver : BroadcastReceiver() {
         ) {
             val token = AndroidEmergencySessionAlarmScheduler.tokenFromIntent(intent)
                 ?: return@run
+            if (intent?.action == AndroidEmergencySessionAlarmScheduler.ACTION_GRACE ||
+                intent?.action == AndroidEmergencySessionAlarmScheduler.ACTION_PRE_WARNING) {
+                EmergencySessionRuntime.coordinator(context).warn(token,
+                    intent.action == AndroidEmergencySessionAlarmScheduler.ACTION_PRE_WARNING)
+                return@run
+            }
             val dispatch = EmergencySessionRuntime.coordinator(context).claimAndDispatch(token)
             if (DirectBootAccess.isUserUnlocked(context) && (
                     dispatch.callRequestOutcome != CallRequestOutcome.NOT_ATTEMPTED ||

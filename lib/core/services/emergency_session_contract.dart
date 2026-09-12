@@ -292,8 +292,12 @@ class SessionSnapshot {
     this.callRequestOutcome = CallRequestOutcome.notAttempted,
     this.fallbackOutcome = FallbackOutcome.notAttempted,
     this.reasonCode,
+    this.mainDurationSeconds,
+    this.completedAt,
   });
 
+  final int? mainDurationSeconds;
+  final DateTime? completedAt;
   final SessionReadStatus status;
   final SessionToken? token;
   final EmergencySessionLifecycle lifecycleState;

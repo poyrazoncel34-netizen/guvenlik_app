@@ -1,4 +1,5 @@
 {
+  "legal_save_failed": "Your choices could not be saved. They have been kept on this screen; please try again.",
   "app_name": "KoruBeni",
   "panic_button": "EMERGENCY",
   "panic_desc": "An emergency countdown starts; if it is not cancelled, the call flow starts.",
@@ -242,8 +243,8 @@
   "error_title": "Something went wrong",
   "error_restart": "Please restart the app.",
   "location_unavailable": "Location unavailable",
-  "map_fallback_location": "Location could not be obtained. Last known or approximate location is shown.",
-  "map_fallback_location_time": "Last checked: {time}",
+  "map_fallback_location": "Current location unavailable. Showing the last known location.",
+  "map_fallback_location_time": "Last measured: {time}",
   "location_share_message": "Current location: {url}",
   "default_emergency_message": "Emergency",
   "emergency_contact_not_found": "No emergency contact found",
@@ -1005,5 +1006,12 @@
   "emergency_unconfirmed_failure_title": "Call not started, some steps unconfirmed",
   "emergency_unconfirmed_failure_body": "The call could not be started. Call the number below manually. Some steps could not be confirmed; their status is listed below.",
   "safe_walk_pre_warning_undelivered": "The warning notification could not be shown. Notifications may be off; remember to tap \"I am safe\" before the timer ends.",
-  "check_in_grace_alert_undelivered": "The warning notification could not be shown. Notifications may be off; if you do not confirm before the timer ends, your emergency contact will be called."
+  "check_in_grace_alert_undelivered": "The warning notification could not be shown. Notifications may be off; if you do not confirm before the timer ends, your emergency contact will be called.",
+  "native_history_request_submitted": "Call request submitted; connection or answer is not confirmed.",
+  "native_history_request_unknown": "The automatic call request outcome could not be confirmed.",
+  "native_history_request_failed": "The automatic call request failed.",
+  "native_history_fallback_posted": "A manual call action was posted in a notification.",
+  "native_history_fallback_failed": "The call notification is unavailable; use your phone app to call your contact if needed.",
+  "native_history_fallback_expired": "The manual call notification has expired; use your phone app if needed.",
+  "native_history_recorded_time": "The time shown is when this result was recorded in the app."
 }

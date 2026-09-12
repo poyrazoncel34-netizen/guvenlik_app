@@ -19,6 +19,7 @@ class EmergencySessionCoordinator(
     private val capabilityProvider: EmergencyCapabilityProvider,
     private val wallClockMs: () -> Long = { System.currentTimeMillis() },
     private val elapsedRealtimeMs: () -> Long = { android.os.SystemClock.elapsedRealtime() },
+    private val warningPoster: EmergencyWarningPoster = EmergencyWarningPoster { _, _ -> false },
 ) {
     fun arm(request: ArmRequest): ArmResult = synchronized(PROCESS_LOCK) {
         if (request.protocolVersion != EMERGENCY_PROTOCOL_VERSION) {
@@ -120,6 +121,7 @@ class EmergencySessionCoordinator(
             finalDeadlineMs = request.finalDeadlineMs,
             elapsedRealtimeDeadlineMs = elapsedDeadline,
             schedulingMode = SchedulingMode.NONE,
+            mainDurationMs = revisionFrom?.mainDurationMs ?: (request.mainDeadlineMs - now),
         )
         if (revisionFrom == null && !store.write(preparing)) {
             return@synchronized ArmResult.Unknown("preparingCommitFailed")
@@ -167,6 +169,28 @@ class EmergencySessionCoordinator(
         submittedInProcess.remove(token.processKey())
         retryScheduledInProcess.remove(token.processKey())
         ArmResult.Armed(token, request.mainDeadlineMs, request.finalDeadlineMs)
+    }
+
+    /** Durable claim suppresses exact/inexact repeats; a crash remains unknown. */
+    fun warn(token: SessionToken, preWarning: Boolean): String = synchronized(PROCESS_LOCK) {
+        val current = (store.read(token.slot) as? SessionRead.Present)?.envelope
+            ?: return@synchronized "unknown"
+        if (current.token != token || current.lifecycleState != LifecycleState.ARMED ||
+            token.kind == SessionKind.PANIC ||
+            (preWarning && token.kind != SessionKind.SAFE_WALK)) return@synchronized "stale"
+        val deadline = current.mainDeadlineMs - if (preWarning) current.preWarningLeadMs else 0L
+        if (wallClockMs() < deadline || wallClockMs() >= current.finalDeadlineMs ||
+            (preWarning && wallClockMs() >= current.mainDeadlineMs)) return@synchronized "stale"
+        val previous = if (preWarning) current.preWarningOutcome else current.graceWarningOutcome
+        if (previous != "notAttempted") return@synchronized previous
+        val claimed = if (preWarning) current.copy(preWarningOutcome = "unknown")
+            else current.copy(graceWarningOutcome = "unknown")
+        if (!store.write(claimed)) return@synchronized "unknown"
+        val outcome = try { if (warningPoster.post(claimed, preWarning)) "posted" else "failed" }
+            catch (_: RuntimeException) { "failed" }
+        val completed = if (preWarning) claimed.copy(preWarningOutcome = outcome)
+            else claimed.copy(graceWarningOutcome = outcome)
+        if (store.write(completed)) outcome else "unknown"
     }
 
     fun cancel(token: SessionToken): CancelResult = synchronized(PROCESS_LOCK) {
@@ -308,6 +332,7 @@ class EmergencySessionCoordinator(
             else -> LifecycleState.REQUEST_FAILED
         }
         val terminal = claimedWithFallback.copy(
+            completedAtMs = wallClockMs(),
             lifecycleState = terminalState,
             // The phone target remains only in the app-private Direct Boot
             // record while the user-action fallback is live. PendingIntents

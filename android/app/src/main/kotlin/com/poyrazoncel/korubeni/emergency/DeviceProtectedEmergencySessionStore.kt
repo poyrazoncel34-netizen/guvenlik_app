@@ -83,6 +83,10 @@ class DeviceProtectedEmergencySessionStore(context: Context) : EmergencySessionS
                     callRequestOutcome = callOutcome,
                     fallbackOutcome = fallbackOutcome,
                     fallbackExpiresAtMs = fallbackExpiry,
+                    completedAtMs = prefs.getLong(key(prefix, "completedAtMs"), 0L),
+                    mainDurationMs = prefs.getLong(key(prefix, "mainDurationMs"), 0L),
+                    graceWarningOutcome = prefs.getString(key(prefix, "graceWarningOutcome"), "notAttempted") ?: "unknown",
+                    preWarningOutcome = prefs.getString(key(prefix, "preWarningOutcome"), "notAttempted") ?: "unknown",
                 ),
             )
         } catch (_: ClassCastException) {
@@ -104,6 +108,7 @@ class DeviceProtectedEmergencySessionStore(context: Context) : EmergencySessionS
             .putString(key(prefix, "kind"), envelope.token.kind.wireValue)
             .putString(key(prefix, "lifecycleState"), envelope.lifecycleState.wireValue)
             .putString(key(prefix, "target"), envelope.target)
+            .putLong(key(prefix, "completedAtMs"), envelope.completedAtMs)
             .putLong(key(prefix, "mainDeadlineMs"), envelope.mainDeadlineMs)
             .putLong(key(prefix, "finalDeadlineMs"), envelope.finalDeadlineMs)
             .putLong(
@@ -117,12 +122,21 @@ class DeviceProtectedEmergencySessionStore(context: Context) : EmergencySessionS
             )
             .putString(key(prefix, "fallbackOutcome"), envelope.fallbackOutcome.wireValue)
             .putLong(key(prefix, "fallbackExpiresAtMs"), envelope.fallbackExpiresAtMs)
+            .putLong(key(prefix, "mainDurationMs"), envelope.mainDurationMs)
+            .putString(key(prefix, "graceWarningOutcome"), envelope.graceWarningOutcome)
+            .putString(key(prefix, "preWarningOutcome"), envelope.preWarningOutcome)
+        EmergencyTerminalJournal.append(editor, envelope)
         return try {
             editor.commit()
         } catch (_: RuntimeException) {
             false
         }
     }
+
+    fun pendingOutcomes(): List<Map<String, Any?>> = EmergencyTerminalJournal.read(prefs)
+
+    fun acknowledgeOutcome(token: SessionToken): Boolean =
+        prefs.edit().remove(EmergencyTerminalJournal.key(token)).commit()
 
     override fun clearAll(): Boolean = try {
         prefs.edit().clear().commit()

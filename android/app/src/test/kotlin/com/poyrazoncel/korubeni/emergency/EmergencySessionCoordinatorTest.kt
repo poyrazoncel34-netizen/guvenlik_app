@@ -736,6 +736,76 @@ class EmergencySessionCoordinatorTest {
         assertEquals(0, violations)
     }
 
+    @Test
+    fun `native warnings survive controller recreation and duplicate alarms never call`() {
+        for (kind in listOf(SessionKind.CHECK_IN, SessionKind.SAFE_WALK)) {
+            val store = FakeStore()
+            var posts = 0
+            val poster = EmergencyWarningPoster { _, _ -> posts++; true }
+            val first = Fixture(store = store, warningPoster = poster)
+            val token = (first.coordinator.arm(validArmRequest(randomId = "warning-${kind}").copy(kind = kind)) as ArmResult.Armed).token
+            val restored = Fixture(store = store, warningPoster = poster)
+            if (kind == SessionKind.SAFE_WALK) {
+                restored.advanceTo(now + 54_000L)
+                assertEquals("posted", restored.coordinator.warn(token, true))
+                assertEquals("posted", restored.coordinator.warn(token, true))
+            }
+            restored.advanceTo(now + 60_000L)
+            assertEquals("posted", restored.coordinator.warn(token, false))
+            assertEquals("posted", restored.coordinator.warn(token, false))
+            assertEquals(if (kind == SessionKind.SAFE_WALK) 2 else 1, posts)
+            assertEquals(0, restored.calls.targets.size)
+            restored.advanceToFinalDeadline()
+            restored.coordinator.claimAndDispatch(token)
+            restored.coordinator.claimAndDispatch(token)
+            assertEquals(1, restored.calls.targets.size)
+        }
+    }
+
+    @Test
+    fun `cancel revision stale warning and denied notification never claim delivery`() {
+        var posts = 0
+        val fixture = Fixture(warningPoster = EmergencyWarningPoster { _, _ -> posts++; false })
+        val first = (fixture.coordinator.arm(validArmRequest()) as ArmResult.Armed).token
+        val next = (fixture.coordinator.arm(validArmRequest().copy(requestedGeneration = 2,
+            mainDeadlineMs = now + 180_000L, finalDeadlineMs = now + 240_000L)) as ArmResult.Armed).token
+        fixture.advanceTo(now + 180_000L)
+        assertEquals("stale", fixture.coordinator.warn(first, false))
+        assertEquals("failed", fixture.coordinator.warn(next, false))
+        assertEquals("failed", fixture.coordinator.warn(next, false))
+        assertEquals(1, posts)
+        fixture.coordinator.cancel(next)
+        assertEquals("stale", fixture.coordinator.warn(next, false))
+        assertEquals(0, fixture.calls.targets.size)
+    }
+
+    @Test
+    fun `warning durable claim failure posts nothing and retry preserves same generation`() {
+        var posts = 0
+        val fixture = Fixture(store = FakeStore(failWritesAt = setOf(3)),
+            warningPoster = EmergencyWarningPoster { _, _ -> posts++; true })
+        val token = (fixture.coordinator.arm(validArmRequest()) as ArmResult.Armed).token
+        fixture.advanceTo(now + 60_000L)
+        assertEquals("unknown", fixture.coordinator.warn(token, false))
+        assertEquals(0, posts)
+        assertEquals("posted", fixture.coordinator.warn(token, false))
+        assertEquals(token, fixture.store.current?.token)
+        assertEquals(1, posts)
+    }
+
+    @Test
+    fun `completion timestamp records delayed dispatch rather than planned deadline`() {
+        val fixture = Fixture()
+        val token = (fixture.coordinator.arm(validArmRequest(randomId = "delayed-completion")) as ArmResult.Armed).token
+        fixture.advanceTo(now + 180_000L)
+        fixture.coordinator.claimAndDispatch(token)
+        assertEquals(now + 180_000L, fixture.store.current?.completedAtMs)
+        fixture.advanceTo(now + 240_000L)
+        fixture.coordinator.claimAndDispatch(token)
+        assertEquals(now + 180_000L, fixture.store.current?.completedAtMs)
+        assertEquals(1, fixture.calls.targets.size)
+    }
+
     private fun validArmRequest(
         randomId: String = "session-random-id",
         target: String = "+905001234567",
@@ -767,6 +837,7 @@ class EmergencySessionCoordinatorTest {
         val calls: FakeCalls = FakeCalls(),
         capabilities: CapabilitySnapshot = readyCapabilities,
         capabilityFailure: RuntimeException? = null,
+        warningPoster: EmergencyWarningPoster = EmergencyWarningPoster { _, _ -> false },
     ) {
         private var currentNow = now
         val coordinator = EmergencySessionCoordinator(
@@ -782,6 +853,7 @@ class EmergencySessionCoordinatorTest {
                     entitlementDecision = request.entitlementDecision,
                 )
             },
+            warningPoster = warningPoster,
             wallClockMs = { currentNow },
             elapsedRealtimeMs = { 50_000L },
         )

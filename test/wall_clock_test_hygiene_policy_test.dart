@@ -153,6 +153,10 @@ void main() {
       // scripts/verify_resolution_classification.py: an addition becomes a
       // visible diff instead of a silent gap.
       const known = <String>{
+        // Native terminal events supply their original occurrence time. This
+        // fallback timestamps new local events; it does not resolve a grace
+        // window, so no new clock-coupled assertion detector is needed.
+        'lib/core/services/activity_service.dart',
         'lib/core/services/countdown_clock.dart',
         'lib/core/services/offline_queue_service.dart',
         'lib/core/services/rehearsal_record_service.dart',

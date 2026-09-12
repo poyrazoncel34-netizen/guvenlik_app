@@ -133,6 +133,9 @@ void main() {
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(channel, (call) async {
       if (call.method == 'armEmergencySession') return armedResponse(call);
+      if (call.method == 'warnEmergencySession') {
+        return {'outcome': notificationsEnabled ? 'unknown' : 'failed'};
+      }
       if (call.method == 'readEmergencySession') {
         final token = created.sessionToken!;
         return <String, Object?>{
@@ -207,7 +210,7 @@ void main() {
       final running = await enterGrace(notificationsEnabled: false);
 
       expect(running.graceAlertOutcome,
-          DispatchTargetOutcome.suppressedByUserSetting,
+          DispatchTargetOutcome.platformRejected,
           reason: 'the grace warning is the last cue before a call; a service '
               'that cannot tell it never appeared cannot tell the user');
       expect(running.graceAlertOutcome!.reachability,
@@ -296,7 +299,7 @@ void main() {
           }
         }
       }
-      expect(found, greaterThanOrEqualTo(5),
+      expect(found, greaterThanOrEqualTo(3),
           reason: 'the census must actually find the call sites; zero sites '
               'would make this assertion vacuous');
       expect(unconsumed, isEmpty,
@@ -356,8 +359,8 @@ void main() {
           src.indexOf('Future<DispatchTargetOutcome> _showGraceNotification()');
       expect(start, isNot(-1),
           reason: 'the grace notification must report an outcome');
-      expect(src, contains('SafetyAlertDispatch.postWarning'),
-          reason: 'the grace warning posts through the reporting wrapper');
+      expect(src, contains('_platform.warnEmergencySession'),
+          reason: 'the grace warning uses durable native scheduling');
       expect('_lastGraceAlertOutcome = await'.allMatches(src).length, 2,
           reason: 'BOTH grace entry points (Dart expiry and the native '
               'grace-started callback) must keep the outcome');

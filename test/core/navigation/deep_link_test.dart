@@ -293,9 +293,11 @@ void main() {
         expect(gate, isNot(-1), reason: 'a startup gate disappeared');
       }
       final fallthrough =
-          splash.lastIndexOf('nextScreen = const MainNavigation();');
-      expect(fallthrough, greaterThan(unlock),
-          reason: 'MainNavigation must be the else-branch of the PIN gate');
+          splash.lastIndexOf('_goTo(const MainNavigation());');
+      expect(unlock, greaterThan(consent));
+      expect(onboarding, greaterThan(unlock));
+      expect(fallthrough, greaterThan(onboarding),
+          reason: 'MainNavigation must follow the PIN and onboarding gates');
     });
 
     test('MainActivity parks the link and does nothing else with it', () {

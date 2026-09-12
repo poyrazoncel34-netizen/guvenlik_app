@@ -19,7 +19,6 @@ import '../core/services/dispatch_outcome.dart';
 import '../core/services/emergency_session_contract.dart';
 import '../core/services/pin_verification_service.dart';
 import '../core/utils/emergency_number_validator.dart';
-import '../core/services/safety_alert_dispatch.dart';
 import '../core/utils/permission_helper.dart';
 // Analytics service removed (offline-first)
 import '../core/constants/app_constants.dart';
@@ -235,11 +234,7 @@ class _SafeWalkScreenState extends State<SafeWalkScreen> {
     // Haptic alert
     HapticFeedback.heavyImpact();
     // Local notification (works even when screen is off)
-    final outcome = await SafetyAlertDispatch.postWarning(
-      id: 200,
-      title: 'safe_walk_pre_warning_title'.tr(),
-      body: 'safe_walk_pre_warning_body'.tr(),
-    );
+    final outcome = await _controller.postPreWarning();
     if (outcome.reachability == DispatchReachability.reached) return;
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(

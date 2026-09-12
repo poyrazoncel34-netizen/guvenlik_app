@@ -176,7 +176,14 @@ data class EmergencySessionEnvelope(
     val callRequestOutcome: CallRequestOutcome = CallRequestOutcome.NOT_ATTEMPTED,
     val fallbackOutcome: FallbackOutcome = FallbackOutcome.NOT_ATTEMPTED,
     val fallbackExpiresAtMs: Long = 0L,
+    val mainDurationMs: Long = 0L,
+    val completedAtMs: Long = 0L,
+    val graceWarningOutcome: String = "notAttempted",
+    val preWarningOutcome: String = "notAttempted",
 )
+
+val EmergencySessionEnvelope.preWarningLeadMs: Long
+    get() = if (mainDurationMs >= 240_000L || mainDurationMs <= 0L) 120_000L else mainDurationMs / 10L
 
 sealed interface SessionRead {
     data object Absent : SessionRead
@@ -294,6 +301,10 @@ sealed interface ReadSessionResult {
                 "target" to envelope.target,
                 "callRequestOutcome" to envelope.callRequestOutcome.wireValue,
                 "fallbackOutcome" to envelope.fallbackOutcome.wireValue,
+                "mainDurationMs" to envelope.mainDurationMs,
+                "completedAtMs" to envelope.completedAtMs,
+                "graceWarningOutcome" to envelope.graceWarningOutcome,
+                "preWarningOutcome" to envelope.preWarningOutcome,
             ),
         )
     }
@@ -352,4 +363,8 @@ fun interface EmergencyCallRequester {
 
 fun interface EmergencyCapabilityProvider {
     fun snapshot(request: ArmRequest): CapabilitySnapshot
+}
+
+fun interface EmergencyWarningPoster {
+    fun post(envelope: EmergencySessionEnvelope, preWarning: Boolean): Boolean
 }

@@ -43,17 +43,25 @@ class ActivityService {
     required ActivityType type,
     required String title,
     required String description,
+    String? eventId,
+    DateTime? timestamp,
   }) async {
     final event = ActivityEvent(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      id: eventId ?? DateTime.now().millisecondsSinceEpoch.toString(),
       type: type,
       title: title,
       description: description,
-      timestamp: DateTime.now(),
+      timestamp: timestamp ?? DateTime.now(),
     );
 
     final db = await serviceLocator<LocalDatabaseService>().database;
-    await db.insert('activity_events', event.toMap());
+    await db.insert(
+      'activity_events',
+      event.toMap(),
+      conflictAlgorithm: eventId == null
+          ? ConflictAlgorithm.abort
+          : ConflictAlgorithm.ignore,
+    );
     await db.rawDelete(
       '''
       DELETE FROM activity_events

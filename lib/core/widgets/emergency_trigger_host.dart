@@ -11,6 +11,7 @@ import '../navigation/app_navigator.dart';
 import '../services/app_lifecycle_handler.dart';
 import '../services/check_in_expiry_coordinator.dart';
 import '../services/check_in_service.dart';
+import '../services/native_emergency_history.dart';
 import '../services/emergency_platform_service.dart';
 import '../services/emergency_session_contract.dart';
 import '../services/local_logger_service.dart';
@@ -57,6 +58,7 @@ class EmergencyTriggerHostState extends State<EmergencyTriggerHost>
     WidgetsBinding.instance.addObserver(this);
     CheckInService.instance.initialize();
     CheckInService.safeWalk.initialize();
+    unawaited(_reconcilePendingHistory());
     unawaited(EmergencyReadinessService.instance.checkReadiness());
     _bindPlatformEvents();
     _consumeQuickPanicRequest();
@@ -79,6 +81,7 @@ class EmergencyTriggerHostState extends State<EmergencyTriggerHost>
       _startForegroundTriggers();
       CheckInService.instance.handleAppResumed();
       CheckInService.safeWalk.handleAppResumed();
+      unawaited(_reconcilePendingHistory());
       _consumePendingTrigger();
       _consumeQuickPanicRequest();
       // Re-auth after prolonged background
@@ -122,7 +125,10 @@ class EmergencyTriggerHostState extends State<EmergencyTriggerHost>
         await VolumeTriggerService.instance.setEnabled(false);
         return;
       }
-      if (!SubscriptionGate.isAuthorized(access, PremiumFeature.volumeTrigger)) {
+      if (!SubscriptionGate.isAuthorized(
+        access,
+        PremiumFeature.volumeTrigger,
+      )) {
         // Unknown is not free and does not authorize a new safety session, but
         // it also must not erase the user's preference as if access were denied.
         return;
@@ -163,6 +169,7 @@ class EmergencyTriggerHostState extends State<EmergencyTriggerHost>
               await Future.wait([
                 CheckInService.instance.handleAppResumed(),
                 CheckInService.safeWalk.handleAppResumed(),
+                _reconcilePendingHistory(),
               ]);
             }
           } catch (_) {
@@ -197,7 +204,18 @@ class EmergencyTriggerHostState extends State<EmergencyTriggerHost>
       await Future.wait([
         CheckInService.instance.handleAppResumed(),
         CheckInService.safeWalk.handleAppResumed(),
+        _reconcilePendingHistory(),
       ]);
+    }
+  }
+
+  Future<void> _reconcilePendingHistory() async {
+    try {
+      await NativeEmergencyHistory.reconcilePending(
+        EmergencyPlatformService.instance,
+      );
+    } catch (_) {
+      // Native terminal remains durable for retry at the next resume.
     }
   }
 

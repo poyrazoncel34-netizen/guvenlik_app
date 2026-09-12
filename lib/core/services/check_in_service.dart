@@ -3,11 +3,9 @@
 // ============================================================================
 
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../domain/models/activity_event.dart';
 import '../../domain/repositories/contacts_repository.dart';
@@ -26,7 +24,8 @@ import '../services/foreground_service.dart';
 import '../services/haptic_service.dart';
 import '../services/local_logger_service.dart';
 import '../services/notification_service.dart';
-import '../services/safety_alert_dispatch.dart';
+import '../services/check_in_projection_store.dart';
+import '../services/native_emergency_history.dart';
 import '../utils/emergency_number_validator.dart';
 
 /// Shared session controller for the check-in / safe-walk dead-man's-switch.
@@ -82,18 +81,12 @@ class CheckInService extends ChangeNotifier {
 
   static const int _gracePeriodSeconds = 60;
 
-  // Per-session persistence key (safe-walk gets its own blob).
-  String get _stateKey =>
-      _isSafeWalk ? 'safe_walk_state_v2' : 'check_in_state_v2';
+  // Disk projection of this session; the native slot stays authoritative.
+  CheckInProjectionStore get _projection =>
+      CheckInProjectionStore(isSafeWalk: _isSafeWalk);
 
   // Per-session alert notification id (grace + emergency reuse the same id).
   int get _alertNotificationId => _isSafeWalk ? 9998 : 9999;
-
-  // Legacy check-in keys for one-time migration (check-in session only).
-  static const String _activeKey = 'check_in_active';
-  static const String _totalSecondsKey = 'check_in_total_seconds';
-  static const String _endAtKey = 'check_in_end_at';
-  static const String _graceEndAtKey = 'check_in_grace_end_at';
 
   Timer? _tickTimer;
   DateTime? _endAt;
@@ -187,7 +180,14 @@ class CheckInService extends ChangeNotifier {
       pinConfigured: pinConfigured,
     );
     _lastArmResult = result;
-    if (result is! Armed) return result;
+    if (result is! Armed) {
+      if (result is ArmUnknown && result.uncertainToken != null) {
+        _sessionToken = result.uncertainToken;
+        _nativeScheduleDegraded = true;
+        notifyListeners();
+      }
+      return result;
+    }
 
     _sessionToken = result.sessionToken;
     _armedTarget = target;
@@ -337,57 +337,77 @@ class CheckInService extends ChangeNotifier {
   Future<CancelResult?> stop() => stopSession();
 
   Future<void> _restoreFromStorage() async {
-    final prefs = await SharedPreferences.getInstance();
-    final stateJson = prefs.getString(_stateKey);
-    if (stateJson == null) {
-      // Legacy active state has no versioned token and therefore cannot be a
-      // safety authority. Do not silently re-arm it with fresh commercial or
-      // contact decisions.
-      await _clearLegacyKeys(prefs);
+    if (_mutationInProgress) return;
+    _mutationInProgress = true;
+    try {
+      await _restoreFromStorageUnlocked();
+    } finally {
+      _mutationInProgress = false;
+    }
+  }
+
+  Future<void> _restoreFromStorageUnlocked() async {
+    // The NATIVE SLOT is the authority even if the projection never committed.
+    // This used to run the other way round: a missing or corrupt blob
+    // short-circuited restore, so an alarm Android had already accepted became
+    // a session the UI could neither show nor cancel (F01). Discovery only
+    // ADOPTS what native holds; it never synthesizes a new session.
+    var totalSeconds = _totalSeconds;
+    final stored = await _projection.read();
+    if (stored != null) {
+      _sessionToken ??= stored.token;
+      totalSeconds = stored.totalSeconds ?? totalSeconds;
+    }
+    final snapshot = await _platform.discoverEmergencySession(
+      _isSafeWalk
+          ? EmergencySessionKind.safeWalk
+          : EmergencySessionKind.checkIn,
+    );
+    // Temporary uncertainty is NOT absence. Keep the token and the projection
+    // so the next read can reconcile the same session, and surface the degraded
+    // state instead of showing a cancellation that was never confirmed.
+    if (snapshot.status == SessionReadStatus.unknown ||
+        snapshot.status == SessionReadStatus.corrupted ||
+        snapshot.lifecycleState == EmergencySessionLifecycle.corrupted) {
+      _nativeScheduleDegraded = true;
+      notifyListeners();
       return;
     }
-
-    try {
-      final state = jsonDecode(stateJson) as Map<String, dynamic>;
-      final token = SessionToken.fromMap(state['token']);
-      final totalSeconds = state['totalSeconds'] as int? ?? 0;
-      if (token == null || totalSeconds <= 0) {
-        await _clearPersistedState();
-        return;
-      }
-
-      final snapshot = await _platform.readEmergencySession(token);
-      if (!snapshot.isPresent ||
-          snapshot.lifecycleState == EmergencySessionLifecycle.cancelled ||
-          snapshot.lifecycleState.isTerminal) {
-        await _clearLocalProjection(stopForeground: true);
-        return;
-      }
-      if (snapshot.lifecycleState != EmergencySessionLifecycle.armed) {
-        // Claimed/preparing/unknown cannot be projected as an active, safely
-        // cancellable timer. Native remains authoritative and will reconcile.
-        _sessionToken = snapshot.token ?? token;
-        _emergencyInProgress =
-            snapshot.lifecycleState == EmergencySessionLifecycle.claimed;
-        _cancelTicker();
-        return;
-      }
-
-      _sessionToken = snapshot.token;
-      _armedTarget = snapshot.target;
-      _totalSeconds = totalSeconds;
-      _isActive = true;
-      _endAt = snapshot.mainDeadline;
-      _graceEndAt = snapshot.finalDeadline;
-      if (_endAt == null || _graceEndAt == null || _armedTarget == null) {
-        _cancelTicker();
-        return;
-      }
-      await _reconcileWithClock();
-    } catch (_) {
-      // Corrupt Dart projection must never synthesize a new native session.
-      await _clearPersistedState();
+    if (snapshot.status == SessionReadStatus.absent ||
+        snapshot.lifecycleState == EmergencySessionLifecycle.cancelled) {
+      await _clearLocalProjection(stopForeground: true);
+      return;
     }
+    if (!snapshot.isPresent) return;
+    _sessionToken = snapshot.token;
+    _armedTarget = snapshot.target;
+    _endAt = snapshot.mainDeadline;
+    _graceEndAt = snapshot.finalDeadline;
+    _nativeScheduleDegraded = false;
+    if (snapshot.lifecycleState.isTerminal) {
+      if (_sideEffectsEnabled) {
+        await NativeEmergencyHistory.reconcilePending(_platform);
+      }
+      await _clearLocalProjection(stopForeground: true);
+      return;
+    }
+    // Claimed/preparing cannot be projected as an active, safely cancellable
+    // timer. Native stays authoritative and will reconcile.
+    _isActive = snapshot.lifecycleState == EmergencySessionLifecycle.armed;
+    _emergencyInProgress =
+        snapshot.lifecycleState == EmergencySessionLifecycle.claimed;
+    _totalSeconds = (snapshot.mainDurationSeconds ?? 0) > 0
+        ? snapshot.mainDurationSeconds!
+        : totalSeconds > 0
+        ? totalSeconds
+        : (_endAt?.difference(DateTime.now()).inSeconds ?? 1).clamp(1, 86400);
+    if (!_isActive) {
+      _cancelTicker();
+      notifyListeners();
+      return;
+    }
+    await _bestEffort(_persistState);
+    await _reconcileWithClock();
   }
 
   Future<void> _reconcileWithClock() async {
@@ -481,12 +501,9 @@ class CheckInService extends ChangeNotifier {
         .clamp(0, _gracePeriodSeconds)
         .toInt();
 
-    await _persistState();
+    await _bestEffort(_persistState);
     if (_sideEffectsEnabled) {
       await _bestEffort(_startBackgroundProtection);
-      // The grace alert's outcome is RECORDED, not dropped. It used to go
-      // through _bestEffort, whose bare catch turned "the user switched this
-      // off" into the same silence as "Android displayed it" (FIR-02).
       _lastGraceAlertOutcome = await _showGraceNotification();
     }
     _startGraceTicker();
@@ -499,21 +516,31 @@ class CheckInService extends ChangeNotifier {
   DispatchTargetOutcome? get graceAlertOutcome => _lastGraceAlertOutcome;
   DispatchTargetOutcome? _lastGraceAlertOutcome;
 
+  /// Safe-Walk's lead-time warning, posted by the NATIVE session.
+  ///
+  /// It used to fire from the Safe-Walk screen's own listener, so leaving the
+  /// screen -- never mind losing the process -- silently removed the user's
+  /// early cue while the native alarm kept running (F02).
+  Future<DispatchTargetOutcome> postPreWarning() async {
+    final token = _sessionToken;
+    return token == null
+        ? DispatchTargetOutcome.handoffUnconfirmed
+        : _platform.warnEmergencySession(token, preWarning: true);
+  }
+
   /// Posts the 60-second grace warning and REPORTS what happened to it.
   ///
-  /// The user's last cue before the session escalates to a call. It used to sit
-  /// in `catch (_) { // Notification not critical }`, which discarded the typed
-  /// outcome at the one moment it mattered; see [SafetyAlertDispatch].
-  ///
-  /// NOTE (SPEC §0 K8 / §3.7): wording is the deferred text step. Both sessions
-  /// reuse the existing 60s-grace copy here; the lock-screen native
-  /// notification already carries session-correct wording.
-  Future<DispatchTargetOutcome> _showGraceNotification() =>
-      SafetyAlertDispatch.postWarning(
-        id: _alertNotificationId,
-        title: "check_in_notification_title".tr(),
-        body: "check_in_notification_body".tr(),
-      );
+  /// The user's last cue before escalation, and the outcome is RECORDED, not
+  /// dropped: it used to sit in `catch (_) { // not critical }`, which turned
+  /// "notifications are off" into the same silence as "Android displayed it"
+  /// (FIR-02). Scheduling is native so a dead Flutter process cannot cost the
+  /// user the warning (F02).
+  Future<DispatchTargetOutcome> _showGraceNotification() async {
+    final token = _sessionToken;
+    return token == null
+        ? DispatchTargetOutcome.handoffUnconfirmed
+        : _platform.warnEmergencySession(token);
+  }
 
   Future<void> _triggerEmergency() async {
     if (_emergencyInProgress) return;
@@ -579,18 +606,18 @@ class CheckInService extends ChangeNotifier {
           ledger,
           DispatchTarget.safetyTimeline,
           () async {
-            await ActivityService.logEvent(
-              type: ActivityType.emergencyTriggered,
-              title: "check_in_emergency_title".tr(),
-              description: "check_in_emergency_desc".tr(),
-            );
+            await NativeEmergencyHistory.reconcilePending(_platform);
             return null;
           },
         );
-        await DispatchLedgerRecorder.runRecorded(ledger, DispatchTarget.haptic, () async {
-          await HapticService.emergencyTriggered();
-          return null;
-        });
+        await DispatchLedgerRecorder.runRecorded(
+          ledger,
+          DispatchTarget.haptic,
+          () async {
+            await HapticService.emergencyTriggered();
+            return null;
+          },
+        );
         await DispatchLedgerRecorder.runRecorded(
           ledger,
           DispatchTarget.alertNotification,
@@ -672,37 +699,13 @@ class CheckInService extends ChangeNotifier {
     );
   }
 
-  Future<void> _persistState() async {
-    final prefs = await SharedPreferences.getInstance();
-
-    if (!_isActive) {
-      await _clearPersistedState();
-      return;
-    }
-
-    final state = {
-      'active': _isActive,
-      'totalSeconds': _totalSeconds,
-      'endAt': _endAt?.toIso8601String(),
-      'graceEndAt': _graceEndAt?.toIso8601String(),
-      'token': _sessionToken?.toMap(),
-    };
-    await prefs.setString(_stateKey, jsonEncode(state));
-  }
-
-  Future<void> _clearPersistedState() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_stateKey);
-    await _clearLegacyKeys(prefs);
-  }
-
-  Future<void> _clearLegacyKeys(SharedPreferences prefs) async {
-    if (_isSafeWalk) return;
-    await prefs.remove(_activeKey);
-    await prefs.remove(_totalSecondsKey);
-    await prefs.remove(_endAtKey);
-    await prefs.remove(_graceEndAtKey);
-  }
+  Future<void> _persistState() => _projection.write(
+    isActive: _isActive,
+    totalSeconds: _totalSeconds,
+    endAt: _endAt,
+    graceEndAt: _graceEndAt,
+    token: _sessionToken,
+  );
 
   Future<void> _clearLocalProjection({required bool stopForeground}) async {
     _cancelTicker();
@@ -716,7 +719,7 @@ class CheckInService extends ChangeNotifier {
     _sessionToken = null;
     _armedTarget = null;
 
-    await _bestEffort(_clearPersistedState);
+    await _bestEffort(_projection.clear);
     if (stopForeground && _sideEffectsEnabled) {
       await _bestEffort(
         () => KoruBeniForegroundService.stop(owner: _foregroundOwner),

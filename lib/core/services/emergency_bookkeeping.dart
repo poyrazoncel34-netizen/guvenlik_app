@@ -7,6 +7,8 @@ import 'emergency_dispatch_pipeline.dart';
 import 'haptic_service.dart';
 import 'notification_service.dart';
 import 'offline_queue_service.dart';
+import 'native_emergency_history.dart';
+import 'emergency_platform_service.dart';
 
 /// The non-critical targets a panic dispatch fans out to, as labelled steps.
 ///
@@ -22,6 +24,7 @@ abstract final class EmergencyBookkeeping {
     required String alertTitle,
     required String alertBody,
     required int notificationId,
+    Future<void> Function()? historyOperation,
   }) => <BestEffortStep>[
     BestEffortStep.effect(
       target: DispatchTarget.offlineQueue,
@@ -36,11 +39,13 @@ abstract final class EmergencyBookkeeping {
     ),
     BestEffortStep.effect(
       target: DispatchTarget.safetyTimeline,
-      run: () => ActivityService.logEvent(
-        type: ActivityType.emergencyTriggered,
-        title: eventTitle,
-        description: eventDescription,
-      ),
+      run:
+          historyOperation ??
+          () => ActivityService.logEvent(
+            type: ActivityType.emergencyTriggered,
+            title: eventTitle,
+            description: eventDescription,
+          ),
     ),
     BestEffortStep.effect(
       target: DispatchTarget.haptic,
@@ -61,6 +66,9 @@ abstract final class EmergencyBookkeeping {
 
   /// The panic path's step list with this app's copy already resolved.
   static List<BestEffortStep> panicStepsWithDefaultCopy() => panicSteps(
+    historyOperation: () => NativeEmergencyHistory.reconcilePending(
+      EmergencyPlatformService.instance,
+    ),
     eventTitle: 'countdown_emergency_title'.tr(),
     eventDescription: 'countdown_emergency_desc'.tr(),
     alertTitle: 'countdown_emergency_title'.tr(),

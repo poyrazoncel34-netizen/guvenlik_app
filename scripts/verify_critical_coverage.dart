@@ -5,8 +5,10 @@ const int _minimumPercent = 90;
 const List<String> _criticalFiles = <String>[
   'lib/core/services/emergency_session_contract.dart',
   'lib/core/services/emergency_platform_service.dart',
+  'lib/core/services/emergency_snapshot_parser.dart',
   'lib/core/services/pin_verification_service.dart',
   'lib/core/services/check_in_service.dart',
+  'lib/core/services/check_in_projection_store.dart',
   'lib/core/services/contact_service.dart',
 ];
 

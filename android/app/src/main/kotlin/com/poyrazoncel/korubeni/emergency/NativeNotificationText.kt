@@ -34,6 +34,11 @@ object NativeNotificationText {
         }
     }
 
+    fun preWarning(context: Context): NotificationCopy =
+        if (context.resources.configuration.locales[0].language == "tr")
+            NotificationCopy("Güvenli Yürüyüş", "Süren dolmak üzere. Güvendeysen süreyi yenile.")
+        else NotificationCopy("Safe Walk", "Your time is nearly up. Renew the timer if you are safe.")
+
     fun graceStarted(
         context: Context,
         sessionId: String,

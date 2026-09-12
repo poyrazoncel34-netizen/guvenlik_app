@@ -120,7 +120,102 @@ void main() {
         .setMockMethodCallHandler(channel, null);
   });
 
-  test('false arm ack never activates the Dart projection', () async {
+  for (final kind in [EmergencySessionKind.checkIn, EmergencySessionKind.safeWalk]) {
+    for (final blob in ['missing', 'corrupt', 'stale']) {
+      test('${kind.name} discovers native session with $blob projection', () async {
+        final token = SessionToken(protocolVersion: 1, randomId: 'native-session', generation: 2, kind: kind);
+        final key = kind == EmergencySessionKind.safeWalk ? 'safe_walk_state_v2' : 'check_in_state_v2';
+        final prefs = await SharedPreferences.getInstance();
+        if (blob != 'missing') await prefs.setString(key, blob == 'corrupt' ? '{broken' : '{"totalSeconds":300,"token":{"protocolVersion":1,"randomId":"native-session","generation":1,"kind":"${kind.wireName}"}}');
+        service.dispose();
+        service = CheckInService.forTesting(sessionId: kind == EmergencySessionKind.safeWalk ? CheckInExpiryCoordinator.safeWalkSession : CheckInExpiryCoordinator.checkInSession, platform: platform, contactsRepository: contacts);
+        final methods = <String>[];
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(channel, (call) async {
+          methods.add(call.method);
+          if (call.method == 'cancelEmergencySession') {
+            expect((call.arguments as Map)['token'], token.toMap());
+            return {'type':'cancelled', 'token':token.toMap()};
+          }
+          return {'type':'present', 'session': {'token':token.toMap(), 'lifecycleState':'armed', 'mainDeadlineMs':DateTime.now().add(const Duration(minutes:5)).millisecondsSinceEpoch, 'finalDeadlineMs':DateTime.now().add(const Duration(minutes:6)).millisecondsSinceEpoch, 'target':'+905551112233', 'callRequestOutcome':'notAttempted', 'fallbackOutcome':'notAttempted'}};
+        });
+        await service.initialize();
+        expect(service.sessionToken, token);
+        expect(service.isActive, isTrue);
+        expect((await service.stopSession())!.isConfirmedCancelled, isTrue);
+        expect(methods, isNot(contains('armEmergencySession')));
+        expect(methods, isNot(contains('dispatchEmergencySession')));
+      });
+    }
+  }
+
+  for (final kind in [EmergencySessionKind.checkIn, EmergencySessionKind.safeWalk]) {
+    test('${kind.name} lost arm response survives restart without rearming', () async {
+      Map<String, Object?>? accepted;
+      var armCount = 0;
+      var readable = false;
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, (call) async {
+        if (call.method == 'armEmergencySession') {
+          armCount++;
+          accepted = armedResponse(call);
+          throw PlatformException(code: 'lost_response');
+        }
+        if (!readable) return {'type': 'unknown'};
+        if (call.method == 'cancelEmergencySession') {
+          expect((call.arguments as Map)['token'], accepted!['token']);
+          return {'type': 'cancelled', 'token': accepted!['token']};
+        }
+        return {'type': 'present', 'session': {
+          'token': accepted!['token'], 'lifecycleState': 'armed',
+          'mainDeadlineMs': accepted!['mainDeadlineMs'],
+          'finalDeadlineMs': accepted!['finalDeadlineMs'],
+          'target': '+905551112233', 'callRequestOutcome': 'notAttempted',
+          'fallbackOutcome': 'notAttempted',
+        }};
+      });
+      CheckInService create() => CheckInService.forTesting(
+        sessionId: kind == EmergencySessionKind.safeWalk
+            ? CheckInExpiryCoordinator.safeWalkSession : CheckInExpiryCoordinator.checkInSession,
+        platform: platform, contactsRepository: contacts);
+      service.dispose();
+      service = create();
+      final result = await service.startSession(minutes: 5,
+          entitlementDecision: EntitlementDecision.authorized, pinConfigured: true);
+      expect(result, isA<ArmUnknown>());
+      final uncertain = service.sessionToken;
+      expect(uncertain, isNotNull);
+      await service.handleAppResumed();
+      expect(service.sessionToken, uncertain);
+      service.dispose();
+      contacts.primary = const EmergencyContact(name: 'Changed', phone: '+905559999999', isPrimary: true);
+      readable = true;
+      service = create();
+      await service.initialize();
+      expect(service.sessionToken, uncertain);
+      expect(service.isActive, isTrue);
+      expect((await service.stopSession())!.isConfirmedCancelled, isTrue);
+      expect(armCount, 1);
+    });
+  }
+
+  test('restore timeout preserves token and persisted projection', () async {
+    var unknown = false;
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(channel, (call) async {
+      if (call.method == 'armEmergencySession') return armedResponse(call);
+      if (unknown) return {'type':'unknown'};
+      return null;
+    });
+    await service.startSession(minutes:5, entitlementDecision:EntitlementDecision.authorized, pinConfigured:true);
+    final token = service.sessionToken;
+    final prefs = await SharedPreferences.getInstance();
+    final blob = prefs.getString('check_in_state_v2');
+    unknown = true;
+    await service.handleAppResumed();
+    expect(service.sessionToken, token);
+    expect(prefs.getString('check_in_state_v2'), blob);
+  });
+
+  test('false arm ack preserves uncertain token without activating projection', () async {
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(
           channel,
@@ -135,7 +230,8 @@ void main() {
 
     expect(result, isA<ArmUnknown>());
     expect(service.isActive, isFalse);
-    expect(service.sessionToken, isNull);
+    expect(service.sessionToken, isNotNull);
+    expect(service.nativeScheduleDegraded, isTrue);
   });
 
   test(

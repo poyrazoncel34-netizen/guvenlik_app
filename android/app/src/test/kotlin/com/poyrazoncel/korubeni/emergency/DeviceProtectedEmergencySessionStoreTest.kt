@@ -69,6 +69,51 @@ class DeviceProtectedEmergencySessionStoreTest {
         assertEquals("", restored.envelope.target)
     }
 
+    @Test
+    fun `terminal journal survives slot reuse and cold start until acknowledged`() {
+        val store = DeviceProtectedEmergencySessionStore(context)
+        val terminal = armedEnvelope().copy(
+            lifecycleState = LifecycleState.MANUAL_ACTION_REQUIRED,
+            callRequestOutcome = CallRequestOutcome.FAILED,
+            fallbackOutcome = FallbackOutcome.POSTED,
+            completedAtMs = 1_700_000_180_000L,
+        )
+        assertTrue(store.write(terminal))
+        assertTrue(store.write(terminal))
+        assertTrue(store.write(armedEnvelope().copy(token = terminal.token.copy(randomId = "next"))))
+        val restored = DeviceProtectedEmergencySessionStore(context)
+        val outcomes = restored.pendingOutcomes()
+        assertEquals(1, outcomes.size)
+        val session = outcomes.single()["session"] as Map<*, *>
+        assertEquals("", session["target"])
+        assertEquals("failed", session["callRequestOutcome"])
+        assertEquals("posted", session["fallbackOutcome"])
+        assertEquals(1_700_000_180_000L, session["completedAtMs"])
+        assertFalse(outcomes.toString().contains(terminal.target))
+        assertTrue(restored.acknowledgeOutcome(terminal.token))
+        assertTrue(DeviceProtectedEmergencySessionStore(context).pendingOutcomes().isEmpty())
+    }
+
+    @Test
+    fun `corrupt journal entry does not hide valid pending outcomes`() {
+        val store = DeviceProtectedEmergencySessionStore(context)
+        assertTrue(store.write(armedEnvelope().copy(lifecycleState = LifecycleState.REQUEST_FAILED)))
+        rawPrefs.edit().putString("outcome_corrupt", "{broken").commit()
+        assertEquals(1, DeviceProtectedEmergencySessionStore(context).pendingOutcomes().size)
+        assertTrue(rawPrefs.contains("outcome_corrupt"))
+    }
+
+    @Test
+    fun `wipe removes pending outcomes and cancellation creates no history`() {
+        val store = DeviceProtectedEmergencySessionStore(context)
+        assertTrue(store.write(armedEnvelope().copy(lifecycleState = LifecycleState.CANCELLED)))
+        assertTrue(store.pendingOutcomes().isEmpty())
+        assertTrue(store.write(armedEnvelope().copy(lifecycleState = LifecycleState.REQUEST_FAILED)))
+        assertEquals(1, store.pendingOutcomes().size)
+        assertTrue(store.clearAll())
+        assertTrue(store.pendingOutcomes().isEmpty())
+    }
+
     private fun armedEnvelope() = EmergencySessionEnvelope(
         token = SessionToken(
             protocolVersion = EMERGENCY_PROTOCOL_VERSION,

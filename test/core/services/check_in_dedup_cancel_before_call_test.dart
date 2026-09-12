@@ -22,7 +22,7 @@ void main() {
     final dispatch = triggerBody.indexOf('dispatchEmergencySession');
     expect(dispatch, isNot(-1));
     for (final nonCritical in <String>[
-      'ActivityService.logEvent',
+      'NativeEmergencyHistory.reconcilePending',
       'HapticService.emergencyTriggered',
       'NotificationService.instance.showEmergencyAlert',
       'navigator.push',

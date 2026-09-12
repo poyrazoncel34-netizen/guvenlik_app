@@ -355,7 +355,9 @@ void main() {
     },
   );
 
-  test('initialize clears legacy, corrupt and tokenless projections', () async {
+  test('confirmed native absence clears legacy, corrupt and tokenless projections', () async {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, (call) async => {'type': 'absent'});
     SharedPreferences.setMockInitialValues(<String, Object>{
       'check_in_active': true,
       'check_in_total_seconds': 30,
@@ -452,7 +454,7 @@ void main() {
       var dispatchMode = 'unknown';
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(channel, (call) async {
-            if (call.method == 'readEmergencySession') {
+            if ((call.method == 'readEmergencySession' || call.method == 'discoverEmergencySession')) {
               return present(
                 mainDeadline: now.subtract(const Duration(seconds: 5)),
                 finalDeadline: now.add(const Duration(seconds: 40)),
@@ -499,7 +501,7 @@ void main() {
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(channel, (call) async {
             methods.add(call.method);
-            if (call.method == 'readEmergencySession') {
+            if ((call.method == 'readEmergencySession' || call.method == 'discoverEmergencySession')) {
               return present(
                 mainDeadline: now.subtract(const Duration(minutes: 2)),
                 finalDeadline: now.subtract(const Duration(minutes: 1)),
@@ -518,7 +520,7 @@ void main() {
       await service.initialize();
 
       expect(methods, <String>[
-        'readEmergencySession',
+        'discoverEmergencySession',
         'dispatchEmergencySession',
       ]);
       expect(service.isActive, isFalse);
@@ -553,7 +555,7 @@ void main() {
       });
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(channel, (call) async {
-            if (call.method == 'readEmergencySession') {
+            if ((call.method == 'readEmergencySession' || call.method == 'discoverEmergencySession')) {
               return present(
                 mainDeadline: now.subtract(const Duration(minutes: 2)),
                 finalDeadline: now.subtract(const Duration(minutes: 1)),

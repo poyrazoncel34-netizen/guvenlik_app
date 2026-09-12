@@ -32,7 +32,10 @@ void main() {
 
       final triggerIdx = source.indexOf('Future<void> _triggerEmergency()');
       final claimIdx = source.indexOf('dispatchEmergencySession(', triggerIdx);
-      final logIdx = source.indexOf('ActivityService.logEvent', triggerIdx);
+      final logIdx = source.indexOf(
+        'NativeEmergencyHistory.reconcilePending',
+        triggerIdx,
+      );
 
       expect(claimIdx, isNot(-1));
       expect(logIdx, isNot(-1));

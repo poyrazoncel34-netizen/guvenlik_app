@@ -23,6 +23,16 @@ object EmergencySessionRuntime {
             fallbackPoster = AndroidEmergencyFallbackPoster(appContext),
             callRequester = AndroidEmergencyCallRequester(appContext),
             capabilityProvider = AndroidEmergencyCapabilityProvider(appContext),
+            warningPoster = EmergencyWarningPoster { envelope, preWarning ->
+                val copy = if (preWarning) NativeNotificationText.preWarning(appContext) else NativeNotificationText.graceStarted(appContext, envelope.token.kind.wireValue)
+                EmergencyNotificationHelper.showAlert(
+                    context = appContext,
+                    id = if (envelope.token.kind == SessionKind.SAFE_WALK) 9998 else 9999,
+                    title = copy.title,
+                    body = copy.body,
+                    triggerType = "safetySessionWarning",
+                )
+            },
         )
     }
 }
@@ -234,6 +244,13 @@ class AndroidEmergencySessionAlarmScheduler(
         } catch (_: RuntimeException) {
             false
         }
+        if (envelope.token.kind != SessionKind.PANIC) {
+            val graceAt = triggerAt - (envelope.finalDeadlineMs - envelope.mainDeadlineMs)
+            scheduleWarning(manager, envelope.token, graceAt, ACTION_GRACE)
+            if (envelope.token.kind == SessionKind.SAFE_WALK) {
+                scheduleWarning(manager, envelope.token, graceAt - envelope.preWarningLeadMs, ACTION_PRE_WARNING)
+            }
+        }
         return AlarmScheduleResult(exactAccepted, inexactAccepted)
     }
 
@@ -241,9 +258,26 @@ class AndroidEmergencySessionAlarmScheduler(
         val manager = context.getSystemService(Context.ALARM_SERVICE) as? AlarmManager ?: return
         manager.cancel(pendingIntent(token, exact = true))
         manager.cancel(pendingIntent(token, exact = false))
+        for (action in listOf(ACTION_GRACE, ACTION_PRE_WARNING)) {
+            manager.cancel(pendingIntent(token, true, action))
+            manager.cancel(pendingIntent(token, false, action))
+        }
+        (context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager)
+            ?.cancel(if (token.kind == SessionKind.SAFE_WALK) 9998 else 9999)
     }
 
-    private fun pendingIntent(token: SessionToken, exact: Boolean): PendingIntent {
+    private fun scheduleWarning(manager: AlarmManager, token: SessionToken, at: Long, action: String) {
+        try {
+            manager.setExactAndAllowWhileIdle(AlarmManager.ELAPSED_REALTIME_WAKEUP,
+                at.coerceAtLeast(android.os.SystemClock.elapsedRealtime()), pendingIntent(token, true, action))
+        } catch (_: RuntimeException) { /* Final dispatch schedule remains authoritative. */ }
+        try {
+            manager.setAndAllowWhileIdle(AlarmManager.ELAPSED_REALTIME_WAKEUP,
+                at.coerceAtLeast(android.os.SystemClock.elapsedRealtime()), pendingIntent(token, false, action))
+        } catch (_: RuntimeException) { /* No delivery claim is made until post succeeds. */ }
+    }
+
+    private fun pendingIntent(token: SessionToken, exact: Boolean, alarmAction: String = ACTION_DISPATCH): PendingIntent {
         val receiver = if (token.kind == SessionKind.PANIC) {
             CountdownAlarmReceiver::class.java
         } else {
@@ -251,7 +285,7 @@ class AndroidEmergencySessionAlarmScheduler(
         }
         val identity = if (exact) "exact" else "inexact"
         val intent = Intent(context, receiver).apply {
-            action = ACTION_DISPATCH
+            action = alarmAction
             data = Uri.Builder()
                 .scheme("korubeni")
                 .authority("emergency-session")
@@ -259,6 +293,7 @@ class AndroidEmergencySessionAlarmScheduler(
                 .appendPath(token.randomId)
                 .appendPath(token.generation.toString())
                 .appendPath(identity)
+                .appendPath(alarmAction)
                 .build()
             putExtra(EXTRA_PROTOCOL_VERSION, token.protocolVersion)
             putExtra(EXTRA_RANDOM_ID, token.randomId)
@@ -274,6 +309,8 @@ class AndroidEmergencySessionAlarmScheduler(
     }
 
     companion object {
+        const val ACTION_GRACE = "com.poyrazoncel.korubeni.EMERGENCY_SESSION_GRACE"
+        const val ACTION_PRE_WARNING = "com.poyrazoncel.korubeni.EMERGENCY_SESSION_PRE_WARNING"
         const val ACTION_DISPATCH = "com.poyrazoncel.korubeni.EMERGENCY_SESSION_DISPATCH"
         const val EXTRA_PROTOCOL_VERSION = "emergency_protocol_version"
         const val EXTRA_RANDOM_ID = "emergency_random_id"
@@ -283,7 +320,8 @@ class AndroidEmergencySessionAlarmScheduler(
         private const val INEXACT_REQUEST_CODE = 42502
 
         fun tokenFromIntent(intent: Intent?): SessionToken? {
-            if (intent?.action != ACTION_DISPATCH) return null
+            if (intent?.action !in setOf(ACTION_DISPATCH, ACTION_GRACE, ACTION_PRE_WARNING)) return null
+            if (intent == null) return null
             val protocol = intent.getIntExtra(EXTRA_PROTOCOL_VERSION, -1)
             val randomId = intent.getStringExtra(EXTRA_RANDOM_ID).orEmpty()
             val generation = intent.getLongExtra(EXTRA_GENERATION, -1L)

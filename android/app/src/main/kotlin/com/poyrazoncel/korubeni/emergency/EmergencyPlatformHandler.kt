@@ -39,6 +39,31 @@ class EmergencyPlatformHandler(
                         )
                     }
                 }
+                "pendingEmergencyOutcomes" -> {
+                    result.success(mapOf("outcomes" to DeviceProtectedEmergencySessionStore(context).pendingOutcomes()))
+                }
+                "acknowledgeEmergencyOutcome" -> {
+                    val token = tokenFromCall(call)
+                    result.success(mapOf("acknowledged" to (token != null &&
+                        DeviceProtectedEmergencySessionStore(context).acknowledgeOutcome(token))))
+                }
+                "warnEmergencySession" -> {
+                    val token = SessionToken.fromMap(call.argument<Map<String, Any?>>("token"))
+                    result.success(mapOf("outcome" to if (token == null) "unknown" else
+                        EmergencySessionRuntime.coordinator(context).warn(token, call.argument<Boolean>("preWarning") == true)))
+                }
+                "discoverEmergencySession" -> {
+                    val kind = SessionKind.fromWire(call.argument<String>("kind"))
+                    val protocol = call.argument<Number>("protocolVersion")?.toInt()
+                    val read = if (kind == null || protocol != EMERGENCY_PROTOCOL_VERSION) {
+                        ReadSessionResult.Corrupted("invalidDiscoveryRequest")
+                    } else {
+                        EmergencySessionRuntime.coordinator(context).read(kind)
+                    }
+                    result.success(if (read is ReadSessionResult.Present && read.envelope.token.kind != kind) {
+                        ReadSessionResult.Absent.toMap()
+                    } else read.toMap())
+                }
                 "readEmergencySession" -> {
                     result.success(readEmergencySession(call))
                 }

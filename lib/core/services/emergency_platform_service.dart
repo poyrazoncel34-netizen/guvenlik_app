@@ -1,3 +1,5 @@
+import 'dispatch_outcome.dart';
+import 'emergency_snapshot_parser.dart';
 import 'dart:async';
 import 'dart:math';
 
@@ -187,6 +189,64 @@ class EmergencyPlatformService {
     return _parseCancelResult(invocation.value, token);
   }
 
+  Future<DispatchTargetOutcome> warnEmergencySession(
+    SessionToken token, {
+    bool preWarning = false,
+  }) async {
+    final result = await _invokeTypedMap(
+      'warnEmergencySession',
+      arguments: {'token': token.toMap(), 'preWarning': preWarning},
+    );
+    if (!result.completed) return DispatchTargetOutcome.handoffUnconfirmed;
+    return switch (result.value['outcome']) {
+      'posted' => DispatchTargetOutcome.handoffAccepted,
+      'failed' => DispatchTargetOutcome.platformRejected,
+      'stale' => DispatchTargetOutcome.notAttempted,
+      _ => DispatchTargetOutcome.handoffUnconfirmed,
+    };
+  }
+
+  Future<List<SessionSnapshot>> pendingEmergencyOutcomes() async {
+    final result = await _invokeTypedMap('pendingEmergencyOutcomes');
+    if (!result.completed || result.value['outcomes'] is! List) return [];
+    return (result.value['outcomes'] as List)
+        .map(
+          (value) =>
+              parseSessionSnapshot(wireMap(value) ?? <String, dynamic>{}),
+        )
+        .toList();
+  }
+
+  Future<void> acknowledgeEmergencyOutcome(SessionToken token) async {
+    await _invokeTypedMap(
+      'acknowledgeEmergencyOutcome',
+      arguments: {
+        'protocolVersion': emergencyProtocolVersion,
+        'token': token.toMap(),
+      },
+    );
+  }
+
+  /// App-private MethodChannel discovery; no intent or exported component.
+  Future<SessionSnapshot> discoverEmergencySession(
+    EmergencySessionKind kind,
+  ) async {
+    final invocation = await _invokeTypedMap(
+      'discoverEmergencySession',
+      arguments: {
+        'protocolVersion': emergencyProtocolVersion,
+        'kind': kind.wireName,
+      },
+    );
+    if (!invocation.completed) {
+      return SessionSnapshot(
+        status: SessionReadStatus.unknown,
+        reasonCode: invocation.reasonCode,
+      );
+    }
+    return parseSessionSnapshot(invocation.value, requestedKind: kind);
+  }
+
   Future<SessionSnapshot> readEmergencySession(SessionToken token) async {
     if (!isSupported) {
       return const SessionSnapshot(
@@ -208,7 +268,7 @@ class EmergencyPlatformService {
         reasonCode: invocation.reasonCode,
       );
     }
-    return _parseSnapshot(invocation.value, requestedToken: token);
+    return parseSessionSnapshot(invocation.value, requestedToken: token);
   }
 
   Future<DispatchResult> dispatchEmergencySession({
@@ -522,89 +582,6 @@ class EmergencyPlatformService {
       return SessionCancelTooLate(token, snapshot.lifecycleState);
     }
     return SessionCancelUnknown(token, failureReason);
-  }
-
-  SessionSnapshot _parseSnapshot(
-    Map<String, dynamic> map, {
-    required SessionToken requestedToken,
-  }) {
-    final type = map['type']?.toString();
-    if (type == 'absent') {
-      return SessionSnapshot(
-        status: SessionReadStatus.absent,
-        token: requestedToken,
-        lifecycleState: EmergencySessionLifecycle.absent,
-        reasonCode: map['reasonCode']?.toString(),
-      );
-    }
-    if (type == 'corrupted') {
-      return SessionSnapshot(
-        status: SessionReadStatus.corrupted,
-        token: requestedToken,
-        lifecycleState: EmergencySessionLifecycle.corrupted,
-        reasonCode: map['reasonCode']?.toString(),
-      );
-    }
-    if (type != 'present') {
-      return SessionSnapshot(
-        status: SessionReadStatus.unknown,
-        token: requestedToken,
-        reasonCode: map['reasonCode']?.toString() ?? 'malformedResponse',
-      );
-    }
-    final session = wireMap(map['session']);
-    if (session == null) {
-      return SessionSnapshot(
-        status: SessionReadStatus.unknown,
-        token: requestedToken,
-        reasonCode: 'missingSession',
-      );
-    }
-    final token = SessionToken.fromMap(session['token']);
-    if (token == null || token != requestedToken) {
-      return SessionSnapshot(
-        status: SessionReadStatus.unknown,
-        token: requestedToken,
-        reasonCode: 'invalidToken',
-      );
-    }
-    final lifecycle = EmergencySessionLifecycle.fromWire(
-      session['lifecycleState'],
-    );
-    final mainDeadline = wireDate(session['mainDeadlineMs']);
-    final finalDeadline = wireDate(session['finalDeadlineMs']);
-    final target = session['target'];
-    final callOutcome = _parseCallRequestOutcome(
-      session['callRequestOutcome'] ?? map['callRequestOutcome'],
-    );
-    final fallbackOutcome = _parseFallbackOutcome(
-      session['fallbackOutcome'] ?? map['fallbackOutcome'],
-    );
-    if (lifecycle == EmergencySessionLifecycle.unknown ||
-        lifecycle == EmergencySessionLifecycle.absent ||
-        mainDeadline == null ||
-        finalDeadline == null ||
-        finalDeadline.isBefore(mainDeadline) ||
-        target is! String ||
-        callOutcome == null ||
-        fallbackOutcome == null) {
-      return SessionSnapshot(
-        status: SessionReadStatus.unknown,
-        token: requestedToken,
-        reasonCode: 'malformedSession',
-      );
-    }
-    return SessionSnapshot(
-      status: SessionReadStatus.present,
-      token: token,
-      lifecycleState: lifecycle,
-      mainDeadline: mainDeadline,
-      finalDeadline: finalDeadline,
-      target: target,
-      callRequestOutcome: callOutcome,
-      fallbackOutcome: fallbackOutcome,
-      reasonCode: map['reasonCode']?.toString(),
-    );
   }
 
   DispatchResult _parseDispatchResult(
