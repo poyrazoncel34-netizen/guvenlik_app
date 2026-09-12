@@ -1,0 +1,26 @@
+# Outstanding candidate acceptance — F13
+
+Status: NO-GO. Local remediation is not release approval. No production AAB, Play Console, licensed billing account or physical device has been verified in this task. Existing `release-evidence/` files are templates, not completed candidate evidence. Historical debug/emulator reports must not be reused as production results.
+
+Each supplied record must include: scenario ID, UTC timestamp, tester, device model/API/build fingerprint, installation track/package, versionName/versionCode, source commit, signed AAB SHA-256, upload certificate SHA-256, preconditions, exact steps, expected/actual, PASS/FAIL/NOT_RUN, and redacted evidence file/hash. Use `release-evidence/gates.template.json` and `gate-evidence.template.json`; preserve UNVERIFIED until actual acceptance.
+
+| Scenario | Preconditions / steps | Expected | Required evidence |
+|---|---|---|---|
+| F01 session continuity | Synthetic contacts/PIN, test dispatcher; Check-in and Safe Walk arm; drop response, remove/corrupt/stale Dart projection; normal process kill/relaunch; read and PIN cancel | Same immutable native token/generation recovered; no duplicate/changed target; cancel confirmed | Device/test-run log with redacted session IDs and fake dispatch count |
+| F02 lifecycle warning | Pixel + Samsung + Xiaomi, API29 and API36; screen leave, normal kill, Doze, exact denied, notifications denied/channel blocked, revision/cancel separately | Warning separate from dispatch; stale generation ignored; final <=1 dispatch; blocked delivery identified | Timer/notification evidence + fake dispatcher records |
+| F02 OS boundary | Separate normal kill, force-stop, reboot locked/unlocked and OEM restricted battery tests | Record actual platform constraints, no claim of equal guarantees | Settings screenshots, reboot/kill command context, outcome timestamps |
+| F03 storage failure | Empty test installation only; inject native unknown, prefs=false, DB exception and file failure; restart then retry | PIN protects retained data; no success on partial wipe; full success clears all stores | Remaining synthetic state and startup gate evidence |
+| F04/F05/F16 UI | Small phone, text 1.0/1.3/2.0, old consent + saved PIN/contact, write faults, rapid double taps/background/restore | No private content before PIN; bounded sensitive retries, coherent consent retry | Real screens; TalkBack focus/error announcements separately |
+| F06/F15 billing | Verified license tester, exact candidate and dashboard product/offering/entitlement mapping; test-payment UI before proceeding | Monthly/annual purchase, pending, cancel/lapse, refund, restore, offline cached/future-clock restart preserve documented policy | Redacted Play/RC test transaction timestamps/requestDate/verification/state, no real payment |
+| F08 location | Synthetic/test location; prior measurement then timeout, no measurement, revoke permission, fresh GPS | Last known not presented fresh; no fake location | Screen + measured timestamp/provider/test scenario |
+| Binary/16 KB | Same signed production AAB, CI provenance, ABI/manifest and certificate verification | arm64 supported; native libraries align; no prohibited FGS/permissions | CI URL, artifact hashes, App Bundle Explorer and binary gate output |
+| Device call boundary | Physical Pixel/Samsung/Xiaomi/API29, dual SIM/no SIM/denied CALL_PHONE/low memory; this task uses fake dispatcher | Correct target, at most one submission, honest request/fallback result | Instrumentation harness proof; real telephony requires separate explicit authorization |
+| Play/policy | Console owner, same candidate, live legal URL and store package review | Accurate Data Safety/content rating/18+/TR/trial/package, closed-test eligibility | Dated Console previews and named human signoff |
+| Operations/hotfix | Actual commander and backup, approved thresholds, same candidate | Two operators reach same stop decision; increasing-version hotfix and recovery demonstrated | Redacted tabletop timeline, actual signer trust and custody rehearsal; no invented names |
+| F11 CodeQL | Hosted job with actual traced Kotlin compile | Coordinator and receiver source paths in extracted database | Workflow URL + extraction logs/DB query result; YAML alone insufficient |
+
+Do not rebuild after QA and transfer old evidence to the new binary. Any changed AAB hash requires renewed candidate-specific acceptance. No push, tag, merge, deploy, upload, account change or operator contact is authorized by this preparation.
+
+## H02 tag verification trust
+
+The release workflow now invokes `scripts/verify_release_tag.sh` using a disposable keyring / allowed-signers file. Production environment variables `RELEASE_TAG_GPG_PUBLIC_KEYS` (armored public keys) or `RELEASE_TAG_SSH_ALLOWED_SIGNERS` (OpenSSH allowed-signers records) must be configured by the actual owner. No real signer has been selected, no private key generated, and no account settings changed. Empty trust rejects the release. Obtain approval for the actual public fingerprint/principal and retain that approval beside the candidate. `scripts/test_release_tag_trust.py` creates only disposable synthetic test keys/tags and verifies missing trust, approved fixture trust, wrong signer and unsigned rejection; it does not prove the production identity or hosted run.

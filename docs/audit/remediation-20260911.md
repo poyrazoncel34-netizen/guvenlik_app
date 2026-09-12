@@ -1,0 +1,90 @@
+# Evidence-based remediation — F01–F17
+
+Source of truth: `/Users/poyrazoncel/Projects/guvenlik_app`, branch
+`codex/evidence-remediation-20260911`, baseline commit
+`5f9f0576f408ae7724c7a27e06f3f62ada7ebd01`. The original review report is NOT
+modified; this file is the separate remediation record it asked for.
+
+Environment: Flutter 3.38.9 / Dart 3.10.8, macOS arm64 (Darwin 25.6.0), JDK 17,
+Gradle 8.14. No dependency version was added, removed or upgraded; `pubspec.yaml`
+and `pubspec.lock` are untouched and `flutter pub get --enforce-lockfile`
+resolves.
+
+## Honest status vocabulary
+
+Implementation status and verification status are tracked SEPARATELY. "Local
+tests pass" is never written as release approval, and no PASS is recorded for
+anything requiring a physical device, the Play Console, a licensed billing
+account, a hosted CI run, or a human legal review. Those stay OPEN in F13.
+
+Two corrections to the record this file replaces, which described work as
+pending that had in fact landed, and claimed one action that cannot be shown:
+
+- F01/F02/F07 were listed "In progress / Pending". Their implementation is
+  present and is described below with the code that carries it.
+- The F14 note claimed a question "was sent to the user". That is not
+  verifiable from this repository, so the wording now states only that the
+  decision is open and belongs to the owner.
+
+## Closure table
+
+| ID | Root cause (verified against current source) | Fix | Meaningful verification | Remaining external dependency |
+|---|---|---|---|---|
+| F01 | `_restoreFromStorage` treated a timed-out/corrupt read and a missing Dart blob as ABSENCE, cleared the token and deleted the projection, so an alarm Android had already accepted became uncancellable | Native slot is the authority: app-private `discoverEmergencySession(kind)` finds the session without a Dart token; uncertainty keeps token/projection and raises `nativeScheduleDegraded`; `ArmUnknown.uncertainToken` is retained | `emergency_snapshot_parser_test`, `check_in_typed_session_test`, `check_in_service_behavior_matrix_test`, `native_emergency_history_test`; parser at 100% line coverage | Physical lifecycle acceptance (F13) |
+| F02 | Grace warning and Safe-Walk pre-warning existed only in Dart (`Timer`, screen listener), so leaving the screen or losing the process removed the user's last cue while the native alarm kept running | Native `ACTION_GRACE` / `ACTION_PRE_WARNING` alarms scheduled in `AndroidEmergencySessionRuntime`, handled by `CheckInAlarmReceiver`, dispatched through `coordinator.warn()` with token+generation and idempotency checks; both cancelled on cancel/revision | `EmergencySessionCoordinatorTest`, `NativeNotificationTextTest` (Kotlin, 92 tests, 0 failures) | Device matrix: Doze, OEM restrictions, notifications-denied, force-stop vs normal kill (F13). Force-stop/reboot/OEM are NOT claimed equivalent |
+| F03 | Any prefs/DB/files failure still fell through to an unconditional `clearSecureStorage()`, deleting the PIN while the data it protected survived | `if (!allDeleted) return WipeResult.unknown;` placed BEFORE the credential boundary; native-unknown returns before any Dart store is touched | `app_reset_native_prefs_test`, `app_reset_helper_pin_contract_test`, `startup_pin_boundary_test` — fault-injected prefs=false, DB throw, files=false, native unknown, then restart | Device storage-fault confirmation (F13) |
+| F04 | The sensitive gate reused the armed-cancel modal, which WROTE the shared counter but never READ `isLocked`, so attempt 6+ verified immediately; a second surface in `app_reset_helper` called the verifier directly | `enforceLockout` reads lockout and reserves the attempt durably BEFORE comparing; counter read/write/delete faults deny; `app_reset_helper` now routes through the shared gate (~90 duplicated lines removed). Armed cancel keeps the deliberate unthrottled policy | `sensitive_action_pin_gate_test` — real widgets/gate/verifier/lockout, memory storage; proves the verifier is NOT reached (`pinReads` unchanged) under lockout and across a reopened modal, and that armed cancel still succeeds | — |
+| F05 | Splash computed PIN presence but the re-consent branch never used it; consent pushed onboarding with no callback, and `MainNavigation` only checked that a PIN existed | `_continueStartup()` re-reads durable state after consent and puts PIN verification before unfinished onboarding and before main content; consent returns through `AppRoot`, preserving the state-restoration boundary | `startup_pin_boundary_test` — stored synthetic PIN/contact + stale legal version; no saved contact or MainNavigation before PIN; correct PIN proceeds; fresh-install and incomplete-onboarding paths unregressed | TalkBack / physical a11y (F13) |
+| F06 | `RevenueCatService` returned null for any future anchor, so the persisted evidence never reached the state rule that grants emergency continuity to a previously verified Pro | Parseable anchors load; the safety-vs-commercial decision stays in `SubscriptionAccessState` | `subscription_provider_access_test`, `revenue_cat_evidence_persistence_test` — normal/future anchor cold start offline, absent/corrupt/single-key, confirmed-free | Sandbox offline/clock matrix (F13) |
+| F07 | Native terminal outcomes only cleared counters; restore deleted the terminal snapshot without moving the result into history, so a native dispatch could reappear as "no session" | `EmergencyTerminalJournal` persists redacted terminal envelopes atomically with the envelope; `NativeEmergencyHistory` records them with an idempotent `eventId` (protocol:kind:randomId:generation) and acknowledges | `native_emergency_history_test`, `safety_alert_outcome_test`, `DeviceProtectedEmergencySessionStoreTest` — warm and cold consumption, no duplicate on second launch | Physical background dispatch (F13) |
+| F08 | `LocationResult` carried no measurement time; a timed-out request returned the cached point as `success`, and MapPage cleared its staleness warning | Result carries measurement timestamp, source and staleness; MapPage states age truthfully; no synthetic measurement is produced | `location_service_test`, `map_freshness_widget_test` — stale+timeout, no measurement, permission denial, fresh fix; 360x640 at 1.0/1.3/2.0 text scale | Physical GPS/a11y (F13) |
+| F09 | `process_artifact_contract_test` required the git-ignored `.claude/rules/common/development-workflow.md`, so a clean checkout failed | Canonical standard moved to tracked `docs/release/development_standard.md`; the test binds there. No skip, no weakened assertion, no personal `.claude` directory committed | Verified in a tracked-files-only clean checkout (see Verification runs) | — |
+| F10 | Legacy Fastlane lanes built a local AAB and called upload/promotion with none of the release evidence gates | Both lanes fail closed with an explanatory error under the repo's CI-only policy; no rebuild of an accepted candidate | `scripts/test_fastlane_release_boundary.rb` — executes the ACTUAL Fastfile with a fake uploader across 5 candidate shapes: 55 assertions, upload never called | Hosted/Play acceptance (F13) |
+| F11 | `build-mode: none` does not extract Kotlin (GitHub documents this), so the workflow's claimed native coverage was effectively zero | `java-kotlin` uses `build-mode: manual` with a traced `:app:assemblePlayDebug` after `flutter pub get --enforce-lockfile`; `actions` stays source-based. The workflow's coverage-honesty note is restored, including that YAML text is not evidence | Both prerequisites executed locally: `--enforce-lockfile` exit 0, `:app:assemblePlayDebug` BUILD SUCCESSFUL | **Hosted CodeQL database/extraction log is OPEN.** No native analysis coverage is claimed |
+| F12 | The Console paste pack put history/rehearsal under Pro (the matrix makes them free), claimed all data stays on device, and requested a removed FGS declaration | Canonical pack rebuilt from the real feature tier table, actual permission/FGS surface and OSM/RevenueCat data flow; legacy docs redirect | `store_release_docs_test` — parity against runtime `FeatureAccessMatrix` | Human legal review and Console preview (F13) |
+| F13 | Not a code bug: no candidate-bound physical/billing/Console evidence exists; `release-evidence/` holds templates | Full scenario and evidence inventory prepared in `docs/release/external_acceptance_20260911.md`, with required fields per record | Inventory reviewed against the actual template files | **OPEN / NO-GO.** Nothing marked PASS |
+| F14 | Three conflicting threshold/cadence sources; first-line support asked for a full user-data JSON export | One canonical procedure with redirects; first diagnosis takes version/device/time/steps and an allowlisted error code only; user export stays a separate voluntary feature | `support_diagnostics_privacy_test` — synthetic contacts/phone/email/PIN/coordinates fed in; only allowlisted codes survive | **Threshold decision is the owner's** (`operations_decision_pending.md`); no operator rehearsal performed |
+| F15 | A trusted-but-stale cached `CustomerInfo` was stamped with `DateTime.now()`, advancing "last verified" on every cache read | The anchor comes from the SDK's `CustomerInfo.requestDate`; a malformed date cannot create evidence | `subscription_provider_access_test` — repeated cache read does not advance the anchor; SDK 10.4.2 source and current caching docs reviewed | Real sandbox cancel/refund/offline cycle OPEN. **No claim that an "unlimited free Pro" hole was closed** |
+| F16 | Consent writes were unchecked and an exception closed the loader and rethrew, leaving no on-screen reason or retry | Every persisted write must commit; the completion marker is written last; a localized retry message preserves selections and discards the optimistic prefs cache | `unified_consent_retry_test` — failure injected at each write boundary; error visible, no navigation, choices kept, retry yields one coherent consent set | — |
+| F17 | Onboarding claimed the phone "cannot be forced open" and that Test Mode shows the number "works" | Copy limited to actual behaviour: local PIN, no biometric unlock, and Test Mode as a rehearsal that does NOT verify reachability. Informational pages made scrollable | `onboarding_safety_copy_render_test` — real screens at 320x640, text scale 1.0/1.3/2.0: 3 overflows before, 6/6 pass after; TR/EN parity enforced | **User comprehension NOT measured.** No claim about understanding or abandonment |
+| H01 | `Future.wait` on best-effort startup work was awaited before the first `runApp`, so one never-completing plugin future could hold the app | Critical bootstrap takes ordered preliminary steps; optional work is bounded per operation and late failures are consumed. `ErrorWidget.builder` is installed before localization and falls back to literal copy | `best_effort_startup_test`, `app_bootstrap_service_test`, `main_startup_init_order_test` (contract deliberately updated) — never-completing and sync/async faults | No startup-time measurement is claimed |
+| H02 | `release.yml` ran `git verify-tag` on a clean runner with no trusted signer configured | `scripts/verify_release_tag.sh` verifies against operator-configured public trust in a disposable keyring/allowed-signers file; empty trust fails closed; private keys rejected | `scripts/test_release_tag_trust.py` — synthetic disposable SSH tag: approved trust, wrong signer, absent trust, unsigned all behave correctly | Real trusted signer identity and hosted run OPEN. No signer identity invented |
+
+## Findings this remediation itself introduced and fixed
+
+| ID | Issue | Resolution |
+|---|---|---|
+| R-01 | The in-flight remediation left three analyzer **warnings** in new test files, which fails CI (`flutter analyze --no-fatal-infos` exited 1) | Warnings and all remaining infos removed; analyze reports "No issues found" |
+| R-02 | Safety rationale in `check_in_service.dart` (SPEC §0/§3.1 references, the FIR-02 and MP-01-027 notes, restore-path invariants) had been deleted, partly to stay under the 800-line ratchet | Rationale restored and the file brought to 799 lines by EXTRACTING `CheckInProjectionStore`, the CLAUDE.md-prescribed fix, rather than deleting documentation. Coverage of the extracted file is enforced at 96.30% |
+| R-03 | The CodeQL workflow's "what this does and does not cover" note had been removed, including the rule that unclosed gaps must not be shown as closed | Note restored and updated for `build-mode: manual` |
+| R-04 | `safety_session_pin_lockout_test` had its file-wide bare-catch assertion NARROWED to a substring window to accommodate the new policy catches | File-wide guarantee restored: bare catches are pinned to exactly three and each must sit inside the `enforceLockout` branch. Mutation-checked — injecting a bare catch outside the guard fails the test |
+| R-05 | `CheckInProjectionStore`, holding logic extracted from a critical file, was outside the 90% critical-coverage list | Added to `verify_critical_coverage.dart` and `critical_coverage_gate_test.dart` |
+
+## Verification runs
+
+| Check | Result |
+|---|---|
+| `flutter analyze --no-fatal-infos` | **No issues found** (exit 0) |
+| `flutter test --no-pub` | **1815 passed, 0 failed** (exit 0) |
+| `flutter test --coverage` + `dart scripts/verify_critical_coverage.dart` | **CRITICAL_COVERAGE_PASS**; every critical file ≥ 90% (contract 99.18, platform 94.99, parser 100.00, pin 96.15, check-in 91.71, projection store 96.30, contact 93.08); threshold unchanged at 90 |
+| `./gradlew :app:testPlayDebugUnitTest` | **BUILD SUCCESSFUL**; 92 Kotlin tests, 0 failures, 0 errors, 0 skipped |
+| `./gradlew :app:assemblePlayDebug` | **BUILD SUCCESSFUL** (F11 prerequisite) |
+| `flutter pub get --enforce-lockfile` | exit 0; no dependency change |
+| `ruby scripts/test_fastlane_release_boundary.rb` | 55 assertions, 0 failures (F10) |
+| `python3 scripts/test_release_tag_trust.py` | OK (H02) |
+| `python3 scripts/verify_release_change_classification.py` | **RELEASE_CHANGE_CLASSIFICATION_PASS**, 88 classified paths |
+| `python3 scripts/verify_absence_claims.py` | **ABSENCE_CLAIMS_PASS**, 46 registered |
+| `dart scripts/verify_alert_outcome_consumption.dart` | **PASS**, 176 files, 0 violations |
+| Tracked-files-only clean checkout | analyze + full suite green; F09 acceptance met without any ignored machine file |
+
+Not run, with reasons: the signed-AAB chain in `scripts/verify_release.sh`
+requires the release keystore and `--dart-define` secrets, which this task is not
+authorized to generate, change or print; hosted CodeQL, Play Console, RevenueCat
+sandbox and physical devices were not accessible. No push, tag, merge, deploy,
+upload, console change, payment or third-party contact was performed.
+
+## Release decision
+
+**NO-GO.** Local remediation and green local gates are not release approval. F13
+is open by definition, F11's hosted extraction evidence is missing, and the F14
+threshold decision belongs to the owner.
