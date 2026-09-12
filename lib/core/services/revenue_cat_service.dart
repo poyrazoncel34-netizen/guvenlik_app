@@ -155,22 +155,26 @@ class RevenueCatService {
   Future<void> rememberVerifiedProInitializationHint() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool(priorProInitializationHintKey, true);
+      if (!await prefs.setBool(priorProInitializationHintKey, true)) {
+        throw StateError('Evidence commit rejected');
+      }
     } catch (_) {
       _logSanitizedFailure(LocalErrorCode.revenueCatPriorProHintWriteFailed);
+      throw StateError('Evidence commit failed');
     }
   }
 
-  /// Reads the persisted grace anchor. A future timestamp means a rolled-back
-  /// clock or a tampered store and is discarded rather than trusted.
+  /// Reads stored evidence without applying clock policy. The access state
+  /// separately decides safety continuity and commercial grace. Local keys
+  /// corroborate history; they are not cryptographic store verification.
   Future<DateTime?> readLastVerifiedProAt() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final millis = prefs.getInt(lastVerifiedProAtKey);
       if (millis == null || millis <= 0) return null;
       final moment = DateTime.fromMillisecondsSinceEpoch(millis);
-      return moment.isAfter(DateTime.now()) ? null : moment;
-    } on Exception {
+      return moment;
+    } catch (_) {
       _logSanitizedFailure(LocalErrorCode.revenueCatProAnchorReadFailed);
       return null;
     }
@@ -179,21 +183,40 @@ class RevenueCatService {
   Future<void> rememberVerifiedProAt(DateTime when) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setInt(lastVerifiedProAtKey, when.millisecondsSinceEpoch);
-    } on Exception {
+      if (!await prefs.setInt(
+        lastVerifiedProAtKey,
+        when.millisecondsSinceEpoch,
+      )) {
+        throw StateError('Evidence commit rejected');
+      }
+    } catch (_) {
       _logSanitizedFailure(LocalErrorCode.revenueCatProAnchorWriteFailed);
+      throw StateError('Evidence commit failed');
     }
   }
 
   /// Awaited by callers on a verified-free answer: if the process dies between
   /// the in-memory downgrade and this write, a stale anchor would survive.
   Future<void> clearLastVerifiedProAt() async {
+    var committed = true;
     try {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.remove(lastVerifiedProAtKey);
-      await prefs.remove(priorProInitializationHintKey);
-    } on Exception {
+      // Either key's removal invalidates the pair. Attempt both even if one
+      // storage boundary fails; total disk failure cannot promise durability.
+      for (final key in [lastVerifiedProAtKey, priorProInitializationHintKey]) {
+        try {
+          if (!await prefs.remove(key)) committed = false;
+        } catch (_) {
+          committed = false;
+        }
+      }
+      if (!committed) await prefs.reload();
+    } catch (_) {
+      committed = false;
+    }
+    if (!committed) {
       _logSanitizedFailure(LocalErrorCode.revenueCatProAnchorWriteFailed);
+      throw StateError('Evidence invalidation failed');
     }
   }
 

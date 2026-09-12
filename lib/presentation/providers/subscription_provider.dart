@@ -24,6 +24,19 @@ class SubscriptionProvider extends ChangeNotifier {
       const SubscriptionAccessState.uninitialized();
   Future<void>? _initializationFuture;
   Future<void>? _refreshFuture;
+  Future<void> _evidencePersistence = Future<void>.value();
+
+  Future<void> _persistEvidence(Future<void> Function() operation) {
+    return _evidencePersistence = _evidencePersistence.then((_) async {
+      try {
+        await operation();
+      } catch (_) {
+        // Service records a sanitized commit failure. Store truth remains in
+        // memory; unavailable disk cannot guarantee it survives process death.
+      }
+    });
+  }
+
   CustomerInfoUpdateListener? _customerInfoUpdateListener;
   Offerings? _offerings;
   CustomerInfo? _customerInfo;
@@ -293,17 +306,25 @@ class SubscriptionProvider extends ChangeNotifier {
     switch (decision) {
       case EntitlementDecision.authorized:
         _customerInfo = info;
-        final verifiedAt = DateTime.now();
+        // SDK 10.4.2 requestDate is the original fetch date, including on
+        // cached reads. Re-reading signed cache is not a new store check.
+        final verifiedAt = DateTime.tryParse(info.requestDate);
+        if (verifiedAt == null) {
+          _setAccess(_access.markUnavailable());
+          return;
+        }
         _setAccess(_access.markVerified(isPro: true, at: verifiedAt));
-        unawaited(_rcService.rememberVerifiedProInitializationHint());
-        unawaited(_rcService.rememberVerifiedProAt(verifiedAt));
+        await _persistEvidence(() async {
+          await _rcService.rememberVerifiedProInitializationHint();
+          await _rcService.rememberVerifiedProAt(verifiedAt);
+        });
       case EntitlementDecision.denied:
         _customerInfo = info;
         _setAccess(_access.markVerified(isPro: false));
         // Awaited, unlike the Pro side: a process death between this in-memory
         // downgrade and the erase would resurrect the anchor on the next cold
         // start, handing offline authorization back to a lapsed subscriber.
-        await _rcService.clearLastVerifiedProAt();
+        await _persistEvidence(_rcService.clearLastVerifiedProAt);
       case EntitlementDecision.unknown:
         // The store could not be reached. Preserve the anchor
         // (`lastVerifiedPro` + `lastVerifiedProAt`) untouched: under the IR-04

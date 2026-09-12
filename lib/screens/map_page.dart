@@ -110,10 +110,11 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
     final lastKnown = await _locationRepository.getLastKnownLocation();
 
     if (!mounted) return;
-    if (lastKnown.isSuccess && lastKnown.position != null) {
+    if (lastKnown.position != null) {
       setState(() {
         _currentLocation = lastKnown.position;
         _locationStatus = lastKnown.status;
+        _fallbackCheckedAt = lastKnown.measuredAt;
       });
     }
 
@@ -125,13 +126,14 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
       _isLoading = false;
       _locationStatus = result.status;
 
-      if (result.isSuccess && result.position != null) {
+      if (result.isCurrent && result.position != null) {
         _currentLocation = result.position;
         _usingFallbackLocation = false;
-        _fallbackCheckedAt = null;
+        _fallbackCheckedAt = result.measuredAt;
       } else {
         _usingFallbackLocation = true;
-        _fallbackCheckedAt = DateTime.now();
+        if (result.position != null) _currentLocation = result.position;
+        _fallbackCheckedAt = result.measuredAt ?? _fallbackCheckedAt;
       }
     });
 
@@ -165,11 +167,11 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
       _locationStatus = result.status;
     });
 
-    if (result.isSuccess && result.position != null) {
+    if (result.isCurrent && result.position != null) {
       setState(() {
         _currentLocation = result.position;
         _usingFallbackLocation = false;
-        _fallbackCheckedAt = null;
+        _fallbackCheckedAt = result.measuredAt;
       });
       _animateToLocation(result.position!);
 
@@ -196,15 +198,11 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
         );
       }
     } else {
-      if (mounted && _currentLocation == null) {
+      if (mounted) {
         setState(() {
           _usingFallbackLocation = true;
-          _fallbackCheckedAt = DateTime.now();
-        });
-      } else if (mounted) {
-        setState(() {
-          _usingFallbackLocation = true;
-          _fallbackCheckedAt = DateTime.now();
+          if (result.position != null) _currentLocation = result.position;
+          _fallbackCheckedAt = result.measuredAt ?? _fallbackCheckedAt;
         });
       }
       _showPermissionError(result);
@@ -218,8 +216,7 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
     setState(() {
       _isLoading = false;
       _locationStatus = LocationStatus.permissionDenied;
-      _usingFallbackLocation = _currentLocation == null;
-      _fallbackCheckedAt = _currentLocation == null ? DateTime.now() : null;
+      _usingFallbackLocation = true;
     });
     return false;
   }
@@ -459,7 +456,7 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              "map_fallback_location".tr(),
+                              (_currentLocation == null ? "map_location_unavailable" : "map_fallback_location").tr(),
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 13,
@@ -470,7 +467,7 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
                               Text(
                                 'map_fallback_location_time'.tr(
                                   namedArgs: {
-                                    'time': Formatters.clockHm(_fallbackCheckedAt!),
+                                    'time': '${_fallbackCheckedAt!.toLocal().day}.${_fallbackCheckedAt!.toLocal().month}.${_fallbackCheckedAt!.toLocal().year} ${Formatters.clockHm(_fallbackCheckedAt!)}',
                                   },
                                 ),
                                 style: const TextStyle(
@@ -559,7 +556,7 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
       ),
       child: SafeArea(
         child: Center(
-          child: Padding(
+          child: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: Container(
               width: double.infinity,

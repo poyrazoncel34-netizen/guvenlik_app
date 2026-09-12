@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 // ============================================================================
 // KONUM SERVİSİ - GPS & İZİN YÖNETİMİ
 // ============================================================================
@@ -10,19 +11,31 @@ import 'package:latlong2/latlong.dart';
 /// Konum servisi sonuç durumları
 enum LocationStatus {
   success,
+  stale,
   serviceDisabled,
   permissionDenied,
   permissionDeniedForever,
   error,
 }
 
+enum LocationSource { current, lastKnown, none }
+
 /// Konum sonucu
 class LocationResult {
   final LocationStatus status;
   final LatLng? position;
   final String? errorMessage;
+  final DateTime? measuredAt;
+  final LocationSource source;
+  bool get isCurrent => isSuccess && source == LocationSource.current;
 
-  LocationResult({required this.status, this.position, this.errorMessage});
+  LocationResult({
+    required this.status,
+    this.position,
+    this.errorMessage,
+    this.measuredAt,
+    this.source = LocationSource.none,
+  });
 
   bool get isSuccess => status == LocationStatus.success && position != null;
 }
@@ -34,11 +47,16 @@ class LocationService {
   factory LocationService() => _instance;
   LocationService._internal();
 
+  /// An isolated in-memory cache for deterministic platform-boundary tests.
+  @visibleForTesting
+  LocationService.forTesting();
+
   // Neutral map viewport center. This is never presented as the user's location.
   static const LatLng fallbackMapCenter = LatLng(39.0, 35.0);
 
   // Cache for last known position
   LatLng? _lastKnownPosition;
+  DateTime? _lastMeasuredAt;
   LatLng? get lastKnownPosition => _lastKnownPosition;
 
   /// Konum servisinin aktif olup olmadığını kontrol eder
@@ -114,13 +132,21 @@ class LocationService {
 
       final latLng = LatLng(position.latitude, position.longitude);
       _lastKnownPosition = latLng;
+      _lastMeasuredAt = position.timestamp;
 
-      return LocationResult(status: LocationStatus.success, position: latLng);
+      return LocationResult(
+        status: LocationStatus.success,
+        position: latLng,
+        measuredAt: position.timestamp,
+        source: LocationSource.current,
+      );
     } on TimeoutException catch (e) {
       if (_lastKnownPosition != null) {
         return LocationResult(
-          status: LocationStatus.success,
+          status: LocationStatus.stale,
           position: _lastKnownPosition,
+          measuredAt: _lastMeasuredAt,
+          source: LocationSource.lastKnown,
         );
       }
       return LocationResult(
@@ -150,8 +176,14 @@ class LocationService {
       if (position != null) {
         final latLng = LatLng(position.latitude, position.longitude);
         _lastKnownPosition = latLng;
+        _lastMeasuredAt = position.timestamp;
 
-        return LocationResult(status: LocationStatus.success, position: latLng);
+        return LocationResult(
+          status: LocationStatus.stale,
+          position: latLng,
+          measuredAt: position.timestamp,
+          source: LocationSource.lastKnown,
+        );
       }
 
       // Son konum yoksa mevcut konumu al
