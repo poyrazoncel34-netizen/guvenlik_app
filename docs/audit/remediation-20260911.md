@@ -74,6 +74,8 @@ test was confirmed to fail.
 | N-03 | `EmergencyTerminalJournal.append` ran on every terminal `store.write()`. `expireFallback()` (up to 24h later) and `consumeFallbackTarget()` re-write the same terminal envelope to drop the retained target, which re-offered an already-acknowledged outcome from `pendingOutcomes()` | MEDIUM, **not** the HIGH it was reported as: `ActivityService.logEvent` uses `ConflictAlgorithm.ignore` keyed on `eventId`, so no duplicate history row and no re-dial could result. What broke was the "acknowledged stays acknowledged" contract | Journal on the TRANSITION into a terminal state; re-writing the same terminal state does not append, while a genuine change of terminal state still does |
 | N-04 | `NativeNotificationText.preWarning()` read the DEVICE locale while every other copy in that file resolves the app's own persisted language. On an English phone with the app defaulting to Turkish, the Safe-Walk pre-warning arrived in English and the grace warning for the same session arrived in Turkish minutes later | MEDIUM (user-visible inconsistency) | Routed through the same `Strings`/`resolveLanguage` path as every other notification copy |
 | N-05 | Warning notification ids 9998/9999 were duplicated as magic literals in the poster and in `cancel()`. Changing one and not the other would stop `cancel()` dismissing the warning, leaving "your time is nearly up" on screen after the session ended | MEDIUM (latent) | Unified under `EmergencyNotificationHelper.warningNotificationId(kind)` |
+| N-06 | `CountdownScreen._cancelCountdownAndExit` awaited `PinLockoutService.instance.reset()` unguarded AFTER the native cancel was confirmed. A secure-storage failure there escaped the method: the Dart timer was already stopped, back is blocked (`canPop: false`) and the PIN pad ignores input while `_isNavigating` is set, so the user sat on a dead countdown until the app was killed. No call could result (the cancel was durable). Reproduced in a widget probe: correct PIN, `cancelled` from native, `PlatformException` from the lockout store, screen stayed, a second correct PIN produced no channel call. `safety_session_pin_gate.dart` already guarded the same call | MEDIUM (user trapped; no missed or unwanted call) | Reset failure caught as `Exception` only; cancel and exit continue, the counter persists. `countdown_lockout_reset_failure_test.dart`; reverting the fix fails it with `keystore_delete_failed`. Commit `0a6a8c5` |
+| N-07 | The countdown awaited `WidgetsBinding.instance.endOfFrame` before arming the native session. `SchedulerBinding.scheduleFrame()` is a no-op while the app is `hidden`/`paused` (Flutter 3.38.9 `scheduler/binding.dart:949`), so if the phone was locked while the PIN/contact read was still pending, nothing requested a frame and the native session was not armed until the screen came back on. Widget probe: load finished, 60 s with no frame, no `armEmergencySession`; one frame, armed. **Not measured on a device:** a frame already pending at lock time (the glow pulse keeps one pending) may or may not be delivered by Android after the display turns off. The contract test pinned the unbounded wait | CRITICAL by this repo's definition if it occurs on devices (delays the emergency session); device occurrence UNVERIFIED | Wait bounded by `BoundedFrameWait` (300 ms, the fixed delay every dial paid before `endOfFrame`); the visible case is unchanged. `bounded_frame_wait_test.dart`, `countdown_locked_screen_arm_test.dart`; mutations: old wait -> no arm, no bound -> wait never ends, no timer cancel -> pending Timer caught. Commit `e79e56d` |
 
 Reviewed and deliberately NOT changed, with reasons: `pendingOutcomes` /
 `acknowledgeOutcome` do not take the coordinator's `PROCESS_LOCK`, but no
@@ -118,6 +120,21 @@ requires the release keystore and `--dart-define` secrets, which this task is no
 authorized to generate, change or print; hosted CodeQL, Play Console, RevenueCat
 sandbox and physical devices were not accessible. No push, tag, merge, deploy,
 upload, console change, payment or third-party contact was performed.
+
+### Countdown review, 2026-09-13 (N-06, N-07)
+
+Measured on the tree at `e79e56d`: `flutter analyze --no-fatal-infos` no issues;
+`flutter test --no-pub` **1820 passed, 0 failed**; `lib/screens/countdown_screen.dart`
+stays at its 1081-line ratchet (a 5-line doc comment for a method that had already
+moved to `CountdownAnnouncement` was removed to absorb N-06's guard).
+
+Still open, device-only: (1) whether a pending frame is delivered after the display
+turns off (N-07 occurrence); (2) `MainActivity.openDialer` returns `true` after
+`startActivity` even if Android's background-activity-launch restriction blocks it,
+so a foreground-dial fallback with the screen off may report "dialer opened" when
+nothing opened -- not reproduced; (3) `emergency_trigger_host.dart` also awaits an
+unbounded `endOfFrame` on its cold-start navigator retry (runs on resume, lower risk).
+Suggested device check: press panic, immediately press power, wait 15 s, confirm the call.
 
 ## Release decision
 

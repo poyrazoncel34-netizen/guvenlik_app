@@ -10,6 +10,12 @@ Surumleme: `pubspec.yaml` 1.0.0+1'de SABITTIR; gercek `versionCode`
 ## Yayinlanmadi
 
 ### Duzeltildi
+- Panik butonuna basip geri sayim yuklenirken telefon hemen kilitlenirse
+  acil durum oturumu ekran tekrar acilana kadar kurulmayabiliyordu. Kurulum
+  artik ekran kapali olsa da en gec 300 ms icinde basliyor.
+- Geri sayimda dogru PIN girilip iptal onaylandiktan sonra PIN kilit sayaci
+  sifirlanamazsa ekran kapanmiyor ve kullanici uygulamayi kapatmak zorunda
+  kaliyordu. Iptal artik her durumda ekrandan cikiyor.
 - Platformun "animasyonlari kaldir" tercihi yedi ekranda yok sayiliyordu.
   Sonsuz nabizlar `AnimationController(...)..repeat()` insa kaskadiyla, yani
   MediaQuery okunabilir hale gelmeden basliyordu. Bastirilan nabizlar artik
