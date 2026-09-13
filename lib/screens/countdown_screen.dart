@@ -501,7 +501,12 @@ class _CountdownScreenState extends State<CountdownScreen>
       return;
     }
     if (resetPinLockout) {
-      await PinLockoutService.instance.reset();
+      // Cancel is already durable natively; a lockout-store failure must not
+      // trap the user on a dead countdown (the failure counter just persists).
+      await PinLockoutService.instance.reset().catchError(
+        (Object _) => debugPrint('CountdownScreen: lockout reset failed'),
+        test: (error) => error is Exception,
+      );
     }
     try {
       await ActivityService.logEvent(
@@ -914,11 +919,6 @@ class _CountdownScreenState extends State<CountdownScreen>
     );
   }
 
-  /// Returns the screen-reader announcement string for the current
-  /// countdown second. Returns an empty string for ticks that should
-  /// not announce — sparse schedule (10, 8, 5, 4, 3, 2, 1) keeps
-  /// TalkBack from spamming every second while still giving the user
-  /// enough warning to enter PIN before dispatch.
   Widget _buildNumberPad() {
     return GridView.builder(
       shrinkWrap: true,
