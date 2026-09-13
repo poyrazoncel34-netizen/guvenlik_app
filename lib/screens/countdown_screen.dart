@@ -13,6 +13,7 @@ import '../core/motion.dart';
 import '../core/services/contact_service.dart';
 import '../domain/repositories/contacts_repository.dart';
 import '../core/services/activity_service.dart';
+import '../core/services/bounded_frame_wait.dart';
 import '../core/services/countdown_clock.dart';
 import '../core/services/call_service.dart';
 import '../core/services/android_intent_service.dart';
@@ -137,9 +138,8 @@ class _CountdownScreenState extends State<CountdownScreen>
       await _startCountdown();
       return;
     }
-    // Wait for the frame that is actually pending, not a fixed 300ms: the
-    // deadline is set at arm time, so that delay pushed every dial 300ms later.
-    await WidgetsBinding.instance.endOfFrame;
+    // Bounded: a locked screen never delivers the frame (BoundedFrameWait).
+    await BoundedFrameWait.nextFrame(WidgetsBinding.instance);
     if (!mounted) return;
     await _startCountdown();
   }

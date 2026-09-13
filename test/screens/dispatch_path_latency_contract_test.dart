@@ -23,10 +23,18 @@ void main() {
   });
 
   group('no fixed delay before arming', () {
-    test('the countdown waits for the pending frame, not a timer', () {
+    test('the countdown waits for the pending frame, bounded, not a timer', () {
+      expect(
+        countdown.contains('await BoundedFrameWait.nextFrame('),
+        isTrue,
+      );
       expect(
         countdown.contains('await WidgetsBinding.instance.endOfFrame'),
-        isTrue,
+        isFalse,
+        reason:
+            'Unbounded: frames are disabled while the screen is locked, so a '
+            'panic pressed just before locking never armed the native '
+            'session. Behaviour: countdown_locked_screen_arm_test.dart.',
       );
       expect(
         countdown.contains('Future.delayed'),
