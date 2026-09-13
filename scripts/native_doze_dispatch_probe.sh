@@ -105,7 +105,7 @@ trap cleanup EXIT
 [ -f "$TEST_APK" ] || fail "test APK missing: $TEST_APK"
 
 dev install -r -t "$APP_APK" > "$OUT_DIR/install-app.txt" 2>&1 || \
-  fail "app install failed (signature mismatch? not uninstalling automatically); see $OUT_DIR/install-app.txt"
+  fail "app install failed ($(grep -m1 -oE 'INSTALL_FAILED_[A-Z_]+|not enough space|signatures do not match' "$OUT_DIR/install-app.txt" || echo 'see log')); nothing is uninstalled automatically; see $OUT_DIR/install-app.txt"
 dev install -r -t "$TEST_APK" > "$OUT_DIR/install-test.txt" 2>&1 || fail "test APK install failed"
 TEST_INSTALLED=1
 
