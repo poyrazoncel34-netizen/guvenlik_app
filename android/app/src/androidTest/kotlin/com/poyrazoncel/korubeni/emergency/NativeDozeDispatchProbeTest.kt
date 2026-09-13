@@ -107,7 +107,11 @@ class NativeDozeDispatchProbeTest {
         }
     }
 
-    /** Safety net for an interrupted run: an ARMED record left behind would dispatch after reboot. */
+    /**
+     * Safety net for an interrupted run, for a session that is NOT yet due. An overdue one is
+     * dispatched by reconcile before this runs: launching instrumentation un-stops the app and
+     * Android 15+ delivers LOCKED_BOOT_COMPLETED (observed on API 37).
+     */
     @Test
     fun cancelLeftoverProbeSession() {
         assumeTrue(args.getString(ARG_MODE) == "cancel")

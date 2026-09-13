@@ -89,7 +89,10 @@ cleanup() {
   dev shell input keyevent KEYCODE_WAKEUP >/dev/null 2>&1 || true
   dev shell input keyevent KEYCODE_ENDCALL >/dev/null 2>&1 || true
   if [ "$TEST_INSTALLED" = "1" ] && [ "$PROBE_COMPLETED" != "1" ]; then
-    # An interrupted run can leave an ARMED record that would dispatch after reboot.
+    # Cancels a NOT-YET-DUE probe session left by an interrupted run. It cannot stop an
+    # OVERDUE one: starting instrumentation un-stops the app, Android 15+ then delivers
+    # LOCKED_BOOT_COMPLETED and reconcile dispatches it before this cancel runs
+    # (observed on API 37, docs/audit/device-verification-2026-09-13-force-stop.md).
     dev shell am instrument -w -e nativeDozeProbe cancel \
       -e class "$PROBE_CLASS#cancelLeftoverProbeSession" "$RUNNER" \
       > "$OUT_DIR/cleanup-cancel.txt" 2>&1 || true
