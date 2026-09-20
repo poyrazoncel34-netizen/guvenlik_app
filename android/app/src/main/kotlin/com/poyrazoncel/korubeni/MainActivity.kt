@@ -195,15 +195,21 @@ class MainActivity : FlutterFragmentActivity() {
                     .setStreamHandler(EmergencyEventStreamHandler())
                 android.util.Log.d("MainActivity", "Emergency platform configured")
             } catch (e: Exception) {
-                // The cause used to be discarded with `catch (_)`, so the one
-                // surviving signal named the failure without explaining it.
-                // Dart cannot be told from here -- the channel that would
-                // carry the message is the thing that failed -- so it detects
+                // Only the exception TYPE, never the Throwable and never its
+                // message: native_log_pii_test forbids raw exception text in
+                // release logs, and it is right to -- a PlatformException
+                // message can carry a contact number or a URI.
+                //
+                // Dart is not told from here at all. The channel that would
+                // carry the message is the thing that failed, so Dart detects
                 // the absence itself via MissingPluginException and surfaces
                 // it through EmergencyReadinessService (audit A-005). This
-                // line exists for the post-mortem: a bug report captured with
-                // `adb bugreport` now carries the actual exception.
-                android.util.Log.e("MainActivity", "EMERGENCY_PLATFORM_CONFIG_FAILED", e)
+                // line only narrows a post-mortem from "something threw" to
+                // "this class threw".
+                android.util.Log.e(
+                    "MainActivity",
+                    "EMERGENCY_PLATFORM_CONFIG_FAILED:" + e.javaClass.simpleName,
+                )
             }
 
             try {

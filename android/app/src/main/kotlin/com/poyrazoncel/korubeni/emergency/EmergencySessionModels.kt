@@ -350,8 +350,24 @@ interface EmergencySessionAlarmScheduler {
     fun cancel(token: SessionToken)
 }
 
+/** Why a user-action fallback is being offered. It changes the wording only. */
+enum class FallbackReason {
+    /** An automatic call is about to be attempted; the action is a backup. */
+    DISPATCH_ATTEMPTED,
+
+    /**
+     * The session's deadline passed too long ago to dial without asking, so
+     * NO automatic call happens. The manual-fallback copy promises "an
+     * automatic request will be attempted", which would be a lie here.
+     */
+    OVERDUE_NOT_DISPATCHED,
+}
+
 interface EmergencyFallbackPoster {
-    fun post(envelope: EmergencySessionEnvelope): FallbackOutcome
+    fun post(
+        envelope: EmergencySessionEnvelope,
+        reason: FallbackReason = FallbackReason.DISPATCH_ATTEMPTED,
+    ): FallbackOutcome
 
     /** Removes notification and retained PendingIntents for a terminal wipe. */
     fun clear(envelope: EmergencySessionEnvelope) = Unit

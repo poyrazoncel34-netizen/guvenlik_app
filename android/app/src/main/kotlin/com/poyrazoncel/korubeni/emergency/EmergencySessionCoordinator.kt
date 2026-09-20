@@ -509,6 +509,64 @@ class EmergencySessionCoordinator(
         if (consumed) target else null
     }
 
+    /**
+     * An ARMED session whose deadline passed more than [MAX_OVERDUE_DISPATCH_MS]
+     * ago is OFFERED to the user instead of dialled.
+     *
+     * The defect this closes: a user starts a panic countdown, the phone is
+     * force-stopped or powered off, no call goes out and nothing is said. When
+     * the app is next opened -- the same day or a week later -- reconcile() ran
+     * this branch with no age limit at all and called the emergency contact as
+     * if the emergency were live. The project's own emulator capture timed that
+     * at 82 ms after LOCKED_BOOT_COMPLETED, before Flutter even loaded. An
+     * unwanted outgoing call cannot be taken back, and the second time it
+     * happens the contact stops taking the app seriously (audit A-001).
+     *
+     * The limit is a product decision, not a technical one: the opposite error
+     * -- a missed call in a real emergency -- is also a real cost. 5 minutes
+     * keeps a short interruption (a reboot, a brief power-off) on the automatic
+     * path while ending the "days later" dispatch entirely.
+     *
+     * Nothing new is invented here. MANUAL_ACTION_REQUIRED and the fallback
+     * notification already exist for exactly this shape: a terminal session
+     * that retains its target so the user can authorise the call with one tap,
+     * via consumeFallbackTarget. Only the copy is new, because the standard
+     * manual-fallback text promises an automatic request that will not happen.
+     *
+     * If the notification cannot be posted, the session ends as REQUEST_FAILED
+     * with the target cleared rather than silently falling back to dialling:
+     * failing to reach the user is not permission to call on their behalf.
+     */
+    private fun offerOverdueInsteadOfDialling(envelope: EmergencySessionEnvelope) {
+        val intendedExpiry = wallClockMs() + FALLBACK_TARGET_RETENTION_MS
+        val candidate = envelope.copy(fallbackExpiresAtMs = intendedExpiry)
+        val outcome = try {
+            fallbackPoster.post(candidate, FallbackReason.OVERDUE_NOT_DISPATCHED)
+        } catch (_: RuntimeException) {
+            FallbackOutcome.FAILED
+        }
+        val posted = outcome == FallbackOutcome.POSTED
+        // A write failure leaves the envelope ARMED, so the next reconcile
+        // offers again. At-least-once NOTIFICATION is the safe direction; the
+        // tap cannot dial either, because consumeFallbackTarget requires the
+        // terminal+POSTED state this failed to commit.
+        store.write(
+            candidate.copy(
+                completedAtMs = wallClockMs(),
+                lifecycleState = if (posted) {
+                    LifecycleState.MANUAL_ACTION_REQUIRED
+                } else {
+                    LifecycleState.REQUEST_FAILED
+                },
+                target = if (posted) envelope.target else "",
+                callRequestOutcome = CallRequestOutcome.NOT_ATTEMPTED,
+                fallbackOutcome = outcome,
+                fallbackExpiresAtMs = if (posted) intendedExpiry else 0L,
+            ),
+        )
+        cancelAlarmBestEffort(envelope.token)
+    }
+
     /** Re-arms future alarms or dispatches elapsed ARMED/CLAIMED sessions. */
     fun reconcileAfterBoot() = reconcile(rebaseElapsedFromWall = true)
 
@@ -521,7 +579,11 @@ class EmergencySessionCoordinator(
             when (envelope.lifecycleState) {
                 LifecycleState.ARMED -> {
                     if (wallClockMs() >= envelope.finalDeadlineMs) {
-                        claimAndDispatch(envelope.token)
+                        if (wallClockMs() - envelope.finalDeadlineMs > MAX_OVERDUE_DISPATCH_MS) {
+                            offerOverdueInsteadOfDialling(envelope)
+                        } else {
+                            claimAndDispatch(envelope.token)
+                        }
                     } else {
                         if (rebaseElapsedFromWall) {
                             val rebased = envelope.copy(
@@ -637,6 +699,14 @@ class EmergencySessionCoordinator(
         private val submittedInProcess = mutableSetOf<String>()
         private val retryScheduledInProcess = mutableSetOf<String>()
         private const val DISPATCH_RETRY_DELAY_MS = 5_000L
+
+        /**
+         * How stale an ARMED session may be and still be dialled WITHOUT
+         * asking. Owner decision, 2026-09-20. See
+         * [offerOverdueInsteadOfDialling] for why this is a balance and not a
+         * safety maximum.
+         */
+        const val MAX_OVERDUE_DISPATCH_MS = 5L * 60L * 1_000L
 
         private fun isValidRandomId(value: String): Boolean =
             value.length in 8..128 && value.all {

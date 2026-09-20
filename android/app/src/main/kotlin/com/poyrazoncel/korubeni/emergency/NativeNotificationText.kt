@@ -98,6 +98,13 @@ object NativeNotificationText {
      */
     fun manualFallback(context: Context): NotificationCopy = strings(context).manualFallback
 
+    /**
+     * An overdue session was NOT dialled. The wording must not reuse
+     * [manualFallback], which tells the user an automatic request is coming.
+     */
+    fun overdueFallback(context: Context): NotificationCopy =
+        strings(context).overdueFallback
+
     fun serviceActive(context: Context): NotificationCopy = strings(context).serviceActive
 
     private fun strings(context: Context): Strings {
@@ -184,6 +191,7 @@ object NativeNotificationText {
         val dispatchFailed: NotificationCopy,
         val dispatchUnconfirmed: NotificationCopy,
         val manualFallback: NotificationCopy,
+        val overdueFallback: NotificationCopy,
     )
 
     private val enStrings = Strings(
@@ -249,6 +257,10 @@ object NativeNotificationText {
             title = "Emergency call action",
             body = "An automatic request will be attempted. Tap the protected action to call manually if needed.",
         ),
+        overdueFallback = NotificationCopy(
+            title = "Your countdown did not finish",
+            body = "It was interrupted and is now too old to call automatically. Tap the protected action if you still want to call.",
+        ),
     )
 
     private val trStrings = Strings(
@@ -313,6 +325,10 @@ object NativeNotificationText {
         manualFallback = NotificationCopy(
             title = "Acil arama işlemi",
             body = "Otomatik istek denenecek. Gerekirse elle aramak için korumalı eyleme dokunun.",
+        ),
+        overdueFallback = NotificationCopy(
+            title = "Geri sayımınız tamamlanamadı",
+            body = "Kesintiye uğradı ve otomatik aranamayacak kadar eskidi. Yine de aramak isterseniz korumalı eyleme dokunun.",
         ),
     )
 }

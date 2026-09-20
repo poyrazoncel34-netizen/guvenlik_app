@@ -122,10 +122,16 @@ class AndroidEmergencyCallRequester(
 class AndroidEmergencyFallbackPoster(
     private val context: Context,
 ) : EmergencyFallbackPoster {
-    override fun post(envelope: EmergencySessionEnvelope): FallbackOutcome {
+    override fun post(
+        envelope: EmergencySessionEnvelope,
+        reason: FallbackReason,
+    ): FallbackOutcome {
         val target = envelope.target
         if (!EmergencyTargetValidator.isCallable(target)) return FallbackOutcome.FAILED
-        val copy = NativeNotificationText.manualFallback(context)
+        val copy = when (reason) {
+            FallbackReason.DISPATCH_ATTEMPTED -> NativeNotificationText.manualFallback(context)
+            FallbackReason.OVERDUE_NOT_DISPATCHED -> NativeNotificationText.overdueFallback(context)
+        }
         val notificationId = notificationId(envelope.token.kind)
         val dialIntent = EmergencyFallbackDialActivity.pendingIntent(
             context,

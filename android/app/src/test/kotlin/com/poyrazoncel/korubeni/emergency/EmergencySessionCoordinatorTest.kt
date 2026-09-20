@@ -841,6 +841,123 @@ class EmergencySessionCoordinatorTest {
         assertEquals(1, fixture.calls.targets.size)
     }
 
+    // ---- A-001: overdue sessions are offered, not dialled -------------------
+    //
+    // reconcile()'s ARMED branch had NO age limit: on app open (or boot,
+    // package replace, user unlock) it dialled the emergency contact for a
+    // countdown that had been interrupted days earlier. The owner set the
+    // limit at 5 minutes on 2026-09-20.
+
+    @Test
+    fun `a session overdue beyond the limit is not dialled`() {
+        val fixture = Fixture()
+        fixture.coordinator.arm(validArmRequest(randomId = "overdue-not-dialled"))
+        // One millisecond past the limit: the boundary itself is asserted
+        // separately, so this cannot pass by being wildly over.
+        fixture.advanceTo(now + 120_000L + EmergencySessionCoordinator.MAX_OVERDUE_DISPATCH_MS + 1L)
+
+        fixture.coordinator.reconcileAfterBoot()
+
+        assertEquals(
+            "no Telecom request may be made for a stale session",
+            0,
+            fixture.calls.targets.size,
+        )
+        assertEquals(
+            LifecycleState.MANUAL_ACTION_REQUIRED,
+            fixture.store.current?.lifecycleState,
+        )
+        assertEquals(FallbackOutcome.POSTED, fixture.store.current?.fallbackOutcome)
+        assertEquals(
+            CallRequestOutcome.NOT_ATTEMPTED,
+            fixture.store.current?.callRequestOutcome,
+        )
+    }
+
+    @Test
+    fun `the overdue offer uses copy that does not promise an automatic call`() {
+        val fixture = Fixture()
+        fixture.coordinator.arm(validArmRequest(randomId = "overdue-copy"))
+        fixture.advanceTo(now + 120_000L + EmergencySessionCoordinator.MAX_OVERDUE_DISPATCH_MS + 1L)
+
+        fixture.coordinator.reconcileAfterBoot()
+
+        assertEquals(
+            listOf(FallbackReason.OVERDUE_NOT_DISPATCHED),
+            fixture.fallback.reasons,
+        )
+    }
+
+    @Test
+    fun `the target is retained so one tap can still place the call`() {
+        val fixture = Fixture()
+        fixture.coordinator.arm(validArmRequest(randomId = "overdue-target-kept"))
+        fixture.advanceTo(now + 120_000L + EmergencySessionCoordinator.MAX_OVERDUE_DISPATCH_MS + 1L)
+
+        fixture.coordinator.reconcileAfterBoot()
+
+        // Refusing to dial automatically must not take the call AWAY from a
+        // user who still wants it; that would trade one failure for another.
+        assertEquals("+905001234567", fixture.store.current?.target)
+    }
+
+    @Test
+    fun `a session inside the limit is still dialled automatically`() {
+        val fixture = Fixture()
+        fixture.coordinator.arm(validArmRequest(randomId = "overdue-within-limit"))
+        // The control. A brief interruption -- a reboot -- must NOT be turned
+        // into a notification the user has to notice.
+        fixture.advanceTo(now + 120_000L + EmergencySessionCoordinator.MAX_OVERDUE_DISPATCH_MS - 1L)
+
+        fixture.coordinator.reconcileAfterBoot()
+
+        assertEquals(1, fixture.calls.targets.size)
+        assertEquals(
+            LifecycleState.REQUEST_SUBMITTED_UNCONFIRMED,
+            fixture.store.current?.lifecycleState,
+        )
+    }
+
+    @Test
+    fun `exactly at the limit still dials`() {
+        val fixture = Fixture()
+        fixture.coordinator.arm(validArmRequest(randomId = "overdue-boundary"))
+        // The comparison is strictly greater-than, so the limit itself is on
+        // the dialling side. Pinned because an off-by-one here silently moves
+        // the product decision.
+        fixture.advanceTo(now + 120_000L + EmergencySessionCoordinator.MAX_OVERDUE_DISPATCH_MS)
+
+        fixture.coordinator.reconcileAfterBoot()
+
+        assertEquals(1, fixture.calls.targets.size)
+    }
+
+    @Test
+    fun `an unpostable overdue offer ends the session instead of dialling`() {
+        val fixture = Fixture(fallback = FakeFallback(outcome = FallbackOutcome.FAILED))
+        fixture.coordinator.arm(validArmRequest(randomId = "overdue-post-failed"))
+        fixture.advanceTo(now + 120_000L + EmergencySessionCoordinator.MAX_OVERDUE_DISPATCH_MS + 1L)
+
+        fixture.coordinator.reconcileAfterBoot()
+
+        // Failing to REACH the user is not permission to call on their behalf.
+        assertEquals(0, fixture.calls.targets.size)
+        assertEquals(LifecycleState.REQUEST_FAILED, fixture.store.current?.lifecycleState)
+        assertEquals("", fixture.store.current?.target)
+    }
+
+    @Test
+    fun `a throwing notifier cannot make an overdue session dial`() {
+        val fixture = Fixture(fallback = FakeFallback(throwOnPost = true))
+        fixture.coordinator.arm(validArmRequest(randomId = "overdue-post-throws"))
+        fixture.advanceTo(now + 120_000L + EmergencySessionCoordinator.MAX_OVERDUE_DISPATCH_MS + 1L)
+
+        fixture.coordinator.reconcileAfterBoot()
+
+        assertEquals(0, fixture.calls.targets.size)
+        assertEquals(LifecycleState.REQUEST_FAILED, fixture.store.current?.lifecycleState)
+    }
+
     private fun validArmRequest(
         randomId: String = "session-random-id",
         target: String = "+905001234567",
@@ -965,8 +1082,14 @@ class EmergencySessionCoordinatorTest {
         val cleared = mutableListOf<SessionToken>()
         var postAttempts = 0
 
-        override fun post(envelope: EmergencySessionEnvelope): FallbackOutcome {
+        val reasons = mutableListOf<FallbackReason>()
+
+        override fun post(
+            envelope: EmergencySessionEnvelope,
+            reason: FallbackReason,
+        ): FallbackOutcome {
             postAttempts += 1
+            reasons += reason
             order?.add("fallback")
             if (throwOnPost) throw IllegalStateException("injected notification failure")
             return outcome
