@@ -1,7 +1,8 @@
 // ============================================================================
 // YASAL METİNLER SABİTLERİ
 // Tüm uzun yasal metinler versiyonlanmış olarak burada tutulur.
-// Versiyon değiştiğinde LegalVersionChecker kullanıcıyı tekrar onay akışına yönlendirir.
+// Versiyon değiştiğinde splash_screen.dart ve ConsentManager kullanıcıyı
+// tekrar onay akışına yönlendirir (prefTermsVersion / kvkkVersion karşılaştırması).
 // ============================================================================
 
 class LegalTexts {

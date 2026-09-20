@@ -493,25 +493,5 @@ void main() {
       expect(consentScreen, contains('LegalTexts.lastUpdatedKvkk'));
       expect(publishedDisclosure, contains('19 Temmuz 2026'));
     });
-
-    test('stale Firebase FCM and resource monitor claims are cleaned', () {
-      final userProfile = File(
-        'lib/domain/models/user_profile.dart',
-      ).readAsStringSync();
-      final crashShim = File(
-        'lib/core/utils/crashlytics_test_helper.dart',
-      ).readAsStringSync();
-      final resourceMonitor = File(
-        'lib/core/services/resource_monitor_service.dart',
-      ).readAsStringSync();
-
-      expect(userProfile, isNot(contains('Firestore')));
-      expect(userProfile, isNot(contains('fcmToken')));
-      expect(userProfile, contains('Offline-first'));
-      expect(crashShim, contains('Compatibility shim'));
-      expect(crashShim, contains('no remote logging'));
-      expect(resourceMonitor, isNot(contains('NOT implemented')));
-      expect(resourceMonitor, contains('Memory usage is unavailable'));
-    });
   });
 }

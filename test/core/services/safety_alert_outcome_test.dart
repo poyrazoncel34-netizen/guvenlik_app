@@ -299,7 +299,14 @@ void main() {
           }
         }
       }
-      expect(found, greaterThanOrEqualTo(3),
+      // Two LIVE call sites: emergency_bookkeeping.dart (Safe Walk pre-expiry)
+      // and check_in_service.dart (grace notice). The third site used to be
+      // lib/core/services/safety_alert_dispatch.dart -- a documented shared
+      // wrapper that nothing in lib/ ever imported, so it inflated this census
+      // without protecting anything. It was deleted (audit A-011); the number
+      // below is the count of real call sites, and the assertion it guards
+      // (`unconsumed is empty`) is unchanged.
+      expect(found, greaterThanOrEqualTo(2),
           reason: 'the census must actually find the call sites; zero sites '
               'would make this assertion vacuous');
       expect(unconsumed, isEmpty,
@@ -366,22 +373,6 @@ void main() {
               'grace-started callback) must keep the outcome');
       expect(src, isNot(contains('_bestEffort(_showGraceNotification)')),
           reason: 'the best-effort wrapper is where the outcome used to die');
-    });
-
-    test('the shared wrapper classifies and records instead of swallowing', () {
-      final raw = File(
-        'lib/core/services/safety_alert_dispatch.dart',
-      ).readAsStringSync();
-      // Comments quote the defect being described; only code counts.
-      final src = raw.replaceAll(RegExp(r'//[^\n]*'), '');
-      expect(src, isNot(contains('catch (_)')),
-          reason: 'a bare catch turned every failure mode into one silence');
-      expect(src, contains('on Exception catch'));
-      expect(src, contains('on Error catch'),
-          reason: 'documented dispatch-fan-out exception: recorded, never '
-              'swallowed, so a notification bug cannot stop a grace ticker');
-      expect(src, contains('DispatchOutcomeClassifier.classifyError'));
-      expect(src, contains('LocalWarningCode.safetyAlertNotDelivered'));
     });
 
     test('the Check-In screen surfaces a warning the user never saw', () {

@@ -81,8 +81,6 @@ void main() {
     'lib/screens/splash_screen.dart':
         'Transient brand screen with no navigable content; it is replaced '
         'before a screen reader could navigate it by heading.',
-    'lib/screens/legal/onboarding_legal_flow.dart':
-        'Four-line re-export file; it renders nothing.',
   };
 
   test('every screen either has an AppBar or marks its title explicitly', () {
