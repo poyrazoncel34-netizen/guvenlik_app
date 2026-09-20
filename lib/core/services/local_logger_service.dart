@@ -50,7 +50,13 @@ enum LocalWarningCode {
   /// behaviour -- reporting a failed probe as a clean device -- was fail-open
   /// in the one scenario where the offline entitlement anchor and local data
   /// are readable. Carries no device identifier, only the fact of the failure.
-  deviceIntegrityUnknown('device_integrity_unknown');
+  deviceIntegrityUnknown('device_integrity_unknown'),
+
+  /// The native emergency MethodChannel is not registered in this process, so
+  /// the Doze-proof AlarmManager session cannot be armed at all. The readiness
+  /// snapshot already reports not-ready in this case (every field is unknown),
+  /// but nothing recorded WHY, and logcat is unreadable in release.
+  emergencyPlatformBridgeMissing('emergency_platform_bridge_missing');
 
   const LocalWarningCode(this.wireCode);
   final String wireCode;

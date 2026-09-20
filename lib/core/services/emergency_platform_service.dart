@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 import 'android_intent_service.dart';
+import 'emergency_platform_channel.dart';
 import 'emergency_session_contract.dart';
 
 class EmergencyPlatformService {
@@ -37,6 +38,10 @@ class EmergencyPlatformService {
   static const String channelName =
       'com.poyrazoncel.korubeni/emergency_platform';
   final MethodChannel _methodChannel;
+  late final EmergencyPlatformChannel _channel = EmergencyPlatformChannel(
+    _methodChannel,
+    defaultTimeout: _defaultTimeout,
+  );
   final bool? _supportedOverride;
   final Duration _defaultTimeout;
   final Duration _dispatchTimeout;
@@ -54,6 +59,28 @@ class EmergencyPlatformService {
       _supportedOverride ??
       (!kIsWeb && defaultTargetPlatform == TargetPlatform.android);
 
+  /// True once any invocation proved the native handler is not registered.
+  ///
+  /// [isSupported] answers a DIFFERENT question: it reports that this is an
+  /// Android build, never that MainActivity actually installed the emergency
+  /// MethodChannel. MainActivity wraps that installation in a catch that only
+  /// writes `EMERGENCY_PLATFORM_CONFIG_FAILED` to logcat, which a release user
+  /// cannot read; the arm path then saw a MissingPluginException, folded it
+  /// into the generic `unexpectedError`, and a countdown started looking
+  /// exactly like a protected one while no native AlarmManager session
+  /// existed (audit A-005).
+  ///
+  /// The audit's first suggestion -- have MainActivity persist a flag for Dart
+  /// to read -- cannot work: the only way Dart could read it is the channel
+  /// that is broken. Distinguishing the exception here is the one signal that
+  /// survives, and it is the audit's own stated alternative.
+  ///
+  /// Latching (never cleared) is deliberate: the engine configures its
+  /// channels once per FlutterEngine, so a bridge that was absent does not
+  /// reappear within the process, and a safety signal must not flicker back
+  /// to "fine" because a later call happened to time out instead.
+  bool get platformBridgeMissing => _channel.bridgeMissing;
+
   Stream<Map<String, dynamic>> get events => _eventsController.stream;
 
   Future<void> initialize() async {
@@ -64,7 +91,7 @@ class EmergencyPlatformService {
     _eventsSubscription = _eventChannel.receiveBroadcastStream().listen((
       dynamic event,
     ) {
-      final mapped = _toMap(event);
+      final mapped = EmergencyPlatformChannel.toMap(event);
       if (mapped != null) {
         _eventsController.add(mapped);
       }
@@ -103,7 +130,7 @@ class EmergencyPlatformService {
       return ArmRejected('invalidTarget', rejectedToken: proposedToken);
     }
 
-    final invocation = await _invokeTypedMap(
+    final invocation = await _channel.invokeTypedMap(
       'armEmergencySession',
       arguments: <String, Object?>{
         'protocolVersion': emergencyProtocolVersion,
@@ -172,7 +199,7 @@ class EmergencyPlatformService {
     if (!isSupported) {
       return SessionCancelUnknown(token, 'unsupportedPlatform');
     }
-    final invocation = await _invokeTypedMap(
+    final invocation = await _channel.invokeTypedMap(
       'cancelEmergencySession',
       arguments: <String, Object?>{
         'protocolVersion': emergencyProtocolVersion,
@@ -193,7 +220,7 @@ class EmergencyPlatformService {
     SessionToken token, {
     bool preWarning = false,
   }) async {
-    final result = await _invokeTypedMap(
+    final result = await _channel.invokeTypedMap(
       'warnEmergencySession',
       arguments: {'token': token.toMap(), 'preWarning': preWarning},
     );
@@ -207,7 +234,7 @@ class EmergencyPlatformService {
   }
 
   Future<List<SessionSnapshot>> pendingEmergencyOutcomes() async {
-    final result = await _invokeTypedMap('pendingEmergencyOutcomes');
+    final result = await _channel.invokeTypedMap('pendingEmergencyOutcomes');
     if (!result.completed || result.value['outcomes'] is! List) return [];
     return (result.value['outcomes'] as List)
         .map(
@@ -218,7 +245,7 @@ class EmergencyPlatformService {
   }
 
   Future<void> acknowledgeEmergencyOutcome(SessionToken token) async {
-    await _invokeTypedMap(
+    await _channel.invokeTypedMap(
       'acknowledgeEmergencyOutcome',
       arguments: {
         'protocolVersion': emergencyProtocolVersion,
@@ -231,7 +258,7 @@ class EmergencyPlatformService {
   Future<SessionSnapshot> discoverEmergencySession(
     EmergencySessionKind kind,
   ) async {
-    final invocation = await _invokeTypedMap(
+    final invocation = await _channel.invokeTypedMap(
       'discoverEmergencySession',
       arguments: {
         'protocolVersion': emergencyProtocolVersion,
@@ -254,7 +281,7 @@ class EmergencyPlatformService {
         reasonCode: 'unsupportedPlatform',
       );
     }
-    final invocation = await _invokeTypedMap(
+    final invocation = await _channel.invokeTypedMap(
       'readEmergencySession',
       arguments: <String, Object?>{
         'protocolVersion': emergencyProtocolVersion,
@@ -278,7 +305,7 @@ class EmergencyPlatformService {
     if (!isSupported) {
       return _unknownDispatch(token);
     }
-    final invocation = await _invokeTypedMap(
+    final invocation = await _channel.invokeTypedMap(
       'dispatchEmergencySession',
       arguments: <String, Object?>{
         'protocolVersion': emergencyProtocolVersion,
@@ -313,7 +340,7 @@ class EmergencyPlatformService {
     required bool callableTarget,
   }) async {
     if (!isSupported) return const CapabilitySnapshot.unavailable();
-    final invocation = await _invokeTypedMap(
+    final invocation = await _channel.invokeTypedMap(
       'getEmergencyCapabilities',
       arguments: <String, Object?>{
         'protocolVersion': emergencyProtocolVersion,
@@ -345,7 +372,7 @@ class EmergencyPlatformService {
 
   Future<WipeResult> wipeEmergencySessions() async {
     if (!isSupported) return WipeResult.unknown;
-    final invocation = await _invokeTypedMap(
+    final invocation = await _channel.invokeTypedMap(
       'wipeEmergencySessions',
       arguments: const <String, Object?>{
         'protocolVersion': emergencyProtocolVersion,
@@ -364,14 +391,14 @@ class EmergencyPlatformService {
     if (!isSupported) {
       return null;
     }
-    return _invokeMap('consumePendingTrigger');
+    return _channel.invokeMap('consumePendingTrigger');
   }
 
   Future<Map<String, dynamic>> getDeviceState() async {
     if (!isSupported) {
       return const <String, dynamic>{};
     }
-    return _invokeMap('getDeviceState');
+    return _channel.invokeMap('getDeviceState');
   }
 
   /// Returns a bounded, allowlisted projection of native Direct Boot safety
@@ -379,12 +406,9 @@ class EmergencyPlatformService {
   /// malformed values and caller-controlled extra fields are discarded.
   Future<List<Map<String, Object?>>> readNativeSafetyDiagnostics() async {
     if (!isSupported) return const <Map<String, Object?>>[];
-    try {
-      final response = await _methodChannel
-          .invokeMethod<dynamic>('readNativeSafetyDiagnostics')
-          .timeout(_defaultTimeout);
-      if (response is! List) return const <Map<String, Object?>>[];
-      final normalized = <Map<String, Object?>>[];
+    final response = await _channel.invokeRaw('readNativeSafetyDiagnostics');
+    if (response is! List) return const <Map<String, Object?>>[];
+    final normalized = <Map<String, Object?>>[];
       for (final raw in response) {
         if (normalized.length >= _maxNativeSafetyDiagnostics) break;
         if (raw is! Map) continue;
@@ -401,17 +425,7 @@ class EmergencyPlatformService {
           'occurredAtMs': occurredAtMs,
         });
       }
-      return List<Map<String, Object?>>.unmodifiable(normalized);
-    } on TimeoutException {
-      debugPrint('[EmergencyPlatform] native diagnostics read timed out');
-      return const <Map<String, Object?>>[];
-    } on PlatformException {
-      debugPrint('[EmergencyPlatform] native diagnostics read failed');
-      return const <Map<String, Object?>>[];
-    } on Exception {
-      debugPrint('[EmergencyPlatform] native diagnostics read failed');
-      return const <Map<String, Object?>>[];
-    }
+    return List<Map<String, Object?>>.unmodifiable(normalized);
   }
 
   static const int _maxNativeSafetyDiagnostics = 64;
@@ -435,7 +449,7 @@ class EmergencyPlatformService {
         reasonCode: 'unsupportedPlatform',
       );
     }
-    final invocation = await _invokeTypedMap('getDeviceState');
+    final invocation = await _channel.invokeTypedMap('getDeviceState');
     if (!invocation.completed) {
       return PlatformReadinessSnapshot.unavailable(
         reasonCode: invocation.reasonCode,
@@ -451,31 +465,21 @@ class EmergencyPlatformService {
     if (!isSupported) {
       return false;
     }
-    return await _invokeBool('canScheduleExactAlarms');
+    return await _channel.invokeBool('canScheduleExactAlarms');
   }
 
   Future<void> requestExactAlarmPermission() async {
     if (!isSupported) {
       return;
     }
-    try {
-      await _methodChannel
-          .invokeMethod<void>('requestExactAlarmPermission')
-          .timeout(_defaultTimeout);
-    } on TimeoutException {
-      debugPrint('[EmergencyPlatform] requestExactAlarmPermission timed out');
-    } on PlatformException {
-      debugPrint('[EmergencyPlatform] requestExactAlarmPermission failed');
-    } on Exception {
-      debugPrint('[EmergencyPlatform] requestExactAlarmPermission failed');
-    }
+    await _channel.invokeVoid('requestExactAlarmPermission');
   }
 
   Future<bool> openManufacturerSettings() async {
     if (!isSupported) {
       return false;
     }
-    return _invokeBool('openManufacturerSettings');
+    return _channel.invokeBool('openManufacturerSettings');
   }
 
   /// Opens Android's app-scoped battery optimization exemption request.
@@ -487,7 +491,7 @@ class EmergencyPlatformService {
     if (!isSupported) {
       return false;
     }
-    return _invokeBool('requestBatteryOptimizationExemption');
+    return _channel.invokeBool('requestBatteryOptimizationExemption');
   }
 
   /// Opens the generic Android battery optimization settings list without
@@ -496,7 +500,7 @@ class EmergencyPlatformService {
     if (!isSupported) {
       return false;
     }
-    return _invokeBool('openBatteryOptimizationSettings');
+    return _channel.invokeBool('openBatteryOptimizationSettings');
   }
 
   ArmResult _parseArmResult(
@@ -660,102 +664,10 @@ class EmergencyPlatformService {
     ).join();
   }
 
-  Future<_TypedInvocation> _invokeTypedMap(
-    String method, {
-    Map<String, Object?>? arguments,
-    Duration? timeout,
-  }) async {
-    try {
-      final response = await _methodChannel
-          .invokeMethod<dynamic>(method, arguments)
-          .timeout(timeout ?? _defaultTimeout);
-      final mapped = _toMap(response);
-      if (mapped == null) {
-        return const _TypedInvocation.failed('malformedResponse');
-      }
-      return _TypedInvocation.completed(mapped);
-    } on TimeoutException {
-      debugPrint('[EmergencyPlatform] $method timed out');
-      return const _TypedInvocation.failed('timeout');
-    } on PlatformException {
-      debugPrint('[EmergencyPlatform] $method failed');
-      return const _TypedInvocation.failed('platformError');
-    } on Exception {
-      debugPrint('[EmergencyPlatform] $method failed');
-      return const _TypedInvocation.failed('unexpectedError');
-    }
-  }
-
-  Future<Map<String, dynamic>> _invokeMap(
-    String method, {
-    Map<String, Object?>? arguments,
-    Duration? timeout,
-  }) async {
-    try {
-      final response = await _methodChannel
-          .invokeMethod<dynamic>(method, arguments)
-          .timeout(timeout ?? _defaultTimeout);
-      return _toMap(response) ?? const <String, dynamic>{};
-    } on TimeoutException {
-      debugPrint('[EmergencyPlatform] $method timed out');
-      return const <String, dynamic>{};
-    } on PlatformException {
-      debugPrint('[EmergencyPlatform] $method failed');
-      return const <String, dynamic>{};
-    } on Exception {
-      debugPrint('[EmergencyPlatform] $method failed');
-      return const <String, dynamic>{};
-    }
-  }
-
-  Future<bool> _invokeBool(
-    String method, {
-    Map<String, Object?>? arguments,
-  }) async {
-    try {
-      return await _methodChannel
-              .invokeMethod<bool>(method, arguments)
-              .timeout(_defaultTimeout) ??
-          false;
-    } on TimeoutException {
-      debugPrint('[EmergencyPlatform] $method timed out');
-      return false;
-    } on PlatformException {
-      debugPrint('[EmergencyPlatform] $method failed');
-      return false;
-    } on Exception {
-      debugPrint('[EmergencyPlatform] $method failed');
-      return false;
-    }
-  }
-
-  Map<String, dynamic>? _toMap(dynamic event) {
-    if (event is Map) {
-      return event.map(
-        (dynamic key, dynamic value) => MapEntry(key.toString(), value),
-      );
-    }
-    return null;
-  }
-
   Future<void> dispose() async {
     await _eventsSubscription?.cancel();
     await _eventsController.close();
   }
-}
-
-class _TypedInvocation {
-  const _TypedInvocation.completed(this.value)
-    : completed = true,
-      reasonCode = '';
-
-  const _TypedInvocation.failed(this.reasonCode)
-    : completed = false,
-      value = const <String, dynamic>{};
-
-  final bool completed;
-  final Map<String, dynamic> value;
-  final String reasonCode;
 }
 
 @immutable

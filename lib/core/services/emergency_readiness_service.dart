@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 
 import 'emergency_platform_service.dart';
+import 'local_logger_service.dart';
 
 /// System 3A: Checks device readiness for emergency dispatch.
 /// Non-blocking — results cached for later query.
@@ -54,6 +55,19 @@ class EmergencyReadinessService extends ChangeNotifier {
     if (probeId != _latestProbeId) {
       return _lastState ??
           const PlatformReadinessSnapshot.unavailable(reasonCode: 'superseded');
+    }
+    if (nextState.reasonCode == 'platformBridgeMissing') {
+      // criticalSafetyReady is already false here (an unavailable snapshot is
+      // not `isKnown`), so the readiness card turns red on its own -- verified,
+      // not assumed: ReadinessCard derives every chip from automaticCallReady /
+      // backgroundAlertReady, both of which require isKnown.
+      //
+      // What was missing is any durable trace of WHY. Without it this case is
+      // indistinguishable from a plain timeout, and the only other evidence is
+      // a logcat line the user cannot read (audit A-005).
+      await LocalLoggerService.instance.warningCode(
+        LocalWarningCode.emergencyPlatformBridgeMissing,
+      );
     }
     _lastState = nextState;
     notifyListeners();

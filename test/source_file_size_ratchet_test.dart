@@ -33,7 +33,6 @@ void main() {
     'lib/screens/countdown_screen.dart': 1081,
     'lib/screens/contacts_page.dart': 1153,
     'lib/screens/map_page.dart': 885,
-    'lib/core/services/emergency_platform_service.dart': 867,
     'lib/core/services/contact_service.dart': 810,
   };
 
