@@ -8,6 +8,8 @@
 // NOTE: KoruBeni is offline-first. No third-party crash reporting (KVKK compliance).
 // ============================================================================
 
+import 'package:flutter/foundation.dart';
+
 class AppEnvironment {
   AppEnvironment._();
 
@@ -25,11 +27,31 @@ class AppEnvironment {
     defaultValue: defaultMapTileUrlTemplate,
   );
 
-  static bool get isProduction => _env == 'production';
-  static bool get isCiSmoke => _env == 'ci_smoke';
-  static bool get isDev => !isProduction;
+  static bool get isProduction => envIsProduction(_env);
+  static bool get isCiSmoke => envIsCiSmoke(_env);
+  static bool get isDev => envIsDev(_env);
   static String get name => _env;
   static String get mapTileUrlTemplate => _mapTileUrlTemplate;
+
+  // Three named environments, each matched by its OWN literal.
+  //
+  // `isDev` used to be `!isProduction`, so `ci_smoke` counted as "dev" -- a
+  // two-valued flag inside a three-valued model (audit A-022). It happens to
+  // be harmless today only because nothing branches on isDev; the next caller
+  // would have inherited the wrong answer.
+  //
+  // These take the environment as a PARAMETER because the getters above read
+  // `String.fromEnvironment`, a compile-time constant: no unit test can vary
+  // it, which is precisely why the defect was never caught by a test. With the
+  // seam, the ci_smoke case is testable without a --dart-define run.
+  @visibleForTesting
+  static bool envIsProduction(String env) => env == 'production';
+
+  @visibleForTesting
+  static bool envIsCiSmoke(String env) => env == 'ci_smoke';
+
+  @visibleForTesting
+  static bool envIsDev(String env) => env == 'dev';
 
   static bool _hasSafeRevenueCatClientKeyShape(String value) {
     final normalized = value.trim();
