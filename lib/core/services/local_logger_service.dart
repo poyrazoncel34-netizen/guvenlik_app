@@ -43,7 +43,14 @@ enum LocalWarningCode {
 
   /// A quick-access panic request arrived with no root navigator mounted, so
   /// there was no surface to open a countdown on OR to explain the refusal on.
-  quickPanicNavigatorUnavailable('quick_panic_navigator_unavailable');
+  quickPanicNavigatorUnavailable('quick_panic_navigator_unavailable'),
+
+  /// The root/jailbreak probe could not produce a verdict: plugin missing,
+  /// channel error, or a non-boolean reply. Recorded because the previous
+  /// behaviour -- reporting a failed probe as a clean device -- was fail-open
+  /// in the one scenario where the offline entitlement anchor and local data
+  /// are readable. Carries no device identifier, only the fact of the failure.
+  deviceIntegrityUnknown('device_integrity_unknown');
 
   const LocalWarningCode(this.wireCode);
   final String wireCode;

@@ -167,8 +167,8 @@ class _SplashScreenState extends State<SplashScreen>
   Future<void> _goNext() async {
     if (!mounted) return;
 
-    final compromised = await DeviceSecurityService().isCompromised();
-    if (compromised && mounted) {
+    final integrity = await DeviceSecurityService().checkIntegrity();
+    if (integrity == DeviceIntegrity.compromised && mounted) {
       await showDialog<void>(
         context: context,
         barrierDismissible: false,
