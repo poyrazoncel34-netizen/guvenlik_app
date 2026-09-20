@@ -23,7 +23,6 @@ class AppConstants {
   static const String prefTermsVersion = 'pref_terms_version';
   static const String prefNotificationPermissionPrompted =
       'pref_notification_permission_prompted';
-  static const String prefDemoMode = 'pref_demo_mode';
   static const String prefVolumeTrigger = 'pref_volume_trigger';
 
   // One-time cleanup flag for the removed medical-profile feature (KVKK Md.7).
