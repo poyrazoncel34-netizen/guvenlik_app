@@ -1617,13 +1617,6 @@
       "sourceUrl": "https://pub.dev/packages/crypto/versions/3.0.7/license",
       "spdxId": "BSD-3-Clause"
     },
-    "pkg:pub/cupertino_icons@1.0.8": {
-      "reviewedAt": "2026-07-31",
-      "reviewedBy": "korubenidestek@gmail.com",
-      "sha256": "310d6ab6483280280c9db122bded0a63c09558bc5743720f61dbcbb494db370a",
-      "sourceUrl": "https://pub.dev/packages/cupertino_icons/versions/1.0.8/license",
-      "spdxId": "MIT"
-    },
     "pkg:pub/dart_earcut@1.2.0": {
       "reviewedAt": "2026-07-31",
       "reviewedBy": "korubenidestek@gmail.com",

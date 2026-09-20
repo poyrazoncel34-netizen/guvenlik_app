@@ -91,7 +91,7 @@ void main() {
     expect(unreviewed['reviewedAt'], isNull);
   });
 
-  test('exact 400-purl review queue mirrors the accountable evidence', () async {
+  test('exact 399-purl review queue mirrors the accountable evidence', () async {
     final directory = await Directory.systemTemp.createTemp(
       'korubeni-license-review-',
     );
@@ -130,11 +130,11 @@ void main() {
         jsonDecode(queue.readAsStringSync()) as Map<String, dynamic>;
     final entries = (payload['entries'] as List<dynamic>)
         .cast<Map<String, dynamic>>();
-    expect(payload['componentCount'], 400);
-    expect(payload['reviewedCount'], 400);
+    expect(payload['componentCount'], 399);
+    expect(payload['reviewedCount'], 399);
     expect(payload['unreviewedCount'], 0);
-    expect(entries, hasLength(400));
-    expect(entries.map((entry) => entry['purl']).toSet(), hasLength(400));
+    expect(entries, hasLength(399));
+    expect(entries.map((entry) => entry['purl']).toSet(), hasLength(399));
     expect(entries.every((entry) => entry['status'] == 'REVIEWED'), isTrue);
 
     // The queue tool must only carry evidence forward, never invent it: every
@@ -149,7 +149,7 @@ void main() {
                 )
                 as Map<String, dynamic>)['entries']
             as Map<String, dynamic>;
-    expect(evidence, hasLength(400));
+    expect(evidence, hasLength(399));
     for (final entry in entries) {
       final purl = entry['purl'] as String;
       final reviewed = evidence[purl] as Map<String, dynamic>;
