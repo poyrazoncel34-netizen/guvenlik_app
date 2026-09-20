@@ -16,7 +16,7 @@
   ],
   "rules": [
     {
-      "pattern": "^(?:\\.agents/|\\.codex/|AGENTS\\.md$)",
+      "pattern": "^(?:\\.agents/|\\.claude/|\\.codex/|AGENTS\\.md$)",
       "category": "tooling",
       "commitGroup": "EXCLUDE",
       "reason": "Local Codex/agent configuration is not product source."
@@ -112,10 +112,22 @@
       "reason": "Translation bundle gates ship in the same commit group as the bundles they guard."
     },
     {
-      "pattern": "^(?:docs/MASTER_PRODUCTION_CHECKLIST\\.md|PRODUCTION_AUDIT\\.md|REMEDIATION_PLAN\\.md|PROGRESS\\.md|RESOLUTION_QUEUE\\.md|EXTERNAL_LAUNCH_BLOCKERS\\.md|PRODUCT_DECISIONS_REQUIRED\\.md|FINAL_REMEDIATION_REGISTER\\.md|[A-Za-z0-9_]*INDEPENDENT_REVIEW[A-Za-z0-9_]*\\.md)$",
+      "pattern": "^(?:docs/MASTER_PRODUCTION_CHECKLIST\\.md|PRODUCTION_AUDIT\\.md|REMEDIATION_PLAN\\.md|PROGRESS\\.md|RESOLUTION_QUEUE\\.md|EXTERNAL_LAUNCH_BLOCKERS\\.md|PRODUCT_DECISIONS_REQUIRED\\.md|FINAL_REMEDIATION_REGISTER\\.md|[A-Za-z0-9_]*INDEPENDENT_REVIEW[A-Za-z0-9_]*\\.md|[A-Za-z0-9_]*AUDIT_REPORT[A-Za-z0-9_]*\\.md)$",
       "category": "release",
       "commitGroup": "04-ci-evidence-security",
       "reason": "Production-readiness standard and its per-requirement audit, remediation, continuity, resolution-queue, external-blocker, and independent-review outputs are release-governance source. The review pattern is deliberately open-ended on BOTH sides: a NEW reviewer report must never be able to fail the classification gate simply by existing, and FINAL_INDEPENDENT_REVIEW.md proved a leading qualifier could do exactly that."
+    },
+    {
+      "pattern": "^test/edge_cases/",
+      "category": "safety-test",
+      "commitGroup": "02-flutter-pin-session",
+      "reason": "Executable degraded-condition evidence: GPS off, low battery, denied permissions, offline queue."
+    },
+    {
+      "pattern": "^lib/(?:data/|domain/|services/)",
+      "category": "safety",
+      "commitGroup": "02-flutter-pin-session",
+      "reason": "Contacts repository/datasource, location repository, device-security and secure-storage source. Appended LAST on purpose: lib/services/consent_manager.dart and lib/models/consent_record.dart keep the earlier legal classification, because first match wins. Before this rule the gate could not classify lib/services/device_security_service.dart at all -- a security file invisible to a fail-closed gate is the gate failing open."
     }
   ]
 }
