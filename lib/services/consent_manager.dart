@@ -84,7 +84,7 @@ class ConsentManager {
       if (raw == null || raw.isEmpty) return;
       final decoded = jsonDecode(raw);
       if (decoded is! List) return;
-      final List<dynamic> list = decoded;
+      final List<Object?> list = decoded;
       // Son durumu bul (her tür için en son kaydı al).
       // Tek bir bozuk kayıt, geçerli onayları SİLMEMELİ — KVKK kayıtları
       // kullanıcının açık iradesini yansıtır; yarım yazma veya şema
@@ -160,7 +160,7 @@ class ConsentManager {
       if (raw == null || raw.isEmpty) return [];
       final decoded = jsonDecode(raw);
       if (decoded is! List) return [];
-      final List<dynamic> list = decoded;
+      final List<Object?> list = decoded;
       // Tek bir bozuk kayıt tüm KVKK audit log'unu silmesin — geçerli olan
       // kayıtlar export/management ekranlarında görünmeye devam etmeli.
       final records = <ConsentRecord>[];
@@ -298,7 +298,7 @@ class ConsentManager {
     // Read the existing log. Tolerate a corrupt/non-list blob by starting a
     // fresh list so the new consent can still be recorded.
     final raw = prefs.getString(_consentLogKey);
-    var list = <dynamic>[];
+    var list = <Object?>[];
     if (raw != null && raw.isNotEmpty) {
       try {
         final decoded = jsonDecode(raw);

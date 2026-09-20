@@ -1,10 +1,11 @@
+import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 import '../../core/services/location_service.dart';
 
 abstract class LocationRepository {
   Future<LocationResult> getCurrentLocation({bool highAccuracy = true});
   Future<LocationResult> getLastKnownLocation();
-  Stream<dynamic>? getPositionStream({
+  Stream<Position>? getPositionStream({
     bool highAccuracy = true,
     int distanceFilter = 10,
   });

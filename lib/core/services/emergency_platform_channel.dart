@@ -127,7 +127,7 @@ class EmergencyPlatformChannel {
   static Map<String, dynamic>? toMap(dynamic event) {
     if (event is Map) {
       return event.map(
-        (dynamic key, dynamic value) => MapEntry(key.toString(), value),
+        (Object? key, Object? value) => MapEntry(key.toString(), value),
       );
     }
     return null;

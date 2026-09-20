@@ -1,3 +1,4 @@
+import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 import '../../core/services/location_service.dart';
 import '../../domain/repositories/location_repository.dart';
@@ -18,7 +19,7 @@ class LocationRepositoryImpl implements LocationRepository {
   }
 
   @override
-  Stream<dynamic>? getPositionStream({
+  Stream<Position>? getPositionStream({
     bool highAccuracy = true,
     int distanceFilter = 10,
   }) {

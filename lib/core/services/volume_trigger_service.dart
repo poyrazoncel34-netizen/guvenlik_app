@@ -32,7 +32,7 @@ class VolumeTriggerService {
   final EventChannel _events = const EventChannel(_eventChannel);
   final MethodChannel _control = const MethodChannel(_controlChannel);
 
-  StreamSubscription<dynamic>? _subscription;
+  StreamSubscription<Object?>? _subscription;
   VoidCallback? _onPanicTriggered;
 
   bool _isEnabled = false;

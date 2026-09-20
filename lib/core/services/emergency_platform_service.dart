@@ -52,7 +52,7 @@ class EmergencyPlatformService {
   final StreamController<Map<String, dynamic>> _eventsController =
       StreamController<Map<String, dynamic>>.broadcast();
 
-  StreamSubscription<dynamic>? _eventsSubscription;
+  StreamSubscription<Object?>? _eventsSubscription;
   bool _initialized = false;
 
   bool get isSupported =>
@@ -89,7 +89,7 @@ class EmergencyPlatformService {
     }
 
     _eventsSubscription = _eventChannel.receiveBroadcastStream().listen((
-      dynamic event,
+      Object? event,
     ) {
       final mapped = EmergencyPlatformChannel.toMap(event);
       if (mapped != null) {
