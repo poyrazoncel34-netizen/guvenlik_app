@@ -12,20 +12,28 @@ class SettingsProvider extends ChangeNotifier {
   bool _loaded = false;
 
   String _profileName = '';
-  String _profileEmail = '';
 
   bool get notificationsEnabled => _notificationsEnabled;
   bool get soundEnabled => _soundEnabled;
   bool get volumeTriggerEnabled => _volumeTriggerEnabled;
   String get profileName =>
       _profileName.isEmpty ? "settings_default_user".tr() : _profileName;
-  String get profileEmail => _profileEmail.isEmpty ? '' : _profileEmail;
+  /// Always empty. The profile e-mail was removed in audit A-014: no screen
+  /// ever offered a field to type one, so the stored key held '' for every
+  /// user while the KVKK data export still emitted a meaningless `email`
+  /// entry. Nothing reads or writes the key any more.
+  ///
+  /// The getter itself is retained ONLY because settings_page.dart and
+  /// profile_page.dart still render it; dropping it would change those widget
+  /// trees, and CLAUDE.md rule 4 forbids UI changes in this pass. Both sites
+  /// render nothing today (one is guarded by isNotEmpty, the other draws an
+  /// empty Text), so removing them is a separate, visual change.
+  String get profileEmail => '';
   bool get hasProfile => _profileName.isNotEmpty;
 
   Future<void> loadProfile() async {
     final prefs = await SharedPreferences.getInstance();
     _profileName = prefs.getString(AppConstants.prefProfileName) ?? '';
-    _profileEmail = prefs.getString(AppConstants.prefProfileEmail) ?? '';
 
     if (!_loaded) {
       _notificationsEnabled =
@@ -38,15 +46,10 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> updateProfile({
-    required String name,
-    required String email,
-  }) async {
+  Future<void> updateProfile({required String name}) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(AppConstants.prefProfileName, name.trim());
-    await prefs.setString(AppConstants.prefProfileEmail, email.trim());
     _profileName = name.trim();
-    _profileEmail = email.trim();
     notifyListeners();
   }
 

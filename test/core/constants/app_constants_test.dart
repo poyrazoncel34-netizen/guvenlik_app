@@ -31,7 +31,6 @@ void main() {
     test('all SharedPreferences keys are unique', () {
       final keys = [
         AppConstants.prefProfileName,
-        AppConstants.prefProfileEmail,
         AppConstants.prefNotifications,
         AppConstants.prefSound,
         AppConstants.prefPinSetupDone,

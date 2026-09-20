@@ -111,7 +111,6 @@ class UserDataExportService {
   ) async {
     return {
       'name': prefs.getString(AppConstants.prefProfileName) ?? '',
-      'email': prefs.getString(AppConstants.prefProfileEmail) ?? '',
     };
   }
 }

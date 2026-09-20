@@ -13,7 +13,6 @@ class AppConstants {
 
   // SharedPreferences keys (non-sensitive)
   static const String prefProfileName = 'profile_name';
-  static const String prefProfileEmail = 'profile_email';
   static const String prefNotifications = 'pref_notifications';
   static const String prefSound = 'pref_sound';
   static const String prefPinSetupDone = 'pref_pin_setup_done';

@@ -60,7 +60,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     }
 
     final provider = context.read<SettingsProvider>();
-    await provider.updateProfile(name: _nameController.text.trim(), email: '');
+    await provider.updateProfile(name: _nameController.text.trim());
 
     if (mounted) {
       final messenger = ScaffoldMessenger.of(context);
