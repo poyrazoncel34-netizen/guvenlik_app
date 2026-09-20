@@ -329,7 +329,15 @@ class EmergencyTriggerHostState extends State<EmergencyTriggerHost>
         PageRouteBuilder(
           pageBuilder: (_, _, _) =>
               widget.countdownBuilder?.call(decision) ??
-              CountdownScreen(entitlementDecision: decision),
+              CountdownScreen(
+                entitlementDecision: decision,
+                // Every surface routed through _openCountdown -- Quick
+                // Settings tile, home-screen widget, volume trigger -- got
+                // here WITHOUT the app PIN. Starting the countdown that way
+                // is deliberate; disclosing who will be called is not
+                // (audit A-009).
+                maskContactIdentity: true,
+              ),
           transitionDuration: Duration.zero,
           reverseTransitionDuration: Duration.zero,
         ),

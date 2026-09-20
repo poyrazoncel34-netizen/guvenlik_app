@@ -33,6 +33,8 @@ import '../core/services/emergency_result_policy.dart';
 import '../core/services/emergency_session_contract.dart';
 import '../core/services/panic_arm_policy.dart';
 import '../core/services/pin_verification_service.dart';
+import '../core/widgets/countdown_gradient_arc_painter.dart';
+import '../core/utils/contact_name_mask.dart';
 import '../core/utils/emergency_number_validator.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
@@ -42,12 +44,16 @@ class CountdownScreen extends StatefulWidget {
   final PinVerificationService? pinVerificationService;
   final EmergencyPlatformService? emergencyPlatformService;
 
+  /// See [ContactNameMask]: set by surfaces that never asked for the PIN.
+  final bool maskContactIdentity;
+
   const CountdownScreen({
     super.key,
     this.isTestMode = false,
     this.entitlementDecision = EntitlementDecision.unknown,
     this.pinVerificationService,
     this.emergencyPlatformService,
+    this.maskContactIdentity = false,
   });
 
   @override
@@ -80,6 +86,11 @@ class _CountdownScreenState extends State<CountdownScreen>
           debugPrint('CountdownScreen best-effort operation failed: $error');
         },
       );
+  String get _displayContactName => ContactNameMask.forSurface(
+    _armedTargetName ?? _emergencyContact?.name,
+    masked: widget.maskContactIdentity,
+  );
+
   bool _reduceMotion = false;
   bool _handoffToEmergencyScreen = false;
   bool _isNavigating = false;
@@ -404,10 +415,9 @@ class _CountdownScreenState extends State<CountdownScreen>
           context,
           MaterialPageRoute(
             builder: (context) => EmergencyCallScreen(
-              name:
-                  _armedTargetName ??
-                  _emergencyContact?.name ??
-                  "countdown_emergency_label".tr(),
+              name: _displayContactName.isEmpty
+                  ? "countdown_emergency_label".tr()
+                  : _displayContactName,
               // Display the immutable arming-time identity when available.
               phone: calledNumber,
               callResult: callResult,
@@ -748,7 +758,7 @@ class _CountdownScreenState extends State<CountdownScreen>
                                 width: circleSize,
                                 height: circleSize,
                                 child: CustomPaint(
-                                  painter: _GradientArcPainter(
+                                  painter: CountdownGradientArcPainter(
                                     progress: _countdown / 10,
                                     startColor: urgentColor,
                                     endColor: isUrgent
@@ -828,11 +838,7 @@ class _CountdownScreenState extends State<CountdownScreen>
                             const SizedBox(height: 6),
                             Text(
                               "countdown_emergency_contact".tr(
-                                namedArgs: {
-                                  "name":
-                                      _armedTargetName ??
-                                      _emergencyContact!.name,
-                                },
+                                namedArgs: {"name": _displayContactName},
                               ),
                               style: const TextStyle(
                                 fontSize: 13,
@@ -1023,59 +1029,5 @@ class _ScaleTapButtonState extends State<_ScaleTapButton>
       onTapCancel: () => _ctrl.reverse(),
       child: ScaleTransition(scale: _scale, child: widget.child),
     );
-  }
-}
-
-/// Gradient arc painter for the countdown circle
-class _GradientArcPainter extends CustomPainter {
-  final double progress;
-  final Color startColor;
-  final Color endColor;
-  final Color bgColor;
-  final double strokeWidth;
-
-  _GradientArcPainter({
-    required this.progress,
-    required this.startColor,
-    required this.endColor,
-    required this.bgColor,
-    this.strokeWidth = 14,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height / 2);
-    final radius = (size.width / 2) - strokeWidth / 2;
-    final rect = Rect.fromCircle(center: center, radius: radius);
-
-    // Background ring
-    final bgPaint = Paint()
-      ..color = bgColor
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = strokeWidth
-      ..strokeCap = StrokeCap.round;
-    canvas.drawCircle(center, radius, bgPaint);
-
-    // Gradient arc
-    if (progress > 0) {
-      final sweepAngle = 2 * pi * progress;
-      final gradient = SweepGradient(
-        startAngle: -pi / 2,
-        endAngle: -pi / 2 + sweepAngle,
-        colors: [startColor, endColor],
-      );
-      final arcPaint = Paint()
-        ..shader = gradient.createShader(rect)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = strokeWidth
-        ..strokeCap = StrokeCap.round;
-      canvas.drawArc(rect, -pi / 2, sweepAngle, false, arcPaint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _GradientArcPainter oldDelegate) {
-    return oldDelegate.progress != progress ||
-        oldDelegate.startColor != startColor;
   }
 }
