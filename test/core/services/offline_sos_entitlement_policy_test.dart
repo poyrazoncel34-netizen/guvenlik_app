@@ -224,10 +224,7 @@ void main() {
 
     test('convenience features are NOT emergency-capable', () {
       expect(FeatureAccessMatrix.isEmergencyCapable(PremiumFeature.timeline), isFalse);
-      expect(
-        FeatureAccessMatrix.isEmergencyCapable(PremiumFeature.advancedAutomation),
-        isFalse,
-      );
+      expect(FeatureAccessMatrix.isEmergencyCapable(PremiumFeature.fakeCall), isFalse);
     });
   });
 

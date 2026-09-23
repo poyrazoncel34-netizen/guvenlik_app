@@ -13,7 +13,6 @@ enum PremiumFeature {
   emergencyContactSelect,
   volumeTrigger,
   testMode,
-  advancedAutomation,
 }
 
 enum FeatureAccessLevel { free, pro }
@@ -118,12 +117,6 @@ class FeatureAccessMatrix {
       titleKey: 'premium_feature_volume_trigger',
       verificationLabel: 'Volume trigger',
     ),
-    PremiumFeature.advancedAutomation: FeatureAccessEntry(
-      feature: PremiumFeature.advancedAutomation,
-      access: FeatureAccessLevel.pro,
-      titleKey: 'premium_feature_advanced_automation',
-      verificationLabel: 'Advanced safety automation',
-    ),
   };
 
   static const proBenefitKeys = <String>[
@@ -131,7 +124,6 @@ class FeatureAccessMatrix {
     'subscription_value_walk',
     'subscription_value_checkin',
     'subscription_value_volume_trigger',
-    'subscription_value_automation',
   ];
 
   static Set<PremiumFeature> get freeFeatures => entries.values

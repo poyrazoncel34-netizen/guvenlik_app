@@ -41,7 +41,6 @@ void main() {
           PremiumFeature.safeWalk,
           PremiumFeature.checkIn,
           PremiumFeature.volumeTrigger,
-          PremiumFeature.advancedAutomation,
         ]),
       );
 

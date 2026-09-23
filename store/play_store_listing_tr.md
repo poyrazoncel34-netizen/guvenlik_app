@@ -47,7 +47,7 @@ Gece veya güvensiz ortamlarda yardımcı check-in oturumu başlatın. Arka plan
 Belirlediğiniz süre sonunda kontrol akışı başlatan yardımcı check-in oturumları kullanın.
 
 ◉ Ses Tuşu Tetikleyici
-Gelişmiş güvenlik otomasyonlarını kullanın.
+Uygulama açıkken ses tuşuna arka arkaya basarak panik akışını başlatın.
 
 KoruBeni Pro isteğe bağlı bir aboneliktir. Satın alma, yenileme, iptal ve geri yükleme işlemleri Google Play üzerinden yönetilir.
 

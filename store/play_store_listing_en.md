@@ -9,7 +9,7 @@ Panic button, fake call, siren. No account. Your data stays on your device.
 **Full Description (4000 characters):**
 KoruBeni is an Android personal safety app that helps you view location status, run an on-device fake call simulation, and use additional safety tools with an optional Pro subscription.
 
-KoruBeni offers free basic safety tools. Panic/SOS, Safe Walk, check-in, and advanced safety automations are available with KoruBeni Pro.
+KoruBeni offers free basic safety tools. Panic/SOS, Safe Walk, check-in, and the volume-button trigger are available with KoruBeni Pro.
 
 ⚠️ IMPORTANT: KoruBeni is not an official emergency service and does not replace 112 (or your local emergency number). KoruBeni is an independent application. It is not affiliated with, and does not represent, any government body, law enforcement agency or official emergency service. In a real emergency, please call your local emergency number first. KoruBeni is only a complementary tool and does not provide physical protection.
 
@@ -45,7 +45,7 @@ View local in-app safety events on your device.
 Rehearse the whole flow end to end without placing a real call.
 
 ◉ Volume Trigger
-Use advanced safety automations as a Pro user.
+Start the panic flow by pressing the volume button repeatedly while the app is open.
 
 KoruBeni Pro is optional. Purchases, renewals, cancellations, and restore operations are managed through Google Play.
 
