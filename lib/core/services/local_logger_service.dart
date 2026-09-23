@@ -56,7 +56,15 @@ enum LocalWarningCode {
   /// the Doze-proof AlarmManager session cannot be armed at all. The readiness
   /// snapshot already reports not-ready in this case (every field is unknown),
   /// but nothing recorded WHY, and logcat is unreadable in release.
-  emergencyPlatformBridgeMissing('emergency_platform_bridge_missing');
+  emergencyPlatformBridgeMissing('emergency_platform_bridge_missing'),
+
+  /// The PIN brute-force counters could not be read, so the lock screen does
+  /// not know how many attempts have already failed. Recorded because the
+  /// previous behaviour -- treating an unreadable counter as "0 failures, not
+  /// locked" -- silently DISARMED the only lockout enforcement point (PIN
+  /// verification itself never consults the lockout service) with no trace.
+  /// Carries no PIN material and no counter value, only the fact of failure.
+  pinLockoutStateUnreadable('pin_lockout_state_unreadable');
 
   const LocalWarningCode(this.wireCode);
   final String wireCode;

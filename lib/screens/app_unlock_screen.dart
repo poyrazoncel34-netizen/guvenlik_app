@@ -13,6 +13,7 @@ import '../core/motion.dart';
 import '../core/constants/app_constants.dart';
 import '../core/services/app_reset_service.dart';
 import '../core/services/emergency_session_contract.dart';
+import '../core/services/local_logger_service.dart';
 import '../core/services/pin_lockout_service.dart';
 import '../core/services/pin_verification_service.dart';
 import '../core/services/safety_session_activity_probe.dart';
@@ -69,15 +70,54 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> {
       _lockoutEndTime != null && DateTime.now().isBefore(_lockoutEndTime!);
 
   Future<void> _syncLockoutState() async {
-    final state = await PinLockoutService.instance.getState();
+    PinLockoutState state;
+    var counterReadable = true;
+    try {
+      state = await PinLockoutService.instance.getState();
+    } on Exception catch (_) {
+      counterReadable = false;
+      state = _unreadableLockoutState();
+    } on StateError {
+      // getState() throws StateError on a corrupt counter.
+      counterReadable = false;
+      state = _unreadableLockoutState();
+    }
     if (!mounted) return;
     setState(() {
       _lockoutEndTime = state.lockedUntil;
       _lockoutRemaining = state.remainingSeconds;
     });
-    if (state.isLocked) {
+    // `countdownStream` re-reads the counters once a second; starting it on a
+    // store that just threw only reproduces the failure on a timer. The band
+    // stays, without a live countdown, until the screen is entered again.
+    if (state.isLocked && counterReadable) {
       _startLockoutCountdown(state);
     }
+  }
+
+  /// What to believe when the brute-force counters cannot be read.
+  ///
+  /// NOT "zero failures, not locked". `PinVerificationService.verify()` never
+  /// consults `PinLockoutService`; this screen's `_lockoutEndTime` is the ONLY
+  /// thing enforcing the lockout, so treating an unreadable counter as clean
+  /// silently hands an attacker unlimited guesses. Failing closed for one
+  /// backoff step is recoverable -- "PIN'imi unuttum" stays reachable while
+  /// locked out (it is not gated on `_isLockedOut`) and leads to the
+  /// session-guarded reset. One base backoff step is used because the true
+  /// failure count is exactly what could not be read.
+  PinLockoutState _unreadableLockoutState() {
+    unawaited(
+      LocalLoggerService.instance.warningCode(
+        LocalWarningCode.pinLockoutStateUnreadable,
+      ),
+    );
+    return PinLockoutState(
+      // The real count is unknown; only `lockedUntil` gates the keypad.
+      failedAttempts: 0,
+      lockedUntil: DateTime.now().add(
+        const Duration(seconds: PinLockoutService.baseLockoutSeconds),
+      ),
+    );
   }
 
   void _startLockoutCountdown(PinLockoutState state) {
