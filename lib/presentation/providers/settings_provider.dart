@@ -4,8 +4,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/constants/app_constants.dart';
 import '../../core/services/volume_trigger_service.dart';
+import '../../core/services/app_reset_state_registry.dart';
 
 class SettingsProvider extends ChangeNotifier {
+  SettingsProvider() {
+    AppResetStateRegistry.register(this, resetAfterDataDeletion);
+  }
+
   bool _notificationsEnabled = true;
   bool _soundEnabled = true;
   bool _volumeTriggerEnabled = false;
@@ -64,10 +69,21 @@ class SettingsProvider extends ChangeNotifier {
     await VolumeTriggerService.instance.setEnabled(value);
   }
 
+  Future<void> resetAfterDataDeletion() async {
+    _notificationsEnabled = true;
+    _soundEnabled = true;
+    _volumeTriggerEnabled = false;
+    _profileName = '';
+    _loaded = false;
+    await VolumeTriggerService.instance.setEnabled(false);
+    notifyListeners();
+  }
+
   bool _disposed = false;
 
   @override
   void dispose() {
+    AppResetStateRegistry.unregister(this);
     _disposed = true;
     super.dispose();
   }

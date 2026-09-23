@@ -4,6 +4,7 @@ import '../../core/app_colors.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/di/service_locator.dart';
 import '../../core/services/contact_service.dart';
+import '../../core/services/app_reset_state_registry.dart';
 import '../../core/utils/emergency_number_validator.dart';
 import '../../domain/repositories/contacts_repository.dart';
 
@@ -22,7 +23,9 @@ class ContactItem {
 }
 
 class ContactsProvider extends ChangeNotifier {
-  ContactsProvider();
+  ContactsProvider() {
+    AppResetStateRegistry.register(this, resetAfterDataDeletion);
+  }
 
   late final ContactsRepository _repository =
       serviceLocator<ContactsRepository>();
@@ -174,6 +177,14 @@ class ContactsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void resetAfterDataDeletion() {
+    _emergencyContacts.clear();
+    _selectedEmergencyPhone = null;
+    _initialized = false;
+    _isLoading = false;
+    notifyListeners();
+  }
+
   int _findIndexByPhone(String phone) {
     final normalized = normalizePhoneNumber(phone);
     return _emergencyContacts.indexWhere(
@@ -203,6 +214,7 @@ class ContactsProvider extends ChangeNotifier {
 
   @override
   void dispose() {
+    AppResetStateRegistry.unregister(this);
     _disposed = true;
     super.dispose();
   }

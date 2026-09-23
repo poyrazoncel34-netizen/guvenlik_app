@@ -9,6 +9,7 @@ import 'emergency_platform_service.dart';
 import 'emergency_session_contract.dart';
 import 'contact_service.dart';
 import 'local_database_service.dart';
+import 'app_reset_state_registry.dart';
 
 /// Local deletion boundary used by the app-reset transaction.
 ///
@@ -104,6 +105,9 @@ class AppResetService {
       // The emergency-contact cache mirrors secure storage. Invalidate it only
       // after that authority acknowledges deletion.
       ContactService.resetCache();
+      if (!await AppResetStateRegistry.resetAll()) {
+        allDeleted = false;
+      }
     }
 
     return allDeleted ? WipeResult.completed : WipeResult.unknown;

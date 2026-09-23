@@ -8,10 +8,13 @@ import '../../core/services/contact_service.dart';
 import '../../core/di/service_locator.dart';
 import '../../core/utils/permission_helper.dart';
 import '../../core/services/location_service.dart';
+import '../../core/services/app_reset_state_registry.dart';
 import '../../domain/repositories/contacts_repository.dart';
 
 class HomeProvider extends ChangeNotifier {
-  HomeProvider();
+  HomeProvider() {
+    AppResetStateRegistry.register(this, resetAfterDataDeletion);
+  }
 
   static const String onboardingKey = "onboarding_dismissed";
 
@@ -113,4 +116,28 @@ class HomeProvider extends ChangeNotifier {
     return message;
   }
 
+  void resetAfterDataDeletion() {
+    _emergencyContact = null;
+    _contactsPermissionGranted = false;
+    _locationPermissionGranted = false;
+    _onboardingDismissed = false;
+    _initialized = false;
+    _pendingMessage = null;
+    notifyListeners();
+  }
+
+  bool _disposed = false;
+
+  @override
+  void dispose() {
+    AppResetStateRegistry.unregister(this);
+    _disposed = true;
+    super.dispose();
+  }
+
+  @override
+  void notifyListeners() {
+    if (_disposed) return;
+    super.notifyListeners();
+  }
 }
