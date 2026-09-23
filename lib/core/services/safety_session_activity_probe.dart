@@ -2,8 +2,15 @@ import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// Reports whether a long-running safety session (Check-In / Safe Walk) is
-/// still persisted, without requiring the caller to hold a [SessionToken].
+import 'emergency_platform_service.dart';
+import 'emergency_session_contract.dart';
+
+/// Reads the native PANIC session without holding a token.
+typedef PanicSessionDiscovery = Future<SessionSnapshot> Function();
+
+/// Reports whether a safety session — Check-In, Safe Walk, or a running PANIC
+/// countdown — is still live, without requiring the caller to hold a
+/// [SessionToken].
 ///
 /// This exists for ONE caller: the pre-authentication lock screen. A local
 /// data reset performed before the PIN is entered cancels every `PREPARING`
@@ -11,18 +18,30 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// duress model an attacker holding the device must not be able to do that,
 /// so the reset is refused while a session projection exists.
 ///
-/// The projection is deliberately the same SharedPreferences blob
-/// `CheckInService` writes, so the probe cannot disagree with the running
-/// session for a reason the user could not observe. A read failure is treated
-/// as "a session may be active" (fail-closed): refusing a destructive reset is
-/// recoverable (unlock, or reinstall), a wrongly cancelled safety session is
-/// not.
+/// The Check-In / Safe Walk projection is deliberately the same
+/// SharedPreferences blob `CheckInService` writes, so the probe cannot
+/// disagree with the running session for a reason the user could not observe.
+///
+/// PANIC has NO such Dart projection: it is armed straight into the native
+/// coordinator's durable store. Reading only the SharedPreferences keys
+/// therefore answered "no session" while a countdown was `ARMED`, and
+/// `EmergencySessionCoordinator.wipe()` refuses only `CLAIMED` — it CANCELS
+/// `PREPARING`/`ARMED`. An attacker holding the device could silence a live
+/// SOS through the forgot-PIN or bootstrap-recovery reset without ever
+/// knowing the PIN. The native slot is consulted here for that reason.
+///
+/// A read failure is treated as "a session may be active" (fail-closed):
+/// refusing a destructive reset is recoverable (unlock, or reinstall), a
+/// wrongly cancelled safety session is not.
 class SafetySessionActivityProbe {
   const SafetySessionActivityProbe({
     Future<SharedPreferences> Function()? preferencesLoader,
-  }) : _preferencesLoader = preferencesLoader ?? SharedPreferences.getInstance;
+    PanicSessionDiscovery? panicDiscovery,
+  }) : _preferencesLoader = preferencesLoader ?? SharedPreferences.getInstance,
+       _panicDiscovery = panicDiscovery;
 
   final Future<SharedPreferences> Function() _preferencesLoader;
+  final PanicSessionDiscovery? _panicDiscovery;
 
   static const SafetySessionActivityProbe instance =
       SafetySessionActivityProbe();
@@ -36,6 +55,7 @@ class SafetySessionActivityProbe {
   ];
 
   Future<bool> hasActiveSession() async {
+    if (await hasActivePanicSession()) return true;
     try {
       final preferences = await _preferencesLoader();
       for (final key in sessionStateKeys) {
@@ -45,6 +65,39 @@ class SafetySessionActivityProbe {
     } on Exception {
       return true;
     }
+  }
+
+  /// Whether the native PANIC slot holds a session that is not finished.
+  ///
+  /// Visible for tests; [hasActiveSession] already includes it.
+  Future<bool> hasActivePanicSession() async {
+    final discover = _panicDiscovery ?? _discoverPanicSession;
+    try {
+      final snapshot = await discover();
+      return switch (snapshot.status) {
+        SessionReadStatus.present =>
+          snapshot.lifecycleState != EmergencySessionLifecycle.absent &&
+              !snapshot.lifecycleState.isTerminal,
+        SessionReadStatus.absent => false,
+        // Not proof that nothing is armed.
+        SessionReadStatus.corrupted || SessionReadStatus.unknown => true,
+      };
+    } on Exception {
+      return true;
+    }
+  }
+
+  static Future<SessionSnapshot> _discoverPanicSession() {
+    // No native coordinator means no native session to protect, so this is
+    // not a bypass: PANIC is only ever armed through the Android runtime.
+    if (!EmergencyPlatformService.instance.isSupported) {
+      return Future<SessionSnapshot>.value(
+        const SessionSnapshot(status: SessionReadStatus.absent),
+      );
+    }
+    return EmergencyPlatformService.instance.discoverEmergencySession(
+      EmergencySessionKind.panic,
+    );
   }
 
   bool _isActiveState(String? raw) {
