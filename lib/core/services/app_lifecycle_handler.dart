@@ -8,6 +8,7 @@ import '../navigation/app_navigator.dart';
 import '../di/service_locator.dart';
 import '../security/secure_storage.dart';
 import '../security/secure_storage_keys.dart';
+import 'emergency_session_contract.dart';
 
 /// Whether a lifecycle state means the app GENUINELY went to the background and
 /// the re-auth clock should start.
@@ -31,8 +32,21 @@ bool lifecycleStartsBackgroundClock(AppLifecycleState state) =>
 /// Tracks app lifecycle and forces re-authentication after being
 /// backgrounded for longer than [lockAfterSeconds].
 class AppLifecycleHandler {
-  AppLifecycleHandler._();
+  AppLifecycleHandler._({
+    DateTime Function()? now,
+    SecureStorage? secureStorage,
+  }) : _now = now ?? DateTime.now,
+       _secureStorage = secureStorage;
+
+  factory AppLifecycleHandler.forTesting({
+    required DateTime Function() now,
+    required SecureStorage secureStorage,
+  }) => AppLifecycleHandler._(now: now, secureStorage: secureStorage);
+
   static final AppLifecycleHandler instance = AppLifecycleHandler._();
+
+  final DateTime Function() _now;
+  final SecureStorage? _secureStorage;
 
   /// How many seconds in background before requiring re-auth.
   static const int lockAfterSeconds = 120; // 2 minutes
@@ -47,7 +61,7 @@ class AppLifecycleHandler {
   /// background time. Defence in depth alongside
   /// [lifecycleStartsBackgroundClock].
   void onPaused() {
-    _pausedAt ??= DateTime.now();
+    _pausedAt ??= _now();
   }
 
   /// Visible for tests: the background clock, or null when the app is foreground.
@@ -66,14 +80,24 @@ class AppLifecycleHandler {
     if (_isLockScreenShowing) return;
     if (_pausedAt == null) return;
 
-    final elapsed = DateTime.now().difference(_pausedAt!).inSeconds;
+    final elapsed = _now().difference(_pausedAt!).inSeconds;
     _pausedAt = null;
 
     if (elapsed < lockAfterSeconds) return;
     // Check if PIN is set — no lock if user hasn't set one.
-    final secureStorage = serviceLocator<SecureStorage>();
-    final pin = await secureStorage.read(key: SecureStorageKeys.userPin);
-    if (pin == null || pin.isEmpty) return;
+    final secureStorage = _secureStorage ?? serviceLocator<SecureStorage>();
+    PinState pinState;
+    try {
+      final pin = await secureStorage.read(key: SecureStorageKeys.userPin);
+      pinState = pin == null || pin.isEmpty
+          ? PinState.absent
+          : PinState.configured;
+    } catch (_) {
+      // Storage uncertainty is never evidence that no PIN exists. Route to
+      // the existing local-PIN recovery surface instead of exposing the app.
+      pinState = PinState.readFailed;
+    }
+    if (pinState == PinState.absent) return;
 
     final navigator = rootNavigatorKey.currentState;
     if (navigator == null) return;

@@ -11,9 +11,31 @@
 // Zorlama modeli yalnizca yerel PIN'e dayandigi icin (CLAUDE.md kural 2), hic
 // tetiklenmeyen bir otomatik kilit gercek bir guvenlik bulgusudur.
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:guvenlik_app/core/di/service_locator.dart';
+import 'package:guvenlik_app/core/navigation/app_navigator.dart';
+import 'package:guvenlik_app/core/security/secure_storage.dart';
 import 'package:guvenlik_app/core/services/app_lifecycle_handler.dart';
+import 'package:guvenlik_app/screens/app_unlock_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+class _UnreadableSecureStorage extends SecureStorage {
+  @override
+  Future<String?> read({required String key}) =>
+      Future<String?>.error(StateError('injected unreadable keystore'));
+
+  @override
+  Future<void> write({required String key, required String value}) async {}
+
+  @override
+  Future<void> delete({required String key}) async {}
+
+  @override
+  Future<void> deleteAll() async {}
+}
 
 void main() {
   group('lifecycleStartsBackgroundClock', () {
@@ -86,4 +108,43 @@ void main() {
   test('esik degeri 2 dakika olarak sabit', () {
     expect(AppLifecycleHandler.lockAfterSeconds, 120);
   });
+
+  testWidgets(
+    'secure storage read failure on resume fails closed without trapping loading UI',
+    (tester) async {
+      SharedPreferences.setMockInitialValues(<String, Object>{});
+      await serviceLocator.reset();
+      final storage = _UnreadableSecureStorage();
+      serviceLocator.registerSingleton<SecureStorage>(storage);
+      var now = DateTime.utc(2026, 9, 23, 12);
+      final handler = AppLifecycleHandler.forTesting(
+        now: () => now,
+        secureStorage: storage,
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          navigatorKey: rootNavigatorKey,
+          home: const Scaffold(body: Text('protected content')),
+        ),
+      );
+      handler.onPaused();
+      now = now.add(const Duration(seconds: 121));
+
+      Object? resumeError;
+      unawaited(
+        handler.onResumed().catchError((Object error) {
+          resumeError = error;
+        }),
+      );
+      await tester.pumpAndSettle();
+
+      expect(resumeError, isNull);
+      expect(find.byType(AppUnlockScreen), findsOneWidget);
+      expect(find.byType(CircularProgressIndicator), findsNothing);
+      expect(find.text('protected content'), findsNothing);
+
+      await serviceLocator.reset();
+    },
+  );
 }
