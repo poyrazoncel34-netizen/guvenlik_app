@@ -104,6 +104,15 @@ class EmergencyTriggerHostState extends State<EmergencyTriggerHost>
   }
 
   void _startForegroundTriggers() {
+    if (VolumeTriggerService.isSupported) {
+      // Bind even while the preference is off. Settings may enable the native
+      // detector without another lifecycle transition; without this callback
+      // the detector consumed the three key presses but Dart performed no
+      // action until the next resume.
+      VolumeTriggerService.instance.bindCallback(
+        onPanicTriggered: _openCountdown,
+      );
+    }
     _startVolumeIfEnabled();
   }
 

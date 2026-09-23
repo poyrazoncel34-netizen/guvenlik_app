@@ -27,10 +27,29 @@ class VolumeTriggerService {
   static VolumeTriggerService get instance =>
       _instance ??= VolumeTriggerService._();
 
-  VolumeTriggerService._();
+  VolumeTriggerService._({
+    bool? supportedOverride,
+    Stream<Object?>? eventStream,
+    Future<void> Function(bool enabled)? nativeSetter,
+  }) : _supportedOverride = supportedOverride,
+       _eventStreamOverride = eventStream,
+       _nativeSetter = nativeSetter;
+
+  factory VolumeTriggerService.forTesting({
+    required Stream<Object?> eventStream,
+    required Future<void> Function(bool enabled) nativeSetter,
+    bool supported = true,
+  }) => VolumeTriggerService._(
+    supportedOverride: supported,
+    eventStream: eventStream,
+    nativeSetter: nativeSetter,
+  );
 
   final EventChannel _events = const EventChannel(_eventChannel);
   final MethodChannel _control = const MethodChannel(_controlChannel);
+  final bool? _supportedOverride;
+  final Stream<Object?>? _eventStreamOverride;
+  final Future<void> Function(bool enabled)? _nativeSetter;
 
   StreamSubscription<Object?>? _subscription;
   VoidCallback? _onPanicTriggered;
@@ -43,26 +62,24 @@ class VolumeTriggerService {
 
   /// Platform desteği var mı?
   static bool get isSupported => !kIsWeb && Platform.isAndroid;
+  bool get _supported => _supportedOverride ?? isSupported;
 
   /// Tercih edilen durumu SharedPreferences'tan yükle.
   Future<void> loadPreference() async {
-    if (!isSupported) return;
+    if (!_supported) return;
     final prefs = await SharedPreferences.getInstance();
     _isEnabled = prefs.getBool(AppConstants.prefVolumeTrigger) ?? false;
-    if (_isEnabled && _onPanicTriggered != null && !_isListening) {
-      _startListening();
-    }
   }
 
   /// Tercihi kaydet ve native tarafı güncelle.
   Future<void> setEnabled(bool enabled) async {
-    if (!isSupported) return;
+    if (!_supported) return;
     _isEnabled = enabled;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(AppConstants.prefVolumeTrigger, enabled);
 
     try {
-      await _control.invokeMethod('setEnabled', {'enabled': enabled});
+      await _setNativeEnabled(enabled);
     } catch (e) {
       debugPrint('VolumeTrigger setEnabled failed: $e');
     }
@@ -75,18 +92,25 @@ class VolumeTriggerService {
   }
 
   /// Callback belirleyerek dinlemeyi başlat.
-  void startListening({required VoidCallback onPanicTriggered}) {
+  void bindCallback({required VoidCallback onPanicTriggered}) {
     _onPanicTriggered = onPanicTriggered;
+  }
+
+  /// Callback belirleyerek etkin tercih için dinlemeyi başlat.
+  void startListening({required VoidCallback onPanicTriggered}) {
+    bindCallback(onPanicTriggered: onPanicTriggered);
     if (_isEnabled && !_isListening) {
       _startListening();
     }
   }
 
   void _startListening() {
-    if (!isSupported || _isListening) return;
+    if (!_supported || _isListening) return;
 
     try {
-      _subscription = _events.receiveBroadcastStream().listen(
+      final eventStream =
+          _eventStreamOverride ?? _events.receiveBroadcastStream();
+      _subscription = eventStream.listen(
         (event) {
           if (event == 'volume_panic') {
             debugPrint('>>> Volume panic triggered!');
@@ -100,10 +124,19 @@ class VolumeTriggerService {
       _isListening = true;
 
       // Native tarafı da etkinleştir
-      _control.invokeMethod('setEnabled', {'enabled': true}).catchError((_) {});
+      _setNativeEnabled(true).catchError((_) {});
     } catch (e) {
       debugPrint('VolumeTrigger startListening failed: $e');
     }
+  }
+
+  Future<void> _setNativeEnabled(bool enabled) async {
+    final setter = _nativeSetter;
+    if (setter != null) {
+      await setter(enabled);
+      return;
+    }
+    await _control.invokeMethod<void>('setEnabled', {'enabled': enabled});
   }
 
   void _stopListening() {
