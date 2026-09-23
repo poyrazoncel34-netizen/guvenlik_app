@@ -45,8 +45,39 @@ Surumleme: `pubspec.yaml` 1.0.0+1'de SABITTIR; gercek `versionCode`
   etiketini alttan kirpiyordu; banner artik metin olcegiyle birlikte buyuyor.
 - Arka plan kilidi hic tetiklenmiyordu (`AppLifecycleState.inactive` donus
   yolunda da tetikleniyor ve sayaci sifirliyordu).
+- Gunler once yarida kalmis bir acil oturum kaydi, uygulama yeniden acildiginda
+  yas sinirina bakilmadan aranabiliyordu. Vadesi 5 dakikayi asmis boyle bir
+  kayit artik sessizce aranmiyor; kullaniciya bildirimle teklif ediliyor.
+- "Verilerimi sil" ayni oturum icinde calistirildiginda silinen acil kisiler
+  Kisiler ekraninda gorunmeye devam edebiliyor ve sonraki bir duzenleme eski
+  listeyi geri yazabiliyordu. Silme artik ekranlardaki listeleri de bosaltiyor.
+- Gecikmeli sahte cagri "zamanlandi" denmesine ragmen hic gelmiyordu: zamanlanmis
+  bildirimi teslim edecek alici uygulama manifestinde yoktu. Alici eklendi;
+  yeniden baslatmadan sonra da yeniden zamanlaniyor.
+- Ses tusu tetikleyici Ayarlar'dan acildiginda bir sonraki uygulama donusune
+  kadar hicbir sey yapmiyordu; native taraf tuslari yutuyor, uygulama tarafinda
+  karsiligi calismiyordu. Tetikleyici artik acildigi anda calisiyor.
+- Arka plan kilidi, guvenli depo okunamadiginda hic gosterilmiyordu (hata
+  yutuluyor ve "PIN yok" sayiliyordu). Okuma hatasi artik kilit ekranina
+  dusuyor.
+- Panik geri sayimi calisirken, PIN bilinmeden ulasilabilen "PIN'imi unuttum"
+  sifirlamasi bu oturumu iptal edebiliyordu: aktif oturum kontrolu yalnizca
+  check-in ve guvenli yuruyusu goruyor, paniki gormuyordu. Kontrol artik panik
+  oturumunu da kapsiyor; okunamadiginda sifirlama reddediliyor.
+- PIN deneme sayaclari okunamadiginda kilit tamamen devre disi kaliyordu
+  (sayac "0 hata" sayiliyor, hicbir kayit dusulmuyordu). Okunamayan sayac artik
+  kilitli kabul ediliyor ve yerel kayda geciyor; "PIN'imi unuttum" erisilebilir
+  kaliyor.
+
+### Degistirildi
+- Paywall ve magaza metnindeki "Gelismis guvenlik otomasyonlari" faydasi
+  kaldirildi: karsiligi olan bir islev yoktu. Gercek otomasyonlar (panik/SOS,
+  guvenli yuruyus, check-in, ses tusu tetikleyici) kendi maddeleriyle listeleniyor.
 
 ### Eklendi
+- Guvenli depodan PIN okunamadiginda uygulama artik cikissiz bir hata
+  ekraninda kalmiyor; yeniden deneme ve yazarak onaylanan yerel sifirlama
+  sunan bir kurtarma ekrani geliyor.
 - `docs/audit/evidence/` altinda makine-okunur kanit artefaktlari ve her biri
   icin negatif kontrollu dogrulayicilar.
 - `docs/release/incident_runbook.md`, `SECURITY.md`, bu dosya.
