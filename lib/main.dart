@@ -11,12 +11,15 @@ import 'core/app_theme.dart';
 import 'core/navigation/app_navigator.dart';
 import 'presentation/providers/providers.dart';
 import 'screens/app_root.dart';
+import 'screens/bootstrap_recovery_screen.dart';
 import 'core/services/crash_log_service.dart';
 import 'core/widgets/emergency_trigger_host.dart';
 import 'core/design_tokens.dart';
 import 'core/widgets/app_privacy_shield.dart';
 import 'core/services/local_logger_service.dart';
 import 'core/services/app_bootstrap_service.dart';
+import 'core/services/app_reset_service.dart';
+import 'core/services/safety_session_activity_probe.dart';
 import 'core/services/best_effort_startup.dart';
 import 'core/services/startup_best_effort_services.dart';
 import 'core/constants/feature_access_matrix.dart';
@@ -94,21 +97,29 @@ void main() async {
     );
   };
 
-  final criticalBootstrap = await AppBootstrapService.production(
-    preliminarySteps: [
-      CriticalBootstrapStep('localization', EasyLocalization.ensureInitialized),
-      CriticalBootstrapStep('localePreferences', () async {
-        final prefs = await SharedPreferences.getInstance();
-        final storedLocale = prefs.getString('locale');
-        if (storedLocale != null && storedLocale != 'tr_TR') {
-          if (!await prefs.remove('locale')) {
-            throw StateError('LOCALE_RESET_FAILED');
-          }
-        }
-      }),
-    ],
-  ).initializeCritical();
+  final criticalBootstrap = await _runCriticalBootstrap();
   if (!criticalBootstrap.isReady) {
+    final reasonCode = criticalBootstrap.reasonCode ?? 'unknown';
+    if (reasonCode == 'pinFailed' || reasonCode == 'pinTimeout') {
+      runApp(
+        MaterialApp(
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.darkTheme,
+          home: BootstrapRecoveryScreen(
+            reasonCode: reasonCode,
+            retryBootstrap: () async => (await _runCriticalBootstrap()).isReady,
+            hasActiveSafetySession:
+                SafetySessionActivityProbe.instance.hasActiveSession,
+            resetLocalData: AppResetService.clearLocalData,
+            // Re-enter the normal bootstrap from the process root. No recovery
+            // callback can construct KoruBeniApp directly and bypass a critical
+            // check that may have changed since the last attempt.
+            onRecovered: main,
+          ),
+        ),
+      );
+      return;
+    }
     runApp(
       ErrorWidget.builder(
         FlutterErrorDetails(
@@ -196,6 +207,28 @@ void main() async {
     ),
   );
 }
+
+/// The critical preliminary steps, in the order `main` has always run them.
+///
+/// Kept as a top-level list so the bootstrap-recovery retry re-runs exactly
+/// these steps rather than a second, drifting copy of them.
+List<CriticalBootstrapStep> _criticalPreliminarySteps() => [
+  CriticalBootstrapStep('localization', EasyLocalization.ensureInitialized),
+  CriticalBootstrapStep('localePreferences', () async {
+    final prefs = await SharedPreferences.getInstance();
+    final storedLocale = prefs.getString('locale');
+    if (storedLocale != null && storedLocale != 'tr_TR') {
+      if (!await prefs.remove('locale')) {
+        throw StateError('LOCALE_RESET_FAILED');
+      }
+    }
+  }),
+];
+
+Future<CriticalBootstrapResult> _runCriticalBootstrap() =>
+    AppBootstrapService.production(
+      preliminarySteps: _criticalPreliminarySteps(),
+    ).initializeCritical();
 
 // ============================================================================
 // ANA UYGULAMA
