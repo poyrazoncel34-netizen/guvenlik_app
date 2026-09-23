@@ -23,6 +23,10 @@ class EmergencyPlatformChannel {
 
   bool _bridgeMissing = false;
 
+  /// Reason code for an invocation the native side never received. Shared so
+  /// the arm path and readiness compare against one spelling, not three.
+  static const String bridgeMissingReason = 'platformBridgeMissing';
+
   /// True once an invocation proved the native handler is not registered.
   ///
   /// Latched, never cleared: a FlutterEngine configures its channels once, so
@@ -38,7 +42,7 @@ class EmergencyPlatformChannel {
     if (error is MissingPluginException) {
       _bridgeMissing = true;
       debugPrint('[EmergencyPlatform] $method: native bridge missing');
-      return 'platformBridgeMissing';
+      return bridgeMissingReason;
     }
     if (error is TimeoutException) {
       debugPrint('[EmergencyPlatform] $method timed out');

@@ -22,8 +22,29 @@ class RevenueCatService {
   static const String _androidApiKey = String.fromEnvironment(
     'REVENUECAT_ANDROID_API_KEY',
   );
-  static const bool _isProduction =
-      String.fromEnvironment('ENV') == 'production';
+
+  /// Which client keys an environment may configure the SDK with, resolved
+  /// over the THREE named environments rather than production-vs-rest.
+  ///
+  /// This used to be `_isProduction ? production : dev`, read from its own
+  /// copy of `ENV`. Every non-production value therefore got the dev policy,
+  /// so `ci_smoke` with anything but the smoke sentinel accepted a `test_`
+  /// sandbox key -- the same two-valued flag in a three-valued model that
+  /// A-022 found in `AppEnvironment.isDev`. `ci_smoke` never talks to billing
+  /// (the sentinel case is disabled earlier, before any key is looked at), and
+  /// an `ENV` that names no environment gets no policy at all.
+  ///
+  /// Key policy only: entitlement, purchase and restore handling are untouched.
+  @visibleForTesting
+  static bool isClientKeyAllowedFor(String env, String key) {
+    if (AppEnvironment.envIsProduction(env)) {
+      return AppEnvironment.isProductionRevenueCatAndroidSdkKey(key);
+    }
+    if (AppEnvironment.envIsDev(env)) {
+      return AppEnvironment.isSafeRevenueCatClientSdkKey(key);
+    }
+    return false;
+  }
 
   /// The entitlement identifier configured in the RevenueCat dashboard.
   static const String entitlementId = 'KoruBeni Pro';
@@ -96,9 +117,10 @@ class RevenueCatService {
         );
         return false;
       }
-      final isAllowedClientKey = _isProduction
-          ? AppEnvironment.isProductionRevenueCatAndroidSdkKey(_androidApiKey)
-          : AppEnvironment.isSafeRevenueCatClientSdkKey(_androidApiKey);
+      final isAllowedClientKey = isClientKeyAllowedFor(
+        AppEnvironment.name,
+        _androidApiKey,
+      );
       if (!isAllowedClientKey) {
         _isConfigured = false;
         throw StateError(

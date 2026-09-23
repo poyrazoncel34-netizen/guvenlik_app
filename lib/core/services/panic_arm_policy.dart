@@ -1,3 +1,4 @@
+import 'emergency_platform_channel.dart';
 import 'emergency_session_contract.dart';
 
 /// Determines what the visible Panic countdown may do after the native arm
@@ -34,6 +35,21 @@ abstract final class PanicArmPolicy {
       _ => 'safety_session_not_ready',
     };
   }
+
+  /// Number the blocked-arm dialog may offer for a MANUAL call, or ''.
+  ///
+  /// Only a missing native bridge qualifies. By the time the native arm is
+  /// invoked, entitlement, PIN and a callable target have already been
+  /// verified; what is absent is only the automatic, Doze-proof session. The
+  /// system dialer is reached over a separate channel, so the user is offered
+  /// it at once instead of a countdown that looks protected and is not
+  /// (audit A-005). Every other blocked reason is an authorization or target
+  /// failure, where offering a call would bypass the gate that refused.
+  static String manualDialNumber(ArmResult result, String? armedTarget) =>
+      result is ArmRejected &&
+          result.reasonCode == EmergencyPlatformChannel.bridgeMissingReason
+      ? (armedTarget ?? '')
+      : '';
 
   static PanicArmDisposition dispositionFor(ArmResult result) {
     if (result is Armed) {

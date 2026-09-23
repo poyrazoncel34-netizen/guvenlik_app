@@ -10,6 +10,21 @@ Surumleme: `pubspec.yaml` 1.0.0+1'de SABITTIR; gercek `versionCode`
 ## Yayinlanmadi
 
 ### Duzeltildi
+- Acil durum cekirdegiyle baglanti uygulama icinde kurulamadiginda panik geri
+  sayimi korumali bir geri sayimdan farksiz basliyor, PIN ile iptal de
+  onaylanamiyordu. Artik geri sayim baslamiyor; "Guvenlik oturumu kurulmadi"
+  uyarisi acil kisiyi hemen aramak icin "Simdi Ara" dugmesiyle gosteriliyor.
+- Hizli Ayarlar kutucugu, ana ekran widget'i veya ses tusuyla PIN sorulmadan
+  acilan geri sayim ve arama ekrani acil kisinin tam adini gosteriyordu. Bu
+  yuzeylerde ad artik yalnizca bas harfiyle (ornegin "A***") gorunuyor.
+- Ayarlar ve profil ekranlarindaki, hicbir zaman doldurulamayan bos e-posta
+  satiri kaldirildi. "Verilerimi disa aktar" dosyasi artik bos bir e-posta
+  alani icermiyor; eski surumlerde girilmis bir e-posta, profil ekrani hic
+  acilmasa bile uygulama acilisinda cihazdan siliniyor.
+- Cihaz guvenligi (root) kontrolu, yapamadigi bir denetimi "cihaz guvenli"
+  sayiyordu. Kontrol artik uygulamanin kendi kodunda calisiyor; okunamayan
+  veya zaman asimina ugrayan her denetim "bilinmiyor" olarak yerel kayda
+  geciyor ve hicbir zaman "guvenli" sonucuna donusmuyor.
 - Panik butonuna basip geri sayim yuklenirken telefon hemen kilitlenirse
   acil durum oturumu ekran tekrar acilana kadar kurulmayabiliyordu. Kurulum
   artik ekran kapali olsa da en gec 300 ms icinde basliyor.

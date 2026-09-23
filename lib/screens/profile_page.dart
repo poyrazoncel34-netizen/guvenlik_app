@@ -85,17 +85,6 @@ class _ProfilePageState extends State<ProfilePage> {
                     letterSpacing: -0.5,
                   ),
                 ),
-                if (provider.profileEmail.isNotEmpty) ...[
-                  const SizedBox(height: 6),
-                  Text(
-                    provider.profileEmail,
-                    style: const TextStyle(
-                      fontSize: 15,
-                      color: AppColors.textSecondary,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
               ],
             ),
           ),
@@ -202,7 +191,6 @@ class _ProfilePageState extends State<ProfilePage> {
                   MaterialPageRoute(
                     builder: (context) => EditProfileScreen(
                       name: provider.profileName,
-                      email: provider.profileEmail,
                     ),
                   ),
                 )

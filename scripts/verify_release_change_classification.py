@@ -4,6 +4,13 @@
 This is a source-scope verifier, not a release-readiness claim. It intentionally
 accepts a dirty tree during hardening, but only when every changed path matches
 one reviewed rule. Production provenance still requires a completely clean tree.
+
+`--all-tracked` additionally classifies every path in the index. Without it a
+clean tree classifies zero paths, so a PASS there proves nothing: a tracked file
+no rule covers stays invisible until someone edits it, and then the whole test
+suite goes red for a reason unrelated to the edit (audit A-033). In that mode a
+tracked path in a forbidden category is rejected too -- committed tooling or
+signing material is at least as bad as staged.
 """
 
 from __future__ import annotations
@@ -93,6 +100,11 @@ def main() -> int:
     parser.add_argument("--repo", type=Path, default=Path.cwd())
     parser.add_argument("--config", type=Path, required=True)
     parser.add_argument("--output", type=Path)
+    parser.add_argument(
+        "--all-tracked",
+        action="store_true",
+        help="also classify every tracked path, not only dirty ones",
+    )
     args = parser.parse_args()
 
     try:
@@ -105,15 +117,31 @@ def main() -> int:
             "--untracked-files=all",
         )
         dirty_entries = parse_porcelain_v1(raw_status)
+        tracked_paths: set[str] = set()
+        if args.all_tracked:
+            raw_tracked = run_git(args.repo.resolve(), "ls-files", "-z")
+            tracked_paths = {
+                field.decode("utf-8", errors="surrogateescape")
+                for field in raw_tracked.split(b"\0")
+                if field
+            }
     except (OSError, RuntimeError, ValueError, json.JSONDecodeError) as exc:
         return fail([str(exc)])
+
+    # Clean tracked paths carry a two-space status, exactly as porcelain would
+    # print an unmodified entry; dirty entries keep their real status.
+    dirty_paths = {path for _, path in dirty_entries}
+    candidates = list(dirty_entries) + [
+        ("  ", path) for path in sorted(tracked_paths - dirty_paths)
+    ]
 
     forbidden = set(config["forbiddenStagedCategories"])
     unclassified: list[str] = []
     forbidden_staged: list[str] = []
+    forbidden_tracked: list[str] = []
     entries: list[dict[str, Any]] = []
 
-    for status, path in dirty_entries:
+    for status, path in candidates:
         matches = [(pattern, rule) for pattern, rule in rules if pattern.search(path)]
         if not matches:
             unclassified.append(path)
@@ -126,6 +154,8 @@ def main() -> int:
         # rename remains blocked.
         if staged and status[0] != "D" and category in forbidden:
             forbidden_staged.append(path)
+        elif path in tracked_paths and category in forbidden:
+            forbidden_tracked.append(path)
         entries.append(
             {
                 "path": path,
@@ -141,9 +171,12 @@ def main() -> int:
         "schemaVersion": 1,
         "gitHead": git_head(args.repo.resolve()),
         "statusSha256": hashlib.sha256(raw_status).hexdigest(),
+        "scope": "all-tracked" if args.all_tracked else "dirty",
+        "trackedCount": len(tracked_paths),
         "entryCount": len(entries),
         "unclassifiedCount": len(unclassified),
         "forbiddenStagedCount": len(forbidden_staged),
+        "forbiddenTrackedCount": len(forbidden_tracked),
         "entries": sorted(entries, key=lambda item: item["path"]),
     }
     if args.output:
@@ -155,10 +188,12 @@ def main() -> int:
 
     errors = [f"UNCLASSIFIED_PATH {path}" for path in unclassified]
     errors.extend(f"FORBIDDEN_STAGED_PATH {path}" for path in forbidden_staged)
+    errors.extend(f"FORBIDDEN_TRACKED_PATH {path}" for path in forbidden_tracked)
     if errors:
         return fail(errors)
 
     print("RELEASE_CHANGE_CLASSIFICATION_PASS")
+    print(f"scope={payload['scope']}")
     print(f"classified_paths={len(entries)}")
     print(f"status_sha256={payload['statusSha256']}")
     return 0

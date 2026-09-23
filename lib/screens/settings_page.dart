@@ -583,14 +583,6 @@ class _SettingsPageState extends State<SettingsPage> {
                         fontWeight: FontWeight.w800,
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      provider.profileEmail,
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.85),
-                        fontSize: 14,
-                      ),
-                    ),
                   ],
                 ),
               ),

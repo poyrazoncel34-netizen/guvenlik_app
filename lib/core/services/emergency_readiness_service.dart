@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
+import 'emergency_platform_channel.dart';
 import 'emergency_platform_service.dart';
 import 'local_logger_service.dart';
 
@@ -56,7 +57,7 @@ class EmergencyReadinessService extends ChangeNotifier {
       return _lastState ??
           const PlatformReadinessSnapshot.unavailable(reasonCode: 'superseded');
     }
-    if (nextState.reasonCode == 'platformBridgeMissing') {
+    if (nextState.reasonCode == EmergencyPlatformChannel.bridgeMissingReason) {
       // criticalSafetyReady is already false here (an unavailable snapshot is
       // not `isKnown`), so the readiness card turns red on its own -- verified,
       // not assumed: ReadinessCard derives every chip from automaticCallReady /

@@ -28,16 +28,16 @@
       "reason": "Signing material and environment secrets must remain outside release source."
     },
     {
-      "pattern": "^android/app/src/(?:test|androidTest)/kotlin/com/poyrazoncel/korubeni/emergency/",
+      "pattern": "^android/app/src/(?:test|androidTest)/kotlin/com/poyrazoncel/korubeni/(?:emergency|integrity)/",
       "category": "safety-test",
       "commitGroup": "01-native-safety-kernel",
-      "reason": "Executable native safety-kernel evidence belongs with the native implementation."
+      "reason": "Executable native safety-kernel evidence belongs with the native implementation. integrity/ holds the root-detection probe tests and its device-evidence instrumentation (A-017)."
     },
     {
-      "pattern": "^android/app/src/main/kotlin/com/poyrazoncel/korubeni/(?:emergency/|MainActivity\\.kt$|DozeModeHandler\\.kt$)",
+      "pattern": "^android/app/src/main/kotlin/com/poyrazoncel/korubeni/(?:emergency/|integrity/|MainActivity\\.kt$|DozeModeHandler\\.kt$|VolumeButtonDetector\\.kt$)",
       "category": "safety",
       "commitGroup": "01-native-safety-kernel",
-      "reason": "Native emergency state, scheduling, dispatch, and platform-channel authority."
+      "reason": "Native emergency state, scheduling, dispatch, and platform-channel authority. VolumeButtonDetector.kt is the native half of the volume-button panic trigger, so it is a safety entry point like the quick-access surfaces. integrity/ is the native root-detection probe (A-017) whose verdict gates the duress-model device warning."
     },
     {
       "pattern": "^android/app/src/(?:test|androidTest)/kotlin/com/poyrazoncel/korubeni/quickaccess/",
@@ -52,7 +52,7 @@
       "reason": "Home-screen widget and Quick Settings tile: they submit a panic request and launch the launcher activity; the arm boundary stays in the Flutter path."
     },
     {
-      "pattern": "^test/(?:(?:android|core|presentation|screens|widgets)/|main_(?:locale|release_logging_contract|startup_init_order|text_scaling)_test\\.dart$|state_restoration_policy_test\\.dart$|wall_clock_test_hygiene_policy_test\\.dart$)",
+      "pattern": "^test/(?:(?:android|core|presentation|screens|widgets)/|main_(?:locale|release_logging_contract|start_locale|startup_init_order|text_scaling)_test\\.dart$|state_restoration_policy_test\\.dart$|wall_clock_test_hygiene_policy_test\\.dart$)",
       "category": "safety-test",
       "commitGroup": "02-flutter-pin-session",
       "reason": "Executable Flutter/platform safety behavior evidence."
@@ -70,25 +70,25 @@
       "reason": "Reproducible build wrapper/lock output or generated store media."
     },
     {
-      "pattern": "^(?:android/(?:\\.gitignore$|app/build\\.gradle\\.kts$|app/proguard-rules\\.pro$|app/src/main/AndroidManifest\\.xml$|app/src/main/res/xml/|build\\.gradle\\.kts$|fastlane/|gradle/)|pubspec\\.(?:yaml|lock)$)",
+      "pattern": "^(?:android/(?:\\.gitignore$|app/build\\.gradle\\.kts$|app/proguard-rules\\.pro$|app/src/main/AndroidManifest\\.xml$|app/src/(?:debug|play|profile)/AndroidManifest\\.xml$|app/src/main/res/xml/|build\\.gradle\\.kts$|settings\\.gradle\\.kts$|gradle\\.properties$|key\\.properties\\.example$|fastlane/|gradle/)|pubspec\\.(?:yaml|lock)$)",
       "category": "release",
       "commitGroup": "03-android-build-dependency",
-      "reason": "Android manifest, R8 keep rules, dependency, toolchain, and build configuration."
+      "reason": "Android manifest, R8 keep rules, dependency, toolchain, and build configuration. The debug/play/profile manifests are merged into those variants, so the play one is part of the release manifest surface. key.properties.example is the placeholder-only signing template; the real key.properties stays in secret-quarantine through the earlier rule, which requires the name to END in key.properties."
     },
     {
-      "pattern": "^android/app/src/main/res/(?:drawable(?:-[A-Za-z0-9-]+)?/|layout/|values(?:-[A-Za-z0-9-]+)?/)",
+      "pattern": "^android/app/src/main/res/(?:drawable(?:-[A-Za-z0-9-]+)?/|layout/|mipmap(?:-[A-Za-z0-9-]+)?/|values(?:-[A-Za-z0-9-]+)?/)",
       "category": "release",
       "commitGroup": "03-android-build-dependency",
-      "reason": "Android resources that ship in the release surface: system-rendered labels, widget layout and its palette mirror."
+      "reason": "Android resources that ship in the release surface: system-rendered labels, launcher icon densities, widget layout and its palette mirror."
     },
     {
-      "pattern": "^(?:\\.github/|config/|release-evidence/|scripts/|docs/(?:qa/|release/|audit/|research/|design/)|docs/(?:HANDOVER|release_risks)\\.md$|test/(?:audit_absence_claims_gate|audit_accounting_gate|critical_coverage_gate|external_release_gate_verifier|license_|masvs_assessment_gate|osv_evidence_gate|release/|release_|safety_mutation_runner_contract|sbom_|source_file_size_ratchet|third_party_notices|store/|store_release_docs_test\\.dart$)|README\\.md$|SPEC\\.md$|SECURITY\\.md$|CHANGELOG\\.md$)",
+      "pattern": "^(?:\\.github/|config/|release-evidence/|scripts/|docs/(?:qa/|release/|audit/|research/|design/)|docs/(?:HANDOVER|release_risks|FRESH_AUDIT_2026-06-10|PLAN_F2_F3|SECURITY_AT_REST_DESIGN|WORKFLOW_LOOPS|device-round2-investigation|feature_matrix_verification)\\.md$|test/(?:audit_absence_claims_gate|audit_accounting_gate|critical_coverage_gate|external_release_gate_verifier|license_|masvs_assessment_gate|osv_evidence_gate|release/|release_|safety_mutation_runner_contract|sbom_|source_file_size_ratchet|third_party_notices|store/|store_release_docs_test\\.dart$)|README\\.md$|SPEC\\.md$|SECURITY\\.md$|CHANGELOG\\.md$|CLAUDE\\.md$)",
       "category": "release",
       "commitGroup": "04-ci-evidence-security",
-      "reason": "CI, evidence, security, audit, or release-governance source. SECURITY.md is the published vulnerability-disclosure channel and CHANGELOG.md is the source for the Play 'what's new' text, so both are release governance rather than product source."
+      "reason": "CI, evidence, security, audit, or release-governance source. SECURITY.md is the published vulnerability-disclosure channel and CHANGELOG.md is the source for the Play 'what's new' text, so both are release governance rather than product source. CLAUDE.md is the checked-in engineering rule set every change is reviewed against (it is tracked, unlike the local-only AGENTS.md and .claude/ tooling). The named docs/*.md files are dated audit, security-design, device-investigation, plan and workflow records."
     },
     {
-      "pattern": "^(?:\\.gh-pages-publish/|assets/legal/|lib/constants/legal_texts\\.dart$|docs/(?:legal/|kvkk_|play-|play_|verbis_|veri_ihlali_)|store/(?!screenshots/android/(?:generate_|premium_app_store/README)))",
+      "pattern": "^(?:\\.gh-pages-publish/|assets/legal/|lib/constants/legal_texts\\.dart$|docs/(?:legal/|kvkk_|play-|play_|verbis_|veri_ihlali_|google_play_data_safety_notes\\.md$)|store/(?!screenshots/android/(?:generate_|premium_app_store/README)))",
       "category": "legal",
       "commitGroup": "05-legal-store",
       "reason": "Candidate-facing legal, Play declaration, billing, QA, or store material."
@@ -106,13 +106,13 @@
       "reason": "Localized product copy or store-asset source."
     },
     {
-      "pattern": "^test/translations?_key_(?:parity|usage)_test\\.dart$",
+      "pattern": "^test/translations?_(?:key_(?:parity|usage)|emergency_keys)_test\\.dart$",
       "category": "product",
       "commitGroup": "05-legal-store",
       "reason": "Translation bundle gates ship in the same commit group as the bundles they guard."
     },
     {
-      "pattern": "^(?:docs/MASTER_PRODUCTION_CHECKLIST\\.md|PRODUCTION_AUDIT\\.md|REMEDIATION_PLAN\\.md|PROGRESS\\.md|RESOLUTION_QUEUE\\.md|EXTERNAL_LAUNCH_BLOCKERS\\.md|PRODUCT_DECISIONS_REQUIRED\\.md|FINAL_REMEDIATION_REGISTER\\.md|[A-Za-z0-9_]*INDEPENDENT_REVIEW[A-Za-z0-9_]*\\.md|[A-Za-z0-9_]*AUDIT_REPORT[A-Za-z0-9_]*\\.md)$",
+      "pattern": "^(?:docs/MASTER_PRODUCTION_CHECKLIST\\.md|PRODUCTION_AUDIT\\.md|REMEDIATION_PLAN\\.md|PROGRESS\\.md|RESOLUTION_QUEUE\\.md|EXTERNAL_LAUNCH_BLOCKERS\\.md|PRODUCT_DECISIONS_REQUIRED\\.md|FINAL_REMEDIATION_REGISTER\\.md|[A-Za-z0-9_]*INDEPENDENT_REVIEW[A-Za-z0-9_]*\\.md|[A-Za-z0-9_]*AUDIT_REPORT[A-Za-z0-9_]*\\.md|FINAL_INDEPENDENT_REREVIEW\\.md|FINAL_REPOSITORY_CERTIFICATION(?:_[0-9]+)?\\.md|CERT_REMEDIATION_RECORD\\.md)$",
       "category": "release",
       "commitGroup": "04-ci-evidence-security",
       "reason": "Production-readiness standard and its per-requirement audit, remediation, continuity, resolution-queue, external-blocker, and independent-review outputs are release-governance source. The review pattern is deliberately open-ended on BOTH sides: a NEW reviewer report must never be able to fail the classification gate simply by existing, and FINAL_INDEPENDENT_REVIEW.md proved a leading qualifier could do exactly that."
@@ -128,6 +128,24 @@
       "category": "safety",
       "commitGroup": "02-flutter-pin-session",
       "reason": "Contacts repository/datasource, location repository, device-security and secure-storage source. Appended LAST on purpose: lib/services/consent_manager.dart and lib/models/consent_record.dart keep the earlier legal classification, because first match wins. Before this rule the gate could not classify lib/services/device_security_service.dart at all -- a security file invisible to a fail-closed gate is the gate failing open."
+    },
+    {
+      "pattern": "^assets/(?:icon|sounds)/",
+      "category": "product",
+      "commitGroup": "02-flutter-pin-session",
+      "reason": "Bundled Flutter assets: launcher/splash artwork and the siren and fake-call ringtone audio. The siren is a safety surface, so a re-encode ships in the same group as the Flutter code that plays it."
+    },
+    {
+      "pattern": "^(?:\\.gitignore|analysis_options\\.yaml)$",
+      "category": "release",
+      "commitGroup": "04-ci-evidence-security",
+      "reason": "Root .gitignore decides what can enter release source at all (it is what keeps key.properties and keystores out of the index); analysis_options.yaml configures the CI analyze gate."
+    },
+    {
+      "pattern": "^(?:\\.metadata|devtools_options\\.yaml)$",
+      "category": "generated",
+      "commitGroup": "03-android-build-dependency",
+      "reason": "Written by the Flutter tool (project/migration metadata) and by DevTools; committed so the toolchain state is reproducible, never hand-authored."
     }
   ]
 }

@@ -12,6 +12,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guvenlik_app/core/services/emergency_platform_service.dart';
 import 'package:guvenlik_app/core/services/emergency_session_contract.dart';
+import 'package:guvenlik_app/core/services/panic_arm_policy.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -37,17 +38,44 @@ void main() {
   }
 
   group('a missing native bridge is its own state', () {
-    test('arming reports platformBridgeMissing, not unexpectedError', () async {
+    test('arming is a definitive rejection named platformBridgeMissing', () async {
       final service = absentBridge();
       final result = await arm(service);
-      expect(result, isA<ArmUnknown>());
       expect(
-        (result as ArmUnknown).reasonCode,
+        result,
+        isA<ArmRejected>(),
+        reason:
+            'MissingPluginException proves native never received the arm, so '
+            'no session exists. As ArmUnknown it started an unprotected '
+            'countdown whose PIN cancel could never be confirmed',
+      );
+      expect(
+        (result as ArmRejected).reasonCode,
         'platformBridgeMissing',
         reason:
             'collapsed into the same bucket as a transient failure, the one '
             'condition that cannot recover became indistinguishable from the '
             'ones that can',
+      );
+    });
+
+    test('the countdown does not start and no session token survives', () async {
+      final result = await arm(absentBridge());
+      expect(
+        PanicArmPolicy.shouldStartCountdown(result),
+        isFalse,
+        reason: 'a normal-looking countdown with nothing native behind it',
+      );
+      expect(
+        PanicArmPolicy.dispositionFor(result),
+        PanicArmDisposition.blocked,
+      );
+      expect(
+        PanicArmPolicy.activeOrUncertainToken(result),
+        isNull,
+        reason:
+            'a retained token sends the PIN cancel across the missing bridge, '
+            'where it can only come back unconfirmed',
       );
     });
 

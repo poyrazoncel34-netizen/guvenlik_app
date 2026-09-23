@@ -8,9 +8,8 @@ import '../presentation/providers/settings_provider.dart';
 
 class EditProfileScreen extends StatefulWidget {
   final String name;
-  final String email;
 
-  const EditProfileScreen({super.key, required this.name, required this.email});
+  const EditProfileScreen({super.key, required this.name});
 
   @override
   State<EditProfileScreen> createState() => _EditProfileScreenState();

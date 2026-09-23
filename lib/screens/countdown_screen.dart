@@ -258,7 +258,7 @@ class _CountdownScreenState extends State<CountdownScreen>
           reason: EmergencyFailureReason.armRejected,
           bodyKeyOverride: PanicArmPolicy.blockedMessageKey(armResult),
         ),
-        phoneNumber: '',
+        phoneNumber: PanicArmPolicy.manualDialNumber(armResult, _armedTargetNumber),
         popHostOnDismiss: true,
       );
       return;

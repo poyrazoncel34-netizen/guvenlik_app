@@ -75,8 +75,17 @@ void main() {
   setUp(() async {
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(
-          const MethodChannel('safe_device'),
-          (_) async => false,
+          const MethodChannel('com.poyrazoncel.korubeni/device_integrity'),
+          (_) async => const <String, String>{
+            'suBinary': 'absent',
+            'magiskBinary': 'absent',
+            'superuserArtifacts': 'absent',
+            'pathSuBinary': 'absent',
+            'rwSystemMounts': 'absent',
+            'testKeys': 'absent',
+            'dangerousProps': 'absent',
+            'developmentEnvironment': 'absent',
+          },
         );
     await serviceLocator.reset();
     serviceLocator.registerSingleton<SecureStorage>(_Storage());

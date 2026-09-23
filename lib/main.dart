@@ -11,21 +11,14 @@ import 'core/app_theme.dart';
 import 'core/navigation/app_navigator.dart';
 import 'presentation/providers/providers.dart';
 import 'screens/app_root.dart';
-import 'core/services/offline_queue_service.dart';
 import 'core/services/crash_log_service.dart';
-import 'core/services/medical_data_cleanup_service.dart';
-import 'core/services/foreground_service.dart';
-import 'core/services/haptic_service.dart';
-import 'core/services/connectivity_service.dart';
-import 'core/services/atomic_storage_service.dart';
-import 'core/services/notification_service.dart';
 import 'core/widgets/emergency_trigger_host.dart';
 import 'core/design_tokens.dart';
 import 'core/widgets/app_privacy_shield.dart';
 import 'core/services/local_logger_service.dart';
-import 'core/services/sensitive_temp_file_service.dart';
 import 'core/services/app_bootstrap_service.dart';
 import 'core/services/best_effort_startup.dart';
+import 'core/services/startup_best_effort_services.dart';
 import 'core/constants/feature_access_matrix.dart';
 import 'core/config/app_environment.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -129,26 +122,10 @@ void main() async {
   }
 
   // Best-effort services cannot change the critical bootstrap decision.
-  // Web skips platform notification plugins.
   try {
     FeatureAccessMatrix.debugPrintMatrix();
 
-    final services = <Future<void> Function()>[
-      // KVKK Md.7 — purge orphaned medical-profile data from removed feature.
-      // Best-effort (internally try/catch); runs concurrently so it never
-      // blocks the emergency / notification startup path.
-      MedicalDataCleanupService.purgeIfNeeded,
-      OfflineQueueService.instance.initialize,
-      AtomicStorageService.instance.checkIntegrity,
-      HapticService.initialize,
-      ConnectivityService.instance.initialize,
-      LocalLoggerService.instance.initialize,
-      SensitiveTempFileService.purgeStaleExports,
-    ];
-    if (!kIsWeb) {
-      services.add(NotificationService.instance.initialize);
-      services.add(KoruBeniForegroundService.configure);
-    }
+    final services = buildStartupBestEffortServices(isWeb: kIsWeb);
     await initializeBestEffortServices(services);
   } catch (_) {
     // Non-critical initialization failures remain degraded local features.

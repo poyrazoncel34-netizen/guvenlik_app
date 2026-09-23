@@ -16,6 +16,7 @@ import android.view.WindowManager
 import com.poyrazoncel.korubeni.emergency.EmergencyChannels
 import com.poyrazoncel.korubeni.emergency.EmergencyEventStreamHandler
 import com.poyrazoncel.korubeni.emergency.EmergencyPlatformHandler
+import com.poyrazoncel.korubeni.integrity.DeviceIntegrityChannel
 import com.poyrazoncel.korubeni.quickaccess.PanicLaunch
 import com.poyrazoncel.korubeni.quickaccess.PanicRequestStore
 import io.flutter.embedding.android.FlutterFragmentActivity
@@ -141,6 +142,13 @@ class MainActivity : FlutterFragmentActivity() {
                 android.util.Log.d("MainActivity", "Volume detector MethodChannel configured")
             } catch (_: Exception) {
                 android.util.Log.e("MainActivity", "VOLUME_METHOD_CHANNEL_CONFIG_FAILED")
+            }
+
+            // Root/integrity probe (audit A-017) — replaces safe_device at runtime.
+            try {
+                DeviceIntegrityChannel.register(messenger)
+            } catch (_: Exception) {
+                android.util.Log.e("MainActivity", "DEVICE_INTEGRITY_CHANNEL_CONFIG_FAILED")
             }
 
             try {

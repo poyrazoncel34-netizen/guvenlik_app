@@ -8,8 +8,6 @@
 // NOTE: KoruBeni is offline-first. No third-party crash reporting (KVKK compliance).
 // ============================================================================
 
-import 'package:flutter/foundation.dart';
-
 class AppEnvironment {
   AppEnvironment._();
 
@@ -44,13 +42,14 @@ class AppEnvironment {
   // `String.fromEnvironment`, a compile-time constant: no unit test can vary
   // it, which is precisely why the defect was never caught by a test. With the
   // seam, the ci_smoke case is testable without a --dart-define run.
-  @visibleForTesting
+  //
+  // Public, not @visibleForTesting: RevenueCatService's key policy classifies
+  // through these same predicates. Its private copy of `ENV` was the second
+  // two-valued flag, and one classification must not be written twice.
   static bool envIsProduction(String env) => env == 'production';
 
-  @visibleForTesting
   static bool envIsCiSmoke(String env) => env == 'ci_smoke';
 
-  @visibleForTesting
   static bool envIsDev(String env) => env == 'dev';
 
   static bool _hasSafeRevenueCatClientKeyShape(String value) {

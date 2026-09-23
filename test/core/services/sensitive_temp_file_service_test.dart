@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guvenlik_app/core/services/sensitive_temp_file_service.dart';
+import 'package:guvenlik_app/core/services/startup_best_effort_services.dart';
 
 void main() {
   late Directory sandbox;
@@ -76,11 +77,15 @@ void main() {
   });
 
   test('startup and both export surfaces retain cleanup hooks', () {
-    final mainSource = File('lib/main.dart').readAsStringSync();
-    expect(
-      mainSource,
-      contains('SensitiveTempFileService.purgeStaleExports,'),
-    );
+    // The startup list moved out of main.dart (A-014); check the real list
+    // main() runs instead of grepping source text.
+    for (final isWeb in <bool>[false, true]) {
+      expect(
+        buildStartupBestEffortServices(isWeb: isWeb),
+        contains(SensitiveTempFileService.purgeStaleExports),
+        reason: 'isWeb=$isWeb',
+      );
+    }
 
     for (final path in <String>[
       'lib/screens/settings_detail_page.dart',

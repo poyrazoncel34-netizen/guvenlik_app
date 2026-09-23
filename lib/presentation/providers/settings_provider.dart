@@ -18,17 +18,6 @@ class SettingsProvider extends ChangeNotifier {
   bool get volumeTriggerEnabled => _volumeTriggerEnabled;
   String get profileName =>
       _profileName.isEmpty ? "settings_default_user".tr() : _profileName;
-  /// Always empty. The profile e-mail was removed in audit A-014: no screen
-  /// ever offered a field to type one, so the stored key held '' for every
-  /// user while the KVKK data export still emitted a meaningless `email`
-  /// entry. Nothing reads or writes the key any more.
-  ///
-  /// The getter itself is retained ONLY because settings_page.dart and
-  /// profile_page.dart still render it; dropping it would change those widget
-  /// trees, and CLAUDE.md rule 4 forbids UI changes in this pass. Both sites
-  /// render nothing today (one is guarded by isNotEmpty, the other draws an
-  /// empty Text), so removing them is a separate, visual change.
-  String get profileEmail => '';
   bool get hasProfile => _profileName.isNotEmpty;
 
   Future<void> loadProfile() async {

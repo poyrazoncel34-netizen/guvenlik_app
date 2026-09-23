@@ -1,74 +1,93 @@
 // Structural guards for the root/jailbreak probe. The BEHAVIOUR (what each
-// failure mode classifies as) lives in
+// reply and failure classifies as) lives in
 // test/core/security/device_security_service_test.dart, which drives the real
-// platform channel. This file only pins the things a behavioural test cannot
-// see: that the probe still exists, that it keeps its OEM crash guard, and
-// that no catch branch is allowed to invent a clean verdict.
-//
-// It replaces an earlier version that asserted `source.contains('try')` and
-// `source.contains('isCompromised')`. Those passed for the defective code too:
-// the old implementation had a try/catch, and its catch returned `false`.
+// platform channel. This file pins what a behavioural test cannot see: that
+// safe_device is gone from runtime code, that the Kotlin probe is registered,
+// that the OEM crash guard stays, and that no catch invents a clean verdict.
 import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
+
+String stripComments(String source) => source
+    .replaceAll(RegExp(r'/\*[\s\S]*?\*/'), '')
+    .replaceAll(RegExp(r'//[^\n]*'), '');
 
 void main() {
   final source = File(
     'lib/services/device_security_service.dart',
   ).readAsStringSync();
-  // Comments in this file quote the defect on purpose; only code counts.
-  final code = source.replaceAll(RegExp(r'//[^\n]*'), '');
+  final code = stripComments(source);
 
-  test('the probe exists and is three-valued', () {
+  test('safe_device is not used anywhere in runtime Dart code', () {
+    final offenders = <String>[];
+    for (final entity in Directory('lib').listSync(recursive: true)) {
+      if (entity is! File || !entity.path.endsWith('.dart')) continue;
+      final body = stripComments(entity.readAsStringSync());
+      if (body.contains('safe_device') || body.contains('SafeDevice')) {
+        offenders.add(entity.path);
+      }
+    }
     expect(
-      File('lib/services/device_security_service.dart').existsSync(),
-      isTrue,
+      offenders,
+      isEmpty,
+      reason:
+          'A-017: safe_device converts failures into "not rooted" in both '
+          'its Dart getter and its native checks',
     );
+  });
+
+  test('the app Kotlin code does not call safe_device or RootBeer', () {
+    final offenders = <String>[];
+    for (final entity in Directory(
+      'android/app/src/main/kotlin',
+    ).listSync(recursive: true)) {
+      if (entity is! File || !entity.path.endsWith('.kt')) continue;
+      final body = stripComments(entity.readAsStringSync());
+      if (body.contains('xamdesign') || body.contains('rootbeer')) {
+        offenders.add(entity.path);
+      }
+    }
+    expect(offenders, isEmpty);
+  });
+
+  test('MainActivity registers the native integrity probe', () {
+    final activity = File(
+      'android/app/src/main/kotlin/com/poyrazoncel/korubeni/MainActivity.kt',
+    ).readAsStringSync();
+    expect(activity, contains('DeviceIntegrityChannel.register(messenger)'));
+    final channel = File(
+      'android/app/src/main/kotlin/com/poyrazoncel/korubeni/integrity/'
+      'DeviceIntegrityChannel.kt',
+    ).readAsStringSync();
+    expect(
+      channel,
+      contains('"com.poyrazoncel.korubeni/device_integrity"'),
+      reason: 'must match DeviceSecurityService.defaultChannel',
+    );
+  });
+
+  test('the probe is three-valued', () {
     expect(
       code,
       contains('enum DeviceIntegrity { clean, compromised, unknown }'),
-      reason:
-          'a boolean cannot distinguish "not rooted" from "could not tell", '
-          'which is the whole of A-017',
     );
+    expect(code, contains('enum ProbeOutcome { found, absent, error }'));
     expect(code, contains('Future<DeviceIntegrity> checkIntegrity()'));
   });
 
   test('startup still cannot be crashed by an OEM probe failure', () {
-    // The original catch-everything existed for a real reason: this runs on
-    // the splash path. Losing that guard would trade a fail-open for a crash.
-    expect(code, contains('try {'));
     expect(code, contains('} on Exception {'));
     expect(code, contains('} on Error {'));
+    expect(code, contains('.timeout(_timeout)'));
   });
 
-  test('no failure branch may return a clean verdict', () {
-    // The exact regression, stated as a rule rather than a keyword: the only
-    // place `clean` may be produced is the branch that actually read `false`
-    // from the platform.
-    final cleanReturns = RegExp(
-      r'return\s+DeviceIntegrity\.clean',
-    ).allMatches(code).length;
+  test('clean is produced in exactly one place', () {
     expect(
-      cleanReturns,
-      0,
+      RegExp(r'DeviceIntegrity\.clean').allMatches(code).length,
+      1,
       reason:
-          'DeviceIntegrity.clean must only be reachable from the ternary on '
-          'the platform reply, never from a `return` inside a catch',
+          'only aggregate() may derive clean, after every counted check '
+          'read absent',
     );
-    expect(
-      code,
-      contains('raw ? DeviceIntegrity.compromised : DeviceIntegrity.clean'),
-      reason: 'the single place a verdict is derived from the real reply',
-    );
-  });
-
-  test('the plugin init contract is still honoured', () {
-    // checkIntegrity reads the safe_device channel directly (the plugin's own
-    // getter swallows errors into `false`), so it must still perform the
-    // one-shot init the plugin would have done.
-    expect(code, contains('SafeDevice.ensureInitiated()'));
-    expect(code, contains("MethodChannel('safe_device')"));
-    expect(code, contains("invokeMethod<bool>('isJailBroken')"));
   });
 
   test('a failed probe is recorded, not silently dropped', () {
@@ -78,12 +97,6 @@ void main() {
   test('splash_screen acts on the typed verdict', () {
     final splash = File('lib/screens/splash_screen.dart').readAsStringSync();
     expect(splash, contains('DeviceSecurityService().checkIntegrity()'));
-    expect(
-      splash,
-      contains('integrity == DeviceIntegrity.compromised'),
-      reason:
-          'the warning dialog belongs to `compromised` only; `unknown` is '
-          'recorded, not turned into an accusation',
-    );
+    expect(splash, contains('integrity == DeviceIntegrity.compromised'));
   });
 }

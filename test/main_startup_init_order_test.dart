@@ -22,6 +22,17 @@ void main() {
     );
     expect(source, contains("CriticalBootstrapStep('localePreferences'"));
     expect(source, contains('await initializeBestEffortServices(services)'));
+    // The list itself lives in startup_best_effort_services.dart so tests run
+    // the real one (profile_email_removal_test.dart); main must use it.
+    expect(
+      source,
+      contains('final services = buildStartupBestEffortServices(isWeb: kIsWeb);'),
+    );
+    expect(
+      source.indexOf('buildStartupBestEffortServices('),
+      greaterThan(source.indexOf('if (!criticalBootstrap.isReady)')),
+      reason: 'optional work still runs only after the critical bootstrap',
+    );
     expect(source, contains('ErrorWidget.builder('));
     expect(
       source,

@@ -103,7 +103,8 @@ class EmergencyPlatformService {
   /// Arm a versioned native safety session. A malformed response is never
   /// treated as an acknowledgement. Timeout/error reconciles with the same
   /// proposed token and remains [ArmUnknown] unless native durable state proves
-  /// the session is armed.
+  /// the session is armed. A missing native bridge is the exception: it is a
+  /// definitive [ArmRejected], because the call never reached native code.
   Future<ArmResult> armEmergencySession({
     required EmergencySessionKind kind,
     required DateTime mainDeadline,
@@ -145,6 +146,18 @@ class EmergencyPlatformService {
       },
     );
     if (!invocation.completed) {
+      if (invocation.reasonCode ==
+          EmergencyPlatformChannel.bridgeMissingReason) {
+        // MissingPluginException means no native handler received the arm, so
+        // no session exists -- that is certainty, not uncertainty. Reporting
+        // it as ArmUnknown let a countdown start with nothing native behind it
+        // and made the PIN cancel unconfirmable (the cancel crosses the same
+        // missing bridge), trapping the user in it (audit A-005).
+        return ArmRejected(
+          EmergencyPlatformChannel.bridgeMissingReason,
+          rejectedToken: proposedToken,
+        );
+      }
       final snapshot = await readEmergencySession(proposedToken);
       if (snapshot.isPresent &&
           snapshot.lifecycleState == EmergencySessionLifecycle.armed &&

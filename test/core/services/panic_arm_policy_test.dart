@@ -71,6 +71,61 @@ void main() {
     );
   });
 
+  group('A-005: a missing native bridge', () {
+    const bridgeMissing = ArmRejected(
+      'platformBridgeMissing',
+      rejectedToken: token,
+    );
+
+    test('blocks the countdown instead of starting an unprotected one', () {
+      expect(
+        PanicArmPolicy.dispositionFor(bridgeMissing),
+        PanicArmDisposition.blocked,
+      );
+      expect(PanicArmPolicy.shouldStartCountdown(bridgeMissing), isFalse);
+      expect(
+        PanicArmPolicy.blockedMessageKey(bridgeMissing),
+        'safety_session_not_ready',
+      );
+    });
+
+    test('offers the armed target for a manual call', () {
+      expect(
+        PanicArmPolicy.manualDialNumber(bridgeMissing, '+905001234567'),
+        '+905001234567',
+      );
+      expect(PanicArmPolicy.manualDialNumber(bridgeMissing, null), '');
+    });
+
+    test('never offers a call for authorization or target refusals', () {
+      for (final reason in <String>{
+        'entitlementDenied',
+        'entitlementUnknown',
+        'pinNotConfigured',
+        'pinReadFailed',
+        'targetNotCallable',
+        'callableTargetMissing',
+        'unsupportedOs',
+      }) {
+        expect(
+          PanicArmPolicy.manualDialNumber(
+            ArmRejected(reason, rejectedToken: token),
+            '+905001234567',
+          ),
+          '',
+          reason: '$reason: a manual call here would bypass the refusing gate',
+        );
+      }
+      expect(
+        PanicArmPolicy.manualDialNumber(
+          const ArmUnknown('timeout', uncertainToken: token),
+          '+905001234567',
+        ),
+        '',
+      );
+    });
+  });
+
   test('armed and uncertain outcomes keep their distinct countdown modes', () {
     final deadline = DateTime.fromMillisecondsSinceEpoch(10000);
     expect(

@@ -1,28 +1,102 @@
+import 'dart:async';
+
 import 'package:flutter/services.dart';
-import 'package:safe_device/safe_device.dart';
 import '../core/services/local_logger_service.dart';
 
 /// A probe that FAILED is not a device that is clean (audit A-017).
 enum DeviceIntegrity { clean, compromised, unknown }
 
+/// What one native check observed. Only [absent] is evidence of cleanliness.
+enum ProbeOutcome { found, absent, error }
+
 class DeviceSecurityService {
-  static const MethodChannel _channel = MethodChannel('safe_device');
+  DeviceSecurityService({
+    MethodChannel channel = defaultChannel,
+    Duration timeout = const Duration(seconds: 3),
+  }) : _channel = channel,
+       _timeout = timeout;
+
+  static const MethodChannel defaultChannel = MethodChannel(
+    'com.poyrazoncel.korubeni/device_integrity',
+  );
+
+  /// Checks whose FOUND means compromised on any build.
+  static const List<String> hardChecks = <String>[
+    'suBinary',
+    'magiskBinary',
+    'superuserArtifacts',
+    'pathSuBinary',
+    'rwSystemMounts',
+  ];
+
+  /// Checks every eng/userdebug build trips; ignored only when the native
+  /// side positively observed a development build (safe_device parity).
+  static const List<String> buildChecks = <String>[
+    'testKeys',
+    'dangerousProps',
+  ];
+
+  static const String devEnvironmentCheck = 'developmentEnvironment';
+
+  static const List<String> allChecks = <String>[
+    ...hardChecks,
+    ...buildChecks,
+    devEnvironmentCheck,
+  ];
+
+  final MethodChannel _channel;
+  final Duration _timeout;
 
   Future<DeviceIntegrity> checkIntegrity() async {
+    final Object? raw;
     try {
-      SafeDevice.ensureInitiated();
-      final raw = await _channel.invokeMethod<bool>('isJailBroken');
-      if (raw == null) return _unknown();
-      return raw ? DeviceIntegrity.compromised : DeviceIntegrity.clean;
+      raw = await _channel.invokeMethod<Object?>('probe').timeout(_timeout);
     } on Exception {
+      // PlatformException, MissingPluginException, TimeoutException.
       return _unknown();
     } on Error {
-      // The probe runs on the splash path. An OEM-specific failure must not
-      // crash startup -- that is why the original code caught everything. The
-      // change is not that it stops catching, it is that catching no longer
-      // produces a clean verdict.
+      // The probe runs on the splash path; an OEM-specific failure must not
+      // crash startup. Catching does not produce a clean verdict.
       return _unknown();
     }
+    final outcomes = parse(raw);
+    if (outcomes == null) return _unknown();
+    final verdict = aggregate(outcomes);
+    if (verdict == DeviceIntegrity.unknown) return _unknown();
+    return verdict;
+  }
+
+  /// Strict decoding of the native reply. Null when anything is off: not a
+  /// map, a missing check, a non-string key or an unknown value.
+  static Map<String, ProbeOutcome>? parse(Object? raw) {
+    if (raw is! Map) return null;
+    final result = <String, ProbeOutcome>{};
+    for (final check in allChecks) {
+      final value = raw[check];
+      final outcome = switch (value) {
+        'found' => ProbeOutcome.found,
+        'absent' => ProbeOutcome.absent,
+        'error' => ProbeOutcome.error,
+        _ => null,
+      };
+      if (outcome == null) return null;
+      result[check] = outcome;
+    }
+    return result;
+  }
+
+  /// FOUND anywhere that counts -> compromised; otherwise any ERROR that
+  /// counts -> unknown; clean only when every counted check is ABSENT.
+  static DeviceIntegrity aggregate(Map<String, ProbeOutcome> outcomes) {
+    final lenient = outcomes[devEnvironmentCheck] == ProbeOutcome.found;
+    final counted = <String>[...hardChecks, if (!lenient) ...buildChecks];
+    if (counted.any((c) => outcomes[c] == ProbeOutcome.found)) {
+      return DeviceIntegrity.compromised;
+    }
+    if (counted.any((c) => outcomes[c] != ProbeOutcome.absent)) {
+      return DeviceIntegrity.unknown;
+    }
+    return DeviceIntegrity.clean;
   }
 
   Future<DeviceIntegrity> _unknown() async {
@@ -33,33 +107,20 @@ class DeviceSecurityService {
   }
 }
 
-// Why this reads the platform channel instead of `SafeDevice.isJailBroken`
-// ----------------------------------------------------------------------
-// It looks like a layering violation, and fixing only our own `catch` would
-// have looked like a fix. It would not have been one: safe_device 1.3.10 does
-//
-//     static Future<bool> get isJailBroken async {
-//       try { ... } catch (e) { print(...); return false; }
-//     }
-//
-// so the failure is already converted to "not rooted" ONE LEVEL DOWN, before
-// our code ever sees it. A missing plugin, a revoked permission, an OEM
-// implementation that throws, or a null reply all arrive at the caller as a
-// confident `false`, indistinguishable from a genuinely clean device. Our
-// `catch (e) { return false; }` was therefore not the fail-open -- it was a
-// second, unreachable copy of it.
-//
-// Reading the same channel directly is the only way the three outcomes stay
-// distinguishable. `SafeDevice.ensureInitiated()` is still called first, so
-// the plugin's own init contract (a one-shot `init` invocation carrying the
-// default config) is honoured exactly as before; only the error handling is
-// ours.
+// Why this no longer touches safe_device
+// -------------------------------------
+// safe_device 1.3.10 converts failures into "not rooted" twice: its Dart
+// getter catches everything and returns false, and its Java checks (and
+// RootBeer under them) treat EACCES, a failed exec or an unreadable mount
+// table as absence. Reading its channel directly fixed only the first layer.
+// The native probe (android/.../integrity/DeviceIntegrityProbe.kt) reports
+// found / absent / error per check, and this file is the only place those are
+// turned into a verdict. The dependency stays in pubspec.yaml for this round;
+// nothing at runtime calls it.
 //
 // Why `unknown` does not raise the warning dialog
 // -----------------------------------------------
-// It is not an accusation. Turning every probe failure into a security
-// warning would show a scary dialog to users whose device is fine but whose
-// OEM build trips the plugin, and the dialog is dismissible anyway -- locking
+// It is not an accusation. The dialog is dismissible anyway, and locking
 // someone out of their own phone is not the right answer in a duress model.
-// What A-017 asks for is that a silent failure stop being recorded as "clean";
-// it is now recorded, locally and allowlisted, as its own state.
+// What A-017 asks for is that a silent failure stop being recorded as
+// "clean"; it is recorded, locally and allowlisted, as its own state.
