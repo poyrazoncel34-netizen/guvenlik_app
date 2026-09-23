@@ -34,6 +34,18 @@
       "reason": "Executable native safety-kernel evidence belongs with the native implementation. integrity/ holds the root-detection probe tests and its device-evidence instrumentation (A-017)."
     },
     {
+      "pattern": "^android/app/src/test/kotlin/com/poyrazoncel/korubeni/VolumeButtonDetectorTest\\.kt$",
+      "category": "safety-test",
+      "commitGroup": "01-native-safety-kernel",
+      "reason": "JVM evidence for VolumeButtonDetector.kt, which sits at the package root rather than under emergency/. The detector is a panic entry point, so its test ships with the native safety kernel it guards."
+    },
+    {
+      "pattern": "^android/app/src/androidTest/kotlin/com/poyrazoncel/korubeni/notifications/",
+      "category": "safety-test",
+      "commitGroup": "03-android-build-dependency",
+      "reason": "Instrumentation evidence that the INSTALLED package declares the flutter_local_notifications scheduled-delivery and boot-reschedule receivers (R5). It proves a manifest declaration, so it travels with the manifest change rather than with the native kernel."
+    },
+    {
       "pattern": "^android/app/src/main/kotlin/com/poyrazoncel/korubeni/(?:emergency/|integrity/|MainActivity\\.kt$|DozeModeHandler\\.kt$|VolumeButtonDetector\\.kt$)",
       "category": "safety",
       "commitGroup": "01-native-safety-kernel",

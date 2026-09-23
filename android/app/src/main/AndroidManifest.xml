@@ -132,6 +132,23 @@
             tools:ignore="MissingClass" />
         <!-- Shake detection is disabled in this release; service kept out of manifest. -->
         <!-- Audio recording service is disabled in this release. -->
+        <!-- flutter_local_notifications 19.x does not merge scheduled-delivery
+             components automatically. These app-private receivers are required
+             for zonedSchedule delivery and for rescheduling after reboot or an
+             app update. Keep this list aligned with the resolved plugin README. -->
+        <receiver
+            android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver"
+            android:exported="false" />
+        <receiver
+            android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+                <action android:name="com.htc.intent.action.QUICKBOOT_POWERON" />
+            </intent-filter>
+        </receiver>
         <receiver
             android:name=".emergency.CheckInAlarmReceiver"
             android:enabled="true"
