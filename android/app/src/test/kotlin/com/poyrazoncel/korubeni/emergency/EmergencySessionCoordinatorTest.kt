@@ -958,6 +958,63 @@ class EmergencySessionCoordinatorTest {
         assertEquals(LifecycleState.REQUEST_FAILED, fixture.store.current?.lifecycleState)
     }
 
+    @Test
+    fun `a stale CLAIMED session recovered after process death is offered not dialled`() {
+        val store = FakeStore(crashAfterWritesAt = setOf(3))
+        val interrupted = Fixture(store = store)
+        val token = (
+            interrupted.coordinator.arm(
+                validArmRequest(randomId = "stale-claimed-process-death"),
+            ) as ArmResult.Armed
+        ).token
+        interrupted.advanceToFinalDeadline()
+
+        assertProcessDeath { interrupted.coordinator.claimAndDispatch(token) }
+        assertEquals(LifecycleState.CLAIMED, store.current?.lifecycleState)
+        assertEquals(0, interrupted.calls.targets.size)
+
+        val recoveredCalls = FakeCalls()
+        val recovered = Fixture(store = store, calls = recoveredCalls)
+        recovered.advanceTo(
+            now + 120_000L + EmergencySessionCoordinator.MAX_OVERDUE_DISPATCH_MS + 1L,
+        )
+        recovered.coordinator.reconcileAfterBoot()
+
+        assertEquals(
+            "a stale durable claim must never cause an automatic call on reopen or boot",
+            0,
+            recoveredCalls.targets.size,
+        )
+        assertEquals(LifecycleState.MANUAL_ACTION_REQUIRED, store.current?.lifecycleState)
+        assertEquals(FallbackOutcome.POSTED, store.current?.fallbackOutcome)
+        assertEquals(CallRequestOutcome.NOT_ATTEMPTED, store.current?.callRequestOutcome)
+    }
+
+    @Test
+    fun `a fresh CLAIMED session recovered after process death still dispatches`() {
+        val store = FakeStore(crashAfterWritesAt = setOf(3))
+        val interrupted = Fixture(store = store)
+        val token = (
+            interrupted.coordinator.arm(
+                validArmRequest(randomId = "fresh-claimed-process-death"),
+            ) as ArmResult.Armed
+        ).token
+        interrupted.advanceToFinalDeadline()
+
+        assertProcessDeath { interrupted.coordinator.claimAndDispatch(token) }
+
+        val recoveredCalls = FakeCalls()
+        val recovered = Fixture(store = store, calls = recoveredCalls)
+        recovered.advanceTo(now + 120_001L)
+        recovered.coordinator.reconcileAfterBoot()
+
+        assertEquals(1, recoveredCalls.targets.size)
+        assertEquals(
+            LifecycleState.REQUEST_SUBMITTED_UNCONFIRMED,
+            store.current?.lifecycleState,
+        )
+    }
+
     private fun validArmRequest(
         randomId: String = "session-random-id",
         target: String = "+905001234567",

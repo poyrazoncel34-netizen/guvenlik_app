@@ -87,7 +87,75 @@ class OverdueSessionProbeTest {
         )
     }
 
-    private fun seed(overdueByMs: Long): EmergencySessionEnvelope {
+    /**
+     * R3: the same freshness rule must hold for a record left in CLAIMED.
+     *
+     * CLAIMED is a durable uncertainty boundary, not timeless permission to
+     * call: the process can die after the claim commit but before any external
+     * side effect. Until this probe, the CLAIMED branch of reconcile dialled
+     * with NO age limit, so a record stranded by a force-stop could place an
+     * emergency call days later. The ARMED half was measured on
+     * 2026-09-20; that record states the CLAIMED branch was left unmeasured.
+     */
+    @Test
+    fun staleClaimedSessionIsOfferedNotDialled() {
+        assumeTrue(args.getString(ARG_MODE) == "claimed")
+        val envelope = seed(
+            overdueByMs = 60L * 60L * 1_000L,
+            lifecycleState = LifecycleState.CLAIMED,
+        )
+
+        EmergencySessionRuntime.coordinator(context).reconcileAfterBoot()
+
+        val after = read(envelope.token)
+        Log.i(
+            TAG,
+            "CLAIMED_STALE state=${after?.lifecycleState?.wireValue} " +
+                "call=${after?.callRequestOutcome?.wireValue} " +
+                "fallback=${after?.fallbackOutcome?.wireValue}",
+        )
+        assertEquals(
+            "an hour-old CLAIMED record must not reach Telecom",
+            CallRequestOutcome.NOT_ATTEMPTED,
+            after?.callRequestOutcome,
+        )
+        assertEquals(
+            LifecycleState.MANUAL_ACTION_REQUIRED,
+            after?.lifecycleState,
+        )
+        assertEquals(FallbackOutcome.POSTED, after?.fallbackOutcome)
+    }
+
+    /**
+     * The negative control for the CLAIMED pair. A probe that silently failed
+     * to run would otherwise be indistinguishable from a pass.
+     */
+    @Test
+    fun recentlyClaimedSessionIsStillDialled() {
+        assumeTrue(args.getString(ARG_MODE) == "claimed-control")
+        val envelope = seed(
+            overdueByMs = 30L * 1_000L,
+            lifecycleState = LifecycleState.CLAIMED,
+        )
+
+        EmergencySessionRuntime.coordinator(context).reconcileAfterBoot()
+
+        val after = read(envelope.token)
+        Log.i(
+            TAG,
+            "CLAIMED_CONTROL state=${after?.lifecycleState?.wireValue} " +
+                "call=${after?.callRequestOutcome?.wireValue}",
+        )
+        assertTrue(
+            "a 30s-late CLAIMED record must still be dispatched automatically",
+            after?.callRequestOutcome != CallRequestOutcome.NOT_ATTEMPTED,
+        )
+    }
+
+    private fun seed(
+        overdueByMs: Long,
+        lifecycleState: LifecycleState = LifecycleState.ARMED,
+    ): EmergencySessionEnvelope {
         val target = args.getString(ARG_TARGET).orEmpty()
         assertTrue("$ARG_TARGET is required", target.isNotBlank())
         val store = DeviceProtectedEmergencySessionStore(context)
@@ -105,7 +173,7 @@ class OverdueSessionProbeTest {
                 generation = 1L,
                 kind = SessionKind.PANIC,
             ),
-            lifecycleState = LifecycleState.ARMED,
+            lifecycleState = lifecycleState,
             mainDeadlineMs = deadline,
             finalDeadlineMs = deadline,
             elapsedRealtimeDeadlineMs = 0L,
@@ -113,7 +181,7 @@ class OverdueSessionProbeTest {
             schedulingMode = SchedulingMode.NONE,
         )
         assertTrue("seed write failed", store.write(envelope))
-        Log.i(TAG, "SEEDED overdueByMs=$overdueByMs")
+        Log.i(TAG, "SEEDED state=${lifecycleState.wireValue} overdueByMs=$overdueByMs")
         return envelope
     }
 

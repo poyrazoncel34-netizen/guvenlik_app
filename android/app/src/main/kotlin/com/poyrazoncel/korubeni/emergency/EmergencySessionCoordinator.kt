@@ -567,7 +567,7 @@ class EmergencySessionCoordinator(
         cancelAlarmBestEffort(envelope.token)
     }
 
-    /** Re-arms future alarms or dispatches elapsed ARMED/CLAIMED sessions. */
+    /** Re-arms future alarms or dispatches fresh elapsed ARMED/CLAIMED sessions. */
     fun reconcileAfterBoot() = reconcile(rebaseElapsedFromWall = true)
 
     /** Used for package replacement, unlock, and exact-permission grant. */
@@ -595,7 +595,18 @@ class EmergencySessionCoordinator(
                         scheduleBestEffort(envelope)
                     }
                 }
-                LifecycleState.CLAIMED -> claimAndDispatch(envelope.token)
+                LifecycleState.CLAIMED -> {
+                    if (wallClockMs() - envelope.finalDeadlineMs > MAX_OVERDUE_DISPATCH_MS) {
+                        // CLAIMED is a durable uncertainty boundary, not
+                        // timeless permission to call. A process may die after
+                        // the claim commit but before any external side effect;
+                        // reopening days later must follow the same freshness
+                        // policy as an overdue ARMED session.
+                        offerOverdueInsteadOfDialling(envelope)
+                    } else {
+                        claimAndDispatch(envelope.token)
+                    }
+                }
                 LifecycleState.PREPARING -> {
                     // An interrupted arm is never promoted after reboot because
                     // AlarmManager acceptance was not durably acknowledged.
