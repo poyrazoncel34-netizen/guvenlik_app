@@ -64,10 +64,16 @@
       "reason": "Home-screen widget and Quick Settings tile: they submit a panic request and launch the launcher activity; the arm boundary stays in the Flutter path."
     },
     {
-      "pattern": "^test/(?:(?:android|core|presentation|screens|widgets)/|main_(?:locale|release_logging_contract|start_locale|startup_init_order|text_scaling)_test\\.dart$|state_restoration_policy_test\\.dart$|wall_clock_test_hygiene_policy_test\\.dart$)",
+      "pattern": "^test/(?:(?:android|core|presentation|screens|widgets)/|main_(?:locale|release_logging_contract|start_locale|startup_init_order|text_scaling|unhandled_error_handlers_behavior)_test\\.dart$|state_restoration_policy_test\\.dart$|wall_clock_test_hygiene_policy_test\\.dart$)",
       "category": "safety-test",
       "commitGroup": "02-flutter-pin-session",
       "reason": "Executable Flutter/platform safety behavior evidence."
+    },
+    {
+      "pattern": "^tool/stage4_android_runtime_probe\\.dart$",
+      "category": "safety-test",
+      "commitGroup": "02-flutter-pin-session",
+      "reason": "Stage 4 executable Flutter-to-Android runtime probe; it is test-only evidence and not a production entrypoint."
     },
     {
       "pattern": "^lib/(?:core/|presentation/|screens/|widgets/|main\\.dart$)",

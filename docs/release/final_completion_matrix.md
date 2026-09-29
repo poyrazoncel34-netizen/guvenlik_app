@@ -10,8 +10,9 @@ uzerine yalnizca takip alanlari ekler. Yeni ID eklemek = once envantere satir ek
 
 1. **Bir satir yalnizca gercek kanitla KAPANIR.** Kod dogru gorunmesi, "test var"
    denmesi ya da kaynak-metni (string/grep) testi kapatmaz.
-2. **Mevcut durum** sutunu envanterden BIREBIR devralindi; bu turda hicbir satirin
-   durumu iyilestirilmedi.
+2. **Mevcut durum** sutunu baseline'da envanterden BIREBIR devralindi. Sonraki
+   asamalarda ancak kayitli davranis kaniti uretilen satirlar guncellenir; kaynak
+   envanter tarihsel kesif fotografi olarak degistirilmez.
 3. **Final durum** yalnizca su kosulda `KAPANDI` yazar: envanter durumu `KANITLI`
    VE emulator/fiziksel cihaz/Play/gorsel kanit gereksinimlerinin hicbiri yok.
    Diger her satir `ACIK`.
@@ -22,16 +23,22 @@ uzerine yalnizca takip alanlari ekler. Yeni ID eklemek = once envantere satir ek
 
 ## Asama dagilimi (baseline)
 
-| Asama | Anlami | Baseline | Asama 2 sonrasi |
-|---|---|---|---|
-| `A1-kapandi` | kanit tam | 19 | **21** |
-| `A2-repo` | repo-ici davranis testi | 141 | 141 |
-| `A3-emu` | emulator | 72 | 72 |
-| `A4-fiz` | fiziksel cihaz | 101 | **100** |
-| `A5-play` | Play / RevenueCat | 36 | 36 |
-| `A6-gorsel` | gorsel / manuel | 24 | 24 |
-| `A7-olu` | olu kod karari | 16 | **15** |
-| | **Toplam** | **409** | **409** |
+| Asama | Anlami | Baseline | Asama 2 sonrasi | Asama 3 | Asama 4 ara sonucu | Asama 6 baslangici | Asama 7 sonrasi (guncel) |
+|---|---|---|---|---|---|---|---|
+| `A1-kapandi` | kanit tam | 19 | **21** | **74** | **117** | **125** | **240** |
+| `A2-repo` | repo-ici davranis testi | 141 | 141 | **0** | **0** | **0** | **0** |
+| `A3-emu` | emulator | 72 | 72 | 72 | **35** | **0** | **0** |
+| `A4-fiz` | fiziksel cihaz | 101 | **100** | 100 | **89** | **54** | **54** |
+| `A5-play` | Play / RevenueCat | 36 | 36 | 36 | **38** | **99** | **99** |
+| `A6-gorsel` | gorsel / manuel | 24 | 24 | **112** | **115** | **116** | **1** |
+| `A7-olu` | olu kod karari | 16 | **15** | 15 | **15** | **15** | **15** |
+| | **Toplam** | **409** | **409** | **409** | **409** | **409** | **409** |
+
+> Son kolon elle yazilmis bir tahmin degil, tablodan makineyle sayilan degerdir;
+> `final_completion_matrix_parity_test` her iki dagilimin 409'a toplandigini ve
+> `A1-*` etiketi ile `KAPANDI` kumelerinin birebir ortustugunu dogrular. Bu kolon
+> bir ara anlik goruntusu oldugu icin, kanit uretildikce degisir: guncelligini
+> "bu satir sayimla uyusuyor mu" diye sormak yerine testi kosarak dogrula.
 
 > **Bu `A1..A7` etiketleri KANIT TURUDUR, calisma plani asama numarasi DEGILDIR.**
 > `A5-play` "Play/RevenueCat kaniti gerekir" demektir; "Asama 5" demek degildir.
@@ -41,10 +48,11 @@ uzerine yalnizca takip alanlari ekler. Yeni ID eklemek = once envantere satir ek
 
 ## Final durum dagilimi (baseline)
 
-| Final durum | Baseline | Asama 2 sonrasi |
-|---|---|---|
-| KAPANDI | 19 | **21** |
-| ACIK | 390 | **388** |
+| Final durum | Baseline | Asama 2 sonrasi | Asama 3 | Asama 4 ara sonucu | Asama 6 baslangici | Asama 7 sonrasi (guncel) |
+|---|---|---|---|---|---|---|
+| KAPANDI | 19 | **21** | **74** | **117** | **125** | **240** |
+| ACIK | 390 | **388** | **335** | **292** | **284** | **169** |
+| **Toplam** | **409** | **409** | **409** | **409** | **409** | **409** |
 
 > Baseline'da 409 satirin yalnizca 19 tanesi kapaliydi. Bu bir gerileme degil, ilk kez
 > durust sayim: geri kalan satirlar ya cihaz/magaza kaniti ya da gercek davranis
@@ -56,6 +64,88 @@ uzerine yalnizca takip alanlari ekler. Yeni ID eklemek = once envantere satir ek
 > ilgili satirlarin KANIT alanini guclendirdi ama satirlari kapatmadi: onlarin
 > bekledigi emulator/fiziksel/gorsel kanit hala eksik. Bu bilincli: bir fix'in
 > varligi, o satirin istedigi kanit turu degildir.
+
+## Asama 3 kapanisi
+
+**Durum:** `PASS_REPO_BEHAVIOR` — 2026-09-24 tarihli fresh calisma.
+**Kanit:** [`docs/audit/finalization-stage3-2026-09-24.md`](../audit/finalization-stage3-2026-09-24.md)
+
+Tam Flutter paketi 2015/2015 PASS; Android host paketi 125/125 PASS; statik
+analiz PASS; instrumentation APK fresh derlendi. Bu kapanis emulator, fiziksel
+cihaz, Play veya RevenueCat kaniti sayilmaz. Android runtime sinirlari Asama 4'te
+ayni calisma agacindan uretilen APK ile yeniden dogrulanir.
+
+## Asama 4 Android runtime sonucu
+
+**Guncel durum:** `PASS` — final kapanis 2026-09-28.
+
+**Final kanit:**
+[`docs/audit/finalization-stage4-continuation-2026-09-25.md`](../audit/finalization-stage4-continuation-2026-09-25.md),
+bolum 21.6. `EMU_REQUIRED_TOTAL=94`, `EMU_PROVEN=94`,
+`EMU_UNVERIFIED=0`; final APK SHA-256
+`d1b99ea35961ed077c76c535e8f1d4ac1aaa0965cc6c3d59d844311553b96a22`.
+
+Ilk ara snapshot
+[`docs/audit/finalization-stage4-2026-09-25.md`](../audit/finalization-stage4-2026-09-25.md)
+ve devam raporunun onceki bolumleri append-only tarihsel kanittir. Oradaki
+`INCOMPLETE` ifadeleri final kapanis tarafindan supersede edilmistir; sonradan
+olusmus regression kaydi degildir.
+
+Ilk ara APK `7ddb50717ab192fe337b910a108c2dece199d09c68a731d37bae5ab1b654ed79`
+uzerindeki tarihsel emulator kanit ID'leri ve bagli envanter satirlari:
+
+| Kanit ID | Interaction Inventory ID'leri | Kapsam |
+|---|---|---|
+| `E4-COLD-02` | BOOT-01, PIN-01 | production-main cold start ve zorunlu PIN kurulum ekrani |
+| `E4-PRIVACY-02` | BOOT-07 | final APK recents kartinda hassas icerik yok |
+| `E4-INTEGRITY-02` | BOOT-09, NTV-33 | final APK Android integrity probe |
+| `E4-LIFECYCLE-02` | YDK-01 | 120 sn arka plan sonrasi gercek PIN kilidi |
+| `E4-PERMISSION-02` | NAV-06, PRM-02 | disclosure, gercek OS dialogu ve ret/ayar grant gecisleri |
+| `E4-READINESS-02` | HOME-05, HOME-06, PIL-01 | pil ve konum kullanici zincirleri |
+| `E4-DEEPLINK-02` | DL-01, DL-02, DL-04, DL-06, DL-08 | cold/warm, kilit kapisi, map/settings ve gecersiz link |
+| `E4-FAKECALL-02` | BLD-01, BLD-03, FKC-03 | 1 dk alarm, process death, bildirim tap ve gercek FakeCallScreen |
+| `E4-LOCATION-02` | MAP-01 | OS izni ve gercek emulator koordinati |
+| `E4-RESET-02` | SIF-02 | PIN kapili uygulama ici silme ve temiz yeniden acilis |
+| `E4-ALARM-02` | NTV-01 | exact/inexact scheduler ve final APK instrumentation |
+| `E4-STALE-02` | NTV-10 | stale/fresh ARMED/CLAIMED negatif kontrolleri |
+| `E4-SETTINGS-02` | NTV-31 | gercek Android notification/channel settings siniri |
+| `E4-QUICK-VISIBLE-02` | HZ-01 | final APK tile'i SystemUI'da INACTIVE gorunur; tiklama kaniti degil |
+
+Bu baglar yalniz emulator boyutunu kanitlar; fiziksel/Play gereksinimi olan
+satirlari `KAPANDI` yapmaz. Yeniden siniflandirma: eski 193 satirdan 5'i
+`PHYSICAL_ONLY`, 20'si `EXTERNAL_PLAY`; gercek emulator kapsami 168, güncel
+final SHA muhasebesinde 77 proven ve 91 unverified. R6'nin native callback/wiring ucu onceki
+build'de gorulmus olsa da final SHA'da riskli tetik calistirilmadigi icin burada
+PASS sayilmadi; RevenueCat entitlement ucu Asama 6'dir. Asama 4 INCOMPLETE'tir.
+
+## Asama 7 kapanisi
+
+**Durum:** `BLOCKED` — emulator, production widget, text-scale, layout,
+semantics ve asset kapsami tamamlandi; fiziksel cihazda gercek TalkBack yok.
+
+**Kanit:** [`docs/audit/finalization-stage7-2026-09-29.md`](../audit/finalization-stage7-2026-09-29.md)
+
+Asama basinda bu tablodan makineyle cikarilan `A6-gorsel` kaynak kumesi 116
+ID idi. 116/116 satirin gorsel alt gereksinimi kanitlandi; 115 saf-gorsel satir
+`A1-kapandi/KAPANDI` olarak yeniden siniflandirildi. `RIZA-13` uygulama ici
+gorsel alt gereksinimini gecti, fakat canli web surum eslesmesi A-004 acik
+oldugu icin `ACIK` ve `A6-gorsel` kaldi. Bu, Aşama 6'yi PASS yapmaz.
+
+Tam Flutter paketi 2040/2040 PASS; `flutter analyze` PASS;
+`verify_release` exit 0. Gercek cihaz TalkBack gerektiren 11 ana akis
+`PHYSICAL_TALKBACK_BLOCKED` kaldigi icin genel `STAGE_7=BLOCKED`tir.
+
+### RIZA-13 routing etiketi notu
+
+`RIZA-13` icin uygulama-ici gorsel kanit Asama 7'de tamamlanmistir;
+`VISUAL_PROVEN=116/116` ve `VISUAL_UNTESTED=0` gercektir. Satirin
+`A6-gorsel` etiketi, mevcut matris semasinda Play/RC disindaki canli web/legal
+bagimliligi icin ayri bir routing etiketi bulunmamasindan kalan tarihsel
+etikettir ve "gorsel test acik" anlamina gelmez. Gercek kalan gereksinim,
+canli Terms sayfasinin uygulamadaki `4.0.0` surumuyle hash/icerik paritesi ve
+Play Console URL alaninin ayni sayfayi gosterdigi dis sistem kanitidir.
+Bu nedenle satir `ACIK` kalir; `KAPANDI`ya yukseltilmez ve zorla baska bir
+calisma asamasina tasinmaz.
 
 ## Asama 2 kapanisi ve devir (R1-R7 / K1-K3)
 
@@ -93,379 +183,379 @@ cihaz ucu Asama 6'ya, R1'in arkasina tasindi.
 
 | ID | Yuzey | Mevcut durum | Gereken kanit turu | Ilgili asama | Son kanit | Final durum |
 |---|---|---|---|---|---|---|
-| BOOT-01 | Başlangıç | KISMEN KANITLI | repo-ici davranis testi + emulator + fiziksel cihaz + gorsel/manuel kontrol | `A4-fiz` | app_bootstrap_service_test; main_startup_init_order_test [U; S]; gercek-yol: Kısmen (servis gerçek, `main()` değil) | ACIK |
-| BOOT-02 | Başlangıç hata ekranı | KISMEN KANITLI | repo-ici davranis testi + emulator + gorsel/manuel kontrol | `A3-emu` | bootstrap_recovery_screen_test (gercek ekran pump; cikissiz hata ekrani yerine kurtarma yolu) [W]; gercek-yol: Evet (Flutter katmani) | ACIK |
+| BOOT-01 | Başlangıç | KISMEN KANITLI | fiziksel cihaz + gorsel/manuel kontrol | `A4-fiz` | E4-COLD-02: final APK production-main cold start; app_bootstrap_service_test; main_startup_init_order_test [D; U; S] | ACIK |
+| BOOT-02 | Başlangıç hata ekranı | KISMEN KANITLI | fiziksel cihaz + gorsel/manuel kontrol | `A4-fiz` | PHYSICAL_ONLY: kalan gerçek sınır hardware-backed Android Keystore/secure-storage okuma arızasıdır; sağlıklı emulator bunu production kullanıcı aksiyonuyla üretemez, storage mock/fault probe cihaz kanıtı sayılmaz; Flutter kurtarma yüzeyi gerçek widget testinde kanıtlı [W] | ACIK |
 | BOOT-03 | Başlangıç | KANITLI | Yok (kanit tam) | `A1-kapandi` | best_effort_startup_test; profile_email_removal_test; sensitive_temp_file_service_test [U]; gercek-yol: Evet | KAPANDI |
-| BOOT-04 | Başlangıç | KISMEN KANITLI | repo-ici davranis testi | `A2-repo` | main_release_logging_contract_test; crash_log_service_test [S; U]; gercek-yol: Kısmen | ACIK |
-| BOOT-05 | Başlangıç | KISMEN KANITLI | repo-ici davranis testi + emulator + fiziksel cihaz + gorsel/manuel kontrol | `A4-fiz` | main_text_scaling_test [U]; gercek-yol: Kısmen (yalnız clamp fonksiyonu) | ACIK |
-| BOOT-06 | Tüm uygulama | DOĞRULANMADI | repo-ici davranis testi + emulator + fiziksel cihaz + gorsel/manuel kontrol | `A4-fiz` | secure_window_contract_test [S]; gercek-yol: Hayır | ACIK |
-| BOOT-07 | Tüm uygulama | KISMEN KANITLI | repo-ici davranis testi + emulator + gorsel/manuel kontrol | `A3-emu` | app_privacy_shield_test [W]; gercek-yol: Evet (Flutter katmanı) | ACIK |
-| BOOT-08 | Splash | DOĞRULANMADI | repo-ici davranis testi + emulator + gorsel/manuel kontrol | `A3-emu` | reduced_motion_coverage_test [S; W*]; gercek-yol: Hayır | ACIK |
-| BOOT-09 | Splash | KISMEN KANITLI | repo-ici davranis testi + emulator + fiziksel cihaz + gorsel/manuel kontrol | `A4-fiz` | device_security_service_test; device_security_test; DeviceIntegrityProbeTest (18); DeviceIntegrityEmulatorProbeTest [U; S; K; I; D]; gercek-yol: Kısmen; cihaz kaydi 2026-09-22 | ACIK |
-| BOOT-10 | Splash bütünlük diyaloğu | DOĞRULANMADI | repo-ici davranis testi + emulator + fiziksel cihaz + gorsel/manuel kontrol | `A4-fiz` | test yok; gercek-yol: Hayır | ACIK |
+| BOOT-04 | Başlangıç | KANITLI | Yok (kanit tam) | `A1-kapandi` | main_unhandled_error_handlers_behavior_test [U; gerçek kurulu FlutterError ve PlatformDispatcher handler çağrıları, debug/release negatif kontrolü]; main_release_logging_contract_test; crash_log_service_test [S; U]; gercek-yol: Evet | KAPANDI |
+| BOOT-05 | Başlangıç | KISMEN KANITLI | fiziksel cihaz + gorsel/manuel kontrol | `A4-fiz` | E4-FINAL10-BOOT05: dbae294b… API35 gerçek font_scale 2.0 + landscape talebinde ROTATION_0/1080×2400; ilk tur gerçek RenderFlex bug'ları reproduce edildi, responsive reflow + 411×914 regression sonrası runtime logcat overflow/FATAL/ANR boş (`stage4-dbae-boot05-fixed.*`) [D; W] | ACIK |
+| BOOT-06 | Tüm uygulama | KANITLI | Yok (kanit tam) | `A1-kapandi` | E4-FINAL11-BOOT06: release-key imzalı `smokeRelease` (APK 82f4c194…) API35 runtime penceresinde `SECURE`; gerçek screencap uygulama içeriğini siyah, recents kartı siyah thumbnail üretti (`stage4-smoke-release-boot06-*`) [D; S] | KAPANDI |
+| BOOT-07 | Tüm uygulama | KANITLI | Yok (kanit tam) | `A1-kapandi` | E4-PRIVACY-02: final APK recents maskesi; app_privacy_shield_test; secure_window_contract_test [D; W; S] | KAPANDI |
+| BOOT-08 | Splash | KANITLI | Yok (kanit tam) | `A1-kapandi` | VISUAL_ONLY: reduce-motion controller/döngü politikası gerçek widget davranış testlerinde kanıtlı; kalan kabul 500 ms hareket kalitesinin gözle/manual değerlendirmesidir [W]; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| BOOT-09 | Splash | KISMEN KANITLI | fiziksel cihaz + gorsel/manuel kontrol | `A4-fiz` | E4-INTEGRITY-02: final APK DeviceIntegrityEmulatorProbeTest; repo testleri [I; D; U; S; K] | ACIK |
+| BOOT-10 | Splash bütünlük diyaloğu | KISMEN KANITLI | fiziksel cihaz | `A4-fiz` | PHYSICAL_ONLY: mevcut Play user/release-keys AVD temizdir; ikinci API35 userdebug/test-keys AVD'de gerçek `/system/xbin/su` uygulama SELinux alanına `Permission denied` verdi ve production probe doğru biçimde `suBinary=error`, `device_integrity_unknown` üretti. Mock/fault build PASS sayılmadı; kalan zincir uygulama alanından gerçekten okunabilen root artifact taşıyan önceden kompromize fiziksel test cihazı gerektirir (`stage4-4abe-boot10.log`) [D] | ACIK |
 | BOOT-11 | Splash yönlendirme | KANITLI | Yok (kanit tam) | `A1-kapandi` | startup_pin_boundary_test [W]; gercek-yol: Evet | KAPANDI |
 | BOOT-12 | Splash yönlendirme | KANITLI | Yok (kanit tam) | `A1-kapandi` | startup_pin_boundary_test ("reconsent gates existing PIN"); splash_version_logic_test [W; S]; gercek-yol: Evet | KAPANDI |
 | BOOT-13 | Splash yönlendirme | KANITLI | Yok (kanit tam) | `A1-kapandi` | startup_pin_boundary_test [W]; gercek-yol: Evet | KAPANDI |
 | BOOT-14 | Splash yönlendirme | KANITLI | Yok (kanit tam) | `A1-kapandi` | startup_pin_boundary_test [W]; gercek-yol: Evet | KAPANDI |
 | BOOT-15 | Splash yönlendirme | KANITLI | Yok (kanit tam) | `A1-kapandi` | startup_pin_boundary_test [W]; gercek-yol: Evet | KAPANDI |
 | BOOT-16 | Splash | KISMEN KANITLI | repo-ici davranis testi + Play/RevenueCat islemi | `A5-play` | subscription_provider_access_test; offline_sos_entitlement_policy_test [U]; gercek-yol: Kısmen (RC sahte) | ACIK |
-| BOOT-17 | AppRoot | KISMEN KANITLI | repo-ici davranis testi + emulator | `A3-emu` | state_restoration_test; state_restoration_navigator_precondition_test; state_restoration_policy_test; D 2026-08-14 [W; W*; S; D]; gercek-yol: Kısmen | ACIK |
-| BOOT-18 | Kök ekranlar | DOĞRULANMADI | repo-ici davranis testi + emulator | `A3-emu` | test yok; gercek-yol: Hayır | ACIK |
-| RIZA-01 | UnifiedConsent | KANITLI | gorsel/manuel kontrol | `A6-gorsel` | startup_pin_boundary_test (gerçek tap) [W]; gercek-yol: Evet | ACIK |
-| RIZA-02 | UnifiedConsent | DOĞRULANMADI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | test yok; gercek-yol: Hayır | ACIK |
-| RIZA-03 | UnifiedConsent | KISMEN KANITLI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | startup_pin_boundary_test (onChanged doğrudan çağrılıyor); unified_consent_retry_test; touch_target_minimum_size_test [W]; gercek-yol: Kısmen (dokunma jesti değil callback) | ACIK |
-| RIZA-04 | UnifiedConsent | DOĞRULANMADI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | test yok; gercek-yol: Hayır | ACIK |
-| RIZA-05 | UnifiedConsent | KISMEN KANITLI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | startup_pin_boundary_test; unified_consent_retry_test [W]; gercek-yol: Kısmen | ACIK |
-| RIZA-06 | UnifiedConsent | KISMEN KANITLI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | unified_consent_retry_test [W]; gercek-yol: Kısmen | ACIK |
-| RIZA-07 | UnifiedConsent | KISMEN KANITLI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | unified_consent_retry_test [W]; gercek-yol: Kısmen | ACIK |
-| RIZA-08 | UnifiedConsent | KISMEN KANITLI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | unified_consent_retry_test [W]; gercek-yol: Kısmen | ACIK |
-| RIZA-09 | UnifiedConsent | KISMEN KANITLI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | unified_consent_retry_test [W]; gercek-yol: Kısmen | ACIK |
-| RIZA-10 | UnifiedConsent | KANITLI | gorsel/manuel kontrol | `A6-gorsel` | startup_pin_boundary_test [W]; gercek-yol: Evet | ACIK |
+| BOOT-17 | AppRoot | KANITLI | gerçek emulator process-death + repo-ici davranis testi | `A1-kapandi` | E4-FINAL5-BOOT17; APK e0618db2; HOME → am kill → cold 5/5 + DraftOnb/5552223333; assertion/crash yok [D; W; W*] | KAPANDI |
+| BOOT-18 | Kök ekranlar | KANITLI | Yok (kanit tam) | `A1-kapandi` | E4-FINAL4-BOOT18: consent/onboarding/main root BACK uygulama task'ından çıktı; AppLock BACK etkisiz [D] | KAPANDI |
+| RIZA-01 | UnifiedConsent | KANITLI | Yok (kanit tam) | `A1-kapandi` | startup_pin_boundary_test (gerçek tap) [W]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| RIZA-02 | UnifiedConsent | KANITLI | Yok (kanit tam) | `A1-kapandi` | unified_consent_behavior_test `RIZA-02/RIZA-04: real expand controls reveal and hide legal text` [W]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| RIZA-03 | UnifiedConsent | KANITLI | Yok (kanit tam) | `A1-kapandi` | unified_consent_behavior_test `RIZA-03/RIZA-05/RIZA-06/RIZA-07/RIZA-08/RIZA-09: taps change real controls and persist choices` (gercek satir tap); startup_pin_boundary_test; unified_consent_retry_test; touch_target_minimum_size_test [W]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| RIZA-04 | UnifiedConsent | KANITLI | Yok (kanit tam) | `A1-kapandi` | unified_consent_behavior_test `RIZA-02/RIZA-04: real expand controls reveal and hide legal text` [W]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| RIZA-05 | UnifiedConsent | KANITLI | Yok (kanit tam) | `A1-kapandi` | unified_consent_behavior_test `RIZA-03/RIZA-05/RIZA-06/RIZA-07/RIZA-08/RIZA-09: taps change real controls and persist choices`; startup_pin_boundary_test; unified_consent_retry_test [W]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| RIZA-06 | UnifiedConsent | KANITLI | Yok (kanit tam) | `A1-kapandi` | unified_consent_behavior_test `RIZA-03/RIZA-05/RIZA-06/RIZA-07/RIZA-08/RIZA-09: taps change real controls and persist choices` (tap + pref) [W]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| RIZA-07 | UnifiedConsent | KANITLI | Yok (kanit tam) | `A1-kapandi` | unified_consent_behavior_test `RIZA-03/RIZA-05/RIZA-06/RIZA-07/RIZA-08/RIZA-09: taps change real controls and persist choices` (tap + pref) [W]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| RIZA-08 | UnifiedConsent | KANITLI | Yok (kanit tam) | `A1-kapandi` | unified_consent_behavior_test `RIZA-03/RIZA-05/RIZA-06/RIZA-07/RIZA-08/RIZA-09: taps change real controls and persist choices` (tap + pref) [W]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| RIZA-09 | UnifiedConsent | KANITLI | Yok (kanit tam) | `A1-kapandi` | unified_consent_behavior_test `RIZA-03/RIZA-05/RIZA-06/RIZA-07/RIZA-08/RIZA-09: taps change real controls and persist choices` (tap + ConsentManager kaydi) [W]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| RIZA-10 | UnifiedConsent | KANITLI | Yok (kanit tam) | `A1-kapandi` | startup_pin_boundary_test [W]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
 | RIZA-11 | UnifiedConsent | KANITLI | Yok (kanit tam) | `A1-kapandi` | startup_pin_boundary_test; unified_consent_retry_test [W]; gercek-yol: Evet | KAPANDI |
 | RIZA-12 | UnifiedConsent | KANITLI | Yok (kanit tam) | `A1-kapandi` | unified_consent_retry_test [W]; gercek-yol: Evet | KAPANDI |
-| RIZA-13 | UnifiedConsent | DIŞ SİSTEM GEREKİYOR | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | legal_* policy tests; release_readiness_policy_test [S]; gercek-yol: Hayır | ACIK |
-| RIZA-14 | UnifiedConsent | DOĞRULANMADI | repo-ici davranis testi + emulator | `A3-emu` | legal_age_gate_contract_test [S]; gercek-yol: Hayır | ACIK |
-| ONB-01 | Onboarding | DOĞRULANMADI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | onboarding_contact_gate_source_test [S]; gercek-yol: Hayır | ACIK |
-| ONB-02 | Onboarding | DOĞRULANMADI | repo-ici davranis testi + emulator + gorsel/manuel kontrol | `A3-emu` | state_restoration_policy_test; D 2026-08-16 [S; D]; gercek-yol: Hayır | ACIK |
-| ONB-03 | Onboarding | KISMEN KANITLI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | onboarding_safety_copy_render_test (sayfa render) [W]; gercek-yol: Kısmen (tap yok) | ACIK |
-| ONB-04 | Onboarding | DOĞRULANMADI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | onboarding_contact_gate_source_test [S]; gercek-yol: Hayır | ACIK |
-| ONB-05 | Onboarding | KISMEN KANITLI | repo-ici davranis testi | `A2-repo` | onboarding_contact_gate_service_test [U]; gercek-yol: Kısmen (UI tap yok) | ACIK |
-| ONB-06 | Kişi adımı | KISMEN KANITLI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | onboarding_contact_gate_service_test; accessibility_guidelines_test [U; W]; gercek-yol: Kısmen | ACIK |
-| ONB-07 | Kişi adımı | KANITLI | gorsel/manuel kontrol | `A6-gorsel` | input_robustness_test; state_restoration_test [W]; gercek-yol: Evet | ACIK |
-| ONB-08 | Kişi adımı | KANITLI | gorsel/manuel kontrol | `A6-gorsel` | input_robustness_test; state_restoration_test; onboarding_contact_step_keyboard_test [W]; gercek-yol: Evet | ACIK |
-| ONB-09 | Kişi adımı | KISMEN KANITLI | repo-ici davranis testi + emulator + fiziksel cihaz | `A4-fiz` | contacts_picker_native_test [S; U]; gercek-yol: Kısmen (native yok) | ACIK |
-| ONB-10 | Kişi adımı | KISMEN KANITLI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | onboarding_contact_gate_service_test; onboarding_contact_step_keyboard_test [U; W]; gercek-yol: Kısmen | ACIK |
-| ONB-11 | Kişi rıza diyaloğu | KANITLI | gorsel/manuel kontrol | `A6-gorsel` | button_loading_state_test [W]; gercek-yol: Evet | ACIK |
-| ONB-12 | Kişi rıza diyaloğu | DOĞRULANMADI | repo-ici davranis testi | `A2-repo` | test yok; gercek-yol: Hayır | ACIK |
-| ONB-13 | Kişi rıza diyaloğu | KISMEN KANITLI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | button_loading_state_test [W]; gercek-yol: Kısmen | ACIK |
-| ONB-14 | Kişi adımı | DOĞRULANMADI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | test yok; gercek-yol: Hayır | ACIK |
-| ONB-15 | Kişi adımı | KISMEN KANITLI | repo-ici davranis testi + emulator + fiziksel cihaz + gorsel/manuel kontrol | `A4-fiz` | onboarding_contact_step_keyboard_test; D 2026-08-13 [W; D]; gercek-yol: Kısmen | ACIK |
-| PIN-01 | PinSetup (zorunlu) | DOĞRULANMADI | repo-ici davranis testi + emulator + gorsel/manuel kontrol | `A3-emu` | main_navigation_construction_sites_test [S]; gercek-yol: Hayır | ACIK |
-| PIN-02 | PinSetup | KANITLI | gorsel/manuel kontrol | `A6-gorsel` | pin_setup_layout_stability_test [W]; gercek-yol: Evet | ACIK |
-| PIN-03 | PinSetup | KANITLI | gorsel/manuel kontrol | `A6-gorsel` | pin_setup_layout_stability_test [W]; gercek-yol: Evet | ACIK |
-| PIN-04 | PinSetup | KANITLI | gorsel/manuel kontrol | `A6-gorsel` | pin_setup_layout_stability_test; pin_change_validation_test [W; U]; gercek-yol: Evet | ACIK |
-| PIN-05 | PinSetup | DOĞRULANMADI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | test yok; gercek-yol: Hayır | ACIK |
-| PIN-06 | PinSetup | KISMEN KANITLI | repo-ici davranis testi | `A2-repo` | pin_verification_service_test; pin_hasher_test [U]; gercek-yol: Kısmen (UI akışı yok) | ACIK |
-| PIN-07 | PinSetup | KISMEN KANITLI | repo-ici davranis testi | `A2-repo` | pin_verification_service_test [U]; gercek-yol: Kısmen | ACIK |
-| PIN-08 | PinSetup | DOĞRULANMADI | repo-ici davranis testi + emulator | `A3-emu` | test yok; gercek-yol: Hayır | ACIK |
-| PIN-09 | PinSetup | DOĞRULANMADI | repo-ici davranis testi | `A2-repo` | test yok; gercek-yol: Hayır | ACIK |
-| PIN-10 | İlk ana ekran | DOĞRULANMADI | repo-ici davranis testi + emulator + gorsel/manuel kontrol | `A3-emu` | test yok; gercek-yol: Hayır | ACIK |
-| KLT-01 | AppUnlock | KANITLI | gorsel/manuel kontrol | `A6-gorsel` | startup_pin_boundary_test [W]; gercek-yol: Evet | ACIK |
+| RIZA-13 | UnifiedConsent | DIŞ SİSTEM GEREKİYOR | gorsel/manuel kontrol + canli web surum eslesmesi | `A6-gorsel` | unified_consent_behavior_test (production ekranda ToS 4.0.0 / KVKK 3.4.0 render); legal_* policy tests; release_readiness_policy_test [W; S]; gercek-yol: Evet (uygulama ici), canli web uyumsuzlugu A-004 acik; Asama 7 gorsel alt gereksinimi PASS, canli web kalani ACIK | ACIK |
+| RIZA-14 | UnifiedConsent | KANITLI | Yok (kanit tam) | `A1-kapandi` | E4-FINAL4-RIZA14: consent kökünde onaysız sistem BACK uygulama task'ından çıktı; cold dönüş consent'te kaldı [D] | KAPANDI |
+| ONB-01 | Onboarding | KANITLI | Yok (kanit tam) | `A1-kapandi` | onboarding_behavior_test `ONB-01/ONB-04 skip lands on contact gate without completing` [W; gerçek OnboardingScreen, Atla tap, contact PageView ve completion negatif kontrolü]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| ONB-02 | Onboarding | KANITLI | Yok (kanit tam) | `A1-kapandi` | E4-FINAL4-ONB02: gerçek swipe -> sayfa 2; vibrator TEXTURE_TICK; HOME+am kill cold dönüşte sayfa 2; `stage4-final4-onboarding-page2.png` [D] | KAPANDI |
+| ONB-03 | Onboarding | KANITLI | Yok (kanit tam) | `A1-kapandi` | onboarding_behavior_test `ONB-03 next advances the real production PageView` [W; gerçek İleri tap ve sayfa state transition]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| ONB-04 | Onboarding | KANITLI | Yok (kanit tam) | `A1-kapandi` | onboarding_behavior_test `ONB-01/ONB-04 skip lands on contact gate without completing` [W; gerçek disabled Başla, required hint ve callback çağrılmaması]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| ONB-05 | Onboarding | KANITLI | Yok (kanit tam) | `A1-kapandi` | onboarding_behavior_test `ONB-05 callable primary contact enables and completes onboarding` [W; gerçek Başla tap, pref write ve callback transition]; onboarding_contact_gate_service_test [U]; gercek-yol: Evet | KAPANDI |
+| ONB-06 | Kişi adımı | KANITLI | Yok (kanit tam) | `A1-kapandi` | onboarding_behavior_test `ONB-06 consent action enables the real contact form` [W; gerçek consent tap, kalıcı manager yolu ve disabled→enabled alanlar]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| ONB-07 | Kişi adımı | KANITLI | Yok (kanit tam) | `A1-kapandi` | input_robustness_test; state_restoration_test [W]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| ONB-08 | Kişi adımı | KANITLI | Yok (kanit tam) | `A1-kapandi` | input_robustness_test; state_restoration_test; onboarding_contact_step_keyboard_test [W]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| ONB-09 | Kişi adımı | KISMEN KANITLI | fiziksel cihaz | `A4-fiz` | PHYSICAL_ONLY: gerçek emulator'da ACTION_PICK başarı, iptal ve resolver kaldırılarak NO_PICKER kanıtlı; kalan PICK_FAILED yalnız OEM Contacts provider'ın resolve sonrası exception vermesiyle oluşur, mock exception fiziksel/OEM kanıtı değildir [D; S; U] | ACIK |
+| ONB-10 | Kişi adımı | KANITLI | Yok (kanit tam) | `A1-kapandi` | onboarding_behavior_test `ONB-10/ONB-13 consent confirm persists primary contact` [W; gerçek form type, Kaydet tap, dialog ve secure primary read-back]; onboarding_contact_gate_service_test [U]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| ONB-11 | Kişi rıza diyaloğu | KANITLI | Yok (kanit tam) | `A1-kapandi` | button_loading_state_test [W]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| ONB-12 | Kişi rıza diyaloğu | KANITLI | Yok (kanit tam) | `A1-kapandi` | onboarding_behavior_test `ONB-12 consent dialog cancel leaves contact unsaved` [W; gerçek dialog Cancel tap, dialog kapanır ve secure contact yok]; gercek-yol: Evet | KAPANDI |
+| ONB-13 | Kişi rıza diyaloğu | KANITLI | Yok (kanit tam) | `A1-kapandi` | onboarding_behavior_test `ONB-10/ONB-13 consent confirm persists primary contact` [W; gerçek checkbox disabled→enabled, Ekle tap, consent log + secure contact]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| ONB-14 | Kişi adımı | KANITLI | Yok (kanit tam) | `A1-kapandi` | onboarding_behavior_test `ONB-14 change contact returns to form and closes gate` [W; gerçek saved-card tap, form transition ve Başla disabled]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| ONB-15 | Kişi adımı | KANITLI | Yok (kanit tam) | `A1-kapandi` | E4-FINAL5-ONB15: production telefon alani gercek IME; Kaydet bounds `[84,987][996,1124]` ile gorunur; screenshot + UIAutomator XML [D; W] | KAPANDI |
+| PIN-01 | PinSetup (zorunlu) | KANITLI | Yok (kanit tam) | `A1-kapandi` | E4-COLD-02: yeni kullanicida gercek requiredSetup ve PIN 2468 kurulumu; main_navigation_construction_sites_test [D; S] | KAPANDI |
+| PIN-02 | PinSetup | KANITLI | Yok (kanit tam) | `A1-kapandi` | pin_setup_layout_stability_test [W]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| PIN-03 | PinSetup | KANITLI | Yok (kanit tam) | `A1-kapandi` | pin_setup_layout_stability_test [W]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| PIN-04 | PinSetup | KANITLI | Yok (kanit tam) | `A1-kapandi` | pin_setup_layout_stability_test; pin_change_validation_test [W; U]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| PIN-05 | PinSetup | KANITLI | Yok (kanit tam) | `A1-kapandi` | pin_setup_behavior_test `PIN-05 mismatch resets the real two-step entry flow` [W; gerçek iki aşamalı keypad ve reset]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| PIN-06 | PinSetup | KANITLI | Yok (kanit tam) | `A1-kapandi` | pin_setup_behavior_test `PIN-06 matching PIN persists a hash and returns success` [W; gerçek keypad, PBKDF2 kayıt, pref ve pop sonucu]; pin_hasher_test [U]; gercek-yol: Evet | KAPANDI |
+| PIN-07 | PinSetup | KANITLI | Yok (kanit tam) | `A1-kapandi` | pin_setup_behavior_test `PIN-07 storage failure stays open and reports failure` [W; gerçek widget + keystore write-fail negatif yolu]; gercek-yol: Evet | KAPANDI |
+| PIN-08 | PinSetup | KANITLI | Yok (kanit tam) | `A1-kapandi` | E4-FINAL4-PIN08: zorunlu PIN ekranında sistem BACK; aynı ekran/top activity kaldı [D] | KAPANDI |
+| PIN-09 | PinSetup | KANITLI | Yok (kanit tam) | `A1-kapandi` | pin_setup_behavior_test `PIN-09 info action opens production legal settings` [W; gerçek tap ve LegalSettingsScreen route]; gercek-yol: Evet | KAPANDI |
+| PIN-10 | İlk ana ekran | KANITLI | Yok (kanit tam) | `A1-kapandi` | E4-FINAL5-PIN10: yeni kullanicida ilk kare yalniz PIN; tamamlaninca pil sihirbazi; modal cakismasi yok [D] | KAPANDI |
+| KLT-01 | AppUnlock | KANITLI | Yok (kanit tam) | `A1-kapandi` | startup_pin_boundary_test [W]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
 | KLT-02 | AppUnlock | KANITLI | Yok (kanit tam) | `A1-kapandi` | startup_pin_boundary_test [W]; gercek-yol: Evet | KAPANDI |
-| KLT-03 | AppUnlock | KISMEN KANITLI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | pin_lockout_service_test; unlock_screen_duress_contract_test [U; S]; gercek-yol: Kısmen (UI yok) | ACIK |
-| KLT-04 | AppUnlock | KISMEN KANITLI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | pin_lockout_backoff_test; pin_lockout_service_test [U]; gercek-yol: Kısmen | ACIK |
-| KLT-05 | AppUnlock | KISMEN KANITLI | repo-ici davranis testi + emulator | `A3-emu` | pin_lockout_service_test [U]; gercek-yol: Kısmen | ACIK |
-| KLT-06 | AppUnlock | KISMEN KANITLI | repo-ici davranis testi | `A2-repo` | single_pin_verification_path_test; pin_verification_service_test [S; U]; gercek-yol: Kısmen | ACIK |
-| KLT-07 | AppUnlock | DOĞRULANMADI | repo-ici davranis testi | `A2-repo` | test yok; gercek-yol: Hayır | ACIK |
-| KLT-08 | AppUnlock | KISMEN KANITLI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | safety_session_activity_probe_test (14 test: panik ARMED/PREPARING/CLAIMED sifirlamayi engeller, bitmis oturum engellemez, okunamayan yuva fail-closed); forgot_pin_reset_route_test [U; S]; gercek-yol: Evet (probe) — CRITICAL: probe panik oturumunu kapsamiyordu, 2026-09-23 kapatildi | ACIK |
-| KLT-09 | Unuttum diyaloğu | DOĞRULANMADI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | forgot_pin_reset_route_test [S]; gercek-yol: Hayır | ACIK |
-| KLT-10 | Unuttum diyaloğu | DOĞRULANMADI | repo-ici davranis testi | `A2-repo` | test yok; gercek-yol: Hayır | ACIK |
-| KLT-11 | Unuttum diyaloğu | KISMEN KANITLI | repo-ici davranis testi + emulator + gorsel/manuel kontrol | `A3-emu` | app_reset_native_prefs_test; contact_service_app_reset_cache_test; forgot_pin_reset_route_test; app_reset_provider_state_test [U; S]; gercek-yol: Kısmen | ACIK |
-| KLT-12 | AppUnlock | DOĞRULANMADI | repo-ici davranis testi + emulator | `A3-emu` | unlock_screen_duress_contract_test [S]; gercek-yol: Hayır | ACIK |
-| YDK-01 | Arka plan kilidi | KISMEN KANITLI | repo-ici davranis testi + emulator | `A3-emu` | app_lifecycle_lock_test [U]; gercek-yol: Kısmen (push yok) | ACIK |
+| KLT-03 | AppUnlock | KANITLI | Yok (kanit tam) | `A1-kapandi` | app_unlock_behavior_test `KLT-03 wrong PIN clears input and records a failure` [W; gerçek production widget, tap, SnackBar, sayaç]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| KLT-04 | AppUnlock | KANITLI | Yok (kanit tam) | `A1-kapandi` | app_unlock_behavior_test `KLT-04 fifth wrong PIN locks the real keypad` [W; 5 gerçek PIN girişi, kilit bandı, disabled negatif kontrol]; pin_lockout_backoff_test [U]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| KLT-05 | AppUnlock | KANITLI | Yok (kanit tam) | `A1-kapandi` | E4-FINAL5-KLT05: production keypad 57s lockout -> force-stop/cold launch -> 52s; countdown persistent [D; U] | KAPANDI |
+| KLT-06 | AppUnlock | KANITLI | Yok (kanit tam) | `A1-kapandi` | app_unlock_behavior_test `KLT-06 secure-storage read failure fails closed` [W; gerçek production widget, doğru PIN tap, fail-closed SnackBar, unlock ve lockout yok]; pin_verification_service_test [U]; gercek-yol: Evet | KAPANDI |
+| KLT-07 | AppUnlock | KANITLI | Yok (kanit tam) | `A1-kapandi` | app_unlock_behavior_test `KLT-07 info action opens the production legal screen` [W; gerçek route ve LegalSettingsScreen]; gercek-yol: Evet | KAPANDI |
+| KLT-08 | AppUnlock | KANITLI | Yok (kanit tam) | `A1-kapandi` | app_unlock_behavior_test `KLT-08 active safety session blocks forgot-PIN reset` [W; gerçek widget, aktif projection, dialog açılmaz, fail-closed SnackBar]; safety_session_activity_probe_test [U]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| KLT-09 | Unuttum diyaloğu | KANITLI | Yok (kanit tam) | `A1-kapandi` | app_unlock_behavior_test `KLT-09/KLT-10 reset token enables confirm and cancel closes` [W; gerçek dialog, yanlış/doğru metin ve disabled/enabled geçişi]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| KLT-10 | Unuttum diyaloğu | KANITLI | Yok (kanit tam) | `A1-kapandi` | app_unlock_behavior_test `KLT-09/KLT-10 reset token enables confirm and cancel closes` [W; gerçek Cancel tap ve route kapanışı]; controller lifecycle regression testi; gercek-yol: Evet | KAPANDI |
+| KLT-11 | Unuttum diyaloğu | DIŞ SİSTEM GEREKİYOR | Play/RevenueCat islemi + gorsel/manuel kontrol | `A5-play` | E4-FINAL5-KLT11 gerçek reset başarı zinciri kanıtlı; açık native TOO_LATE/active-session kolu production'da gerçek Pro safety session gerektirir, Aşama 6'ya devredildi [D; U] | ACIK |
+| KLT-12 | AppUnlock | KANITLI | Yok (kanit tam) | `A1-kapandi` | E4-FINAL4-KLT12: 125 s gerçek background sonrası AppLock; BACK etkisiz; `stage4-final4-background-lock-125s.png` [D] | KAPANDI |
+| YDK-01 | Arka plan kilidi | KANITLI | Yok (kanit tam) | `A1-kapandi` | E4-LIFECYCLE-02: 120 sn uzeri arka plan, AppUnlockScreen ve dogru PIN ile pop; app_lifecycle_lock_test [D; U] | KAPANDI |
 | YDK-02 | Arka plan kilidi | KANITLI | Yok (kanit tam) | `A1-kapandi` | app_lifecycle_lock_test [U]; gercek-yol: Evet | KAPANDI |
-| YDK-03 | Arka plan kilidi | KISMEN KANITLI | repo-ici davranis testi + emulator | `A3-emu` | app_lifecycle_lock_test (gercek AppUnlockScreen pump; firlatan secure storage artik fail-closed) [W]; gercek-yol: Evet | ACIK |
-| YDK-04 | Arka plan kilidi | DOĞRULANMADI | repo-ici davranis testi + emulator + fiziksel cihaz + gorsel/manuel kontrol | `A4-fiz` | test yok; gercek-yol: Hayır | ACIK |
-| NAV-01 | MainNavigation | DOĞRULANMADI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | tab_crossfade_test [S]; gercek-yol: Hayır | ACIK |
-| NAV-02 | MainNavigation | DOĞRULANMADI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | tab_crossfade_test; map_page_ui_test [S]; gercek-yol: Hayır | ACIK |
-| NAV-03 | MainNavigation | DOĞRULANMADI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | tab_crossfade_test [S]; gercek-yol: Hayır | ACIK |
-| NAV-04 | MainNavigation | DOĞRULANMADI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | tab_crossfade_test [S]; gercek-yol: Hayır | ACIK |
-| NAV-05 | MainNavigation | DOĞRULANMADI | repo-ici davranis testi + emulator | `A3-emu` | state_restoration_policy_test; D 2026-08-14 [S; D]; gercek-yol: Hayır | ACIK |
-| NAV-06 | MainNavigation | DOĞRULANMADI | repo-ici davranis testi + emulator + fiziksel cihaz + gorsel/manuel kontrol | `A4-fiz` | test yok; gercek-yol: Hayır | ACIK |
-| NAV-07 | Bağlantı bandı | KISMEN KANITLI | repo-ici davranis testi + emulator + gorsel/manuel kontrol | `A3-emu` | connectivity_banner_reserves_space_test; connectivity_service_test; D 2026-08-16 [W*; U; D]; gercek-yol: Kısmen | ACIK |
-| NAV-08 | Bağlantı bandı | DOĞRULANMADI | repo-ici davranis testi + emulator + gorsel/manuel kontrol | `A3-emu` | D 2026-08-14 (dokunma hedefi) [D]; gercek-yol: Kısmen | ACIK |
-| NAV-09 | Çevrimdışı diyaloğu | DOĞRULANMADI | repo-ici davranis testi | `A2-repo` | test yok; gercek-yol: Hayır | ACIK |
-| NAV-10 | MainNavigation | DOĞRULANMADI | repo-ici davranis testi + emulator | `A3-emu` | test yok; gercek-yol: Hayır | ACIK |
-| HOME-01 | Ana Sayfa | DOĞRULANMADI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | home_page_test [S]; gercek-yol: Hayır | ACIK |
-| HOME-02 | Ana Sayfa | DOĞRULANMADI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | test yok; gercek-yol: Hayır | ACIK |
-| HOME-03 | Hazırlık kartı | KISMEN KANITLI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | readiness_card_test [W]; gercek-yol: Kısmen (kart gerçek, home kablosu değil) | ACIK |
-| HOME-04 | Hazırlık kartı | KISMEN KANITLI | repo-ici davranis testi + emulator + fiziksel cihaz + gorsel/manuel kontrol | `A4-fiz` | readiness_card_test [W]; gercek-yol: Kısmen (izin akışı yok) | ACIK |
-| HOME-05 | Hazırlık kartı | KISMEN KANITLI | repo-ici davranis testi + emulator + fiziksel cihaz + gorsel/manuel kontrol | `A4-fiz` | readiness_card_test [W]; gercek-yol: Kısmen | ACIK |
-| HOME-06 | Hazırlık kartı | KISMEN KANITLI | repo-ici davranis testi + emulator + fiziksel cihaz + gorsel/manuel kontrol | `A4-fiz` | readiness_card_test; consent_gate_service_test [W; U]; gercek-yol: Kısmen | ACIK |
-| HOME-07 | Hazırlık kartı | DOĞRULANMADI | repo-ici davranis testi + emulator + gorsel/manuel kontrol | `A3-emu` | readiness_card_test [W]; gercek-yol: Kısmen | ACIK |
-| HOME-08 | Hazırlık kartı | KISMEN KANITLI | repo-ici davranis testi + emulator + fiziksel cihaz + gorsel/manuel kontrol | `A4-fiz` | readiness_card_test; emergency_readiness_test; emergency_readiness_behavior_test; home_readiness_exact_alarm_test [W; U; S]; gercek-yol: Kısmen | ACIK |
-| HOME-09 | Hazırlık kartı | KANITLI | gorsel/manuel kontrol | `A6-gorsel` | readiness_card_stale_verification_test [W]; gercek-yol: Evet | ACIK |
-| HOME-10 | Hazırlık kartı | KISMEN KANITLI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | readiness_card_test [W]; gercek-yol: Kısmen | ACIK |
-| HOME-11 | Onboarding kartı | DOĞRULANMADI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | test yok; gercek-yol: Hayır | ACIK |
-| HOME-12 | Onboarding kartı | DOĞRULANMADI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | test yok; gercek-yol: Hayır | ACIK |
-| HOME-13 | Onboarding kartı | DOĞRULANMADI | repo-ici davranis testi + emulator + fiziksel cihaz + gorsel/manuel kontrol | `A4-fiz` | test yok; gercek-yol: Hayır | ACIK |
-| HOME-14 | Ana Sayfa / Onboarding kartı adım 3 | KISMEN KANITLI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | rehearsal_record_service_test; countdown_dispose_lifecycle_test [U; W]; gercek-yol: Kısmen (Home kablosu yok) | ACIK |
-| HOME-15 | Hızlı eylemler | DOĞRULANMADI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | premium_gating_contract_test; consent_gate_enforcement_test [S]; gercek-yol: Hayır | ACIK |
+| YDK-03 | Arka plan kilidi | KISMEN KANITLI | fiziksel cihaz | `A4-fiz` | PHYSICAL_ONLY: fail-closed AppUnlockScreen davranışı gerçek widget yolunda kanıtlı; kalan sınır resume anında hardware-backed secure-storage okuma arızasıdır, sağlıklı emulator'da production aksiyonuyla üretilemez [W] | ACIK |
+| YDK-04 | Arka plan kilidi | DIŞ SİSTEM GEREKİYOR | Play/RevenueCat islemi + fiziksel cihaz + gorsel/manuel kontrol | `A5-play` | PLAY_REQUIRED: aynı resume'daki quick panic isteği gerçek production'da Pro panic entitlement kapısına gider; native trampoline HZ-06'da ayrı emulator kapsamındadır [D] | ACIK |
+| NAV-01 | MainNavigation | KANITLI | Yok (kanit tam) | `A1-kapandi` | main_navigation_behavior_test `NAV-01: home tab tap returns to the production HomePage`; `NAV-01..04: a second tap is ignored during tab transition` [W]; tab_crossfade_test [S]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| NAV-02 | MainNavigation | KANITLI | Yok (kanit tam) | `A1-kapandi` | main_navigation_behavior_test `NAV-02: map tab tap activates the production MapPage`; `NAV-01..04: a second tap is ignored during tab transition` [W]; tab_crossfade_test; map_page_ui_test [S]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| NAV-03 | MainNavigation | KANITLI | Yok (kanit tam) | `A1-kapandi` | main_navigation_behavior_test `NAV-03: contacts tab tap selects the production ContactsPage`; `NAV-01..04: a second tap is ignored during tab transition` [W]; tab_crossfade_test [S]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| NAV-04 | MainNavigation | KANITLI | Yok (kanit tam) | `A1-kapandi` | main_navigation_behavior_test `NAV-04: settings tab tap selects the production SettingsPage`; `NAV-01..04: a second tap is ignored during tab transition` [W]; tab_crossfade_test [S]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| NAV-05 | MainNavigation | KANITLI | Yok (kanit tam) | `A1-kapandi` | E4-FINAL5-NAV05: Ayarlar -> cached am kill/PID yok -> LaunchState COLD -> PIN -> Ayarlar selected=true [D; S] | KAPANDI |
+| NAV-06 | MainNavigation | KISMEN KANITLI | fiziksel cihaz + gorsel/manuel kontrol | `A4-fiz` | E4-PERMISSION-02: gercek disclosure, Android ret ve daha sonra ayarlardan grant [D] | ACIK |
+| NAV-07 | Bağlantı bandı | KANITLI | Yok (kanit tam) | `A1-kapandi` | E4-FINAL8-NAV07: APK `913e4e72…` gerçek ağ kesintisi; banner `[0,0][1080,233]`; `stage4-final8-nav07-offline.png/.xml` [D; W*]; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| NAV-08 | Bağlantı bandı | KANITLI | Yok (kanit tam) | `A1-kapandi` | E4-FINAL8-NAV08: APK `913e4e72…` offline banner tap gerçek bilgi yüzeyini açtı; ağ dönüşünde banner gizlendi [D; W]; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| NAV-09 | Çevrimdışı diyaloğu | KANITLI | Yok (kanit tam) | `A1-kapandi` | E4-FINAL8-NAV08: ağ geri gelince banner bounds `[0,0][0,0]` [D; W] | KAPANDI |
+| NAV-10 | MainNavigation | KANITLI | Yok (kanit tam) | `A1-kapandi` | E4-FINAL5-NAV10: ana kabuk sistem BACK -> KoruBeni task gorunmez, alttaki Settings foreground [D] | KAPANDI |
+| HOME-01 | Ana Sayfa | KANITLI | Yok (kanit tam) | `A1-kapandi` | main_navigation_behavior_test `HOME-01 contact chip pushes ContactsPage and refreshes on return` [W; gerçek HomePage chip tap, production ContactsPage push/pop ve HomeProvider refresh]; home_page_test [S]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| HOME-02 | Ana Sayfa | KANITLI | Yok (kanit tam) | `A1-kapandi` | main_navigation_behavior_test `HOME-02/HOME-27 production home renders empty contact and legal banner` [W; gerçek MainNavigation/HomePage, boş acil kişi durumu]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| HOME-03 | Hazırlık kartı | KANITLI | Yok (kanit tam) | `A1-kapandi` | main_navigation_behavior_test `HOME-03 readiness emergency-contact chip pushes ContactsPage` [W; gercek HomePage/ReadinessCard cip tap + production ContactsPage push]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| HOME-04 | Hazırlık kartı | KANITLI | Yok (kanit tam) | `A1-kapandi` | E4-FINAL5-HOME04: production disclosure -> PermissionController grant/re-read; iki ret -> USER_FIXED -> uygulama diyaloğu -> APPLICATION_DETAILS_SETTINGS; permission restore [D; W] | KAPANDI |
+| HOME-05 | Hazırlık kartı | KISMEN KANITLI | fiziksel cihaz + gorsel/manuel kontrol | `A4-fiz` | E4-READINESS-02: gercek cip → BatteryOptimizationWizard; readiness_card_test [D; W] | ACIK |
+| HOME-06 | Hazırlık kartı | KISMEN KANITLI | fiziksel cihaz + gorsel/manuel kontrol | `A4-fiz` | E4-READINESS-02/E4-LOCATION-02: riza, gerekce, OS izni ve gercek emulator konumu; repo testleri [D; W; U] | ACIK |
+| HOME-07 | Hazırlık kartı | KANITLI | Yok (kanit tam) | `A1-kapandi` | E4-FINAL4-HOME07: Rehber çipi gerçek Acil Kişiler ekranını açtı; `stage4-final3-home07-contacts.png` [D] | KAPANDI |
+| HOME-08 | Hazırlık kartı | KISMEN KANITLI | repo-ici davranis testi + fiziksel cihaz + gorsel/manuel kontrol | `A4-fiz` | E4-FINAL8-HOME08: APK `913e4e72…`, gerçek Android notification/location/CALL_PHONE durumları ve `Kuruluma 2 adım kaldı`; readiness testleri [D; W; U; S]; emulator bileşeni kanıtlı | ACIK |
+| HOME-09 | Hazırlık kartı | KANITLI | Yok (kanit tam) | `A1-kapandi` | readiness_card_stale_verification_test [W]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| HOME-10 | Hazırlık kartı | KANITLI | Yok (kanit tam) | `A1-kapandi` | main_navigation_behavior_test `HOME-10 readiness rehearsal runs production Test Mode to completion` [W; gercek prova satiri tap, production CountdownScreen 10 sn tamamlama + kalici prova kaydi]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| HOME-11 | Onboarding kartı | KANITLI | Yok (kanit tam) | `A1-kapandi` | main_navigation_behavior_test `HOME-11 onboarding close persists and removes the card` [W; gerçek kapat tap, kart state transition ve SharedPreferences read-back]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| HOME-12 | Onboarding kartı | KANITLI | Yok (kanit tam) | `A1-kapandi` | main_navigation_behavior_test `HOME-12 onboarding contact step pushes production ContactsPage` [W; gerçek eylem tap ve production ContactsPage route transition]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| HOME-13 | Onboarding kartı | KISMEN KANITLI | repo-ici davranis testi + fiziksel cihaz + gorsel/manuel kontrol | `A4-fiz` | E4-FINAL8-HOME13: APK `913e4e72…`, iki production disclosure → Android PermissionController → foreground location grant → hazırlık `3→2` [D]; emulator bileşeni kanıtlı | ACIK |
+| HOME-14 | Ana Sayfa / Onboarding kartı adım 3 | KANITLI | Yok (kanit tam) | `A1-kapandi` | main_navigation_behavior_test `HOME-14 standalone Test Mode button runs production countdown` [W; gercek HomePage buton tap, production CountdownScreen 10 sn tamamlama + kalici prova kaydi]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| HOME-15 | Hızlı eylemler | KANITLI | Yok (kanit tam) | `A1-kapandi` | main_navigation_behavior_test `HOME-15/FKC-01/FKC-02 consent gates then opens fake call now` [W; riza yok -> SnackBar, riza var -> gecikme sayfasi]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
 | HOME-16 | Hızlı eylemler | DOĞRULANMADI | repo-ici davranis testi + fiziksel cihaz + gorsel/manuel kontrol | `A4-fiz` | premium_gating_contract_test [S]; gercek-yol: Hayır | ACIK |
 | HOME-17 | Hızlı eylemler | KISMEN KANITLI | repo-ici davranis testi + Play/RevenueCat islemi + gorsel/manuel kontrol | `A5-play` | premium_gating_contract_test; subscription_gate_test [S; U]; gercek-yol: Kısmen | ACIK |
 | HOME-18 | Hızlı eylemler | KISMEN KANITLI | repo-ici davranis testi + Play/RevenueCat islemi + gorsel/manuel kontrol | `A5-play` | subscription_gate_test; subscription_gate_unverified_test [U; W*]; gercek-yol: Kısmen | ACIK |
-| HOME-19 | Hızlı eylemler | DOĞRULANMADI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | premium_gating_contract_test [S]; gercek-yol: Hayır | ACIK |
-| HOME-20 | Hızlı eylemler | DOĞRULANMADI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | premium_gating_contract_test [S]; gercek-yol: Hayır | ACIK |
+| HOME-19 | Hızlı eylemler | KANITLI | Yok (kanit tam) | `A1-kapandi` | main_navigation_behavior_test `HOME-19 contacts quick action pushes production ContactsPage` [W; gerçek HomePage hızlı eylem tap ve production ContactsPage route]; premium_gating_contract_test [S]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| HOME-20 | Hızlı eylemler | KANITLI | Yok (kanit tam) | `A1-kapandi` | main_navigation_behavior_test `HOME-20 history quick action pushes SafetyTimelineScreen` [W; gerçek HomePage hızlı eylem tap, production timeline ve bellek-içi gerçek SQLite]; premium_gating_contract_test [S]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
 | HOME-21 | Hızlı eylemler | DOĞRULANMADI | repo-ici davranis testi + Play/RevenueCat islemi + gorsel/manuel kontrol | `A5-play` | premium_gating_contract_test [S]; gercek-yol: Hayır | ACIK |
 | HOME-22 | Hızlı eylemler | KISMEN KANITLI | repo-ici davranis testi + Play/RevenueCat islemi + gorsel/manuel kontrol | `A5-play` | subscription_gate_test [U]; gercek-yol: Kısmen | ACIK |
-| HOME-23 | Hızlı eylem kartı | DOĞRULANMADI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | test yok; gercek-yol: Hayır | ACIK |
-| HOME-24 | Gerekçe diyaloğu | DOĞRULANMADI | repo-ici davranis testi | `A2-repo` | test yok; gercek-yol: Hayır | ACIK |
-| HOME-25 | Gerekçe diyaloğu | DOĞRULANMADI | repo-ici davranis testi | `A2-repo` | test yok; gercek-yol: Hayır | ACIK |
-| HOME-26 | Pil sihirbazı otomatik | DOĞRULANMADI | repo-ici davranis testi + emulator + gorsel/manuel kontrol | `A3-emu` | battery_wizard_onboarding_test [S]; gercek-yol: Hayır | ACIK |
-| HOME-27 | Ana Sayfa | DOĞRULANMADI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | no_sms_references_test; legal_no_first_responder_claims_test [S]; gercek-yol: Hayır | ACIK |
-| PNK-01 | Panik butonu | KANITLI | gorsel/manuel kontrol | `A6-gorsel` | panic_button_behavior_test [W]; gercek-yol: Evet | ACIK |
+| HOME-23 | Hızlı eylem kartı | KANITLI | Yok (kanit tam) | `A1-kapandi` | main_navigation_behavior_test `HOME-23 quick action cancel restores scale and suppresses action` [W; gerçek pointer down/cancel, ölçek geri dönüşü, route negatif kontrolü ve normal tap]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| HOME-24 | Gerekçe diyaloğu | KANITLI | Yok (kanit tam) | `A1-kapandi` | main_navigation_behavior_test `HOME-24/25 rationale Later cancels and Allow continues` [W; gercek konum cipi + Simdi Degil tap, provider istegi negatif kontrol 0]; gercek-yol: Evet | KAPANDI |
+| HOME-25 | Gerekçe diyaloğu | KANITLI | Yok (kanit tam) | `A1-kapandi` | main_navigation_behavior_test `HOME-24/25 rationale Later cancels and Allow continues` [W; gercek konum cipi + Izin Ver tap, provider istegi 1]; gercek-yol: Evet | KAPANDI |
+| HOME-26 | Pil sihirbazı otomatik | KANITLI | Yok (kanit tam) | `A1-kapandi` | E4-FINAL5-HOME26: yeni kullanici PIN'i bitirince production Pil Optimizasyonu ekrani otomatik acildi [D; S] | KAPANDI |
+| HOME-27 | Ana Sayfa | KANITLI | Yok (kanit tam) | `A1-kapandi` | main_navigation_behavior_test `HOME-02/HOME-27 production home renders empty contact and legal banner` [W; gerçek MainNavigation/HomePage ve production LegalDisclaimerBanner]; no_sms_references_test; legal_no_first_responder_claims_test [S]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| PNK-01 | Panik butonu | KANITLI | Yok (kanit tam) | `A1-kapandi` | panic_button_behavior_test [W]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
 | PNK-02 | Panik butonu | KISMEN KANITLI | repo-ici davranis testi + fiziksel cihaz + Play/RevenueCat islemi + gorsel/manuel kontrol | `A5-play` | panic_button_behavior_test; panic_button_hold_contract_test; panic_button_release_contract_test [W; S]; gercek-yol: Kısmen (tam 3 sn → push testi adı yok) | ACIK |
-| PNK-03 | Panik butonu | KANITLI | gorsel/manuel kontrol | `A6-gorsel` | panic_button_behavior_test [W]; gercek-yol: Evet | ACIK |
-| PNK-04 | Panik butonu | DOĞRULANMADI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | test yok; gercek-yol: Hayır | ACIK |
+| PNK-03 | Panik butonu | KANITLI | Yok (kanit tam) | `A1-kapandi` | panic_button_behavior_test [W]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| PNK-04 | Panik butonu | KANITLI | Yok (kanit tam) | `A1-kapandi` | panic_button_behavior_test `PNK-04 pointer cancel resets a completed hold without arming` [W; gerçek PanicButton pointer cancel, tamamlanmış hold clock ve route/SnackBar negatif kontrolü]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
 | PNK-05 | Panik butonu | KISMEN KANITLI | repo-ici davranis testi + Play/RevenueCat islemi + gorsel/manuel kontrol | `A5-play` | subscription_gate_test; subscription_gate_unverified_test [U; W*]; gercek-yol: Kısmen | ACIK |
-| PNK-06 | Panik butonu | KANITLI | gorsel/manuel kontrol | `A6-gorsel` | panic_button_behavior_test; subscription_gate_unverified_test [W]; gercek-yol: Evet | ACIK |
-| PNK-07 | Panik butonu | DOĞRULANMADI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | contact_service_emergency_read_contract_test [S]; gercek-yol: Hayır | ACIK |
-| PNK-08 | Panik SnackBar | DOĞRULANMADI | repo-ici davranis testi | `A2-repo` | test yok; gercek-yol: Hayır | ACIK |
-| PNK-09 | İlk kullanım uyarısı | DOĞRULANMADI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | no_sms_references_test [S]; gercek-yol: Hayır | ACIK |
-| PNK-10 | Panik butonu (TalkBack) | KISMEN KANITLI | repo-ici davranis testi + emulator + fiziksel cihaz + gorsel/manuel kontrol | `A4-fiz` | accessibility_guidelines_test; panic_button_a11y_test; D 2026-08-21 [W; S; D]; gercek-yol: Kısmen | ACIK |
-| PNK-11 | TalkBack onay diyaloğu | DOĞRULANMADI | repo-ici davranis testi + emulator | `A3-emu` | test yok; gercek-yol: Hayır | ACIK |
-| PNK-12 | TalkBack onay diyaloğu | DOĞRULANMADI | repo-ici davranis testi + emulator | `A3-emu` | test yok; gercek-yol: Hayır | ACIK |
-| PNK-13 | Panik butonu | DOĞRULANMADI | repo-ici davranis testi | `A2-repo` | panic_route_guard_test; panic_button_test [S]; gercek-yol: Hayır | ACIK |
-| PNK-14 | Panik butonu | DOĞRULANMADI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | panic_button_pro_only_test [S]; gercek-yol: Hayır | ACIK |
+| PNK-06 | Panik butonu | KANITLI | Yok (kanit tam) | `A1-kapandi` | panic_button_behavior_test; subscription_gate_unverified_test [W]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| PNK-07 | Panik butonu | KANITLI | Yok (kanit tam) | `A1-kapandi` | panic_button_behavior_test `PNK-07: completed hold without callable contact is refused visibly` [W; gercek 3 sn hold/release, Countdown yok + kisi gerekli SnackBar]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| PNK-08 | Panik SnackBar | KANITLI | Yok (kanit tam) | `A1-kapandi` | panic_button_behavior_test `PNK-08: missing-contact SnackBar action pushes ContactsPage` [W; gercek SnackBar action tap + production ContactsPage push]; gercek-yol: Evet | KAPANDI |
+| PNK-09 | İlk kullanım uyarısı | KANITLI | Yok (kanit tam) | `A1-kapandi` | panic_button_behavior_test `PNK-09: accepting first-use warning cancels that first hold` [W; ilk 3 sn hold, gercek kabul tap, pref yazimi, Countdown negatif kontrolu, ikinci hold zorunlulugu]; feature warning log I/O kapanisi artik bloklamiyor; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| PNK-10 | Panik butonu (TalkBack) | DIŞ SİSTEM GEREKİYOR | Play/RevenueCat islemi + fiziksel cihaz + gorsel/manuel kontrol | `A5-play` | PLAY_REQUIRED E4-FINAL10-PROGATE: production SOS butonu `PRO` kilitli; TalkBack ile gerçek başlatma doğrulanmış panic entitlement ister [D; W] | ACIK |
+| PNK-11 | TalkBack onay diyaloğu | DIŞ SİSTEM GEREKİYOR | Play/RevenueCat islemi | `A5-play` | PLAY_REQUIRED E4-FINAL10-PROGATE: production SOS kapısı entitlement doğrulanmadan TalkBack onay diyaloğunu açmaz [D] | ACIK |
+| PNK-12 | TalkBack onay diyaloğu | DIŞ SİSTEM GEREKİYOR | Play/RevenueCat islemi | `A5-play` | PLAY_REQUIRED E4-FINAL10-PROGATE: diyaloğun Başlat kolu gerçek Pro panic oturumu oluşturur; Aşama 6'ya devredildi [D] | ACIK |
+| PNK-13 | Panik butonu | KANITLI | Yok (kanit tam) | `A1-kapandi` | panic_button_behavior_test `PNK-13: five rapid completed holds can push only one countdown` [W; gercek production PanicButton 5 hizli hold/release, async yetki yarisi + tek production CountdownScreen route]; koruma async sinirdan once sahipleniliyor; gercek-yol: Evet | KAPANDI |
+| PNK-14 | Panik butonu | KANITLI | Yok (kanit tam) | `A1-kapandi` | panic_button_behavior_test `PNK-14 verified free access renders the locked production state` [W; gerçek PanicButton ve verified-free provider state, locked/Pro/armed negatif görünüm]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
 | GS-01 | Geri sayım | KANITLI | Yok (kanit tam) | `A1-kapandi` | countdown_locked_screen_arm_test; emergency_trigger_host_contact_mask_test [W]; gercek-yol: Evet (native mock) | KAPANDI |
-| GS-02 | Geri sayım | KISMEN KANITLI | repo-ici davranis testi + emulator + fiziksel cihaz | `A4-fiz` | EmergencySessionCoordinatorTest (51); EmergencySessionAlarmInstrumentationTest; NativeDozeDispatchProbeTest; D 2026-09-13 native-doze [K; I; D]; gercek-yol: Kısmen | ACIK |
-| GS-03 | Geri sayım | KANITLI | emulator | `A3-emu` | countdown_locked_screen_arm_test; bounded_frame_wait_test [W; U]; gercek-yol: Evet | ACIK |
-| GS-04 | Geri sayım | KANITLI | gorsel/manuel kontrol | `A6-gorsel` | countdown_dispose_lifecycle_test; panic_arm_policy_test [W; U]; gercek-yol: Evet | ACIK |
-| GS-05 | Geri sayım | KISMEN KANITLI | repo-ici davranis testi + emulator + fiziksel cihaz + gorsel/manuel kontrol | `A4-fiz` | countdown_dispose_lifecycle_test ("rejected native arm ... PIN cancel exits locally"); panic_arm_policy_test [W; U]; gercek-yol: Kısmen | ACIK |
-| GS-06 | Geri sayım | KISMEN KANITLI | repo-ici davranis testi + emulator | `A3-emu` | panic_arm_policy_test; emergency_platform_typed_contract_test [U]; gercek-yol: Kısmen | ACIK |
-| GS-07 | Geri sayım | KANITLI | gorsel/manuel kontrol | `A6-gorsel` | countdown_bridge_missing_test; emergency_platform_bridge_test [W; U]; gercek-yol: Evet | ACIK |
-| GS-08 | Geri sayım | KANITLI | gorsel/manuel kontrol | `A6-gorsel` | countdown_dispose_lifecycle_test; countdown_accessibility_test [W]; gercek-yol: Evet | ACIK |
+| GS-02 | Geri sayım | DIŞ SİSTEM GEREKİYOR | Play/RevenueCat islemi + fiziksel cihaz | `A5-play` | PLAY_REQUIRED E4-FINAL10-PROGATE: instrumentation native AlarmManager'ı kanıtlar, fakat production kullanıcı geri sayımı SubscriptionGate arkasında; gerçek entitlement gerekir [D; K; I] | ACIK |
+| GS-03 | Geri sayım | DIŞ SİSTEM GEREKİYOR | Play/RevenueCat islemi | `A5-play` | PLAY_REQUIRED E4-FINAL10-PROGATE: gerçek production countdown önce Pro panic kapısından geçer; widget testi entitlement kanıtı değildir [D; W] | ACIK |
+| GS-04 | Geri sayım | KANITLI | Yok (kanit tam) | `A1-kapandi` | countdown_dispose_lifecycle_test; panic_arm_policy_test [W; U]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| GS-05 | Geri sayım | DIŞ SİSTEM GEREKİYOR | Play/RevenueCat islemi + fiziksel cihaz + gorsel/manuel kontrol | `A5-play` | PLAY_REQUIRED E4-FINAL10-PROGATE: production arm reddi zinciri gerçek Pro countdown başlatılmadan oluşamaz [D; W; U] | ACIK |
+| GS-06 | Geri sayım | DIŞ SİSTEM GEREKİYOR | Play/RevenueCat islemi | `A5-play` | PLAY_REQUIRED E4-FINAL10-PROGATE: production ArmUnknown davranışı gerçek Pro countdown zincirinin içindedir [D; U] | ACIK |
+| GS-07 | Geri sayım | KANITLI | Yok (kanit tam) | `A1-kapandi` | countdown_bridge_missing_test; emergency_platform_bridge_test [W; U]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| GS-08 | Geri sayım | KANITLI | Yok (kanit tam) | `A1-kapandi` | countdown_dispose_lifecycle_test; countdown_accessibility_test [W]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
 | GS-09 | Geri sayım | KANITLI | Yok (kanit tam) | `A1-kapandi` | countdown_lockout_reset_failure_test [W]; gercek-yol: Evet | KAPANDI |
-| GS-10 | Geri sayım | KANITLI | gorsel/manuel kontrol | `A6-gorsel` | countdown_dispose_lifecycle_test [W]; gercek-yol: Evet | ACIK |
-| GS-11 | Geri sayım | KISMEN KANITLI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | emergency_platform_typed_contract_test [U]; gercek-yol: Kısmen (UI dalı yok) | ACIK |
-| GS-12 | Geri sayım | DOĞRULANMADI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | countdown_pin_dispatch_contract_test [S]; gercek-yol: Hayır | ACIK |
-| GS-13 | Geri sayım | KANITLI | gorsel/manuel kontrol | `A6-gorsel` | countdown_dispose_lifecycle_test ("PIN read failure") [W]; gercek-yol: Evet | ACIK |
-| GS-14 | Geri sayım | DOĞRULANMADI | repo-ici davranis testi + emulator | `A3-emu` | countdown_back_guard_test [S]; gercek-yol: Hayır | ACIK |
+| GS-10 | Geri sayım | KANITLI | Yok (kanit tam) | `A1-kapandi` | countdown_dispose_lifecycle_test [W]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| GS-11 | Geri sayım | KANITLI | Yok (kanit tam) | `A1-kapandi` | countdown_dispatch_behavior_test `GS-11: too-late PIN cancel visibly resumes native dispatch` [W; gerçek production ekran, doğru PIN, tooLate SnackBar ve devam eden dispatch negatif kontrolü]; emergency_platform_typed_contract_test [U]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| GS-12 | Geri sayım | KANITLI | Yok (kanit tam) | `A1-kapandi` | countdown_dispose_lifecycle_test `wrong PIN stays on countdown and never requests cancellation` [W; gerçek CountdownScreen, 4 digit tap, hata state'i, route kalır, native cancel negatif kontrolü]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| GS-13 | Geri sayım | KANITLI | Yok (kanit tam) | `A1-kapandi` | countdown_dispose_lifecycle_test ("PIN read failure") [W]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| GS-14 | Geri sayım | DIŞ SİSTEM GEREKİYOR | Play/RevenueCat islemi | `A5-play` | PLAY_REQUIRED E4-FINAL10-PROGATE: gerçek production countdown route'u entitlement olmadan açılamaz [D; S] | ACIK |
 | GS-15 | Geri sayım | KANITLI | Yok (kanit tam) | `A1-kapandi` | emergency_trigger_host_contact_mask_test; emergency_dispatch_pipeline_test; dispatch_path_latency_contract_test [W; U; S]; gercek-yol: Evet (native mock) | KAPANDI |
 | GS-16 | Geri sayım | KISMEN KANITLI | repo-ici davranis testi + emulator + fiziksel cihaz | `A4-fiz` | EmergencySessionCoordinatorTest; D 2026-09-13 native-doze [K; D]; gercek-yol: Kısmen | ACIK |
-| GS-17 | Geri sayım | KISMEN KANITLI | repo-ici davranis testi + emulator + fiziksel cihaz + gorsel/manuel kontrol | `A4-fiz` | android_intent_service_test; call_service_test [U; S]; gercek-yol: Kısmen | ACIK |
-| GS-18 | Geri sayım | DOĞRULANMADI | repo-ici davranis testi | `A2-repo` | test yok; gercek-yol: Hayır | ACIK |
-| GS-19 | Geri sayım | KISMEN KANITLI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | emergency_failure_surface_test; emergency_result_policy_test [W; U]; gercek-yol: Kısmen (diyalog gerçek, tetikleme değil) | ACIK |
-| GS-20 | Geri sayım (Test Modu) | KANITLI | gorsel/manuel kontrol | `A6-gorsel` | countdown_dispose_lifecycle_test ("test mode advances locally") [W]; gercek-yol: Evet | ACIK |
-| GS-21 | Geri sayım (Test Modu) | DOĞRULANMADI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | test yok; gercek-yol: Hayır | ACIK |
-| GS-22 | Geri sayım | KANITLI | gorsel/manuel kontrol | `A6-gorsel` | countdown_contact_mask_test; emergency_trigger_host_contact_mask_test [W]; gercek-yol: Evet | ACIK |
-| GS-23 | Geri sayım | KISMEN KANITLI | repo-ici davranis testi + emulator + fiziksel cihaz + gorsel/manuel kontrol | `A4-fiz` | countdown_accessibility_test; countdown_live_region_test [W; S]; gercek-yol: Kısmen (TalkBack gerçek değil) | ACIK |
-| GS-24 | Geri sayım | DOĞRULANMADI | repo-ici davranis testi + emulator + fiziksel cihaz | `A4-fiz` | test yok; gercek-yol: Hayır | ACIK |
-| GS-25 | Geri sayım | KISMEN KANITLI | repo-ici davranis testi | `A2-repo` | countdown_dispose_lifecycle_test; wakelock_balance_test [W; S]; gercek-yol: Kısmen | ACIK |
-| GS-26 | Hata diyaloğu | KISMEN KANITLI | repo-ici davranis testi + emulator + fiziksel cihaz + gorsel/manuel kontrol | `A4-fiz` | emergency_failure_surface_test (render) [W]; gercek-yol: Kısmen (tap yok) | ACIK |
+| GS-17 | Geri sayım | DIŞ SİSTEM GEREKİYOR | Play/RevenueCat islemi + fiziksel cihaz + gorsel/manuel kontrol | `A5-play` | PLAY_REQUIRED E4-FINAL10-PROGATE: dispatch→dialer fallback gerçek Pro countdown sonudur; bağımsız dialer sınırı KSI-12'de kanıtlıdır [D; U] | ACIK |
+| GS-18 | Geri sayım | KANITLI | Yok (kanit tam) | `A1-kapandi` | countdown_dispatch_behavior_test `GS-18: native cancelled dispatch exits without a result screen` [W; gerçek 10 saniyelik production geri sayım, native cancelled sonucu, köke dönüş ve sonuç ekranı negatif kontrolü]; gercek-yol: Evet | KAPANDI |
+| GS-19 | Geri sayım | KANITLI | Yok (kanit tam) | `A1-kapandi` | countdown_dispatch_behavior_test `GS-19: total dispatch failure opens the blocking recovery dialog` [W; gerçek 10 saniyelik production geri sayım, native+OS tam başarısızlık ve bloklayıcı kurtarma yüzeyi]; emergency_failure_surface_test; emergency_result_policy_test [W; U]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| GS-20 | Geri sayım (Test Modu) | KANITLI | Yok (kanit tam) | `A1-kapandi` | countdown_dispose_lifecycle_test ("test mode advances locally") [W]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| GS-21 | Geri sayım (Test Modu) | KANITLI | Yok (kanit tam) | `A1-kapandi` | countdown_dispose_lifecycle_test `test mode advances locally without native safety state` [W; gerçek CountdownScreen route, yerel saniye geçişi, native çağrı yok ve otomatik çıkış]; mevcut zorunlu-bekleme UX bulgusu açık; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| GS-22 | Geri sayım | KANITLI | Yok (kanit tam) | `A1-kapandi` | countdown_contact_mask_test; emergency_trigger_host_contact_mask_test [W]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| GS-23 | Geri sayım | DIŞ SİSTEM GEREKİYOR | Play/RevenueCat islemi + fiziksel cihaz + gorsel/manuel kontrol | `A5-play` | PLAY_REQUIRED E4-FINAL10-PROGATE: gerçek countdown TalkBack yüzeyi production Pro panic kapısından sonra oluşur [D; W] | ACIK |
+| GS-24 | Geri sayım | DIŞ SİSTEM GEREKİYOR | Play/RevenueCat islemi + fiziksel cihaz | `A5-play` | PLAY_REQUIRED E4-FINAL10-PROGATE: background armed countdown gerçek entitlement ile başlatılmış panic oturumu gerektirir [D] | ACIK |
+| GS-25 | Geri sayım | KANITLI | Yok (kanit tam) | `A1-kapandi` | countdown_dispose_lifecycle_test `disposing an armed countdown never sends native cancel` [W; gerçek CountdownScreen arm + dispose, native method ledger negatif kontrolü]; wakelock_balance_test [S]; gercek-yol: Evet | KAPANDI |
+| GS-26 | Hata diyaloğu | DIŞ SİSTEM GEREKİYOR | Play/RevenueCat islemi + fiziksel cihaz + gorsel/manuel kontrol | `A5-play` | PLAY_REQUIRED E4-FINAL10-PROGATE: production dispatch hata diyaloğu gerçek Pro panic oturumunun terminal yüzeyidir [D; W] | ACIK |
 | GS-27 | Hata diyaloğu | ULAŞILAMAZ / ÖLÜ | Urun karari: sil ya da bagla (kanit degil karar) | `A7-olu` | test yok; gercek-yol: Hayır | ACIK |
-| GS-28 | Hata diyaloğu | KISMEN KANITLI | repo-ici davranis testi | `A2-repo` | emergency_failure_surface_test [W]; gercek-yol: Kısmen | ACIK |
-| SNC-01 | Acil sonuç ekranı | KANITLI | gorsel/manuel kontrol | `A6-gorsel` | emergency_per_target_outcome_test [W]; gercek-yol: Evet | ACIK |
-| SNC-02 | Acil sonuç ekranı | DOĞRULANMADI | repo-ici davranis testi + emulator + gorsel/manuel kontrol | `A3-emu` | test yok; gercek-yol: Hayır | ACIK |
-| SNC-03 | Fail-safe diyaloğu | DOĞRULANMADI | repo-ici davranis testi + emulator + fiziksel cihaz | `A4-fiz` | test yok; gercek-yol: Hayır | ACIK |
+| GS-28 | Hata diyaloğu | KANITLI | Yok (kanit tam) | `A1-kapandi` | emergency_failure_surface_test `GS-28 dismiss closes the dialog and its countdown host route` [W; gerçek EmergencyFailureDialog, tap, dialog + host route pop]; gercek-yol: Evet | KAPANDI |
+| SNC-01 | Acil sonuç ekranı | KANITLI | Yok (kanit tam) | `A1-kapandi` | emergency_per_target_outcome_test [W]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| SNC-02 | Acil sonuç ekranı | DIŞ SİSTEM GEREKİYOR | Play/RevenueCat islemi + gorsel/manuel kontrol | `A5-play` | PLAY_REQUIRED E4-FINAL10-PROGATE: acil sonuç/fail-safe yüzeyi gerçek Pro dispatch sonrası oluşur [D] | ACIK |
+| SNC-03 | Fail-safe diyaloğu | DIŞ SİSTEM GEREKİYOR | Play/RevenueCat islemi + fiziksel cihaz | `A5-play` | PLAY_REQUIRED E4-FINAL10-PROGATE: sonuç ekranı `Şimdi ara` zinciri gerçek Pro dispatch gerektirir [D] | ACIK |
 | SNC-04 | Fail-safe diyaloğu | ULAŞILAMAZ / ÖLÜ | Urun karari: sil ya da bagla (kanit degil karar) | `A7-olu` | test yok; gercek-yol: Hayır | ACIK |
-| SNC-05 | Fail-safe diyaloğu | DOĞRULANMADI | repo-ici davranis testi | `A2-repo` | test yok; gercek-yol: Hayır | ACIK |
-| SNC-06 | Acil sonuç ekranı | DOĞRULANMADI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | test yok; gercek-yol: Hayır | ACIK |
+| SNC-05 | Fail-safe diyaloğu | KANITLI | Yok (kanit tam) | `A1-kapandi` | emergency_call_screen_behavior_test `SNC-05: fail-safe blocks Back and Kapat closes only the dialog` [W; gerçek production ekran, zaman aşımı, Back negatif kontrolü ve Kapat davranışı]; gercek-yol: Evet | KAPANDI |
+| SNC-06 | Acil sonuç ekranı | KANITLI | Yok (kanit tam) | `A1-kapandi` | emergency_call_screen_behavior_test `SNC-06: home control pops every emergency result route` [W; gerçek production ekran ve gerçek ana ekran kontrolü]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
 | SNC-07 | Acil sonuç ekranı | ULAŞILAMAZ / ÖLÜ | Urun karari: sil ya da bagla (kanit degil karar) | `A7-olu` | test yok; gercek-yol: Hayır | ACIK |
-| SNC-08 | Acil sonuç ekranı | KISMEN KANITLI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | emergency_trigger_host_contact_mask_test (yalnız ad) [W]; gercek-yol: Kısmen | ACIK |
-| SNC-09 | Acil sonuç ekranı | DOĞRULANMADI | repo-ici davranis testi + emulator | `A3-emu` | test yok; gercek-yol: Hayır | ACIK |
-| SNC-10 | Acil sonuç ekranı | DOĞRULANMADI | repo-ici davranis testi + emulator | `A3-emu` | wakelock_balance_test [S]; gercek-yol: Hayır | ACIK |
-| HZ-01 | Hızlı Ayarlar kutucuğu | DOĞRULANMADI | repo-ici davranis testi + emulator + fiziksel cihaz + gorsel/manuel kontrol | `A4-fiz` | quick_access_panic_surface_test [S]; gercek-yol: Hayır | ACIK |
-| HZ-02 | Hızlı Ayarlar kutucuğu | KISMEN KANITLI | repo-ici davranis testi + emulator + fiziksel cihaz | `A4-fiz` | PanicLaunchTest; PanicRequestStoreTest; quick_access_panic_surface_test [K; S]; gercek-yol: Kısmen | ACIK |
-| HZ-03 | Hızlı Ayarlar kutucuğu | DOĞRULANMADI | repo-ici davranis testi + emulator + fiziksel cihaz + gorsel/manuel kontrol | `A4-fiz` | test yok; gercek-yol: Hayır | ACIK |
-| HZ-04 | Ana ekran widget'ı | DOĞRULANMADI | repo-ici davranis testi + emulator + fiziksel cihaz + gorsel/manuel kontrol | `A4-fiz` | test yok; gercek-yol: Hayır | ACIK |
-| HZ-05 | Ana ekran widget'ı | KISMEN KANITLI | repo-ici davranis testi + emulator + fiziksel cihaz | `A4-fiz` | PanicLaunchTest [K]; gercek-yol: Kısmen | ACIK |
-| HZ-06 | Trampoline | KISMEN KANITLI | repo-ici davranis testi + emulator | `A3-emu` | PanicLaunchTest; PanicRequestStoreTest [K]; gercek-yol: Kısmen | ACIK |
+| SNC-08 | Acil sonuç ekranı | KANITLI | Yok (kanit tam) | `A1-kapandi` | emergency_call_screen_behavior_test `SNC-08: masked name does not implicitly mask the phone number` [W; gerçek production ekran ve fail-safe diyaloğu; mevcut davranış/SAPMA: ad A***, telefon açık]; emergency_trigger_host_contact_mask_test [W]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| SNC-09 | Acil sonuç ekranı | DIŞ SİSTEM GEREKİYOR | Play/RevenueCat islemi | `A5-play` | PLAY_REQUIRED E4-FINAL10-PROGATE: production sonuç route'u gerçek Pro dispatch olmadan açılmaz [D] | ACIK |
+| SNC-10 | Acil sonuç ekranı | DIŞ SİSTEM GEREKİYOR | Play/RevenueCat islemi | `A5-play` | PLAY_REQUIRED E4-FINAL10-PROGATE: production sonuç ekranı lifecycle/wakelock zinciri gerçek Pro dispatch gerektirir [D; S] | ACIK |
+| HZ-01 | Hızlı Ayarlar kutucuğu | KISMEN KANITLI | fiziksel cihaz + gorsel/manuel kontrol | `A4-fiz` | E4-QUICK-VISIBLE-02: final APK tile'i SystemUI'da INACTIVE gorunur; dokunma acil tetik riski nedeniyle calistirilmadi [D; S] | ACIK |
+| HZ-02 | Hızlı Ayarlar kutucuğu | KANITLI | Yok (kanit tam) | `A1-kapandi` | E4-FINAL4-TILE: gerçek SystemUI tile -> trampoline -> MainActivity; `stage4-final3-quick-tile-result.png` [D] | KAPANDI |
+| HZ-03 | Hızlı Ayarlar kutucuğu | KISMEN KANITLI | fiziksel cihaz + gorsel/manuel kontrol | `A4-fiz` | PHYSICAL_ONLY E4-FINAL10-HZ03: dbae294b… AOSP API35'te geçici gerçek device PIN ile keyguard `showing=true/secure=true`; locked shade tile'ı kullanıcıya açmadı ve `click-tile` service/pending request üretmedi. Unlocked tile→trampoline HZ-06'da geçti; kalan unlock prompt davranışı OEM/lockscreen politikasına bağlı fiziksel cihaz sınırıdır [D] | ACIK |
+| HZ-04 | Ana ekran widget'ı | KANITLI | Yok (kanit tam) | `A1-kapandi` | E4-FINAL4-WIDGET-BIND: Launcher3 host, widget id=4, PanicWidgetProvider RemoteViews; `stage4-final4-widget-added.png` [D] | KAPANDI |
+| HZ-05 | Ana ekran widget'ı | KANITLI | Yok (kanit tam) | `A1-kapandi` | E4-FINAL4-WIDGET-TAP: gerçek widget -> trampoline -> MainActivity; `stage4-final4-widget-trampoline-result.png` [D] | KAPANDI |
+| HZ-06 | Trampoline | KANITLI | emulator | `A1-kapandi` | E4-FINAL10-HZ06: APK e2883c75… Android `cmd statusbar add-tile/click-tile` gerçek PanicTileService'i çalıştırdı; ActivityTaskManager QuickPanicTrampolineActivity→MainActivity zincirini kaydetti, PIN sonrası `korubeni_emergency.xml` boştu (tek tüketim) [D; K] | KAPANDI |
 | HZ-07 | EmergencyTriggerHost | KISMEN KANITLI | repo-ici davranis testi + emulator + fiziksel cihaz + Play/RevenueCat islemi + gorsel/manuel kontrol | `A5-play` | quick_panic_request_service_test; emergency_trigger_duplicate_guard_test; emergency_trigger_host_contact_mask_test [U; W]; gercek-yol: Evet (Dart) | ACIK |
 | HZ-08 | EmergencyTriggerHost | KANITLI | Yok (kanit tam) | `A1-kapandi` | emergency_trigger_duplicate_guard_test [W]; gercek-yol: Evet | KAPANDI |
-| HZ-09 | EmergencyTriggerHost | KANITLI | gorsel/manuel kontrol | `A6-gorsel` | emergency_trigger_duplicate_guard_test [W]; gercek-yol: Evet | ACIK |
+| HZ-09 | EmergencyTriggerHost | KANITLI | Yok (kanit tam) | `A1-kapandi` | emergency_trigger_duplicate_guard_test [W]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
 | HZ-10 | Hızlı erişim — soğuk açılış | DOĞRULANMADI | repo-ici davranis testi + emulator + fiziksel cihaz + Play/RevenueCat islemi + gorsel/manuel kontrol | `A5-play` | test yok; gercek-yol: Hayır | ACIK |
-| HZ-11 | MainActivity | KISMEN KANITLI | repo-ici davranis testi + emulator | `A3-emu` | PanicLaunchTest; quick_access_panic_surface_test [K; S]; gercek-yol: Kısmen | ACIK |
+| HZ-11 | MainActivity | KANITLI | Yok (kanit tam) | `A1-kapandi` | E4-FINAL4-HZ11: uid=2000 trampoline `SecurityException:not exported`; MainActivity sahte extra etkisiz [D] | KAPANDI |
 | SES-01 | Ses tuşu tetikleyici | KISMEN KANITLI | repo-ici davranis testi + emulator + fiziksel cihaz + Play/RevenueCat islemi | `A5-play` | volume_trigger_service_behavior_test (mutasyonla oldurulen davranis testi); VolumeButtonDetectorTest (4 Robolectric) [U; K]; gercek-yol: Evet (Dart + JVM); cihaz uctan uca dogrulamasi **Asama 6 / R1 (Play+RevenueCat yetkisi)** bekliyor | ACIK |
-| SES-02 | Ses tuşu tetikleyici | KISMEN KANITLI | repo-ici davranis testi + emulator + fiziksel cihaz | `A4-fiz` | volume_trigger_service_behavior_test (mutasyonla oldurulen davranis testi); VolumeButtonDetectorTest (4 Robolectric) [U; K]; gercek-yol: Evet (Dart + JVM); cihaz uctan uca dogrulamasi **Asama 6 / R1 (Play+RevenueCat yetkisi)** bekliyor | ACIK |
-| SES-03 | Ses tuşu tetikleyici | KISMEN KANITLI | repo-ici davranis testi + emulator + fiziksel cihaz | `A4-fiz` | volume_trigger_service_behavior_test (mutasyonla oldurulen davranis testi); VolumeButtonDetectorTest (4 Robolectric) [U; K]; gercek-yol: Evet (Dart + JVM); cihaz uctan uca dogrulamasi **Asama 6 / R1 (Play+RevenueCat yetkisi)** bekliyor | ACIK |
-| SES-04 | Ses tuşu tetikleyici | KISMEN KANITLI | repo-ici davranis testi + emulator + fiziksel cihaz | `A4-fiz` | volume_trigger_service_behavior_test (mutasyonla oldurulen davranis testi); VolumeButtonDetectorTest (4 Robolectric) [U; K]; gercek-yol: Evet (Dart + JVM); cihaz uctan uca dogrulamasi **Asama 6 / R1 (Play+RevenueCat yetkisi)** bekliyor | ACIK |
+| SES-02 | Ses tuşu tetikleyici | DIŞ SİSTEM GEREKİYOR | repo-ici davranis testi + Play/RevenueCat islemi + fiziksel cihaz | `A5-play` | PLAY_REQUIRED: volume_trigger_service_behavior_test (mutasyonla oldurulen) + VolumeButtonDetectorTest (4 Robolectric) native wiring'i kanitlar; production etkin zincir SubscriptionGate arkasinda ve bu build `revenuecat_api_key_missing`; **Asama 6 / R1** | ACIK |
+| SES-03 | Ses tuşu tetikleyici | DIŞ SİSTEM GEREKİYOR | repo-ici davranis testi + Play/RevenueCat islemi + fiziksel cihaz | `A5-play` | PLAY_REQUIRED: ayni foreground oturumunda callback baglama repo davranis testinde kanitli; gerçek production toggle Pro entitlement olmadan acilamaz; **Asama 6 / R1** | ACIK |
+| SES-04 | Ses tuşu tetikleyici | DIŞ SİSTEM GEREKİYOR | repo-ici davranis testi + Play/RevenueCat islemi + fiziksel cihaz | `A5-play` | PLAY_REQUIRED: lifecycle listener iptali repo davranis testinde kanitli; gerçek etkin production zinciri Pro entitlement ister; **Asama 6 / R1** | ACIK |
 | SES-05 | Ses tuşu tetikleyici | KISMEN KANITLI | repo-ici davranis testi + Play/RevenueCat islemi | `A5-play` | volume_trigger_service_behavior_test (mutasyonla oldurulen davranis testi); VolumeButtonDetectorTest (4 Robolectric) [U; K]; gercek-yol: Evet (Dart + JVM); cihaz uctan uca dogrulamasi **Asama 6 / R1 (Play+RevenueCat yetkisi)** bekliyor | ACIK |
-| NTV-01 | CountdownAlarmReceiver | KISMEN KANITLI | repo-ici davranis testi + emulator + fiziksel cihaz | `A4-fiz` | EmergencySessionCoordinatorTest; EmergencyReceiverExceptionBoundaryTest; EmergencySessionAlarmInstrumentationTest; D 2026-09-13 native-doze [K; I; D]; gercek-yol: Kısmen | ACIK |
+| NTV-01 | CountdownAlarmReceiver | KISMEN KANITLI | fiziksel cihaz | `A4-fiz` | E4-ALARM-02: final APK exact/inexact instrumentation; gercek delayed notification alarm; repo testleri [D; I; K] | ACIK |
 | NTV-02 | Koordinatör | KANITLI | Yok (kanit tam) | `A1-kapandi` | EmergencySessionCoordinatorTest (1000 iç içe geçme ×3) [K]; gercek-yol: Evet (JVM, sahte depo) | KAPANDI |
-| NTV-03 | CheckInAlarmReceiver | KISMEN KANITLI | repo-ici davranis testi + emulator + fiziksel cihaz | `A4-fiz` | EmergencySessionCoordinatorTest; EmergencyReceiverExceptionBoundaryTest [K]; gercek-yol: Kısmen | ACIK |
-| NTV-04 | CheckInAlarmReceiver | KISMEN KANITLI | repo-ici davranis testi + emulator + fiziksel cihaz + gorsel/manuel kontrol | `A4-fiz` | EmergencySessionCoordinatorTest (uyarı testleri) [K]; gercek-yol: Kısmen | ACIK |
-| NTV-05 | CheckInAlarmReceiver | KISMEN KANITLI | repo-ici davranis testi + emulator + fiziksel cihaz + gorsel/manuel kontrol | `A4-fiz` | EmergencySessionCoordinatorTest [K]; gercek-yol: Kısmen | ACIK |
-| NTV-06 | BootCompletedReceiver | KISMEN KANITLI | repo-ici davranis testi + emulator + fiziksel cihaz + gorsel/manuel kontrol | `A4-fiz` | AlarmClockRecoveryTest; EmergencySessionCoordinatorTest; Phase3RebootProbeTest; OverdueSessionProbeTest; D 2026-09-20 [K; I; D]; gercek-yol: Kısmen | ACIK |
-| NTV-07 | BootCompletedReceiver | KISMEN KANITLI | repo-ici davranis testi + emulator + fiziksel cihaz + Play/RevenueCat islemi | `A5-play` | EmergencyReceiverExceptionBoundaryTest [K]; gercek-yol: Kısmen | ACIK |
-| NTV-08 | BootCompletedReceiver | KISMEN KANITLI | repo-ici davranis testi + emulator + fiziksel cihaz | `A4-fiz` | DirectBootSafetyKernelTest [K]; gercek-yol: Kısmen | ACIK |
-| NTV-09 | Force-stop sonrası açılış | KISMEN KANITLI | repo-ici davranis testi + emulator + fiziksel cihaz + gorsel/manuel kontrol | `A4-fiz` | EmergencySessionCoordinatorTest (overdue 6 test); OverdueSessionProbeTest; D 2026-09-13 force-stop; D 2026-09-20; D 2026-09-23 (CLAIMED dali kapandi) [K; I; D]; gercek-yol: Kısmen — force-stop yarisi ACIK, **Asama 5 / fiziksel cihaz** | ACIK |
+| NTV-03 | CheckInAlarmReceiver | DIŞ SİSTEM GEREKİYOR | Play/RevenueCat islemi + fiziksel cihaz | `A5-play` | PLAY_REQUIRED E4-FINAL10-PROGATE: gerçek ARMED Check-In/SW oturumu entitlement olmadan üretilemez; receiver probe production kullanıcı zinciri değildir [D; K] | ACIK |
+| NTV-04 | CheckInAlarmReceiver | DIŞ SİSTEM GEREKİYOR | Play/RevenueCat islemi + fiziksel cihaz + gorsel/manuel kontrol | `A5-play` | PLAY_REQUIRED E4-FINAL10-PROGATE: grace bildirimi gerçek ARMED Pro oturumu gerektirir [D; K] | ACIK |
+| NTV-05 | CheckInAlarmReceiver | DIŞ SİSTEM GEREKİYOR | Play/RevenueCat islemi + fiziksel cihaz + gorsel/manuel kontrol | `A5-play` | PLAY_REQUIRED E4-FINAL10-PROGATE: SW pre-warning gerçek ARMED Pro oturumu gerektirir [D; K] | ACIK |
+| NTV-06 | BootCompletedReceiver | DIŞ SİSTEM GEREKİYOR | Play/RevenueCat islemi + fiziksel cihaz + gorsel/manuel kontrol | `A5-play` | PLAY_REQUIRED E4-FINAL10-PROGATE: reconcile edilecek kayıtlı safety session production'da yalnız gerçek Pro arm ile oluşur; probe entitlement yerine geçmez [D; K; I] | ACIK |
+| NTV-07 | BootCompletedReceiver | KISMEN KANITLI | Play dagitim/yukseltme kaniti | `A5-play` | E4-FINAL4-PACKAGE: aynı APK `install -r`, gerçek MY_PACKAGE_REPLACED, ARMED/deadline drift=0, `OK (2 tests)` [D; I]; emulator boyutu kapandı, Play dağıtım artığı açık | ACIK |
+| NTV-08 | BootCompletedReceiver | DIŞ SİSTEM GEREKİYOR | Play/RevenueCat islemi + fiziksel cihaz | `A5-play` | PLAY_REQUIRED E4-FINAL10-PROGATE: USER_UNLOCKED reconciliation için gerçek önceden armed Pro oturumu gerekir [D; K] | ACIK |
+| NTV-09 | Force-stop sonrası açılış | DIŞ SİSTEM GEREKİYOR | Play/RevenueCat islemi + fiziksel cihaz + gorsel/manuel kontrol | `A5-play` | PLAY_REQUIRED: force-stop öncesi gerçek ARMED session production Pro entitlement gerektirir; OEM force-stop yarısı ayrıca fiziksel kalır [D; K; I] | ACIK |
 | NTV-10 | Force-stop sonrası açılış | KANITLI | Yok (kanit tam) | `A1-kapandi` | EmergencySessionCoordinatorTest (bayat/taze CLAIMED, negatif kontrollu); OverdueSessionProbeTest.staleClaimedSessionIsOfferedNotDialled + recentlyClaimedSessionIsStillDialled (gercek Direct Boot deposu + gercek koordinator) [K; I; D]; gercek-yol: Evet; cihaz kaydi 2026-09-23 | KAPANDI |
-| NTV-11 | Gecikmiş oturum teklifi | KISMEN KANITLI | repo-ici davranis testi + emulator + fiziksel cihaz | `A4-fiz` | EmergencySessionCoordinatorTest ("consumed exactly once", "fail closed after 24h"); DirectBootSafetyKernelTest [K]; gercek-yol: Kısmen | ACIK |
-| NTV-12 | Manuel fallback bildirimi | KISMEN KANITLI | repo-ici davranis testi + emulator + fiziksel cihaz | `A4-fiz` | EmergencySessionCoordinatorTest [K]; gercek-yol: Kısmen | ACIK |
-| NTV-13 | Fallback bildirimi | KISMEN KANITLI | repo-ici davranis testi + emulator + fiziksel cihaz | `A4-fiz` | EmergencyReceiverExceptionBoundaryTest [K]; gercek-yol: Kısmen | ACIK |
-| NTV-14 | Fallback bildirimi | KISMEN KANITLI | repo-ici davranis testi + emulator + fiziksel cihaz | `A4-fiz` | EmergencySessionCoordinatorTest [K]; gercek-yol: Kısmen | ACIK |
-| NTV-15 | Direct Boot | KISMEN KANITLI | repo-ici davranis testi + emulator + fiziksel cihaz | `A4-fiz` | DirectBootSafetyKernelTest; DeviceProtectedEmergencySessionStoreTest [K]; gercek-yol: Kısmen | ACIK |
-| NTV-16 | ClockChangeReceiver | KISMEN KANITLI | repo-ici davranis testi + emulator + fiziksel cihaz | `A4-fiz` | AlarmClockRecoveryTest; time_boundary_safety_test [K; U]; gercek-yol: Kısmen | ACIK |
-| NTV-17 | ExactAlarmPermissionReceiver | KISMEN KANITLI | repo-ici davranis testi + emulator + fiziksel cihaz | `A4-fiz` | EmergencyReceiverExceptionBoundaryTest [K]; gercek-yol: Kısmen | ACIK |
-| NTV-18 | Exact alarm izni geri alındı | DOĞRULANMADI | repo-ici davranis testi + emulator + fiziksel cihaz | `A4-fiz` | test yok; gercek-yol: Hayır | ACIK |
+| NTV-11 | Gecikmiş oturum teklifi | DIŞ SİSTEM GEREKİYOR | Play/RevenueCat islemi + fiziksel cihaz | `A5-play` | PLAY_REQUIRED: MANUAL_ACTION_REQUIRED yalnız gerçek armed Pro safety session'dan doğar [D; K] | ACIK |
+| NTV-12 | Manuel fallback bildirimi | DIŞ SİSTEM GEREKİYOR | Play/RevenueCat islemi + fiziksel cihaz | `A5-play` | PLAY_REQUIRED: gerçek dispatch fallback bildirimi production Pro session gerektirir [D; K] | ACIK |
+| NTV-13 | Fallback bildirimi | DIŞ SİSTEM GEREKİYOR | Play/RevenueCat islemi + fiziksel cihaz | `A5-play` | PLAY_REQUIRED: gerçek fallback bildirimi/deleteIntent production Pro dispatch gerektirir [D; K] | ACIK |
+| NTV-14 | Fallback bildirimi | DIŞ SİSTEM GEREKİYOR | Play/RevenueCat islemi + fiziksel cihaz | `A5-play` | PLAY_REQUIRED: 24 saat TTL yalnız gerçek Pro dispatch fallback'i sonrası kurulur [D; K] | ACIK |
+| NTV-15 | Direct Boot | DIŞ SİSTEM GEREKİYOR | Play/RevenueCat islemi + fiziksel cihaz | `A5-play` | PLAY_REQUIRED: kilitli boot'ta işlenecek gerçek device-protected session production Pro arm ile oluşur [D; K] | ACIK |
+| NTV-16 | ClockChangeReceiver | DIŞ SİSTEM GEREKİYOR | Play/RevenueCat islemi + fiziksel cihaz | `A5-play` | PLAY_REQUIRED: TIME_SET/TIMEZONE reconcile edilecek ARMED session gerçek Pro arm gerektirir [D; K] | ACIK |
+| NTV-17 | ExactAlarmPermissionReceiver | DIŞ SİSTEM GEREKİYOR | Play/RevenueCat islemi + fiziksel cihaz | `A5-play` | PLAY_REQUIRED: izne tepki verecek ARMED safety session production Pro entitlement gerektirir; genel exact izin UI'sı BLD-02'de kanıtlıdır [D; K] | ACIK |
+| NTV-18 | Exact alarm izni geri alındı | DIŞ SİSTEM GEREKİYOR | Play/RevenueCat islemi + fiziksel cihaz | `A5-play` | PLAY_REQUIRED: revoke anında gözlenecek ARMED safety session yalnız gerçek Pro kullanıcı zinciriyle oluşur [D] | ACIK |
 | NTV-19 | Alıcı sınırı | KANITLI | Yok (kanit tam) | `A1-kapandi` | EmergencyReceiverExceptionBoundaryTest (6) [K]; gercek-yol: Evet | KAPANDI |
-| NTV-20 | Olay kanalı | DOĞRULANMADI | repo-ici davranis testi + emulator | `A3-emu` | native_event_contract_test [S]; gercek-yol: Hayır | ACIK |
-| NTV-21 | Bekleyen tetik | DOĞRULANMADI | repo-ici davranis testi + emulator | `A3-emu` | native_event_contract_test [S]; gercek-yol: Hayır | ACIK |
+| NTV-20 | Olay kanalı | DIŞ SİSTEM GEREKİYOR | Play/RevenueCat islemi | `A5-play` | PLAY_REQUIRED: `emergencySessionDispatched` gerçek production olayı armed Pro session dispatch'inden doğar; mock event kanıt sayılmadı [D; S] | ACIK |
+| NTV-21 | Bekleyen tetik | DIŞ SİSTEM GEREKİYOR | Play/RevenueCat islemi | `A5-play` | PLAY_REQUIRED: Flutter ölüyken bekleyen gerçek dispatch tetiki armed Pro session gerektirir [D; S] | ACIK |
 | NTV-22 | Olay kanalı | ULAŞILAMAZ / ÖLÜ | Urun karari: sil ya da bagla (kanit degil karar) | `A7-olu` | native_event_contract_test [S]; gercek-yol: Hayır | ACIK |
-| NTV-23 | Native geçmiş | KISMEN KANITLI | repo-ici davranis testi + emulator | `A3-emu` | native_emergency_history_test [U]; gercek-yol: Kısmen | ACIK |
-| NTV-24 | Native uyarı bildirimleri | DOĞRULANMADI | repo-ici davranis testi + emulator + fiziksel cihaz | `A4-fiz` | test yok; gercek-yol: Hayır | ACIK |
+| NTV-23 | Native geçmiş | DIŞ SİSTEM GEREKİYOR | Play/RevenueCat islemi | `A5-play` | PLAY_REQUIRED: gerçek terminal journal sonucu production Pro dispatch zincirinden doğar [D; U] | ACIK |
+| NTV-24 | Native uyarı bildirimleri | DIŞ SİSTEM GEREKİYOR | Play/RevenueCat islemi + fiziksel cihaz | `A5-play` | PLAY_REQUIRED: grace/pre-warning notification contentIntent gerçek ARMED Pro Check-In/SW session gerektirir [D] | ACIK |
 | NTV-25 | Native bildirim metni | KANITLI | Yok (kanit tam) | `A1-kapandi` | NativeNotificationTextTest [K]; gercek-yol: Evet | KAPANDI |
-| NTV-26 | Native bildirim | KISMEN KANITLI | repo-ici davranis testi + emulator + fiziksel cihaz | `A4-fiz` | EmergencySessionCoordinatorTest; FullScreenIntentNotificationTest [K]; gercek-yol: Kısmen | ACIK |
-| NTV-27 | Arm yetenek reddi | KISMEN KANITLI | repo-ici davranis testi + emulator + fiziksel cihaz | `A4-fiz` | EmergencySessionCoordinatorTest; EmergencyPlatformReadinessTest; SupportedOsBoundaryInstrumentationTest [K; I]; gercek-yol: Kısmen | ACIK |
-| NTV-28 | Süreç ölümü (sevk ortası) | KISMEN KANITLI | repo-ici davranis testi + emulator + fiziksel cihaz | `A4-fiz` | EmergencySessionCoordinatorTest (4 süreç ölümü testi) [K]; gercek-yol: Evet (JVM) | ACIK |
-| NTV-29 | Kanal: kişi seçici | KISMEN KANITLI | repo-ici davranis testi + emulator + fiziksel cihaz | `A4-fiz` | contacts_picker_native_test [S; U]; gercek-yol: Kısmen (Dart eşlemesi) | ACIK |
-| NTV-30 | Kanal: android_intents | KISMEN KANITLI | repo-ici davranis testi + emulator + fiziksel cihaz | `A4-fiz` | android_intent_service_test [U]; gercek-yol: Kısmen | ACIK |
-| NTV-31 | Kanal: settings | KISMEN KANITLI | repo-ici davranis testi + emulator + fiziksel cihaz | `A4-fiz` | notification_categories_test; oem_background_guide_service_test [W; U]; gercek-yol: Kısmen | ACIK |
-| NTV-32 | Kanal: audio_control | DOĞRULANMADI | repo-ici davranis testi + emulator + fiziksel cihaz | `A4-fiz` | test yok; gercek-yol: Hayır | ACIK |
-| NTV-33 | Kanal: device_integrity | KISMEN KANITLI | repo-ici davranis testi + emulator + fiziksel cihaz | `A4-fiz` | DeviceIntegrityProbeTest; device_security_service_test; DeviceIntegrityEmulatorProbeTest [K; U; I]; gercek-yol: Kısmen | ACIK |
+| NTV-26 | Native bildirim | DIŞ SİSTEM GEREKİYOR | Play/RevenueCat islemi + fiziksel cihaz | `A5-play` | PLAY_REQUIRED: gerçek alert/fallback gönderimi production Pro safety dispatch gerektirir [D; K] | ACIK |
+| NTV-27 | Arm yetenek reddi | DIŞ SİSTEM GEREKİYOR | Play/RevenueCat islemi + fiziksel cihaz | `A5-play` | PLAY_REQUIRED: production arm çağrısı SubscriptionGate sonrasında yapılır; instrumentation typed boundary'yi kanıtlar ama gerçek Pro kullanıcıyı kanıtlamaz [D; K; I] | ACIK |
+| NTV-28 | Süreç ölümü (sevk ortası) | DIŞ SİSTEM GEREKİYOR | Play/RevenueCat islemi + fiziksel cihaz | `A5-play` | PLAY_REQUIRED: CLAIMED dispatch ortasında öldürülecek gerçek production session önce Pro arm gerektirir; JVM simülasyonu production kanıtı sayılmadı [D; K] | ACIK |
+| NTV-29 | Kanal: kişi seçici | KISMEN KANITLI | fiziksel cihaz | `A4-fiz` | E4-FINAL5-ONB09 + E4-FINAL9-KSI04: production MethodChannel gerçek ACTION_PICK Contacts picker'ı açtı; başarı ad/numara döndürdü, kullanıcı iptali null, resolver kaldırma NO_PICKER kalıcı hata yüzeyi verdi [D; S; U] | ACIK |
+| NTV-30 | Kanal: android_intents | KISMEN KANITLI | fiziksel cihaz | `A4-fiz` | E4-FINAL9-KSI12: production kişi Ara eylemi gerçek Dart→Kotlin android_intents kanalından Android Dialer'ı `tel:5551234567` ile açtı; UI `(555) 123-4567` gösterdi [D; U] | ACIK |
+| NTV-31 | Kanal: settings | KISMEN KANITLI | fiziksel cihaz | `A4-fiz` | E4-SETTINGS-02: gercek Android app/channel settings ve user grant; repo testleri [D; W; U] | ACIK |
+| NTV-32 | Kanal: audio_control | KISMEN KANITLI | fiziksel cihaz | `A4-fiz` | E4-FINAL10-SIREN: gerçek Dart→Kotlin audio_control siren girişinde alarm stream 6→7, Durdur'da 7→6; focus/loop ile birlikte runtime gözlendi [D] | ACIK |
+| NTV-33 | Kanal: device_integrity | KISMEN KANITLI | fiziksel cihaz | `A4-fiz` | E4-INTEGRITY-02: final APK DeviceIntegrityEmulatorProbeTest; repo testleri [D; I; K; U] | ACIK |
 | NTV-34 | Kanal: emergency_platform | ULAŞILAMAZ / ÖLÜ | Urun karari: sil ya da bagla (kanit degil karar) | `A7-olu` | EmergencyPlatformReadinessTest [K]; gercek-yol: Hayır | ACIK |
 | NTV-35 | Kanal: emergency_platform | ULAŞILAMAZ / ÖLÜ | Urun karari: sil ya da bagla (kanit degil karar) | `A7-olu` | LegacySafetyAuthorityTest [K]; gercek-yol: Evet | ACIK |
 | NTV-36 | EmergencyNotificationHelper | ULAŞILAMAZ / ÖLÜ | Urun karari: sil ya da bagla (kanit degil karar) | `A7-olu` | test yok; gercek-yol: Hayır | ACIK |
-| NTV-37 | MainActivity | KISMEN KANITLI | repo-ici davranis testi + emulator | `A3-emu` | countdown_bridge_missing_test; emergency_platform_bridge_test [W; U]; gercek-yol: Kısmen (Dart simülasyonu) | ACIK |
-| NTV-38 | MainActivity | DOĞRULANMADI | repo-ici davranis testi + emulator | `A3-emu` | test yok; gercek-yol: Hayır | ACIK |
-| DL-01 | Derin bağlantı | DOĞRULANMADI | repo-ici davranis testi + emulator | `A3-emu` | deep_link_test (MainActivity kısmı kaynak) [S]; gercek-yol: Hayır | ACIK |
-| DL-02 | Derin bağlantı | KISMEN KANITLI | repo-ici davranis testi + emulator | `A3-emu` | deep_link_test [S; U]; gercek-yol: Kısmen | ACIK |
+| NTV-37 | MainActivity | KISMEN KANITLI | fiziksel cihaz | `A4-fiz` | PHYSICAL_ONLY: normal API35 Play emulator runtime'ında bütün native kanallar gerçek engine'e başarıyla kaydoldu; beklenen `configureFlutterEngine` istisnası kullanıcı eylemiyle üretilemez. Enjeksiyonlu instrumentation/mock production kanıtı sayılmadı; kalan sınır gerçek OEM/Flutter-engine kanal kayıt arızası görülen fiziksel cihazdır. Dart MissingPlugin fallback'i `countdown_bridge_missing_test` ve `emergency_platform_bridge_test` ile davranış düzeyinde korunur [D; W; U] | ACIK |
+| NTV-38 | MainActivity | DIŞ SİSTEM GEREKİYOR | Play/RevenueCat islemi | `A5-play` | PLAY_REQUIRED: onDestroy'da kapatılması gereken etkin ses dedektörü production'da yalnız Pro volume-trigger entitlement ile açılır [D] | ACIK |
+| DL-01 | Derin bağlantı | KANITLI | Yok (kanit tam) | `A1-kapandi` | E4-DEEPLINK-02: cold `korubeni://open/map`, kilit sonrasi map; deep_link_test [D; U; S] | KAPANDI |
+| DL-02 | Derin bağlantı | KANITLI | Yok (kanit tam) | `A1-kapandi` | E4-DEEPLINK-02: warm `korubeni://open/settings`; deep_link_test [D; U; S] | KAPANDI |
 | DL-03 | Derin bağlantı | KANITLI | Yok (kanit tam) | `A1-kapandi` | deep_link_test (30 test) [U]; gercek-yol: Evet | KAPANDI |
-| DL-04 | Derin bağlantı | DOĞRULANMADI | repo-ici davranis testi + emulator | `A3-emu` | deep_link_test (kaynak düzeyi) [S]; gercek-yol: Hayır | ACIK |
-| DL-05 | Derin bağlantı | KISMEN KANITLI | repo-ici davranis testi + emulator | `A3-emu` | deep_link_test [U; S]; gercek-yol: Kısmen | ACIK |
-| DL-06 | Derin bağlantı | KISMEN KANITLI | repo-ici davranis testi + emulator | `A3-emu` | deep_link_test [U; S]; gercek-yol: Kısmen | ACIK |
-| DL-07 | Derin bağlantı | KISMEN KANITLI | repo-ici davranis testi + emulator | `A3-emu` | deep_link_test [U; S]; gercek-yol: Kısmen | ACIK |
-| DL-08 | Derin bağlantı | KISMEN KANITLI | repo-ici davranis testi + emulator | `A3-emu` | deep_link_test [U; S]; gercek-yol: Kısmen | ACIK |
-| DL-09 | Derin bağlantı | KISMEN KANITLI | repo-ici davranis testi + emulator | `A3-emu` | deep_link_test [U; S]; gercek-yol: Kısmen | ACIK |
+| DL-04 | Derin bağlantı | KANITLI | Yok (kanit tam) | `A1-kapandi` | E4-DEEPLINK-02: cold link PIN kapisinda park edildi, unlock sonrasi tuketildi [D; U; S] | KAPANDI |
+| DL-05 | Derin bağlantı | KANITLI | Yok (kanit tam) | `A1-kapandi` | E4-FINAL4-DL05: gerçek VIEW `korubeni://open/home`, Home sekmesi [D] | KAPANDI |
+| DL-06 | Derin bağlantı | KANITLI | Yok (kanit tam) | `A1-kapandi` | E4-DEEPLINK-02: cold `/map` gercek sekme yonlendirmesi [D; U; S] | KAPANDI |
+| DL-07 | Derin bağlantı | KANITLI | Yok (kanit tam) | `A1-kapandi` | E4-FINAL4-DL07: gerçek VIEW `/contacts`; `stage4-final4-deeplink-contacts.png` [D] | KAPANDI |
+| DL-08 | Derin bağlantı | KANITLI | Yok (kanit tam) | `A1-kapandi` | E4-DEEPLINK-02: warm `/settings` gercek sekme yonlendirmesi [D; U; S] | KAPANDI |
+| DL-09 | Derin bağlantı | KANITLI | Yok (kanit tam) | `A1-kapandi` | E4-FINAL4-DL09: gerçek VIEW `/timeline`; `stage4-final4-deeplink-timeline.png` [D] | KAPANDI |
 | DL-10 | Derin bağlantı | KISMEN KANITLI | repo-ici davranis testi + emulator + Play/RevenueCat islemi | `A5-play` | deep_link_test [U; S]; gercek-yol: Kısmen | ACIK |
-| DL-11 | Derin bağlantı | KISMEN KANITLI | repo-ici davranis testi + emulator + Play/RevenueCat islemi | `A5-play` | deep_link_test [U; S]; gercek-yol: Kısmen | ACIK |
-| BLD-01 | Dart bildirimi | KISMEN KANITLI | repo-ici davranis testi + emulator + fiziksel cihaz + gorsel/manuel kontrol | `A4-fiz` | ScheduledNotificationManifestInstrumentationTest (kurulu paket; manifest blogu kaldirilinca NameNotFoundException ile duser); emulator: 1 dk gecikmeli sahte cagri teslim edildi [I; D]; gercek-yol: Evet; cihaz kaydi 2026-09-23; fiziksel cihaz ACIK | ACIK |
-| BLD-02 | Dart bildirimi | DOĞRULANMADI | repo-ici davranis testi + emulator + fiziksel cihaz | `A4-fiz` | test yok; gercek-yol: Hayır | ACIK |
-| BLD-03 | Dart bildirimi | DOĞRULANMADI | repo-ici davranis testi + emulator + fiziksel cihaz | `A4-fiz` | test yok; gercek-yol: Hayır | ACIK |
+| DL-11 | Derin bağlantı | KANITLI | Yok (route kaniti tam; satin alma ayri ABN satirlari) | `A1-kapandi` | E4-FINAL4-DL11: gerçek VIEW `/subscription`, PaywallScreen; `stage4-final4-deeplink-subscription.png` [D] | KAPANDI |
+| BLD-01 | Dart bildirimi | KISMEN KANITLI | fiziksel cihaz + gorsel/manuel kontrol | `A4-fiz` | E4-FAKECALL-02: final APK 1 dk secim, exact AlarmManager, process death ve id 31001 teslimi; manifest instrumentation [D; I] | ACIK |
+| BLD-02 | Dart bildirimi | KISMEN KANITLI | fiziksel cihaz | `A4-fiz` | E4-FINAL10-BLD02: APK e2883c75… production yolunda exact izni OS ekranından verildi; RTC_WAKEUP window=0 alarmı process death sonrası receiver sürecini kaldırdı, gerçek bildirime dokunma FakeCallScreen'i açtı; cold-launch tek-frame kaybı reproduce→fix→regression→runtime retest [D; U] | ACIK |
+| BLD-03 | Dart bildirimi | KISMEN KANITLI | fiziksel cihaz | `A4-fiz` | E4-FAKECALL-02: final APK process-death notification tap → first-use → FakeCallScreen; notification_cold_launch_test [D; U] | ACIK |
 | BLD-04 | Dart bildirimi | ULAŞILAMAZ / ÖLÜ | Urun karari: sil ya da bagla (kanit degil karar) | `A7-olu` | deep_link_test ("a notification submits through the SAME park") [U]; gercek-yol: Kısmen | ACIK |
-| BLD-05 | Dart bildirimi | KISMEN KANITLI | repo-ici davranis testi + emulator + fiziksel cihaz + gorsel/manuel kontrol | `A4-fiz` | safety_alert_outcome_test; notification_channel_name_test [U]; gercek-yol: Kısmen | ACIK |
-| BLD-06 | Durum bildirimi | KISMEN KANITLI | repo-ici davranis testi + emulator + fiziksel cihaz + gorsel/manuel kontrol | `A4-fiz` | foreground_service_ownership_test; (foreground_service yalnız S) [U; S]; gercek-yol: Kısmen | ACIK |
-| CHK-01 | Check-In kurulum | DOĞRULANMADI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | test yok; gercek-yol: Hayır | ACIK |
+| BLD-05 | Dart bildirimi | KISMEN KANITLI | fiziksel cihaz + gorsel/manuel kontrol | `A4-fiz` | E4-FINAL10-BLD05: dbae294b… gerçek NotificationManager kayıtları emergency=`Acil Bildirimler` importance4, general=`Genel Bildirimler` importance3, service=`Servis Durumu` importance2; ham key görünmedi [D; U] | ACIK |
+| BLD-06 | Durum bildirimi | DIŞ SİSTEM GEREKİYOR | Play/RevenueCat islemi + fiziksel cihaz + gorsel/manuel kontrol | `A5-play` | PLAY_REQUIRED: production foreground safety-service durum bildirimi gerçek Pro safety session yaşam döngüsüne bağlıdır [D; U] | ACIK |
+| CHK-01 | Check-In kurulum | KANITLI | Yok (kanit tam) | `A1-kapandi` | safety_timer_screen_behavior_test `CHK-01: all four duration choices execute missing-contact branch` [W; gercek CheckInScreen, dort production sure secenegi tap + kişisiz hata dali]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
 | CHK-02 | Check-In | KISMEN KANITLI | repo-ici davranis testi + emulator + fiziksel cihaz + Play/RevenueCat islemi + gorsel/manuel kontrol | `A5-play` | check_in_service_behavior_matrix_test; check_in_typed_session_test; safety_session_callsite_contract_test [U; S]; gercek-yol: Kısmen (servis gerçek, ekran değil) | ACIK |
-| CHK-03 | Check-In | DOĞRULANMADI | repo-ici davranis testi | `A2-repo` | test yok; gercek-yol: Hayır | ACIK |
-| CHK-04 | Exact alarm kapısı | DOĞRULANMADI | repo-ici davranis testi + emulator + fiziksel cihaz + gorsel/manuel kontrol | `A4-fiz` | emergency_timer_release_blockers_test [S]; gercek-yol: Hayır | ACIK |
-| CHK-05 | Check-In | DOĞRULANMADI | repo-ici davranis testi + emulator + fiziksel cihaz | `A4-fiz` | test yok; gercek-yol: Hayır | ACIK |
+| CHK-03 | Check-In | KANITLI | Yok (kanit tam) | `A1-kapandi` | safety_timer_screen_behavior_test `CHK-03: contact-required action pushes production ContactsPage` [W; gercek SnackBar eylemi tap + gercek ContactsPage push]; gercek-yol: Evet | KAPANDI |
+| CHK-04 | Exact alarm kapısı | DIŞ SİSTEM GEREKİYOR | Play/RevenueCat islemi + fiziksel cihaz + gorsel/manuel kontrol | `A5-play` | PLAY_REQUIRED E4-FINAL10-PROGATE: production Check-In girişi `subscription_entitlement_unverified` ile SubscriptionGate'te durdu; oturum içi exact alarm gerçek entitlement olmadan başlatılamaz; fake-call exact kapısı BLD-02'de ayrıca kanıtlandı [D] | ACIK |
+| CHK-05 | Check-In | DIŞ SİSTEM GEREKİYOR | Play/RevenueCat islemi + fiziksel cihaz | `A5-play` | PLAY_REQUIRED E4-FINAL10-PROGATE: production Check-In rotası gerçek emulator'da entitlement doğrulanmadan açılmadı; oturum başlatma Aşama 6 gerçek Pro kullanıcı zinciridir [D] | ACIK |
 | CHK-06 | Check-In | KISMEN KANITLI | repo-ici davranis testi + Play/RevenueCat islemi + gorsel/manuel kontrol | `A5-play` | check_in_service_behavior_matrix_test [U]; gercek-yol: Kısmen | ACIK |
-| CHK-07 | Check-In aktif | KISMEN KANITLI | repo-ici davranis testi + emulator + gorsel/manuel kontrol | `A3-emu` | check_in_service_behavior_matrix_test; time_boundary_safety_test [U]; gercek-yol: Kısmen | ACIK |
-| CHK-08 | Check-In aktif | KISMEN KANITLI | repo-ici davranis testi + emulator + gorsel/manuel kontrol | `A3-emu` | check_in_service_behavior_matrix_test; safety_session_pin_gate_test [U; W]; gercek-yol: Kısmen | ACIK |
-| CHK-09 | Check-In aktif | KISMEN KANITLI | repo-ici davranis testi + emulator + gorsel/manuel kontrol | `A3-emu` | check_in_service_behavior_matrix_test; check_in_dedup_cancel_before_call_test [U]; gercek-yol: Kısmen | ACIK |
-| CHK-10 | Güvenlik PIN diyaloğu | KANITLI | gorsel/manuel kontrol | `A6-gorsel` | safety_session_pin_gate_test; safety_session_pin_lockout_test; sensitive_action_pin_gate_test [W; S]; gercek-yol: Evet | ACIK |
-| CHK-11 | Check-In | KISMEN KANITLI | repo-ici davranis testi + emulator + fiziksel cihaz + gorsel/manuel kontrol | `A4-fiz` | safety_alert_outcome_test; check_in_service_behavior_matrix_test [U]; gercek-yol: Kısmen | ACIK |
-| CHK-12 | Check-In | KISMEN KANITLI | repo-ici davranis testi + emulator + fiziksel cihaz + gorsel/manuel kontrol | `A4-fiz` | check_in_service_behavior_matrix_test; check_in_primary_only_contract_test [U]; gercek-yol: Kısmen | ACIK |
-| CHK-13 | Check-In | KISMEN KANITLI | repo-ici davranis testi + emulator + fiziksel cihaz | `A4-fiz` | check_in_service_behavior_matrix_test; check_in_shared_controller_test [U; S]; gercek-yol: Kısmen | ACIK |
-| CHK-14 | Check-In | DOĞRULANMADI | repo-ici davranis testi | `A2-repo` | test yok; gercek-yol: Hayır | ACIK |
-| SWK-01 | Güvenli Yürüyüş | DOĞRULANMADI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | safe_walk_timer_test [S]; gercek-yol: Hayır | ACIK |
+| CHK-07 | Check-In aktif | DIŞ SİSTEM GEREKİYOR | Play/RevenueCat islemi + gorsel/manuel kontrol | `A5-play` | PLAY_REQUIRED E4-FINAL10-PROGATE: aktif Check-In üretmek için önce doğrulanmış Pro entitlement gerekir; repo davranış testi dış entitlement kanıtı değildir [D; U] | ACIK |
+| CHK-08 | Check-In aktif | DIŞ SİSTEM GEREKİYOR | Play/RevenueCat islemi + gorsel/manuel kontrol | `A5-play` | PLAY_REQUIRED E4-FINAL10-PROGATE: production rota entitlement kapısında durdu; aktif oturum PIN uzatma/iptal zinciri Aşama 6'ya devredildi [D; U] | ACIK |
+| CHK-09 | Check-In aktif | DIŞ SİSTEM GEREKİYOR | Play/RevenueCat islemi + gorsel/manuel kontrol | `A5-play` | PLAY_REQUIRED E4-FINAL10-PROGATE: production rota entitlement kapısında durdu; aktif oturum sevk/iptal zinciri Aşama 6'ya devredildi [D; U] | ACIK |
+| CHK-10 | Güvenlik PIN diyaloğu | KANITLI | Yok (kanit tam) | `A1-kapandi` | safety_session_pin_gate_test; safety_session_pin_lockout_test; sensitive_action_pin_gate_test [W; S]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| CHK-11 | Check-In | DIŞ SİSTEM GEREKİYOR | Play/RevenueCat islemi + fiziksel cihaz + gorsel/manuel kontrol | `A5-play` | PLAY_REQUIRED E4-FINAL10-PROGATE: gerçek Check-In bildirim/izin production zinciri doğrulanmış entitlement ister [D; U] | ACIK |
+| CHK-12 | Check-In | DIŞ SİSTEM GEREKİYOR | Play/RevenueCat islemi + fiziksel cihaz + gorsel/manuel kontrol | `A5-play` | PLAY_REQUIRED E4-FINAL10-PROGATE: production Check-In hedef/sevk zinciri SubscriptionGate arkasındadır [D; U] | ACIK |
+| CHK-13 | Check-In | DIŞ SİSTEM GEREKİYOR | Play/RevenueCat islemi + fiziksel cihaz | `A5-play` | PLAY_REQUIRED E4-FINAL10-PROGATE: ortak native oturum controller'ına production erişim gerçek Pro entitlement gerektirir [D; U] | ACIK |
+| CHK-14 | Check-In | KANITLI | Yok (kanit tam) | `A1-kapandi` | safety_timer_screen_behavior_test `CHK-14: system Back leaves an armed singleton session running` [W; gercek CheckInScreen, sistem geri olayi, route kapanir ama oturum aktif kalir]; gercek-yol: Evet | KAPANDI |
+| SWK-01 | Güvenli Yürüyüş | KANITLI | Yok (kanit tam) | `A1-kapandi` | safety_timer_screen_behavior_test `SWK-01: every production duration chip changes selection` [W; gercek SafeWalkScreen, 5/10/15/30/60 dk tap + secim state gecisi]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
 | SWK-02 | Güvenli Yürüyüş | KISMEN KANITLI | repo-ici davranis testi + emulator + fiziksel cihaz + Play/RevenueCat islemi + gorsel/manuel kontrol | `A5-play` | check_in_service_behavior_matrix_test; safe_walk_persist_test [U; S]; gercek-yol: Kısmen | ACIK |
-| SWK-03 | Güvenli Yürüyüş | DOĞRULANMADI | repo-ici davranis testi + emulator | `A3-emu` | test yok; gercek-yol: Hayır | ACIK |
-| SWK-04 | Güvenli Yürüyüş | KISMEN KANITLI | repo-ici davranis testi + emulator + fiziksel cihaz + gorsel/manuel kontrol | `A4-fiz` | safety_alert_outcome_test [U; S]; gercek-yol: Kısmen | ACIK |
-| SWK-05 | Güvenli Yürüyüş | KISMEN KANITLI | repo-ici davranis testi + emulator + gorsel/manuel kontrol | `A3-emu` | check_in_expiry_coordinator_test [U]; gercek-yol: Kısmen | ACIK |
-| SWK-06 | Güvenli Yürüyüş | KISMEN KANITLI | repo-ici davranis testi + emulator + gorsel/manuel kontrol | `A3-emu` | check_in_service_behavior_matrix_test [U]; gercek-yol: Kısmen | ACIK |
-| SWK-07 | Güvenli Yürüyüş | DOĞRULANMADI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | test yok; gercek-yol: Hayır | ACIK |
-| SWK-08 | Çıkış diyaloğu | DOĞRULANMADI | repo-ici davranis testi | `A2-repo` | test yok; gercek-yol: Hayır | ACIK |
-| SWK-09 | Çıkış diyaloğu | DOĞRULANMADI | repo-ici davranis testi | `A2-repo` | test yok; gercek-yol: Hayır | ACIK |
-| SWK-10 | Güvenli Yürüyüş | DOĞRULANMADI | repo-ici davranis testi + emulator | `A3-emu` | test yok; gercek-yol: Hayır | ACIK |
-| SWK-11 | Güvenli Yürüyüş | KISMEN KANITLI | repo-ici davranis testi + emulator + fiziksel cihaz + gorsel/manuel kontrol | `A4-fiz` | check_in_service_behavior_matrix_test [U]; gercek-yol: Kısmen | ACIK |
-| FKC-01 | Sahte çağrı sayfası | DOĞRULANMADI | repo-ici davranis testi | `A2-repo` | consent_gate_enforcement_test [S]; gercek-yol: Hayır | ACIK |
-| FKC-02 | Sahte çağrı sayfası | DOĞRULANMADI | repo-ici davranis testi | `A2-repo` | test yok; gercek-yol: Hayır | ACIK |
-| FKC-03 | Sahte çağrı sayfası | KISMEN KANITLI | repo-ici davranis testi + emulator + fiziksel cihaz + gorsel/manuel kontrol | `A4-fiz` | BLD-01 kanitlari; emulator: "1 Dakika Sonra" secildi, bildirim geldi [I; D]; gercek-yol: Evet; cihaz kaydi 2026-09-23; fiziksel cihaz ACIK | ACIK |
-| FKC-04 | Sahte çağrı sayfası | DOĞRULANMADI | repo-ici davranis testi + emulator + fiziksel cihaz | `A4-fiz` | test yok; gercek-yol: Hayır | ACIK |
-| FKC-05 | FakeCallScreen | DOĞRULANMADI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | fake_call_consent_order_test [S]; gercek-yol: Hayır | ACIK |
-| FKC-06 | FakeCallScreen | DOĞRULANMADI | repo-ici davranis testi | `A2-repo` | fake_call_consent_order_test [S]; gercek-yol: Hayır | ACIK |
-| FKC-07 | FakeCallScreen | DOĞRULANMADI | repo-ici davranis testi + emulator + fiziksel cihaz + gorsel/manuel kontrol | `A4-fiz` | test yok; gercek-yol: Hayır | ACIK |
-| FKC-08 | FakeCallScreen | DOĞRULANMADI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | fake_call_haptic_source_test [S]; gercek-yol: Hayır | ACIK |
-| FKC-09 | FakeCallScreen | DOĞRULANMADI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | test yok; gercek-yol: Hayır | ACIK |
-| FKC-10 | FakeCallScreen | DOĞRULANMADI | repo-ici davranis testi | `A2-repo` | test yok; gercek-yol: Hayır | ACIK |
-| FKC-11 | FakeCallScreen | DOĞRULANMADI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | test yok; gercek-yol: Hayır | ACIK |
-| FKC-12 | Özelleştir sayfası | KISMEN KANITLI | repo-ici davranis testi + emulator + fiziksel cihaz + gorsel/manuel kontrol | `A4-fiz` | avatar_store_service_test; image_sanitizer_service_test [U]; gercek-yol: Kısmen | ACIK |
-| FKC-13 | Özelleştir sayfası | DOĞRULANMADI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | fake_call_presets_test [S]; gercek-yol: Hayır | ACIK |
-| FKC-14 | Özelleştir sayfası | DOĞRULANMADI | repo-ici davranis testi | `A2-repo` | test yok; gercek-yol: Hayır | ACIK |
+| SWK-03 | Güvenli Yürüyüş | DIŞ SİSTEM GEREKİYOR | Play/RevenueCat islemi | `A5-play` | PLAY_REQUIRED E4-FINAL10-PROGATE: production Güvenli Yürüyüş girişi gerçek emulator'da `subscription_entitlement_unverified` ile durdu [D] | ACIK |
+| SWK-04 | Güvenli Yürüyüş | DIŞ SİSTEM GEREKİYOR | Play/RevenueCat islemi + fiziksel cihaz + gorsel/manuel kontrol | `A5-play` | PLAY_REQUIRED E4-FINAL10-PROGATE: gerçek SW başlatma/uyarı zinciri doğrulanmış entitlement olmadan erişilemez [D; U] | ACIK |
+| SWK-05 | Güvenli Yürüyüş | DIŞ SİSTEM GEREKİYOR | Play/RevenueCat islemi + gorsel/manuel kontrol | `A5-play` | PLAY_REQUIRED E4-FINAL10-PROGATE: gerçek aktif SW oturumu SubscriptionGate arkasındadır [D; U] | ACIK |
+| SWK-06 | Güvenli Yürüyüş | DIŞ SİSTEM GEREKİYOR | Play/RevenueCat islemi + gorsel/manuel kontrol | `A5-play` | PLAY_REQUIRED E4-FINAL10-PROGATE: gerçek aktif SW süre/ek süre zinciri SubscriptionGate arkasındadır [D; U] | ACIK |
+| SWK-07 | Güvenli Yürüyüş | KANITLI | Yok (kanit tam) | `A1-kapandi` | safety_timer_screen_behavior_test `SWK-07/08: active Back warns and Stay preserves the session`; `SWK-07 negative control: inactive Back pops without warning` [W; aktif/pasif iki dal gercek SafeWalkScreen]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| SWK-08 | Çıkış diyaloğu | KANITLI | Yok (kanit tam) | `A1-kapandi` | safety_timer_screen_behavior_test `SWK-07/08: active Back warns and Stay preserves the session` [W; gercek Kal tap, diyalog kapanir, ekran ve oturum korunur]; gercek-yol: Evet | KAPANDI |
+| SWK-09 | Çıkış diyaloğu | KANITLI | Yok (kanit tam) | `A1-kapandi` | safety_timer_screen_behavior_test `SWK-09: wrong PIN cannot exit; correct PIN cancels then pops`; `SWK-09 negative: too-late cancellation keeps screen and timer` [W; yanlis PIN, dogru PIN+native cancel ack ve too-late reddi]; gercek-yol: Evet | KAPANDI |
+| SWK-10 | Güvenli Yürüyüş | DIŞ SİSTEM GEREKİYOR | Play/RevenueCat islemi | `A5-play` | PLAY_REQUIRED E4-FINAL10-PROGATE: production Güvenli Yürüyüş rotası entitlement doğrulanmadan açılmaz [D] | ACIK |
+| SWK-11 | Güvenli Yürüyüş | DIŞ SİSTEM GEREKİYOR | Play/RevenueCat islemi + fiziksel cihaz + gorsel/manuel kontrol | `A5-play` | PLAY_REQUIRED E4-FINAL10-PROGATE: gerçek SW arka plan/notification zinciri doğrulanmış entitlement ister [D; U] | ACIK |
+| FKC-01 | Sahte çağrı sayfası | KANITLI | Yok (kanit tam) | `A1-kapandi` | main_navigation_behavior_test `HOME-15/FKC-01/FKC-02 consent gates then opens fake call now` [W; gercek Sahte Cagri karti tap, rizasiz SnackBar negatif kontrolu]; gercek-yol: Evet | KAPANDI |
+| FKC-02 | Sahte çağrı sayfası | KANITLI | Yok (kanit tam) | `A1-kapandi` | main_navigation_behavior_test `HOME-15/FKC-01/FKC-02 consent gates then opens fake call now` [W; gercek 'Simdi' tap ve FakeCallScreen push]; gercek-yol: Evet | KAPANDI |
+| FKC-03 | Sahte çağrı sayfası | KISMEN KANITLI | fiziksel cihaz + gorsel/manuel kontrol | `A4-fiz` | E4-FAKECALL-02: final APK "1 Dakika Sonra", teslim ve cold tap ile gercek FakeCallScreen [D; I] | ACIK |
+| FKC-04 | Sahte çağrı sayfası | KISMEN KANITLI | repo-ici davranis testi + fiziksel cihaz | `A4-fiz` | E4-FINAL9-FKC04: APK `6fe2b8dc…`; iki gerçek PermissionController reddi → USER_FIXED → SnackBar Bildirim Ayarları → APP_NOTIFICATION_SETTINGS [D] | ACIK |
+| FKC-05 | FakeCallScreen | KANITLI | Yok (kanit tam) | `A1-kapandi` | fake_call_behavior_test `FKC-05 first-use cancel pops without granting consent`; fake_call_first_use_test `FKC-05 first-use accept persists consent and keeps call open` [W; iki dal ayri dosyada, cunku bir izolatta ikinci AudioPlayer yaratilamiyor]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| FKC-06 | FakeCallScreen | KANITLI | Yok (kanit tam) | `A1-kapandi` | fake_call_behavior_test `FKC-06 missing consent closes an already-warned fake call` [W; rizasiz acilis kendini kapatir, gate SnackBar'i kanit]; gercek-yol: Evet | KAPANDI |
+| FKC-07 | FakeCallScreen | KISMEN KANITLI | repo-ici davranis testi + fiziksel cihaz + gorsel/manuel kontrol | `A4-fiz` | E4-FINAL9-FKC07: production fake-call'da audio_flinger aktif track + `Ringtone started playing`; UI screenshot/XML [D] | ACIK |
+| FKC-08 | FakeCallScreen | KANITLI | Yok (kanit tam) | `A1-kapandi` | fake_call_behavior_test `FKC-08 Reddet stops and pops the real screen` [W; gercek tap, pop ve activity_events'e 1 fakeCallUsed kaydi]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| FKC-09 | FakeCallScreen | KANITLI | Yok (kanit tam) | `A1-kapandi` | fake_call_behavior_test `FKC-09 Kabul Et stops and pops the real screen` [W; gercek tap, pop ve kayit]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| FKC-10 | FakeCallScreen | KANITLI | Yok (kanit tam) | `A1-kapandi` | fake_call_behavior_test `FKC-10 üst kapatma stops and pops the real screen` [W; gercek ikon tap, pop ve etkinlik YAZILMADIGI negatif kontrolu]; gercek-yol: Evet | KAPANDI |
+| FKC-11 | FakeCallScreen | KANITLI | Yok (kanit tam) | `A1-kapandi` | fake_call_behavior_test `FKC-11/FKC-13/FKC-14 customize preset and save defaults` [W; gercek 'Ayarla' tap, alt sayfa acilir]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| FKC-12 | Özelleştir sayfası | KISMEN KANITLI | repo-ici davranis testi + fiziksel cihaz + gorsel/manuel kontrol | `A4-fiz` | E4-FINAL9-FKC12: Android Photo Picker GET_CONTENT image/* → seçilen PNG → 0600 `fake_call_avatar.jpg` 13742 bytes; service tests [D; U] | ACIK |
+| FKC-13 | Özelleştir sayfası | KANITLI | Yok (kanit tam) | `A1-kapandi` | fake_call_behavior_test `FKC-11/FKC-13/FKC-14 customize preset and save defaults` [W; 'Patron' cipi ADI doldurur, numara alani negatif kontrol ile degismiyor]; gercek-yol: Evet; SAPMA: envanter 'ad/numara dolar' diyor, dort cip de bos telefon geciyor, `_buildTemplateChip` phone dali olu kod; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| FKC-14 | Özelleştir sayfası | KANITLI | Yok (kanit tam) | `A1-kapandi` | fake_call_behavior_test `FKC-11/FKC-13/FKC-14 customize preset and save defaults` [W; bos alanlar kaydedilince varsayilan ad/numara secure storage'a yazilir ve sayfa kapanir]; gercek-yol: Evet | KAPANDI |
 | SRN-01 | Siren | DOĞRULANMADI | repo-ici davranis testi + emulator + fiziksel cihaz + gorsel/manuel kontrol | `A4-fiz` | test yok; gercek-yol: Hayır | ACIK |
-| SRN-02 | Siren | DOĞRULANMADI | repo-ici davranis testi + emulator + fiziksel cihaz | `A4-fiz` | test yok; gercek-yol: Hayır | ACIK |
-| SRN-03 | Siren | DOĞRULANMADI | repo-ici davranis testi + emulator | `A3-emu` | test yok; gercek-yol: Hayır | ACIK |
-| SRN-04 | Siren | DOĞRULANMADI | repo-ici davranis testi + emulator + fiziksel cihaz | `A4-fiz` | test yok; gercek-yol: Hayır | ACIK |
-| KSI-01 | Kişiler | KISMEN KANITLI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | contacts_provider_add_validation_test [U]; gercek-yol: Kısmen | ACIK |
-| KSI-02 | Kişiler | DOĞRULANMADI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | consent_gate_enforcement_test; premium_gating_contract_test [S]; gercek-yol: Hayır | ACIK |
-| KSI-03 | KVKK kişi bilgi diyaloğu | DOĞRULANMADI | repo-ici davranis testi | `A2-repo` | test yok; gercek-yol: Hayır | ACIK |
-| KSI-04 | Ekleme sayfası | KISMEN KANITLI | repo-ici davranis testi + emulator + fiziksel cihaz + gorsel/manuel kontrol | `A4-fiz` | contacts_picker_native_test [S; U]; gercek-yol: Kısmen | ACIK |
-| KSI-05 | Ekleme sayfası | KISMEN KANITLI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | contacts_manual_phone_validation_test [U]; gercek-yol: Kısmen (saf fonksiyon) | ACIK |
-| KSI-06 | Ekleme sayfası | KISMEN KANITLI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | contacts_provider_add_validation_test; contact_service tests [U]; gercek-yol: Kısmen | ACIK |
-| KSI-07 | Ekleme sayfası | DOĞRULANMADI | repo-ici davranis testi + emulator + gorsel/manuel kontrol | `A3-emu` | add_contact_keyboard_visibility_test [S]; gercek-yol: Hayır | ACIK |
-| KSI-08 | Kişiler | DOĞRULANMADI | repo-ici davranis testi + emulator + gorsel/manuel kontrol | `A3-emu` | test yok; gercek-yol: Hayır | ACIK |
-| KSI-09 | Kişiler | DOĞRULANMADI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | test yok; gercek-yol: Hayır | ACIK |
-| KSI-10 | Acil seçici | KISMEN KANITLI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | contact_service tests [U]; gercek-yol: Kısmen | ACIK |
-| KSI-11 | Kişi kartı | DOĞRULANMADI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | contacts_card_overflow_test [S]; gercek-yol: Hayır | ACIK |
-| KSI-12 | Seçenek sayfası | KISMEN KANITLI | repo-ici davranis testi + emulator + fiziksel cihaz | `A4-fiz` | android_intent_service_test [U]; gercek-yol: Kısmen | ACIK |
-| KSI-13 | Seçenek sayfası | KISMEN KANITLI | repo-ici davranis testi | `A2-repo` | contact_service tests [U]; gercek-yol: Kısmen | ACIK |
-| KSI-14 | Seçenek sayfası | KISMEN KANITLI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | contacts_page_test; contact_service_* tests [S; U]; gercek-yol: Kısmen | ACIK |
-| KSI-15 | Kişiler | DOĞRULANMADI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | test yok; gercek-yol: Hayır | ACIK |
-| KSI-16 | Kişiler | KISMEN KANITLI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | contacts_provider_add_validation_test [U]; gercek-yol: Kısmen | ACIK |
-| KSI-17 | Kişiler | KISMEN KANITLI | repo-ici davranis testi + emulator + fiziksel cihaz | `A4-fiz` | EmergencySessionCoordinatorTest ("immutable target") [K]; gercek-yol: Kısmen | ACIK |
-| MAP-01 | Harita | KISMEN KANITLI | repo-ici davranis testi + emulator + fiziksel cihaz + gorsel/manuel kontrol | `A4-fiz` | map_freshness_widget_test [W]; gercek-yol: Evet (konum mock) | ACIK |
-| MAP-02 | Harita | DOĞRULANMADI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | map_consent_gate_test [S]; gercek-yol: Hayır | ACIK |
-| MAP-03 | Harita | KISMEN KANITLI | repo-ici davranis testi + emulator + fiziksel cihaz + gorsel/manuel kontrol | `A4-fiz` | permission_denied_test; gps_disabled_test; location_service_test [U]; gercek-yol: Kısmen | ACIK |
-| MAP-04 | Harita hata diyaloğu | DOĞRULANMADI | repo-ici davranis testi + emulator + fiziksel cihaz | `A4-fiz` | test yok; gercek-yol: Hayır | ACIK |
-| MAP-05 | Harita | DOĞRULANMADI | repo-ici davranis testi + emulator + fiziksel cihaz + gorsel/manuel kontrol | `A4-fiz` | map_page_ui_test [S]; gercek-yol: Hayır | ACIK |
-| MAP-06 | Harita | DIŞ SİSTEM GEREKİYOR | repo-ici davranis testi + emulator | `A3-emu` | map_osm_cache_contract_test [S]; gercek-yol: Hayır | ACIK |
-| MAP-07 | Harita | KISMEN KANITLI | repo-ici davranis testi + emulator + fiziksel cihaz + gorsel/manuel kontrol | `A4-fiz` | osm_tile_cache_client_test; tile_http_status_handling_test; tile_request_volume_test [U]; gercek-yol: Kısmen | ACIK |
-| MAP-08 | Harita | KANITLI | gorsel/manuel kontrol | `A6-gorsel` | map_freshness_widget_test [W]; gercek-yol: Evet | ACIK |
-| GCM-01 | Güvenlik geçmişi | DOĞRULANMADI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | safety_timeline_unified_test; high_volume_timeline_test [S; W*]; gercek-yol: Hayır | ACIK |
-| GCM-02 | Güvenlik geçmişi | DOĞRULANMADI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | test yok; gercek-yol: Hayır | ACIK |
-| GCM-03 | Not alt sayfası | DOĞRULANMADI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | test yok; gercek-yol: Hayır | ACIK |
-| GCM-04 | Kayıt menüsü | DIŞ SİSTEM GEREKİYOR | repo-ici davranis testi + emulator | `A3-emu` | test yok; gercek-yol: Hayır | ACIK |
-| GCM-05 | Kayıt menüsü | DOĞRULANMADI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | timeline_delete_confirmation_test; timeline_delete_semantics_test [S]; gercek-yol: Hayır | ACIK |
-| GCM-06 | Güvenlik geçmişi | KISMEN KANITLI | repo-ici davranis testi + emulator | `A3-emu` | scroll_restoration_test [W*]; gercek-yol: Kısmen | ACIK |
-| PIL-01 | Pil sihirbazı | DOĞRULANMADI | repo-ici davranis testi + emulator + fiziksel cihaz + gorsel/manuel kontrol | `A4-fiz` | battery_wizard_onboarding_test [S]; gercek-yol: Hayır | ACIK |
-| PIL-02 | Pil sihirbazı | DOĞRULANMADI | repo-ici davranis testi | `A2-repo` | oem_background_guide_source_test [S]; gercek-yol: Hayır | ACIK |
-| PIL-03 | Pil sihirbazı | DOĞRULANMADI | repo-ici davranis testi + emulator + fiziksel cihaz | `A4-fiz` | test yok; gercek-yol: Hayır | ACIK |
-| PIL-04 | Pil sihirbazı | DOĞRULANMADI | repo-ici davranis testi | `A2-repo` | battery_wizard_onboarding_test [S]; gercek-yol: Hayır | ACIK |
-| PIL-05 | Pil sihirbazı | DOĞRULANMADI | repo-ici davranis testi | `A2-repo` | test yok; gercek-yol: Hayır | ACIK |
-| PIL-06 | Pil sihirbazı | DOĞRULANMADI | repo-ici davranis testi + emulator + fiziksel cihaz + gorsel/manuel kontrol | `A4-fiz` | test yok; gercek-yol: Hayır | ACIK |
+| SRN-02 | Siren | KISMEN KANITLI | fiziksel cihaz | `A4-fiz` | E4-FINAL10-SIREN: APK 07793fc7… production kartı gerçek audio focus aldı; hatalı iOS audio option assertion'ı reproduce→minimal fix→negatif regression; aktif sayaç ve sürekli MediaPlayer format güncellemeleri gözlendi [D; U] | ACIK |
+| SRN-03 | Siren | KANITLI | emulator | `A1-kapandi` | E4-FINAL10-SIREN: Android Back sonrası `SİREN AKTİF` 54 sn ile kaldı; yalnız production Durdur eylemi kapattı ve timeline'a 100 sn kaydetti [D] | KAPANDI |
+| SRN-04 | Siren | KISMEN KANITLI | fiziksel cihaz | `A4-fiz` | E4-FINAL10-SIREN: Home/background boyunca audio focus ve loop sürdü; hot resume 82 sn'de aktifti; Durdur sonrası focus bırakıldı ve alarm stream 7→6 geri yüklendi [D] | ACIK |
+| KSI-01 | Kişiler | KANITLI | Yok (kanit tam) | `A1-kapandi` | contacts_page_behavior_test `KSI-01/KSI-16 real page initializes once and renders limit` [W; production ContactsPage + gerçek ContactsProvider açılış/yükleme state'i, tek initialize]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| KSI-02 | Kişiler | KANITLI | Yok (kanit tam) | `A1-kapandi` | contacts_page_behavior_test `KSI-02/KSI-03/KSI-05/KSI-06 manual add validates and persists` [W; gerçek AppBar tap, rıza-yok SnackBar negatif kontrolü ve rıza sonrası sheet]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| KSI-03 | KVKK kişi bilgi diyaloğu | KANITLI | Yok (kanit tam) | `A1-kapandi` | contacts_page_behavior_test `KSI-02/KSI-03/KSI-05/KSI-06 manual add validates and persists` [W; gerçek Tamam tap, pref read-back ve sonraki akış]; gercek-yol: Evet | KAPANDI |
+| KSI-04 | Ekleme sayfası | KISMEN KANITLI | repo-ici davranis testi + fiziksel cihaz + gorsel/manuel kontrol | `A4-fiz` | E4-FINAL9-KSI04: APK `6fe2b8dc…`; gerçek ACTION_PICK → StageFour → rıza → duplicate güvenli dönüş; contacts_picker_native_test [D; S; U] | ACIK |
+| KSI-05 | Ekleme sayfası | KANITLI | Yok (kanit tam) | `A1-kapandi` | contacts_page_behavior_test `KSI-02/KSI-03/KSI-05/KSI-06 manual add validates and persists` [W; gerçek TextField type, input formatter ve canlı validation]; contacts_manual_phone_validation_test [U]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| KSI-06 | Ekleme sayfası | KANITLI | Yok (kanit tam) | `A1-kapandi` | contacts_page_behavior_test `KSI-02/KSI-03/KSI-05/KSI-06 manual add validates and persists` [W; gerçek onSubmitted, disabled consent, checkbox/Ekle, kalıcı repository ve Home refresh]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| KSI-07 | Ekleme sayfası | KANITLI | Yok (kanit tam) | `A1-kapandi` | E4-FINAL9-KSI07: APK `6fe2b8dc…`; gerçek IME açıkken telefon alanı ve Manuel kaydet görünür; `stage4-final9-ksi07-ime.png/.xml`; add_contact_keyboard_visibility_test [D; S]; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| KSI-08 | Kişiler | KANITLI | Yok (kanit tam) | `A1-kapandi` | E4-FINAL11-KSI08: APK dbae294b… production listesinde son kişi gerçek Sil onayıyla kaldırıldı; boş durum `Kişi Ekle` dokunuşu doğrudan `com.google.android.contacts/...ContactSelectionActivity` açtı (`stage4-dbae-ksi08-empty.*`, `stage4-dbae-ksi08-picker.*`). Sonraki production değişikliği yalnız timeline resume yoludur ve bu kanıtı etkilemez [D] | KAPANDI |
+| KSI-09 | Kişiler | KANITLI | Yok (kanit tam) | `A1-kapandi` | contacts_page_behavior_test `KSI-09/KSI-10 picker selects and persists primary contact` [W; gerçek enabled seçim butonu ve production bottom sheet]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| KSI-10 | Acil seçici | KANITLI | Yok (kanit tam) | `A1-kapandi` | contacts_page_behavior_test `KSI-09/KSI-10 picker selects and persists primary contact` [W; gerçek ListTile tap, repository primary read-back, Home refresh ve SnackBar]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| KSI-11 | Kişi kartı | KANITLI | Yok (kanit tam) | `A1-kapandi` | contacts_page_behavior_test `KSI-11/KSI-13/KSI-14 options select and remove cancel/confirm` [W; gerçek kart tap ve production seçenek bottom sheet]; contacts_card_overflow_test [S]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| KSI-12 | Seçenek sayfası | KISMEN KANITLI | repo-ici davranis testi + fiziksel cihaz | `A4-fiz` | E4-FINAL9-KSI12: APK `6fe2b8dc…`; production Ara → Dialer `tel:5551234567`; android_intent_service_test [D; U] | ACIK |
+| KSI-13 | Seçenek sayfası | KANITLI | Yok (kanit tam) | `A1-kapandi` | contacts_page_behavior_test `KSI-11/KSI-13/KSI-14 options select and remove cancel/confirm` [W; gerçek Acil Kişi Seç tap ve repository primary read-back]; gercek-yol: Evet | KAPANDI |
+| KSI-14 | Seçenek sayfası | KANITLI | Yok (kanit tam) | `A1-kapandi` | contacts_page_behavior_test `KSI-11/KSI-13/KSI-14 options select and remove cancel/confirm` [W; gerçek kaldır tap, İptal korur, Sil kaldırır ve primary temizler]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| KSI-15 | Kişiler | KANITLI | Yok (kanit tam) | `A1-kapandi` | contacts_page_behavior_test `KSI-15 reorder drag persists order without changing primary` [W; gerçek uzun-bas/sürükle onReorder, kalıcı sıra ve primary negatif kontrolü]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| KSI-16 | Kişiler | KANITLI | Yok (kanit tam) | `A1-kapandi` | contacts_page_behavior_test `KSI-01/KSI-16 real page initializes once and renders limit` [W; beş gerçek kayıtla production maksimum metni]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| KSI-17 | Kişiler | DIŞ SİSTEM GEREKİYOR | Play/RevenueCat islemi + fiziksel cihaz | `A5-play` | PLAY_REQUIRED: silme anında gerçek ARMED Check-In/SW oturumu bulunması doğrulanmış Pro entitlement gerektirir [D; K] | ACIK |
+| MAP-01 | Harita | KISMEN KANITLI | fiziksel cihaz + gorsel/manuel kontrol | `A4-fiz` | E4-LOCATION-02: final APK OS location grant ve gercek emulator koordinati 41.00820,28.97840; map_freshness_widget_test [D; W] | ACIK |
+| MAP-02 | Harita | KANITLI | Yok (kanit tam) | `A1-kapandi` | main_navigation_behavior_test `NAV-02: map tab tap activates the production MapPage` (gercek MapPage aktivasyonu + riza SnackBar'i + build-time regresyonu) [W]; map_consent_gate_test [S]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| MAP-03 | Harita | KISMEN KANITLI | repo-ici davranis testi + fiziksel cihaz + gorsel/manuel kontrol | `A4-fiz` | E4-FINAL9-MAP03: APK `6fe2b8dc…`; gerçek izin reddi güvenli fallback ve gerçek location-service-off production diyaloğu; unit testler [D; U] | ACIK |
+| MAP-04 | Harita hata diyaloğu | KISMEN KANITLI | repo-ici davranis testi + fiziksel cihaz | `A4-fiz` | E4-FINAL9-MAP04: Reddet kapattı; Ayarlara Git → android.settings.LOCATION_SOURCE_SETTINGS/SpaActivity [D] | ACIK |
+| MAP-05 | Harita | KANITLI | Yok (kanit tam) | `A1-kapandi` | E4-FINAL8-MAP05: APK `913e4e72…`; gerçek `41.00820,28.97840`; ilk yükleme ve FAB tüm-preflight timeout düzeltmesinden sonra loading'de kalmadı; `stage4-final8-map-initial/map-fab.png/.xml`; location_service_test [D; U] | KAPANDI |
+| MAP-06 | Harita | KANITLI | Yok (kanit tam) | `A1-kapandi` | E4-FINAL8-MAP06: APK `913e4e72…`; gerçek attribution tap → ACTION_VIEW `https://www.openstreetmap.org/copyright` → `org.chromium.webview_shell/.WebViewBrowserActivity`; screenshot + ActivityTaskManager [D] | KAPANDI |
+| MAP-07 | Harita | KISMEN KANITLI | repo-ici davranis testi + fiziksel cihaz + gorsel/manuel kontrol | `A4-fiz` | E4-FINAL9-MAP07: APK `6fe2b8dc…`; canlı OSM PNG+metadata app-support cache'e 22:56 yazıldı; cache/status/volume unit testleri [D; U] | ACIK |
+| MAP-08 | Harita | KANITLI | Yok (kanit tam) | `A1-kapandi` | map_freshness_widget_test [W]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| GCM-01 | Güvenlik geçmişi | KANITLI | Yok (kanit tam) | `A1-kapandi` | safety_timeline_behavior_test `GCM-01/GCM-02/GCM-03 real timeline loads and saves a note` [W; gerçek SafetyTimelineScreen, IO yükleme ve boş durum]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| GCM-02 | Güvenlik geçmişi | KANITLI | Yok (kanit tam) | `A1-kapandi` | safety_timeline_behavior_test `GCM-01/GCM-02/GCM-03 real timeline loads and saves a note` [W; gerçek FAB tap ve production bottom-sheet]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| GCM-03 | Not alt sayfası | KANITLI | Yok (kanit tam) | `A1-kapandi` | safety_timeline_behavior_test `GCM-01/GCM-02/GCM-03 real timeline loads and saves a note` [W; boş submit negatif kontrolü, type, kalıcı kayıt, SnackBar, liste yenileme]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| GCM-04 | Kayıt menüsü | KANITLI | emulator | `A1-kapandi` | E4-FINAL10-GCM04: production timeline notu oluşturuldu; Paylaş gerçek Android ResolverActivity sharesheet'ini doğru hedef/not metniyle açtı (`stage4-final10-note-sharesheet.xml`) [D] | KAPANDI |
+| GCM-05 | Kayıt menüsü | KANITLI | Yok (kanit tam) | `A1-kapandi` | safety_timeline_behavior_test `GCM-05 delete cancel preserves, confirm permanently removes` [W; gerçek menü/dialog, cancel negatif kontrolü, kalıcı delete ve UI refresh]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| GCM-06 | Güvenlik geçmişi | KANITLI | Yok (kanit tam) | `A1-kapandi` | E4-FINAL11-GCM06: ilk 4abe… turunda gerçek PID 5261, timeline ankrajı, Home ve SIGKILL; PID 5676 cold relaunch + PIN sonrası timeline rotası ve aynı üst ankraj geri geldi. Önceki dbae… turunda Home'a düşen production bug reproduce edildi; PIN-sonrası tek-tüketim resume + kalıcı kimlik ankrajı minimal fix, 33/33 regression (`stage4-4abe-gcm06-*`) [D; W; U] | KAPANDI |
+| PIL-01 | Pil sihirbazı | KISMEN KANITLI | fiziksel cihaz + gorsel/manuel kontrol | `A4-fiz` | E4-READINESS-02: disclosure → gercek REQUEST_IGNORE_BATTERY_OPTIMIZATIONS dialogu → deny/resume; battery_wizard_onboarding_test [D; S] | ACIK |
+| PIL-02 | Pil sihirbazı | KANITLI | Yok (kanit tam) | `A1-kapandi` | battery_oem_behavior_test `PIL-02/OEM-03/OEM-04: wizard opens real OEM guide, records a step and finishes` [W]; gercek-yol: Evet | KAPANDI |
+| PIL-03 | Pil sihirbazı | KISMEN KANITLI | repo-ici davranis testi + fiziksel cihaz | `A4-fiz` | E4-FINAL9-PIL03: APK `6fe2b8dc…`; Pil Ayarlarını Aç → Android App battery usage listesi, KoruBeni görünür [D] | ACIK |
+| PIL-04 | Pil sihirbazı | KANITLI | Yok (kanit tam) | `A1-kapandi` | battery_oem_behavior_test `PIL-04: skip persists dismissal/snooze and pops the wizard` (pop + dismissal count + snooze persistence); battery_wizard_onboarding_test [W; S]; gercek-yol: Evet | KAPANDI |
+| PIL-05 | Pil sihirbazı | KANITLI | Yok (kanit tam) | `A1-kapandi` | battery_oem_behavior_test `PIL-05: already-exempt done action marks seen and pops` [W; gerçek production widget, durum sınırı enjeksiyonu, tap, kalıcı seen ve pop]; gercek-yol: Evet | KAPANDI |
+| PIL-06 | Pil sihirbazı | KISMEN KANITLI | repo-ici davranis testi + fiziksel cihaz + gorsel/manuel kontrol | `A4-fiz` | E4-FINAL9-PIL06: gerçek deviceidle whitelist değişimi + resume → production `Harika!`/`Tamamlandı`; whitelist test sonunda kaldırıldı [D] | ACIK |
 | OEM-01 | OEM rehberi | KISMEN KANITLI | repo-ici davranis testi + emulator + fiziksel cihaz + gorsel/manuel kontrol | `A4-fiz` | oem_background_guide_service_test; turkish_casing_test [U]; gercek-yol: Kısmen | ACIK |
 | OEM-02 | OEM rehberi | DIŞ SİSTEM GEREKİYOR | repo-ici davranis testi + emulator + fiziksel cihaz | `A4-fiz` | oem_background_guide_service_test [U]; gercek-yol: Kısmen | ACIK |
-| OEM-03 | OEM rehberi | KISMEN KANITLI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | oem_background_guide_service_test [U]; gercek-yol: Kısmen | ACIK |
-| OEM-04 | OEM rehberi | DOĞRULANMADI | repo-ici davranis testi | `A2-repo` | test yok; gercek-yol: Hayır | ACIK |
-| BLK-01 | Bildirim kategorileri | KISMEN KANITLI | repo-ici davranis testi + emulator + fiziksel cihaz + gorsel/manuel kontrol | `A4-fiz` | notification_categories_test (12) [W]; gercek-yol: Evet (kanal mock) | ACIK |
-| BLK-02 | Bildirim kategorileri | KISMEN KANITLI | repo-ici davranis testi + emulator + fiziksel cihaz | `A4-fiz` | notification_categories_test; notification_settings_row_test [W; S]; gercek-yol: Kısmen | ACIK |
-| AYR-01 | Ayarlar | DOĞRULANMADI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | user_name_display_test [S]; gercek-yol: Hayır | ACIK |
+| OEM-03 | OEM rehberi | KANITLI | Yok (kanit tam) | `A1-kapandi` | battery_oem_behavior_test `PIL-02/OEM-03/OEM-04: wizard opens real OEM guide, records a step and finishes` (real tap + UI transition + durable step); oem_background_guide_service_test [W; U]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| OEM-04 | OEM rehberi | KANITLI | Yok (kanit tam) | `A1-kapandi` | battery_oem_behavior_test `PIL-02/OEM-03/OEM-04: wizard opens real OEM guide, records a step and finishes` (durable completion + pop) [W]; gercek-yol: Evet | KAPANDI |
+| BLK-01 | Bildirim kategorileri | KISMEN KANITLI | repo-ici davranis testi + fiziksel cihaz + gorsel/manuel kontrol | `A4-fiz` | E4-FINAL9-BLK01: production dört satır gerçek Android durumunu `Gösterilecek` gösterdi; dumpsys importance emergency=4/general=3/service=2; widget testleri [D; W] | ACIK |
+| BLK-02 | Bildirim kategorileri | KISMEN KANITLI | repo-ici davranis testi + fiziksel cihaz | `A4-fiz` | E4-FINAL9-BLK02: Acil satırı → gerçek Android `Acil Bildirimler` channel SubSettings; widget/static testler [D; W; S] | ACIK |
+| AYR-01 | Ayarlar | KANITLI | Yok (kanit tam) | `A1-kapandi` | settings_page_behavior_test `AYR-01/AYR-03/AYR-04: settings opens real destination surfaces`; user_name_display_test [W; S]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
 | AYR-02 | Ayarlar | DOĞRULANMADI | repo-ici davranis testi + Play/RevenueCat islemi + gorsel/manuel kontrol | `A5-play` | premium_gating_contract_test [S]; gercek-yol: Hayır | ACIK |
-| AYR-03 | Ayarlar | DOĞRULANMADI | repo-ici davranis testi | `A2-repo` | notification_settings_row_test [S]; gercek-yol: Hayır | ACIK |
-| AYR-04 | Ayarlar | DOĞRULANMADI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | test yok; gercek-yol: Hayır | ACIK |
-| AYR-05 | Ayarlar | DOĞRULANMADI | repo-ici davranis testi | `A2-repo` | oem_background_guide_source_test [S]; gercek-yol: Hayır | ACIK |
-| AYR-06 | Ayarlar | DOĞRULANMADI | repo-ici davranis testi | `A2-repo` | oem_background_guide_source_test [S]; gercek-yol: Hayır | ACIK |
-| AYR-07 | Ayarlar | DOĞRULANMADI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | touch_target_minimum_size_test [S]; gercek-yol: Hayır | ACIK |
+| AYR-03 | Ayarlar | KANITLI | Yok (kanit tam) | `A1-kapandi` | settings_page_behavior_test `AYR-01/AYR-03/AYR-04: settings opens real destination surfaces` (production NotificationCategoriesScreen; Android bildirim siniri kontrollu mock) [W]; gercek-yol: Evet | KAPANDI |
+| AYR-04 | Ayarlar | KANITLI | Yok (kanit tam) | `A1-kapandi` | settings_page_behavior_test `AYR-01/AYR-03/AYR-04: settings opens real destination surfaces` (production PIN bottom sheet) [W]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| AYR-05 | Ayarlar | KANITLI | Yok (kanit tam) | `A1-kapandi` | settings_page_behavior_test `AYR-05/AYR-06/AYR-07: Android rows navigate and sound tap persists state` [W]; gercek-yol: Evet | KAPANDI |
+| AYR-06 | Ayarlar | KANITLI | Yok (kanit tam) | `A1-kapandi` | settings_page_behavior_test `AYR-05/AYR-06/AYR-07: Android rows navigate and sound tap persists state` [W]; gercek-yol: Evet | KAPANDI |
+| AYR-07 | Ayarlar | KANITLI | Yok (kanit tam) | `A1-kapandi` | settings_page_behavior_test `AYR-05/AYR-06/AYR-07: Android rows navigate and sound tap persists state` (Switch tap + provider + pref); touch_target_minimum_size_test [W; S]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
 | AYR-08 | Ayarlar | KISMEN KANITLI | repo-ici davranis testi + emulator + fiziksel cihaz + Play/RevenueCat islemi + gorsel/manuel kontrol | `A5-play` | volume_trigger_service_behavior_test (mutasyonla oldurulen davranis testi); VolumeButtonDetectorTest (4 Robolectric) [U; K]; gercek-yol: Evet (Dart + JVM); cihaz uctan uca dogrulamasi **Asama 6 / R1 (Play+RevenueCat yetkisi)** bekliyor | ACIK |
-| AYR-09 | Ayarlar | DOĞRULANMADI | repo-ici davranis testi | `A2-repo` | test yok; gercek-yol: Hayır | ACIK |
-| AYR-10 | Ayarlar | DOĞRULANMADI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | test yok; gercek-yol: Hayır | ACIK |
-| AYR-11 | Ayarlar | DOĞRULANMADI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | test yok; gercek-yol: Hayır | ACIK |
-| AYR-12 | Ayarlar | DIŞ SİSTEM GEREKİYOR | repo-ici davranis testi + emulator | `A3-emu` | test yok; gercek-yol: Hayır | ACIK |
-| AYR-13 | Ayarlar | DOĞRULANMADI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | test yok; gercek-yol: Hayır | ACIK |
-| AYR-14 | Ayarlar | DIŞ SİSTEM GEREKİYOR | repo-ici davranis testi + emulator | `A3-emu` | test yok; gercek-yol: Hayır | ACIK |
+| AYR-09 | Ayarlar | KANITLI | Yok (kanit tam) | `A1-kapandi` | settings_page_behavior_test `AYR-09/AYR-10/AYR-11/AYR-13/AYR-16: legal, details and reset routes are wired` [W]; gercek-yol: Evet | KAPANDI |
+| AYR-10 | Ayarlar | KANITLI | Yok (kanit tam) | `A1-kapandi` | settings_page_behavior_test `AYR-09/AYR-10/AYR-11/AYR-13/AYR-16: legal, details and reset routes are wired` (sectionKey + surum mock) [W]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| AYR-11 | Ayarlar | KANITLI | Yok (kanit tam) | `A1-kapandi` | settings_page_behavior_test `AYR-09/AYR-10/AYR-11/AYR-13/AYR-16: legal, details and reset routes are wired` [W]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| AYR-12 | Ayarlar | KANITLI | Yok (kanit tam) | `A1-kapandi` | E4-FINAL9-AYR12: APK `6fe2b8dc…`; production tap → ACTION_VIEW gizlilik URL'si → WebViewBrowserActivity [D] | KAPANDI |
+| AYR-13 | Ayarlar | KANITLI | Yok (kanit tam) | `A1-kapandi` | settings_page_behavior_test `AYR-09/AYR-10/AYR-11/AYR-13/AYR-16: legal, details and reset routes are wired` [W]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| AYR-14 | Ayarlar | KANITLI | Yok (kanit tam) | `A1-kapandi` | E4-FINAL9-AYR14: APK `6fe2b8dc…`; production tap → Android ChooserActivity; paylaşım metni ve Play URL'si gerçek Sharesheet'te [D] | KAPANDI |
 | AYR-15 | Ayarlar | DIŞ SİSTEM GEREKİYOR | repo-ici davranis testi + emulator + Play/RevenueCat islemi | `A5-play` | test yok; gercek-yol: Hayır | ACIK |
-| AYR-16 | Ayarlar | DOĞRULANMADI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | test yok; gercek-yol: Hayır | ACIK |
-| AYR-17 | Detay sayfası | DOĞRULANMADI | repo-ici davranis testi | `A2-repo` | test yok; gercek-yol: Hayır | ACIK |
-| AYR-18 | Detay sayfası (gizlilik) | DOĞRULANMADI | repo-ici davranis testi + emulator | `A3-emu` | sensitive_temp_file_service_test [S]; gercek-yol: Hayır | ACIK |
-| PRF-01 | Profil | DOĞRULANMADI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | user_name_display_test [S]; gercek-yol: Hayır | ACIK |
-| PRF-02 | Profil | DOĞRULANMADI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | test yok; gercek-yol: Hayır | ACIK |
-| PRF-03 | Profil | DOĞRULANMADI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | test yok; gercek-yol: Hayır | ACIK |
-| PRF-04 | Profil | DOĞRULANMADI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | test yok; gercek-yol: Hayır | ACIK |
-| PRF-05 | Profil düzenle | DOĞRULANMADI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | edit_profile_screen_test; profile_email_removal_test [S; U]; gercek-yol: Hayır | ACIK |
-| PCH-01 | PIN değiştir | DOĞRULANMADI | repo-ici davranis testi | `A2-repo` | test yok; gercek-yol: Hayır | ACIK |
-| PCH-02 | PIN değiştir | DOĞRULANMADI | repo-ici davranis testi | `A2-repo` | test yok; gercek-yol: Hayır | ACIK |
-| PCH-03 | PIN değiştir | KISMEN KANITLI | repo-ici davranis testi | `A2-repo` | pin_change_validation_test [U]; gercek-yol: Kısmen (yalnız doğrulayıcı) | ACIK |
-| PCH-04 | PIN değiştir | KISMEN KANITLI | repo-ici davranis testi | `A2-repo` | pin_verification_service_test [U]; gercek-yol: Kısmen | ACIK |
-| SIF-01 | Sıfırlama diyaloğu | DOĞRULANMADI | repo-ici davranis testi | `A2-repo` | test yok; gercek-yol: Hayır | ACIK |
-| SIF-02 | Sıfırlama diyaloğu | KISMEN KANITLI | repo-ici davranis testi + emulator + gorsel/manuel kontrol | `A3-emu` | app_reset_native_prefs_test; contact_service_app_reset_cache_test; sensitive_action_pin_gate_test; app_reset_provider_state_test; safety_session_activity_probe_test (panik oturumu artik engelliyor) [U; W]; gercek-yol: Kısmen | ACIK |
-| YSL-01 | Yasal ayarlar | DOĞRULANMADI | repo-ici davranis testi | `A2-repo` | test yok; gercek-yol: Hayır | ACIK |
-| YSL-02 | Yasal ayarlar | DOĞRULANMADI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | test yok; gercek-yol: Hayır | ACIK |
-| YSL-03 | Yasal ayarlar | DOĞRULANMADI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | release_readiness_policy_test [S]; gercek-yol: Hayır | ACIK |
-| YSL-04 | Yasal ayarlar | DIŞ SİSTEM GEREKİYOR | repo-ici davranis testi + emulator | `A3-emu` | phase5 live-legal-url evidence (07-18) [D]; gercek-yol: Kısmen | ACIK |
-| YSL-05 | Yasal ayarlar | DOĞRULANMADI | repo-ici davranis testi | `A2-repo` | test yok; gercek-yol: Hayır | ACIK |
-| YSL-06 | Rıza yönetimi | DOĞRULANMADI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | touch_target_minimum_size_test; D 2026-08-14 [S; D]; gercek-yol: Hayır | ACIK |
-| YSL-07 | Geri çekme onayı | DOĞRULANMADI | repo-ici davranis testi | `A2-repo` | test yok; gercek-yol: Hayır | ACIK |
-| YSL-08 | Rıza yönetimi | DOĞRULANMADI | repo-ici davranis testi | `A2-repo` | test yok; gercek-yol: Hayır | ACIK |
-| YSL-09 | ToS / KVKK salt okunur | DOĞRULANMADI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | test yok; gercek-yol: Hayır | ACIK |
+| AYR-16 | Ayarlar | KANITLI | Yok (kanit tam) | `A1-kapandi` | settings_page_behavior_test `AYR-09/AYR-10/AYR-11/AYR-13/AYR-16: legal, details and reset routes are wired` (production reset dialog + cancel) [W]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| AYR-17 | Detay sayfası | KANITLI | Yok (kanit tam) | `A1-kapandi` | profile_behavior_test `PRF-03/AYR-17: notifications opens production detail and its back button pops` [W]; gercek-yol: Evet | KAPANDI |
+| AYR-18 | Detay sayfası (gizlilik) | KANITLI | emulator | `A1-kapandi` | E4-FINAL10-EXPORT: production Verilerimi İndir → yerel PIN 2689 → JSON export → gerçek Android sharesheet; dönüşte cache'te JSON kalmadı (`stage4-final10-export-*.xml`) [D] | KAPANDI |
+| PRF-01 | Profil | KANITLI | Yok (kanit tam) | `A1-kapandi` | profile_behavior_test `PRF-01/PRF-05: real profile route validates, saves, pops and refreshes the name` [W]; user_name_display_test [S]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| PRF-02 | Profil | KANITLI | Yok (kanit tam) | `A1-kapandi` | profile_behavior_test `PRF-02: security row opens the real PIN change bottom sheet` [W]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| PRF-03 | Profil | KANITLI | Yok (kanit tam) | `A1-kapandi` | profile_behavior_test `PRF-03/AYR-17: notifications opens production detail and its back button pops` [W]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| PRF-04 | Profil | KANITLI | Yok (kanit tam) | `A1-kapandi` | profile_behavior_test `PRF-04/SIF-01: reset dialog cancel closes without deleting data` [W]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| PRF-05 | Profil düzenle | KANITLI | Yok (kanit tam) | `A1-kapandi` | profile_behavior_test `PRF-01/PRF-05: real profile route validates, saves, pops and refreshes the name` (validation + trim + persist + pop + refresh); edit_profile_screen_test; profile_email_removal_test [W; S; U]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| PCH-01 | PIN değiştir | KANITLI | Yok (kanit tam) | `A1-kapandi` | pin_settings_behavior_test `PCH-01: wrong current PIN stays open and reports the error` [W]; gercek-yol: Evet | KAPANDI |
+| PCH-02 | PIN değiştir | KANITLI | Yok (kanit tam) | `A1-kapandi` | pin_settings_behavior_test `PCH-02: absent and unreadable PIN have distinct fail-closed copy` [W]; gercek-yol: Evet | KAPANDI |
+| PCH-03 | PIN değiştir | KANITLI | Yok (kanit tam) | `A1-kapandi` | pin_settings_behavior_test `PCH-03: invalid, weak and reused new PINs are rejected`; pin_change_validation_test [W; U]; gercek-yol: Evet | KAPANDI |
+| PCH-04 | PIN değiştir | KANITLI | Yok (kanit tam) | `A1-kapandi` | pin_settings_behavior_test `PCH-04: successful update persists, logs, pops and confirms` (controller lifecycle regression dahil); pin_verification_service_test [W; U]; gercek-yol: Evet | KAPANDI |
+| SIF-01 | Sıfırlama diyaloğu | KANITLI | Yok (kanit tam) | `A1-kapandi` | profile_behavior_test `PRF-04/SIF-01: reset dialog cancel closes without deleting data` [W]; gercek-yol: Evet | KAPANDI |
+| SIF-02 | Sıfırlama diyaloğu | KANITLI | Yok (kanit tam) | `A1-kapandi` | E4-RESET-02: iki onay + PIN + native/local silme + temiz consent ve relaunch; repo testleri [D; U; W] | KAPANDI |
+| YSL-01 | Yasal ayarlar | KANITLI | Yok (kanit tam) | `A1-kapandi` | legal_settings_behavior_test `YSL-01: app bar back pops the real legal settings route` [W]; gercek-yol: Evet | KAPANDI |
+| YSL-02 | Yasal ayarlar | KANITLI | Yok (kanit tam) | `A1-kapandi` | legal_settings_behavior_test `YSL-02/YSL-09: terms tile opens read-only production screen and back returns` [W]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| YSL-03 | Yasal ayarlar | KANITLI | Yok (kanit tam) | `A1-kapandi` | legal_settings_behavior_test `YSL-03/YSL-09: KVKK tile opens read-only production screen and back returns` [W]; release_readiness_policy_test [S]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| YSL-04 | Yasal ayarlar | KANITLI | Yok (kanit tam) | `A1-kapandi` | E4-FINAL9-YSL04: APK `6fe2b8dc…`; Yasal ekran tap → gerçek ACTION_VIEW gizlilik URL'si [D] | KAPANDI |
+| YSL-05 | Yasal ayarlar | KANITLI | Yok (kanit tam) | `A1-kapandi` | legal_settings_behavior_test `YSL-05/YSL-08: consent tile opens production screen and back returns` [W]; gercek-yol: Evet | KAPANDI |
+| YSL-06 | Rıza yönetimi | KANITLI | Yok (kanit tam) | `A1-kapandi` | consent_management_behavior_test `YSL-06: tapping a real production switch grants and persists consent preference`; `YSL-06/YSL-07: confirmed revoke updates state and preference`; `YSL-06: storage rejection restores state and shows retryable error`; `YSL-06: an in-flight write blocks rapid duplicate taps` [W]; touch_target_minimum_size_test; D 2026-08-14 [S; D]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| YSL-07 | Geri çekme onayı | KANITLI | Yok (kanit tam) | `A1-kapandi` | consent_management_behavior_test `YSL-07: revoke cancel keeps consent and performs no write`; `YSL-06/YSL-07: confirmed revoke updates state and preference` [W]; gercek-yol: Evet | KAPANDI |
+| YSL-08 | Rıza yönetimi | KANITLI | Yok (kanit tam) | `A1-kapandi` | legal_settings_behavior_test `YSL-05/YSL-08: consent tile opens production screen and back returns` [W]; gercek-yol: Evet | KAPANDI |
+| YSL-09 | ToS / KVKK salt okunur | KANITLI | Yok (kanit tam) | `A1-kapandi` | legal_settings_behavior_test `YSL-02/YSL-09: terms tile opens read-only production screen and back returns`; `YSL-03/YSL-09: KVKK tile opens read-only production screen and back returns` [W]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
 | YSL-10 | ToS / KVKK | ULAŞILAMAZ / ÖLÜ | Urun karari: sil ya da bagla (kanit degil karar) | `A7-olu` | test yok; gercek-yol: Hayır | ACIK |
-| YSL-11 | Yasal ayarlar | DOĞRULANMADI | repo-ici davranis testi | `A2-repo` | test yok; gercek-yol: Hayır | ACIK |
-| YSL-12 | Yasal ayarlar | DOĞRULANMADI | repo-ici davranis testi | `A2-repo` | test yok; gercek-yol: Hayır | ACIK |
-| YSL-13 | Yasal ayarlar | DIŞ SİSTEM GEREKİYOR | repo-ici davranis testi + emulator | `A3-emu` | test yok; gercek-yol: Hayır | ACIK |
-| EXP-01 | Veri dışa aktarma | DOĞRULANMADI | repo-ici davranis testi | `A2-repo` | test yok; gercek-yol: Hayır | ACIK |
-| EXP-02 | Veri dışa aktarma | KISMEN KANITLI | repo-ici davranis testi + emulator | `A3-emu` | sensitive_action_pin_gate_test; profile_email_removal_test; sensitive_temp_file_service_test; legal_data_export_claims_test [W; U; S]; gercek-yol: Kısmen | ACIK |
-| DEL-01 | Veri silme | DOĞRULANMADI | repo-ici davranis testi | `A2-repo` | test yok; gercek-yol: Hayır | ACIK |
-| DEL-02 | Veri silme | KISMEN KANITLI | repo-ici davranis testi + gorsel/manuel kontrol | `A2-repo` | subscription_deletion_copy_test [W]; gercek-yol: Kısmen (not bileşeni gerçek) | ACIK |
-| DEL-03 | Silme onayı | DOĞRULANMADI | repo-ici davranis testi | `A2-repo` | test yok; gercek-yol: Hayır | ACIK |
+| YSL-11 | Yasal ayarlar | KANITLI | Yok (kanit tam) | `A1-kapandi` | legal_settings_behavior_test `YSL-11/EXP-01: export tile opens production screen and back returns` [W]; gercek-yol: Evet | KAPANDI |
+| YSL-12 | Yasal ayarlar | KANITLI | Yok (kanit tam) | `A1-kapandi` | legal_settings_behavior_test `YSL-12/DEL-01: delete tile opens production screen and back returns` [W]; gercek-yol: Evet | KAPANDI |
+| YSL-13 | Yasal ayarlar | KANITLI | Yok (kanit tam) | `A1-kapandi` | E4-FINAL9-YSL13: APK `6fe2b8dc…`; mailto resolver yokken Android result=-91 ve production fallback SnackBar [D] | KAPANDI |
+| EXP-01 | Veri dışa aktarma | KANITLI | Yok (kanit tam) | `A1-kapandi` | legal_settings_behavior_test `YSL-11/EXP-01: export tile opens production screen and back returns` [W]; gercek-yol: Evet | KAPANDI |
+| EXP-02 | Veri dışa aktarma | KANITLI | emulator | `A1-kapandi` | E4-FINAL10-EXPORT: gerçek PIN kapısı, `korubeni_data_export_*.json` sharesheet ve geçici dosya cleanup aynı production zincirinde geçti [D; W; U] | KAPANDI |
+| DEL-01 | Veri silme | KANITLI | Yok (kanit tam) | `A1-kapandi` | legal_settings_behavior_test `YSL-12/DEL-01: delete tile opens production screen and back returns` [W]; gercek-yol: Evet | KAPANDI |
+| DEL-02 | Veri silme | KANITLI | Yok (kanit tam) | `A1-kapandi` | data_deletion_behavior_test `DEL-02/DEL-03: first deletion confirmation can be cancelled`; `DEL-02/DEL-03: continuing first confirmation opens the production reset confirmation` [W]; subscription_deletion_copy_test [W]; gercek-yol: Evet; Asama 7 emulator/production-widget gorsel dogrulamasi: `finalization-stage7-2026-09-29.md` | KAPANDI |
+| DEL-03 | Silme onayı | KANITLI | Yok (kanit tam) | `A1-kapandi` | data_deletion_behavior_test `DEL-02/DEL-03: first deletion confirmation can be cancelled`; `DEL-02/DEL-03: continuing first confirmation opens the production reset confirmation` [W]; gercek-yol: Evet | KAPANDI |
 | DEL-04 | Abonelik notu | DIŞ SİSTEM GEREKİYOR | repo-ici davranis testi + emulator + Play/RevenueCat islemi | `A5-play` | subscription_deletion_copy_test [W]; gercek-yol: Kısmen (tap yok) | ACIK |
 | ABN-01 | Paywall | KISMEN KANITLI | repo-ici davranis testi + Play/RevenueCat islemi + gorsel/manuel kontrol | `A5-play` | paywall_render_test [W]; gercek-yol: Evet (sahte provider) | ACIK |
 | ABN-02 | Paywall | DIŞ SİSTEM GEREKİYOR | repo-ici davranis testi + Play/RevenueCat islemi | `A5-play` | test yok; gercek-yol: Hayır | ACIK |
 | ABN-03 | Paywall | DIŞ SİSTEM GEREKİYOR | repo-ici davranis testi + emulator + fiziksel cihaz + Play/RevenueCat islemi + gorsel/manuel kontrol | `A5-play` | paywall_render_test; revenuecat_subscription_contract_test [W; S]; gercek-yol: Kısmen | ACIK |
 | ABN-04 | Paywall | DIŞ SİSTEM GEREKİYOR | repo-ici davranis testi + emulator + fiziksel cihaz + Play/RevenueCat islemi + gorsel/manuel kontrol | `A5-play` | paywall_render_test [W]; gercek-yol: Kısmen | ACIK |
 | ABN-05 | Paywall | DIŞ SİSTEM GEREKİYOR | repo-ici davranis testi + emulator + fiziksel cihaz + Play/RevenueCat islemi | `A5-play` | paywall_render_test [W]; gercek-yol: Kısmen | ACIK |
-| ABN-06 | Paywall | DIŞ SİSTEM GEREKİYOR | repo-ici davranis testi + emulator | `A3-emu` | paywall_render_test (görünürlük) [W]; gercek-yol: Kısmen | ACIK |
+| ABN-06 | Paywall | KANITLI | Yok (kanit tam) | `A1-kapandi` | E4-FINAL9-ABN06: APK `6fe2b8dc…`; paywall privacy/terms/aydınlatma linklerinin üçü doğru URL ile gerçek ACTION_VIEW açtı; paywall_render_test [D; W] | KAPANDI |
 | ABN-07 | Abonelik yönetimi | DIŞ SİSTEM GEREKİYOR | repo-ici davranis testi + emulator + fiziksel cihaz + Play/RevenueCat islemi | `A5-play` | test yok; gercek-yol: Hayır | ACIK |
 | ABN-08 | Abonelik yönetimi | DOĞRULANMADI | repo-ici davranis testi + Play/RevenueCat islemi | `A5-play` | test yok; gercek-yol: Hayır | ACIK |
 | ABN-09 | Abonelik yönetimi | DIŞ SİSTEM GEREKİYOR | repo-ici davranis testi + emulator + fiziksel cihaz + Play/RevenueCat islemi | `A5-play` | test yok; gercek-yol: Hayır | ACIK |
@@ -473,29 +563,29 @@ cihaz ucu Asama 6'ya, R1'in arkasina tasindi.
 | ABN-11 | Yetki modeli | KISMEN KANITLI | repo-ici davranis testi + Play/RevenueCat islemi | `A5-play` | subscription_access_state tests (13 dosya); offline_grace_expiry_test; offline_sos_entitlement_policy_test [U]; gercek-yol: Evet (mantık) | ACIK |
 | ABN-12 | Yetki | DIŞ SİSTEM GEREKİYOR | repo-ici davranis testi + emulator + fiziksel cihaz + Play/RevenueCat islemi | `A5-play` | revenue_cat_service_test; revenue_cat_evidence_persistence_test [U]; gercek-yol: Hayır | ACIK |
 | ABN-13 | Paywall fayda listesi / mağaza metni | URUN KARARI ALINDI (kaldirildi) | Yok (karar uygulandi) | `A1-kapandi` | advancedAutomation enum + matris girdisi + proBenefitKeys maddesi ve iki magaza metni kaldirildi; store_release_docs_test calisma-zamani matris paritesi [S] | KAPANDI |
-| PRM-01 | İzin açıklama diyaloğu (prominent disclosure) | DOĞRULANMADI | repo-ici davranis testi + emulator + gorsel/manuel kontrol | `A3-emu` | test yok; gercek-yol: Hayır | ACIK |
-| PRM-02 | İzin açıklama diyaloğu | DOĞRULANMADI | repo-ici davranis testi + emulator + fiziksel cihaz + gorsel/manuel kontrol | `A4-fiz` | test yok; gercek-yol: Hayır | ACIK |
-| PRM-03 | İzin reddedildi diyaloğu | DOĞRULANMADI | repo-ici davranis testi + emulator | `A3-emu` | test yok; gercek-yol: Hayır | ACIK |
-| PRM-04 | İzin reddedildi diyaloğu | DOĞRULANMADI | repo-ici davranis testi + emulator + fiziksel cihaz | `A4-fiz` | test yok; gercek-yol: Hayır | ACIK |
-| HATA-01 | Çapraz | KISMEN KANITLI | repo-ici davranis testi + emulator + fiziksel cihaz + gorsel/manuel kontrol | `A4-fiz` | panic_arm_policy_test; countdown_dispose_lifecycle_test [U; W]; gercek-yol: Kısmen | ACIK |
-| HATA-02 | Çapraz | KISMEN KANITLI | repo-ici davranis testi + emulator + fiziksel cihaz + gorsel/manuel kontrol | `A4-fiz` | notification_categories_test; EmergencySessionCoordinatorTest [W; K]; gercek-yol: Kısmen | ACIK |
-| HATA-03 | Çapraz | KISMEN KANITLI | repo-ici davranis testi + emulator + fiziksel cihaz + gorsel/manuel kontrol | `A4-fiz` | app_bootstrap_service_test; bootstrap_recovery_screen_test (gercek kurtarma ekrani: yeniden dene, yazarak onaylanan sifirlama, aktif oturum engeli) [U; W]; gercek-yol: Evet (Flutter katmani) | ACIK |
-| HATA-04 | Çapraz | KISMEN KANITLI | repo-ici davranis testi + emulator | `A3-emu` | pin_verification_service_test; sensitive_action_pin_gate_test [U; W]; gercek-yol: Kısmen | ACIK |
-| HATA-05 | Çapraz | KISMEN KANITLI | repo-ici davranis testi | `A2-repo` | unified_consent_retry_test; atomic storage tests yok [W]; gercek-yol: Kısmen | ACIK |
-| HATA-06 | Çapraz | KISMEN KANITLI | repo-ici davranis testi + emulator + gorsel/manuel kontrol | `A3-emu` | DeviceProtectedEmergencySessionStoreTest; check_in_service_behavior_matrix_test [K; U]; gercek-yol: Kısmen | ACIK |
+| PRM-01 | İzin açıklama diyaloğu (prominent disclosure) | KANITLI | Yok (kanit tam) | `A1-kapandi` | E4-FINAL4-PRM01: disclosure `Reddet`; OS izin penceresi açılmadı, fine/coarse false [D] | KAPANDI |
+| PRM-02 | İzin açıklama diyaloğu | KISMEN KANITLI | fiziksel cihaz + gorsel/manuel kontrol | `A4-fiz` | E4-PERMISSION-02/E4-LOCATION-02: gercek kabul → Android location/notification izin UI [D] | ACIK |
+| PRM-03 | İzin reddedildi diyaloğu | KANITLI | Yok (kanit tam) | `A1-kapandi` | E4-FINAL4-PRM03: iki Android reddi -> USER_FIXED; `Reddet` kapattı, izin false [D] | KAPANDI |
+| PRM-04 | İzin reddedildi diyaloğu | KANITLI | Yok (kanit tam) | `A1-kapandi` | E4-FINAL4-PRM04: `Ayarlara Git` -> APPLICATION_DETAILS_SETTINGS/SpaActivity; `stage4-final4-location-permission-settings.png` [D] | KAPANDI |
+| HATA-01 | Çapraz | DIŞ SİSTEM GEREKİYOR | Play/RevenueCat islemi + fiziksel cihaz + gorsel/manuel kontrol | `A5-play` | PLAY_REQUIRED: CALL_PHONE reddinin gerçek panic/Check-In sonucu production Pro route'larından doğar; bağımsız OS izin durumu emulator'da ölçüldü [D; U] | ACIK |
+| HATA-02 | Çapraz | DIŞ SİSTEM GEREKİYOR | Play/RevenueCat islemi + fiziksel cihaz + gorsel/manuel kontrol | `A5-play` | PLAY_REQUIRED: bildirim reddinin gerçek Check-In/SW/panic sonucunu üretmek production Pro session gerektirir; bağımsız permission/channel UI daha önce emulator'da kanıtlandı [D; K] | ACIK |
+| HATA-03 | Çapraz | KISMEN KANITLI | fiziksel cihaz + gorsel/manuel kontrol | `A4-fiz` | PHYSICAL_ONLY: bootstrap kurtarma UI/yeniden dene/sıfırlama gerçek widget yolunda kanıtlı; kalan üretim sınırı hardware-backed Keystore'un gerçek cihazda okunamamasıdır, emulator fault injection fiziksel kanıt değildir [U; W] | ACIK |
+| HATA-04 | Çapraz | KISMEN KANITLI | fiziksel cihaz | `A4-fiz` | PHYSICAL_ONLY: runtime fail-closed PIN/gate yüzeyleri gerçek widget testlerinde kanıtlı; kalan gerçek sınır hardware-backed secure-storage arızasıdır ve sağlıklı emulator'da kullanıcı yoluyla üretilemez [U; W] | ACIK |
+| HATA-05 | Çapraz | KANITLI | Yok (kanit tam) | `A1-kapandi` | unified_consent_retry_test [W; gerçek production rıza ekranı, 16 commit sınırında false/throw, seçimleri koruma ve kullanıcı retry]; consent_manager_persist_failure_test; atomic_storage_service_test [U; string/int/bool reddedilen commit rollback, typed backup recovery ve negatif dal kanıtı]; gercek-yol: Evet | KAPANDI |
+| HATA-06 | Çapraz | DIŞ SİSTEM GEREKİYOR | Play/RevenueCat islemi + gorsel/manuel kontrol | `A5-play` | PLAY_REQUIRED: gerçek bozuk native session, production'da önce Pro safety session arm edilmiş olmasını gerektirir; depoya test enjeksiyonu kullanıcı zinciri sayılmaz [D; K] | ACIK |
 | HATA-07 | Çapraz | KANITLI | Yok (kanit tam) | `A1-kapandi` | emergency_platform_typed_contract_test; emergency_readiness_behavior_test [U]; gercek-yol: Evet | KAPANDI |
 | HATA-08 | Çapraz | KISMEN KANITLI | repo-ici davranis testi + emulator + fiziksel cihaz + Play/RevenueCat islemi + gorsel/manuel kontrol | `A5-play` | connectivity_service_test; offline_sos_entitlement_policy_test; D 2026-08-14 perf (ağ) [U; D]; gercek-yol: Kısmen | ACIK |
 | HATA-09 | Çapraz | DIŞ SİSTEM GEREKİYOR | repo-ici davranis testi + emulator + fiziksel cihaz + Play/RevenueCat islemi | `A5-play` | subscription_provider_access_test [U]; gercek-yol: Kısmen | ACIK |
-| HATA-10 | Çapraz | KISMEN KANITLI | repo-ici davranis testi + emulator + fiziksel cihaz + gorsel/manuel kontrol | `A4-fiz` | gps_disabled_test; permission_denied_test; location_service_test [U]; gercek-yol: Kısmen | ACIK |
+| HATA-10 | Çapraz | KISMEN KANITLI | fiziksel cihaz + gorsel/manuel kontrol | `A4-fiz` | E4-FINAL9-MAP03/04: production location consent+permission ile Android service gerçek kapatıldı; `Konum Servisi Kapalı`, fallback ve gerçek LOCATION_SOURCE_SETTINGS eylemi geçti; dbae294b… negatif kontrolde onay yokken sahte başarı yerine `Konum alınamadı`/rıza blok yüzeyi kaldı [D; U] | ACIK |
 | HATA-11 | Çapraz | DOĞRULANMADI | repo-ici davranis testi + emulator + fiziksel cihaz + gorsel/manuel kontrol | `A4-fiz` | EmergencyPlatformReadinessTest [K]; gercek-yol: Kısmen | ACIK |
-| HATA-12 | Çapraz | KISMEN KANITLI | repo-ici davranis testi + emulator + gorsel/manuel kontrol | `A3-emu` | app_reset_provider_state_test (gercek ContactsProvider; silme sonrasi diriltme denemesi ve resetAll hata yolu dahil) [U]; gercek-yol: Evet (Dart katmani); UI dogrulamasi ACIK | ACIK |
-| HATA-13 | Çapraz | KISMEN KANITLI | repo-ici davranis testi + emulator + fiziksel cihaz | `A4-fiz` | EmergencySessionCoordinatorTest; D 2026-08-14 [K; D]; gercek-yol: Kısmen | ACIK |
-| HATA-14 | Çapraz | KISMEN KANITLI | repo-ici davranis testi + emulator + fiziksel cihaz + gorsel/manuel kontrol | `A4-fiz` | NTV-09 kanıtları [K; I; D]; gercek-yol: Kısmen — force-stop yarisi ACIK, **Asama 5 / fiziksel cihaz** | ACIK |
-| HATA-15 | Çapraz | KISMEN KANITLI | repo-ici davranis testi + emulator + fiziksel cihaz + Play/RevenueCat islemi | `A5-play` | local_database_migration_test; data_migration_v2_test; pin_storage_migration_test; medical_data_cleanup_service_test [U]; gercek-yol: Kısmen | ACIK |
-| HATA-16 | Çapraz | KISMEN KANITLI | repo-ici davranis testi + emulator + fiziksel cihaz + gorsel/manuel kontrol | `A4-fiz` | NTV-06 kanıtları [K; I]; gercek-yol: Kısmen | ACIK |
-| HATA-17 | Çapraz | DOĞRULANMADI | repo-ici davranis testi + emulator + fiziksel cihaz + Play/RevenueCat islemi | `A5-play` | test yok; gercek-yol: Hayır | ACIK |
-| HATA-19 | Çapraz | DOĞRULANMADI | repo-ici davranis testi + emulator | `A3-emu` | state_restoration_navigator_precondition_test (replika) [W*]; gercek-yol: Hayır | ACIK |
-| HATA-18 | Çapraz | KISMEN KANITLI | repo-ici davranis testi + emulator | `A3-emu` | countdown_bridge_missing_test [W]; gercek-yol: Kısmen | ACIK |
+| HATA-12 | Çapraz | KANITLI | Yok (kanit tam) | `A1-kapandi` | E4-FINAL4-RESET-PROVIDER: gerçek forgot-PIN reset + cold relaunch; kişi adımı temiz, StageFour yalnız yeniden picker+rıza ile eklendi; app_reset_provider_state_test [D; U] | KAPANDI |
+| HATA-13 | Çapraz | DIŞ SİSTEM GEREKİYOR | Play/RevenueCat islemi + fiziksel cihaz | `A5-play` | PLAY_REQUIRED: süreç ölümü sırasında aktif kalacak gerçek safety session production Pro arm gerektirir; free fake-call process-death BLD-02'de ayrıca geçti [D; K] | ACIK |
+| HATA-14 | Çapraz | KISMEN KANITLI | fiziksel cihaz + gorsel/manuel kontrol | `A4-fiz` | PHYSICAL_ONLY: eksik davranış üretici/OEM görev temizleyici ve force-stop politikasının alarm silme/uygulama unstopped sonucudur; AOSP emulator tek OEM varyantını temsil edemez, Test C fiziksel cihazda kalır [K; I; D] | ACIK |
+| HATA-15 | Çapraz | DIŞ SİSTEM GEREKİYOR | fiziksel cihaz + Play/RevenueCat islemi | `A5-play` | PLAY_REQUIRED: eksik kalan davranış gerçek imzalı Play sürümünden store upgrade/MY_PACKAGE_REPLACED zinciridir; local reinstall aynı dış sistemi kanıtlamaz [U] | ACIK |
+| HATA-16 | Çapraz | DIŞ SİSTEM GEREKİYOR | Play/RevenueCat islemi + fiziksel cihaz + gorsel/manuel kontrol | `A5-play` | PLAY_REQUIRED: reboot sırasında uzlaştırılacak gerçek aktif session production Pro arm gerektirir; receiver probe entitlement kanıtı değildir [D; K; I] | ACIK |
+| HATA-17 | Çapraz | DIŞ SİSTEM GEREKİYOR | fiziksel cihaz + Play/RevenueCat islemi | `A5-play` | PLAY_REQUIRED: yeni telefonda abonelik restore sonucu gerçek Play/RevenueCat hesabı ve ikinci cihaz gerektirir; emulator local install ile kanıtlanamaz [D] | ACIK |
+| HATA-19 | Çapraz | KANITLI | gerçek emulator reset + process-death | `A1-kapandi` | E4-FINAL5-HATA19; APK e0618db2; gerçek SIFIRLA → AppRoot consent/onboarding → HOME → am kill → taslak restore, crash/assert yok [D; W; W*] | KAPANDI |
+| HATA-18 | Çapraz | KISMEN KANITLI | fiziksel cihaz | `A4-fiz` | PHYSICAL_ONLY: normal API35 Play emulator'da production `configureFlutterEngine` bütün kanalları başarıyla kurdu; kullanıcı/sistem aksiyonuyla kontrollü native kayıt istisnası üretilemez. Mock veya fault-injection build gerçek kullanıcı kanıtı sayılmadı; kalan çapraz fallback gerçek OEM/engine kanal-kurulum arızası görülen fiziksel cihaz gerektirir. `countdown_bridge_missing_test` Dart fallback regresyonunu korur [D; W] | ACIK |
 | OLU-01 | LegalDisclaimerScreen | ULAŞILAMAZ / ÖLÜ | Urun karari: sil ya da bagla (kanit degil karar) | `A7-olu` | test yok; gercek-yol: Hayır | ACIK |
 | OLU-02 | ConsentScreen (eski rıza ekranı) | ULAŞILAMAZ / ÖLÜ | Urun karari: sil ya da bagla (kanit degil karar) | `A7-olu` | edge_to_edge_bottom_inset_test [S]; gercek-yol: Hayır | ACIK |
 | OLU-03 | NetworkErrorRetry / showNetworkErrorSnackBar | ULAŞILAMAZ / ÖLÜ | Urun karari: sil ya da bagla (kanit degil karar) | `A7-olu` | test yok; gercek-yol: Hayır | ACIK |

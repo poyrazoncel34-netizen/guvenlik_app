@@ -118,6 +118,89 @@ void main() {
     );
   });
 
+  // Two counts drifted in exactly the way a hand-maintained header drifts: the
+  // summary tables kept a mid-stage snapshot (31 closed / 121 A2-repo) long after
+  // the rows below said 57 / 35, and eleven rows carried the stage label
+  // `A1-kapali` instead of `A1-kapandi`. Neither was caught, because the older
+  // assertions only checked ID parity. A miscount here is not cosmetic: it is the
+  // number that decides whether a release gate is reported as met.
+  test('final states account for every row exactly once', () {
+    final List<List<String>> rows = _rows(matrixPath);
+    final int closed = rows
+        .where((List<String> r) => r.last == 'KAPANDI')
+        .length;
+    final int open = rows.where((List<String> r) => r.last == 'ACIK').length;
+
+    expect(
+      closed + open,
+      expectedBehaviourCount,
+      reason:
+          'KAPANDI ($closed) + ACIK ($open) must equal '
+          '$expectedBehaviourCount. Any other total means rows were added, '
+          'dropped, or given a third status.',
+    );
+    expect(
+      closed + open,
+      rows.length,
+      reason: 'Row total disagrees with statuses',
+    );
+  });
+
+  test('stage labels account for every row and agree with the final status', () {
+    const Set<String> knownStages = <String>{
+      '`A1-kapandi`',
+      '`A2-repo`',
+      '`A3-emu`',
+      '`A4-fiz`',
+      '`A5-play`',
+      '`A6-gorsel`',
+      '`A7-olu`',
+    };
+    final List<List<String>> rows = _rows(matrixPath);
+
+    final List<String> unknown = <String>[];
+    // A row is closed if and only if it needs no further evidence. Letting these
+    // two columns disagree is how "KAPANDI" stops meaning anything.
+    final List<String> disagree = <String>[];
+    int staged = 0;
+
+    for (final List<String> row in rows) {
+      final String stage = row[4];
+      if (!knownStages.contains(stage)) {
+        unknown.add('${row.first} -> "$stage"');
+        continue;
+      }
+      staged++;
+      final bool labelledClosed = stage == '`A1-kapandi`';
+      final bool statusClosed = row.last == 'KAPANDI';
+      if (labelledClosed != statusClosed) {
+        disagree.add('${row.first} (stage $stage, final ${row.last})');
+      }
+    }
+
+    expect(
+      unknown,
+      isEmpty,
+      reason:
+          'Unknown stage label. A typo such as `A1-kapali` silently leaves a '
+          'row out of every stage count: $unknown',
+    );
+    expect(
+      staged,
+      expectedBehaviourCount,
+      reason:
+          'Stage labels must cover all $expectedBehaviourCount rows, got $staged',
+    );
+    expect(
+      disagree,
+      isEmpty,
+      reason:
+          '`A1-kapandi` and KAPANDI must mark the same rows. A row cannot be '
+          'closed while still owing evidence, nor owe evidence while closed: '
+          '$disagree',
+    );
+  });
+
   test('the matrix header states the count it actually carries', () {
     final String source = File(matrixPath).readAsStringSync();
     final int rows = _rows(matrixPath).length;
