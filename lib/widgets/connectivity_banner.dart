@@ -48,7 +48,8 @@ class ConnectivityBanner extends StatefulWidget {
   /// mid-glyph while the page beneath it stayed correctly positioned (CERT2-03).
   static double contentHeightFor(BuildContext context) => math.max(
     minContentHeight,
-    MediaQuery.textScalerOf(context).scale(labelFontSize) * labelLineHeightFactor,
+    MediaQuery.textScalerOf(context).scale(labelFontSize) *
+        labelLineHeightFactor,
   );
 
   /// How much vertical space the banner occupies BELOW the status bar.
@@ -126,6 +127,7 @@ class _ConnectivityBannerState extends State<ConnectivityBanner>
     // widget reported a zero inset and did nothing. `viewPadding` reports the
     // real, unconsumed inset.
     final double statusBarInset = MediaQuery.viewPaddingOf(context).top;
+    final bool largeText = MediaQuery.textScalerOf(context).scale(1) > 1.5;
     return SlideTransition(
       position: _slideAnimation,
       child: GestureDetector(
@@ -139,8 +141,8 @@ class _ConnectivityBannerState extends State<ConnectivityBanner>
           padding: EdgeInsets.only(
             top: statusBarInset + ConnectivityBanner.verticalPadding,
             bottom: ConnectivityBanner.verticalPadding,
-            left: 16,
-            right: 16,
+            left: largeText ? 8 : 16,
+            right: largeText ? 8 : 16,
           ),
           decoration: BoxDecoration(
             color: AppColors.warning.withValues(alpha: 0.9),
@@ -151,30 +153,35 @@ class _ConnectivityBannerState extends State<ConnectivityBanner>
           child: SizedBox(
             height: ConnectivityBanner.contentHeightFor(context),
             child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(
-                Icons.cloud_off_rounded,
-                color: Colors.white,
-                size: IconSizes.dense,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                'offline_banner_text'.tr(),
-                style: const TextStyle(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(
+                  Icons.cloud_off_rounded,
                   color: Colors.white,
-                  fontSize: ConnectivityBanner.labelFontSize,
-                  fontWeight: FontWeight.w700,
+                  size: IconSizes.dense,
                 ),
-              ),
-              const SizedBox(width: 6),
-              const Icon(
-                Icons.info_outline_rounded,
-                color: Colors.white,
-                size: IconSizes.inline,
-              ),
-            ],
-          ),
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Text(
+                    'offline_banner_text'.tr(),
+                    maxLines: 1,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: ConnectivityBanner.labelFontSize,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                if (!largeText) ...[
+                  const SizedBox(width: 6),
+                  const Icon(
+                    Icons.info_outline_rounded,
+                    color: Colors.white,
+                    size: IconSizes.inline,
+                  ),
+                ],
+              ],
+            ),
           ),
         ),
       ),
@@ -186,76 +193,78 @@ class _ConnectivityBannerState extends State<ConnectivityBanner>
       context: context,
       builder: (ctx) => EscapeDismissible(
         child: AlertDialog(
-        backgroundColor: AppColors.cardBg,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Row(
-          children: [
-            const Icon(
-              Icons.wifi_off_rounded,
-              color: AppColors.warning,
-              size: IconSizes.emphasis,
-            ),
-            const SizedBox(width: 10),
-            Text(
-              'offline_info_title'.tr(),
-              style: const TextStyle(
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.w800,
-                fontSize: 17,
-              ),
-            ),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _offlineFeatureRow(
-              Icons.check_circle_rounded,
-              AppColors.success,
-              'offline_feature_alarm'.tr(),
-            ),
-            _offlineFeatureRow(
-              Icons.check_circle_rounded,
-              AppColors.success,
-              'offline_feature_siren'.tr(),
-            ),
-            _offlineFeatureRow(
-              Icons.check_circle_rounded,
-              AppColors.success,
-              'offline_feature_fakecall'.tr(),
-            ),
-            _offlineFeatureRow(
-              Icons.check_circle_rounded,
-              AppColors.success,
-              'offline_feature_safewalk'.tr(),
-            ),
-            const SizedBox(height: 10),
-            _offlineFeatureRow(
-              Icons.warning_rounded,
-              AppColors.warning,
-              'offline_feature_location'.tr(),
-            ),
-            _offlineFeatureRow(
-              Icons.warning_rounded,
-              AppColors.warning,
-              'offline_feature_sync'.tr(),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(
-              'btn_ok'.tr(),
-              style: const TextStyle(
-                color: AppColors.primary,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
+          backgroundColor: AppColors.cardBg,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
           ),
-        ],
-      ),
+          title: Row(
+            children: [
+              const Icon(
+                Icons.wifi_off_rounded,
+                color: AppColors.warning,
+                size: IconSizes.emphasis,
+              ),
+              const SizedBox(width: 10),
+              Text(
+                'offline_info_title'.tr(),
+                style: const TextStyle(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 17,
+                ),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _offlineFeatureRow(
+                Icons.check_circle_rounded,
+                AppColors.success,
+                'offline_feature_alarm'.tr(),
+              ),
+              _offlineFeatureRow(
+                Icons.check_circle_rounded,
+                AppColors.success,
+                'offline_feature_siren'.tr(),
+              ),
+              _offlineFeatureRow(
+                Icons.check_circle_rounded,
+                AppColors.success,
+                'offline_feature_fakecall'.tr(),
+              ),
+              _offlineFeatureRow(
+                Icons.check_circle_rounded,
+                AppColors.success,
+                'offline_feature_safewalk'.tr(),
+              ),
+              const SizedBox(height: 10),
+              _offlineFeatureRow(
+                Icons.warning_rounded,
+                AppColors.warning,
+                'offline_feature_location'.tr(),
+              ),
+              _offlineFeatureRow(
+                Icons.warning_rounded,
+                AppColors.warning,
+                'offline_feature_sync'.tr(),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(
+                'btn_ok'.tr(),
+                style: const TextStyle(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

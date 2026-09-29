@@ -76,7 +76,10 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
     if (!oldWidget.isActive &&
         widget.isActive &&
         !_hasRequestedInitialLocation) {
-      _initLocation();
+      // Defer: the consent gate may show a SnackBar during the parent build.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && widget.isActive && !_hasRequestedInitialLocation) unawaited(_initLocation());
+      });
     }
   }
 

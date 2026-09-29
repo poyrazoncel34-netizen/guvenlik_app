@@ -235,8 +235,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                         locationGranted: provider.locationPermissionGranted,
                         contactsGranted: provider.contactsPermissionGranted,
                         hasEmergencyContact: provider.emergencyContact != null,
-                        readiness:
-                            EmergencyReadinessService.instance.lastState,
+                        readiness: EmergencyReadinessService.instance.lastState,
                         lastRehearsalAt: _lastRehearsalAt,
                         onFixEmergencyContact: _navigateToContacts,
                         onFixCallPermission: _requestCallPhonePermission,
@@ -287,14 +286,14 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           child: Semantics(
             header: true,
             child: Text(
-            'welcome_greeting'.tr(),
-            style: const TextStyle(
-              fontSize: 30,
-              fontWeight: FontWeight.w800,
-              color: AppColors.textPrimary,
-              letterSpacing: -0.8,
-              height: 1.1,
-            ),
+              'welcome_greeting'.tr(),
+              style: const TextStyle(
+                fontSize: 30,
+                fontWeight: FontWeight.w800,
+                color: AppColors.textPrimary,
+                letterSpacing: -0.8,
+                height: 1.1,
+              ),
             ),
           ),
         ),
@@ -406,18 +405,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       );
       return;
     }
-    // Show rationale dialog before requesting permission
-    final proceed = await _showPermissionRationale(
-      title: 'perm_rationale_contacts_title'.tr(),
-      body: 'perm_rationale_contacts_body'.tr(),
-    );
-    if (!proceed || !mounted) return;
-
-    final provider = context.read<HomeProvider>();
-    final message = await provider.requestContactsPermission();
-    if (message != null && context.mounted) {
-      _showSnack(message);
-    }
+    // Android contact access uses ACTION_PICK and manual entry, so there is no
+    // READ_CONTACTS permission to request here. Take the user to the real
+    // contact workflow instead of presenting a permission dialog whose
+    // affirmative action cannot do anything.
+    await _navigateToContacts();
   }
 
   Future<void> _requestCallPhonePermission() async {
@@ -434,40 +426,45 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       context: context,
       builder: (ctx) => EscapeDismissible(
         child: AlertDialog(
-        backgroundColor: AppColors.cardBg,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(
-          title,
-          style: const TextStyle(
-            color: AppColors.textPrimary,
-            fontWeight: FontWeight.w800,
+          backgroundColor: AppColors.cardBg,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
           ),
-        ),
-        content: Text(
-          body,
-          style: const TextStyle(color: AppColors.textSecondary, fontSize: 14),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(
-              'perm_rationale_later'.tr(),
-              style: const TextStyle(color: AppColors.textSecondary),
+          title: Text(
+            title,
+            style: const TextStyle(
+              color: AppColors.textPrimary,
+              fontWeight: FontWeight.w800,
             ),
           ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+          content: Text(
+            body,
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 14,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(
+                'perm_rationale_later'.tr(),
+                style: const TextStyle(color: AppColors.textSecondary),
               ),
             ),
-            child: Text('perm_rationale_allow'.tr()),
-          ),
-        ],
-      ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: Text('perm_rationale_allow'.tr()),
+            ),
+          ],
+        ),
       ),
     );
     return result ?? false;
@@ -485,66 +482,66 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       backgroundColor: Colors.transparent,
       builder: (ctx) => EscapeDismissible(
         child: Container(
-        decoration: const BoxDecoration(
-          color: AppColors.cardBg,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          decoration: const BoxDecoration(
+            color: AppColors.cardBg,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.border,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 18),
+              Text(
+                'fake_call_delay_title'.tr(),
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'fake_call_delay_subtitle'.tr(),
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 12,
+                  height: 1.35,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              const SizedBox(height: 12),
+              _buildFakeCallOption('fake_call_delay_now'.tr(), Duration.zero),
+              _buildFakeCallOption(
+                'fake_call_delay_1min'.tr(),
+                const Duration(minutes: 1),
+              ),
+              _buildFakeCallOption(
+                'fake_call_delay_3min'.tr(),
+                const Duration(minutes: 3),
+              ),
+              // Longer horizons exist for the everyday reasons people actually
+              // reach for this — leaving a meeting, a bad date, a pushy seller.
+              // Three minutes is too short to cover any of them.
+              _buildFakeCallOption(
+                'fake_call_delay_10min'.tr(),
+                const Duration(minutes: 10),
+              ),
+              _buildFakeCallOption(
+                'fake_call_delay_15min'.tr(),
+                const Duration(minutes: 15),
+              ),
+              const SizedBox(height: 12),
+            ],
+          ),
         ),
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: AppColors.border,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(height: 18),
-            Text(
-              'fake_call_delay_title'.tr(),
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w800,
-                color: AppColors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              'fake_call_delay_subtitle'.tr(),
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 12,
-                height: 1.35,
-                color: AppColors.textSecondary,
-              ),
-            ),
-            const SizedBox(height: 12),
-            _buildFakeCallOption('fake_call_delay_now'.tr(), Duration.zero),
-            _buildFakeCallOption(
-              'fake_call_delay_1min'.tr(),
-              const Duration(minutes: 1),
-            ),
-            _buildFakeCallOption(
-              'fake_call_delay_3min'.tr(),
-              const Duration(minutes: 3),
-            ),
-            // Longer horizons exist for the everyday reasons people actually
-            // reach for this — leaving a meeting, a bad date, a pushy seller.
-            // Three minutes is too short to cover any of them.
-            _buildFakeCallOption(
-              'fake_call_delay_10min'.tr(),
-              const Duration(minutes: 10),
-            ),
-            _buildFakeCallOption(
-              'fake_call_delay_15min'.tr(),
-              const Duration(minutes: 15),
-            ),
-            const SizedBox(height: 12),
-          ],
-        ),
-      ),
       ),
     );
   }
@@ -613,9 +610,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
     // A delayed fake call is only shown as scheduled when exact-alarm access
     // is currently granted. Returning from Settings requires an explicit retry.
-    final exactAlarmGranted = await requireExactAlarmPermission(
-      context,
-    );
+    final exactAlarmGranted = await requireExactAlarmPermission(context);
     if (!exactAlarmGranted || !mounted) return;
 
     final scheduled = await NotificationService.instance.scheduleFakeCall(
@@ -771,7 +766,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   Widget _buildTestModeButton() {
     return OutlinedButton.icon(
       onPressed: _startTestMode,
-      icon: const Icon(Icons.check_circle_outline_rounded, size: IconSizes.listItem),
+      icon: const Icon(
+        Icons.check_circle_outline_rounded,
+        size: IconSizes.listItem,
+      ),
       label: Text("test_mode_no_real_call".tr()),
       style: OutlinedButton.styleFrom(
         foregroundColor: AppColors.primary,

@@ -31,8 +31,13 @@ class BatteryOptimizationWizard extends StatefulWidget {
   /// Eğer true ise, ilk açılış kontrolü yapılır.
   /// false ise direkt gösterilir (ayarlardan açılma).
   final bool checkFirstLaunch;
+  final Future<bool> Function()? optimizationStatusLoader;
 
-  const BatteryOptimizationWizard({super.key, this.checkFirstLaunch = false});
+  const BatteryOptimizationWizard({
+    super.key,
+    this.checkFirstLaunch = false,
+    this.optimizationStatusLoader,
+  });
 
   /// İlk açılışta wizard'ı göstermeli mi kontrol eder
   static Future<bool> shouldShow() async {
@@ -95,10 +100,11 @@ class _BatteryOptimizationWizardState extends State<BatteryOptimizationWizard>
   }
 
   Future<void> _checkStatus() async {
-    if (!Platform.isAndroid) return;
+    if (widget.optimizationStatusLoader == null && !Platform.isAndroid) return;
     try {
-      final isIgnoring = await BatteryOptimizationService.instance
-          .isOptimizationDisabled();
+      final isIgnoring =
+          await (widget.optimizationStatusLoader?.call() ??
+              BatteryOptimizationService.instance.isOptimizationDisabled());
       if (mounted) {
         setState(() => _isOptimizationDisabled = isIgnoring);
       }
@@ -246,7 +252,10 @@ class _BatteryOptimizationWizardState extends State<BatteryOptimizationWizard>
                       HapticFeedback.mediumImpact();
                       _requestDisableOptimization(context);
                     },
-                    icon: const Icon(Icons.battery_saver_rounded, size: IconSizes.emphasis),
+                    icon: const Icon(
+                      Icons.battery_saver_rounded,
+                      size: IconSizes.emphasis,
+                    ),
                     label: Text(
                       'battery_wizard_disable_btn'.tr(),
                       style: const TextStyle(
@@ -281,7 +290,10 @@ class _BatteryOptimizationWizardState extends State<BatteryOptimizationWizard>
                         ),
                       );
                     },
-                    icon: const Icon(Icons.phonelink_setup_rounded, size: IconSizes.action),
+                    icon: const Icon(
+                      Icons.phonelink_setup_rounded,
+                      size: IconSizes.action,
+                    ),
                     label: Text(
                       'battery_wizard_oem_btn'.tr(),
                       style: const TextStyle(fontWeight: FontWeight.w600),
@@ -308,7 +320,10 @@ class _BatteryOptimizationWizardState extends State<BatteryOptimizationWizard>
                       HapticFeedback.lightImpact();
                       _openBatterySettings();
                     },
-                    icon: const Icon(Icons.settings_rounded, size: IconSizes.action),
+                    icon: const Icon(
+                      Icons.settings_rounded,
+                      size: IconSizes.action,
+                    ),
                     label: Text(
                       'battery_wizard_settings_btn'.tr(),
                       style: const TextStyle(fontWeight: FontWeight.w600),
@@ -350,7 +365,10 @@ class _BatteryOptimizationWizardState extends State<BatteryOptimizationWizard>
                       if (!context.mounted) return;
                       Navigator.pop(context);
                     },
-                    icon: const Icon(Icons.check_rounded, size: IconSizes.emphasis),
+                    icon: const Icon(
+                      Icons.check_rounded,
+                      size: IconSizes.emphasis,
+                    ),
                     label: Text(
                       'battery_wizard_done_btn'.tr(),
                       style: const TextStyle(

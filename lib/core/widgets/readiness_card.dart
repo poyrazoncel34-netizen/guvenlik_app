@@ -379,28 +379,28 @@ class _RehearsalLine extends StatelessWidget {
       child: ConstrainedBox(
         constraints: const BoxConstraints(minHeight: 48),
         child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4),
-        child: Row(
-          children: [
-            const Icon(
-              Icons.history_rounded,
-              size: IconSizes.inline,
-              color: AppColors.textSecondary,
-            ),
-            const SizedBox(width: 6),
-            Expanded(
-              child: Text(
-                text,
-                style: const TextStyle(
-                  fontSize: 11,
-                  height: 1.35,
-                  color: AppColors.textSecondary,
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: Row(
+            children: [
+              const Icon(
+                Icons.history_rounded,
+                size: IconSizes.inline,
+                color: AppColors.textSecondary,
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  text,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    height: 1.35,
+                    color: AppColors.textSecondary,
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
-      ),
       ),
     );
   }
@@ -439,12 +439,14 @@ class _StatusChip extends StatelessWidget {
               color: color,
             ),
             const SizedBox(width: 6),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: color,
+            Flexible(
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: color,
+                ),
               ),
             ),
           ],
