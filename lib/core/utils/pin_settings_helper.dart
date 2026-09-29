@@ -241,8 +241,12 @@ abstract class PinSettingsHelper {
       ),
       ),
     ).whenComplete(() {
-      oldController.dispose();
-      newController.dispose();
+      // The route future can complete while the final removal frame still
+      // holds these controllers. Dispose after that frame, not during it.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        oldController.dispose();
+        newController.dispose();
+      });
     });
   }
 }

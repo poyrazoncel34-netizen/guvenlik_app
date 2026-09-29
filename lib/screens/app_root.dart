@@ -36,6 +36,22 @@ import 'splash_screen.dart';
 class AppRoot extends StatefulWidget {
   const AppRoot({super.key});
 
+  /// Restarts the startup decision without destroying the Navigator's initial
+  /// route.
+  ///
+  /// A completed local-data wipe must return to consent/onboarding, but using
+  /// `pushAndRemoveUntil((_) => false)` for that transition removes `/`. With
+  /// route restoration enabled, the next Android process recreation then has
+  /// no restorable history and fails in `Navigator._history.isNotEmpty` before
+  /// the app can render. Descendants hosted by [AppRoot] use this state reset;
+  /// standalone screens can retain their historical navigation fallback.
+  static bool restartStartup(BuildContext context) {
+    final scope = context.getInheritedWidgetOfExactType<_AppRootRestartScope>();
+    if (scope == null) return false;
+    scope.restart();
+    return true;
+  }
+
   @override
   State<AppRoot> createState() => _AppRootState();
 }
@@ -50,14 +66,31 @@ class _AppRootState extends State<AppRoot> {
     setState(() => _destination = destination);
   }
 
+  void _restart() {
+    if (!mounted) return;
+    setState(() => _destination = null);
+  }
+
   @override
   Widget build(BuildContext context) {
     // Reproduces the transition the four `pushReplacement` calls used to draw:
     // a fade over [Motion.slow]. Swapping destinations must not look like a
     // different app than the one that shipped.
-    return AnimatedSwitcher(
-      duration: Motion.slow,
-      child: _destination ?? SplashScreen(advance: _show),
+    return _AppRootRestartScope(
+      restart: _restart,
+      child: AnimatedSwitcher(
+        duration: Motion.slow,
+        child: _destination ?? SplashScreen(advance: _show),
+      ),
     );
   }
+}
+
+class _AppRootRestartScope extends InheritedWidget {
+  const _AppRootRestartScope({required this.restart, required super.child});
+
+  final VoidCallback restart;
+
+  @override
+  bool updateShouldNotify(_AppRootRestartScope oldWidget) => false;
 }

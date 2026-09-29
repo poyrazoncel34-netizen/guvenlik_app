@@ -172,6 +172,37 @@ void main() {
         }
       }
       expect(find.byType(OnboardingScreen), findsOneWidget);
+      if (!standalone) {
+        final onboardingContext = tester.element(find.byType(OnboardingScreen));
+        final routeBeforeRestart = ModalRoute.of(onboardingContext);
+        expect(routeBeforeRestart, isNotNull);
+        expect(routeBeforeRestart!.isFirst, isTrue);
+
+        expect(
+          AppRoot.restartStartup(onboardingContext),
+          isTrue,
+          reason:
+              'a destructive reset hosted by AppRoot must restart the shell '
+              'instead of deleting the initial Navigator route',
+        );
+        await tester.pump();
+        expect(find.byType(SplashScreen), findsOneWidget);
+        final routeAfterRestart = ModalRoute.of(
+          tester.element(find.byType(SplashScreen)),
+        );
+        expect(
+          routeAfterRestart,
+          same(routeBeforeRestart),
+          reason:
+              'the reset transition must preserve `/`; Android restoration '
+              'cannot recover from an empty route history',
+        );
+        // Dispose the restarted splash, then let its reduced-motion delay
+        // finish. The delayed callback observes `mounted == false` and cannot
+        // start a second startup decision in this focused shell test.
+        await tester.pumpWidget(const SizedBox.shrink());
+        await tester.pump(const Duration(milliseconds: 600));
+      }
       expect(
         (await SharedPreferences.getInstance()).getString(
           'synthetic_surviving_contact',
