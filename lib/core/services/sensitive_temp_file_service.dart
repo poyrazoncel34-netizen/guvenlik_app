@@ -22,16 +22,13 @@ class SensitiveTempFileService {
   static Future<void> purgeStaleExportsInDirectory(Directory directory) async {
     try {
       if (!await directory.exists()) return;
-      await for (final entity in directory.list(followLinks: false)) {
-        if (entity is! File) continue;
-        final name = entity.uri.pathSegments.last;
-        if (name == legacyExportName ||
-            (name.startsWith(exportPrefix) && name.endsWith('.json'))) {
-          try {
-            await entity.delete();
-          } catch (_) {}
-        }
-      }
+      await _purgeMatchingFiles(directory);
+      // share_plus copies XFiles into this cache directory before launching
+      // Android's Sharesheet. The source file is deleted in the export
+      // surface's finally block, but the plugin-owned copy otherwise retains
+      // the same PII after the chooser returns.
+      final sharePlusDirectory = Directory('${directory.path}/share_plus');
+      await _purgeMatchingFiles(sharePlusDirectory);
     } catch (_) {}
   }
 
@@ -40,5 +37,25 @@ class SensitiveTempFileService {
     try {
       if (await file.exists()) await file.delete();
     } catch (_) {}
+    try {
+      final sharePlusCopy = File(
+        '${file.parent.path}/share_plus/${file.uri.pathSegments.last}',
+      );
+      if (await sharePlusCopy.exists()) await sharePlusCopy.delete();
+    } catch (_) {}
+  }
+
+  static Future<void> _purgeMatchingFiles(Directory directory) async {
+    if (!await directory.exists()) return;
+    await for (final entity in directory.list(followLinks: false)) {
+      if (entity is! File) continue;
+      final name = entity.uri.pathSegments.last;
+      if (name == legacyExportName ||
+          (name.startsWith(exportPrefix) && name.endsWith('.json'))) {
+        try {
+          await entity.delete();
+        } catch (_) {}
+      }
+    }
   }
 }

@@ -45,11 +45,15 @@ class LocationService {
   // Singleton instance
   static final LocationService _instance = LocationService._internal();
   factory LocationService() => _instance;
-  LocationService._internal();
+  LocationService._internal() : _positionTimeout = const Duration(seconds: 10);
 
   /// An isolated in-memory cache for deterministic platform-boundary tests.
   @visibleForTesting
-  LocationService.forTesting();
+  LocationService.forTesting({
+    Duration positionTimeout = const Duration(seconds: 10),
+  }) : _positionTimeout = positionTimeout;
+
+  final Duration _positionTimeout;
 
   // Neutral map viewport center. This is never presented as the user's location.
   static const LatLng fallbackMapCenter = LatLng(39.0, 35.0);
@@ -113,6 +117,18 @@ class LocationService {
   /// Mevcut konumu alır
   Future<LocationResult> getCurrentLocation({bool highAccuracy = true}) async {
     try {
+      return await _getCurrentLocationUnbounded(
+        highAccuracy: highAccuracy,
+      ).timeout(_positionTimeout);
+    } on TimeoutException catch (e) {
+      return _timeoutResult(e);
+    }
+  }
+
+  Future<LocationResult> _getCurrentLocationUnbounded({
+    required bool highAccuracy,
+  }) async {
+    try {
       // İzinleri kontrol et
       final permissionResult = await _handlePermissions();
       if (!permissionResult.isSuccess &&
@@ -126,7 +142,7 @@ class LocationService {
           accuracy: highAccuracy
               ? LocationAccuracy.high
               : LocationAccuracy.medium,
-          timeLimit: const Duration(seconds: 10),
+          timeLimit: _positionTimeout,
         ),
       );
 
@@ -141,24 +157,28 @@ class LocationService {
         source: LocationSource.current,
       );
     } on TimeoutException catch (e) {
-      if (_lastKnownPosition != null) {
-        return LocationResult(
-          status: LocationStatus.stale,
-          position: _lastKnownPosition,
-          measuredAt: _lastMeasuredAt,
-          source: LocationSource.lastKnown,
-        );
-      }
-      return LocationResult(
-        status: LocationStatus.error,
-        errorMessage: '${'location_error_failed'.tr()}: ${e.runtimeType}',
-      );
+      return _timeoutResult(e);
     } catch (e) {
       return LocationResult(
         status: LocationStatus.error,
         errorMessage: '${'location_error_failed'.tr()}: ${e.toString()}',
       );
     }
+  }
+
+  LocationResult _timeoutResult(TimeoutException error) {
+    if (_lastKnownPosition != null) {
+      return LocationResult(
+        status: LocationStatus.stale,
+        position: _lastKnownPosition,
+        measuredAt: _lastMeasuredAt,
+        source: LocationSource.lastKnown,
+      );
+    }
+    return LocationResult(
+      status: LocationStatus.error,
+      errorMessage: '${'location_error_failed'.tr()}: ${error.runtimeType}',
+    );
   }
 
   /// Son bilinen konumu alır (daha hızlı, ama eski olabilir)
@@ -186,8 +206,10 @@ class LocationService {
         );
       }
 
-      // Son konum yoksa mevcut konumu al
-      return getCurrentLocation();
+      // This method is deliberately last-known-only. Its caller decides
+      // whether a fresh fix is needed, so an empty cache cannot silently turn
+      // into a second current-position request.
+      return LocationResult(status: LocationStatus.error);
     } catch (e) {
       return LocationResult(
         status: LocationStatus.error,
