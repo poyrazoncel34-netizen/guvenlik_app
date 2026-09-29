@@ -19,10 +19,12 @@ import 'home_page.dart';
 import 'contacts_page.dart';
 import 'map_page.dart';
 import 'pin_setup_screen.dart';
+import 'safety_timeline_screen.dart';
 import 'settings_page.dart';
 import '../core/services/connectivity_service.dart';
 import '../core/services/emergency_session_contract.dart';
 import '../core/services/pin_verification_service.dart';
+import '../core/services/timeline_resume_service.dart';
 import '../core/navigation/deep_link_channel.dart';
 import '../core/navigation/destination_router.dart';
 import '../core/navigation/pending_destination_service.dart';
@@ -129,7 +131,16 @@ class _MainNavigationState extends State<MainNavigation>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _runStartupChecks();
       _collectAndRouteExternalEntry();
+      unawaited(_restoreInterruptedTimeline());
     });
+  }
+
+  Future<void> _restoreInterruptedTimeline() async {
+    final shouldRestore = await TimelineResumeService.consumePending();
+    if (!shouldRestore || !mounted) return;
+    await Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const SafetyTimelineScreen()));
   }
 
   @override

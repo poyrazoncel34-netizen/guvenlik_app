@@ -132,8 +132,7 @@ void main() {
       );
     });
 
-    test('no top-level destination is reached by destroying the route stack',
-        () {
+    test('no top-level destination is reached by destroying the route stack', () {
       // These four call sites are exactly the ones that used to remove the
       // initial route. Each now advances the AppRoot shell instead, and each
       // keeps its old navigation only as a fallback for being mounted alone.
@@ -161,16 +160,45 @@ void main() {
       );
     });
 
-    test('every RestorationMixin in lib/ declares a non-null restorationId',
-        () {
+    test('successful data-reset entry points restart the AppRoot shell', () {
+      const resetEntryPoints = <String>[
+        'lib/core/utils/app_reset_helper.dart',
+        'lib/screens/app_unlock_screen.dart',
+      ];
+      for (final path in resetEntryPoints) {
+        final source = code(read(path));
+        final restart = source.indexOf('AppRoot.restartStartup(context)');
+        final destructiveFallback = source.indexOf(
+          'pushAndRemoveUntil',
+          restart,
+        );
+        expect(
+          restart,
+          greaterThanOrEqualTo(0),
+          reason:
+              '$path handles a completed wipe and must restart AppRoot without '
+              'removing the restorable initial route',
+        );
+        expect(
+          destructiveFallback,
+          greaterThan(restart),
+          reason:
+              '$path may retain standalone fallback navigation only after the '
+              'AppRoot-hosted path has returned',
+        );
+      }
+    });
+
+    test('every RestorationMixin in lib/ declares a non-null restorationId', () {
       final offenders = <String>[];
       for (final file in libDartFiles()) {
         final source = code(file.readAsStringSync());
         if (!RegExp(r'with[^{;]*\bRestorationMixin\b').hasMatch(source)) {
           continue;
         }
-        final match = RegExp(r'String\?\s+get\s+restorationId\s*=>\s*([^;]+);')
-            .firstMatch(source);
+        final match = RegExp(
+          r'String\?\s+get\s+restorationId\s*=>\s*([^;]+);',
+        ).firstMatch(source);
         if (match == null || match.group(1)!.trim() == 'null') {
           offenders.add(file.path);
         }
@@ -217,10 +245,11 @@ void main() {
     });
   });
 
-  group('routes are not restorable while the unlock gate is a pushReplacement',
-      () {
+  group('routes are not restorable while the unlock gate is a pushReplacement', () {
     test('a restored route would sit ABOVE the unlock screen', () {
-      final stack = bypassProof(restoredRoutes: <String>['SafetyTimelineScreen']);
+      final stack = bypassProof(
+        restoredRoutes: <String>['SafetyTimelineScreen'],
+      );
       expect(
         stack.last,
         'SafetyTimelineScreen',
@@ -258,30 +287,32 @@ void main() {
   });
 
   group('the restored surfaces are the intended ones', () {
-    test('onboarding contact drafts and the two index surfaces are restorable',
-        () {
-      final expected = <String, String>{
-        'lib/screens/onboarding/onboarding_contact_step.dart':
-            "'onboarding_contact_step'",
-        'lib/screens/onboarding_screen.dart': "'onboarding_screen'",
-        'lib/screens/main_navigation.dart': "'main_navigation'",
-      };
-      expected.forEach((path, id) {
-        final source = code(read(path));
-        expect(
-          RegExp(r'with[^{;]*\bRestorationMixin\b').hasMatch(source),
-          isTrue,
-          reason: '$path must remain restorable',
-        );
-        expect(
-          source.contains(id),
-          isTrue,
-          reason:
-              'The restoration id $id is part of the saved-state contract. '
-              'Renaming it silently discards any state already saved under the '
-              'old id on a user device.',
-        );
-      });
-    });
+    test(
+      'onboarding contact drafts and the two index surfaces are restorable',
+      () {
+        final expected = <String, String>{
+          'lib/screens/onboarding/onboarding_contact_step.dart':
+              "'onboarding_contact_step'",
+          'lib/screens/onboarding_screen.dart': "'onboarding_screen'",
+          'lib/screens/main_navigation.dart': "'main_navigation'",
+        };
+        expected.forEach((path, id) {
+          final source = code(read(path));
+          expect(
+            RegExp(r'with[^{;]*\bRestorationMixin\b').hasMatch(source),
+            isTrue,
+            reason: '$path must remain restorable',
+          );
+          expect(
+            source.contains(id),
+            isTrue,
+            reason:
+                'The restoration id $id is part of the saved-state contract. '
+                'Renaming it silently discards any state already saved under the '
+                'old id on a user device.',
+          );
+        });
+      },
+    );
   });
 }

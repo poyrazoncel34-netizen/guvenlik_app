@@ -2,6 +2,7 @@
 // GÜVENLİK ZAMAN ÇİZELGESİ (SAFETY TIMELINE)
 // ============================================================================
 
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -10,6 +11,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/app_colors.dart';
 import '../core/services/scroll_restoration.dart';
+import '../core/services/timeline_resume_service.dart';
 import '../core/services/activity_service.dart';
 import '../domain/models/activity_event.dart';
 import '../core/widgets/escape_dismissible.dart';
@@ -37,6 +39,7 @@ class _SafetyTimelineScreenState extends State<SafetyTimelineScreen>
   /// different event than the one the user was reading. That reads as the app
   /// scrolling somewhere by itself, which is worse than not restoring.
   final KeyedListScrollRestorer _restorer = KeyedListScrollRestorer();
+  Timer? _anchorPersistTimer;
 
   @override
   String? get restorationId => 'safety_timeline';
@@ -50,11 +53,33 @@ class _SafetyTimelineScreenState extends State<SafetyTimelineScreen>
   void initState() {
     super.initState();
     _restorer.attach();
-    _loadEntries();
+    _restorer.controller.addListener(_scheduleAnchorPersist);
+    unawaited(_initializeTimeline());
+  }
+
+  Future<void> _initializeTimeline() async {
+    final persistedAnchor = await TimelineResumeService.begin();
+    if (!mounted) return;
+    if (persistedAnchor != null) _restorer.value = persistedAnchor;
+    await _loadEntries();
+  }
+
+  void _scheduleAnchorPersist() {
+    _anchorPersistTimer?.cancel();
+    _anchorPersistTimer = Timer(const Duration(milliseconds: 100), () {
+      unawaited(TimelineResumeService.save(_restorer.value));
+    });
+  }
+
+  void _clearResumeState() {
+    _anchorPersistTimer?.cancel();
+    unawaited(TimelineResumeService.clear());
   }
 
   @override
   void dispose() {
+    _restorer.controller.removeListener(_scheduleAnchorPersist);
+    _clearResumeState();
     _restorer.dispose();
     _destinationController.dispose();
     _planController.dispose();
@@ -206,7 +231,11 @@ class _SafetyTimelineScreenState extends State<SafetyTimelineScreen>
         SnackBar(
           content: Row(
             children: [
-              const Icon(Icons.send_rounded, color: Colors.white, size: IconSizes.action),
+              const Icon(
+                Icons.send_rounded,
+                color: Colors.white,
+                size: IconSizes.action,
+              ),
               const SizedBox(width: 10),
               Expanded(child: Text("timeline_shared_ready".tr())),
             ],
@@ -327,99 +356,99 @@ class _SafetyTimelineScreenState extends State<SafetyTimelineScreen>
       isScrollControlled: true,
       builder: (context) => EscapeDismissible(
         child: Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom,
-        ),
-        child: Container(
-          decoration: const BoxDecoration(
-            color: AppColors.cardBg,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
           ),
-          padding: const EdgeInsets.all(24),
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Center(
-                  child: Container(
-                    width: 40,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: AppColors.border,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                Text(
-                  "timeline_add_entry".tr(),
-                  style: const TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  "timeline_add_desc".tr(),
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-                const SizedBox(height: 24),
-                _buildTextField(
-                  controller: _destinationController,
-                  icon: Icons.location_on_rounded,
-                  hint: "timeline_destination_hint".tr(),
-                  label: "timeline_destination".tr(),
-                  maxLength: 120,
-                ),
-                const SizedBox(height: 14),
-                _buildTextField(
-                  controller: _planController,
-                  icon: Icons.event_note_rounded,
-                  hint: "timeline_plan_hint".tr(),
-                  label: "timeline_plan".tr(),
-                  maxLines: 2,
-                  maxLength: 500,
-                ),
-                const SizedBox(height: 14),
-                _buildTextField(
-                  controller: _notesController,
-                  icon: Icons.notes_rounded,
-                  hint: "timeline_notes_hint".tr(),
-                  label: "timeline_notes".tr(),
-                  maxLines: 3,
-                  maxLength: 1000,
-                ),
-                const SizedBox(height: 24),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: _addEntry,
-                    icon: const Icon(Icons.add_rounded),
-                    label: Text(
-                      "timeline_save".tr(),
-                      style: const TextStyle(fontWeight: FontWeight.w700),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.accent,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
+          child: Container(
+            decoration: const BoxDecoration(
+              color: AppColors.cardBg,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+            ),
+            padding: const EdgeInsets.all(24),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: AppColors.border,
+                        borderRadius: BorderRadius.circular(2),
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 12),
-              ],
+                  const SizedBox(height: 20),
+                  Text(
+                    "timeline_add_entry".tr(),
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    "timeline_add_desc".tr(),
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  _buildTextField(
+                    controller: _destinationController,
+                    icon: Icons.location_on_rounded,
+                    hint: "timeline_destination_hint".tr(),
+                    label: "timeline_destination".tr(),
+                    maxLength: 120,
+                  ),
+                  const SizedBox(height: 14),
+                  _buildTextField(
+                    controller: _planController,
+                    icon: Icons.event_note_rounded,
+                    hint: "timeline_plan_hint".tr(),
+                    label: "timeline_plan".tr(),
+                    maxLines: 2,
+                    maxLength: 500,
+                  ),
+                  const SizedBox(height: 14),
+                  _buildTextField(
+                    controller: _notesController,
+                    icon: Icons.notes_rounded,
+                    hint: "timeline_notes_hint".tr(),
+                    label: "timeline_notes".tr(),
+                    maxLines: 3,
+                    maxLength: 1000,
+                  ),
+                  const SizedBox(height: 24),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: _addEntry,
+                      icon: const Icon(Icons.add_rounded),
+                      label: Text(
+                        "timeline_save".tr(),
+                        style: const TextStyle(fontWeight: FontWeight.w700),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.accent,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                ],
+              ),
             ),
           ),
         ),
-      ),
       ),
     );
   }
@@ -464,32 +493,37 @@ class _SafetyTimelineScreenState extends State<SafetyTimelineScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: Text("timeline_title".tr()),
-        backgroundColor: AppColors.surface,
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          HapticFeedback.lightImpact();
-          _showAddEntryDialog();
-        },
-        backgroundColor: AppColors.accent,
-        icon: const Icon(Icons.add_rounded, color: Colors.white),
-        label: Text(
-          "timeline_new_note".tr(),
-          style: const TextStyle(
-            fontWeight: FontWeight.w700,
-            color: Colors.white,
+    return PopScope(
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) _clearResumeState();
+      },
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        appBar: AppBar(
+          title: Text("timeline_title".tr()),
+          backgroundColor: AppColors.surface,
+        ),
+        floatingActionButton: FloatingActionButton.extended(
+          onPressed: () {
+            HapticFeedback.lightImpact();
+            _showAddEntryDialog();
+          },
+          backgroundColor: AppColors.accent,
+          icon: const Icon(Icons.add_rounded, color: Colors.white),
+          label: Text(
+            "timeline_new_note".tr(),
+            style: const TextStyle(
+              fontWeight: FontWeight.w700,
+              color: Colors.white,
+            ),
           ),
         ),
+        body: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : _entries.isEmpty
+            ? _buildEmptyState()
+            : _buildEntryList(),
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _entries.isEmpty
-          ? _buildEmptyState()
-          : _buildEntryList(),
     );
   }
 
