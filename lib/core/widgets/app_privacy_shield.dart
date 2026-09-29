@@ -5,14 +5,16 @@ import '../motion.dart';
 
 /// Whether the privacy mask should cover the app for a given lifecycle state.
 ///
-/// Masks ONLY for genuine backgrounding — paused/hidden, which the recents /
-/// app-switcher thumbnail routes through. Deliberately does NOT mask on
-/// [AppLifecycleState.inactive]: that fires while a view is still visible
-/// (system dialogs, the screenshot/overlay capture flow, split-screen, an
-/// incoming call), and masking there would black out screenshots and dialogs.
-/// [AppLifecycleState.detached] is teardown and is also excluded.
+/// Masks as soon as Android reports [AppLifecycleState.inactive]. Waiting for
+/// paused/hidden is too late: Flutter disables frames in those states, so the
+/// overlay's state change cannot be painted before Android captures the
+/// recents thumbnail. The app content behind a system dialog is intentionally
+/// masked as the privacy-safe tradeoff. [AppLifecycleState.detached] is
+/// teardown and is excluded.
 bool privacyShieldShouldMask(AppLifecycleState state) =>
-    state == AppLifecycleState.paused || state == AppLifecycleState.hidden;
+    state == AppLifecycleState.inactive ||
+    state == AppLifecycleState.paused ||
+    state == AppLifecycleState.hidden;
 
 class AppPrivacyShield extends StatefulWidget {
   final Widget child;
@@ -72,7 +74,11 @@ class _AppPrivacyShieldState extends State<AppPrivacyShield>
           ignoring: !_masked,
           child: AnimatedOpacity(
             opacity: _masked ? 1 : 0,
-            duration: Motion.fast,
+            // Never animate *into* the privacy state. A fade leaves one or
+            // more sensitive frames available to Android's recents snapshot.
+            // The reveal may stay animated because it happens only after the
+            // app is foreground-visible again.
+            duration: _masked ? Duration.zero : Motion.fast,
             child: const ColoredBox(color: Colors.black),
           ),
         ),

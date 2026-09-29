@@ -50,4 +50,12 @@ void main() {
     final gradle = File('android/app/build.gradle.kts').readAsStringSync();
     expect(gradle, contains('buildConfig = true'));
   });
+
+  test(
+    'API 33+ disables recents snapshots even for screenshot-capable debug',
+    () {
+      expect(mainActivity, contains('Build.VERSION_CODES.TIRAMISU'));
+      expect(mainActivity, contains('setRecentsScreenshotEnabled(false)'));
+    },
+  );
 }

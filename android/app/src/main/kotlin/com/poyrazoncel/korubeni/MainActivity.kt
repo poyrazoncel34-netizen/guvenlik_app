@@ -54,6 +54,14 @@ class MainActivity : FlutterFragmentActivity() {
     private var pendingDeepLink: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Keep task snapshots out of Overview even in debug builds. Debug must
+        // remain screenshot-capable for store assets, but that does not require
+        // Android to retain a sensitive recents thumbnail. API 33 added this
+        // narrower control; release builds also retain FLAG_SECURE below as the
+        // stronger screen-capture boundary on every supported API level.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            setRecentsScreenshotEnabled(false)
+        }
         // FLAG_SECURE blocks screenshots, screen recording and the recents
         // thumbnail for the whole app. Under the duress model the screens that
         // matter are the PIN pad, the emergency contact list and the safety
