@@ -1,15 +1,25 @@
+import 'dart:async';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guvenlik_app/core/di/service_locator.dart';
 import 'package:guvenlik_app/core/security/secure_storage.dart';
 import 'package:guvenlik_app/core/services/contact_service.dart';
+import 'package:guvenlik_app/core/services/emergency_session_contract.dart';
 import 'package:guvenlik_app/core/services/local_database_service.dart';
 import 'package:guvenlik_app/core/services/subscription_access_state.dart';
 import 'package:guvenlik_app/core/utils/panic_hold_gate.dart';
+import 'package:guvenlik_app/domain/repositories/contacts_repository.dart';
+import 'package:guvenlik_app/presentation/providers/contacts_provider.dart';
+import 'package:guvenlik_app/presentation/providers/home_provider.dart';
 import 'package:guvenlik_app/presentation/providers/subscription_provider.dart';
 import 'package:guvenlik_app/screens/countdown_screen.dart';
+import 'package:guvenlik_app/screens/contacts_page.dart';
 import 'package:guvenlik_app/widgets/panic_button.dart';
 import 'package:provider/provider.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/services/contact_service_test_support.dart';
@@ -74,7 +84,84 @@ class _FixedAccessProvider extends SubscriptionProvider {
   SubscriptionAccessState get access => _state;
 
   @override
+  EntitlementDecision get entitlementDecision => _state.entitlementDecision;
+
+  @override
   Future<SubscriptionAccessState> resolveAccess() async => _state;
+}
+
+class _DelayedArmBoundaryProvider extends SubscriptionProvider {
+  _DelayedArmBoundaryProvider(this.state);
+
+  final SubscriptionAccessState state;
+  final Completer<SubscriptionAccessState> armBoundary =
+      Completer<SubscriptionAccessState>();
+  int resolveCount = 0;
+
+  @override
+  SubscriptionAccessState get access => state;
+
+  @override
+  EntitlementDecision get entitlementDecision => state.entitlementDecision;
+
+  @override
+  Future<void> ensureOfflineGraceLoaded() async {}
+
+  @override
+  Future<SubscriptionAccessState> resolveAccess() {
+    resolveCount++;
+    return resolveCount.isOdd ? Future.value(state) : armBoundary.future;
+  }
+}
+
+class _NoopContactsProvider extends ContactsProvider {
+  @override
+  Future<void> initialize() async {}
+}
+
+class _NoopHomeProvider extends HomeProvider {
+  @override
+  Future<void> initialize() async {}
+}
+
+class _ContactsRepository implements ContactsRepository {
+  const _ContactsRepository(this.primary);
+
+  final EmergencyContact? primary;
+
+  @override
+  Future<void> clearPrimaryEmergencyContact() async {}
+  @override
+  Future<List<String>> getAllEmergencyNumbers() async =>
+      primary == null ? const [] : [primary!.phone];
+  @override
+  Future<List<EmergencyContact>> getContactRecords() async =>
+      primary == null ? const [] : [primary!];
+  @override
+  Future<List<String>> getContacts() => getAllEmergencyNumbers();
+  @override
+  Future<EmergencyContact?> getPrimaryEmergencyContact() async => primary;
+  @override
+  Future<void> saveContactRecords(List<EmergencyContact> contacts) async {}
+  @override
+  Future<void> saveContacts(List<String> numbers) async {}
+  @override
+  Future<void> saveEmergencyNumbers(List<String> numbers) async {}
+  @override
+  Future<void> savePrimaryEmergencyContact({
+    required String name,
+    required String phone,
+  }) async {}
+}
+
+class _PushObserver extends NavigatorObserver {
+  int countdownPushes = 0;
+
+  @override
+  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    if (route is PageRouteBuilder<dynamic>) countdownPushes++;
+    super.didPush(route, previousRoute);
+  }
 }
 
 void main() {
@@ -83,6 +170,7 @@ void main() {
 
   late FakeSecureStorage secure;
   late FakeLocalDatabaseService db;
+  const pathProviderChannel = MethodChannel('plugins.flutter.io/path_provider');
 
   setUp(() async {
     // The first-use warning dialog is keyed off SharedPreferences; marking it
@@ -98,10 +186,24 @@ void main() {
     serviceLocator.registerSingleton<SecureStorage>(secure);
     serviceLocator.registerSingleton<LocalDatabaseService>(db);
     ContactService.resetCache();
+    PackageInfo.setMockInitialValues(
+      appName: 'KoruBeni',
+      packageName: 'com.poyrazoncel.korubeni',
+      version: '1.0.0',
+      buildNumber: '1',
+      buildSignature: '',
+    );
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(
+          pathProviderChannel,
+          (_) async => Directory.systemTemp.path,
+        );
   });
 
   tearDown(() async {
     ContactService.resetCache();
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(pathProviderChannel, null);
     await serviceLocator.reset();
   });
 
@@ -109,16 +211,27 @@ void main() {
 
   Future<void> pumpButton(
     WidgetTester tester,
-    SubscriptionAccessState state,
-  ) async {
+    SubscriptionAccessState state, {
+    NavigatorObserver? observer,
+    SubscriptionProvider? provider,
+  }) async {
     holdClock = _ManualStopwatch();
     await tester.pumpWidget(
-      ChangeNotifierProvider<SubscriptionProvider>.value(
-        value: _FixedAccessProvider(state),
-        child: MaterialApp(
-          home: Scaffold(
-            body: PanicButton(holdClockOverride: () => holdClock),
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider<SubscriptionProvider>.value(
+            value: provider ?? _FixedAccessProvider(state),
           ),
+          ChangeNotifierProvider<ContactsProvider>.value(
+            value: _NoopContactsProvider(),
+          ),
+          ChangeNotifierProvider<HomeProvider>.value(
+            value: _NoopHomeProvider(),
+          ),
+        ],
+        child: MaterialApp(
+          navigatorObservers: [?observer],
+          home: Scaffold(body: PanicButton(holdClockOverride: () => holdClock)),
         ),
       ),
     );
@@ -232,4 +345,155 @@ void main() {
       reason: 'an incomplete hold is not a refusal, it is a non-event',
     );
   });
+
+  testWidgets('PNK-04 pointer cancel resets a completed hold without arming', (
+    tester,
+  ) async {
+    await seedCallableContact(tester);
+    await pumpButton(tester, verifiedPro);
+    final gesture = await tester.startGesture(
+      tester.getCenter(find.byType(PanicButton)),
+    );
+    await tester.pump();
+    holdClock.elapsed =
+        PanicHoldGate.requiredDuration + const Duration(milliseconds: 500);
+    await tester.pump(
+      PanicHoldGate.requiredDuration + const Duration(milliseconds: 500),
+    );
+
+    await gesture.cancel();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(find.byType(CountdownScreen), findsNothing);
+    expect(find.byType(SnackBar), findsNothing);
+  });
+
+  testWidgets(
+    'PNK-14 verified free access renders the locked production state',
+    (tester) async {
+      final verifiedFree = const SubscriptionAccessState.uninitialized()
+          .markVerified(isPro: false);
+      await pumpButton(tester, verifiedFree);
+
+      expect(find.text('panic_button_locked_title'), findsOneWidget);
+      expect(find.text('panic_button_locked_subtitle'), findsOneWidget);
+      expect(find.text('subscription_badge_pro'), findsOneWidget);
+      expect(find.text('panic_button_armed_title'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'PNK-07: completed hold without callable contact is refused visibly',
+    (tester) async {
+      await tester.runAsync(ContactService.getContactRecords);
+      await pumpButton(tester, verifiedPro);
+
+      await holdPastGate(tester);
+
+      expect(find.byType(CountdownScreen), findsNothing);
+      expect(find.text('timer_emergency_contact_required'), findsOneWidget);
+      expect(find.text('timer_add_contact_action'), findsOneWidget);
+    },
+  );
+
+  testWidgets('PNK-08: missing-contact SnackBar action pushes ContactsPage', (
+    tester,
+  ) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(1200, 1800);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetPhysicalSize);
+    await tester.runAsync(ContactService.getContactRecords);
+    await pumpButton(tester, verifiedPro);
+    await holdPastGate(tester);
+
+    await tester.tap(find.text('timer_add_contact_action'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 350));
+
+    expect(find.byType(ContactsPage), findsOneWidget);
+  });
+
+  testWidgets('PNK-09: accepting first-use warning cancels that first hold', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues(<String, Object>{});
+    await tester.runAsync(ContactService.getContactRecords);
+    await pumpButton(tester, verifiedPro);
+
+    await holdPastGate(tester);
+    expect(find.byType(AlertDialog), findsOneWidget);
+    expect(find.byType(CountdownScreen), findsNothing);
+
+    await tester.tap(find.text('feature_warning_continue'));
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 300)),
+    );
+    for (var i = 0; i < 8; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    expect(find.byType(AlertDialog), findsNothing);
+    expect(find.byType(CountdownScreen), findsNothing);
+    expect(
+      (await SharedPreferences.getInstance()).getBool('warning_panic_shown'),
+      isTrue,
+    );
+
+    await holdPastGate(tester);
+    expect(find.text('timer_emergency_contact_required'), findsOneWidget);
+  });
+
+  testWidgets(
+    'PNK-13: five rapid completed holds can push only one countdown',
+    (tester) async {
+      const primary = EmergencyContact(
+        name: 'Acil Kisi',
+        phone: '+905551112233',
+        isPrimary: true,
+      );
+      await seedCallableContact(tester);
+      serviceLocator.registerSingleton<ContactsRepository>(
+        const _ContactsRepository(primary),
+      );
+      final delayedProvider = _DelayedArmBoundaryProvider(verifiedPro);
+      final observer = _PushObserver();
+      await pumpButton(
+        tester,
+        verifiedPro,
+        observer: observer,
+        provider: delayedProvider,
+      );
+
+      for (var press = 0; press < 5; press++) {
+        final gesture = await tester.startGesture(
+          tester.getCenter(find.byType(PanicButton)),
+        );
+        await tester.pump();
+        holdClock.elapsed =
+            PanicHoldGate.requiredDuration + const Duration(milliseconds: 1);
+        await tester.pump(const Duration(milliseconds: 10));
+        await gesture.up();
+        await tester.pump();
+      }
+
+      expect(
+        delayedProvider.resolveCount,
+        2,
+        reason: 'route guard async yetki sınırından önce sahiplenilmeli',
+      );
+      delayedProvider.armBoundary.complete(verifiedPro);
+      for (var i = 0; i < 10; i++) {
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+
+      expect(
+        observer.countdownPushes,
+        1,
+        reason: 'hızlı tekrarlar yalnız bir CountdownScreen route açmalı',
+      );
+      expect(find.byType(CountdownScreen), findsOneWidget);
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump();
+    },
+  );
 }

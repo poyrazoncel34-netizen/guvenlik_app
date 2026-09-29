@@ -44,7 +44,9 @@ void main() {
         reason: 'liveRegion label must use the localized announcement key.',
       );
       expect(
-        source.contains('CountdownAnnouncement.labelFor(_countdown)'),
+        RegExp(
+          r'CountdownAnnouncement\.labelFor\(\s*_countdown,?\s*\)',
+        ).hasMatch(source),
         isTrue,
         reason: 'The screen must take its label from the shared schedule.',
       );
@@ -67,10 +69,26 @@ void main() {
         bucketStart,
         (bucketStart + 600).clamp(0, announcement.length),
       );
-      expect(window.contains('seconds >= 10'), isTrue, reason: '10s bucket missing');
-      expect(window.contains('seconds >= 8'), isTrue, reason: '8s bucket missing');
-      expect(window.contains('seconds >= 5'), isTrue, reason: '5s bucket missing');
-      expect(window.contains('seconds >= 1'), isTrue, reason: 'Per-second 4..1 fall-through missing');
+      expect(
+        window.contains('seconds >= 10'),
+        isTrue,
+        reason: '10s bucket missing',
+      );
+      expect(
+        window.contains('seconds >= 8'),
+        isTrue,
+        reason: '8s bucket missing',
+      );
+      expect(
+        window.contains('seconds >= 5'),
+        isTrue,
+        reason: '5s bucket missing',
+      );
+      expect(
+        window.contains('seconds >= 1'),
+        isTrue,
+        reason: 'Per-second 4..1 fall-through missing',
+      );
     });
 
     test('content inside the live region is excluded from semantics', () {
@@ -85,29 +103,39 @@ void main() {
   });
 
   group('Translation keys for liveRegion are present', () {
-    test('tr-TR.json defines countdown_seconds_remaining with {seconds} arg', () {
-      final tr =
-          jsonDecode(File('assets/translations/tr-TR.json').readAsStringSync())
-              as Map<String, dynamic>;
-      expect(tr.containsKey('countdown_seconds_remaining'), isTrue);
-      expect(
-        (tr['countdown_seconds_remaining'] as String).contains('{seconds}'),
-        isTrue,
-        reason:
-            'Localized announcement must interpolate the bucket number — '
-            'a hardcoded sentence would lose the remaining-time info.',
-      );
-    });
+    test(
+      'tr-TR.json defines countdown_seconds_remaining with {seconds} arg',
+      () {
+        final tr =
+            jsonDecode(
+                  File('assets/translations/tr-TR.json').readAsStringSync(),
+                )
+                as Map<String, dynamic>;
+        expect(tr.containsKey('countdown_seconds_remaining'), isTrue);
+        expect(
+          (tr['countdown_seconds_remaining'] as String).contains('{seconds}'),
+          isTrue,
+          reason:
+              'Localized announcement must interpolate the bucket number — '
+              'a hardcoded sentence would lose the remaining-time info.',
+        );
+      },
+    );
 
-    test('en-US.json defines countdown_seconds_remaining with {seconds} arg', () {
-      final en =
-          jsonDecode(File('assets/translations/en-US.json').readAsStringSync())
-              as Map<String, dynamic>;
-      expect(en.containsKey('countdown_seconds_remaining'), isTrue);
-      expect(
-        (en['countdown_seconds_remaining'] as String).contains('{seconds}'),
-        isTrue,
-      );
-    });
+    test(
+      'en-US.json defines countdown_seconds_remaining with {seconds} arg',
+      () {
+        final en =
+            jsonDecode(
+                  File('assets/translations/en-US.json').readAsStringSync(),
+                )
+                as Map<String, dynamic>;
+        expect(en.containsKey('countdown_seconds_remaining'), isTrue);
+        expect(
+          (en['countdown_seconds_remaining'] as String).contains('{seconds}'),
+          isTrue,
+        );
+      },
+    );
   });
 }

@@ -6,6 +6,8 @@
 // from easy_localization keys so EN/TR users see their own language.
 // ============================================================================
 
+import 'dart:async';
+
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -43,16 +45,18 @@ class FeatureWarningHelper {
       barrierDismissible: false,
       builder: (ctx) => EscapeDismissible(
         child: _FeatureWarningDialog(
-        title: title,
-        content: content,
-        onAccepted: () async {
-          await prefs.setBool(prefKey, true);
-          await LegalLogService.instance.logEvent(
-            'warning_shown_and_accepted',
-            feature: featureName,
-          );
-        },
-      ),
+          title: title,
+          content: content,
+          onAccepted: () async {
+            await prefs.setBool(prefKey, true);
+            unawaited(
+              LegalLogService.instance.logEvent(
+                'warning_shown_and_accepted',
+                feature: featureName,
+              ),
+            );
+          },
+        ),
       ),
     );
 

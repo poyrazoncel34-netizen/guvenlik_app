@@ -265,6 +265,59 @@ void main() {
     expect(find.byType(CountdownScreen), findsOneWidget);
   });
 
+  testWidgets('wrong PIN stays on countdown and never requests cancellation', (
+    tester,
+  ) async {
+    const channel = MethodChannel('countdown-wrong-pin-behavior-test');
+    final methods = <String>[];
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(channel, (
+      call,
+    ) async {
+      methods.add(call.method);
+      final arguments = (call.arguments as Map<Object?, Object?>)
+          .cast<String, Object?>();
+      if (call.method == 'armEmergencySession') {
+        return <String, Object?>{
+          'type': 'armed',
+          'token': <String, Object?>{
+            'protocolVersion': arguments['protocolVersion'],
+            'randomId': arguments['randomId'],
+            'generation': arguments['requestedGeneration'],
+            'kind': arguments['kind'],
+          },
+          'mainDeadlineMs': arguments['mainDeadlineMs'],
+          'finalDeadlineMs': arguments['finalDeadlineMs'],
+        };
+      }
+      throw PlatformException(code: 'unexpected_method', message: call.method);
+    });
+    addTearDown(
+      () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        channel,
+        null,
+      ),
+    );
+    await _pumpCountdown(
+      tester,
+      platform: EmergencyPlatformService.forTesting(
+        methodChannel: channel,
+        defaultTimeout: const Duration(milliseconds: 100),
+      ),
+    );
+
+    for (final digit in <String>['1', '1', '1', '1']) {
+      final key = find.text(digit);
+      await tester.ensureVisible(key);
+      await tester.tap(key);
+      await tester.pump();
+    }
+    await tester.pump(const Duration(milliseconds: 500));
+
+    expect(find.text('pin_mismatch'), findsOneWidget);
+    expect(find.byType(CountdownScreen), findsOneWidget);
+    expect(methods, isNot(contains('cancelEmergencySession')));
+  });
+
   testWidgets(
     'rejected native arm has no active token and PIN cancel exits locally',
     (tester) async {

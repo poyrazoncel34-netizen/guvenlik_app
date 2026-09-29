@@ -236,53 +236,59 @@ class _PanicButtonState extends State<PanicButton>
 
   Future<void> _openCountdownScreen() async {
     if (_countdownOpening || !mounted) return;
-
-    // Resolve a fresh entitlement decision at the actual arm boundary. The
-    // earlier long-press gate is UX; it is not an entitlement lease.
-    final allowed = await SubscriptionGate.ensureAccess(
-      context,
-      PremiumFeature.panic,
-    );
-    if (!mounted) return;
-    final entitlementDecision = context
-        .read<SubscriptionProvider>()
-        .entitlementDecision;
-    if (!allowed || entitlementDecision != EntitlementDecision.authorized) {
-      if (entitlementDecision == EntitlementDecision.unknown) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('safety_session_entitlement_unverified'.tr()),
-            backgroundColor: AppColors.warning,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
-      return;
-    }
-
-    // Personless-trigger guard: with 112 removed, the countdown has nothing to
-    // call unless a callable emergency contact is configured. Redirect the user
-    // to add one instead of arming a flow that would dial nobody.
-    if (!await _hasCallableContact()) {
-      if (!mounted) return;
-      _showContactRequired();
-      return;
-    }
-    if (!mounted) return;
-
     _countdownOpening = true;
-    // No transition on the dispatch path. The 300ms fade+slide was 300ms of
-    // screen time before the countdown could arm, and a decorative one at that:
-    // the user has already committed by completing the hold gesture.
-    Navigator.push(
-      context,
-      PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) =>
-            CountdownScreen(entitlementDecision: entitlementDecision),
-        transitionDuration: Duration.zero,
-        reverseTransitionDuration: Duration.zero,
-      ),
-    ).whenComplete(() => _countdownOpening = false);
+    var routeOpened = false;
+
+    try {
+      // Resolve a fresh entitlement decision at the actual arm boundary. The
+      // earlier long-press gate is UX; it is not an entitlement lease.
+      final allowed = await SubscriptionGate.ensureAccess(
+        context,
+        PremiumFeature.panic,
+      );
+      if (!mounted) return;
+      final entitlementDecision = context
+          .read<SubscriptionProvider>()
+          .entitlementDecision;
+      if (!allowed || entitlementDecision != EntitlementDecision.authorized) {
+        if (entitlementDecision == EntitlementDecision.unknown) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('safety_session_entitlement_unverified'.tr()),
+              backgroundColor: AppColors.warning,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+        return;
+      }
+
+      // Personless-trigger guard: with 112 removed, the countdown has nothing to
+      // call unless a callable emergency contact is configured. Redirect the user
+      // to add one instead of arming a flow that would dial nobody.
+      if (!await _hasCallableContact()) {
+        if (!mounted) return;
+        _showContactRequired();
+        return;
+      }
+      if (!mounted) return;
+
+      // No transition on the dispatch path. The 300ms fade+slide was 300ms of
+      // screen time before the countdown could arm, and a decorative one at that:
+      // the user has already committed by completing the hold gesture.
+      routeOpened = true;
+      Navigator.push(
+        context,
+        PageRouteBuilder(
+          pageBuilder: (context, animation, secondaryAnimation) =>
+              CountdownScreen(entitlementDecision: entitlementDecision),
+          transitionDuration: Duration.zero,
+          reverseTransitionDuration: Duration.zero,
+        ),
+      ).whenComplete(() => _countdownOpening = false);
+    } finally {
+      if (!routeOpened) _countdownOpening = false;
+    }
   }
 
   Future<bool> _hasCallableContact() async {
@@ -344,40 +350,45 @@ class _PanicButtonState extends State<PanicButton>
       barrierDismissible: false,
       builder: (ctx) => EscapeDismissible(
         child: AlertDialog(
-        backgroundColor: AppColors.cardBg,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(
-          'panic_button_a11y_confirm_title'.tr(),
-          style: const TextStyle(
-            color: AppColors.textPrimary,
-            fontWeight: FontWeight.w800,
+          backgroundColor: AppColors.cardBg,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
           ),
+          title: Text(
+            'panic_button_a11y_confirm_title'.tr(),
+            style: const TextStyle(
+              color: AppColors.textPrimary,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          content: Text(
+            'panic_button_a11y_confirm_body'.tr(),
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              height: 1.45,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(
+                'cancel'.tr(),
+                style: const TextStyle(color: AppColors.textSecondary),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.emergency,
+                foregroundColor: Colors.white,
+              ),
+              child: Text(
+                'panic_button_a11y_confirm_start'.tr(),
+                style: const TextStyle(fontWeight: FontWeight.w800),
+              ),
+            ),
+          ],
         ),
-        content: Text(
-          'panic_button_a11y_confirm_body'.tr(),
-          style: const TextStyle(color: AppColors.textSecondary, height: 1.45),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(
-              'cancel'.tr(),
-              style: const TextStyle(color: AppColors.textSecondary),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.emergency,
-              foregroundColor: Colors.white,
-            ),
-            child: Text(
-              'panic_button_a11y_confirm_start'.tr(),
-              style: const TextStyle(fontWeight: FontWeight.w800),
-            ),
-          ),
-        ],
-      ),
       ),
     );
     if (confirmed != true || !mounted) return;
@@ -396,7 +407,11 @@ class _PanicButtonState extends State<PanicButton>
     final shortSide = size.shortestSide;
     // Scale button to ~38% of shortest side, clamped
     final baseSize = (shortSide * 0.38).clamp(160.0, 240.0);
-    final buttonSize = _isArmed ? baseSize * 0.92 : baseSize;
+    final textScale = MediaQuery.textScalerOf(context).scale(1);
+    // Grow the circle at larger text scales instead of shrinking its copy.
+    final accessibilityGrowth = ((textScale - 1).clamp(0.0, 1.0)) * 16;
+    final buttonSize =
+        (_isArmed ? baseSize * 0.92 : baseSize) + accessibilityGrowth;
     final iconSize = (baseSize * 0.34).clamp(56.0, 88.0);
     final titleFontSize = (baseSize * 0.092).clamp(14.0, 24.0);
     final subtitleFontSize = (baseSize * 0.048).clamp(10.0, 13.0);
@@ -429,8 +444,8 @@ class _PanicButtonState extends State<PanicButton>
         onTapUp: accessibleNavigation ? null : _onPressEnd,
         onTapCancel: accessibleNavigation ? null : _onPressCancel,
         child: SizedBox(
-          width: baseSize * 1.4,
-          height: baseSize * 1.4,
+          width: max(baseSize * 1.4, buttonSize + 32),
+          height: max(baseSize * 1.4, buttonSize + 32),
           child: Stack(
             alignment: Alignment.center,
             children: [
@@ -461,7 +476,10 @@ class _PanicButtonState extends State<PanicButton>
 
               // Main button with gradient
               AnimatedContainer(
-                duration: Motion.fast,
+                // A system text-scale change is instantaneous. Animating the
+                // circle from its old 160 dp size while the glyphs jump to
+                // 2.0x produces a real one-frame RenderFlex overflow.
+                duration: accessibilityGrowth > 0 ? Duration.zero : Motion.fast,
                 curve: Curves.easeOut,
                 width: buttonSize,
                 height: buttonSize,

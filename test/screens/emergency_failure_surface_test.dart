@@ -307,4 +307,63 @@ void main() {
     expect(texts, isNot(contains(catalogue['emergency_per_target_title'])),
         reason: 'nothing was attempted, so there is no per-target account');
   });
+
+  testWidgets('GS-28 dismiss closes the dialog and its countdown host route', (
+    tester,
+  ) async {
+    final copy = EmergencyResultPolicy.failureCopy(
+      reason: EmergencyFailureReason.armRejected,
+      bodyKeyOverride: 'emergency_total_failure_body',
+    );
+    await tester.pumpWidget(
+      EasyLocalization(
+        supportedLocales: const <Locale>[Locale('tr', 'TR')],
+        path: 'assets/translations',
+        fallbackLocale: const Locale('tr', 'TR'),
+        assetLoader: const _RealTrAssetLoader(),
+        child: Builder(
+          builder: (context) => MaterialApp(
+            locale: EasyLocalization.of(context)!.locale,
+            supportedLocales: EasyLocalization.of(context)!.supportedLocales,
+            localizationsDelegates: EasyLocalization.of(context)!.delegates,
+            home: Builder(
+              builder: (root) => ElevatedButton(
+                onPressed: () => Navigator.of(root).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => Builder(
+                      builder: (host) => Scaffold(
+                        body: ElevatedButton(
+                          onPressed: () => EmergencyFailureDialog.show(
+                            host,
+                            copy: copy,
+                            phoneNumber: '+905001234567',
+                            popHostOnDismiss: true,
+                          ),
+                          child: const Text('show failure'),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                child: const Text('open host'),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('open host'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('show failure'));
+    await tester.pumpAndSettle();
+    expect(find.byType(AlertDialog), findsOneWidget);
+
+    await tester.tap(find.text(_catalogue()['emergency_dismiss']!));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(AlertDialog), findsNothing);
+    expect(find.text('open host'), findsOneWidget);
+    expect(find.text('show failure'), findsNothing);
+  });
 }

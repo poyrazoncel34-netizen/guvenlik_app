@@ -31,7 +31,10 @@ import 'contacts_page.dart';
 import '../core/widgets/escape_dismissible.dart';
 
 class SafeWalkScreen extends StatefulWidget {
-  const SafeWalkScreen({super.key});
+  const SafeWalkScreen({super.key, this.controller});
+
+  @visibleForTesting
+  final CheckInService? controller;
 
   @override
   State<SafeWalkScreen> createState() => _SafeWalkScreenState();
@@ -41,7 +44,8 @@ class _SafeWalkScreenState extends State<SafeWalkScreen> {
   // Safe-walk shares the check-in session controller (SPEC §6): same 60s grace
   // machine + same native primary-only backup. No screen-local timer and no
   // separate panic screen on expiry (escalation is primary-only).
-  final CheckInService _controller = CheckInService.safeWalk;
+  late final CheckInService _controller =
+      widget.controller ?? CheckInService.safeWalk;
 
   int _selectedMinutes = 15;
   bool _preWarningFired = false;
@@ -620,7 +624,10 @@ class _SafeWalkScreenState extends State<SafeWalkScreen> {
           width: double.infinity,
           child: ElevatedButton.icon(
             onPressed: _markSafe,
-            icon: const Icon(Icons.check_circle_rounded, size: IconSizes.dialog),
+            icon: const Icon(
+              Icons.check_circle_rounded,
+              size: IconSizes.dialog,
+            ),
             label: Text(
               "safe_walk_safe".tr(),
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
@@ -670,35 +677,37 @@ class _SafeWalkScreenState extends State<SafeWalkScreen> {
       context: context,
       builder: (ctx) => EscapeDismissible(
         child: AlertDialog(
-        backgroundColor: AppColors.cardBg,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(
-          "safe_walk_exit_title".tr(),
-          style: const TextStyle(color: AppColors.textPrimary),
-        ),
-        content: Text(
-          "safe_walk_exit_message".tr(),
-          style: const TextStyle(color: AppColors.textSecondary),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text("safe_walk_exit_stay".tr()),
+          backgroundColor: AppColors.cardBg,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
           ),
-          TextButton(
-            onPressed: () async {
-              Navigator.pop(ctx);
-              final cancelled = await _cancelWalk();
-              if (!mounted) return;
-              if (cancelled) Navigator.pop(context);
-            },
-            child: Text(
-              "safe_walk_exit_cancel".tr(),
-              style: const TextStyle(color: AppColors.emergency),
+          title: Text(
+            "safe_walk_exit_title".tr(),
+            style: const TextStyle(color: AppColors.textPrimary),
+          ),
+          content: Text(
+            "safe_walk_exit_message".tr(),
+            style: const TextStyle(color: AppColors.textSecondary),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text("safe_walk_exit_stay".tr()),
             ),
-          ),
-        ],
-      ),
+            TextButton(
+              onPressed: () async {
+                Navigator.pop(ctx);
+                final cancelled = await _cancelWalk();
+                if (!mounted) return;
+                if (cancelled) Navigator.pop(context);
+              },
+              child: Text(
+                "safe_walk_exit_cancel".tr(),
+                style: const TextStyle(color: AppColors.emergency),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

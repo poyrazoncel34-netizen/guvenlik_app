@@ -26,7 +26,10 @@ import '../core/services/reduced_motion_policy.dart';
 // Analytics service removed (offline-first)
 
 class CheckInScreen extends StatefulWidget {
-  const CheckInScreen({super.key});
+  const CheckInScreen({super.key, this.service});
+
+  @visibleForTesting
+  final CheckInService? service;
 
   @override
   State<CheckInScreen> createState() => _CheckInScreenState();
@@ -36,7 +39,8 @@ class _CheckInScreenState extends State<CheckInScreen>
     with TickerProviderStateMixin {
   late AnimationController _pulseController;
   late AnimationController _staggerController;
-  final CheckInService _service = CheckInService.instance;
+  late final CheckInService _service =
+      widget.service ?? CheckInService.instance;
   bool _safetyIntentInProgress = false;
 
   @override
@@ -51,7 +55,9 @@ class _CheckInScreenState extends State<CheckInScreen>
       duration: const Duration(milliseconds: 800),
     )..forward();
     _service.addListener(_onServiceChanged);
-    _service.initialize();
+    if (widget.service == null) {
+      _service.initialize();
+    }
     // Analytics removed (offline-first)
   }
 
@@ -608,7 +614,10 @@ class _CheckInScreenState extends State<CheckInScreen>
             width: double.infinity,
             child: ElevatedButton.icon(
               onPressed: _confirmSafe,
-              icon: const Icon(Icons.check_circle_rounded, size: IconSizes.dialog),
+              icon: const Icon(
+                Icons.check_circle_rounded,
+                size: IconSizes.dialog,
+              ),
               label: Text(
                 "check_in_im_safe".tr(),
                 style: const TextStyle(
@@ -649,7 +658,11 @@ class _CheckInScreenState extends State<CheckInScreen>
             ),
             child: Row(
               children: [
-                Icon(Icons.info_outline_rounded, color: color, size: IconSizes.action),
+                Icon(
+                  Icons.info_outline_rounded,
+                  color: color,
+                  size: IconSizes.action,
+                ),
                 const SizedBox(width: 14),
                 Expanded(
                   child: Text(
