@@ -695,8 +695,14 @@ class _FakeCallScreenState extends State<FakeCallScreen>
       ),
       ),
     ).whenComplete(() {
-      nameController.dispose();
-      phoneController.dispose();
+      // The sheet's route future completes on pop while its dismiss frame can
+      // still rebuild these TextFields. Disposing during that frame throws
+      // "A TextEditingController was used after being disposed" and takes the
+      // sheet's layout with it. Dispose after the frame, not during it.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        nameController.dispose();
+        phoneController.dispose();
+      });
     });
   }
 

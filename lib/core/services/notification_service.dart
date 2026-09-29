@@ -29,6 +29,7 @@ class NotificationService {
   bool _initialized = false;
   bool _timezoneInitialized = false;
   int _activeNotificationCount = 0;
+  bool _pendingFakeCallLaunch = false;
 
   Future<void> initialize() async {
     if (_initialized) return;
@@ -44,6 +45,15 @@ class NotificationService {
       settings,
       onDidReceiveNotificationResponse: _handleNotificationResponse,
     );
+    // The response callback handles taps while Flutter is alive. Android does
+    // not replay that callback when a notification creates a fresh process, so
+    // explicitly collect the launch response before runApp. Without this the
+    // delivered fake-call notification merely opened the ordinary app shell.
+    final launchDetails = await _plugin.getNotificationAppLaunchDetails();
+    if (launchDetails?.didNotificationLaunchApp ?? false) {
+      final response = launchDetails?.notificationResponse;
+      if (response != null) _handleNotificationResponse(response);
+    }
     final androidImplementation = _plugin
         .resolvePlatformSpecificImplementation<
           AndroidFlutterLocalNotificationsPlugin
@@ -58,7 +68,10 @@ class NotificationService {
     await androidImplementation?.createNotificationChannel(
       AndroidNotificationChannel(
         kEmergencyAlertsChannelId,
-        _safeChannelTr('notification_channel_emergency_name', 'Acil Bildirimler'),
+        _safeChannelTr(
+          'notification_channel_emergency_name',
+          'Acil Bildirimler',
+        ),
         description: _safeChannelTr(
           'notification_channel_emergency_desc',
           'Kritik guvenlik ve check-in bildirimleri',
@@ -80,7 +93,10 @@ class NotificationService {
     await androidImplementation?.createNotificationChannel(
       AndroidNotificationChannel(
         kGeneralNotificationsChannelId,
-        _safeChannelTr('notification_channel_general_name', 'Genel Bildirimler'),
+        _safeChannelTr(
+          'notification_channel_general_name',
+          'Genel Bildirimler',
+        ),
         description: _safeChannelTr(
           'notification_channel_general_desc',
           'Genel uygulama bildirimleri',
@@ -185,8 +201,8 @@ class NotificationService {
     try {
       await initialize();
       final scheduledAt = tz.TZDateTime.now(tz.local).add(delay);
-      final canExact =
-          await EmergencyPlatformService.instance.canScheduleExactAlarms();
+      final canExact = await EmergencyPlatformService.instance
+          .canScheduleExactAlarms();
       if (!canExact) return false;
       await _plugin.zonedSchedule(
         31001,
@@ -267,8 +283,63 @@ class NotificationService {
     // the app is locked. It exposes the decoy identity the user themselves
     // configured and nothing else.
     final navigator = rootNavigatorKey.currentState;
-    if (navigator == null) return;
+    if (navigator == null) {
+      _pendingFakeCallLaunch = true;
+      return;
+    }
     navigator.push(MaterialPageRoute(builder: (_) => const FakeCallScreen()));
+  }
+
+  /// Pushes a fake-call tap captured before the root Navigator existed.
+  ///
+  /// Returns false without consuming when the Navigator is not mounted yet, so
+  /// a caller can safely retry on a later frame. The flag is consumed before
+  /// the push to prevent duplicate routes if lifecycle callbacks race.
+  bool routePendingFakeCallLaunch({WidgetBuilder? builder}) {
+    if (!_pendingFakeCallLaunch) return false;
+    final navigator = rootNavigatorKey.currentState;
+    if (navigator == null) return false;
+    _pendingFakeCallLaunch = false;
+    navigator.push(
+      MaterialPageRoute(builder: builder ?? (_) => const FakeCallScreen()),
+    );
+    return true;
+  }
+
+  /// Retries a parked cold-launch response until the root Navigator exists.
+  ///
+  /// With state restoration enabled, the first frame of the parent app widget
+  /// can complete before [MaterialApp] has attached its Navigator state. A
+  /// single post-frame attempt therefore leaves the request parked forever.
+  /// Retry only while the allowlisted request is still pending, and keep the
+  /// retry bounded so a broken widget tree cannot schedule work indefinitely.
+  void routePendingFakeCallLaunchWhenReady({
+    WidgetBuilder? builder,
+    int remainingFrames = 8,
+  }) {
+    if (!_pendingFakeCallLaunch || remainingFrames <= 0) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (routePendingFakeCallLaunch(builder: builder)) return;
+      if (_pendingFakeCallLaunch && remainingFrames > 1) {
+        routePendingFakeCallLaunchWhenReady(
+          builder: builder,
+          remainingFrames: remainingFrames - 1,
+        );
+      }
+    });
+  }
+
+  @visibleForTesting
+  void handleNotificationResponseForTesting(NotificationResponse response) {
+    _handleNotificationResponse(response);
+  }
+
+  @visibleForTesting
+  bool get hasPendingFakeCallLaunchForTesting => _pendingFakeCallLaunch;
+
+  @visibleForTesting
+  void resetPendingFakeCallLaunchForTesting() {
+    _pendingFakeCallLaunch = false;
   }
 
   /// Shows a summary notification that groups individual alerts.

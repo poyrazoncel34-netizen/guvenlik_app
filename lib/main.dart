@@ -3,7 +3,8 @@
 // ============================================================================
 
 import 'dart:ui';
-import 'package:flutter/foundation.dart' show kIsWeb, kReleaseMode;
+import 'package:flutter/foundation.dart'
+    show FlutterExceptionHandler, kIsWeb, kReleaseMode, visibleForTesting;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -22,6 +23,7 @@ import 'core/services/app_reset_service.dart';
 import 'core/services/safety_session_activity_probe.dart';
 import 'core/services/best_effort_startup.dart';
 import 'core/services/startup_best_effort_services.dart';
+import 'core/services/notification_service.dart';
 import 'core/constants/feature_access_matrix.dart';
 import 'core/config/app_environment.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -142,38 +144,7 @@ void main() async {
     // Non-critical initialization failures remain degraded local features.
   }
 
-  // Error handling for Flutter errors — local device-only crash log.
-  FlutterError.onError = (details) {
-    CrashLogService.instance.record(LocalErrorCode.flutterFrameworkUnhandled);
-    LocalLoggerService.instance.errorCode(
-      LocalErrorCode.flutterFrameworkUnhandled,
-    );
-    assert(() {
-      debugPrint('FlutterError: ${details.exception}');
-      return true;
-    }());
-    // Framework exception text/stacks can contain PII. Keep raw presentation
-    // in debug builds only; release diagnostics use the structured code above.
-    if (!kReleaseMode) {
-      FlutterError.presentError(details);
-    }
-  };
-
-  // Zero-fault: Fatal hataları yutma - return false ile standart hata yönetimine bırak
-  PlatformDispatcher.instance.onError = (error, stack) {
-    CrashLogService.instance.record(LocalErrorCode.platformDispatcherUnhandled);
-    LocalLoggerService.instance.errorCode(
-      LocalErrorCode.platformDispatcherUnhandled,
-    );
-    assert(() {
-      debugPrint('PlatformDispatcher.onError: $error');
-      return true;
-    }());
-    // Returning false causes the engine to print the raw exception/stack.
-    // Release handles it locally to preserve logcat privacy; debug retains the
-    // default crash visibility for developers.
-    return kReleaseMode;
-  };
+  installUnhandledErrorHandlers();
 
   // Android 15 (API 35) enforces edge-to-edge for any app targeting SDK 35
   // or higher. Opt in explicitly so the engine never falls back to the
@@ -208,6 +179,50 @@ void main() async {
   );
 }
 
+/// Installs the process-wide local-only error boundary used by [main].
+///
+/// Optional callbacks expose only the two OS/plugin boundaries so widget tests
+/// can invoke the actual installed handlers without opening a database.
+@visibleForTesting
+void installUnhandledErrorHandlers({
+  void Function(LocalErrorCode code)? crashRecorder,
+  void Function(LocalErrorCode code)? localLogger,
+  FlutterExceptionHandler? debugPresenter,
+  bool? releaseMode,
+}) {
+  final record = crashRecorder ?? CrashLogService.instance.record;
+  final log = localLogger ?? LocalLoggerService.instance.errorCode;
+  final present = debugPresenter ?? FlutterError.presentError;
+  final isRelease = releaseMode ?? kReleaseMode;
+
+  FlutterError.onError = (details) {
+    record(LocalErrorCode.flutterFrameworkUnhandled);
+    log(LocalErrorCode.flutterFrameworkUnhandled);
+    assert(() {
+      debugPrint('FlutterError: ${details.exception}');
+      return true;
+    }());
+    // Framework exception text/stacks can contain PII. Keep raw presentation
+    // in debug builds only; release diagnostics use the structured code above.
+    if (!isRelease) {
+      present(details);
+    }
+  };
+
+  PlatformDispatcher.instance.onError = (error, stack) {
+    record(LocalErrorCode.platformDispatcherUnhandled);
+    log(LocalErrorCode.platformDispatcherUnhandled);
+    assert(() {
+      debugPrint('PlatformDispatcher.onError: $error');
+      return true;
+    }());
+    // Returning false causes the engine to print the raw exception/stack.
+    // Release handles it locally to preserve logcat privacy; debug retains the
+    // default crash visibility for developers.
+    return isRelease;
+  };
+}
+
 /// The critical preliminary steps, in the order `main` has always run them.
 ///
 /// Kept as a top-level list so the bootstrap-recovery retry re-runs exactly
@@ -240,8 +255,19 @@ Future<CriticalBootstrapResult> _runCriticalBootstrap() =>
 TextScaler appTextScaler(TextScaler systemScaler) =>
     systemScaler.clamp(minScaleFactor: 1.0, maxScaleFactor: 2.0);
 
-class KoruBeniApp extends StatelessWidget {
+class KoruBeniApp extends StatefulWidget {
   const KoruBeniApp({super.key});
+
+  @override
+  State<KoruBeniApp> createState() => _KoruBeniAppState();
+}
+
+class _KoruBeniAppState extends State<KoruBeniApp> {
+  @override
+  void initState() {
+    super.initState();
+    NotificationService.instance.routePendingFakeCallLaunchWhenReady();
+  }
 
   @override
   Widget build(BuildContext context) {

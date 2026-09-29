@@ -95,6 +95,14 @@ dev_dependencies:
   # this touches neither R8 keep rules nor 16KB alignment. Already present in the
   # resolution as a transitive dependency of flutter_test.
   analyzer: ^8.4.1
+  # Dev-only. Lets widget tests replace the audioplayers PLATFORM INTERFACE
+  # instead of its method channels. Channel mocks cannot cover it: AudioPlayer
+  # caches a global init completer per isolate, so the second player built in a
+  # test file never finishes creating and every later `stop()` hangs instead of
+  # throwing. Ships nothing (dev_dependencies are absent from the AAB, so no R8
+  # keep-rule or 16KB impact) and is already in the resolution as a transitive
+  # dependency of audioplayers.
+  audioplayers_platform_interface: ^7.1.1
   # Host-side (in-memory) sqflite for unit-testing DB-backed logic.
   sqflite_common_ffi: ^2.3.3
   flutter_launcher_icons: ^0.13.1

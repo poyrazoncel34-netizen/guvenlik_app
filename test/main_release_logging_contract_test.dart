@@ -33,11 +33,16 @@ void main() {
     test(
       'raw framework presentation is debug-only and codes are persisted',
       () {
-        expect(source, contains('if (!kReleaseMode) {'));
-        expect(source, contains('FlutterError.presentError(details);'));
+        expect(
+          source,
+          contains('final isRelease = releaseMode ?? kReleaseMode;'),
+        );
+        expect(source, contains('if (!isRelease) {'));
+        expect(source, contains('debugPresenter ?? FlutterError.presentError'));
+        expect(source, contains('present(details);'));
         expect(source, contains('LocalErrorCode.flutterFrameworkUnhandled'));
         expect(source, contains('LocalErrorCode.platformDispatcherUnhandled'));
-        expect(source, contains('return kReleaseMode;'));
+        expect(source, contains('return isRelease;'));
       },
     );
   });

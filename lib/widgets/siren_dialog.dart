@@ -4,7 +4,7 @@
 
 import 'dart:async';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb, visibleForTesting;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show HapticFeedback, MethodChannel;
 import 'package:audioplayers/audioplayers.dart';
@@ -15,6 +15,19 @@ import '../core/services/app_settings_service.dart';
 import '../core/services/reduced_motion_policy.dart';
 import '../core/widgets/feature_warning_dialog.dart';
 import '../domain/models/activity_event.dart';
+
+@visibleForTesting
+AudioContext buildSirenAudioContext() => AudioContext(
+  android: const AudioContextAndroid(
+    usageType: AndroidUsageType.alarm,
+    contentType: AndroidContentType.sonification,
+    audioFocus: AndroidAudioFocus.gainTransientExclusive,
+  ),
+  iOS: AudioContextIOS(
+    category: AVAudioSessionCategory.playback,
+    options: {AVAudioSessionOptions.duckOthers},
+  ),
+);
 
 class SirenDialog extends StatefulWidget {
   const SirenDialog({super.key});
@@ -92,22 +105,7 @@ class _SirenDialogState extends State<SirenDialog>
     try {
       // Force audio to main speaker even when headphones are connected
       if (!kIsWeb) {
-        await _audioPlayer.setAudioContext(
-          AudioContext(
-            android: const AudioContextAndroid(
-              usageType: AndroidUsageType.alarm,
-              contentType: AndroidContentType.sonification,
-              audioFocus: AndroidAudioFocus.gainTransientExclusive,
-            ),
-            iOS: AudioContextIOS(
-              category: AVAudioSessionCategory.playback,
-              options: {
-                AVAudioSessionOptions.defaultToSpeaker,
-                AVAudioSessionOptions.duckOthers,
-              },
-            ),
-          ),
-        );
+        await _audioPlayer.setAudioContext(buildSirenAudioContext());
       }
       await _audioPlayer.setVolume(1.0);
       await _audioPlayer.setReleaseMode(ReleaseMode.loop);
