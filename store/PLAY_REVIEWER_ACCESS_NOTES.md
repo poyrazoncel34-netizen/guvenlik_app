@@ -64,12 +64,13 @@ Hesap, giris veya gelistirici sunucusu gerekmez. Uygulama offline-first calisir.
 - Emergency contacts       (tab: Kisiler)
 
 --- PAID FEATURES / UCRETLI OZELLIKLER ---
-Panic/SOS, Safe Walk, Check-in, Safety history, Volume trigger and Test mode
-require the optional "KoruBeni Pro" subscription. To evaluate them without a
+Panic/SOS, Safe Walk, Check-in and Volume trigger require the optional
+"KoruBeni Pro" subscription. To evaluate them without a
 real charge, redeem this promo code on the paywall screen:
     <PROMO_CODE>
 Alternatively the review account can be added to Play Console license testing.
-Test mode ("Test Modu", free) runs the full panic flow WITHOUT placing a call.
+Safety history and Test mode ("Test Modu") are free. Test mode runs the full
+panic flow WITHOUT placing a call.
 
 --- IMPORTANT NOTES / ONEMLI NOTLAR ---
 * Screenshots and screen recording are blocked (FLAG_SECURE) in release

@@ -49,8 +49,8 @@ uygulaması (Flutter). İlk production runtime/listing yalnız Türkçe. Google 
 
 | Katman | Özellikler |
 |---|---|
-| FREE | harita/konum görünümü, sahte çağrı, siren, acil kişi yönetimi (ekleme + birincil seçme) |
-| PRO | **panik/SOS butonu**, Safe Walk, Check-In, etkinlik zaman çizelgesi, ses-tuşu tetikleyici, test modu, gelişmiş otomasyon |
+| FREE | harita/konum görünümü, sahte çağrı, siren, acil kişi yönetimi (ekleme + birincil seçme), etkinlik zaman çizelgesi, test modu |
+| PRO | **panik/SOS butonu**, Safe Walk, Check-In, ses-tuşu tetikleyici |
 
 - RevenueCat entitlement kimliği: **`'KoruBeni Pro'`**
   ([revenue_cat_service.dart:22](../lib/core/services/revenue_cat_service.dart)).

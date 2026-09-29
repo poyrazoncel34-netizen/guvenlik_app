@@ -30,7 +30,7 @@ Bu Kullanım Sözleşmesi ("Sözleşme"), KoruBeni uygulamasını ("Uygulama") g
 
 Kullanıcı, Uygulamayı kurarak ve kullanarak bu Sözleşme'yi okuduğunu, anladığını ve tüm hükümleriyle kabul ettiğini beyan eder. Kullanıcı, herhangi bir hükmü kabul etmiyorsa Uygulamayı kullanmamalı ve cihazından kaldırmalıdır.
 
-6502 Sayılı Tüketicinin Korunması Hakkında Kanun kapsamında bilgilendirme: KoruBeni temel ücretsiz kullanım ve Google Play üzerinden yönetilen isteğe bağlı KoruBeni Pro aboneliği sunabilir. Panik/SOS, güvenli yürüyüş/check-in, ses tuşu tetikleyici ve güvenlik geçmişi gibi araçlar Pro ile açılabilir. Acil kişi yönetimi, siren ve test modu bu sürümde ücretsizdir. KoruBeni profesyonel bir güvenlik hizmeti, acil müdahale servisi veya mesleki güvenlik çözümü DEĞİLDİR. Herhangi bir hizmet seviyesi taahhüdü verilmemektedir.
+6502 Sayılı Tüketicinin Korunması Hakkında Kanun kapsamında bilgilendirme: KoruBeni temel ücretsiz kullanım ve Google Play üzerinden yönetilen isteğe bağlı KoruBeni Pro aboneliği sunabilir. Panik/SOS, güvenli yürüyüş/check-in ve ses tuşu tetikleyici Pro ile açılabilir. Acil kişi yönetimi, siren, güvenlik geçmişi ve test modu bu sürümde ücretsizdir. KoruBeni profesyonel bir güvenlik hizmeti, acil müdahale servisi veya mesleki güvenlik çözümü DEĞİLDİR. Herhangi bir hizmet seviyesi taahhüdü verilmemektedir.
 
 ──────────────────────────────────────
 2. TANIMLAR
@@ -236,7 +236,7 @@ This Terms of Service Agreement ("Agreement") is entered into between the party 
 
 By installing and using the Application, the User declares that they have read, understood and accepted this Agreement in full. A User who does not accept any provision must not use the Application and must remove it from their device.
 
-Notice under Consumer Protection Law No. 6502: KoruBeni may offer basic free functionality and an optional KoruBeni Pro subscription managed through Google Play. Tools such as Panic/SOS, safe walk/check-in, volume trigger and safety history may unlock with Pro. Emergency contact management, siren and test mode are free in this release. KoruBeni is NOT a professional security service, an emergency response service, or a professional security solution. No service level commitment is provided.
+Notice under Consumer Protection Law No. 6502: KoruBeni may offer basic free functionality and an optional KoruBeni Pro subscription managed through Google Play. Panic/SOS, safe walk/check-in and the volume trigger may unlock with Pro. Emergency contact management, siren, safety history and test mode are free in this release. KoruBeni is NOT a professional security service, an emergency response service, or a professional security solution. No service level commitment is provided.
 
 ──────────────────────────────────────
 2. DEFINITIONS

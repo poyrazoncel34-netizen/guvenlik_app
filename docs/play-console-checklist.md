@@ -225,8 +225,10 @@ KoruBeni requests battery optimization exemption only as an optional reliability
 - **Government apps:** No · **Financial features:** None.
 - **Health Apps Declaration:** Form bütün uygulamalar için gönderilir; actual
   build sağlık özelliği sunmadığından “No health features” seçilir.
-- **FLAG_SECURE reviewer note:** Global `FLAG_SECURE` yoktur; screenshot
-  mümkündür. Yalnız app background olduğunda recents privacy mask gösterilir.
+- **FLAG_SECURE reviewer note:** Release build global `FLAG_SECURE` kullanır;
+  screenshot, ekran kaydı ve recents capture engellenir. Uygulama içi privacy
+  mask ve API 33+ recents-screenshot kontrolü ek savunmadır; debug store-asset
+  build'leri capture için bu bayrağı kullanmaz.
 
 ### 3.10 Data deletion
 

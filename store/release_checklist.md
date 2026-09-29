@@ -100,7 +100,7 @@ Every row below remains open until the named owner saves the required external e
 | Exact alarm declaration prepared | CODE_DONE | User-visible safety deadlines/timers; denial blocks long/scheduled arming, while Panic remains foreground/manual-dial only. |
 | Battery optimization declaration prepared | CODE_DONE | Optional reliability improvement; user can decline; degraded mode remains supported; OEM/Android settings may still affect behavior. |
 | CALL_PHONE reviewer note prepared | CODE_DONE | User-armed Panic/SOS, Check-In, and Safe Walk expiry; unconfirmed Telecom request plus user-tapped `ACTION_DIAL` fallback. |
-| Screenshot/privacy reviewer note prepared | CODE_DONE | Global `FLAG_SECURE` is absent; screenshots are possible; the background recent-apps preview is covered by an in-app privacy mask. |
+| Screenshot/privacy reviewer note prepared | CODE_DONE | Release builds set global `FLAG_SECURE`; screenshots, screen recording and recents capture are blocked. The in-app privacy mask and API 33+ recents-screenshot control are defence in depth; debug store-asset builds do not set `FLAG_SECURE`. |
 | Health Apps Declaration prepared | CODE_DONE / PLAY_CONSOLE | Actual build has no health feature; submit the declaration as “No health features”. |
 | App Access / reviewer instructions prepared | CODE_DONE | No login required for basic access. Pro features unlock via subscription; for review without payment, use Play Console license tester account (https://support.google.com/googleplay/android-developer/answer/6062777). Reviewer path + paywall test steps documented in `docs/play_console_declarations.md` (App Access / Reviewer Notes section). Operator must supply the actual license tester credentials in Play Console App Access form. |
 

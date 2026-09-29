@@ -64,7 +64,7 @@ build/app/outputs/bundle/playRelease/app-play-release.aab
 
 - Panic/SOS is Pro-only.
 - Basic access has no login.
-- Global `FLAG_SECURE` is not declared; screenshots remain possible. An in-app privacy mask covers the recent-apps preview while backgrounded.
+- Release builds set global `FLAG_SECURE`; screenshots, screen recording and recents capture are blocked. The in-app privacy mask and API 33+ recents-screenshot control add defence in depth; debug store-asset builds remain capture-capable.
 - CALL_PHONE is limited to user-armed Panic/SOS, Check-In, and Safe Walk expiry; the result is an unconfirmed Telecom request, with a user-tapped `ACTION_DIAL` fallback notification.
 - The build does not use an Android foreground service. Safety-session notifications are status UI; native alarms own deadlines.
 - Exact alarm denial blocks long-running/scheduled arming; Panic is foreground/manual-dial only and makes no background guarantee.

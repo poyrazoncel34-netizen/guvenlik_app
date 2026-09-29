@@ -25,6 +25,26 @@ void main() {
       expect(copy, isNot(contains('yalnızca satın alma geçmişi tutulur')));
     });
 
+    test('public and in-app plan copy matches the runtime feature matrix', () {
+      final tr = File('assets/translations/tr-TR.json').readAsStringSync();
+      final en = File('assets/translations/en-US.json').readAsStringSync();
+      final console = File(
+        'store/PLAY_CONSOLE_COPY_PASTE_PACK.md',
+      ).readAsStringSync();
+      final reviewer = File(
+        'store/PLAY_REVIEWER_ACCESS_NOTES.md',
+      ).readAsStringSync();
+      final combined = '$tr\n$en\n$console\n$reviewer'.toLowerCase();
+
+      expect(tr, contains('Test Modu ve Güvenlik Geçmişini kullanabilirsiniz'));
+      expect(en, contains('Test Mode, and Safety History'));
+      expect(console, contains('Güvenlik geçmişi/plan notu'));
+      expect(reviewer, contains('Safety history and Test mode'));
+      expect(combined, isNot(contains('gelişmiş otomasyon')));
+      expect(combined, isNot(contains('advanced automations')));
+      expect(combined, isNot(contains('pro safety automation')));
+    });
+
     test('short descriptions are consistent and within Play limits', () {
       expect(trShort.runes.length <= 80, isTrue);
 

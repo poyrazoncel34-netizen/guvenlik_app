@@ -68,7 +68,7 @@ Notifications are used for visible safety timer/session reliability and reminder
 ## `FLAG_SECURE` Reviewer Note
 
 ```text
-KoruBeni does not set Android FLAG_SECURE globally. Screenshots remain possible. The app uses an in-app privacy mask only for its background/recent-apps preview.
+KoruBeni sets Android `FLAG_SECURE` globally in release builds, so screenshots, screen recording and recents capture are blocked. The app also uses an in-app privacy mask and disables recents screenshots on API 33+ as defence in depth. Debug builds used for local store-asset capture do not set `FLAG_SECURE`.
 ```
 
 ## Video / Manual Demo Notes

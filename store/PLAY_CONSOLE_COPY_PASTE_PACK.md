@@ -114,7 +114,7 @@ Gece veya güvensiz ortamlarda yardımcı check-in oturumu başlatın. Arka plan
 Belirlediğiniz süre sonunda kontrol akışı başlatan yardımcı check-in oturumları kullanın.
 
 ◉ Ses Tuşu Tetikleyici
-Pro kapsamında panik akışını tetikleyen ses tuşu ve ilgili gelişmiş otomasyonlar.
+Uygulama açıkken ses tuşuna art arda basarak Pro panik akışını tetikleyin.
 
 KoruBeni Pro isteğe bağlı bir aboneliktir. Satın alma, yenileme, iptal ve geri yükleme işlemleri Google Play üzerinden yönetilir.
 
@@ -191,7 +191,7 @@ Start a helper check-in session during night or unsafe situations. Background be
 Use timed check-in sessions that start a follow-up flow when the timer expires.
 
 ◉ Volume Trigger
-Use Pro safety automation to trigger the panic flow.
+While the app is open, press the volume button repeatedly to trigger the Pro panic flow.
 
 KoruBeni Pro is optional. Purchases, renewals, cancellations, and restore operations are managed through Google Play.
 
@@ -442,7 +442,7 @@ CALL_PHONE is limited to user-armed Panic/SOS, Check-In, and Safe Walk expiry. A
 ### FLAG_SECURE reviewer note
 
 ```text
-KoruBeni does not set Android FLAG_SECURE globally. Ordinary screenshots remain possible. An in-app privacy mask obscures the recent-apps preview while the app is backgrounded; it is not an OS screenshot block.
+KoruBeni sets Android `FLAG_SECURE` in release builds, so screenshots, screen recording and recent-apps capture are blocked. The in-app privacy mask and API 33+ recents-screenshot control provide additional protection. Debug builds used for local store-asset capture do not set `FLAG_SECURE`.
 ```
 
 ### POST_NOTIFICATIONS reviewer note

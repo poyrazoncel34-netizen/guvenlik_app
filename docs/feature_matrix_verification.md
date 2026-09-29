@@ -16,14 +16,13 @@ Single source of truth: `lib/core/constants/feature_access_matrix.dart`.
 | Emergency contact call triggered by panic | Pro | Described only as part of Pro panic/SOS | OK |
 | Safe Walk | Pro | Pro feature | OK |
 | Check-in | Pro | Pro feature | OK |
-| Activity timeline / safety history | Pro | Pro feature | OK |
+| Activity timeline / safety history | Free | Free local history/plan note | OK |
 | Volume trigger | Pro | Pro feature | OK |
-| Test mode | Pro | Pro feature | OK |
-| Advanced safety automation | Pro | Pro feature | OK |
+| Test mode | Free | Free rehearsal; no real call | OK |
 
 Verification flags:
 - `PremiumFeature.panic` is not in `FeatureAccessMatrix.freeFeatures`.
 - `SubscriptionGate` reads from `FeatureAccessMatrix`.
 - Paywall benefits use `FeatureAccessMatrix.proBenefitKeys`.
+- No store or paywall benefit claims an unimplemented advanced-automation feature.
 - Store listing does not claim free panic/SOS.
-
