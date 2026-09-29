@@ -122,8 +122,8 @@ void main() {
     tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(channel, (
       call,
     ) async {
-      final args =
-          (call.arguments as Map<Object?, Object?>).cast<String, Object?>();
+      final args = (call.arguments as Map<Object?, Object?>)
+          .cast<String, Object?>();
       if (call.method == 'armEmergencySession') {
         return <String, Object?>{
           'type': 'armed',
@@ -206,6 +206,23 @@ void main() {
     await pumpCountdown(tester, isTestMode: true);
     assertRealCopyRendered(tester);
     await expectLater(tester, meetsGuideline(labeledTapTargetGuideline));
+    handle.dispose();
+  });
+
+  testWidgets('live emergency keypad exposes button roles and delete name', (
+    tester,
+  ) async {
+    final handle = tester.ensureSemantics();
+    await pumpCountdown(tester);
+
+    for (final digit in '0123456789'.split('')) {
+      final key = find.bySemanticsLabel(digit);
+      expect(key, findsOneWidget, reason: 'missing keypad label $digit');
+      expect(tester.getSemantics(key).flagsCollection.isButton, isTrue);
+    }
+    final delete = find.bySemanticsLabel('Sil');
+    expect(delete, findsOneWidget);
+    expect(tester.getSemantics(delete).flagsCollection.isButton, isTrue);
     handle.dispose();
   });
 }

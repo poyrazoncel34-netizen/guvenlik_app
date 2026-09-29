@@ -30,8 +30,7 @@ class OnboardingContactStep extends StatefulWidget {
   final ValueChanged<bool> onGateChanged;
 
   @override
-  State<OnboardingContactStep> createState() =>
-      _OnboardingContactStepState();
+  State<OnboardingContactStep> createState() => _OnboardingContactStepState();
 }
 
 class _OnboardingContactStepState extends State<OnboardingContactStep>
@@ -101,9 +100,14 @@ class _OnboardingContactStepState extends State<OnboardingContactStep>
   /// Last observed raw view inset, in logical pixels.
   double _lastViewInsetBottom = 0;
 
-  /// Fires the settled reveal once the IME stops moving. Longer than one frame
-  /// and shorter than a user would notice.
-  static const Duration _imeSettleDelay = Duration(milliseconds: 180);
+  /// Fires a final reveal after the real Android IME animation has settled.
+  ///
+  /// Gboard on the API 35 production emulator takes about 500 ms to finish.
+  /// A 180 ms fallback ran while the viewport was still shrinking and left the
+  /// save action 425 physical pixels below the keyboard. Metric callbacks are
+  /// retained for responsive tracking, but this delayed fallback must also be
+  /// correct when an embedding coalesces or omits those callbacks.
+  static const Duration _imeSettleDelay = Duration(milliseconds: 700);
   Timer? _settleTimer;
 
   bool _loading = true;
@@ -314,9 +318,7 @@ class _OnboardingContactStepState extends State<OnboardingContactStep>
         unawaited(HapticFeedback.mediumImpact());
         await _refresh();
       case OnboardingContactSaveOutcome.invalidPhone:
-        setState(
-          () => _setPhoneErrorKey('onboarding_contact_invalid_phone'),
-        );
+        setState(() => _setPhoneErrorKey('onboarding_contact_invalid_phone'));
       case OnboardingContactSaveOutcome.storageFailed:
         setState(() => _failureKey = 'onboarding_contact_save_failed');
     }
@@ -416,41 +418,44 @@ class _OnboardingContactStepState extends State<OnboardingContactStep>
 
   List<Widget> _form() {
     return <Widget>[
-      if (_needsConsent) ...[
-        _consentCard(),
-        const SizedBox(height: 16),
-      ],
-      TextField(
-        controller: _nameController.value,
-        enabled: !_needsConsent && !_saving,
-        maxLength: _nameInputLimit,
-        textInputAction: TextInputAction.next,
-        style: const TextStyle(color: AppColors.textPrimary),
-        decoration: _fieldDecoration(
-          label: 'onboarding_contact_name_label'.tr(),
-          icon: Icons.person_outline_rounded,
+      if (_needsConsent) ...[_consentCard(), const SizedBox(height: 16)],
+      Semantics(
+        label: 'onboarding_contact_name_label'.tr(),
+        child: TextField(
+          controller: _nameController.value,
+          enabled: !_needsConsent && !_saving,
+          maxLength: _nameInputLimit,
+          textInputAction: TextInputAction.next,
+          style: const TextStyle(color: AppColors.textPrimary),
+          decoration: _fieldDecoration(
+            label: 'onboarding_contact_name_label'.tr(),
+            icon: Icons.person_outline_rounded,
+          ),
         ),
       ),
       const SizedBox(height: 8),
-      TextField(
-        controller: _phoneController.value,
-        focusNode: _phoneFocusNode,
-        enabled: !_needsConsent && !_saving,
-        maxLength: _phoneInputLimit,
-        keyboardType: TextInputType.phone,
-        style: const TextStyle(color: AppColors.textPrimary),
-        onChanged: (value) {
-          final next = value.trim().isEmpty
-              ? null
-              : OnboardingContactGateService.phoneErrorKey(value);
-          if (next != _phoneErrorKey) {
-            setState(() => _setPhoneErrorKey(next));
-          }
-        },
-        decoration: _fieldDecoration(
-          label: 'onboarding_contact_phone_label'.tr(),
-          icon: Icons.phone_outlined,
-          errorText: _phoneErrorKey?.tr(),
+      Semantics(
+        label: 'onboarding_contact_phone_label'.tr(),
+        child: TextField(
+          controller: _phoneController.value,
+          focusNode: _phoneFocusNode,
+          enabled: !_needsConsent && !_saving,
+          maxLength: _phoneInputLimit,
+          keyboardType: TextInputType.phone,
+          style: const TextStyle(color: AppColors.textPrimary),
+          onChanged: (value) {
+            final next = value.trim().isEmpty
+                ? null
+                : OnboardingContactGateService.phoneErrorKey(value);
+            if (next != _phoneErrorKey) {
+              setState(() => _setPhoneErrorKey(next));
+            }
+          },
+          decoration: _fieldDecoration(
+            label: 'onboarding_contact_phone_label'.tr(),
+            icon: Icons.phone_outlined,
+            errorText: _phoneErrorKey?.tr(),
+          ),
         ),
       ),
       const SizedBox(height: 4),
@@ -613,10 +618,17 @@ class _OnboardingContactStepState extends State<OnboardingContactStep>
     String? errorText,
   }) {
     return InputDecoration(
-      labelText: label,
+      // The editable node gets its accessible name from the surrounding
+      // Semantics widget. Keeping this visual label in the merged semantics
+      // tree announces the same name twice ("label, label") on TalkBack.
+      label: ExcludeSemantics(child: Text(label)),
       errorText: errorText,
       counterText: '',
-      prefixIcon: Icon(icon, color: AppColors.textSecondary, size: IconSizes.action),
+      prefixIcon: Icon(
+        icon,
+        color: AppColors.textSecondary,
+        size: IconSizes.action,
+      ),
       labelStyle: const TextStyle(color: AppColors.textSecondary),
       filled: true,
       fillColor: AppColors.cardBg,

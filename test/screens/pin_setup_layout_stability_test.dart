@@ -77,9 +77,9 @@ void main() {
               supportedLocales: context.supportedLocales,
               locale: context.locale,
               builder: (context, child) => MediaQuery(
-                data: MediaQuery.of(context).copyWith(
-                  textScaler: TextScaler.linear(textScale),
-                ),
+                data: MediaQuery.of(
+                  context,
+                ).copyWith(textScaler: TextScaler.linear(textScale)),
                 child: child ?? const SizedBox.shrink(),
               ),
               home: const PinSetupScreen(),
@@ -99,8 +99,23 @@ void main() {
     await tester.pump(const Duration(milliseconds: 60));
   }
 
+  Future<void> tapVisibleDigit(WidgetTester tester, String digit) async {
+    final target = find.text(digit).last;
+    await tester.ensureVisible(target);
+    await tester.pump();
+    await tester.tap(target);
+    await tester.pump(const Duration(milliseconds: 60));
+  }
+
   /// Geometry of the '5' key -- the centre of the pad, so any shift shows.
   Rect keyRect(WidgetTester tester) => tester.getRect(find.text('5').last);
+
+  /// Scroll-independent keypad position. A validation banner inserted above
+  /// the pad changes this distance, while ensureVisible scrolling moves both
+  /// endpoints by the same amount.
+  double keyOffsetFromTitle(WidgetTester tester) =>
+      keyRect(tester).top -
+      tester.getRect(find.text("Güvenlik PIN'i Belirleyin")).top;
 
   testWidgets('keypad does not move when a weak PIN is rejected', (
     tester,
@@ -143,11 +158,7 @@ void main() {
       for (var i = 0; i < 6; i++) {
         await tester.pump(const Duration(milliseconds: 60));
       }
-      expect(
-        keyRect(tester),
-        before,
-        reason: 'round $round moved the keypad',
-      );
+      expect(keyRect(tester), before, reason: 'round $round moved the keypad');
     }
   });
 
@@ -169,6 +180,37 @@ void main() {
     expect(r.width, greaterThan(0));
     // Announced: a validation failure the user cannot see must be spoken.
     expect(find.bySemanticsLabel(kWeakPinMessage), findsOneWidget);
+    handle.dispose();
+  });
+
+  testWidgets('every keypad action exposes a button role and name', (
+    tester,
+  ) async {
+    final handle = tester.ensureSemantics();
+    await pumpPinSetup(tester);
+
+    for (final digit in <String>[
+      '1',
+      '2',
+      '3',
+      '4',
+      '5',
+      '6',
+      '7',
+      '8',
+      '9',
+      '0',
+    ]) {
+      final node = tester.getSemantics(find.text(digit).last);
+      expect(node.flagsCollection.isButton, isTrue);
+      expect(node.label, digit);
+    }
+
+    final deleteNode = tester.getSemantics(
+      find.byIcon(Icons.backspace_outlined),
+    );
+    expect(deleteNode.flagsCollection.isButton, isTrue);
+    expect(deleteNode.label, isNotEmpty);
     handle.dispose();
   });
 
@@ -194,27 +236,27 @@ void main() {
 
   testWidgets('geometry stays stable on a short screen', (tester) async {
     await pumpPinSetup(tester, size: const Size(360, 640));
-    final before = keyRect(tester);
+    final before = keyOffsetFromTitle(tester);
     for (final d in ['1', '2', '3', '4']) {
-      await tapDigit(tester, d);
+      await tapVisibleDigit(tester, d);
     }
     for (var i = 0; i < 6; i++) {
       await tester.pump(const Duration(milliseconds: 60));
     }
-    expect(keyRect(tester), before);
+    expect(keyOffsetFromTitle(tester), before);
   });
 
   testWidgets('geometry stays stable at 200% text scale', (tester) async {
     await pumpPinSetup(tester, size: const Size(400, 1200), textScale: 2.0);
-    final before = keyRect(tester);
+    final before = keyOffsetFromTitle(tester);
     for (final d in ['1', '2', '3', '4']) {
-      await tapDigit(tester, d);
+      await tapVisibleDigit(tester, d);
     }
     for (var i = 0; i < 6; i++) {
       await tester.pump(const Duration(milliseconds: 60));
     }
     expect(
-      keyRect(tester),
+      keyOffsetFromTitle(tester),
       before,
       reason:
           'The reserved slot scales with text size, so large-text users get '

@@ -263,6 +263,19 @@ void main() {
       await expectLater(tester, meetsGuideline(labeledTapTargetGuideline));
       handle.dispose();
     });
+
+    testWidgets('text fields expose their real Turkish labels', (tester) async {
+      final handle = tester.ensureSemantics();
+      await pumpLocalized(tester, OnboardingContactStep(onGateChanged: (_) {}));
+      assertScreenSettled(tester);
+      assertRealCopyRendered(tester);
+
+      final fields = find.byType(TextField);
+      expect(fields, findsNWidgets(2));
+      expect(tester.getSemantics(fields.first).label, 'İsim (isteğe bağlı)');
+      expect(tester.getSemantics(fields.last).label, 'Telefon numarası');
+      handle.dispose();
+    });
   });
 
   group('panic button -- the app\'s single most important control', () {
@@ -272,8 +285,9 @@ void main() {
           child: const PanicButton(),
         );
 
-    final pro = const SubscriptionAccessState.uninitialized()
-        .markVerified(isPro: true);
+    final pro = const SubscriptionAccessState.uninitialized().markVerified(
+      isPro: true,
+    );
 
     testWidgets('entitled state renders real copy and meets guidelines', (
       tester,

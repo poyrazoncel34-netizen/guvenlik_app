@@ -341,12 +341,16 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
         if (index == 9) return const SizedBox();
         if (index == 11) {
           return _buildPadButton(
+            semanticsLabel: MaterialLocalizations.of(
+              context,
+            ).deleteButtonTooltip,
             child: const Icon(Icons.backspace_outlined, size: 26),
             onTap: () => _handleInput("DEL"),
           );
         }
         final value = index == 10 ? "0" : "${index + 1}";
         return _buildPadButton(
+          semanticsLabel: value,
           child: Text(
             value,
             style: const TextStyle(
@@ -361,19 +365,29 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
     );
   }
 
-  Widget _buildPadButton({required Widget child, required VoidCallback onTap}) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        customBorder: const CircleBorder(),
-        child: Container(
-          decoration: BoxDecoration(
-            color: AppColors.cardBg,
-            shape: BoxShape.circle,
-            border: Border.all(color: AppColors.border, width: 1.5),
+  Widget _buildPadButton({
+    required String semanticsLabel,
+    required Widget child,
+    required VoidCallback onTap,
+  }) {
+    return Semantics(
+      button: true,
+      label: semanticsLabel,
+      onTap: onTap,
+      excludeSemantics: true,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          customBorder: const CircleBorder(),
+          child: Container(
+            decoration: BoxDecoration(
+              color: AppColors.cardBg,
+              shape: BoxShape.circle,
+              border: Border.all(color: AppColors.border, width: 1.5),
+            ),
+            child: Center(child: child),
           ),
-          child: Center(child: child),
         ),
       ),
     );

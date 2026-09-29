@@ -18,6 +18,7 @@ import '../core/services/pin_lockout_service.dart';
 import '../core/services/pin_verification_service.dart';
 import '../core/services/safety_session_activity_probe.dart';
 import 'settings_legal/legal_settings_screen.dart';
+import 'app_root.dart';
 import 'splash_screen.dart';
 import '../core/widgets/escape_dismissible.dart';
 
@@ -155,8 +156,7 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> {
     if (_pin.length >= AppConstants.pinLength) return;
     setState(() => _pin += key);
 
-    if (_pin.length == AppConstants.pinLength &&
-        _pinState != PinState.absent) {
+    if (_pin.length == AppConstants.pinLength && _pinState != PinState.absent) {
       unawaited(_submitPin());
     }
   }
@@ -191,38 +191,41 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> {
       } else {
         HapticFeedback.vibrate();
         setState(() => _pin = '');
-        PinLockoutService.instance.registerFailure().then((state) {
-          if (!mounted) return;
-          setState(() {
-            _lockoutEndTime = state.lockedUntil;
-            _lockoutRemaining = state.remainingSeconds;
-          });
-          if (state.isLocked) {
-            _startLockoutCountdown(state);
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  'brute_force_locked'.tr(
-                    namedArgs: {'seconds': '${state.remainingSeconds}'},
+        PinLockoutService.instance
+            .registerFailure()
+            .then((state) {
+              if (!mounted) return;
+              setState(() {
+                _lockoutEndTime = state.lockedUntil;
+                _lockoutRemaining = state.remainingSeconds;
+              });
+              if (state.isLocked) {
+                _startLockoutCountdown(state);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      'brute_force_locked'.tr(
+                        namedArgs: {'seconds': '${state.remainingSeconds}'},
+                      ),
+                    ),
+                    backgroundColor: AppColors.emergency,
+                    behavior: SnackBarBehavior.floating,
+                    duration: const Duration(seconds: 3),
                   ),
+                );
+                return;
+              }
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('unlock_wrong_pin'.tr()),
+                  backgroundColor: AppColors.emergency,
+                  behavior: SnackBarBehavior.floating,
                 ),
-                backgroundColor: AppColors.emergency,
-                behavior: SnackBarBehavior.floating,
-                duration: const Duration(seconds: 3),
-              ),
-            );
-            return;
-          }
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('unlock_wrong_pin'.tr()),
-              backgroundColor: AppColors.emergency,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
-        }).catchError((Object error, StackTrace stack) {
-          debugPrint('PinLockoutService.registerFailure failed: $error');
-        });
+              );
+            })
+            .catchError((Object error, StackTrace stack) {
+              debugPrint('PinLockoutService.registerFailure failed: $error');
+            });
       }
     } finally {
       _verifying = false;
@@ -284,125 +287,125 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> {
                     minHeight: constraints.maxHeight - 48,
                   ),
                   child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      width: 80,
-                      height: 80,
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withValues(alpha: 0.12),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.lock_rounded,
-                        size: IconSizes.illustration,
-                        color: AppColors.primary,
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    Text(
-                      'unlock_title'.tr(),
-                      style: const TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'unlock_subtitle'.tr(),
-                      style: TextStyle(
-                        fontSize: 15,
-                        color: AppColors.textSecondary.withValues(alpha: 0.9),
-                      ),
-                    ),
-                    if (_loading) ...[
-                      const SizedBox(height: 32),
-                      const CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          AppColors.primary,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        width: 80,
+                        height: 80,
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withValues(alpha: 0.12),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.lock_rounded,
+                          size: IconSizes.illustration,
+                          color: AppColors.primary,
                         ),
                       ),
-                    ] else ...[
-                      const SizedBox(height: 32),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: List.generate(
-                          AppConstants.pinLength,
-                          (i) => Container(
-                            margin: const EdgeInsets.symmetric(horizontal: 8),
-                            width: 16,
-                            height: 16,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: i < _pin.length
-                                  ? AppColors.primary
-                                  : AppColors.border,
-                            ),
-                          ),
+                      const SizedBox(height: 24),
+                      Text(
+                        'unlock_title'.tr(),
+                        style: const TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.textPrimary,
                         ),
                       ),
-                      const SizedBox(height: 32),
-                      if (_isLockedOut)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 16),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 10,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppColors.emergency.withValues(
-                                alpha: 0.12,
-                              ),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: AppColors.emergency.withValues(
-                                  alpha: 0.4,
-                                ),
-                              ),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(
-                                  Icons.lock_clock_rounded,
-                                  color: AppColors.emergency,
-                                  size: IconSizes.action,
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  'brute_force_locked_short'.tr(
-                                    namedArgs: {
-                                      'seconds': '$_lockoutRemaining',
-                                    },
-                                  ),
-                                  style: const TextStyle(
-                                    color: AppColors.emergency,
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      _buildNumPad(),
                       const SizedBox(height: 8),
-                      TextButton(
-                        onPressed: _showForgotPinDialog,
-                        child: Text(
-                          'forgot_pin_title'.tr(),
-                          style: TextStyle(
-                            color: AppColors.textSecondary.withValues(
-                              alpha: 0.7,
-                            ),
-                            fontSize: 14,
-                          ),
+                      Text(
+                        'unlock_subtitle'.tr(),
+                        style: TextStyle(
+                          fontSize: 15,
+                          color: AppColors.textSecondary.withValues(alpha: 0.9),
                         ),
                       ),
+                      if (_loading) ...[
+                        const SizedBox(height: 32),
+                        const CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            AppColors.primary,
+                          ),
+                        ),
+                      ] else ...[
+                        const SizedBox(height: 32),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: List.generate(
+                            AppConstants.pinLength,
+                            (i) => Container(
+                              margin: const EdgeInsets.symmetric(horizontal: 8),
+                              width: 16,
+                              height: 16,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: i < _pin.length
+                                    ? AppColors.primary
+                                    : AppColors.border,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 32),
+                        if (_isLockedOut)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 16),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 10,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.emergency.withValues(
+                                  alpha: 0.12,
+                                ),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: AppColors.emergency.withValues(
+                                    alpha: 0.4,
+                                  ),
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(
+                                    Icons.lock_clock_rounded,
+                                    color: AppColors.emergency,
+                                    size: IconSizes.action,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'brute_force_locked_short'.tr(
+                                      namedArgs: {
+                                        'seconds': '$_lockoutRemaining',
+                                      },
+                                    ),
+                                    style: const TextStyle(
+                                      color: AppColors.emergency,
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        _buildNumPad(),
+                        const SizedBox(height: 8),
+                        TextButton(
+                          onPressed: _showForgotPinDialog,
+                          child: Text(
+                            'forgot_pin_title'.tr(),
+                            style: TextStyle(
+                              color: AppColors.textSecondary.withValues(
+                                alpha: 0.7,
+                              ),
+                              fontSize: 14,
+                            ),
+                          ),
+                        ),
+                      ],
                     ],
-                  ],
                   ),
                 ),
               ),
@@ -441,120 +444,130 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> {
       builder: (ctx) => EscapeDismissible(
         autofocus: false,
         child: StatefulBuilder(
-        builder: (ctx, setDialogState) => AlertDialog(
-          backgroundColor: AppColors.cardBg,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          title: Row(
-            children: [
-              const Icon(
-                Icons.warning_amber_rounded,
-                color: AppColors.emergency,
-                size: IconSizes.dialog,
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  'forgot_pin_title'.tr(),
-                  style: const TextStyle(
-                    color: AppColors.textPrimary,
-                    fontWeight: FontWeight.w800,
+          builder: (ctx, setDialogState) => AlertDialog(
+            backgroundColor: AppColors.cardBg,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            title: Row(
+              children: [
+                const Icon(
+                  Icons.warning_amber_rounded,
+                  color: AppColors.emergency,
+                  size: IconSizes.dialog,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'forgot_pin_title'.tr(),
+                    style: const TextStyle(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
+                ),
+              ],
+            ),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'forgot_pin_reset_body'.tr(),
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 14,
+                      height: 1.5,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  TextField(
+                    controller: confirmController,
+                    onChanged: (v) => setDialogState(() {}),
+                    decoration: InputDecoration(
+                      hintText: 'forgot_pin_reset_hint'.tr(),
+                      hintStyle: TextStyle(
+                        color: AppColors.textSecondary.withValues(alpha: 0.6),
+                      ),
+                      filled: true,
+                      fillColor: AppColors.surface,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(
+                          color: AppColors.inputBorder,
+                        ),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(
+                          color: AppColors.inputBorder,
+                        ),
+                      ),
+                    ),
+                    style: const TextStyle(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w700,
+                    ),
+                    textCapitalization: TextCapitalization.characters,
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: Text(
+                  'cancel'.tr(),
+                  style: const TextStyle(color: AppColors.textSecondary),
+                ),
+              ),
+              ElevatedButton(
+                onPressed: confirmController.text == resetToken
+                    ? () async {
+                        Navigator.pop(ctx);
+                        final wipe = await AppResetService.clearLocalData();
+                        if (!mounted) return;
+                        if (wipe != WipeResult.completed) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('data_delete_pending'.tr())),
+                          );
+                          return;
+                        }
+                        if (AppRoot.restartStartup(context)) return;
+                        Navigator.of(context).pushAndRemoveUntil(
+                          PageRouteBuilder(
+                            pageBuilder: (_, _, _) => const SplashScreen(),
+                            transitionsBuilder: (_, a, _, child) =>
+                                FadeTransition(opacity: a, child: child),
+                            transitionDuration: Motion.slow,
+                          ),
+                          (_) => false,
+                        );
+                      }
+                    : null,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.emergency,
+                  disabledBackgroundColor: AppColors.emergency.withValues(
+                    alpha: 0.3,
+                  ),
+                  foregroundColor: Colors.white,
+                ),
+                child: Text(
+                  'forgot_pin_reset_button'.tr(),
+                  style: const TextStyle(fontWeight: FontWeight.w700),
                 ),
               ),
             ],
           ),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'forgot_pin_reset_body'.tr(),
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 14,
-                    height: 1.5,
-                  ),
-                ),
-                const SizedBox(height: 20),
-                TextField(
-                  controller: confirmController,
-                  onChanged: (v) => setDialogState(() {}),
-                  decoration: InputDecoration(
-                    hintText: 'forgot_pin_reset_hint'.tr(),
-                    hintStyle: TextStyle(
-                      color: AppColors.textSecondary.withValues(alpha: 0.6),
-                    ),
-                    filled: true,
-                    fillColor: AppColors.surface,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: AppColors.inputBorder),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: AppColors.inputBorder),
-                    ),
-                  ),
-                  style: const TextStyle(
-                    color: AppColors.textPrimary,
-                    fontWeight: FontWeight.w700,
-                  ),
-                  textCapitalization: TextCapitalization.characters,
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: Text(
-                'cancel'.tr(),
-                style: const TextStyle(color: AppColors.textSecondary),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: confirmController.text == resetToken
-                  ? () async {
-                      Navigator.pop(ctx);
-                      final wipe = await AppResetService.clearLocalData();
-                      if (!mounted) return;
-                      if (wipe != WipeResult.completed) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('data_delete_pending'.tr())),
-                        );
-                        return;
-                      }
-                      Navigator.of(context).pushAndRemoveUntil(
-                        PageRouteBuilder(
-                          pageBuilder: (_, _, _) => const SplashScreen(),
-                          transitionsBuilder: (_, a, _, child) =>
-                              FadeTransition(opacity: a, child: child),
-                          transitionDuration: Motion.slow,
-                        ),
-                        (_) => false,
-                      );
-                    }
-                  : null,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.emergency,
-                disabledBackgroundColor: AppColors.emergency.withValues(
-                  alpha: 0.3,
-                ),
-                foregroundColor: Colors.white,
-              ),
-              child: Text(
-                'forgot_pin_reset_button'.tr(),
-                style: const TextStyle(fontWeight: FontWeight.w700),
-              ),
-            ),
-          ],
         ),
       ),
-      ),
     );
-    confirmController.dispose();
+    // `showDialog` completes when the route is popped, while its exit frame
+    // can still rebuild the TextField. Dispose after that frame so cancel does
+    // not leave the route reading an already-disposed controller.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      confirmController.dispose();
+    });
   }
 
   Widget _buildNumPad() {
@@ -577,32 +590,43 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> {
   }
 
   Widget _numKey(String key, {bool isIcon = false}) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () => _onPinKey(key),
-        customBorder: const CircleBorder(),
-        child: Container(
-          decoration: BoxDecoration(
-            color: AppColors.cardBg,
-            shape: BoxShape.circle,
-            border: Border.all(color: AppColors.border),
-          ),
-          child: Center(
-            child: isIcon
-                ? const Icon(
-                    Icons.backspace_outlined,
-                    size: IconSizes.dialog,
-                    color: AppColors.textPrimary,
-                  )
-                : Text(
-                    key,
-                    style: const TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.w700,
+    final enabled = !_isLockedOut;
+    final label = isIcon
+        ? MaterialLocalizations.of(context).deleteButtonTooltip
+        : key;
+    return Semantics(
+      label: label,
+      button: true,
+      enabled: enabled,
+      onTap: enabled ? () => _onPinKey(key) : null,
+      excludeSemantics: true,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: enabled ? () => _onPinKey(key) : null,
+          customBorder: const CircleBorder(),
+          child: Container(
+            decoration: BoxDecoration(
+              color: AppColors.cardBg,
+              shape: BoxShape.circle,
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Center(
+              child: isIcon
+                  ? const Icon(
+                      Icons.backspace_outlined,
+                      size: IconSizes.dialog,
                       color: AppColors.textPrimary,
+                    )
+                  : Text(
+                      key,
+                      style: const TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
+                      ),
                     ),
-                  ),
+            ),
           ),
         ),
       ),

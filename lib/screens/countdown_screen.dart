@@ -1,7 +1,3 @@
-// ============================================================================
-// GERİ SAYIM EKRANI – DRAMATIC UX (Gradient arc, pulsating glow, scale bounce)
-// ============================================================================
-
 import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
@@ -44,6 +40,8 @@ class CountdownScreen extends StatefulWidget {
   final PinVerificationService? pinVerificationService;
   final EmergencyPlatformService? emergencyPlatformService;
 
+  final Future<bool> Function(String number)? dialerOpener;
+  final EmergencyDispatchPipeline? dispatchPipeline;
   /// See [ContactNameMask]: set by surfaces that never asked for the PIN.
   final bool maskContactIdentity;
 
@@ -53,6 +51,8 @@ class CountdownScreen extends StatefulWidget {
     this.entitlementDecision = EntitlementDecision.unknown,
     this.pinVerificationService,
     this.emergencyPlatformService,
+    this.dialerOpener,
+    this.dispatchPipeline,
     this.maskContactIdentity = false,
   });
 
@@ -81,6 +81,7 @@ class _CountdownScreenState extends State<CountdownScreen>
   late final EmergencyPlatformService _emergencyPlatformService =
       widget.emergencyPlatformService ?? EmergencyPlatformService.instance;
   late final EmergencyDispatchPipeline _dispatchPipeline =
+      widget.dispatchPipeline ??
       EmergencyDispatchPipeline(
         onBestEffortError: (error, _) {
           debugPrint('CountdownScreen best-effort operation failed: $error');
@@ -114,7 +115,6 @@ class _CountdownScreenState extends State<CountdownScreen>
       vsync: this,
       duration: const Duration(milliseconds: 300),
     );
-    // ~2.8s breath; 800ms read as a flash. Pulse started once MediaQuery is.
     _glowController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1400),
@@ -281,7 +281,6 @@ class _CountdownScreenState extends State<CountdownScreen>
         if (left == _countdown) return;
         setState(() => _countdown = left);
         HapticService.countdownTick(secondsRemaining: _countdown);
-        // ── Tick bounce ── decoration; number + haptic carry the second.
         ReducedMotionPolicy.playOnce(
           _tickBounceController,
           reduced: _reduceMotion,
@@ -370,7 +369,7 @@ class _CountdownScreenState extends State<CountdownScreen>
         // a false automatic-call claim. A missing token means native arm was
         // definitively rejected and uses the same foreground-only path.
         final dialerOpened = primaryNumber != null && primaryNumber.isNotEmpty
-            ? await AndroidIntentService.openDialer(primaryNumber)
+            ? await (widget.dialerOpener ?? AndroidIntentService.openDialer)(primaryNumber)
             : false;
         return dialerOpened
             ? EmergencyCallResult.dialer(primaryNumber)
@@ -634,7 +633,6 @@ class _CountdownScreenState extends State<CountdownScreen>
           body: AnimatedBuilder(
             animation: _glowController,
             builder: (context, child) {
-              // ── Pulsating background glow in last 5 seconds ──
               final glowPulse = ReducedMotionPolicy.pulseValue(
                 _glowController,
                 reduced: _reduceMotion,
@@ -676,7 +674,6 @@ class _CountdownScreenState extends State<CountdownScreen>
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           SizedBox(height: topGap),
-                          // Warning banner
                           Container(
                             padding: EdgeInsets.all(bannerPadding),
                             decoration: BoxDecoration(
@@ -749,11 +746,9 @@ class _CountdownScreenState extends State<CountdownScreen>
                             ),
                           ],
                           SizedBox(height: sectionGap),
-                          // ── Countdown circle with gradient arc + tick bounce ──
                           Stack(
                             alignment: Alignment.center,
                             children: [
-                              // Gradient arc
                               SizedBox(
                                 width: circleSize,
                                 height: circleSize,
@@ -771,7 +766,6 @@ class _CountdownScreenState extends State<CountdownScreen>
                                   ),
                                 ),
                               ),
-                              // Bouncing countdown number
                               Semantics(
                                 liveRegion: true,
                                 container: true,
@@ -866,7 +860,6 @@ class _CountdownScreenState extends State<CountdownScreen>
                           ),
                           SizedBox(height: sectionGap),
                           if (_pinState == PinState.configured) ...[
-                            // ── PIN dots with shake ──
                             AnimatedBuilder(
                               animation: _shakeController,
                               builder: (context, child) {
@@ -941,12 +934,14 @@ class _CountdownScreenState extends State<CountdownScreen>
         if (index == 9) return const SizedBox();
         if (index == 11) {
           return _buildPadButton(
+            semanticsLabel: MaterialLocalizations.of(context).deleteButtonTooltip,
             child: const Icon(Icons.backspace_outlined, size: 26),
             onTap: () => _handlePinInput("DEL"),
           );
         }
         final value = index == 10 ? "0" : "${index + 1}";
         return _buildPadButton(
+          semanticsLabel: value,
           child: Text(
             value,
             style: const TextStyle(
@@ -961,29 +956,32 @@ class _CountdownScreenState extends State<CountdownScreen>
     );
   }
 
-  Widget _buildPadButton({required Widget child, required VoidCallback onTap}) {
-    return _ScaleTapButton(
+  Widget _buildPadButton({required String semanticsLabel, required Widget child, required VoidCallback onTap}) {
+    return Semantics(
+      label: semanticsLabel,
+      button: true,
       onTap: onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          color: AppColors.cardBg,
-          shape: BoxShape.circle,
-          border: Border.all(color: AppColors.border, width: 1.5),
-          boxShadow: [
-            BoxShadow(
+      excludeSemantics: true,
+      child: _ScaleTapButton(
+        onTap: onTap,
+        child: Container(
+          decoration: BoxDecoration(
+            color: AppColors.cardBg,
+            shape: BoxShape.circle,
+            border: Border.all(color: AppColors.border, width: 1.5),
+            boxShadow: [BoxShadow(
               color: AppColors.shadow.withValues(alpha: 0.2),
               blurRadius: 6,
               offset: const Offset(0, 2),
-            ),
-          ],
+            )],
+          ),
+          child: Center(child: child),
         ),
-        child: Center(child: child),
       ),
     );
   }
 }
 
-/// Scale-bounce micro-animation for numpad buttons
 class _ScaleTapButton extends StatefulWidget {
   final Widget child;
   final VoidCallback onTap;

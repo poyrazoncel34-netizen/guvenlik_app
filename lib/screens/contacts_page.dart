@@ -1,6 +1,3 @@
-// ============================================================================
-// KİŞİLER SAYFASI
-// ============================================================================
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
@@ -19,17 +16,12 @@ import '../presentation/providers/contacts_provider.dart';
 import '../presentation/providers/home_provider.dart';
 import '../widgets/emergency_contact_consent_dialog.dart';
 import '../core/widgets/escape_dismissible.dart';
+import '../core/widgets/responsive_contacts_header.dart';
 import '../core/design_tokens.dart';
 
 const int _manualContactPhoneInputLimit = 32;
 const int _manualContactNameInputLimit = 60;
 
-/// Validates a manually entered emergency-contact phone number.
-///
-/// Returns a translation key for the error message, or null when the number is
-/// acceptable. Kept as a pure top-level function so it can be unit-tested and
-/// reused by the inline field validator. The same rule is enforced again at
-/// submit time in [_addManualContact] (defense in depth).
 String? manualContactPhoneError(String raw) {
   if (EmergencyNumberValidator.normalizedCallableTargetOrNull(raw) == null) {
     return 'contacts_manual_invalid_phone';
@@ -86,6 +78,7 @@ class _ContactsPageState extends State<ContactsPage> {
           title: Text("contacts_emergency_title".tr()),
           actions: [
             IconButton(
+              tooltip: 'contacts_add_person'.tr(),
               icon: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
@@ -119,38 +112,16 @@ class _ContactsPageState extends State<ContactsPage> {
               const SizedBox(height: 28),
             ],
 
-            // Emergency contacts header
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  "contacts_network_title".tr(),
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.textPrimary,
-                    letterSpacing: -0.5,
-                  ),
-                ),
-                TextButton.icon(
-                  onPressed: provider.hasContacts
-                      ? () async {
-                          final allowed = await SubscriptionGate.ensureAccess(
-                            context,
-                            PremiumFeature.emergencyContactSelect,
-                          );
-                          if (!allowed || !context.mounted) return;
-                          _showEmergencyPicker(context);
-                        }
-                      : null,
-                  icon: const Icon(Icons.shield_rounded, size: IconSizes.listItem),
-                  label: Text("contacts_select_emergency".tr()),
-                  style: TextButton.styleFrom(
-                    foregroundColor: AppColors.accent,
-                    textStyle: const TextStyle(fontWeight: FontWeight.w700),
-                  ),
-                ),
-              ],
+            ResponsiveContactsHeader(
+              hasContacts: provider.hasContacts,
+              onSelectEmergencyContact: () async {
+                final allowed = await SubscriptionGate.ensureAccess(
+                  context,
+                  PremiumFeature.emergencyContactSelect,
+                );
+                if (!allowed || !context.mounted) return;
+                _showEmergencyPicker(context);
+              },
             ),
             const SizedBox(height: 16),
 
@@ -375,148 +346,163 @@ class _ContactsPageState extends State<ContactsPage> {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (sheetContext) => EscapeDismissible(child: Container(
-        decoration: const BoxDecoration(
-          color: AppColors.cardBg,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: AppColors.border,
-                borderRadius: BorderRadius.circular(2),
+      builder: (sheetContext) => EscapeDismissible(
+        child: Container(
+          decoration: const BoxDecoration(
+            color: AppColors.cardBg,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.border,
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
-            ),
-            const SizedBox(height: 24),
-            Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                color: contact.color.withValues(alpha: 0.12),
-                shape: BoxShape.circle,
+              const SizedBox(height: 24),
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  color: contact.color.withValues(alpha: 0.12),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  contact.icon,
+                  size: IconSizes.illustration,
+                  color: contact.color,
+                ),
               ),
-              child: Icon(contact.icon, size: IconSizes.illustration, color: contact.color),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              contact.name,
-              style: const TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.w800,
-                color: AppColors.textPrimary,
+              const SizedBox(height: 16),
+              Text(
+                contact.name,
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textPrimary,
+                ),
               ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              contact.phone,
-              style: const TextStyle(
-                fontSize: 15,
-                color: AppColors.textSecondary,
+              const SizedBox(height: 4),
+              Text(
+                contact.phone,
+                style: const TextStyle(
+                  fontSize: 15,
+                  color: AppColors.textSecondary,
+                ),
               ),
-            ),
-            const SizedBox(height: 24),
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () async {
-                      Navigator.pop(sheetContext);
-                      await _dialNumber(contact.phone);
-                    },
-                    icon: const Icon(Icons.call_rounded, size: IconSizes.action),
-                    label: Text(
-                      "contacts_call".tr(),
-                      style: const TextStyle(fontWeight: FontWeight.w700),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.success,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () async {
+                        Navigator.pop(sheetContext);
+                        await _dialNumber(contact.phone);
+                      },
+                      icon: const Icon(
+                        Icons.call_rounded,
+                        size: IconSizes.action,
+                      ),
+                      label: Text(
+                        "contacts_call".tr(),
+                        style: const TextStyle(fontWeight: FontWeight.w700),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.success,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: () async {
-                  Navigator.pop(sheetContext);
-                  final allowed = await SubscriptionGate.ensureAccess(
-                    context,
-                    PremiumFeature.emergencyContactSelect,
-                  );
-                  if (!allowed || !mounted) return;
-                  await provider.selectEmergencyContact(contact);
-                  await _refreshHomeProvider();
-                  if (!mounted) return;
-                  _showSnack(
-                    "contacts_emergency_selected".tr(
-                      namedArgs: {"name": contact.name},
+                ],
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () async {
+                    Navigator.pop(sheetContext);
+                    final allowed = await SubscriptionGate.ensureAccess(
+                      context,
+                      PremiumFeature.emergencyContactSelect,
+                    );
+                    if (!allowed || !mounted) return;
+                    await provider.selectEmergencyContact(contact);
+                    await _refreshHomeProvider();
+                    if (!mounted) return;
+                    _showSnack(
+                      "contacts_emergency_selected".tr(
+                        namedArgs: {"name": contact.name},
+                      ),
+                    );
+                  },
+                  icon: const Icon(
+                    Icons.shield_rounded,
+                    size: IconSizes.action,
+                  ),
+                  label: Text(
+                    "contacts_select_emergency_btn".tr(),
+                    style: const TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.accent,
+                    side: const BorderSide(color: AppColors.accent),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
                     ),
-                  );
-                },
-                icon: const Icon(Icons.shield_rounded, size: IconSizes.action),
-                label: Text(
-                  "contacts_select_emergency_btn".tr(),
-                  style: const TextStyle(fontWeight: FontWeight.w700),
-                ),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: AppColors.accent,
-                  side: const BorderSide(color: AppColors.accent),
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
                   ),
                 ),
               ),
-            ),
-            const SizedBox(height: 8),
-            SizedBox(
-              width: double.infinity,
-              child: TextButton.icon(
-                onPressed: () async {
-                  Navigator.pop(sheetContext);
-                  final confirmed = await _confirmRemoveContact(contact);
-                  if (!confirmed || !mounted) return;
-                  final removed = await provider.removeContact(contact.phone);
-                  await _refreshHomeProvider();
-                  if (!mounted) return;
-                  _showSnack(
-                    removed
-                        ? "contacts_removed".tr(
-                            namedArgs: {"name": contact.name},
-                          )
-                        : "contacts_remove_failed".tr(),
-                    backgroundColor: removed
-                        ? AppColors.warning
-                        : AppColors.emergency,
-                  );
-                },
-                icon: const Icon(Icons.delete_outline_rounded, size: IconSizes.action),
-                label: Text(
-                  "contacts_remove".tr(),
-                  style: const TextStyle(fontWeight: FontWeight.w700),
-                ),
-                style: TextButton.styleFrom(
-                  foregroundColor: AppColors.emergency,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
+              const SizedBox(height: 8),
+              SizedBox(
+                width: double.infinity,
+                child: TextButton.icon(
+                  onPressed: () async {
+                    Navigator.pop(sheetContext);
+                    final confirmed = await _confirmRemoveContact(contact);
+                    if (!confirmed || !mounted) return;
+                    final removed = await provider.removeContact(contact.phone);
+                    await _refreshHomeProvider();
+                    if (!mounted) return;
+                    _showSnack(
+                      removed
+                          ? "contacts_removed".tr(
+                              namedArgs: {"name": contact.name},
+                            )
+                          : "contacts_remove_failed".tr(),
+                      backgroundColor: removed
+                          ? AppColors.warning
+                          : AppColors.emergency,
+                    );
+                  },
+                  icon: const Icon(
+                    Icons.delete_outline_rounded,
+                    size: IconSizes.action,
+                  ),
+                  label: Text(
+                    "contacts_remove".tr(),
+                    style: const TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppColors.emergency,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 16),
-          ],
+              const SizedBox(height: 16),
+            ],
+          ),
         ),
-      )),
+      ),
     );
   }
 
@@ -524,35 +510,44 @@ class _ContactsPageState extends State<ContactsPage> {
     if (!mounted) return false;
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (dialogContext) => EscapeDismissible(child: AlertDialog(
-        backgroundColor: AppColors.cardBg,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(
-          "contacts_remove_confirm_title".tr(),
-          style: const TextStyle(
-            color: AppColors.textPrimary,
-            fontWeight: FontWeight.w800,
+      builder: (dialogContext) => EscapeDismissible(
+        child: AlertDialog(
+          backgroundColor: AppColors.cardBg,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
           ),
-        ),
-        content: Text(
-          "contacts_remove_confirm_desc".tr(namedArgs: {"name": contact.name}),
-          style: const TextStyle(color: AppColors.textSecondary, height: 1.45),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: Text("cancel".tr()),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(dialogContext, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.emergency,
-              foregroundColor: Colors.white,
+          title: Text(
+            "contacts_remove_confirm_title".tr(),
+            style: const TextStyle(
+              color: AppColors.textPrimary,
+              fontWeight: FontWeight.w800,
             ),
-            child: Text("btn_delete".tr()),
           ),
-        ],
-      )),
+          content: Text(
+            "contacts_remove_confirm_desc".tr(
+              namedArgs: {"name": contact.name},
+            ),
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              height: 1.45,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: Text("cancel".tr()),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.emergency,
+                foregroundColor: Colors.white,
+              ),
+              child: Text("btn_delete".tr()),
+            ),
+          ],
+        ),
+      ),
     );
     return confirmed == true;
   }
@@ -610,7 +605,10 @@ class _ContactsPageState extends State<ContactsPage> {
               if (!_requireEmergencyContactConsent()) return;
               await _pickContactFromDevice();
             },
-            icon: const Icon(Icons.person_add_rounded, size: IconSizes.listItem),
+            icon: const Icon(
+              Icons.person_add_rounded,
+              size: IconSizes.listItem,
+            ),
             label: Text(
               "contacts_add_person".tr(),
               style: const TextStyle(fontWeight: FontWeight.w700),
@@ -639,7 +637,11 @@ class _ContactsPageState extends State<ContactsPage> {
       ),
       child: Row(
         children: [
-          const Icon(Icons.info_rounded, color: AppColors.info, size: IconSizes.emphasis),
+          const Icon(
+            Icons.info_rounded,
+            color: AppColors.info,
+            size: IconSizes.emphasis,
+          ),
           const SizedBox(width: 16),
           Expanded(
             child: Text(
@@ -663,51 +665,55 @@ class _ContactsPageState extends State<ContactsPage> {
     if (shown || !mounted) return;
     await showDialog<void>(
       context: context,
-      builder: (ctx) => EscapeDismissible(child: AlertDialog(
-        backgroundColor: AppColors.cardBg,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Row(
-          children: [
-            const Icon(
-              Icons.shield_rounded,
-              color: AppColors.primary,
-              size: IconSizes.emphasis,
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                'kvkk_contact_consent_title'.tr(),
-                style: const TextStyle(
-                  color: AppColors.textPrimary,
-                  fontWeight: FontWeight.w800,
-                  fontSize: 16,
+      builder: (ctx) => EscapeDismissible(
+        child: AlertDialog(
+          backgroundColor: AppColors.cardBg,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: Row(
+            children: [
+              const Icon(
+                Icons.shield_rounded,
+                color: AppColors.primary,
+                size: IconSizes.emphasis,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'kvkk_contact_consent_title'.tr(),
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 16,
+                  ),
                 ),
               ),
+            ],
+          ),
+          content: Text(
+            'kvkk_contact_consent_body'.tr(),
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 14,
+              height: 1.5,
+            ),
+          ),
+          actions: [
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              onPressed: () => Navigator.pop(ctx),
+              child: Text('btn_ok'.tr()),
             ),
           ],
         ),
-        content: Text(
-          'kvkk_contact_consent_body'.tr(),
-          style: const TextStyle(
-            color: AppColors.textSecondary,
-            fontSize: 14,
-            height: 1.5,
-          ),
-        ),
-        actions: [
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-            onPressed: () => Navigator.pop(ctx),
-            child: Text('btn_ok'.tr()),
-          ),
-        ],
-      )),
+      ),
     );
     await prefs.setBool(AppConstants.prefContactConsentShown, true);
   }
@@ -747,168 +753,170 @@ class _ContactsPageState extends State<ContactsPage> {
         context: context,
         isScrollControlled: true,
         backgroundColor: Colors.transparent,
-        builder: (sheetContext) => EscapeDismissible(child: SingleChildScrollView(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(sheetContext).viewInsets.bottom,
-          ),
-          child: Container(
-            decoration: const BoxDecoration(
-              color: AppColors.cardBg,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        builder: (sheetContext) => EscapeDismissible(
+          child: SingleChildScrollView(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(sheetContext).viewInsets.bottom,
             ),
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: AppColors.border,
-                    borderRadius: BorderRadius.circular(2),
+            child: Container(
+              decoration: const BoxDecoration(
+                color: AppColors.cardBg,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: AppColors.border,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 24),
-                Container(
-                  width: 70,
-                  height: 70,
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.12),
-                    shape: BoxShape.circle,
+                  const SizedBox(height: 24),
+                  Container(
+                    width: 70,
+                    height: 70,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.12),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.person_add_rounded,
+                      size: IconSizes.feature,
+                      color: AppColors.primary,
+                    ),
                   ),
-                  child: const Icon(
-                    Icons.person_add_rounded,
-                    size: IconSizes.feature,
-                    color: AppColors.primary,
+                  const SizedBox(height: 20),
+                  Text(
+                    "contacts_add_new".tr(),
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textPrimary,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 20),
-                Text(
-                  "contacts_add_new".tr(),
-                  style: const TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.textPrimary,
+                  const SizedBox(height: 16),
+                  Text(
+                    "contacts_add_new_subtitle".tr(),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: AppColors.textSecondary,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  "contacts_add_new_subtitle".tr(),
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: AppColors.textSecondary,
+                  const SizedBox(height: 24),
+                  Row(
+                    children: [
+                      const Expanded(child: Divider(color: AppColors.border)),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        child: Text(
+                          "contacts_picker_user_selected_only".tr(),
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: AppColors.textSecondary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      const Expanded(child: Divider(color: AppColors.border)),
+                    ],
                   ),
-                ),
-                const SizedBox(height: 24),
-                Row(
-                  children: [
-                    const Expanded(child: Divider(color: AppColors.border)),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.pop(
+                        sheetContext,
+                        const _AddContactSheetResult.pickFromDevice(),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
                       child: Text(
-                        "contacts_picker_user_selected_only".tr(),
-                        textAlign: TextAlign.center,
+                        "contacts_pick_from_contacts".tr(),
                         style: const TextStyle(
-                          fontSize: 12,
-                          color: AppColors.textSecondary,
-                          fontWeight: FontWeight.w600,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 16,
                         ),
                       ),
                     ),
-                    const Expanded(child: Divider(color: AppColors.border)),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () => Navigator.pop(
-                      sheetContext,
-                      const _AddContactSheetResult.pickFromDevice(),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
+                  ),
+                  const SizedBox(height: 20),
+                  TextField(
+                    controller: nameController,
+                    textInputAction: TextInputAction.next,
+                    textCapitalization: TextCapitalization.words,
+                    maxLength: _manualContactNameInputLimit,
+                    inputFormatters: [
+                      LengthLimitingTextInputFormatter(
+                        _manualContactNameInputLimit,
                       ),
+                    ],
+                    decoration: InputDecoration(
+                      labelText: "contacts_manual_name_label".tr(),
+                      prefixIcon: const Icon(Icons.person_rounded),
                     ),
-                    child: Text(
-                      "contacts_pick_from_contacts".tr(),
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 16,
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: phoneController,
+                    focusNode: phoneFocusNode,
+                    keyboardType: TextInputType.phone,
+                    textInputAction: TextInputAction.done,
+                    autovalidateMode: AutovalidateMode.onUserInteraction,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(RegExp(r'[0-9+]')),
+                      LengthLimitingTextInputFormatter(
+                        _manualContactPhoneInputLimit,
                       ),
+                    ],
+                    validator: (value) {
+                      final errorKey = manualContactPhoneError(value ?? '');
+                      return errorKey?.tr();
+                    },
+                    decoration: InputDecoration(
+                      labelText: "contacts_manual_phone_label".tr(),
+                      prefixIcon: const Icon(Icons.phone_rounded),
                     ),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                TextField(
-                  controller: nameController,
-                  textInputAction: TextInputAction.next,
-                  textCapitalization: TextCapitalization.words,
-                  maxLength: _manualContactNameInputLimit,
-                  inputFormatters: [
-                    LengthLimitingTextInputFormatter(
-                      _manualContactNameInputLimit,
-                    ),
-                  ],
-                  decoration: InputDecoration(
-                    labelText: "contacts_manual_name_label".tr(),
-                    prefixIcon: const Icon(Icons.person_rounded),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: phoneController,
-                  focusNode: phoneFocusNode,
-                  keyboardType: TextInputType.phone,
-                  textInputAction: TextInputAction.done,
-                  autovalidateMode: AutovalidateMode.onUserInteraction,
-                  inputFormatters: [
-                    FilteringTextInputFormatter.allow(RegExp(r'[0-9+]')),
-                    LengthLimitingTextInputFormatter(
-                      _manualContactPhoneInputLimit,
-                    ),
-                  ],
-                  validator: (value) {
-                    final errorKey = manualContactPhoneError(value ?? '');
-                    return errorKey?.tr();
-                  },
-                  decoration: InputDecoration(
-                    labelText: "contacts_manual_phone_label".tr(),
-                    prefixIcon: const Icon(Icons.phone_rounded),
-                  ),
-                  onFieldSubmitted: (_) => Navigator.pop(
-                    sheetContext,
-                    _AddContactSheetResult.manual(
-                      nameController.text,
-                      phoneController.text,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton.icon(
-                    onPressed: () => Navigator.pop(
+                    onFieldSubmitted: (_) => Navigator.pop(
                       sheetContext,
                       _AddContactSheetResult.manual(
                         nameController.text,
                         phoneController.text,
                       ),
                     ),
-                    icon: const Icon(Icons.save_rounded),
-                    label: Text("contacts_manual_save".tr()),
                   ),
-                ),
-                const SizedBox(height: 24),
-              ],
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () => Navigator.pop(
+                        sheetContext,
+                        _AddContactSheetResult.manual(
+                          nameController.text,
+                          phoneController.text,
+                        ),
+                      ),
+                      icon: const Icon(Icons.save_rounded),
+                      label: Text("contacts_manual_save".tr()),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                ],
+              ),
             ),
           ),
-        )),
+        ),
       );
       if (!mounted || result == null) return;
       if (result.pickFromDevice) {
@@ -1007,17 +1015,12 @@ class _ContactsPageState extends State<ContactsPage> {
       return;
     }
 
-    final name = picked.name.isNotEmpty
-        ? picked.name
-        : "contacts_unknown".tr();
+    final name = picked.name.isNotEmpty ? picked.name : "contacts_unknown".tr();
     final phone = EmergencyNumberValidator.normalizedCallableTargetOrNull(
       picked.number,
     );
     if (phone == null) {
-      _showSnack(
-        "contacts_no_phone".tr(),
-        backgroundColor: AppColors.warning,
-      );
+      _showSnack("contacts_no_phone".tr(), backgroundColor: AppColors.warning);
       return;
     }
 
@@ -1055,94 +1058,96 @@ class _ContactsPageState extends State<ContactsPage> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (sheetContext) => EscapeDismissible(child: SingleChildScrollView(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(sheetContext).viewInsets.bottom,
-        ),
-        child: Container(
-          decoration: const BoxDecoration(
-            color: AppColors.cardBg,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      builder: (sheetContext) => EscapeDismissible(
+        child: SingleChildScrollView(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(sheetContext).viewInsets.bottom,
           ),
-          padding: const EdgeInsets.all(24),
-          child: SafeArea(
-            top: false,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: AppColors.border,
-                    borderRadius: BorderRadius.circular(2),
+          child: Container(
+            decoration: const BoxDecoration(
+              color: AppColors.cardBg,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+            ),
+            padding: const EdgeInsets.all(24),
+            child: SafeArea(
+              top: false,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: AppColors.border,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 18),
-                Text(
-                  "contacts_select_emergency_btn".tr(),
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.textPrimary,
+                  const SizedBox(height: 18),
+                  Text(
+                    "contacts_select_emergency_btn".tr(),
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textPrimary,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 12),
-                ...provider.emergencyContacts.map((contact) {
-                  final isSelected =
-                      provider.selectedEmergencyPhone == contact.phone;
-                  return ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    leading: Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: contact.color.withValues(alpha: 0.12),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(contact.icon, color: contact.color),
-                    ),
-                    title: Text(
-                      contact.name,
-                      style: const TextStyle(
-                        color: AppColors.textPrimary,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    subtitle: Text(
-                      contact.phone,
-                      style: const TextStyle(color: AppColors.textSecondary),
-                    ),
-                    trailing: Icon(
-                      isSelected
-                          ? Icons.check_circle_rounded
-                          : Icons.radio_button_unchecked_rounded,
-                      color: isSelected ? AppColors.accent : AppColors.border,
-                    ),
-                    onTap: () async {
-                      Navigator.pop(sheetContext);
-                      final allowed = await SubscriptionGate.ensureAccess(
-                        context,
-                        PremiumFeature.emergencyContactSelect,
-                      );
-                      if (!allowed || !mounted) return;
-                      await provider.selectEmergencyContact(contact);
-                      await _refreshHomeProvider();
-                      if (!mounted) return;
-                      _showSnack(
-                        "contacts_emergency_selected".tr(
-                          namedArgs: {"name": contact.name},
+                  const SizedBox(height: 12),
+                  ...provider.emergencyContacts.map((contact) {
+                    final isSelected =
+                        provider.selectedEmergencyPhone == contact.phone;
+                    return ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: contact.color.withValues(alpha: 0.12),
+                          shape: BoxShape.circle,
                         ),
-                      );
-                    },
-                  );
-                }),
-                const SizedBox(height: 8),
-              ],
+                        child: Icon(contact.icon, color: contact.color),
+                      ),
+                      title: Text(
+                        contact.name,
+                        style: const TextStyle(
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      subtitle: Text(
+                        contact.phone,
+                        style: const TextStyle(color: AppColors.textSecondary),
+                      ),
+                      trailing: Icon(
+                        isSelected
+                            ? Icons.check_circle_rounded
+                            : Icons.radio_button_unchecked_rounded,
+                        color: isSelected ? AppColors.accent : AppColors.border,
+                      ),
+                      onTap: () async {
+                        Navigator.pop(sheetContext);
+                        final allowed = await SubscriptionGate.ensureAccess(
+                          context,
+                          PremiumFeature.emergencyContactSelect,
+                        );
+                        if (!allowed || !mounted) return;
+                        await provider.selectEmergencyContact(contact);
+                        await _refreshHomeProvider();
+                        if (!mounted) return;
+                        _showSnack(
+                          "contacts_emergency_selected".tr(
+                            namedArgs: {"name": contact.name},
+                          ),
+                        );
+                      },
+                    );
+                  }),
+                  const SizedBox(height: 8),
+                ],
+              ),
             ),
           ),
         ),
-      )),
+      ),
     );
   }
 }

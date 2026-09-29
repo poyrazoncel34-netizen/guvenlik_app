@@ -48,10 +48,14 @@ double get kKeyboardTop => kViewport.height - kImeInset;
 /// therefore silently misses the save action and matches the consent card's
 /// plain ElevatedButton instead -- another way this file could have passed
 /// while measuring the wrong widget. Predicate finders match subclasses.
-Finder saveAction() =>
-    find.byWidgetPredicate((w) => w is ElevatedButton, description: 'save action');
-Finder pickAction() =>
-    find.byWidgetPredicate((w) => w is OutlinedButton, description: 'pick action');
+Finder saveAction() => find.byWidgetPredicate(
+  (w) => w is ElevatedButton,
+  description: 'save action',
+);
+Finder pickAction() => find.byWidgetPredicate(
+  (w) => w is OutlinedButton,
+  description: 'pick action',
+);
 
 /// Fails loudly if the step is not in the state a real user reaches.
 void assertRealFormState(WidgetTester tester) {
@@ -120,9 +124,15 @@ void main() {
           home: Scaffold(body: OnboardingContactStep(onGateChanged: (_) {})),
         ),
       );
-      await Future<void>.delayed(const Duration(milliseconds: 400));
+      await Future<void>.delayed(const Duration(milliseconds: 200));
     });
-    await tester.pump(const Duration(milliseconds: 50));
+    for (var round = 0; round < 20; round++) {
+      await tester.pump(const Duration(milliseconds: 50));
+      if (find.byType(TextField).evaluate().length == 2) break;
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 100)),
+      );
+    }
     assertRealFormState(tester);
   }
 
@@ -293,7 +303,6 @@ void main() {
     );
   });
 
-
   // ==========================================================================
   // R3-01: the SAME step, in the embedding production actually uses.
   //
@@ -349,9 +358,15 @@ void main() {
             ),
           ),
         );
-        await Future<void>.delayed(const Duration(milliseconds: 400));
+        await Future<void>.delayed(const Duration(milliseconds: 200));
       });
-      await tester.pump(const Duration(milliseconds: 50));
+      for (var round = 0; round < 20; round++) {
+        await tester.pump(const Duration(milliseconds: 50));
+        if (find.byType(TextField).evaluate().length == 2) break;
+        await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 100)),
+        );
+      }
       assertRealFormState(tester);
     }
 
@@ -359,8 +374,7 @@ void main() {
         'user scrolling', (tester) async {
       await pumpEmbedded(tester);
 
-      final keyboardTop =
-          embeddedViewport.height / 2.625 - embeddedIme / 2.625;
+      final keyboardTop = embeddedViewport.height / 2.625 - embeddedIme / 2.625;
 
       // Precondition: before the IME opens the action is on screen (compared
       // against the FULL viewport, not the future keyboard line -- comparing
@@ -375,10 +389,15 @@ void main() {
       await tester.tap(find.byType(TextField).last);
       await tester.pump(const Duration(milliseconds: 50));
       for (final fraction in <double>[0.25, 0.5, 0.75, 1.0]) {
-        tester.view.viewInsets = FakeViewPadding(bottom: embeddedIme * fraction);
+        tester.view.viewInsets = FakeViewPadding(
+          bottom: embeddedIme * fraction,
+        );
         await tester.pump(const Duration(milliseconds: 50));
       }
-      for (var i = 0; i < 12; i++) {
+      // Production keeps a 700 ms fallback because Gboard's real animation is
+      // ~500 ms and Android may coalesce metric callbacks. Leave enough time
+      // for that fallback to execute against the final viewport.
+      for (var i = 0; i < 18; i++) {
         await tester.pump(const Duration(milliseconds: 50));
       }
 
@@ -398,5 +417,4 @@ void main() {
       );
     });
   });
-
 }
