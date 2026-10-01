@@ -12,11 +12,12 @@ madde madde onay alınarak uygulandı ve aşağıdaki tabloda commit'leriyle kay
 | F-01 | MEDIUM | **KAPANDI** | `af24a4d` — fix(security): kilit ekrani sayac yazma hatasinda fail-closed |
 | F-02 | MEDIUM | **KABUL EDİLEN RİSK** | §3 F-02 → "Kabul kararı" |
 | F-03 | MEDIUM | **AÇIK** | Kapsam kararı verildi (§3 F-03); kod uygulanmadı |
-| F-04 | LOW | AÇIK | — |
+| F-04 | LOW | **KAPANDI** | `26d09dc` — fix(reliability): quick-access panik istegine tazelik penceresi (3 dk, monotonik saat) |
 | F-05 | LOW | AÇIK | — |
-| F-06 | INFO | AÇIK | — |
-| F-07 | INFO | AÇIK | — |
+| F-06 | INFO | AÇIK (Aşama 4'e taşındı) | `safe_device` kaldırma yedi lisans/SBOM kapısını yeniden üretmeyi gerektiriyor; `verify_release.sh` adımıyla birlikte yapılacak |
+| F-07 | INFO | **SABITLENDI** | `9fb7138` — yüzey silinmedi; hiçbir çağırıcının geçmediği bir tel tuzak testiyle pinlendi |
 | F-08 | INFO | KISMEN | Bu belgenin commit'i yarısı; temiz ağaçta `verify_release.sh` koşumu kalan yarısı |
+| F-09 | INFO | **KAPANDI** | Denetim değil, düzeltme sırasında bulundu. §3 F-09 |
 
 Bu belge `config/absence_claims.json`'a kayıtlı **değildir**. O kayıt defteri `MP-xxx` audit
 satır kimlikleriyle anahtarlanmıştır ve `PRODUCTION_AUDIT.md` satırlarına bağlıdır; bu rapor
@@ -573,6 +574,49 @@ imzalı artefakt yok. Sorgular doğrudan koşuldu (0 bulgu, bkz. DEPENDENCY_SCAN
 Kalan iş: kanıt dosyaları commit edilip `scripts/verify_release.sh` temiz ağaçta koşulmalı.
 Bu aynı koşum merged-manifest exported-surface kapısını ve 16KB hizalamayı da kapatır.
 
+### F-09 — `PRODUCTION_AUDIT.md` var olmayan bir hafifletme beyan ediyordu — KAPANDI
+
+```
+Kategori   Release governance / denetim doğruluğu
+Severity   INFO (kodda açık yok; yanlış olan şey beyanın kendisi)
+Durum      KAPANDI — bu raporla aynı commit
+```
+
+Denetim sırasında değil, F-06 için `safe_device` atıfları taranırken bulundu.
+`PRODUCTION_AUDIT.md` iki yerde `safe_device`'ı çalışan bir güvenlik kontrolü olarak
+gösteriyordu:
+
+- Bölüm 22, "Gap.": *"the app mitigates with safe_device root detection"*
+- Bölüm 32, "Section assessment.": *"safe_device provides root/jailbreak detection"*
+
+İki cümle **iki ayrı nedenle** yanlıştı:
+
+1. `safe_device` A-017 ile runtime yolundan çıkarılmıştı; gerçek mekanizma native
+   `DeviceIntegrityProbe`.
+2. Daha önemlisi: **hiçbir kök tespiti entitlement kurcalamasını hafifletmiyor.**
+   `DeviceIntegrity.compromised` verdict'inin tek tüketicisi
+   `splash_screen.dart:170-183` ve orada yaptığı tek şey "Devam" düğmesi olan,
+   kapatılabilir bir uyarı göstermek. Hiçbir özelliği kısıtlamıyor, hiçbir
+   yetkilendirme kararını beslemiyor. Yani bileşen adı düzeltilse bile "hafifletme"
+   kelimesi fazlasını iddia ediyordu.
+
+**Kullanıcıya ve Play'e bakan metinler temiz** (kontrol edildi): `store/`,
+`.gh-pages-publish/`, yasal metinler ve KVKK/Play belgelerinde kök tespiti iddiası yok.
+Tek kullanıcıya görünen değinme uyarı diyaloğunun kendi metni ve o metin dürüst
+("risk altında olabilir", onay istiyor). Yani mağaza veya yasal bir aşırı iddia sorunu
+yoktu; sorun yalnız iç denetim belgesindeydi.
+
+**Düzeltme:** iki cümle gerçeğe çekildi; ikisi de artık verdict'in neyi
+beslemediğini açıkça söylüyor ve `safe_device`'a yalnız tarihsel düzeltme notu
+olarak atıf yapıyor.
+
+**Bu bulgunun asıl anlamı tek bir cümle değil.** Denetim belgelerinin kodla
+tutarlılığı bu çalışmada **sistematik olarak kontrol edilmedi** — kod okundu,
+belgeler kodla karşılaştırılmadı. Bulunan iki örnek (F-09 ve aşağıdaki
+`specialUse` gözlemi) tesadüfen çıktı. Belgelerdeki her `SRC` / `CMD` / `TEST`
+atıfının gerçek kodla karşılaştırılması ayrı bir iş olarak planlandı ve bu raporun
+kapsamı dışındadır.
+
 ### Gözlem — `specialUse` foreground service iddiası geçersiz
 
 Güvenlik bulgusu değil, **belge sürüklenmesi**. `.claude/rules/common/performance.md` ve
@@ -625,7 +669,9 @@ SECURITY_RELEASE_READY=NO
 Düzeltmeler sonrası güncel durum:
 
 ```
-KAPANDI=1 (F-01)   KABUL EDİLEN RİSK=1 (F-02)   AÇIK=6 (F-03..F-08)
+KAPANDI=3 (F-01, F-04, F-09)   KABUL EDİLEN RİSK=1 (F-02)
+AÇIK=5 (F-03, F-05, F-06, F-07*, F-08)
+* F-07 silinmedi; yüzey bir tel tuzak testiyle sabitlendi (bak §3 F-07)
 CRITICAL=0   HIGH=0
 RELEASE_BLOCKING_SECURITY_FINDINGS=0
 SECURITY_RELEASE_READY=NO
