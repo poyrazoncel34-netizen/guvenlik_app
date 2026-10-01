@@ -175,6 +175,30 @@ void main() {
         reason: 'A process death before an async write lands drops the press.',
       );
     });
+
+    test('the pending request expires on a monotonic clock', () {
+      // A press that never reached Flutter used to wait forever, so opening the
+      // app days later landed the user in a real countdown. The behaviour is
+      // covered by PanicRequestStoreTest; these two lines exist so the window
+      // cannot be deleted from the store without a failing test somewhere.
+      expect(
+        codeOnly(store),
+        contains('FRESHNESS_WINDOW_MS'),
+        reason: 'Without a window the stale-press case comes straight back.',
+      );
+      expect(
+        codeOnly(store),
+        contains('SystemClock.elapsedRealtime'),
+        reason:
+            'A wall clock is user-settable, so a stale request could be made to '
+            'look fresh by moving the device clock.',
+      );
+      expect(
+        codeOnly(store).contains('System.currentTimeMillis'),
+        isFalse,
+        reason: 'The freshness decision must not rest on a settable clock.',
+      );
+    });
   });
 
   group('cold-start ordering', () {
