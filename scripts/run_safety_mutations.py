@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run the six release-blocking KoruBeni safety mutants in isolation.
+"""Run the seven release-blocking KoruBeni safety mutants in isolation.
 
 The active worktree is never edited. A minimal temporary project is copied,
 baseline evals must pass there, then every mutant must make its targeted eval
@@ -40,6 +40,7 @@ FLUTTER_BASELINE = (
     "test/screens/countdown_dispose_lifecycle_test.dart",
     "test/core/services/pin_verification_service_test.dart",
     "test/core/services/emergency_dispatch_pipeline_test.dart",
+    "test/screens/unlock_lockout_write_failure_test.dart",
 )
 NATIVE_BASELINE = (
     "./gradlew",
@@ -154,6 +155,25 @@ MUTATIONS = (
             "disposing an armed countdown never sends native cancel",
         ),
     ),
+    Mutation(
+        "M07_LOCKOUT_WRITE_FAILURE_IGNORED",
+        "Let a failed PIN attempt that could not be debited pass unlocked.",
+        "lib/screens/app_unlock_screen.dart",
+        (
+            "        } on Exception catch (_) {\n"
+            "          _applyUnrecordedAttemptLockout();\n"
+            "          return;\n"
+        ),
+        "        } on Exception catch (_) {\n          return;\n",
+        (
+            "flutter",
+            "test",
+            "--no-pub",
+            "test/screens/unlock_lockout_write_failure_test.dart",
+            "--plain-name",
+            "a keystore write fault still locks the keypad",
+        ),
+    ),
 )
 
 
@@ -264,6 +284,7 @@ def main() -> int:
         "test/screens/countdown_dispose_lifecycle_test.dart",
         "test/core/services/pin_verification_service_test.dart",
         "test/core/services/emergency_dispatch_pipeline_test.dart",
+        "test/screens/unlock_lockout_write_failure_test.dart",
         "android/app/src/test/kotlin/com/poyrazoncel/korubeni/emergency/EmergencySessionCoordinatorTest.kt",
     }
     evidence: dict[str, object] = {

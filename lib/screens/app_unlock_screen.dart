@@ -121,6 +121,43 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> {
     );
   }
 
+  /// What to believe when a failed attempt could not be DEBITED.
+  ///
+  /// NOT "no lockout": the attempt happened, and the stored counter is now
+  /// behind reality. Enforcing one base backoff step makes the attacker pay for
+  /// every guess while staying recoverable for the owner -- the correct PIN
+  /// still unlocks (verification reads, it never writes) and "PIN'imi unuttum"
+  /// is not gated on `_isLockedOut`.
+  ///
+  /// Debiting BEFORE the comparison, the way `SafetySessionPinGate` does, is
+  /// deliberately NOT used here. That gate guards an export or a reset, so
+  /// refusing the action is a safe answer. Refusing to compare on the app's
+  /// unlock screen would lock an owner whose keystore cannot write out of their
+  /// own safety app permanently, which in a duress model is its own harm.
+  void _applyUnrecordedAttemptLockout() {
+    unawaited(
+      LocalLoggerService.instance.warningCode(
+        LocalWarningCode.pinLockoutRegisterFailed,
+      ),
+    );
+    if (!mounted) return;
+    setState(() {
+      _lockoutEndTime = DateTime.now().add(
+        const Duration(seconds: PinLockoutService.baseLockoutSeconds),
+      );
+      _lockoutRemaining = PinLockoutService.baseLockoutSeconds;
+    });
+    // No countdown stream: it re-reads the same counters once a second, so
+    // starting it on a store that just failed only reproduces the failure on a
+    // timer. Matches `_syncLockoutState`'s treatment of an unreadable counter.
+    //
+    // No SnackBar either. The lock band this setState raises already states the
+    // remaining seconds ('brute_force_locked_short'), so the refusal is not
+    // silent -- and the nearest existing message, 'pin_state_read_failed',
+    // tells the user that "PIN cancellation is unavailable", which is about
+    // cancelling an armed session and would be false here.
+  }
+
   void _startLockoutCountdown(PinLockoutState state) {
     _lockoutSubscription?.cancel();
     _lockoutSubscription = PinLockoutService.instance
@@ -191,41 +228,51 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> {
       } else {
         HapticFeedback.vibrate();
         setState(() => _pin = '');
-        PinLockoutService.instance
-            .registerFailure()
-            .then((state) {
-              if (!mounted) return;
-              setState(() {
-                _lockoutEndTime = state.lockedUntil;
-                _lockoutRemaining = state.remainingSeconds;
-              });
-              if (state.isLocked) {
-                _startLockoutCountdown(state);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      'brute_force_locked'.tr(
-                        namedArgs: {'seconds': '${state.remainingSeconds}'},
-                      ),
-                    ),
-                    backgroundColor: AppColors.emergency,
-                    behavior: SnackBarBehavior.floating,
-                    duration: const Duration(seconds: 3),
-                  ),
-                );
-                return;
-              }
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('unlock_wrong_pin'.tr()),
-                  backgroundColor: AppColors.emergency,
-                  behavior: SnackBarBehavior.floating,
+        // Awaited, not fire-and-forget. This screen's `_lockoutEndTime` is the
+        // ONLY thing enforcing the lockout -- `PinVerificationService.verify()`
+        // never consults `PinLockoutService` -- so a failed attempt that cannot
+        // be debited must still cost the attacker something. The previous
+        // `.catchError(debugPrint)` was compiled out in release, which turned a
+        // secure-storage write fault into unlimited, untraced guesses.
+        final PinLockoutState state;
+        try {
+          state = await PinLockoutService.instance.registerFailure();
+        } on Exception catch (_) {
+          _applyUnrecordedAttemptLockout();
+          return;
+        } on StateError {
+          // getState() throws StateError on a corrupt counter.
+          _applyUnrecordedAttemptLockout();
+          return;
+        }
+        if (!mounted) return;
+        setState(() {
+          _lockoutEndTime = state.lockedUntil;
+          _lockoutRemaining = state.remainingSeconds;
+        });
+        if (state.isLocked) {
+          _startLockoutCountdown(state);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'brute_force_locked'.tr(
+                  namedArgs: {'seconds': '${state.remainingSeconds}'},
                 ),
-              );
-            })
-            .catchError((Object error, StackTrace stack) {
-              debugPrint('PinLockoutService.registerFailure failed: $error');
-            });
+              ),
+              backgroundColor: AppColors.emergency,
+              behavior: SnackBarBehavior.floating,
+              duration: const Duration(seconds: 3),
+            ),
+          );
+          return;
+        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('unlock_wrong_pin'.tr()),
+            backgroundColor: AppColors.emergency,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
       }
     } finally {
       _verifying = false;

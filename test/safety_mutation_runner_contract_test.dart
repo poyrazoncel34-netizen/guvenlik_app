@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  test('release mutation runner owns all six mandatory regressions', () {
+  test('release mutation runner owns all seven mandatory regressions', () {
     final source = File(
       'scripts/run_safety_mutations.py',
     ).readAsStringSync();
@@ -15,6 +15,7 @@ void main() {
       'M04_LOG_BEFORE_DISPATCH',
       'M05_NOTIFICATION_RESULT_IGNORED',
       'M06_DISPOSE_NATIVE_CANCEL',
+      'M07_LOCKOUT_WRITE_FAILURE_IGNORED',
     ]) {
       expect(source, contains(mutation));
     }

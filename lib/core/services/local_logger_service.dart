@@ -64,7 +64,17 @@ enum LocalWarningCode {
   /// locked" -- silently DISARMED the only lockout enforcement point (PIN
   /// verification itself never consults the lockout service) with no trace.
   /// Carries no PIN material and no counter value, only the fact of failure.
-  pinLockoutStateUnreadable('pin_lockout_state_unreadable');
+  pinLockoutStateUnreadable('pin_lockout_state_unreadable'),
+
+  /// A failed PIN attempt could not be DEBITED to the brute-force counters, so
+  /// the attempt happened without being counted. Distinct from
+  /// [pinLockoutStateUnreadable]: there the counters could not be READ, here a
+  /// readable counter could not be advanced. The distinction matters because
+  /// only this one means the stored count is now lower than the real number of
+  /// attempts. Previously this failure reached nothing but `debugPrint`, which
+  /// release compiles out, so the one surface enforcing the lockout silently
+  /// stopped enforcing it. Carries no PIN material and no counter value.
+  pinLockoutRegisterFailed('pin_lockout_register_failed');
 
   const LocalWarningCode(this.wireCode);
   final String wireCode;
