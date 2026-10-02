@@ -1011,5 +1011,6 @@
   "native_history_fallback_posted": "A manual call action was posted in a notification.",
   "native_history_fallback_failed": "The call notification is unavailable; use your phone app to call your contact if needed.",
   "native_history_fallback_expired": "The manual call notification has expired; use your phone app if needed.",
-  "native_history_recorded_time": "The time shown is when this result was recorded in the app."
+  "native_history_recorded_time": "The time shown is when this result was recorded in the app.",
+  "overlay_touch_warning": "Another app is drawing over this screen. What you enter here may be visible; close that app before continuing."
 }

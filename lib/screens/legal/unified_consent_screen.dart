@@ -18,6 +18,8 @@ import '../../models/consent_record.dart';
 import '../../core/di/service_locator.dart';
 import '../../widgets/consent_checkbox_widget.dart';
 import '../app_root.dart';
+import '../../core/services/overlay_touch_guard.dart';
+import '../../core/widgets/overlay_touch_shield.dart';
 
 class UnifiedConsentScreen extends StatefulWidget {
   const UnifiedConsentScreen({super.key, this.onAccepted});
@@ -34,7 +36,15 @@ class UnifiedConsentScreen extends StatefulWidget {
   State<UnifiedConsentScreen> createState() => _UnifiedConsentScreenState();
 }
 
-class _UnifiedConsentScreenState extends State<UnifiedConsentScreen> {
+class _UnifiedConsentScreenState extends State<UnifiedConsentScreen> with OverlayTouchShield {
+  // WARN, not BLOCK. Consent is a gateway: a user who cannot tap here cannot
+  // finish onboarding and cannot reach the panic button at all.
+  @override
+  String get overlayGuardOwner => 'unified_consent';
+
+  @override
+  OverlayTouchPolicy get overlayGuardPolicy => OverlayTouchPolicy.warn;
+
   int? _selectedAgeOption; // 0 = 18+
 
   bool _isEulaAccepted = false;

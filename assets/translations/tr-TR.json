@@ -1011,5 +1011,6 @@
   "native_history_fallback_posted": "Elle arama seçeneği bildirimde sunuldu.",
   "native_history_fallback_failed": "Arama bildirimine erişim doğrulanamadı; gerekirse kişini telefon uygulamasından ara.",
   "native_history_fallback_expired": "Elle arama bildiriminin süresi doldu; gerekirse telefon uygulamasını kullan.",
-  "native_history_recorded_time": "Gösterilen zaman, bu sonucun uygulamaya kaydedildiği zamandır."
+  "native_history_recorded_time": "Gösterilen zaman, bu sonucun uygulamaya kaydedildiği zamandır.",
+  "overlay_touch_warning": "Başka bir uygulama bu ekranın üstüne çiziyor. Girdiğiniz bilgiler görünüyor olabilir; devam etmeden önce o uygulamayı kapatın."
 }

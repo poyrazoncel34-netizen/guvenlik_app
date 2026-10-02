@@ -12,6 +12,7 @@ import android.os.Bundle
 import android.provider.ContactsContract
 import android.provider.Settings
 import android.view.KeyEvent
+import android.view.MotionEvent
 import android.view.WindowManager
 import com.poyrazoncel.korubeni.emergency.EmergencyChannels
 import com.poyrazoncel.korubeni.emergency.EmergencyEventStreamHandler
@@ -19,6 +20,7 @@ import com.poyrazoncel.korubeni.emergency.EmergencyPlatformHandler
 import com.poyrazoncel.korubeni.integrity.DeviceIntegrityChannel
 import com.poyrazoncel.korubeni.quickaccess.PanicLaunch
 import com.poyrazoncel.korubeni.quickaccess.PanicRequestStore
+import com.poyrazoncel.korubeni.security.OverlayTouchGuard
 import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.EventChannel
@@ -32,6 +34,7 @@ class MainActivity : FlutterFragmentActivity() {
         private const val CONTACTS_PICKER_CHANNEL = "com.poyrazoncel.korubeni/contacts_picker"
         private const val QUICK_PANIC_CHANNEL = "com.poyrazoncel.korubeni/quick_panic"
         private const val DEEP_LINK_CHANNEL = "com.poyrazoncel.korubeni/deep_link"
+        private const val OVERLAY_GUARD_CHANNEL = "com.poyrazoncel.korubeni/overlay_guard"
 
         /// The ONLY scheme this Activity will hand to Dart. The manifest filter
         /// already restricts what Android delivers; this is the second half of
@@ -52,6 +55,13 @@ class MainActivity : FlutterFragmentActivity() {
     /// means the user pressed something repeatedly, and it must not accumulate
     /// navigations that all fire after the PIN gate.
     private var pendingDeepLink: String? = null
+
+    /// Overlay policy for the surface currently on screen, and whether the user
+    /// has already been told about an overlay since it became active. Dart owns
+    /// the policy; this Activity only enforces and reports it.
+    private var overlayPolicy = OverlayTouchGuard.Policy.OFF
+    private var overlayReported = false
+    private var overlayGuardChannel: MethodChannel? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         // Keep task snapshots out of Overview even in debug builds. Debug must
@@ -391,11 +401,73 @@ class MainActivity : FlutterFragmentActivity() {
                 android.util.Log.e("MainActivity", "QUICK_PANIC_CHANNEL_CONFIG_FAILED")
             }
 
+            // Overlay (tapjacking) policy for the surface on screen. Dart decides
+            // WHICH policy a surface gets; this channel only carries it in and
+            // carries an observation back out.
+            try {
+                val overlayChannel = MethodChannel(messenger, OVERLAY_GUARD_CHANNEL)
+                overlayGuardChannel = overlayChannel
+                overlayChannel.setMethodCallHandler { call, result ->
+                    when (call.method) {
+                        "setPolicy" -> {
+                            val policy = OverlayTouchGuard.policyFrom(
+                                call.argument<String>("policy"),
+                            )
+                            if (policy == null) {
+                                // An unknown policy must not silently become a
+                                // weaker one.
+                                result.error("INVALID_ARG", "unknown overlay policy", null)
+                            } else {
+                                overlayPolicy = policy
+                                // A new surface earns a fresh warning; the user
+                                // needs to know about the overlay on THIS screen.
+                                overlayReported = false
+                                window.decorView.filterTouchesWhenObscured =
+                                    OverlayTouchGuard.filterTouches(policy)
+                                result.success(true)
+                            }
+                        }
+                        else -> result.notImplemented()
+                    }
+                }
+                android.util.Log.d("MainActivity", "Overlay guard channel configured")
+            } catch (_: Exception) {
+                android.util.Log.e("MainActivity", "OVERLAY_GUARD_CHANNEL_CONFIG_FAILED")
+            }
+
             android.util.Log.i("MainActivity", "All platform channels configured successfully")
         } catch (_: Exception) {
             android.util.Log.e("MainActivity", "FLUTTER_ENGINE_CONFIG_FAILED")
             // Don't crash - let Flutter handle it
         }
+    }
+
+    /**
+     * Observes obscured touches and reports them; it never decides whether the
+     * touch lands.
+     *
+     * Runs BEFORE the window's own filter (Activity.dispatchTouchEvent precedes
+     * decorView's), so a touch discarded under BLOCK is still seen here. That is
+     * what keeps a discarded touch from reading as a dead button.
+     */
+    override fun dispatchTouchEvent(event: MotionEvent): Boolean {
+        if (
+            OverlayTouchGuard.shouldReport(
+                overlayPolicy,
+                OverlayTouchGuard.isObscured(event.flags),
+                overlayReported,
+            )
+        ) {
+            overlayReported = true
+            try {
+                overlayGuardChannel?.invokeMethod("onObscuredTouch", overlayPolicy.wire)
+            } catch (_: Exception) {
+                // Reporting is best effort. A failed notification must never
+                // swallow the user's touch.
+                android.util.Log.e("MainActivity", "OVERLAY_REPORT_FAILED")
+            }
+        }
+        return super.dispatchTouchEvent(event)
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
@@ -418,6 +490,7 @@ class MainActivity : FlutterFragmentActivity() {
     override fun onDestroy() {
         try {
             volumeDetector.setEnabled(false)
+            overlayGuardChannel = null
             android.util.Log.d("MainActivity", "Resources cleaned up")
         } catch (_: Exception) {
             android.util.Log.e("MainActivity", "LIFECYCLE_CLEANUP_FAILED")

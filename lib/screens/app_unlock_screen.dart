@@ -21,6 +21,8 @@ import 'settings_legal/legal_settings_screen.dart';
 import 'app_root.dart';
 import 'splash_screen.dart';
 import '../core/widgets/escape_dismissible.dart';
+import '../core/services/overlay_touch_guard.dart';
+import '../core/widgets/overlay_touch_shield.dart';
 
 class AppUnlockScreen extends StatefulWidget {
   final VoidCallback onUnlocked;
@@ -31,7 +33,17 @@ class AppUnlockScreen extends StatefulWidget {
   State<AppUnlockScreen> createState() => _AppUnlockScreenState();
 }
 
-class _AppUnlockScreenState extends State<AppUnlockScreen> {
+class _AppUnlockScreenState extends State<AppUnlockScreen> with OverlayTouchShield {
+  // WARN, not BLOCK. This screen is the gateway to the entire app, panic
+  // button included, and "PIN'imi unuttum" is a touch like any other.
+  // Discarding touches here could lock an owner out of their own safety app,
+  // with no escape -- see OverlayTouchPolicy.
+  @override
+  String get overlayGuardOwner => 'app_unlock';
+
+  @override
+  OverlayTouchPolicy get overlayGuardPolicy => OverlayTouchPolicy.warn;
+
   String _pin = '';
   PinState _pinState = PinState.loading;
   bool _verifying = false;

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
@@ -10,11 +12,19 @@ import '../services/app_reset_service.dart';
 import '../services/emergency_session_contract.dart';
 import '../widgets/sensitive_action_pin_gate.dart';
 import '../widgets/escape_dismissible.dart';
+import '../services/overlay_touch_guard.dart';
 
 class AppResetHelper {
   AppResetHelper._();
 
   static void showResetDialog(BuildContext context, {String? title}) {
+    // BLOCK: not a gateway. This flow erases the user's local data, so refusing
+    // the touch while another app is drawn over the confirmation is the safe
+    // answer -- an overlay here could hide WHAT is being agreed to. The lease
+    // is held for the whole dialog, so the PIN modal it opens on top inherits
+    // it without SafetySessionPinGate needing to know about any of this.
+    final guard = OverlayTouchGuard.instance;
+    unawaited(guard.acquire(_overlayGuardOwner, OverlayTouchPolicy.block));
     showDialog(
       context: context,
       builder: (dialogContext) => EscapeDismissible(
@@ -129,8 +139,10 @@ class AppResetHelper {
           ),
         ),
       ),
-    );
+    ).whenComplete(() => unawaited(guard.release(_overlayGuardOwner)));
   }
+
+  static const String _overlayGuardOwner = 'app_reset';
 
   static Future<bool> _verifyPinIfConfigured(BuildContext context) =>
       SensitiveActionPinGate.ensure(context);

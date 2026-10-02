@@ -15,6 +15,8 @@ import '../../core/app_colors.dart';
 import '../../core/services/user_data_export_service.dart';
 import '../../core/services/sensitive_temp_file_service.dart';
 import '../../core/widgets/sensitive_action_pin_gate.dart';
+import '../../core/services/overlay_touch_guard.dart';
+import '../../core/widgets/overlay_touch_shield.dart';
 
 class DataExportScreen extends StatefulWidget {
   const DataExportScreen({super.key});
@@ -23,7 +25,16 @@ class DataExportScreen extends StatefulWidget {
   State<DataExportScreen> createState() => _DataExportScreenState();
 }
 
-class _DataExportScreenState extends State<DataExportScreen> {
+class _DataExportScreenState extends State<DataExportScreen> with OverlayTouchShield {
+  // BLOCK: not a gateway. Refusing the action while an overlay is up is a
+  // safe answer, and the export writes every emergency contact to a file.
+  // The lease also covers the PIN modal this screen opens over itself.
+  @override
+  String get overlayGuardOwner => 'data_export';
+
+  @override
+  OverlayTouchPolicy get overlayGuardPolicy => OverlayTouchPolicy.block;
+
   bool _exporting = false;
 
   Future<void> _exportData() async {

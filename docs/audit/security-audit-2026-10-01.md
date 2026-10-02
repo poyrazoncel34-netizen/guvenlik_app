@@ -11,7 +11,7 @@ madde madde onay alınarak uygulandı ve aşağıdaki tabloda commit'leriyle kay
 |---|---|---|---|
 | F-01 | MEDIUM | **KAPANDI** | `af24a4d` — fix(security): kilit ekrani sayac yazma hatasinda fail-closed |
 | F-02 | MEDIUM | **KABUL EDİLEN RİSK** | §3 F-02 → "Kabul kararı" |
-| F-03 | MEDIUM | **AÇIK** | Kapsam kararı verildi (§3 F-03); kod uygulanmadı |
+| F-03 | MEDIUM | **UYGULANDI — CİHAZDA DOĞRULANMADI** | feat(security): ortusme (tapjacking) dokunus politikasi — uyar/engelle ayrımı; §3 F-03 → "Uygulama" |
 | F-04 | LOW | **KAPANDI** | `26d09dc` — fix(reliability): quick-access panik istegine tazelik penceresi (3 dk, monotonik saat) |
 | F-05 | LOW | AÇIK | — |
 | F-06 | INFO | AÇIK (Aşama 4'e taşındı) | `safe_device` kaldırma yedi lisans/SBOM kapısını yeniden üretmeyi gerektiriyor; `verify_release.sh` adımıyla birlikte yapılacak |
@@ -480,6 +480,60 @@ engellemiyor — farklı tehdit sınıfı.
 
 **Kanıt:** `docs/` ve kök `*.md` içinde tapjacking hakkında alınmış hiçbir karar yok; yani
 bu bilinçli bir takas değil, atlanmış bir yüzey.
+
+#### Uygulama (2026-10-02)
+
+Kapsam kararı korundu ama **davranış değişti**, ve bu değişiklik uygulamadan önce
+bulunan bir yan etkiden doğdu.
+
+`View.setFilterTouchesWhenObscured(true)` örtüşen dokunuşları **opaklık eşiği
+olmadan** atar. Android 12+ güvenilmeyen dokunuşları kendisi de engelliyor ama
+eşikli; yani bu bayrağı açmak platformdan **kesinlikle daha katı** ve bugün geçen
+örtüşmeleri yarın engeller. Ulaştığı örtüşmeler ekran karartma ve mavi ışık
+filtresi uygulamaları — yaygın olanlar. minSdk 29, yani API 29-30'da platform hiç
+bir şey yapmıyor.
+
+Sorun: kapsamdaki **PIN ekranı ve rıza akışı birer geçiş kapısı.** Orada dokunuş
+atılırsa kullanıcı uygulamayı hiç açamaz — panik butonuna ulaşmak için bile — ve
+"PIN'imi unuttum" da bir dokunuş olduğu için kaçış yolu yok.
+
+Bu yüzden tek bir anahtar yerine iki politika uygulandı:
+
+| Yüzey | Politika | Neden |
+|---|---|---|
+| Uygulama kilidi PIN ekranı | `warn` | Geçiş kapısı; kilitlenme kabul edilemez |
+| Rıza akışı | `warn` | Geçiş kapısı; tamamlanmadan panik butonuna ulaşılamıyor |
+| Veri export | `block` | Geçiş kapısı değil; reddetmek güvenli cevap |
+| Yerel veri sıfırlama | `block` | Geçiş kapısı değil; örtüşme neyi onayladığını saklayabilir |
+
+`warn` altında dokunuş geçer ve kullanıcıya "başka bir uygulama bu ekranın üstüne
+çiziyor" denir — duress modelinde eyleme geçirilebilir bilgi. **İki politika da
+rapor üretir**, yani `block` altında atılan dokunuş ölü bir düğme gibi görünmez;
+sessiz reddetme bu projede kendi başına bir defekt.
+
+**Acil yol hiç dokunulmadı:** `countdown_screen`, `panic_button`,
+`safety_session_pin_gate` (silahlı oturum iptali) ve `emergency_trigger_host`
+hiçbir politika taşımıyor; `test/screens/overlay_touch_policy_contract_test.dart`
+bunu sabitliyor. İyi niyetli bir örtüşme (sohbet balonu, ses paneli) bir panik
+basışını asla yutmamalı.
+
+**Uygulama notları:**
+- Kiralama modeli `ForegroundServiceOwnership` desenini izliyor: en güçlü canlı
+  kiralama kazanır, bir diyalog kapanınca altındaki ekranın koruması düşmez.
+- Sarmalayıcı widget yerine `State` mixin'i kullanıldı: `build` gövdelerini bir
+  seviye içe almak ekran başına ~200 önceki satırı yeniden girintilerdi, ki bu depo
+  o churn'ü açıkça reddediyor.
+- Kanal hatası yutuluyor: koruma derinlik savunması, bir kullanıcının rıza ekranına
+  veya PIN pad'ine ulaşamama nedeni olamaz.
+
+**DOĞRULANMADI — ve bu bir eksik, kapatılmış bir madde değil.** Birim testleri
+politika haritasını, kiralama aritmetiğini, strict parse'ı ve kanal çağrısını
+kanıtlıyor (Kotlin 7 test, Dart 14 test, üç mutant öldürüldü). Korumanın
+**gerçekten çalıştığı** — hangi örtüşmelerin `FLAG_WINDOW_IS_OBSCURED` tetiklediği —
+cihazda ölçülmedi. Politika ayrımı tam olarak bu belirsizliğin zarar vermesini
+engellemek için var: ölçülmeyen durum bir uyarıya düşer, kilitlenmiş bir
+kullanıcıya değil. Cihaz doğrulaması yapıldığında AVD/cihaz, yoğunluk, commit ve
+`lastUpdateTime` parmak iziyle `docs/audit/`'a kaydedilmeli.
 
 #### Kapsam kararı
 
