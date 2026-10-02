@@ -16,7 +16,7 @@ madde madde onay alınarak uygulandı ve aşağıdaki tabloda commit'leriyle kay
 | F-05 | LOW | AÇIK | — |
 | F-06 | INFO | AÇIK (Aşama 4'e taşındı) | `safe_device` kaldırma yedi lisans/SBOM kapısını yeniden üretmeyi gerektiriyor; `verify_release.sh` adımıyla birlikte yapılacak |
 | F-07 | INFO | **SABITLENDI** | `9fb7138` — yüzey silinmedi; hiçbir çağırıcının geçmediği bir tel tuzak testiyle pinlendi |
-| F-08 | INFO | KISMEN | Bu belgenin commit'i yarısı; temiz ağaçta `verify_release.sh` koşumu kalan yarısı |
+| F-08 | INFO | **KAPANDI** | Kanıtlar commit edildi; `verify_release.sh` 5/5 yeşil, imzalı secret-scan ve OSV artefaktları üretildi (§7) |
 | F-09 | INFO | **KAPANDI** | Denetim değil, düzeltme sırasında bulundu. §3 F-09 |
 
 Bu belge `config/absence_claims.json`'a kayıtlı **değildir**. O kayıt defteri `MP-xxx` audit
@@ -264,6 +264,12 @@ Her iki katman tam-sürüm eşleşmesiyle OSV'ye sorguldu, 2026-10-01:
 Lockfile otoritatif: `android/build.gradle.kts` içinde
 `dependencyLocking { lockAllConfigurations() }` — kilit dışına çıkan bir çözüm build'i kırar.
 "Outdated" durumu vulnerability sayılmadı.
+
+2026-10-02'de aynı kontrol deponun kendi zinciriyle tekrarlandı ve imzalı artefakt
+üretildi: `OSV_EVIDENCE_PASS`, **196 Pub + 203 Maven** sorgu, findingCount=0 (§4b).
+Pub sayısı yukarıdaki 96'dan farklıdır çünkü iki sayma farklı: benim elle koşumum
+`pubspec.lock`'taki yalnız `hosted` paketleri sorguldu, deponun script'i çözümlenmiş
+ağacın tamamını sorguluyor. İkisi de 0 bulgu verdi; otoritatif olan imzalı artefakttır.
 
 Terk edilmiş/ölü bağımlılık: `safe_device` 1.3.10 pubspec'te duruyor ama runtime'da hiçbir
 şey çağırmıyor (F-06).
@@ -707,6 +713,58 @@ karşı koşuyor ve tespit ettiğini assert ediyor — yalnız grep değil.
 authorization bypass, unsafe SQL interpolasyonu, `http://` endpoint policy'si, korumasız
 exported bileşen. Bunlar için mutant eklenmesi önerilir.
 
+
+## 4b. Yayın zinciri koşumu — 2026-10-02
+
+Denetim sırasında çalıştırılamayan kapılar, kanıt dosyaları commit edildikten sonra
+temiz ağaçta koşuldu.
+
+### `scripts/verify_release.sh` — exit 0, 5/5 kod+smoke kapısı
+
+| Adım | Sonuç |
+|---|---|
+| temiz build zemini (`flutter clean` + `pub get`) | PASS |
+| `flutter analyze` | PASS, sıfır sorun |
+| `flutter test` + kritik safety coverage | PASS, 2066 test; `CRITICAL_COVERAGE_PASS` |
+| imzalı NON_RELEASE_SMOKE AAB + imza + **birleşik Android release yüzeyi** | PASS, `ANDROID_RELEASE_SURFACE_PASS` |
+| Android lint + Kotlin unit + instrumentation derlemesi | PASS |
+| 16KB sayfa boyutu hizalaması | PASS, tüm native kütüphaneler uyumlu |
+| etiketli-yayın blocker (SBOM lisans kanıtı + notices paritesi) | PASS |
+
+Sonuç satırları: `LOCAL_CANDIDATE_PASS`, `TAGGED_RELEASE_GATES_LOCAL_PASS`,
+`EXTERNAL_RELEASE_GATES_UNVERIFIED`.
+
+**Bu, §2'deki en önemli "doğrulanmadı" maddesini kapatır.** `ANDROID_RELEASE_SURFACE_PASS`
+kaynak manifest değil **birleşik** manifest üzerinde çalışır; yani bağımlılık
+manifest'lerinin inceleme sonrası izin veya bileşen ekleyip eklemediği artık
+doğrulanmıştır. Denetim anında bu kapı koşulamamıştı (release build gerektiriyor).
+
+Not: üretilen AAB `.smoke` paket kimliğiyle derlenir ve Play'e yüklenemez; gerçek
+üretim AAB'si yalnız etiketli production zincirinden alınır.
+
+### İmzalı kanıt artefaktları
+
+| Kapı | Sonuç |
+|---|---|
+| `scan_release_secrets.py --require-clean` | `RELEASE_SECRET_SCAN_PASS` — mode=tracked-candidate, 1379 yol (1156 metin + 223 ikili), **findings=0**, içerik ve yol SHA-256'larıyla bağlı |
+| `audit_dependencies_osv.sh` | `OSV_EVIDENCE_PASS` — pub 196 + Maven 203 sorgu, **findingCount=0**, ekosistem başına sorgu/yanıt SHA-256'larıyla |
+
+F-08'in nedeni buydu: ikisi de `--untracked-files=all` ile kirli ağaçta fail-closed
+davranıyor ve 362 izlenmeyen kanıt dosyası onları bloke ediyordu. Dosyalar commit
+edildi, kapılar koştu.
+
+`interpretation: noKnownFindingsAtScanTime` — aracın kendi ifadesi ve doğru olanı bu:
+PASS "bu tam sürümlerde koşum anında bilinen OSV bulgusu yok" demektir, "açık yok"
+demez.
+
+### Hala doğrulanmayan
+
+`EXTERNAL_RELEASE_GATES_UNVERIFIED` — script'in kendisi bunu yazıyor. Repo kodundan
+doğrulanamayan şeyler: GitHub branch protection, required reviewers, environment
+approver'ları, secret scanning / push protection ve Play Console beyanları.
+
+F-03'ün cihaz doğrulaması da yapılmadı (§3 F-03).
+
 ## 5. Özet
 
 Denetim anındaki (69c2ecd) sayım:
@@ -723,10 +781,13 @@ SECURITY_RELEASE_READY=NO
 Düzeltmeler sonrası güncel durum:
 
 ```
-KAPANDI=3 (F-01, F-04, F-09)   KABUL EDİLEN RİSK=1 (F-02)
-AÇIK=5 (F-03, F-05, F-06, F-07*, F-08)
-* F-07 silinmedi; yüzey bir tel tuzak testiyle sabitlendi (bak §3 F-07)
-CRITICAL=0   HIGH=0
+KAPANDI=4 (F-01, F-04, F-08, F-09)
+SABITLENDI=1 (F-07 — silinmedi, tel tuzak testiyle pinlendi)
+KABUL EDİLEN RİSK=1 (F-02)
+UYGULANDI / CİHAZDA DOĞRULANMADI=1 (F-03)
+AÇIK=2 (F-05 obfuscation, F-06 ölü safe_device bağımlılığı)
+
+CRITICAL=0   HIGH=0   açık MEDIUM=0
 RELEASE_BLOCKING_SECURITY_FINDINGS=0
 SECURITY_RELEASE_READY=NO
 ```
@@ -740,15 +801,22 @@ SECURITY_RELEASE_READY=NO
 | authentication/authorization bypass yok | ✅ (entitlement client-side, ayrı sınıf) |
 | sensitive data leakage bulunmuyor | ⚠️ F-02 kabul edilen risk olarak kayıtlı |
 | release logging güvenli | ✅ |
-| bilinen kritik/yüksek dependency vulnerability yok | ✅ 96 Pub + 203 Maven, 0 OSV |
-| Android exported/native yüzeyleri doğrulanmış | ❌ merged manifest kapısı koşulmadı |
-| uygulanabilir kritik kontrollerde doğrulanmamış güvenlik sınırı yok | ❌ F-03 açık |
-| gerekli dış güvenlik ayarları doğrulanmış | ❌ UNVERIFIED_EXTERNAL=2 |
+| bilinen kritik/yüksek dependency vulnerability yok | ✅ `OSV_EVIDENCE_PASS`: 196 Pub + 203 Maven sorgu, findingCount=0 (§4b) |
+| Android exported/native yüzeyleri doğrulanmış | ✅ `ANDROID_RELEASE_SURFACE_PASS` birleşik manifest üzerinde (§4b) |
+| uygulanabilir kritik kontrollerde doğrulanmamış güvenlik sınırı yok | ⚠️ F-03 uygulandı ama cihazda ölçülmedi |
+| gerekli dış güvenlik ayarları doğrulanmış | ❌ `EXTERNAL_RELEASE_GATES_UNVERIFIED` — GitHub/Play paneli gerekir |
 
-**Bu bir "yayınlamayın" kararı değildir.** Hiçbir bulgu release-blocker değil. `NO`'nun
-nedeni eşiğin ayrıca doğrulanmamış güvenlik sınırı bırakmamayı ve dış ayarların
-doğrulanmasını şart koşmasıdır. F-03 kapatılır, `verify_release.sh` temiz ağaçta koşulur ve
-GitHub ayarları dashboard'dan doğrulanırsa eşik karşılanır.
+**Bu bir "yayınlamayın" kararı değildir.** Hiçbir bulgu release-blocker değil ve açık
+MEDIUM kalmadı. 2026-10-02 itibarıyla `NO` iki maddeye indi:
+
+1. **F-03 cihazda ölçülmedi.** Kod uygulandı ve birim testleriyle çevrelendi, ama
+   korumanın gerçekten çalıştığı yalnız cihazda kanıtlanabilir.
+2. **Dış ayarlar doğrulanmadı.** GitHub branch protection, required reviewers,
+   environment approver'ları, secret scanning ve Play Console beyanları repo
+   kodundan görülemez.
+
+İkisi de kapatılırsa eşik karşılanır. F-05 ve F-06 açık ama ikisi de eşiğin
+maddesi değil: biri hardening (güvenlik sınırı değil), diğeri ölü bir bağımlılık.
 
 ## 6. Kalan iş
 
