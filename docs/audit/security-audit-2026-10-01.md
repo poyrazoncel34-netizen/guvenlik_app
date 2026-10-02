@@ -839,10 +839,16 @@ SECURITY_RELEASE_READY=NO
 MEDIUM kalmadı. 2026-10-02 itibarıyla `NO` iki maddeye indi:
 
 **Tek bir madde kaldı: dış ayarlar doğrulanmadı.** GitHub branch protection, required
-reviewers, environment approver'ları, secret scanning / push protection ve Play Console
-beyanları repo kodundan görülemez. `verify_release.sh` bunu kendisi
-`EXTERNAL_RELEASE_GATES_UNVERIFIED` olarak raporluyor. Bu maddeyi kapatacak olan
-denetimçi değil, hesap sahibidir.
+reviewers, MFA ve Play App Signing kaydı repo kodundan görülemez.
+`verify_release.sh` bunu kendisi `EXTERNAL_RELEASE_GATES_UNVERIFIED` olarak raporluyor.
+
+Bu için **yeni bir kontrol listesi yazılmadı**: depo bunu zaten tanımlı bir dış blocker
+olarak taşıyor — `EXTERNAL_LAUNCH_BLOCKERS.md` §E4 "Account security and key custody
+(Play Console + GitHub)", 8 gereksinim kimliği, PASS kriteri ve kanıt formatıyla
+(tarihli ekran görüntüleri, `docs/release/` altına). Prosedürün kendisi
+`docs/release/dr_and_key_custody.md`'de yazılı; eksik olan yalnız konsol teyidi.
+
+Bu maddeyi kapatacak olan denetimçi değil, yayınlayan hesabın sahibidir.
 
 F-02 kabul edilen risk olarak kayıtlı ve eşiğin "sensitive data leakage bulunmuyor"
 maddesini tam yeşile çekmiyor; kabul kararı ve gerekçesi §3 F-02'de.
