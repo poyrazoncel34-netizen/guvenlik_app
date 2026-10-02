@@ -11,10 +11,10 @@ madde madde onay alınarak uygulandı ve aşağıdaki tabloda commit'leriyle kay
 |---|---|---|---|
 | F-01 | MEDIUM | **KAPANDI** | `af24a4d` — fix(security): kilit ekrani sayac yazma hatasinda fail-closed |
 | F-02 | MEDIUM | **KABUL EDİLEN RİSK** | §3 F-02 → "Kabul kararı" |
-| F-03 | MEDIUM | **UYGULANDI — CİHAZDA DOĞRULANMADI** | feat(security): ortusme (tapjacking) dokunus politikasi — uyar/engelle ayrımı; §3 F-03 → "Uygulama" |
+| F-03 | MEDIUM | **KAPANDI — CİHAZDA DOĞRULANDI** | feat(security): ortusme (tapjacking) dokunus politikasi; cihaz kaydı: `docs/audit/device-verification-2026-10-02-f03-overlay-guard.md` |
 | F-04 | LOW | **KAPANDI** | `26d09dc` — fix(reliability): quick-access panik istegine tazelik penceresi (3 dk, monotonik saat) |
 | F-05 | LOW | AÇIK | — |
-| F-06 | INFO | AÇIK (Aşama 4'e taşındı) | `safe_device` kaldırma yedi lisans/SBOM kapısını yeniden üretmeyi gerektiriyor; `verify_release.sh` adımıyla birlikte yapılacak |
+| F-06 | INFO | **KAPANDI** | `6bb7361` — chore(deps): olu safe_device bagimliligini kaldir; 399→398 bileşen, parite `cmp` ile |
 | F-07 | INFO | **SABITLENDI** | `9fb7138` — yüzey silinmedi; hiçbir çağırıcının geçmediği bir tel tuzak testiyle pinlendi |
 | F-08 | INFO | **KAPANDI** | Kanıtlar commit edildi; `verify_release.sh` 5/5 yeşil, imzalı secret-scan ve OSV artefaktları üretildi (§7) |
 | F-09 | INFO | **KAPANDI** | Denetim değil, düzeltme sırasında bulundu. §3 F-09 |
@@ -532,14 +532,25 @@ basışını asla yutmamalı.
 - Kanal hatası yutuluyor: koruma derinlik savunması, bir kullanıcının rıza ekranına
   veya PIN pad'ine ulaşamama nedeni olamaz.
 
-**DOĞRULANMADI — ve bu bir eksik, kapatılmış bir madde değil.** Birim testleri
-politika haritasını, kiralama aritmetiğini, strict parse'ı ve kanal çağrısını
-kanıtlıyor (Kotlin 7 test, Dart 14 test, üç mutant öldürüldü). Korumanın
-**gerçekten çalıştığı** — hangi örtüşmelerin `FLAG_WINDOW_IS_OBSCURED` tetiklediği —
-cihazda ölçülmedi. Politika ayrımı tam olarak bu belirsizliğin zarar vermesini
-engellemek için var: ölçülmeyen durum bir uyarıya düşer, kilitlenmiş bir
-kullanıcıya değil. Cihaz doğrulaması yapıldığında AVD/cihaz, yoğunluk, commit ve
-`lastUpdateTime` parmak iziyle `docs/audit/`'a kaydedilmeli.
+**CİHAZDA DOĞRULANDI (2026-10-02).** Kayıt:
+`docs/audit/device-verification-2026-10-02-f03-overlay-guard.md` — AVD
+`KoruBeni_A017_API35_Play`, API 35, 1080x2400 @420, commit `6bb7361`,
+`lastUpdateTime=2026-10-02 11:30:04`, APK SHA-256 kayıtlı.
+
+Ham okuma `FLAG_WINDOW_IS_OBSCURED`'in gerçekten set edildiğini gösterdi
+(`flags=0x0` örtüşme yokken, `flags=0x1` varken) ve Dart tarafının her yüzeye doğru
+politikayı gönderdiğini (`warn` kilit ekranında, `off` korumasız ayarlar listesinde,
+`block` sıfırlama diyaloğunda). Dört vaka ölçüldü: `warn` altında dokunuş geçti ve
+uyarı çıktı; `block` altında dokunuş atıldı ve uyarı yine çıktı; örtüşme
+kaldırıldığında aynı dokunuş çalıştı (negatif kontrol — onsuz "diyalog açık kaldı"
+sonucu bozuk bir butondan ayırt edilemezdi).
+
+Ölçüm teshis build'iyle YAPILMADI: geçici logcat satırı kaldırıldıktan ve APK yeniden
+derlenip kurulduktan sonra tekrarlandı (CERT2-05).
+
+Hala ölçülmeyen, belgede açıkça yazılı: tek OEM/imaj, gerçek bir ekran karartma
+uygulaması denenmedi, rıza ve export yüzeyleri cihazda koşulmadı (ikisi de aynı mixin
+ve aynı iki politikayı kullanıyor).
 
 #### Kapsam kararı
 
@@ -798,11 +809,11 @@ SECURITY_RELEASE_READY=NO
 Düzeltmeler sonrası güncel durum:
 
 ```
-KAPANDI=4 (F-01, F-04, F-08, F-09)
+KAPANDI=5 (F-01, F-03, F-04, F-08, F-09)
 SABITLENDI=1 (F-07 — silinmedi, tel tuzak testiyle pinlendi)
 KABUL EDİLEN RİSK=1 (F-02)
-UYGULANDI / CİHAZDA DOĞRULANMADI=1 (F-03)
-AÇIK=2 (F-05 obfuscation, F-06 ölü safe_device bağımlılığı)
+KAPANDI — cihazda dogrulandi=1 (F-03)
+AÇIK=1 (F-05 obfuscation)
 
 CRITICAL=0   HIGH=0   açık MEDIUM=0
 RELEASE_BLOCKING_SECURITY_FINDINGS=0
@@ -820,7 +831,7 @@ SECURITY_RELEASE_READY=NO
 | release logging güvenli | ✅ |
 | bilinen kritik/yüksek dependency vulnerability yok | ✅ `OSV_EVIDENCE_PASS`: 196 Pub + 203 Maven sorgu, findingCount=0 (§4b) |
 | Android exported/native yüzeyleri doğrulanmış | ✅ `ANDROID_RELEASE_SURFACE_PASS` birleşik manifest üzerinde (§4b) |
-| uygulanabilir kritik kontrollerde doğrulanmamış güvenlik sınırı yok | ⚠️ F-03 uygulandı ama cihazda ölçülmedi |
+| uygulanabilir kritik kontrollerde doğrulanmamış güvenlik sınırı yok | ✅ F-03 cihazda doğrulandı (§3 F-03) |
 | gerekli dış güvenlik ayarları doğrulanmış | ❌ `EXTERNAL_RELEASE_GATES_UNVERIFIED` — GitHub/Play paneli gerekir |
 
 **Bu bir "yayınlamayın" kararı değildir.** Hiçbir bulgu release-blocker değil ve açık
