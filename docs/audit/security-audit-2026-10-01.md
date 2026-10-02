@@ -677,19 +677,36 @@ belgeler kodla karşılaştırılmadı. Bulunan iki örnek (F-09 ve aşağıdaki
 atıfının gerçek kodla karşılaştırılması ayrı bir iş olarak planlandı ve bu raporun
 kapsamı dışındadır.
 
-### Gözlem — `specialUse` foreground service iddiası geçersiz
+### Gözlem — `specialUse` foreground service iddiası (DÜZELTİLDİ 2026-10-02)
 
-Güvenlik bulgusu değil, **belge sürüklenmesi**. `.claude/rules/common/performance.md` ve
-`.claude/rules/dart/patterns.md` "`specialUse` FGS"den bahsediyor; ancak:
+Yer gerçeği: `AndroidManifest.xml`'de hiçbir foreground `<service>` beyanı yok,
+`FOREGROUND_SERVICE*` izni istenmiyor, `flutter_background_service` ne `pubspec.yaml`'da
+ne `pubspec.lock`'ta, ve `KoruBeniForegroundService` eski dosya adını koruyor ama yalnızca
+sürekli durum bildirimini yönetiyor. Güvenilirlik exact + inexact alarm ve direct-boot
+receiver'lara dayanıyor.
 
-- `AndroidManifest.xml`'de hiçbir foreground `<service>` beyanı yok,
-- `FOREGROUND_SERVICE*` izni istenmiyor,
-- `KoruBeniForegroundService` yalnızca sürekli bir bildirim yönetiyor.
+**Önemli düzeltme: deponun kendisi bu sapmayı ZATEN yakalamış ve düzeltmiş.** Bu raporun
+ilk hali "belgeler gerçeğe çekilmeli" diyerek genel bir belge sapması ima ediyordu; bu
+yanlıştır. İzlenen dosyalar doğrudur:
 
-Güvenilirlik fiilen exact alarm + direct-boot receiver'lara dayanıyor. `dart/security.md`
-ayrıca bu FGS için "Play Console declaration + demo video obligation" olduğunu söylüyor ki
-beyan edilmemiş bir bileşen için bu yükümlülük de yok. Belgeler gerçeğe çekilmeli — var
-sandığımız bir mekanizma bu projenin en pahalı hata sınıfıdır.
+| Dosya | Ne diyor |
+|---|---|
+| `docs/play-console-checklist.md` §3.7 | "Foreground service — beyan UYGULANMAZ"; `flutter_background_service`, servis manifest girdisi ve `specialUse` property'sinin kaldırıldığını yazıyor |
+| `docs/play-submission.md` §1 | "Foreground service beyanı — UYGULANMAZ"; `specialUse` beyanı veya FGS demo videosu gerekmediğini açıkça söylüyor |
+| `EXTERNAL_LAUNCH_BLOCKERS.md` | 2026-08-26 tarihli "Correction" bölümü: operatörü olmayan bir beyanı göndermeye yollayan eski metni iptal ediyor |
+| `docs/legal/ozen_dosyasi.md` | Düzeltilmiş bir denetim bulgusu olarak kayıtlı |
+| `test/core/services/foreground_service_type_test.dart` | Yokluğu test ediyor: `FOREGROUND_SERVICE_SPECIAL_USE` ve `foregroundServiceType="specialUse"` manifest'te BULUNMAMALI. Geçiyor. |
+
+Eski iddia yalnız **izlenmeyen** yerel `.claude/rules/` dosyalarında kalmıştı
+(`.claude/` gitignore'da; depo içeriği değil). Üçü de 2026-10-02'de gerçeğe çekildi:
+`common/performance.md`, `dart/patterns.md` ve `dart/security.md`. Son dosya FGS için bir
+"Play Console declaration + demo video obligation" olduğunu söylüyordu; o yükümlülük
+mevcut olmadığı gibi, var olmayan bir bileşen için beyan göndermek Google'a yanlış
+beyanda bulunmak olurdu — yeni metin bunu açıkça yasaklıyor.
+
+Alınacak ders bu yüzden "belgeler saptı" değil: **yerel ajan kuralları deponun kendi
+düzeltmelerini takip etmiyor.** Depo yokluğu testle koruyor; yerel kural dosyalarının
+böyle bir kapısı yok ve 2026-08-26 düzeltmesinden sonra ~5 hafta eski kaldılar.
 
 ## 4. Negatif kontrol değerlendirmesi
 
@@ -828,5 +845,5 @@ maddesi değil: biri hardening (güvenlik sınırı değil), diğeri ölü bir b
 | 4 | F-05 keep kuralı daraltma | Cihaz doğrulaması olmadan birleştirilmemeli |
 | 5 | F-08 `verify_release.sh` temiz ağaçta | Merged manifest + OSV artefaktı + 16KB |
 | 6 | GitHub dashboard doğrulaması | Branch protection, environment approver, secret scanning |
-| 7 | `PinLockoutService` `StateError` → kendi `Exception` tipi | F-01'in bıraktığı kural gerilimini kaldırır |
-| 8 | `specialUse` FGS iddiasının belgelerden düzeltilmesi | Güvenlik bulgusu değil, doğruluk işi |
+| 7 | ~~`PinLockoutService` `StateError`~~ | **KAPANDI** `e103d77` — sealed `PinLockoutRead`; fail-closed ağı bilinçli korundu |
+| 8 | ~~`specialUse` FGS iddiası~~ | **KAPANDI** — izlenen depo zaten doğruydu; yalnız yerel `.claude/rules/` düzeltildi (§3 Gözlem) |
