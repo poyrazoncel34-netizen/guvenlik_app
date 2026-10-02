@@ -86,12 +86,30 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> with OverlayTouchShie
     PinLockoutState state;
     var counterReadable = true;
     try {
-      state = await PinLockoutService.instance.getState();
+      // A corrupt counter is a RESULT, not an exception: the sealed read type
+      // makes this switch exhaustive, so "unreadable" cannot be forgotten here
+      // the way a missing catch clause could be. Only a storage fault throws,
+      // and PlatformException is an Exception -- no Error is caught anywhere on
+      // this path any more.
+      final read = await PinLockoutService.instance.readState();
+      switch (read) {
+        case PinLockoutReadable(state: final readable):
+          return _applyReadableLockout(readable);
+        case PinLockoutUnreadable():
+          counterReadable = false;
+          state = _unreadableLockoutState();
+      }
     } on Exception catch (_) {
       counterReadable = false;
       state = _unreadableLockoutState();
-    } on StateError {
-      // getState() throws StateError on a corrupt counter.
+    } catch (_) {
+      // Deliberately catches Error too, against the Dart style rule, and the
+      // rule loses here on purpose: this screen's `_lockoutEndTime` is the only
+      // thing enforcing the lockout, so ANY failure to read the counters must
+      // fail closed. Letting an Error through would leave the keypad open with
+      // no trace -- the exact fail-open the sealed read type above was added to
+      // remove. The compiler now forces the corrupt-data case to be handled;
+      // this clause covers faults the type system cannot describe.
       counterReadable = false;
       state = _unreadableLockoutState();
     }
@@ -104,6 +122,18 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> with OverlayTouchShie
     // store that just threw only reproduces the failure on a timer. The band
     // stays, without a live countdown, until the screen is entered again.
     if (state.isLocked && counterReadable) {
+      _startLockoutCountdown(state);
+    }
+  }
+
+  /// Applies a counter read this screen trusts.
+  void _applyReadableLockout(PinLockoutState state) {
+    if (!mounted) return;
+    setState(() {
+      _lockoutEndTime = state.lockedUntil;
+      _lockoutRemaining = state.remainingSeconds;
+    });
+    if (state.isLocked) {
       _startLockoutCountdown(state);
     }
   }
@@ -250,10 +280,14 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> with OverlayTouchShie
         try {
           state = await PinLockoutService.instance.registerFailure();
         } on Exception catch (_) {
+          // A corrupt counter no longer reaches here: registerFailure handles it
+          // by debiting from the threshold rather than from zero, so it cannot
+          // buy a fresh set of free guesses.
           _applyUnrecordedAttemptLockout();
           return;
-        } on StateError {
-          // getState() throws StateError on a corrupt counter.
+        } catch (_) {
+          // Error included, on purpose. An attempt that cannot be debited must
+          // still cost the attacker something, whatever the failure was.
           _applyUnrecordedAttemptLockout();
           return;
         }

@@ -97,6 +97,16 @@ class _SafetyPinDialogState extends State<_SafetyPinDialog> {
     }
   }
 
+  /// Stops the attempt and shows why. Never silent: a refused PIN attempt that
+  /// looks like a dead button is its own defect on a safety control.
+  void _refuseWithPolicyError(String message) {
+    if (!mounted) return;
+    setState(() {
+      _verificationInProgress = false;
+      _policyError = message;
+    });
+  }
+
   Future<void> _submit() async {
     if (_verificationInProgress ||
         _controller.text.length != AppConstants.pinLength) {
@@ -109,27 +119,32 @@ class _SafetyPinDialogState extends State<_SafetyPinDialog> {
     });
     if (widget.enforceLockout) {
       try {
-        final state = await PinLockoutService.instance.getState();
-        if (state.isLocked) {
-          if (mounted) {
-            setState(() {
-              _verificationInProgress = false;
-              _policyError = 'brute_force_locked'.tr(
-                namedArgs: {'seconds': '${state.remainingSeconds}'},
+        // The sealed read type replaces what used to be a bare `catch (_)` here.
+        // A bare catch also swallowed programming errors; now the only thing
+        // caught is a storage fault, and the corrupt-counter case is a branch
+        // the compiler will not let anyone drop.
+        final read = await PinLockoutService.instance.readState();
+        switch (read) {
+          case PinLockoutUnreadable():
+            // An unreadable counter cannot prove the attempt is allowed. Keep
+            // the modal open and say so, rather than verifying unthrottled.
+            _refuseWithPolicyError('pin_state_read_failed'.tr());
+            return;
+          case PinLockoutReadable(state: final state):
+            if (state.isLocked) {
+              _refuseWithPolicyError(
+                'brute_force_locked'.tr(
+                  namedArgs: {'seconds': '${state.remainingSeconds}'},
+                ),
               );
-            });
-          }
-          return;
+              return;
+            }
         }
       } catch (_) {
-        // An unreadable counter cannot prove the attempt is allowed. Keep the
-        // modal open and say so, rather than silently verifying unthrottled.
-        if (mounted) {
-          setState(() {
-            _verificationInProgress = false;
-            _policyError = 'pin_state_read_failed'.tr();
-          });
-        }
+        // Bare on purpose, Error included: an unreadable counter cannot prove
+        // the attempt is allowed, so every failure refuses. The sealed read type
+        // above means corrupt DATA is no longer what lands here -- only faults.
+        _refuseWithPolicyError('pin_state_read_failed'.tr());
         return;
       }
       try {

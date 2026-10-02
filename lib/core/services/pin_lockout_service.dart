@@ -25,6 +25,31 @@ class PinLockoutState {
   }
 }
 
+/// The outcome of reading the brute-force counters.
+///
+/// Sealed so the compiler refuses a caller that forgets the unreadable case.
+/// That case is the whole reason this type exists: treating an unreadable
+/// counter as "zero failures, not locked" silently disarms the only thing
+/// enforcing the PIN lockout.
+sealed class PinLockoutRead {
+  const PinLockoutRead();
+}
+
+/// The counters were read and are trustworthy.
+final class PinLockoutReadable extends PinLockoutRead {
+  const PinLockoutReadable(this.state);
+
+  final PinLockoutState state;
+}
+
+/// The counters hold values this service will not interpret -- a negative
+/// count, a non-numeric attempt total, an unparseable deadline. NOT a storage
+/// fault: those still throw, because an exception is the right shape for an
+/// error that is nobody's data.
+final class PinLockoutUnreadable extends PinLockoutRead {
+  const PinLockoutUnreadable();
+}
+
 class PinLockoutService {
   PinLockoutService._();
 
@@ -33,7 +58,10 @@ class PinLockoutService {
   static const String _failedAttemptsKey = 'pin_lockout_failed_attempts';
   static const String _lockedUntilKey = 'pin_lockout_until_ms';
 
-  /// First lockout length, applied at the 5th consecutive failure.
+  /// Consecutive failures that trigger the first lockout.
+  static const int lockoutThreshold = 5;
+
+  /// First lockout length, applied at the [lockoutThreshold]th consecutive failure.
   static const int baseLockoutSeconds = 30;
 
   /// Hard ceiling for the exponential backoff.
@@ -48,8 +76,8 @@ class PinLockoutService {
 
   /// Pure, testable backoff: 30s, 60s, 120s ... capped at [maxLockoutSeconds].
   static int lockoutSecondsFor(int failedAttempts) {
-    if (failedAttempts < 5) return 0;
-    final exponent = failedAttempts - 5;
+    if (failedAttempts < lockoutThreshold) return 0;
+    final exponent = failedAttempts - lockoutThreshold;
     // Stop doubling before the value can leave the int range; the cap applies
     // long before this bound, so the clamp is a safety net, not the policy.
     if (exponent >= 32) return maxLockoutSeconds;
@@ -59,35 +87,66 @@ class PinLockoutService {
 
   SecureStorage get _secureStorage => serviceLocator<SecureStorage>();
 
-  Future<PinLockoutState> getState() async {
+  /// Reads the brute-force counters.
+  ///
+  /// Corrupt stored values are NOT an exception. They are an expected outcome of
+  /// reading data this process does not control, so they come back as
+  /// [PinLockoutUnreadable] and the compiler makes every caller answer for them.
+  ///
+  /// This used to `throw StateError`, which forced both call sites to catch an
+  /// `Error` subtype -- something the Dart style rules forbid, because catching
+  /// `Error` also swallows real bugs. Removing the catch was not an option
+  /// either: nothing else enforces the lockout, so an unhandled corrupt counter
+  /// would have silently disarmed it. Making the expected failure part of the
+  /// RETURN TYPE removes the dilemma instead of picking a side of it.
+  ///
+  /// Storage faults still throw. `PlatformException` from flutter_secure_storage
+  /// is input, not a bug, and callers catch it with `on Exception`.
+  Future<PinLockoutRead> readState() async {
     final failedRaw = await _secureStorage.read(key: _failedAttemptsKey);
     final lockedUntilRaw = await _secureStorage.read(key: _lockedUntilKey);
     final failedAttempts = int.tryParse(failedRaw ?? '') ?? 0;
     final lockedUntilMs = int.tryParse(lockedUntilRaw ?? '');
     if ((failedRaw != null && (int.tryParse(failedRaw) == null || failedAttempts < 0)) ||
         (lockedUntilRaw != null && lockedUntilMs == null)) {
-      throw StateError('PIN counter unavailable');
+      return const PinLockoutUnreadable();
     }
     final lockedUntil = lockedUntilMs == null
         ? null
         : DateTime.fromMillisecondsSinceEpoch(lockedUntilMs);
 
     if (lockedUntil != null && DateTime.now().isAfter(lockedUntil)) {
-      return PinLockoutState(failedAttempts: failedAttempts, lockedUntil: null);
+      return PinLockoutReadable(
+        PinLockoutState(failedAttempts: failedAttempts, lockedUntil: null),
+      );
     }
 
-    return PinLockoutState(
-      failedAttempts: failedAttempts,
-      lockedUntil: lockedUntil,
+    return PinLockoutReadable(
+      PinLockoutState(
+        failedAttempts: failedAttempts,
+        lockedUntil: lockedUntil,
+      ),
     );
   }
 
+  /// Debits one failed attempt.
+  ///
+  /// An unreadable counter is treated as "the real count is unknown", and the
+  /// attempt is debited from the base threshold rather than from zero: a corrupt
+  /// counter must never buy the attacker a fresh set of free guesses.
   Future<PinLockoutState> registerFailure() async {
-    final current = await getState();
+    final read = await readState();
+    final current = switch (read) {
+      PinLockoutReadable(:final state) => state,
+      PinLockoutUnreadable() => const PinLockoutState(
+        failedAttempts: lockoutThreshold - 1,
+        lockedUntil: null,
+      ),
+    };
     final failedAttempts = current.failedAttempts + 1;
 
     DateTime? lockedUntil;
-    if (failedAttempts >= 5) {
+    if (failedAttempts >= lockoutThreshold) {
       final seconds = lockoutSecondsFor(failedAttempts);
       lockedUntil = DateTime.now().add(Duration(seconds: seconds));
       await _secureStorage.write(
@@ -116,12 +175,19 @@ class PinLockoutService {
     ]);
   }
 
+  /// Ticks the remaining lockout seconds for a screen that is already locked.
+  ///
+  /// Stops on an unreadable counter rather than guessing: the band stays, and
+  /// the screen re-reads on the next entry. Re-polling a store that just failed
+  /// only reproduces the failure on a timer.
   Stream<int> countdownStream(PinLockoutState initial) async* {
     var state = initial;
     while (state.isLocked) {
       yield state.remainingSeconds;
       await Future<void>.delayed(const Duration(seconds: 1));
-      state = await getState();
+      final read = await readState();
+      if (read is! PinLockoutReadable) return;
+      state = read.state;
     }
     yield 0;
   }
