@@ -13,7 +13,7 @@ madde madde onay alınarak uygulandı ve aşağıdaki tabloda commit'leriyle kay
 | F-02 | MEDIUM | **KABUL EDİLEN RİSK** | §3 F-02 → "Kabul kararı" |
 | F-03 | MEDIUM | **KAPANDI — CİHAZDA DOĞRULANDI** | feat(security): ortusme (tapjacking) dokunus politikasi; cihaz kaydı: `docs/audit/device-verification-2026-10-02-f03-overlay-guard.md` |
 | F-04 | LOW | **KAPANDI** | `26d09dc` — fix(reliability): quick-access panik istegine tazelik penceresi (3 dk, monotonik saat) |
-| F-05 | LOW | AÇIK | — |
+| F-05 | LOW | **KAPANDI — CİHAZDA DOĞRULANDI** | R8 wildcard'ı kaldırıldı; 88 sınıfın 74'ü artık obfuscate. Kayıt: `docs/audit/device-verification-2026-10-02-f05-r8-narrowing.md` |
 | F-06 | INFO | **KAPANDI** | `6bb7361` — chore(deps): olu safe_device bagimliligini kaldir; 399→398 bileşen, parite `cmp` ile |
 | F-07 | INFO | **SABITLENDI** | `9fb7138` — yüzey silinmedi; hiçbir çağırıcının geçmediği bir tel tuzak testiyle pinlendi |
 | F-08 | INFO | **KAPANDI** | Kanıtlar commit edildi; `verify_release.sh` 5/5 yeşil, imzalı secret-scan ve OSV artefaktları üretildi (§7) |
@@ -809,11 +809,12 @@ SECURITY_RELEASE_READY=NO
 Düzeltmeler sonrası güncel durum:
 
 ```
-KAPANDI=5 (F-01, F-03, F-04, F-08, F-09)
+KAPANDI=7 (F-01, F-03, F-04, F-05, F-06, F-08, F-09)
 SABITLENDI=1 (F-07 — silinmedi, tel tuzak testiyle pinlendi)
 KABUL EDİLEN RİSK=1 (F-02)
-KAPANDI — cihazda dogrulandi=1 (F-03)
-AÇIK=1 (F-05 obfuscation)
+AÇIK=0
+
+F-03 ve F-05 cihazda doğrulandı (ayrı kayıt belgeleri)
 
 CRITICAL=0   HIGH=0   açık MEDIUM=0
 RELEASE_BLOCKING_SECURITY_FINDINGS=0
@@ -829,7 +830,7 @@ SECURITY_RELEASE_READY=NO
 | authentication/authorization bypass yok | ✅ (entitlement client-side, ayrı sınıf) |
 | sensitive data leakage bulunmuyor | ⚠️ F-02 kabul edilen risk olarak kayıtlı |
 | release logging güvenli | ✅ |
-| bilinen kritik/yüksek dependency vulnerability yok | ✅ `OSV_EVIDENCE_PASS`: 196 Pub + 203 Maven sorgu, findingCount=0 (§4b) |
+| bilinen kritik/yüksek dependency vulnerability yok | ✅ `OSV_EVIDENCE_PASS`: 195 Pub + 203 Maven sorgu, findingCount=0 (safe_device kaldırıldıktan sonra yeniden koşuldu) |
 | Android exported/native yüzeyleri doğrulanmış | ✅ `ANDROID_RELEASE_SURFACE_PASS` birleşik manifest üzerinde (§4b) |
 | uygulanabilir kritik kontrollerde doğrulanmamış güvenlik sınırı yok | ✅ F-03 cihazda doğrulandı (§3 F-03) |
 | gerekli dış güvenlik ayarları doğrulanmış | ❌ `EXTERNAL_RELEASE_GATES_UNVERIFIED` — GitHub/Play paneli gerekir |
@@ -837,14 +838,14 @@ SECURITY_RELEASE_READY=NO
 **Bu bir "yayınlamayın" kararı değildir.** Hiçbir bulgu release-blocker değil ve açık
 MEDIUM kalmadı. 2026-10-02 itibarıyla `NO` iki maddeye indi:
 
-1. **F-03 cihazda ölçülmedi.** Kod uygulandı ve birim testleriyle çevrelendi, ama
-   korumanın gerçekten çalıştığı yalnız cihazda kanıtlanabilir.
-2. **Dış ayarlar doğrulanmadı.** GitHub branch protection, required reviewers,
-   environment approver'ları, secret scanning ve Play Console beyanları repo
-   kodundan görülemez.
+**Tek bir madde kaldı: dış ayarlar doğrulanmadı.** GitHub branch protection, required
+reviewers, environment approver'ları, secret scanning / push protection ve Play Console
+beyanları repo kodundan görülemez. `verify_release.sh` bunu kendisi
+`EXTERNAL_RELEASE_GATES_UNVERIFIED` olarak raporluyor. Bu maddeyi kapatacak olan
+denetimçi değil, hesap sahibidir.
 
-İkisi de kapatılırsa eşik karşılanır. F-05 ve F-06 açık ama ikisi de eşiğin
-maddesi değil: biri hardening (güvenlik sınırı değil), diğeri ölü bir bağımlılık.
+F-02 kabul edilen risk olarak kayıtlı ve eşiğin "sensitive data leakage bulunmuyor"
+maddesini tam yeşile çekmiyor; kabul kararı ve gerekçesi §3 F-02'de.
 
 ## 6. Kalan iş
 
