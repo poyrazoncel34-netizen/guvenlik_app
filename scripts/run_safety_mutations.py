@@ -161,6 +161,9 @@ MUTATIONS = (
         "lib/screens/app_unlock_screen.dart",
         (
             "        } on Exception catch (_) {\n"
+            "          // A corrupt counter no longer reaches here: registerFailure handles it\n"
+            "          // by debiting from the threshold rather than from zero, so it cannot\n"
+            "          // buy a fresh set of free guesses.\n"
             "          _applyUnrecordedAttemptLockout();\n"
             "          return;\n"
         ),
@@ -327,6 +330,7 @@ def main() -> int:
             return finish(args.output, evidence, errors)
 
         for mutation in MUTATIONS:
+            injected_sha256 = None
             target = workspace / mutation.path
             pristine = target.read_text(encoding="utf-8")
             try:
@@ -337,6 +341,8 @@ def main() -> int:
                     mutation.occurrence,
                 )
                 target.write_text(mutated, encoding="utf-8")
+                # Proof of injection: the bytes the mutant run actually saw.
+                injected_sha256 = file_sha256(target)
                 result = run(
                     mutation.command,
                     workspace / mutation.cwd,
@@ -359,6 +365,8 @@ def main() -> int:
                 result.pop("diagnosticTail", None)
             record = {
                 "id": mutation.mutation_id,
+                "injected": "harnessError" not in result,
+                "injectedSha256": injected_sha256,
                 "description": mutation.description,
                 "target": mutation.path,
                 "status": "KILLED" if killed else "SURVIVED_OR_INVALID",
