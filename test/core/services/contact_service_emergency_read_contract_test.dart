@@ -8,8 +8,19 @@ void main() {
   String read(String path) => File(path).readAsStringSync();
 
   test('panic button pre-check resolves one emergency contact', () {
+    // The button delegates to the shared gate, which owns the single read.
     final src = read('lib/widgets/panic_button.dart');
-    expect(src.contains('ContactService.getEmergencyContact()'), isTrue);
+    expect(
+      src.contains('OnboardingContactGateService.hasCallableContact()'),
+      isTrue,
+    );
+    final gate = read('lib/core/services/onboarding_contact_gate_service.dart');
+    final check = gate.substring(
+      gate.indexOf('static Future<bool> hasCallableContact()'),
+      gate.indexOf('static Future<String?> primaryContactName()'),
+    );
+    expect(check.contains('ContactService.getEmergencyContact()'), isTrue);
+    expect(check.contains('isCallableEmergencyTarget('), isTrue);
   });
 
   test(
