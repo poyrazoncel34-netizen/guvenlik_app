@@ -12,6 +12,7 @@ import 'package:provider/provider.dart';
 import '../core/app_colors.dart';
 import '../core/constants/app_constants.dart';
 import '../core/services/emergency_session_contract.dart';
+import '../core/services/panic_countdown_guard.dart';
 import '../core/services/reduced_motion_policy.dart';
 import '../core/services/subscription_gate.dart';
 import '../core/widgets/feature_warning_dialog.dart';
@@ -276,16 +277,22 @@ class _PanicButtonState extends State<PanicButton>
       // No transition on the dispatch path. The 300ms fade+slide was 300ms of
       // screen time before the countdown could arm, and a decorative one at that:
       // the user has already committed by completing the hold gesture.
-      routeOpened = true;
-      Navigator.push(
-        context,
-        PageRouteBuilder(
-          pageBuilder: (context, animation, secondaryAnimation) =>
-              CountdownScreen(entitlementDecision: entitlementDecision),
-          transitionDuration: Duration.zero,
-          reverseTransitionDuration: Duration.zero,
+      final opened = PanicCountdownGuard.open(
+        this,
+        () => Navigator.push(
+          context,
+          PageRouteBuilder(
+            pageBuilder: (context, animation, secondaryAnimation) =>
+                CountdownScreen(entitlementDecision: entitlementDecision),
+            transitionDuration: Duration.zero,
+            reverseTransitionDuration: Duration.zero,
+          ),
         ),
-      ).whenComplete(() => _countdownOpening = false);
+      );
+      // A quick-access entry (volume keys, tile, widget) already shows one.
+      if (opened == null) return;
+      routeOpened = true;
+      opened.whenComplete(() => _countdownOpening = false);
     } finally {
       if (!routeOpened) _countdownOpening = false;
     }

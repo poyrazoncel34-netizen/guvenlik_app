@@ -12,6 +12,7 @@ import '../services/app_lifecycle_handler.dart';
 import '../services/check_in_expiry_coordinator.dart';
 import '../services/check_in_service.dart';
 import '../services/native_emergency_history.dart';
+import '../services/panic_countdown_guard.dart';
 import '../services/emergency_platform_service.dart';
 import '../services/emergency_session_contract.dart';
 import '../services/local_logger_service.dart';
@@ -290,7 +291,10 @@ class EmergencyTriggerHostState extends State<EmergencyTriggerHost>
     // `PanicButton` already had this ordering right (`_pointerDown` is set in
     // the synchronous tap handler); this is the same invariant for the
     // quick-access entries.
-    if (_countdownOpen) {
+    // The shared guard also covers a countdown the in-app PanicButton opened
+    // through its own route: a second one here would be rejected natively
+    // (activeSessionExists) and its failure dialog would hide the real PIN pad.
+    if (_countdownOpen || !PanicCountdownGuard.tryAcquire(this)) {
       return;
     }
     _countdownOpen = true;
@@ -356,6 +360,7 @@ class EmergencyTriggerHostState extends State<EmergencyTriggerHost>
       // exception. A guard that could stay latched would disable the quick
       // access entries for the rest of the process.
       _countdownOpen = false;
+      PanicCountdownGuard.release(this);
     }
   }
 
@@ -382,6 +387,9 @@ class EmergencyTriggerHostState extends State<EmergencyTriggerHost>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    // A countdown still open here is going down with the Navigator; its push
+    // future may never complete, so the shared guard must not outlive us.
+    PanicCountdownGuard.release(this);
     _stopForegroundTriggers();
     _platformEventsSubscription?.cancel();
     super.dispose();

@@ -29,6 +29,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guvenlik_app/core/navigation/app_navigator.dart';
+import 'package:guvenlik_app/core/services/panic_countdown_guard.dart';
 import 'package:guvenlik_app/core/services/subscription_access_state.dart';
 import 'package:guvenlik_app/core/widgets/emergency_trigger_host.dart';
 import 'package:guvenlik_app/presentation/providers/subscription_provider.dart';
@@ -158,8 +159,13 @@ SubscriptionAccessState entitledButUnverifiable() => SubscriptionAccessState(
   lastVerifiedProAt: DateTime.now().subtract(const Duration(hours: 1)),
 );
 
-void main() {
+/// Shared by the cross-surface guard test, which reuses this harness.
+void installHostTestHooks() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  // The shared guard is process-wide. A test that ends with its countdown
+  // still open tears the Navigator down without completing the route.
+  setUp(PanicCountdownGuard.resetForTesting);
 
   setUpAll(() async {
     SharedPreferences.setMockInitialValues(<String, Object>{});
@@ -182,6 +188,10 @@ void main() {
       );
     }
   });
+}
+
+void main() {
+  installHostTestHooks();
 
   group('R2-02: two triggers inside the resolve window', () {
     testWidgets('push exactly one countdown route', (tester) async {
