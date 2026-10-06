@@ -83,7 +83,7 @@ void main() {
             'countdown; its arm is rejected natively (activeSessionExists) and '
             'the blocking failure dialog covers the real PIN-cancel pad',
       );
-      expect(provider.resolveCalls, 0, reason: 'refused before any await');
+      expect(provider.resolveCalls, 1, reason: 'the trigger was evaluated');
 
       rootNavigatorKey.currentState!.pop();
       await harness.settle(tester);
@@ -100,20 +100,61 @@ void main() {
     },
   );
 
-  testWidgets('the panic button cannot open while the host is resolving or '
-      'showing its countdown', (tester) async {
+  testWidgets(
+    'a panic-button press during quick-access resolution is not dropped, and '
+    'the host then stacks nothing on it',
+    (tester) async {
+      final provider = harness.ParkedSubscriptionProvider(
+        harness.entitledButUnverifiable(),
+      );
+      final observer = harness.PushCounter();
+      final state = await harness.pumpHost(
+        tester,
+        provider: provider,
+        observer: observer,
+      );
+
+      unawaited(state.triggerPanicForTest()); // parked in entitlement resolve
+      await tester.pump();
+      expect(
+        PanicCountdownGuard.isHeld,
+        isFalse,
+        reason: 'the shared guard must never be held across an await',
+      );
+
+      await _openPanicButtonCountdown(Object());
+      await harness.settle(tester);
+      expect(find.text('PANIC_BUTTON_COUNTDOWN'), findsOneWidget);
+      observer.pushed.clear();
+
+      provider.gate.complete();
+      await harness.settle(tester);
+      expect(observer.pushed, isEmpty);
+      expect(find.text('STUB_COUNTDOWN'), findsNothing);
+
+      rootNavigatorKey.currentState!.pop();
+      await harness.settle(tester);
+      expect(PanicCountdownGuard.isHeld, isFalse);
+      await harness.drainHostTimers(tester);
+    },
+  );
+
+  testWidgets('the panic button cannot open over the host countdown', (
+    tester,
+  ) async {
     final provider = harness.ParkedSubscriptionProvider(
       harness.entitledButUnverifiable(),
     );
-    final observer = harness.PushCounter();
+    provider.gate.complete();
     final state = await harness.pumpHost(
       tester,
       provider: provider,
-      observer: observer,
+      observer: harness.PushCounter(),
     );
+    unawaited(state.triggerPanicForTest());
+    await harness.settle(tester);
+    expect(find.text('STUB_COUNTDOWN'), findsOneWidget);
 
-    unawaited(state.triggerPanicForTest()); // parked in entitlement resolve
-    await tester.pump();
     var pushed = false;
     expect(
       PanicCountdownGuard.open(Object(), () async {
@@ -122,11 +163,6 @@ void main() {
       isNull,
     );
     expect(pushed, isFalse);
-
-    provider.gate.complete();
-    await harness.settle(tester);
-    expect(find.text('STUB_COUNTDOWN'), findsOneWidget);
-    expect(PanicCountdownGuard.open(Object(), () async {}), isNull);
 
     rootNavigatorKey.currentState!.pop();
     await harness.settle(tester);
@@ -193,7 +229,7 @@ void main() {
     expect(PanicCountdownGuard.isHeld, isFalse);
   });
 
-  testWidgets('disposing the host mid-resolve releases the shared guard', (
+  testWidgets('disposing the host mid-resolve never takes the shared guard', (
     tester,
   ) async {
     final provider = harness.ParkedSubscriptionProvider(
@@ -207,10 +243,9 @@ void main() {
     );
     final trigger = state.triggerPanicForTest();
     await tester.pump();
-    expect(PanicCountdownGuard.isHeld, isTrue);
+    expect(PanicCountdownGuard.isHeld, isFalse);
 
     await tester.pumpWidget(const SizedBox.shrink());
-    expect(PanicCountdownGuard.isHeld, isFalse);
 
     // The orphaned trigger finishes without pushing and without re-taking
     // the guard for a host that no longer exists.

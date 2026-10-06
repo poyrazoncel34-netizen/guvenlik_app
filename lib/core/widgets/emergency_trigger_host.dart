@@ -295,10 +295,7 @@ class EmergencyTriggerHostState extends State<EmergencyTriggerHost>
     // `PanicButton` already had this ordering right (`_pointerDown` is set in
     // the synchronous tap handler); this is the same invariant for the
     // quick-access entries.
-    // The shared guard also covers a countdown the in-app PanicButton opened
-    // through its own route: a second one here would be rejected natively
-    // (activeSessionExists) and its failure dialog would hide the real PIN pad.
-    if (_countdownOpen || !PanicCountdownGuard.tryAcquire(this)) {
+    if (_countdownOpen) {
       return;
     }
     _countdownOpen = true;
@@ -342,29 +339,40 @@ class EmergencyTriggerHostState extends State<EmergencyTriggerHost>
         }),
       );
       final decision = access.entitlementDecision;
-      await navigator.push(
-        PageRouteBuilder(
-          pageBuilder: (_, _, _) =>
-              widget.countdownBuilder?.call(decision) ??
-              CountdownScreen(
-                entitlementDecision: decision,
-                // Every surface routed through _openCountdown -- Quick
-                // Settings tile, home-screen widget, volume trigger -- got
-                // here WITHOUT the app PIN. Starting the countdown that way
-                // is deliberate; disclosing who will be called is not
-                // (audit A-009).
-                maskContactIdentity: true,
-              ),
-          transitionDuration: Duration.zero,
-          reverseTransitionDuration: Duration.zero,
+      final root = navigator;
+      // The SHARED guard is taken here, at the push, and never across an
+      // await: the in-app PanicButton opens its countdown through its own
+      // route. A second one here would be rejected natively
+      // (activeSessionExists) and its failure dialog would hide the real
+      // PIN pad; holding the guard during entitlement resolution would
+      // instead silently drop a panic-button press.
+      final opened = PanicCountdownGuard.open(
+        this,
+        () => root.push(
+          PageRouteBuilder(
+            pageBuilder: (_, _, _) =>
+                widget.countdownBuilder?.call(decision) ??
+                CountdownScreen(
+                  entitlementDecision: decision,
+                  // Every surface routed through _openCountdown -- Quick
+                  // Settings tile, home-screen widget, volume trigger -- got
+                  // here WITHOUT the app PIN. Starting the countdown that way
+                  // is deliberate; disclosing who will be called is not
+                  // (audit A-009).
+                  maskContactIdentity: true,
+                ),
+            transitionDuration: Duration.zero,
+            reverseTransitionDuration: Duration.zero,
+          ),
         ),
       );
+      if (opened == null) return; // the panic button's countdown is showing
+      await opened;
     } finally {
       // Reset on EVERY exit -- success, early return, rejection, or a thrown
       // exception. A guard that could stay latched would disable the quick
       // access entries for the rest of the process.
       _countdownOpen = false;
-      PanicCountdownGuard.release(this);
     }
   }
 

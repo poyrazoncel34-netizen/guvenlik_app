@@ -12,13 +12,12 @@ import 'package:provider/provider.dart';
 import '../core/app_colors.dart';
 import '../core/constants/app_constants.dart';
 import '../core/services/emergency_session_contract.dart';
+import '../core/services/onboarding_contact_gate_service.dart';
 import '../core/services/panic_countdown_guard.dart';
 import '../core/services/reduced_motion_policy.dart';
 import '../core/services/subscription_gate.dart';
 import '../core/widgets/feature_warning_dialog.dart';
 import '../presentation/providers/subscription_provider.dart';
-import '../core/services/contact_service.dart';
-import '../core/utils/emergency_number_validator.dart';
 import '../core/utils/panic_hold_gate.dart';
 import '../screens/contacts_page.dart';
 import '../screens/countdown_screen.dart';
@@ -298,15 +297,9 @@ class _PanicButtonState extends State<PanicButton>
     }
   }
 
-  Future<bool> _hasCallableContact() async {
-    try {
-      final contact = await ContactService.getEmergencyContact();
-      return contact != null &&
-          EmergencyNumberValidator.isCallableEmergencyTarget(contact.phone);
-    } on Exception {
-      return false;
-    }
-  }
+  // Same rule and fail-closed storage handling, owned by one tested service.
+  Future<bool> _hasCallableContact() =>
+      OnboardingContactGateService.hasCallableContact();
 
   void _showContactRequired() {
     ScaffoldMessenger.of(context).showSnackBar(
