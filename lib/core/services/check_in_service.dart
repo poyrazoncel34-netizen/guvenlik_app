@@ -25,6 +25,7 @@ import '../services/haptic_service.dart';
 import '../services/local_logger_service.dart';
 import '../services/notification_service.dart';
 import '../services/check_in_projection_store.dart';
+import '../services/countdown_clock.dart';
 import '../services/native_emergency_history.dart';
 import '../utils/emergency_number_validator.dart';
 
@@ -415,8 +416,9 @@ class CheckInService extends ChangeNotifier {
       return;
     }
 
+    // Rounded UP: truncating inSeconds reached native deadlines early.
     final now = DateTime.now();
-    final mainRemaining = _endAt!.difference(now).inSeconds;
+    final mainRemaining = CountdownClock.secondsUntil(_endAt!, now: now);
     if (mainRemaining > 0) {
       _isGracePeriod = false;
       _remainingSeconds = mainRemaining;
@@ -429,7 +431,7 @@ class CheckInService extends ChangeNotifier {
     }
 
     _isGracePeriod = true;
-    final graceRemaining = _graceEndAt!.difference(now).inSeconds;
+    final graceRemaining = CountdownClock.secondsUntil(_graceEndAt!, now: now);
     if (graceRemaining > 0) {
       _remainingSeconds = graceRemaining;
       if (_sideEffectsEnabled) {
@@ -452,7 +454,7 @@ class CheckInService extends ChangeNotifier {
         return;
       }
 
-      final remaining = deadline.difference(DateTime.now()).inSeconds;
+      final remaining = CountdownClock.secondsUntil(deadline);
       if (remaining <= 0) {
         _onMainTimerExpired();
         return;
@@ -472,7 +474,7 @@ class CheckInService extends ChangeNotifier {
         return;
       }
 
-      final remaining = deadline.difference(DateTime.now()).inSeconds;
+      final remaining = CountdownClock.secondsUntil(deadline);
       if (remaining <= 0) {
         _triggerEmergency();
         return;
@@ -495,11 +497,9 @@ class CheckInService extends ChangeNotifier {
       await _triggerEmergency();
       return;
     }
-    _remainingSeconds = finalDeadline
-        .difference(DateTime.now())
-        .inSeconds
-        .clamp(0, _gracePeriodSeconds)
-        .toInt();
+    _remainingSeconds = CountdownClock.secondsUntil(
+      finalDeadline,
+    ).clamp(0, _gracePeriodSeconds).toInt();
 
     await _bestEffort(_persistState);
     if (_sideEffectsEnabled) {

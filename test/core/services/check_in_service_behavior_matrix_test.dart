@@ -634,7 +634,10 @@ void main() {
         );
 
     await service.initialize();
-    await Future<void>.delayed(const Duration(milliseconds: 1250));
+    // Grace starts on the first 1 Hz tick AT OR AFTER mainDeadline (+1100 ms),
+    // i.e. by +2100 ms. The old 1250 ms wait only passed because the ticker
+    // truncated 0.1 s to 0 and entered grace before native would accept it.
+    await Future<void>.delayed(const Duration(milliseconds: 2250));
 
     expect(service.isGracePeriod, isTrue);
     expect(service.sessionToken, fixedToken);
