@@ -1,4 +1,5 @@
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/foundation.dart';
 import '../../domain/models/activity_event.dart';
 import 'activity_service.dart';
 import 'emergency_platform_service.dart';
@@ -43,10 +44,25 @@ abstract final class NativeEmergencyHistory {
     );
   }
 
+  /// Whether the translation catalogue is loaded.
+  ///
+  /// The record is written as translated TEXT. EmergencyTriggerHost sits above
+  /// MaterialApp and reconciles at cold start, before MaterialApp's delegate
+  /// has loaded the catalogue; `.tr()` then returns the key itself and the
+  /// timeline kept `countdown_emergency_title` / `native_history_request_*`
+  /// for good (reproduced on an API 35 emulator). Until the catalogue exists
+  /// the outcome stays in the native journal, unacknowledged.
+  @visibleForTesting
+  static bool Function() translationsReady = _catalogueLoaded;
+
+  static bool _catalogueLoaded() => trExists('countdown_emergency_title');
+
   static Future<void> reconcilePending(
     EmergencyPlatformService platform,
   ) async {
-    for (final snapshot in await platform.pendingEmergencyOutcomes()) {
+    final outcomes = await platform.pendingEmergencyOutcomes();
+    if (outcomes.isEmpty || !translationsReady()) return;
+    for (final snapshot in outcomes) {
       if (!snapshot.isPresent ||
           snapshot.token == null ||
           !snapshot.lifecycleState.isTerminal) {
@@ -55,5 +71,20 @@ abstract final class NativeEmergencyHistory {
       await record(snapshot);
       await platform.acknowledgeEmergencyOutcome(snapshot.token!);
     }
+  }
+
+  /// Cold-start entry: waits, bounded, for the catalogue, then reconciles.
+  /// Timer-based on purpose -- no frame is guaranteed while starting up. If
+  /// the catalogue never appears the outcomes simply stay pending for the
+  /// next resume or dispatch event.
+  static Future<void> reconcileWhenReady(
+    EmergencyPlatformService platform, {
+    Duration pollInterval = const Duration(milliseconds: 100),
+    int maxPolls = 50,
+  }) async {
+    for (var poll = 0; poll < maxPolls && !translationsReady(); poll++) {
+      await Future<void>.delayed(pollInterval);
+    }
+    await reconcilePending(platform);
   }
 }

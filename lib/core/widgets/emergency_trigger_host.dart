@@ -59,7 +59,8 @@ class EmergencyTriggerHostState extends State<EmergencyTriggerHost>
     WidgetsBinding.instance.addObserver(this);
     CheckInService.instance.initialize();
     CheckInService.safeWalk.initialize();
-    unawaited(_reconcilePendingHistory());
+    // Cold start: the translation catalogue loads below us, inside MaterialApp.
+    unawaited(_reconcilePendingHistory(waitForTranslations: true));
     unawaited(EmergencyReadinessService.instance.checkReadiness());
     _bindPlatformEvents();
     _consumeQuickPanicRequest();
@@ -219,11 +220,14 @@ class EmergencyTriggerHostState extends State<EmergencyTriggerHost>
     }
   }
 
-  Future<void> _reconcilePendingHistory() async {
+  Future<void> _reconcilePendingHistory({
+    bool waitForTranslations = false,
+  }) async {
     try {
-      await NativeEmergencyHistory.reconcilePending(
-        EmergencyPlatformService.instance,
-      );
+      final platform = EmergencyPlatformService.instance;
+      await (waitForTranslations
+          ? NativeEmergencyHistory.reconcileWhenReady(platform)
+          : NativeEmergencyHistory.reconcilePending(platform));
     } catch (_) {
       // Native terminal remains durable for retry at the next resume.
     }

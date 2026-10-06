@@ -30,6 +30,10 @@ void main() {
     await LocalDatabaseService.createSchema(db);
     await serviceLocator.reset();
     serviceLocator.registerSingleton<LocalDatabaseService>(_Database(db));
+    // These cases pin key selection and idempotency without a loaded
+    // catalogue; the catalogue gate has its own file
+    // (native_emergency_history_localization_test.dart).
+    NativeEmergencyHistory.translationsReady = () => true;
   });
   tearDown(() async {
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
