@@ -10,6 +10,20 @@ Surumleme: `pubspec.yaml` 1.0.0+1'de SABITTIR; gercek `versionCode`
 ## Yayinlanmadi
 
 ### Duzeltildi
+- Check-In ekrani acikken bekleme suresine girildiginde "Uyari bildirimi
+  gosterilemedi" mesaji, bildirim aslinda gosterildigi halde cikiyordu;
+  Guvenli Yuruyus'teki 2 dakika uyarisi icin de ayni yanlis mesaj
+  gorunebiliyordu. Uygulama sure dolmadan bir saniye kadar erken davranip
+  telefonun reddettigi bir istek gonderiyordu. Artik istek tam zamaninda
+  gidiyor; arama zamani degismedi.
+- Panik butonuyla acilan geri sayim ekrandayken ses tusu, Hizli Ayarlar
+  kutucugu veya ana ekran widget'i ikinci bir geri sayim acip gercek geri
+  sayimin PIN iptal tuslarini "Guvenlik oturumu hazir degil" uyarisiyla
+  ortebiliyordu. Artik ayni anda yalniz bir geri sayim acilabiliyor.
+- Uygulama kapaliyken yapilan bir acil arama, uygulama sonra acildiginda
+  Guvenlik Zaman Cizelgesi'ne "countdown_emergency_title" gibi cevrilmemis
+  teknik metinle kaydediliyordu. Kayit artik Turkce/Ingilizce metinle
+  yaziliyor.
 - Acil durum cekirdegiyle baglanti uygulama icinde kurulamadiginda panik geri
   sayimi korumali bir geri sayimdan farksiz basliyor, PIN ile iptal de
   onaylanamiyordu. Artik geri sayim baslamiyor; "Guvenlik oturumu kurulmadi"
