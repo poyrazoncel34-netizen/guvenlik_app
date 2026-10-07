@@ -132,9 +132,8 @@ class _CountdownScreenState extends State<CountdownScreen>
   }
 
   Future<void> _bootstrapAndStartCountdown() async {
-    if (!widget.isTestMode) {
-      await Future.wait<void>([_loadPin(), _loadEmergencyContact()]);
-    }
+    // Rehearsals load the PIN too (misses hit the real lockout; no unmetered PIN oracle).
+    await Future.wait<void>([_loadPin(), if (!widget.isTestMode) _loadEmergencyContact()]);
     if (!mounted) return;
     await _startCountdownAfterPermission();
   }
@@ -483,7 +482,7 @@ class _CountdownScreenState extends State<CountdownScreen>
         ? null
         : await _emergencyPlatformService.cancelEmergencySession(token);
     final definitivelyNoNativeSession =
-        token == null && _armResult is ArmRejected;
+        token == null && (widget.isTestMode || _armResult is ArmRejected);
     final cancellationConfirmed =
         definitivelyNoNativeSession ||
         (cancelResult?.isConfirmedCancelled ?? false);
@@ -518,11 +517,14 @@ class _CountdownScreenState extends State<CountdownScreen>
       );
     }
     try {
-      await ActivityService.logEvent(
-        type: ActivityType.emergencyCancelled,
-        title: "countdown_cancelled_title".tr(),
-        description: description,
-      );
+      // A rehearsal is not an emergency; it stays out of the safety history.
+      if (!widget.isTestMode) {
+        await ActivityService.logEvent(
+          type: ActivityType.emergencyCancelled,
+          title: "countdown_cancelled_title".tr(),
+          description: description,
+        );
+      }
     } catch (_) {
       // Native cancellation is already durably acknowledged. A local history
       // failure must not trap the user on an active-looking countdown or
