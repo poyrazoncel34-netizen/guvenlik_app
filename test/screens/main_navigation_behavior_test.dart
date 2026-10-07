@@ -4,6 +4,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:guvenlik_app/core/constants/app_constants.dart';
 import 'package:guvenlik_app/core/di/service_locator.dart';
 import 'package:guvenlik_app/core/security/secure_storage.dart';
@@ -294,6 +295,31 @@ void main() {
     );
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets(
+    'NAV-02b: the hidden map requests no tiles until the map tab is opened',
+    (tester) async {
+      // IndexedStack keeps MapPage built while Home is shown. Its TileLayer
+      // used to fetch the fallback-centre tiles from tile.openstreetmap.org
+      // on every launch -- third-party traffic for a map nobody had opened,
+      // and against this layer's own "only the viewport the user actively
+      // views" rule. Observed on an API 35 emulator: files/osm_tiles_v1/15
+      // was populated while the user never left Home.
+      await _pumpMainNavigation(tester);
+      expect(_selectedTab(tester), 0);
+      expect(find.byType(TileLayer, skipOffstage: false), findsNothing);
+
+      await _tapTab(tester, 'Harita');
+      await tester.pump();
+      expect(find.byType(TileLayer), findsOneWidget);
+
+      // Leaving the tab keeps what was already shown; it is not torn down.
+      await _tapTab(tester, 'Ana Sayfa');
+      await tester.pump();
+      expect(find.byType(TileLayer, skipOffstage: false), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
 
   testWidgets('NAV-03: contacts tab tap selects the production ContactsPage', (
     tester,

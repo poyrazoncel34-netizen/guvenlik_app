@@ -8,7 +8,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../core/app_colors.dart';
 import '../core/config/app_environment.dart';
 import '../core/di/service_locator.dart';
@@ -381,7 +380,7 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
                   label: 'OpenStreetMap copyright link',
                   button: true,
                   child: GestureDetector(
-                    onTap: _openOsmCopyrightPage,
+                    onTap: openOsmCopyrightPage,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 10,
@@ -521,16 +520,21 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
         // OpenStreetMap tile layer — only shown when online for the viewport
         // the user actively views. Do not bulk download, pre-seed, scrape,
         // archive, or package public OSM tiles from this endpoint.
-        TileLayer(
-          urlTemplate: AppEnvironment.mapTileUrlTemplate,
-          userAgentPackageName: kOsmUserAgentPackageName,
-          tileProvider: _osmTileProvider,
-          maxZoom: 19,
-          errorTileCallback: (tile, error, stack) {
-            // Silently ignore individual tile load failures (offline tolerance)
-            debugPrint('MAP_TILE_LOAD_FAILED_REDACTED');
-          },
-        ),
+        //
+        // MainNavigation's IndexedStack keeps this page BUILT while another
+        // tab is shown, so "actively views" has to be enforced here: until the
+        // tab has been opened once there is no tile layer and no request.
+        if (widget.isActive || _hasRequestedInitialLocation)
+          TileLayer(
+            urlTemplate: AppEnvironment.mapTileUrlTemplate,
+            userAgentPackageName: kOsmUserAgentPackageName,
+            tileProvider: _osmTileProvider,
+            maxZoom: 19,
+            errorTileCallback: (tile, error, stack) {
+              // Silently ignore individual tile load failures (offline tolerance)
+              debugPrint('MAP_TILE_LOAD_FAILED_REDACTED');
+            },
+          ),
 
         // My location marker
         if (_currentLocation != null)
@@ -871,15 +875,5 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
         ),
       ],
     );
-  }
-
-  Future<void> _openOsmCopyrightPage() async {
-    final uri = Uri.parse('https://www.openstreetmap.org/copyright');
-    try {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    } on Exception {
-      // Silent fallback — attribution remains visible as static text even
-      // if no browser is available to open the copyright page.
-    }
   }
 }
