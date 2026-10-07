@@ -194,6 +194,15 @@ void main() {
         await Future<void>.delayed(const Duration(milliseconds: 100));
       });
       await tester.pump();
+      // The save is several async writes. A fixed 100 ms was enough on an idle
+      // machine and failed under a parallel test load (2 of 18 runs); poll,
+      // bounded, instead of guessing.
+      for (var round = 0; round < 50 && accepted == 0; round++) {
+        await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 20)),
+        );
+        await tester.pump();
+      }
 
       expect(accepted, 1);
       final prefs = await SharedPreferences.getInstance();
