@@ -333,6 +333,7 @@ def main() -> int:
             injected_sha256 = None
             target = workspace / mutation.path
             pristine = target.read_text(encoding="utf-8")
+            pristine_sha256 = file_sha256(target)
             try:
                 mutated = replace_occurrence(
                     pristine,
@@ -343,6 +344,10 @@ def main() -> int:
                 target.write_text(mutated, encoding="utf-8")
                 # Proof of injection: the bytes the mutant run actually saw.
                 injected_sha256 = file_sha256(target)
+                if injected_sha256 == pristine_sha256:
+                    # A replacement that changes nothing is not a mutant; a
+                    # "killed" verdict on it would be meaningless.
+                    raise ValueError("mutation left the target byte-identical")
                 result = run(
                     mutation.command,
                     workspace / mutation.cwd,
@@ -359,6 +364,9 @@ def main() -> int:
                 }
             finally:
                 target.write_text(pristine, encoding="utf-8")
+            restored_sha256 = file_sha256(target)
+            if restored_sha256 != pristine_sha256:
+                errors.append(f"MUTATION_RESTORE_FAILED {mutation.mutation_id}")
 
             killed = result["exitCode"] not in {0, 124, 125}
             if killed:
@@ -366,7 +374,11 @@ def main() -> int:
             record = {
                 "id": mutation.mutation_id,
                 "injected": "harnessError" not in result,
+                "pristineSha256": pristine_sha256,
                 "injectedSha256": injected_sha256,
+                "differs": injected_sha256 not in {None, pristine_sha256},
+                "restoredSha256": restored_sha256,
+                "restored": restored_sha256 == pristine_sha256,
                 "description": mutation.description,
                 "target": mutation.path,
                 "status": "KILLED" if killed else "SURVIVED_OR_INVALID",
