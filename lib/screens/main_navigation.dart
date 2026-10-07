@@ -21,6 +21,7 @@ import 'map_page.dart';
 import 'pin_setup_screen.dart';
 import 'safety_timeline_screen.dart';
 import 'settings_page.dart';
+import '../core/services/app_lifecycle_handler.dart';
 import '../core/services/connectivity_service.dart';
 import '../core/services/emergency_session_contract.dart';
 import '../core/services/pin_verification_service.dart';
@@ -127,6 +128,9 @@ class _MainNavigationState extends State<MainNavigation>
     // than of a conditional someone has to remember to write (MP-26-008).
     WidgetsBinding.instance.addObserver(this);
     PendingDestinationService.instance.addListener(_onPendingDestination);
+    // ...and, because this widget outlives the RESUME lock (a route pushed
+    // above it), not while that lock is up. A parked link waits for unlock.
+    AppLifecycleHandler.instance.lockActive.addListener(_onPendingDestination);
     // Firebase services removed (offline-first)
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _runStartupChecks();
@@ -173,15 +177,27 @@ class _MainNavigationState extends State<MainNavigation>
 
   Future<void> _routePending() async {
     if (_routing || !mounted) return;
+    if (AppLifecycleHandler.instance.lockActive.value) return;
     _routing = true;
     try {
+      final source = PendingDestinationService.instance.pendingSource;
       final accepted = PendingDestinationService.instance.consume();
       if (accepted == null || !mounted) return;
-      await DestinationRouter.route(
+      final outcome = await DestinationRouter.route(
         context,
         accepted.destination,
         selectTab: _selectTab,
       );
+      // Re-park for after unlock -- unless a newer link arrived meanwhile:
+      // the park holds the LATEST destination, never an older one.
+      if (outcome == DestinationRouteOutcome.deferredByLock &&
+          !PendingDestinationService.instance.hasPending) {
+        PendingDestinationService.instance.submitDestination(
+          accepted.destination,
+          parameters: accepted.parameters,
+          source: source ?? ExternalEntrySource.deepLink,
+        );
+      }
     } finally {
       _routing = false;
     }
@@ -192,6 +208,9 @@ class _MainNavigationState extends State<MainNavigation>
     _connectivitySubscription?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     PendingDestinationService.instance.removeListener(_onPendingDestination);
+    AppLifecycleHandler.instance.lockActive.removeListener(
+      _onPendingDestination,
+    );
     _tabFadeController.removeListener(_swapAtTrough);
     _tabFadeController.dispose();
     _restoredIndex.dispose();

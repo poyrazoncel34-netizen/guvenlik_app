@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../services/app_lifecycle_handler.dart';
 import '../services/subscription_gate.dart';
 import '../../screens/check_in_screen.dart';
 import '../../screens/safety_timeline_screen.dart';
@@ -22,11 +23,19 @@ abstract final class DestinationRouter {
     AppDestination destination, {
     required void Function(int index) selectTab,
   }) async {
+    if (AppLifecycleHandler.instance.lockActive.value) {
+      return DestinationRouteOutcome.deferredByLock;
+    }
     final feature = destination.gatedFeature;
     if (feature != null) {
       final allowed = await SubscriptionGate.ensureAccess(context, feature);
       if (!allowed) return DestinationRouteOutcome.refusedByEntitlement;
       if (!context.mounted) return DestinationRouteOutcome.contextGone;
+      // The gate can take seconds; the re-auth lock may have gone up since.
+      // Pushing now would put the destination ABOVE the lock.
+      if (AppLifecycleHandler.instance.lockActive.value) {
+        return DestinationRouteOutcome.deferredByLock;
+      }
     }
 
     final tab = destination.tabIndex;
@@ -68,4 +77,8 @@ enum DestinationRouteOutcome {
   /// a link that survives its own screen would fire at an arbitrary later
   /// moment.
   contextGone,
+
+  /// The re-auth lock is up. Nothing was shown; the caller re-parks the
+  /// destination so it is routed after unlock, never over the lock.
+  deferredByLock,
 }

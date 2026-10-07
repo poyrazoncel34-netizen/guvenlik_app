@@ -4,6 +4,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../di/service_locator.dart';
+import '../navigation/pending_destination_service.dart';
 import '../security/secure_storage.dart';
 import 'emergency_platform_service.dart';
 import 'emergency_session_contract.dart';
@@ -105,6 +106,8 @@ class AppResetService {
       // The emergency-contact cache mirrors secure storage. Invalidate it only
       // after that authority acknowledges deletion.
       ContactService.resetCache();
+      // A link parked before the wipe must not fire into the fresh install.
+      PendingDestinationService.instance.clear();
       if (!await AppResetStateRegistry.resetAll()) {
         allDeleted = false;
       }
