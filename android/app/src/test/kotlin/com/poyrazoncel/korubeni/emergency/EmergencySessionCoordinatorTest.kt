@@ -458,6 +458,85 @@ class EmergencySessionCoordinatorTest {
     }
 
     @Test
+    fun `clock set back at the deadline still dispatches once elapsed time is up`() {
+        // Independent wall and monotonic clocks: the shared Fixture pins the
+        // monotonic one, which is exactly what hides this race.
+        var wall = now
+        var elapsed = 50_000L
+        val store = FakeStore()
+        val calls = FakeCalls()
+        val coordinator = EmergencySessionCoordinator(
+            store = store,
+            alarmScheduler = FakeAlarms(),
+            fallbackPoster = FakeFallback(),
+            callRequester = calls,
+            capabilityProvider = { request ->
+                readyCapabilities.copy(
+                    pinConfigured = request.pinConfigured,
+                    callableTarget = EmergencyTargetValidator.isCallable(request.target),
+                    entitlementDecision = request.entitlementDecision,
+                )
+            },
+            wallClockMs = { wall },
+            elapsedRealtimeMs = { elapsed },
+        )
+        val armed = coordinator.arm(
+            validArmRequest(randomId = "clock-set-back-at-deadline"),
+        ) as ArmResult.Armed
+
+        // The full 120 s pass on the monotonic clock, but the wall clock was set
+        // back one hour moments before the deadline...
+        elapsed += 120_000L
+        wall = now + 120_000L - 3_600_000L
+        // ...and the ELAPSED_REALTIME alarm beats the TIME_SET broadcast. The
+        // wall-clock gate refuses it, and that alarm is now spent.
+        val early = coordinator.claimAndDispatch(armed.token)
+        assertEquals(CallRequestOutcome.NOT_ATTEMPTED, early.callRequestOutcome)
+
+        // TIME_SET arrives. The duration is over by the monotonic clock, which is
+        // the clock this reconciliation exists to honour.
+        coordinator.reconcileAfterClockChange()
+
+        assertEquals(listOf("+905001234567"), calls.targets)
+        assertEquals(LifecycleState.REQUEST_SUBMITTED_UNCONFIRMED, store.current?.lifecycleState)
+    }
+
+    @Test
+    fun `clock change long after a missed deadline offers instead of dialling`() {
+        var wall = now
+        var elapsed = 50_000L
+        val store = FakeStore()
+        val calls = FakeCalls()
+        val fallback = FakeFallback()
+        val coordinator = EmergencySessionCoordinator(
+            store = store,
+            alarmScheduler = FakeAlarms(),
+            fallbackPoster = fallback,
+            callRequester = calls,
+            capabilityProvider = { request ->
+                readyCapabilities.copy(
+                    pinConfigured = request.pinConfigured,
+                    callableTarget = EmergencyTargetValidator.isCallable(request.target),
+                    entitlementDecision = request.entitlementDecision,
+                )
+            },
+            wallClockMs = { wall },
+            elapsedRealtimeMs = { elapsed },
+        )
+        coordinator.arm(validArmRequest(randomId = "clock-change-long-overdue"))
+
+        // Ten minutes past the monotonic deadline with no dispatch, then a
+        // clock change: the same freshness policy as reboot reconciliation.
+        elapsed += 120_000L + 10L * 60_000L
+        wall = now - 3_600_000L
+        coordinator.reconcileAfterClockChange()
+
+        assertEquals(0, calls.targets.size)
+        assertEquals(listOf(FallbackReason.OVERDUE_NOT_DISPATCHED), fallback.reasons)
+        assertEquals(LifecycleState.MANUAL_ACTION_REQUIRED, store.current?.lifecycleState)
+    }
+
+    @Test
     fun `unattended arm is rejected when exact alarms are unavailable`() {
         val fixture = Fixture(
             capabilities = readyCapabilities.copy(exactAlarmGranted = false),

@@ -633,6 +633,29 @@ class EmergencySessionCoordinator(
                 envelope.elapsedRealtimeDeadlineMs - elapsedRealtimeMs()
             ).coerceAtLeast(0L)
             if (remaining == 0L) {
+                if (wallClockMs() >= envelope.finalDeadlineMs) {
+                    claimAndDispatch(envelope.token)
+                    return@forEach
+                }
+                // Due by the monotonic clock, but a backward wall change has put
+                // the wall clock behind finalDeadlineMs, so claimAndDispatch's
+                // wall gate refuses it. When the ELAPSED alarm had already beaten
+                // this broadcast, nothing was left to retry and the session sat
+                // ARMED. Rebase to "due now" -- only on this previously stuck
+                // path -- with the reboot path's freshness policy, judged on the
+                // monotonic clock.
+                val overdueMs = elapsedRealtimeMs() - envelope.elapsedRealtimeDeadlineMs
+                if (overdueMs > MAX_OVERDUE_DISPATCH_MS) {
+                    offerOverdueInsteadOfDialling(envelope)
+                    return@forEach
+                }
+                val now = wallClockMs()
+                store.write(
+                    envelope.copy(
+                        mainDeadlineMs = minOf(envelope.mainDeadlineMs, now),
+                        finalDeadlineMs = now,
+                    ),
+                )
                 claimAndDispatch(envelope.token)
                 return@forEach
             }
