@@ -10,6 +10,7 @@ import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../core/app_colors.dart';
 import '../core/motion.dart';
+import '../core/navigation/app_navigator.dart';
 import '../core/constants/app_constants.dart';
 import '../core/services/app_reset_service.dart';
 import '../core/services/emergency_session_contract.dart';
@@ -626,6 +627,12 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> with OverlayTouchShie
                           );
                           return;
                         }
+                        // The resume lock is a route ABOVE `/`; without this
+                        // pop the restarted shell would sit under a lock
+                        // whose PIN was just deleted.
+                        rootNavigatorKey.currentState?.popUntil(
+                          (route) => route.isFirst,
+                        );
                         if (AppRoot.restartStartup(context)) return;
                         Navigator.of(context).pushAndRemoveUntil(
                           PageRouteBuilder(

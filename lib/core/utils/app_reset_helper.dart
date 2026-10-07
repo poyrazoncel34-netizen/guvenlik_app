@@ -4,6 +4,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 import '../design_tokens.dart';
+import '../navigation/app_navigator.dart';
 import '../../screens/splash_screen.dart';
 import '../../screens/app_root.dart';
 import '../app_colors.dart';
@@ -111,13 +112,7 @@ class AppResetHelper {
                           );
                           return;
                         }
-                        if (AppRoot.restartStartup(context)) return;
-                        Navigator.of(context).pushAndRemoveUntil(
-                          MaterialPageRoute(
-                            builder: (_) => const SplashScreen(),
-                          ),
-                          (_) => false,
-                        );
+                        returnToStartupAfterWipe(context);
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.emergency,
@@ -140,6 +135,18 @@ class AppResetHelper {
         ),
       ),
     ).whenComplete(() => unawaited(guard.release(_overlayGuardOwner)));
+  }
+
+  /// After a COMPLETED wipe: back to the startup decision, `/` intact.
+  static void returnToStartupAfterWipe(BuildContext context) {
+    // Every route above `/` shows state that no longer exists. Popping to the
+    // first route never removes `/`, which Android restoration depends on.
+    rootNavigatorKey.currentState?.popUntil((route) => route.isFirst);
+    if (AppRoot.restartStartup(context)) return;
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const SplashScreen()),
+      (_) => false,
+    );
   }
 
   static const String _overlayGuardOwner = 'app_reset';

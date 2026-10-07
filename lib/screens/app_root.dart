@@ -47,10 +47,21 @@ class AppRoot extends StatefulWidget {
   /// standalone screens can retain their historical navigation fallback.
   static bool restartStartup(BuildContext context) {
     final scope = context.getInheritedWidgetOfExactType<_AppRootRestartScope>();
-    if (scope == null) return false;
-    scope.restart();
+    // A route pushed onto the root Navigator (Profile, data deletion, the
+    // resume lock) is a SIBLING of `/` in the Overlay, not a descendant of
+    // AppRoot, so the lookup above finds nothing from there. Those are exactly
+    // the screens a wipe is started from; falling through to the caller's
+    // `pushAndRemoveUntil` removed `/`, and the next process recreation died
+    // in `_history.isNotEmpty` (reproduced on an API 35 emulator). The mounted
+    // shell is still the one to restart.
+    final restart = scope?.restart ?? _mounted?._restart;
+    if (restart == null) return false;
+    restart();
     return true;
   }
+
+  /// The shell currently mounted at `/`, for callers outside its subtree.
+  static _AppRootState? _mounted;
 
   @override
   State<AppRoot> createState() => _AppRootState();
@@ -60,6 +71,18 @@ class _AppRootState extends State<AppRoot> {
   /// Null until SplashScreen has decided. Never restored on purpose -- see the
   /// class comment.
   Widget? _destination;
+
+  @override
+  void initState() {
+    super.initState();
+    AppRoot._mounted = this;
+  }
+
+  @override
+  void dispose() {
+    if (identical(AppRoot._mounted, this)) AppRoot._mounted = null;
+    super.dispose();
+  }
 
   void _show(Widget destination) {
     if (!mounted) return;
