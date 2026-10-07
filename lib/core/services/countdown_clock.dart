@@ -12,11 +12,17 @@ class CountdownClock {
 
   /// Whole seconds left, rounded UP so the display never shows a second the
   /// user has already run out of, and clamped at zero.
+  ///
+  /// Zero means "dispatch now", so it is decided in MICROseconds. Truncating
+  /// to milliseconds reported zero up to 1 ms before the deadline, while
+  /// native still refused (`currentTimeMillis() < finalDeadlineMs`); the panic
+  /// path read that refusal as unknown and opened the dialer just before the
+  /// native alarm placed the automatic request too.
   static int secondsUntil(DateTime deadline, {DateTime? now}) {
-    final remainingMs = deadline
+    final remainingUs = deadline
         .difference(now ?? DateTime.now())
-        .inMilliseconds;
-    if (remainingMs <= 0) return 0;
-    return (remainingMs / 1000).ceil();
+        .inMicroseconds;
+    if (remainingUs <= 0) return 0;
+    return (remainingUs / Duration.microsecondsPerSecond).ceil();
   }
 }
