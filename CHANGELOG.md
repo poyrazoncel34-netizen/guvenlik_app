@@ -10,6 +10,36 @@ Surumleme: `pubspec.yaml` 1.0.0+1'de SABITTIR; gercek `versionCode`
 ## Yayinlanmadi
 
 ### Duzeltildi
+- Telefonun guvenli anahtar deposunda bir okuma hatasi olursa uygulama
+  PIN'i (ayni sekilde acil kisileri veya PIN deneme sayacini) sessizce
+  siliyor ve PIN sormadan yeni PIN kurulumunu aciyordu. Artik uygulama kilitli
+  kaliyor; "Yeniden Dene" veya bilincli "Yerel Verileri Sifirla" secenegi
+  sunuluyor, veri kendiliginden silinmiyor.
+- Profil veya "Verilerimi Sil" ekranindan cihaz verileri silindikten sonra
+  Android uygulamayi arka planda kapatip yeniden actiginda "Bir sorun olustu"
+  hata ekrani geliyordu. Silme sonrasi uygulama artik her durumda ilk kurulum
+  ekranina donuyor.
+- Uygulama kilit ekrani (2 dakikadan uzun arka plan sonrasi PIN) acikken
+  gelen bir baglanti veya bildirim dokunusu, Guvenlik Zaman Cizelgesi gibi
+  ekranlari PIN sorulmadan kilidin ustunde aciyordu. Artik hedef ekran ancak
+  PIN girildikten sonra aciliyor.
+- Test Modu provasinda PIN iptal tuslari hic gorunmuyor, ekranda surekli
+  "Guvenlik PIN'i dogrulaniyor…" yaziyordu. Prova artik PIN ile iptal
+  edilebiliyor; gercek arama yapilmiyor.
+- Panik geri sayimi cok nadiren, son milisaniyede arama ekranini (dialer) da
+  acip ayni anda otomatik arama istegi gonderebiliyordu. Geri sayim artik
+  tam suresinde bitiyor; arama zamani degismedi.
+- Harita sekmesi hic acilmasa bile uygulama her acilista OpenStreetMap'ten
+  harita karolari indiriyordu. Karolar artik yalnizca Harita sekmesi
+  acildiginda isteniyor.
+- Siren cok hizli durdurulursa telefonun alarm ses seviyesi en yuksekte
+  kalabiliyordu. Alarm ses seviyesi artik her durumda eski haline donuyor.
+- Panik, Check-In veya Guvenli Yuruyus suresi dolmak uzereyken telefon saati
+  geri alinirsa, nadir bir zamanlamada arama istegi gonderilmeden oturum
+  takili kalabiliyordu. Sure dolduysa istek artik gonderiliyor; 5 dakikadan
+  fazla gecikmis bir oturum aranmiyor, bildirimle oneriliyor.
+- Prova (Test Modu) iptali artik Guvenlik Zaman Cizelgesi'ne "acil durum
+  iptal edildi" olarak yazilmiyor.
 - Check-In ekrani acikken bekleme suresine girildiginde "Uyari bildirimi
   gosterilemedi" mesaji, bildirim aslinda gosterildigi halde cikiyordu;
   Guvenli Yuruyus'teki 2 dakika uyarisi icin de ayni yanlis mesaj
