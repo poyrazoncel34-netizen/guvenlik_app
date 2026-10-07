@@ -50,6 +50,12 @@ class _SirenDialogState extends State<SirenDialog>
   int? _originalAlarmVolume;
   bool _sirenFailed = false;
 
+  /// Set first thing in [dispose]. The start sequence below is async and
+  /// dispose is not: without this a stop that landed before
+  /// `setMaxAlarmVolume` RETURNED found nothing to restore, and the late reply
+  /// then left the user's alarm stream at maximum for good.
+  bool _disposed = false;
+
   @override
   void initState() {
     super.initState();
@@ -109,15 +115,25 @@ class _SirenDialogState extends State<SirenDialog>
       }
       await _audioPlayer.setVolume(1.0);
       await _audioPlayer.setReleaseMode(ReleaseMode.loop);
+      // Stopped while the player was being prepared: leave the volume alone.
+      if (_disposed) return;
 
       // Force device alarm stream to max so siren is audible even in silent mode
       if (!kIsWeb) {
         try {
-          _originalAlarmVolume = await _audioControl.invokeMethod<int>(
+          final original = await _audioControl.invokeMethod<int>(
             'setMaxAlarmVolume',
           );
+          if (_disposed) {
+            // dispose() ran while the volume was going up and had nothing to
+            // restore yet; the restore is this call's job now.
+            _restoreAlarmVolume(original);
+            return;
+          }
+          _originalAlarmVolume = original;
         } catch (_) {} // best-effort: non-fatal if permission denied
       }
+      if (_disposed) return;
 
       if (kIsWeb) {
         // On web, AssetSource paths resolve differently.
@@ -134,18 +150,22 @@ class _SirenDialogState extends State<SirenDialog>
     }
   }
 
+  void _restoreAlarmVolume(int? original) {
+    if (original == null) return;
+    _audioControl
+        .invokeMethod('restoreAlarmVolume', original)
+        .catchError((_) {});
+  }
+
   @override
   void dispose() {
+    _disposed = true;
     _colorController.dispose();
     _scaleController.dispose();
     _soundTimer?.cancel();
     _audioPlayer.stop();
     _audioPlayer.dispose();
-    if (_originalAlarmVolume != null) {
-      _audioControl
-          .invokeMethod('restoreAlarmVolume', _originalAlarmVolume)
-          .catchError((_) {});
-    }
+    _restoreAlarmVolume(_originalAlarmVolume);
     super.dispose();
   }
 
