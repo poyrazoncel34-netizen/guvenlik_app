@@ -1,13 +1,17 @@
 package com.poyrazoncel.korubeni.integrity
 
-import android.content.Context
-import android.content.pm.PackageManager
 import android.os.SystemClock
 import android.util.Log
-import androidx.test.core.app.ApplicationProvider
+import io.flutter.plugin.common.BinaryMessenger
+import io.flutter.plugin.common.MethodCall
+import io.flutter.plugin.common.StandardMethodCodec
+import java.nio.ByteBuffer
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -19,48 +23,20 @@ import org.junit.runner.RunWith
  * Not a substitute for the JVM tests; it measures the real device.
  * Results are logged under tag A017_EVIDENCE and recorded in
  * docs/audit/device-verification-2026-09-22-a017-integrity-probe.md.
+ *
+ * Until 2026-10-06 this class also called RootBeer and safe_device by
+ * reflection to compare the old verdict with the new probe. Both libraries
+ * left the APK with F-06 (6bb7361), so those two methods could only throw
+ * ClassNotFoundException: they measured nothing that still ships. The
+ * comparison they produced is preserved in the audit note above; what
+ * remains here is the production path.
  */
 @RunWith(AndroidJUnit4::class)
 class DeviceIntegrityEmulatorProbeTest {
-    private val context: Context = ApplicationProvider.getApplicationContext()
 
-    /**
-     * D1 negative control. Precondition (checked by the operator with
-     * `pm list packages`): a package named com.topjohnwu.magisk IS installed.
-     * If the app cannot see it, RootBeer's package checks could never have
-     * fired in this app.
-     */
+    /** The probe the Dart side relies on, run directly on this device. */
     @Test
-    fun installedRootManagerPackageIsInvisibleToTheApp() {
-        val pm = context.packageManager
-        // Positive control: the API works for a package the app may see.
-        pm.getPackageInfo(context.packageName, 0)
-
-        val visible = try {
-            pm.getPackageInfo(MAGISK, 0)
-            true
-        } catch (_: PackageManager.NameNotFoundException) {
-            false
-        }
-        Log.i(TAG, "D1 getPackageInfo($MAGISK) visible=$visible")
-
-        // The exact code path safe_device ran: RootBeer 0.1.1, shipped in this APK.
-        val rootBeer = Class.forName("com.scottyab.rootbeer.RootBeer")
-            .getConstructor(Context::class.java).newInstance(context)
-        val managementApps = rootBeer.javaClass.getMethod("detectRootManagementApps")
-            .invoke(rootBeer) as Boolean
-        val dangerousApps = rootBeer.javaClass.getMethod("detectPotentiallyDangerousApps")
-            .invoke(rootBeer) as Boolean
-        Log.i(TAG, "D1 RootBeer.detectRootManagementApps=$managementApps " +
-            "detectPotentiallyDangerousApps=$dangerousApps")
-
-        assertFalse("package visibility hides the installed package", visible)
-        assertFalse("RootBeer package check cannot fire", managementApps)
-    }
-
-    /** New probe vs the old safe_device verdict on the same device. */
-    @Test
-    fun probeOutcomesAndOldVerdictOnThisDevice() {
+    fun probeOutcomesOnThisDevice() {
         val started = SystemClock.elapsedRealtime()
         val probe = DeviceIntegrityProbe()
         val result = probe.run()
@@ -79,18 +55,69 @@ class DeviceIntegrityEmulatorProbeTest {
         )
         Log.i(TAG, "BUILD type=${android.os.Build.TYPE} tags=${android.os.Build.TAGS}")
 
-        val rooted = Class.forName("com.xamdesign.safe_device.Rooted.RootedCheck")
-        val details = rooted.getMethod("getRootDetectionDetails", Context::class.java)
-            .invoke(null, context) as Map<*, *>
-        Log.i(TAG, "OLD safe_device details=$details")
-
         assertEquals(8, result.size)
         assertTrue(result.values.all { it in setOf("found", "absent", "error") })
         assertTrue("probe must finish well inside the 3 s Dart timeout", elapsed < 3_000)
     }
 
+    /**
+     * The exact channel Dart calls: MethodChannel decode, the worker thread,
+     * the hop back to the main looper and the StandardMethodCodec reply.
+     */
+    @Test
+    fun productionChannelRepliesWithEveryCheck() {
+        val messenger = CapturingMessenger()
+        InstrumentationRegistry.getInstrumentation().runOnMainSync {
+            DeviceIntegrityChannel.register(messenger)
+        }
+        val handler = messenger.handler
+        assertNotNull("the channel handler was not installed", handler)
+
+        val replied = CountDownLatch(1)
+        var reply: ByteBuffer? = null
+        val started = SystemClock.elapsedRealtime()
+        InstrumentationRegistry.getInstrumentation().runOnMainSync {
+            // The engine hands handlers a buffer positioned at its start.
+            val call = CODEC.encodeMethodCall(MethodCall("probe", null)).apply { rewind() }
+            handler!!.onMessage(call) { bytes ->
+                reply = bytes
+                replied.countDown()
+            }
+        }
+        assertTrue("no reply within the 3 s Dart budget", replied.await(3, TimeUnit.SECONDS))
+        val elapsed = SystemClock.elapsedRealtime() - started
+
+        val envelope = reply
+        assertNotNull("the channel replied with no envelope", envelope)
+        envelope!!.rewind()
+        val decoded = CODEC.decodeEnvelope(envelope) as Map<*, *>
+        Log.i(TAG, "CHANNEL ms=$elapsed result=$decoded")
+        assertEquals(8, decoded.size)
+        assertTrue(decoded.values.all { it in setOf("found", "absent", "error") })
+    }
+
+    /** Records the handler MethodChannel installs; nothing is sent to Flutter. */
+    private class CapturingMessenger : BinaryMessenger {
+        var handler: BinaryMessenger.BinaryMessageHandler? = null
+
+        override fun send(channel: String, message: ByteBuffer?) = Unit
+
+        override fun send(
+            channel: String,
+            message: ByteBuffer?,
+            callback: BinaryMessenger.BinaryReply?,
+        ) = Unit
+
+        override fun setMessageHandler(
+            channel: String,
+            handler: BinaryMessenger.BinaryMessageHandler?,
+        ) {
+            if (channel == DeviceIntegrityChannel.NAME) this.handler = handler
+        }
+    }
+
     private companion object {
         const val TAG = "A017_EVIDENCE"
-        const val MAGISK = "com.topjohnwu.magisk"
+        val CODEC: StandardMethodCodec = StandardMethodCodec.INSTANCE
     }
 }
