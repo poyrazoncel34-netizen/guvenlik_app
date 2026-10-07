@@ -115,8 +115,8 @@ Doğrulama zinciri sırasında bulundu: `flutter_secure_storage` 10.0.0'da `Andr
 | Commit başına | **12/12 commit** analiz + o commit'in testleri (+ Kotlin) yeşil | geçici worktree |
 | Mutasyon (§37) | **7/7 KILLED**; `differs=true`, `restored=true`; taban çizgileri 0/0 | `scripts/run_safety_mutations.py` |
 | Kararlılık (§38) | kritik set 10x + 8x + yük altında 6x×2 | tek kararsız test (K-09) giderildi |
-| Gizli anahtar taraması | **PASS**, 1173 metin + 226 ikili, 0 bulgu (izlenen aday, çalışma ağacı) | `scan_release_secrets.py`; temiz ağaç (`--require-clean`) koşusu doküman commit'inden sonra |
-| OSV | doküman commit'inden sonra temiz ağaçta | `audit_dependencies_osv.sh` temiz ağaç ister |
+| Gizli anahtar taraması | **PASS**, temiz ağaç `95f3362`: 1175 metin + 226 ikili, 0 bulgu | `scan_release_secrets.py --require-clean` |
+| OSV | **PASS**, temiz ağaç `95f3362`: 195 pub + 203 Maven sorgusu, bilinen bulgu yok (OSV kapsam sınırları geçerli) | `audit_dependencies_osv.sh` |
 | Format (§48 "format") | Uygulanmadı — **bilinçli**: depo politikası (`coding-style.md`, MP-27-003) toplu format'ı yasaklıyor; yalnız yeni dosyalar kendi biçiminde | — |
 
 ## 8. Güven ayrımı (§51)
