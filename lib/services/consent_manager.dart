@@ -331,7 +331,9 @@ class ConsentManager {
     }
     try {
       const legacy = FlutterSecureStorage(
-        aOptions: AndroidOptions(),
+        // Read-only means read-only: the plugin's default resetOnError=true
+        // would DELETE the entry when the read fails.
+        aOptions: AndroidOptions(resetOnError: false),
         iOptions: IOSOptions(accessibility: KeychainAccessibility.first_unlock),
       );
       final old = await legacy.read(key: SecureStorageKeys.consentLog);
