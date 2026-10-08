@@ -397,4 +397,47 @@ void main() {
       expect(await result, isNull);
     },
   );
+
+  testWidgets(
+    'a correct PIN that verifies after dispatch began is not debited as a '
+    'wrong PIN',
+    (tester) async {
+      const channel = MethodChannel('route-scoped/late-correct-pin');
+      _installSubmittingNative(tester, channel);
+      await _openCountdown(tester, storage: storage, channel: channel);
+
+      // The user types the right PIN in the last second; PBKDF2 on a slow
+      // phone keeps the verification running past the deadline.
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 9000)),
+      );
+      storage.holdVerification();
+      for (final digit in _pin.split('')) {
+        await tester.tap(find.text(digit).last);
+        await tester.pump();
+      }
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 1400)),
+      );
+      // Deadline: native submits, the countdown hands off to the call screen.
+      await tester.pump(const Duration(milliseconds: 250));
+      await tester.pump(const Duration(milliseconds: 20));
+      expect(find.byType(EmergencyCallScreen), findsOneWidget);
+
+      storage.gate!.complete();
+      for (var i = 0; i < 6; i++) {
+        await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 20)),
+        );
+        await tester.pump(const Duration(milliseconds: 100));
+      }
+
+      expect(
+        storage.writes.where((key) => key.toLowerCase().contains('fail')),
+        isEmpty,
+        reason: 'a matching PIN was counted toward the brute-force lockout',
+      );
+      expect(find.text('pin_mismatch'.tr()), findsNothing);
+    },
+  );
 }

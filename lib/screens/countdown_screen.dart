@@ -570,8 +570,9 @@ class _CountdownScreenState extends State<CountdownScreen>
     final verification = await _pinVerificationService.verify(candidate);
     if (!mounted) return;
     _pinState = verification.state;
-    if (verification.matches && !_isNavigating) {
+    if (verification.matches) {
       _verificationInProgress = false;
+      // Even when dispatch already began (cancel no-ops): never a wrong PIN.
       await _cancelCountdownAndExit(
         description: "countdown_cancelled_pin".tr(),
         resetPinLockout: true,
