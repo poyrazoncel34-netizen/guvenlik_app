@@ -10,8 +10,10 @@ import '../di/service_locator.dart';
 import '../security/secure_storage.dart';
 import '../security/secure_storage_keys.dart';
 import 'app_reset_state_registry.dart';
+import 'emergency_platform_service.dart';
 import 'emergency_session_contract.dart';
 import 'panic_countdown_guard.dart';
+import 'pin_lockout_service.dart' show MonotonicReading;
 
 /// Whether a lifecycle state means the app GENUINELY went to the background and
 /// the re-auth clock should start.
@@ -38,19 +40,32 @@ class AppLifecycleHandler {
   AppLifecycleHandler._({
     DateTime Function()? now,
     SecureStorage? secureStorage,
+    Future<MonotonicReading?> Function()? monotonic,
   }) : _now = now ?? DateTime.now,
-       _secureStorage = secureStorage;
+       _secureStorage = secureStorage,
+       _monotonic =
+           monotonic ?? EmergencyPlatformService.instance.readMonotonicClock;
 
   factory AppLifecycleHandler.forTesting({
     required DateTime Function() now,
     required SecureStorage secureStorage,
-  }) => AppLifecycleHandler._(now: now, secureStorage: secureStorage);
+    Future<MonotonicReading?> Function()? monotonic,
+  }) => AppLifecycleHandler._(
+    now: now,
+    secureStorage: secureStorage,
+    monotonic: monotonic ?? () async => null,
+  );
 
   static final AppLifecycleHandler instance = AppLifecycleHandler._()
     .._endLockOnDataWipe();
 
   final DateTime Function() _now;
   final SecureStorage? _secureStorage;
+
+  /// Native elapsedRealtime, which nobody can set and which counts sleep.
+  /// The wall clock alone let a clock set back skip the lock (audit Y-10).
+  final Future<MonotonicReading?> Function() _monotonic;
+  Future<MonotonicReading?>? _pausedReading;
 
   /// How many seconds in background before requiring re-auth.
   static const int lockAfterSeconds = 120; // 2 minutes
@@ -98,7 +113,27 @@ class AppLifecycleHandler {
   /// background time. Defence in depth alongside
   /// [lifecycleStartsBackgroundClock].
   void onPaused() {
-    _pausedAt ??= _now();
+    if (_pausedAt != null) return;
+    _pausedAt = _now();
+    _pausedReading = _readMonotonic();
+  }
+
+  Future<MonotonicReading?> _readMonotonic() async {
+    try {
+      return await _monotonic();
+    } on Exception {
+      return null;
+    }
+  }
+
+  /// Whether elapsedRealtime says the background lasted the lock threshold.
+  Future<bool> _monotonicSaysLong(Future<MonotonicReading?>? paused) async {
+    final before = await paused;
+    if (before == null) return false;
+    final after = await _readMonotonic();
+    return after != null &&
+        after.bootCount == before.bootCount &&
+        after.elapsedMs - before.elapsedMs >= lockAfterSeconds * 1000;
   }
 
   /// Visible for tests: the background clock, or null when the app is foreground.
@@ -114,6 +149,7 @@ class AppLifecycleHandler {
   @visibleForTesting
   void resetForTest() {
     _pausedAt = null;
+    _pausedReading = null;
     _lockActive.value = false;
   }
 
@@ -123,13 +159,20 @@ class AppLifecycleHandler {
     // already up let a LATER, brief background inherit this old timestamp and
     // re-lock at once.
     final pausedAt = _pausedAt;
+    final pausedReading = _pausedReading;
     _pausedAt = null;
+    _pausedReading = null;
     if (_lockActive.value || pausedAt == null) return;
 
     final elapsed = _now().difference(pausedAt).inSeconds;
-    if (elapsed < lockAfterSeconds) return;
+    // Raised before the first await either way: a link collected during this
+    // resume must not route while the decision is still being made.
     _lockActive.value = true;
     try {
+      if (elapsed < lockAfterSeconds &&
+          !await _monotonicSaysLong(pausedReading)) {
+        return;
+      }
       if (await _readPinState() == PinState.absent) return;
       final wipesAtLock = _completedWipes;
       while (true) {

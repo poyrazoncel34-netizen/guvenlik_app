@@ -37,6 +37,20 @@ class _UnreadableSecureStorage extends SecureStorage {
   Future<void> deleteAll() async {}
 }
 
+class _PinPresentStorage extends SecureStorage {
+  @override
+  Future<String?> read({required String key}) async => 'pbkdf2\$1000\$abc\$def';
+
+  @override
+  Future<void> write({required String key, required String value}) async {}
+
+  @override
+  Future<void> delete({required String key}) async {}
+
+  @override
+  Future<void> deleteAll() async {}
+}
+
 void main() {
   group('lifecycleStartsBackgroundClock', () {
     test('gercek arka plan durumlari saati BASLATIR', () {
@@ -147,4 +161,97 @@ void main() {
       await serviceLocator.reset();
     },
   );
+
+  // Y-10 (chaos audit 2026-10-08): background time was measured on the WALL
+  // clock alone. Whoever holds the unlocked phone could leave KoruBeni in the
+  // background for any length of time, set the clock back, and reopen it with
+  // no PIN: elapsed came out negative. elapsedRealtime cannot be set; a lock
+  // is now owed when EITHER clock says the threshold passed.
+  group('Y-10: a clock set back cannot skip the re-auth lock', () {
+    Future<void> resumeAfter(
+      WidgetTester tester, {
+      required Duration wallJump,
+      required Duration realElapsed,
+      required bool monotonicAvailable,
+    }) async {
+      SharedPreferences.setMockInitialValues(<String, Object>{});
+      await serviceLocator.reset();
+      final storage = _PinPresentStorage();
+      serviceLocator.registerSingleton<SecureStorage>(storage);
+      var now = DateTime.utc(2026, 10, 8, 18, 10);
+      var elapsedMs = 5000000;
+      final handler = AppLifecycleHandler.forTesting(
+        now: () => now,
+        secureStorage: storage,
+        monotonic: () async => monotonicAvailable
+            ? (elapsedMs: elapsedMs, bootCount: 17)
+            : null,
+      );
+      await tester.pumpWidget(
+        MaterialApp(
+          navigatorKey: rootNavigatorKey,
+          home: const Scaffold(body: Text('protected content')),
+        ),
+      );
+      handler.onPaused();
+      await tester.pump();
+      now = now.add(realElapsed).add(wallJump);
+      elapsedMs += realElapsed.inMilliseconds;
+      unawaited(handler.onResumed());
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('long background, clock set back an hour: locked', (
+      tester,
+    ) async {
+      await resumeAfter(
+        tester,
+        wallJump: const Duration(hours: -1),
+        realElapsed: const Duration(seconds: 130),
+        monotonicAvailable: true,
+      );
+      expect(find.byType(AppUnlockScreen), findsOneWidget);
+      await serviceLocator.reset();
+    });
+
+    testWidgets('short background, no clock change: not locked', (
+      tester,
+    ) async {
+      await resumeAfter(
+        tester,
+        wallJump: Duration.zero,
+        realElapsed: const Duration(seconds: 10),
+        monotonicAvailable: true,
+      );
+      expect(find.byType(AppUnlockScreen), findsNothing);
+      expect(find.text('protected content'), findsOneWidget);
+      await serviceLocator.reset();
+    });
+
+    testWidgets('short background, clock moved forward: locked (fail closed)', (
+      tester,
+    ) async {
+      await resumeAfter(
+        tester,
+        wallJump: const Duration(hours: 1),
+        realElapsed: const Duration(seconds: 10),
+        monotonicAvailable: true,
+      );
+      expect(find.byType(AppUnlockScreen), findsOneWidget);
+      await serviceLocator.reset();
+    });
+
+    testWidgets('without a monotonic reading the wall clock still decides', (
+      tester,
+    ) async {
+      await resumeAfter(
+        tester,
+        wallJump: Duration.zero,
+        realElapsed: const Duration(seconds: 130),
+        monotonicAvailable: false,
+      );
+      expect(find.byType(AppUnlockScreen), findsOneWidget);
+      await serviceLocator.reset();
+    });
+  });
 }
