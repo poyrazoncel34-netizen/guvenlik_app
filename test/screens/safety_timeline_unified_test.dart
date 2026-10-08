@@ -12,7 +12,8 @@ void main() {
       'lib/screens/safety_timeline_screen.dart',
     ).readAsStringSync();
     expect(
-      source.contains('ActivityService.getEvents'),
+      // tryGetEvents: the same read, with a failed read stated, not hidden.
+      source.contains('ActivityService.tryGetEvents'),
       isTrue,
       reason:
           'safety_timeline_screen.dart must read real safety events from '

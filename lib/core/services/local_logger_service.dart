@@ -45,6 +45,10 @@ enum LocalWarningCode {
   /// there was no surface to open a countdown on OR to explain the refusal on.
   quickPanicNavigatorUnavailable('quick_panic_navigator_unavailable'),
 
+  /// The safety-history store could not be read; the timeline showed the
+  /// user's notes and said the event list may be incomplete.
+  timelineActivityUnreadable('timeline_activity_unreadable'),
+
   /// The root/jailbreak probe could not produce a verdict: plugin missing,
   /// channel error, or a non-boolean reply. Recorded because the previous
   /// behaviour -- reporting a failed probe as a clean device -- was fail-open

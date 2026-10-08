@@ -468,6 +468,7 @@
   "timeline_title": "Safety Timeline",
   "timeline_new_note": "New Note",
   "timeline_empty": "No safety activity yet.",
+  "timeline_activity_read_failed": "Safety records could not be read; the list may be incomplete.",
   "timeline_empty_desc": "Write down where you are going and when you expect to be back, and send it to someone you trust from the share sheet if you want to. Your fake call, siren, safe walk and check-in events collect here too.",
   "timeline_add_entry": "Add Note",
   "timeline_add_desc": "Where are you going? What's your plan? Anything noteworthy?",

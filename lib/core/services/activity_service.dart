@@ -6,6 +6,7 @@ import 'package:sqflite/sqflite.dart';
 import '../../domain/models/activity_event.dart';
 import '../di/service_locator.dart';
 import 'local_database_service.dart';
+import 'local_logger_service.dart';
 
 class ActivityService {
   static const String _legacyStorageKey = 'activity_events';
@@ -15,6 +16,20 @@ class ActivityService {
   /// used to be the bare millisecond, and a second event in that millisecond
   /// failed `INSERT OR ABORT` and disappeared from the safety history.
   static int _sequence = 0;
+
+  /// [getEvents] for a screen: null when the store cannot be read, recorded
+  /// as a local warning, so a failed read is never shown as "no events" and
+  /// never leaves the caller waiting forever.
+  static Future<List<ActivityEvent>?> tryGetEvents() async {
+    try {
+      return await getEvents();
+    } on Exception {
+      await LocalLoggerService.instance.warningCode(
+        LocalWarningCode.timelineActivityUnreadable,
+      );
+      return null;
+    }
+  }
 
   static Future<List<ActivityEvent>> getEvents() async {
     final db = await serviceLocator<LocalDatabaseService>().database;

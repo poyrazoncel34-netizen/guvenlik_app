@@ -88,6 +88,43 @@ void main() {
     expect(jsonDecode(saved!.single)['destination'], 'Kadıköy iskelesi');
   });
 
+  // Fault injection (audit §15): the activity store throws on read. The screen
+  // awaited it without a catch, so it stayed on the spinner for good -- the
+  // user's own notes never appeared -- and an empty list would have read as
+  // "no safety activity" when the truth was "could not read it".
+  testWidgets('an unreadable activity store still shows notes and says so', (
+    tester,
+  ) async {
+    final note = <String, Object>{
+      'id': 'note-1',
+      'destination': 'Eve dönüş',
+      'plan': '',
+      'notes': '',
+      'timestamp': DateTime(2026, 9, 24, 20).toIso8601String(),
+    };
+    SharedPreferences.setMockInitialValues(<String, Object>{
+      'safety_timeline_notes': <String>[jsonEncode(note)],
+    });
+    // Real ffi I/O must leave the fake-async zone (it never completes in it).
+    await tester.runAsync(() => db.execute('DROP TABLE activity_events'));
+
+    await pumpLocalized(tester, const SafetyTimelineScreen());
+    // Bounded: an endless spinner would never let pumpAndSettle return.
+    for (var i = 0; i < 5; i++) {
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 80)),
+      );
+      await tester.pump(const Duration(milliseconds: 200));
+    }
+
+    expect(find.byType(CircularProgressIndicator), findsNothing);
+    expect(find.text('Eve dönüş'), findsOneWidget);
+    expect(
+      find.text('Güvenlik kayıtları okunamadı; liste eksik olabilir.'),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('GCM-05 delete cancel preserves, confirm permanently removes', (
     tester,
   ) async {

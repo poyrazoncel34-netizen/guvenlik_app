@@ -110,8 +110,8 @@ class _SafetyTimelineScreenState extends State<SafetyTimelineScreen>
     // Merge with real safety activity events (panic, fake call, siren,
     // safe walk, check-in, etc.) so the paid Safety History reflects what
     // actually happened, not just user notes.
-    final activity = await ActivityService.getEvents();
-    final activityEntries = activity.map(
+    final activity = await ActivityService.tryGetEvents();
+    final activityEntries = (activity ?? const <ActivityEvent>[]).map(
       (e) => {
         'id': e.id,
         '_kind': 'activity',
@@ -137,6 +137,11 @@ class _SafetyTimelineScreenState extends State<SafetyTimelineScreen>
       _restorer
         ..setItems(_entryIds)
         ..applyOnce(_entryIds);
+      if (activity == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('timeline_activity_read_failed'.tr())),
+        );
+      }
     }
   }
 

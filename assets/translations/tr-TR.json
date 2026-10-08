@@ -468,6 +468,7 @@
   "timeline_title": "Güvenlik Zaman Çizelgesi",
   "timeline_new_note": "Yeni Not",
   "timeline_empty": "Henüz güvenlik etkinliği yok.",
+  "timeline_activity_read_failed": "Güvenlik kayıtları okunamadı; liste eksik olabilir.",
   "timeline_empty_desc": "Gideceğin yeri ve dönüş planını not olarak yazabilir, istersen paylaşım ekranından güvendiğin birine gönderebilirsin. Sahte çağrı, siren, güvenli yürüyüş ve check-in olayların da burada birikir.",
   "timeline_add_entry": "Not Ekle",
   "timeline_add_desc": "Nereye gidiyorsunuz? Planınız nedir? Dikkat çeken bir şey var mı?",
