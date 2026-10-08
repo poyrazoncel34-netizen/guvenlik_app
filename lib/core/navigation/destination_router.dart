@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../services/app_lifecycle_handler.dart';
@@ -57,8 +59,11 @@ abstract final class DestinationRouter {
       ),
     };
 
-    await Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (_) => screen),
+    // Not awaited: routing ends once the screen is up. Awaiting the pop kept
+    // the caller's single-flight flag raised while the screen stayed open, so
+    // a second link was parked and fired at some later resume (audit A-08).
+    unawaited(
+      Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => screen)),
     );
     return DestinationRouteOutcome.shown;
   }

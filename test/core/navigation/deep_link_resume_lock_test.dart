@@ -137,7 +137,10 @@ Future<void> _settle(WidgetTester tester, {int rounds = 10}) async {
   }
 }
 
-Future<void> _pumpApp(WidgetTester tester) async {
+Future<void> _pumpApp(
+  WidgetTester tester, {
+  SubscriptionProvider? subscription,
+}) async {
   await tester.runAsync(() async {
     await tester.pumpWidget(
       EasyLocalization(
@@ -158,7 +161,7 @@ Future<void> _pumpApp(WidgetTester tester) async {
                 create: (_) => SettingsProvider(),
               ),
               ChangeNotifierProvider<SubscriptionProvider>(
-                create: (_) => SubscriptionProvider(),
+                create: (_) => subscription ?? SubscriptionProvider(),
               ),
             ],
             // Production shape: MainNavigation sits in `/` of the ROOT
@@ -509,5 +512,60 @@ void main() {
     _unlock(tester);
     await _settle(tester);
     expect(AppLifecycleHandler.instance.lockActive.value, isFalse);
+  });
+
+  // A-08 (chaos audit 2026-10-08): `DestinationRouter.route` awaited the pushed
+  // screen until it was CLOSED, and `_routing` stayed true all that time. A
+  // second link arriving while the first link's screen was open was parked and
+  // `_routePending` returned early; closing the screen routed nothing, so the
+  // link fired at the next resume or lock change -- possibly hours later,
+  // exactly the "link that survives its own screen" this layer forbids.
+  testWidgets('a link that arrives while an earlier link screen is open is '
+      'routed at once, not at some later resume', (tester) async {
+    await _pumpApp(tester);
+    _parkTimelineLink();
+    await _settle(tester);
+    expect(find.byType(SafetyTimelineScreen), findsOneWidget);
+
+    PendingDestinationService.instance.submitUri(
+      Uri.parse('korubeni://open/timeline'),
+    );
+    await _settle(tester);
+
+    expect(
+      PendingDestinationService.instance.hasPending,
+      isFalse,
+      reason: 'the second link was left parked for a later resume',
+    );
+    expect(find.byType(SafetyTimelineScreen), findsWidgets);
+  });
+
+  // A-08, the in-flight half: a link parked while another is still being
+  // routed (here: waiting on the Pro gate) is routed as soon as that routing
+  // ends -- not left for a later resume.
+  testWidgets('a link parked while another link is routing is routed when '
+      'that routing ends', (tester) async {
+    final subscription = _GatedSubscription();
+    await _pumpApp(tester, subscription: subscription);
+    PendingDestinationService.instance.submitUri(
+      Uri.parse('korubeni://open/check-in'),
+    );
+    await _settle(tester, rounds: 3);
+    expect(find.byType(CheckInScreen), findsNothing, reason: 'gate pending');
+
+    _parkTimelineLink();
+    await _settle(tester, rounds: 3);
+    expect(PendingDestinationService.instance.hasPending, isTrue);
+
+    subscription.resolveGate.complete();
+    await _settle(tester);
+
+    expect(find.byType(CheckInScreen, skipOffstage: false), findsOneWidget);
+    expect(
+      PendingDestinationService.instance.hasPending,
+      isFalse,
+      reason: 'the second link was left parked for a later resume',
+    );
+    expect(find.byType(SafetyTimelineScreen), findsOneWidget);
   });
 }

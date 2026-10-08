@@ -208,6 +208,10 @@ class _MainNavigationState extends State<MainNavigation>
       }
     } finally {
       _routing = false;
+      // A link parked while this one was routing -- or re-parked just above
+      // after its deferral ended -- must not wait for an unrelated resume
+      // (audit A-08). `_routePending` re-checks every deferral itself.
+      _onPendingDestination();
     }
   }
 
