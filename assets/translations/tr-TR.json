@@ -732,7 +732,7 @@
   "consent_revoke_title": "Rızayı Geri Çek",
   "consent_revoke_desc": "Bu rızayı geri çekmeniz durumunda ilgili özellik kullanılamaz hale gelecektir. Devam etmek istiyor musunuz?",
   "consent_revoke_confirm": "Geri Çek",
-  "consent_gate_blocked": "Bu özellik için ilgili onay gereklidir.",
+  "consent_gate_blocked": "Bu özellik için ilgili onay gerekli. Ayarlar > Yasal Bilgiler & KVKK > Rıza Yönetimi bölümünden verebilirsin.",
   "data_export_title": "Verilerimi İndir",
   "data_export_share_subject": "KoruBeni — Kişisel Veri Dışa Aktarımı",
   "data_export_share_text": "KoruBeni yerel kişisel veri kopyanız",

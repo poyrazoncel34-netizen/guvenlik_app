@@ -192,4 +192,29 @@ void main() {
       expect((json['consent_gate_blocked'] as String).isNotEmpty, isTrue);
     }
   });
+
+  // Measured on an API 35 (Google Play) emulator: with location consent not
+  // given, the Map's locate button answered only "Bu özellik için ilgili onay
+  // gereklidir." -- which consent, and where to give it, was left unsaid, and
+  // the card then read "Konum alınamadı" for good. The refusal names the path,
+  // and the path is built from the labels the screens actually show.
+  test('the refusal names where the consent is given, in the real labels', () {
+    for (final path in [
+      'assets/translations/tr-TR.json',
+      'assets/translations/en-US.json',
+    ]) {
+      final json =
+          jsonDecode(File(path).readAsStringSync()) as Map<String, dynamic>;
+      final copy = json['consent_gate_blocked'] as String;
+      for (final label in ['nav_settings', 'settings_legal_title',
+          'consent_mgmt_title']) {
+        expect(
+          copy,
+          contains(json[label] as String),
+          reason: '$path: consent_gate_blocked must name "${json[label]}"',
+        );
+      }
+    }
+  });
 }
+

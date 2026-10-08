@@ -290,7 +290,10 @@ void main() {
     expect(_selectedTab(tester), 1);
     expect(tester.widget<MapPage>(find.byType(MapPage)).isActive, isTrue);
     expect(
-      find.text('Bu özellik için ilgili onay gereklidir.'),
+      find.text(
+        'Bu özellik için ilgili onay gerekli. Ayarlar > Yasal Bilgiler & KVKK '
+        '> Rıza Yönetimi bölümünden verebilirsin.',
+      ),
       findsOneWidget,
     );
     expect(tester.takeException(), isNull);

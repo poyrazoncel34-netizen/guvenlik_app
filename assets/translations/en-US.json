@@ -732,7 +732,7 @@
   "consent_revoke_title": "Withdraw Consent",
   "consent_revoke_desc": "If you withdraw this consent, the related feature will become unavailable. Do you want to continue?",
   "consent_revoke_confirm": "Withdraw",
-  "consent_gate_blocked": "This feature requires the related consent.",
+  "consent_gate_blocked": "This feature needs the related consent. You can give it in Settings > Legal Information & KVKK > Consent Management.",
   "data_export_title": "Download My Data",
   "data_export_share_subject": "KoruBeni — Personal Data Export",
   "data_export_share_text": "Your local KoruBeni personal data copy",
