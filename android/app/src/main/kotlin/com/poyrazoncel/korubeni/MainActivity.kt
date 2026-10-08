@@ -170,6 +170,17 @@ class MainActivity : FlutterFragmentActivity() {
             }
 
             try {
+                // A new engine means any siren of an earlier one is gone; a
+                // level it left raised (process death mid-siren) comes back.
+                SirenVolumeJournal.restoreAfterProcessDeath(
+                    this,
+                    getSystemService(Context.AUDIO_SERVICE) as AudioManager,
+                )
+            } catch (_: Exception) {
+                android.util.Log.e("MainActivity", "SIREN_VOLUME_RESTORE_FAILED")
+            }
+
+            try {
                 MethodChannel(messenger, AUDIO_CONTROL_CHANNEL)
                     .setMethodCallHandler { call, result ->
                         try {
@@ -181,6 +192,9 @@ class MainActivity : FlutterFragmentActivity() {
                                         audioManager.getStreamVolume(AudioManager.STREAM_ALARM)
                                     val max =
                                         audioManager.getStreamMaxVolume(AudioManager.STREAM_ALARM)
+                                    // Durable BEFORE raising: a process death
+                                    // mid-siren must not strand the stream.
+                                    SirenVolumeJournal.rememberBeforeRaise(this, original, max)
                                     audioManager.setStreamVolume(
                                         AudioManager.STREAM_ALARM,
                                         max,
@@ -200,6 +214,7 @@ class MainActivity : FlutterFragmentActivity() {
                                             0
                                         )
                                     }
+                                    SirenVolumeJournal.clear(this)
                                     result.success(true)
                                 }
                                 else -> result.notImplemented()

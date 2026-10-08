@@ -34,7 +34,7 @@
       "reason": "Executable native safety-kernel evidence belongs with the native implementation. integrity/ holds the root-detection probe tests and its device-evidence instrumentation (A-017). security/ holds the overlay (tapjacking) touch-policy decisions, whose gateway-vs-non-gateway split is what keeps the guard from locking an owner out of their own safety app."
     },
     {
-      "pattern": "^android/app/src/test/kotlin/com/poyrazoncel/korubeni/VolumeButtonDetectorTest\\.kt$",
+      "pattern": "^android/app/src/test/kotlin/com/poyrazoncel/korubeni/(?:VolumeButtonDetectorTest|SirenVolumeJournalTest)\\.kt$",
       "category": "safety-test",
       "commitGroup": "01-native-safety-kernel",
       "reason": "JVM evidence for VolumeButtonDetector.kt, which sits at the package root rather than under emergency/. The detector is a panic entry point, so its test ships with the native safety kernel it guards."
@@ -46,7 +46,7 @@
       "reason": "Instrumentation evidence that the INSTALLED package declares the flutter_local_notifications scheduled-delivery and boot-reschedule receivers (R5). It proves a manifest declaration, so it travels with the manifest change rather than with the native kernel."
     },
     {
-      "pattern": "^android/app/src/main/kotlin/com/poyrazoncel/korubeni/(?:emergency/|integrity/|security/|MainActivity\\.kt$|DozeModeHandler\\.kt$|VolumeButtonDetector\\.kt$)",
+      "pattern": "^android/app/src/main/kotlin/com/poyrazoncel/korubeni/(?:emergency/|integrity/|security/|MainActivity\\.kt$|DozeModeHandler\\.kt$|VolumeButtonDetector\\.kt$|SirenVolumeJournal\\.kt$)",
       "category": "safety",
       "commitGroup": "01-native-safety-kernel",
       "reason": "Native emergency state, scheduling, dispatch, and platform-channel authority. VolumeButtonDetector.kt is the native half of the volume-button panic trigger, so it is a safety entry point like the quick-access surfaces. integrity/ is the native root-detection probe (A-017) whose verdict gates the duress-model device warning. security/ owns the overlay touch policy that MainActivity enforces on the PIN, consent, export and reset surfaces."
