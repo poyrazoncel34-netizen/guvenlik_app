@@ -90,14 +90,19 @@ class EmergencyTriggerHostState extends State<EmergencyTriggerHost>
     final session = await (widget.discoverArmedPanic?.call() ??
         PanicReattachment.discover(EmergencyPlatformService.instance));
     if (session == null || !mounted) return;
-    if (_countdownOpen || PanicCountdownGuard.isHeld) return;
+    // Cold start: the session is found ~0.8 s after launch, before the root
+    // Navigator exists, and the first frame is deferred while startup loads
+    // (API 35 emulator) -- one endOfFrame was not enough and the re-show was
+    // dropped. Poll on a timer, never on frames, bounded by native's deadline.
     var navigator = rootNavigatorKey.currentState;
-    if (navigator == null) {
-      await WidgetsBinding.instance.endOfFrame;
-      if (!mounted) return;
+    while (navigator == null) {
+      if (!mounted || !session.armed.finalDeadline.isAfter(DateTime.now())) {
+        return;
+      }
+      await Future<void>.delayed(const Duration(milliseconds: 50));
       navigator = rootNavigatorKey.currentState;
-      if (navigator == null) return;
     }
+    if (!mounted || _countdownOpen || PanicCountdownGuard.isHeld) return;
     final root = navigator;
     _countdownOpen = true;
     try {

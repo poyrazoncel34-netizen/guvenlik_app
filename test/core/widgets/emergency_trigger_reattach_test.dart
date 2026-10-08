@@ -140,7 +140,38 @@ void _installNative(WidgetTester tester, {required bool armed}) {
   );
 }
 
-Future<void> _pumpHost(WidgetTester tester, PushCounter observer) async {
+/// The root Navigator appears only after [delay], as on a real cold start
+/// where the first frame is deferred while startup loads (measured on an API
+/// 35 emulator: the session was discovered 0.8 s after reopening, before the
+/// navigator existed, and the re-show was silently dropped).
+class _LateApp extends StatefulWidget {
+  const _LateApp({required this.delay, required this.app});
+  final Duration delay;
+  final Widget app;
+  @override
+  State<_LateApp> createState() => _LateAppState();
+}
+
+class _LateAppState extends State<_LateApp> {
+  bool _ready = false;
+  @override
+  void initState() {
+    super.initState();
+    Timer(widget.delay, () {
+      if (mounted) setState(() => _ready = true);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) =>
+      _ready ? widget.app : const SizedBox.shrink();
+}
+
+Future<void> _pumpHost(
+  WidgetTester tester,
+  PushCounter observer, {
+  Duration? navigatorDelay,
+}) async {
   final provider = ParkedSubscriptionProvider(
     const SubscriptionAccessState.uninitialized(),
   );
@@ -159,15 +190,20 @@ Future<void> _pumpHost(WidgetTester tester, PushCounter observer) async {
             discoverArmedPanic: _armedPanic,
             reattachBuilder: _StubReattached.new,
             child: Builder(
-              builder: (context) => MaterialApp(
-                navigatorKey: rootNavigatorKey,
-                scaffoldMessengerKey: rootScaffoldMessengerKey,
-                navigatorObservers: <NavigatorObserver>[observer],
-                localizationsDelegates: context.localizationDelegates,
-                supportedLocales: context.supportedLocales,
-                locale: context.locale,
-                home: const Scaffold(body: Center(child: Text('HOME'))),
-              ),
+              builder: (context) {
+                final app = MaterialApp(
+                  navigatorKey: rootNavigatorKey,
+                  scaffoldMessengerKey: rootScaffoldMessengerKey,
+                  navigatorObservers: <NavigatorObserver>[observer],
+                  localizationsDelegates: context.localizationDelegates,
+                  supportedLocales: context.supportedLocales,
+                  locale: context.locale,
+                  home: const Scaffold(body: Center(child: Text('HOME'))),
+                );
+                return navigatorDelay == null
+                    ? app
+                    : _LateApp(delay: navigatorDelay, app: app);
+              },
             ),
           ),
         ),
@@ -271,6 +307,28 @@ void main() {
       () => Future<void>.delayed(const Duration(milliseconds: 100)),
     );
     await settle(tester);
+
+    expect(find.text('REATTACHED countdown-reattach-1'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await drainHostTimers(tester);
+  });
+
+  testWidgets('a session discovered before the root navigator exists is '
+      're-shown once it does', (tester) async {
+    _installNative(tester, armed: true);
+    final observer = PushCounter();
+    await _pumpHost(
+      tester,
+      observer,
+      navigatorDelay: const Duration(milliseconds: 1500),
+    );
+    // The host was built inside runAsync, so its timers run on REAL time.
+    for (var i = 0; i < 10; i++) {
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 250)),
+      );
+      await tester.pump(const Duration(milliseconds: 50));
+    }
 
     expect(find.text('REATTACHED countdown-reattach-1'), findsOneWidget);
     await tester.pumpWidget(const SizedBox.shrink());
