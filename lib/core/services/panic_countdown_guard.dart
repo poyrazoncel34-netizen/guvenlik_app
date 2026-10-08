@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 
 /// One real panic countdown at a time, across EVERY entry point.
@@ -14,20 +16,52 @@ import 'package:flutter/foundation.dart';
 /// free a countdown another entry point is showing.
 abstract final class PanicCountdownGuard {
   static Object? _owner;
+  static final ValueNotifier<bool> _held = ValueNotifier<bool>(false);
 
   /// Whether some entry point currently holds a countdown open.
   static bool get isHeld => _owner != null;
+
+  /// [isHeld] as a listenable, for surfaces that must not open ABOVE a live
+  /// countdown (the resume lock, external links) and wait for it instead.
+  static ValueListenable<bool> get held => _held;
+
+  /// Completes once no countdown is held; immediately when none is. With
+  /// [timeout] it also completes when that runs out, and leaves no listener
+  /// behind either way.
+  static Future<void> whenReleased({Duration? timeout}) {
+    if (!isHeld) return Future<void>.value();
+    final released = Completer<void>();
+    Timer? limit;
+    void listener() {
+      if (isHeld) return;
+      limit?.cancel();
+      _held.removeListener(listener);
+      if (!released.isCompleted) released.complete();
+    }
+
+    _held.addListener(listener);
+    if (timeout != null) {
+      limit = Timer(timeout, () {
+        _held.removeListener(listener);
+        if (!released.isCompleted) released.complete();
+      });
+    }
+    return released.future;
+  }
 
   /// Takes the guard for [owner]. False when another owner already holds it.
   static bool tryAcquire(Object owner) {
     if (_owner != null) return false;
     _owner = owner;
+    _held.value = true;
     return true;
   }
 
   /// Frees the guard, but only for the owner that took it.
   static void release(Object owner) {
-    if (identical(_owner, owner)) _owner = null;
+    if (!identical(_owner, owner)) return;
+    _owner = null;
+    _held.value = false;
   }
 
   /// Opens a countdown route while holding the guard for [owner].
@@ -48,5 +82,8 @@ abstract final class PanicCountdownGuard {
   }
 
   @visibleForTesting
-  static void resetForTesting() => _owner = null;
+  static void resetForTesting() {
+    _owner = null;
+    _held.value = false;
+  }
 }

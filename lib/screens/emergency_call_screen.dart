@@ -17,6 +17,7 @@ import '../core/services/call_service.dart';
 import '../core/services/dispatch_outcome.dart';
 import '../core/services/foreground_service.dart';
 import '../core/services/reduced_motion_policy.dart';
+import '../core/services/app_lifecycle_handler.dart';
 
 class EmergencyCallScreen extends StatefulWidget {
   final String name;
@@ -117,7 +118,12 @@ class _EmergencyCallScreenState extends State<EmergencyCallScreen>
     _autoDismissTimer?.cancel();
     await _releaseForegroundOwner();
     if (!mounted) return;
-    Navigator.of(context).popUntil((route) => route.isFirst);
+    // Home -- but never PAST the resume lock. This screen is shown without a
+    // PIN and can sit above the lock (quick-access panic or Check-In dispatch
+    // on a resume); popping to the first route also removed the lock.
+    Navigator.of(context).popUntil(
+      (route) => route.isFirst || AppLifecycleHandler.isLockRoute(route),
+    );
   }
 
   Future<void> _showFailSafeAlert() async {

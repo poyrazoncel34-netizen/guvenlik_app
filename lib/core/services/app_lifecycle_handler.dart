@@ -9,7 +9,9 @@ import '../navigation/app_navigator.dart';
 import '../di/service_locator.dart';
 import '../security/secure_storage.dart';
 import '../security/secure_storage_keys.dart';
+import 'app_reset_state_registry.dart';
 import 'emergency_session_contract.dart';
+import 'panic_countdown_guard.dart';
 
 /// Whether a lifecycle state means the app GENUINELY went to the background and
 /// the re-auth clock should start.
@@ -44,7 +46,8 @@ class AppLifecycleHandler {
     required SecureStorage secureStorage,
   }) => AppLifecycleHandler._(now: now, secureStorage: secureStorage);
 
-  static final AppLifecycleHandler instance = AppLifecycleHandler._();
+  static final AppLifecycleHandler instance = AppLifecycleHandler._()
+    .._endLockOnDataWipe();
 
   final DateTime Function() _now;
   final SecureStorage? _secureStorage;
@@ -54,6 +57,25 @@ class AppLifecycleHandler {
 
   /// Same budget PinVerificationService gives a secure-storage read.
   static const Duration pinReadTimeout = Duration(seconds: 2);
+
+  /// Name of the resume lock route, so stack-wide navigation can stop at it.
+  static const String lockRouteName = 'korubeni/resume-lock';
+
+  /// Longest the lock defers to a live panic countdown. A countdown ends ten
+  /// seconds after it starts; a guard still held long after that is a leak,
+  /// and a leak must not switch the lock off for the rest of the process.
+  static const Duration maxCountdownDeferral = Duration(seconds: 60);
+
+  /// Completed local-data wipes in this process. The ONE event, besides a
+  /// verified unlock, that may end the lock: "forgot PIN" wipes, then pops it.
+  int _completedWipes = 0;
+
+  void _endLockOnDataWipe() =>
+      AppResetStateRegistry.register(this, () => _completedWipes++);
+
+  /// Whether [route] is the resume PIN lock.
+  static bool isLockRoute(Route<dynamic> route) =>
+      route.settings.name == lockRouteName;
 
   DateTime? _pausedAt;
   final ValueNotifier<bool> _lockActive = ValueNotifier<bool>(false);
@@ -108,39 +130,70 @@ class AppLifecycleHandler {
     if (elapsed < lockAfterSeconds) return;
     _lockActive.value = true;
     try {
-      // Check if PIN is set — no lock if user hasn't set one.
-      final secureStorage = _secureStorage ?? serviceLocator<SecureStorage>();
-      PinState pinState;
-      try {
-        // Bounded: the lock flag is already up, and a read that never returned
-        // would keep it up -- no re-lock, no link routing -- for the rest of
-        // the process. A timeout is a read failure, which shows the lock.
-        final pin = await secureStorage
-            .read(key: SecureStorageKeys.userPin)
-            .timeout(pinReadTimeout);
-        pinState = pin == null || pin.isEmpty
-            ? PinState.absent
-            : PinState.configured;
-      } catch (_) {
-        // Storage uncertainty is never evidence that no PIN exists. Route to
-        // the existing local-PIN recovery surface instead of exposing the app.
-        pinState = PinState.readFailed;
+      if (await _readPinState() == PinState.absent) return;
+      final wipesAtLock = _completedWipes;
+      while (true) {
+        // Never ABOVE a live panic countdown: it is a deliberate no-PIN
+        // surface, and covering it hides the only PIN-cancel pad while the
+        // clock runs. The lock follows as soon as the countdown closes.
+        await PanicCountdownGuard.whenReleased(timeout: maxCountdownDeferral);
+        final navigator = rootNavigatorKey.currentState;
+        if (navigator == null) return;
+        if (await _showLock(navigator)) return;
+        // Removed by something other than a verified unlock -- a stack-wide
+        // `popUntil`, a replacement aimed at "the top route". Only a completed
+        // wipe may end the lock that way; anything else gets it back at once,
+        // with no storage read first, so the app is never left exposed.
+        if (_completedWipes != wipesAtLock) return;
       }
-      if (pinState == PinState.absent) return;
-
-      final navigator = rootNavigatorKey.currentState;
-      if (navigator == null) return;
-
-      await navigator.push(
-        MaterialPageRoute(
-          builder: (_) => AppUnlockScreen(onUnlocked: () => navigator.pop()),
-        ),
-      );
     } finally {
       // Lowered only once the lock route is GONE (unlock, back, or a wipe
       // popping it): lowering it first would let a parked link push itself
       // above the lock just before `pop` removed the topmost route.
       _lockActive.value = false;
     }
+  }
+
+  Future<PinState> _readPinState() async {
+    // Check if PIN is set — no lock if user hasn't set one.
+    final secureStorage = _secureStorage ?? serviceLocator<SecureStorage>();
+    try {
+      // Bounded: the lock flag is already up, and a read that never returned
+      // would keep it up -- no re-lock, no link routing -- for the rest of
+      // the process. A timeout is a read failure, which shows the lock.
+      final pin = await secureStorage
+          .read(key: SecureStorageKeys.userPin)
+          .timeout(pinReadTimeout);
+      return pin == null || pin.isEmpty
+          ? PinState.absent
+          : PinState.configured;
+    } catch (_) {
+      // Storage uncertainty is never evidence that no PIN exists. Route to
+      // the existing local-PIN recovery surface instead of exposing the app.
+      return PinState.readFailed;
+    }
+  }
+
+  /// Shows the lock until it is removed; true only for a verified unlock.
+  Future<bool> _showLock(NavigatorState navigator) async {
+    var unlocked = false;
+    late final Route<void> lock;
+    lock = MaterialPageRoute<void>(
+      settings: const RouteSettings(name: lockRouteName),
+      builder: (_) => AppUnlockScreen(
+        onUnlocked: () {
+          unlocked = true;
+          // THIS route, not the top one: a countdown pushed above the lock
+          // while the PIN was being verified must not be what closes.
+          if (lock.isCurrent) {
+            navigator.pop();
+          } else if (lock.isActive) {
+            navigator.removeRoute(lock);
+          }
+        },
+      ),
+    );
+    await navigator.push(lock);
+    return unlocked;
   }
 }

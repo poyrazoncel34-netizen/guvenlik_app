@@ -3,6 +3,8 @@
 // the panic button and every quick-access entry for the rest of the process,
 // so each way a countdown route can end is exercised against a real Navigator.
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guvenlik_app/core/services/panic_countdown_guard.dart';
@@ -162,4 +164,51 @@ void main() {
       expect(PanicCountdownGuard.isHeld, isFalse);
     },
   );
+
+  group('held / whenReleased (surfaces that wait for a countdown)', () {
+    test('held mirrors acquire and the owner-only release', () {
+      final owner = Object();
+      final changes = <bool>[];
+      void listener() => changes.add(PanicCountdownGuard.held.value);
+      PanicCountdownGuard.held.addListener(listener);
+      addTearDown(() => PanicCountdownGuard.held.removeListener(listener));
+
+      expect(PanicCountdownGuard.tryAcquire(owner), isTrue);
+      PanicCountdownGuard.release(Object()); // a stranger cannot free it
+      PanicCountdownGuard.release(owner);
+
+      expect(changes, <bool>[true, false]);
+    });
+
+    test('whenReleased completes on release, at once when free', () async {
+      await PanicCountdownGuard.whenReleased();
+      final owner = Object();
+      PanicCountdownGuard.tryAcquire(owner);
+      var done = false;
+      unawaited(PanicCountdownGuard.whenReleased().then((_) => done = true));
+      await Future<void>.delayed(Duration.zero);
+      expect(done, isFalse);
+      PanicCountdownGuard.release(owner);
+      await Future<void>.delayed(Duration.zero);
+      expect(done, isTrue);
+    });
+
+    testWidgets('a timed-out wait completes and leaves no listener behind', (
+      tester,
+    ) async {
+      PanicCountdownGuard.tryAcquire(Object()); // leaked: never released
+      var done = false;
+      unawaited(
+        PanicCountdownGuard.whenReleased(
+          timeout: const Duration(seconds: 1),
+        ).then((_) => done = true),
+      );
+      await tester.pump(const Duration(seconds: 2));
+      expect(done, isTrue);
+      // ignore: invalid_use_of_protected_member
+      expect((PanicCountdownGuard.held as ValueNotifier<bool>).hasListeners,
+          isFalse);
+    });
+  });
 }
+
