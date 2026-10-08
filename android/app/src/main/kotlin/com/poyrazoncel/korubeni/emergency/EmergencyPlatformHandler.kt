@@ -128,6 +128,9 @@ class EmergencyPlatformHandler(
                     openExactAlarmSettings()
                     result.success(true)
                 }
+                "readMonotonicClock" -> {
+                    result.success(MonotonicClockSnapshot.of(context))
+                }
                 "getDeviceState" -> {
                     result.success(getDeviceState())
                 }

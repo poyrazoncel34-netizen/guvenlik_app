@@ -1,8 +1,14 @@
 import 'dart:async';
 import 'dart:math';
 
+import 'package:flutter/foundation.dart';
+
 import '../di/service_locator.dart';
 import '../security/secure_storage.dart';
+import 'emergency_platform_service.dart';
+
+/// elapsedRealtime (ms) and the boot it belongs to, from native.
+typedef MonotonicReading = ({int elapsedMs, int bootCount});
 
 class PinLockoutState {
   final int failedAttempts;
@@ -51,12 +57,30 @@ final class PinLockoutUnreadable extends PinLockoutRead {
 }
 
 class PinLockoutService {
-  PinLockoutService._();
+  PinLockoutService._({
+    Future<MonotonicReading?> Function()? monotonic,
+    DateTime Function()? now,
+  }) : _monotonic =
+           monotonic ?? EmergencyPlatformService.instance.readMonotonicClock,
+       _now = now ?? DateTime.now;
 
   static final PinLockoutService instance = PinLockoutService._();
 
+  @visibleForTesting
+  factory PinLockoutService.forTesting({
+    required Future<MonotonicReading?> Function() monotonic,
+    required DateTime Function() now,
+  }) => PinLockoutService._(monotonic: monotonic, now: now);
+
+  final Future<MonotonicReading?> Function() _monotonic;
+  final DateTime Function() _now;
+
   static const String _failedAttemptsKey = 'pin_lockout_failed_attempts';
   static const String _lockedUntilKey = 'pin_lockout_until_ms';
+  // The same deadline on elapsedRealtime, and the boot it belongs to (Y-05).
+  static const String _lockedUntilElapsedKey = 'pin_lockout_until_elapsed_ms';
+  static const String _lockedBootKey = 'pin_lockout_boot_count';
+  static const int _unknownBoot = -1;
 
   /// Consecutive failures that trigger the first lockout.
   static const int lockoutThreshold = 5;
@@ -111,22 +135,54 @@ class PinLockoutService {
         (lockedUntilRaw != null && lockedUntilMs == null)) {
       return const PinLockoutUnreadable();
     }
-    final lockedUntil = lockedUntilMs == null
-        ? null
-        : DateTime.fromMillisecondsSinceEpoch(lockedUntilMs);
-
-    if (lockedUntil != null && DateTime.now().isAfter(lockedUntil)) {
+    if (lockedUntilMs == null) {
       return PinLockoutReadable(
         PinLockoutState(failedAttempts: failedAttempts, lockedUntil: null),
       );
     }
-
+    final remaining = await _remaining(
+      DateTime.fromMillisecondsSinceEpoch(lockedUntilMs),
+    );
     return PinLockoutReadable(
       PinLockoutState(
         failedAttempts: failedAttempts,
-        lockedUntil: lockedUntil,
+        lockedUntil: remaining > Duration.zero
+            ? DateTime.now().add(remaining)
+            : null,
       ),
     );
+  }
+
+  /// Time left on a lockout (audit Y-05).
+  ///
+  /// The wall deadline alone let a user-set clock end a lockout at once
+  /// (+1 h: an 86 s lockout gone) or stretch it (-2 h: 7431 s). Within the
+  /// boot that set it, elapsedRealtime -- which nobody can set -- decides;
+  /// across a reboot, or without a reading, the wall deadline still counts but
+  /// never for longer than the longest lockout the policy can impose.
+  Future<Duration> _remaining(DateTime wallUntil) async {
+    final elapsedUntil = int.tryParse(
+      await _secureStorage.read(key: _lockedUntilElapsedKey) ?? '',
+    );
+    final boot = int.tryParse(
+      await _secureStorage.read(key: _lockedBootKey) ?? '',
+    );
+    final reading = elapsedUntil != null && boot != null && boot != _unknownBoot
+        ? await _readMonotonic()
+        : null;
+    final left = reading != null && reading.bootCount == boot
+        ? Duration(milliseconds: elapsedUntil! - reading.elapsedMs)
+        : wallUntil.difference(_now());
+    const cap = Duration(seconds: maxLockoutSeconds);
+    return left > cap ? cap : left;
+  }
+
+  Future<MonotonicReading?> _readMonotonic() async {
+    try {
+      return await _monotonic();
+    } on Exception {
+      return null;
+    }
   }
 
   /// Debits one failed attempt.
@@ -148,13 +204,27 @@ class PinLockoutService {
     DateTime? lockedUntil;
     if (failedAttempts >= lockoutThreshold) {
       final seconds = lockoutSecondsFor(failedAttempts);
-      lockedUntil = DateTime.now().add(Duration(seconds: seconds));
+      lockedUntil = _now().add(Duration(seconds: seconds));
+      final reading = await _readMonotonic();
       await _secureStorage.write(
         key: _lockedUntilKey,
         value: '${lockedUntil.millisecondsSinceEpoch}',
       );
+      if (reading != null && reading.bootCount != _unknownBoot) {
+        await _secureStorage.write(
+          key: _lockedUntilElapsedKey,
+          value: '${reading.elapsedMs + seconds * 1000}',
+        );
+        await _secureStorage.write(
+          key: _lockedBootKey,
+          value: '${reading.bootCount}',
+        );
+      } else {
+        await _clearMonotonicDeadline();
+      }
     } else {
       await _secureStorage.delete(key: _lockedUntilKey);
+      await _clearMonotonicDeadline();
     }
 
     await _secureStorage.write(
@@ -172,7 +242,14 @@ class PinLockoutService {
     await Future.wait([
       _secureStorage.delete(key: _failedAttemptsKey),
       _secureStorage.delete(key: _lockedUntilKey),
+      _secureStorage.delete(key: _lockedUntilElapsedKey),
+      _secureStorage.delete(key: _lockedBootKey),
     ]);
+  }
+
+  Future<void> _clearMonotonicDeadline() async {
+    await _secureStorage.delete(key: _lockedUntilElapsedKey);
+    await _secureStorage.delete(key: _lockedBootKey);
   }
 
   /// Ticks the remaining lockout seconds for a screen that is already locked.

@@ -46,6 +46,9 @@ Future<PinLockoutState> _readable(PinLockoutService service) async {
 }
 
 void main() {
+  // The service reads native elapsedRealtime over a platform channel (Y-05);
+  // unanswered here, so every lockout falls back to the (capped) wall clock.
+  TestWidgetsFlutterBinding.ensureInitialized();
   setUp(() {
     if (!_serviceLocatorReady) {
       _fakeStorage = FakeSecureStorage();

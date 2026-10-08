@@ -347,6 +347,22 @@ class EmergencyPlatformService {
     return _parseDispatchResult(invocation.value, token);
   }
 
+  /// The device's elapsedRealtime and boot count, or null when unavailable.
+  /// Dart has no monotonic clock that outlives its process; the PIN lockout
+  /// needs one so a changed wall clock cannot end or stretch it (audit Y-05).
+  Future<({int elapsedMs, int bootCount})?> readMonotonicClock() async {
+    if (!isSupported) return null;
+    final invocation = await _channel.invokeTypedMap(
+      'readMonotonicClock',
+      timeout: const Duration(milliseconds: 500),
+    );
+    if (!invocation.completed) return null;
+    final elapsed = wireInt(invocation.value['elapsedRealtimeMs']);
+    final boot = wireInt(invocation.value['bootCount']);
+    if (elapsed == null || elapsed < 0 || boot == null) return null;
+    return (elapsedMs: elapsed, bootCount: boot);
+  }
+
   Future<CapabilitySnapshot> getEmergencyCapabilities({
     required EntitlementDecision entitlementDecision,
     required bool pinConfigured,
