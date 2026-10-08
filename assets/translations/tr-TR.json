@@ -34,6 +34,7 @@
   "setup_incomplete": "Kuruluma {count} adım kaldı",
   "system_ready_desc": "Acil kişin kayıtlı, arama izni açık.",
   "setup_incomplete_desc": "Önce acil kişini ekleyelim; gerisi bekleyebilir.",
+  "setup_incomplete_rest_desc": "Eksik adımlara aşağıdan dokunarak tamamlayabilirsin.",
   "readiness_almost_title": "Kurulumun büyük bölümü tamam",
   "readiness_almost_desc": "Tek eksik: {item}. Yaklaşık 30 saniye sürer.",
   "readiness_auto_call_note": "Bu cihaz aramayı kendi başlatamıyor; akış arama ekranını açar.",

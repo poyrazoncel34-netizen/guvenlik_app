@@ -34,6 +34,7 @@
   "setup_incomplete": "{count} steps left in setup",
   "system_ready_desc": "Your emergency contact is saved and call permission is on.",
   "setup_incomplete_desc": "Let's add your emergency contact first; the rest can wait.",
+  "setup_incomplete_rest_desc": "Tap a missing step below to complete it.",
   "readiness_almost_title": "Setup is almost done",
   "readiness_almost_desc": "One thing left: {item}. Takes about 30 seconds.",
   "readiness_auto_call_note": "This device cannot place the call itself; the flow opens the dialer instead.",

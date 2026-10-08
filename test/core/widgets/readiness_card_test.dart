@@ -27,6 +27,8 @@ const _tr = {
   'system_ready_desc': 'Acil kişin kayıtlı, arama izni açık.',
   'setup_incomplete': 'Kuruluma {count} adım kaldı',
   'setup_incomplete_desc': 'Önce acil kişini ekleyelim; gerisi bekleyebilir.',
+  'setup_incomplete_rest_desc':
+      'Eksik adımlara aşağıdan dokunarak tamamlayabilirsin.',
   'readiness_almost_title': 'Kurulumun büyük bölümü tamam',
   'readiness_almost_desc': 'Tek eksik: {item}. Yaklaşık 30 saniye sürer.',
   'readiness_background_note': 'Ekran kapalıyken zamanlayıcılar gecikebilir.',
@@ -152,6 +154,45 @@ void main() {
 
     expect(find.text('Kuruluma 5 adım kaldı'), findsOneWidget);
     expect(find.textContaining('Hazırlık eksik'), findsNothing);
+  });
+
+  // Audit A-04 (API 35 emulator): with the contact SAVED and two or more other
+  // gaps, the card still said "Önce acil kişini ekleyelim" -- steering the user
+  // to a step that was already done.
+  testWidgets('several gaps with a saved contact never ask to add the contact', (
+    tester,
+  ) async {
+    await _pumpCard(
+      tester,
+      locationGranted: false,
+      contactsGranted: false,
+      hasEmergencyContact: true,
+      readiness: _snapshot(),
+    );
+
+    expect(find.text('Kuruluma 2 adım kaldı'), findsOneWidget);
+    expect(find.textContaining('acil kişini ekleyelim'), findsNothing);
+    expect(
+      find.text('Eksik adımlara aşağıdan dokunarak tamamlayabilirsin.'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('a missing contact is still the step named first', (
+    tester,
+  ) async {
+    await _pumpCard(
+      tester,
+      locationGranted: false,
+      contactsGranted: true,
+      hasEmergencyContact: false,
+      readiness: _snapshot(),
+    );
+
+    expect(
+      find.text('Önce acil kişini ekleyelim; gerisi bekleyebilir.'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('an unknown platform snapshot never claims a complete setup', (

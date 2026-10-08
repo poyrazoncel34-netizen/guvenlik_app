@@ -148,7 +148,11 @@ class ReadinessCard extends StatelessWidget {
       title = 'setup_incomplete'.tr(
         namedArgs: {'count': missing.length.toString()},
       );
-      subtitle = 'setup_incomplete_desc'.tr();
+      // "Add your contact first" only while the contact is what is missing
+      // (audit A-04: it was shown with the contact already saved).
+      subtitle = hasEmergencyContact
+          ? 'setup_incomplete_rest_desc'.tr()
+          : 'setup_incomplete_desc'.tr();
     }
 
     final staleNotice = _buildSubscriptionNotice();
