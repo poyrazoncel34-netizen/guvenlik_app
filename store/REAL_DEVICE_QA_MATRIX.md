@@ -140,10 +140,12 @@ gate) and a table cell cannot carry the fail criteria for that.
 
 - The panic countdown is **deadline-driven, not tick-decrementing**:
   `_startDartCountdownTimer` polls every 200 ms and derives the remaining seconds from
-  `CountdownClock.secondsUntil(_armedDeadline)` (`lib/screens/countdown_screen.dart`).
-  A pause therefore cannot make the countdown drift or restart — it recomputes.
+  the armed `MonotonicDeadline` (`deadline.secondsLeft`, `lib/screens/countdown_screen.dart`).
+  A pause therefore cannot make the countdown drift or restart — it recomputes — and,
+  since Y-04 (2026-10-08), neither can a wall-clock change.
 - `CountdownScreen` is deliberately **not** a `WidgetsBindingObserver`. It reacts to no
-  lifecycle callback; the wall-clock deadline plus the native session is the authority.
+  lifecycle callback; the native session (wall deadline, rebased on TIME_SET) plus the
+  monotonic Dart projection is the authority.
   This case exists to prove that design on hardware, not to assume it.
 - The native AlarmManager session is armed **before** the Dart timer starts, and both race
   the same deadline. `EmergencySessionCoordinator` documents an at-least-once durable

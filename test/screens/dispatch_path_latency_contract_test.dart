@@ -163,12 +163,13 @@ void main() {
     });
   });
 
-  group('the display still reads from the absolute deadline', () {
-    test('countdown seconds come from CountdownClock, not tick counting', () {
-      expect(
-        countdown.contains('CountdownClock.secondsUntil(deadline)'),
-        isTrue,
-      );
+  group('the display still reads from the armed deadline', () {
+    // Measured on the monotonic clock since Y-04: a wall-clock deadline let a
+    // clock change reach zero early. Behaviour: countdown_wall_clock_jump_test.
+    test('countdown seconds come from the MonotonicDeadline, not tick counting',
+        () {
+      expect(countdown.contains('deadline.secondsLeft'), isTrue);
+      expect(countdown.contains('MonotonicDeadline(widget.safetyClock'), isTrue);
     });
   });
 }

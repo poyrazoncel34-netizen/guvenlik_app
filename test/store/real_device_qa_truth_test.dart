@@ -84,8 +84,9 @@ void main() {
         File('lib/screens/countdown_screen.dart').readAsStringSync();
 
     // Deadline-derived, not tick-decrementing: this is why an interruption
-    // cannot make the countdown drift, which the case asserts.
-    expect(countdown, contains('CountdownClock.secondsUntil('));
+    // cannot make the countdown drift, which the case asserts. Monotonic since
+    // Y-04, so a wall-clock change cannot move it either.
+    expect(countdown, contains('deadline.secondsLeft'));
     // Not a lifecycle observer: the case says the design reacts to no callback.
     expect(countdown, isNot(contains('WidgetsBindingObserver')));
     expect(countdown, isNot(contains('didChangeAppLifecycleState')));

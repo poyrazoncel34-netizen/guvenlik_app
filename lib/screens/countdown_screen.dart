@@ -11,7 +11,7 @@ import '../core/services/contact_service.dart';
 import '../domain/repositories/contacts_repository.dart';
 import '../core/services/activity_service.dart';
 import '../core/services/bounded_frame_wait.dart';
-import '../core/services/countdown_clock.dart';
+import '../core/services/safety_clock.dart';
 import '../core/services/call_service.dart';
 import '../core/services/android_intent_service.dart';
 import '../core/services/pin_lockout_service.dart';
@@ -46,6 +46,8 @@ class CountdownScreen extends StatefulWidget {
   final EmergencyDispatchPipeline? dispatchPipeline;
   /// See [ContactNameMask]: set by surfaces that never asked for the PIN.
   final bool maskContactIdentity;
+  /// Wall time for the native deadline, monotonic time for the countdown (Y-04).
+  final SafetyClock safetyClock;
 
   const CountdownScreen({
     super.key,
@@ -56,6 +58,7 @@ class CountdownScreen extends StatefulWidget {
     this.dialerOpener,
     this.dispatchPipeline,
     this.maskContactIdentity = false,
+    this.safetyClock = SafetyClock.system,
   });
 
   @override
@@ -66,7 +69,7 @@ class _CountdownScreenState extends State<CountdownScreen>
     with TickerProviderStateMixin {
   int _countdown = 10;
 
-  DateTime? _armedDeadline; // absolute; see [CountdownClock]
+  MonotonicDeadline? _countdownDeadline; // wall changes cannot move it (Y-04)
   Timer? _timer;
   String _pin = "";
   PinState _pinState = PinState.loading;
@@ -209,8 +212,9 @@ class _CountdownScreenState extends State<CountdownScreen>
 
       // Dart and native race against the same 10-second deadline. Whichever
       // claims first performs the request; the loser reads the durable result.
-      final deadline = DateTime.now().add(const Duration(seconds: 10));
-      _armedDeadline = deadline;
+      const length = Duration(seconds: 10);
+      final deadline = widget.safetyClock.now().add(length);
+      _countdownDeadline = MonotonicDeadline(widget.safetyClock, length);
       result = await _emergencyPlatformService.armEmergencySession(
         kind: EmergencySessionKind.panic,
         mainDeadline: deadline,
@@ -269,7 +273,7 @@ class _CountdownScreenState extends State<CountdownScreen>
 
   void _startDartCountdownTimer() {
     // Test mode has no armed session, so it keeps the plain tick behaviour.
-    final deadline = _armedDeadline;
+    final deadline = _countdownDeadline;
     // Real session polls the deadline; test mode keeps whole-second ticks.
     final period = deadline == null
         ? const Duration(seconds: 1)
@@ -277,7 +281,7 @@ class _CountdownScreenState extends State<CountdownScreen>
     _timer = Timer.periodic(period, (timer) {
       final left = deadline == null
           ? _countdown - 1
-          : CountdownClock.secondsUntil(deadline);
+          : deadline.secondsLeft;
       if (left > 0) {
         if (left == _countdown) return;
         setState(() => _countdown = left);
