@@ -31,6 +31,7 @@ import '../core/services/emergency_session_contract.dart';
 import '../core/services/panic_arm_policy.dart';
 import '../core/services/pin_verification_service.dart';
 import '../core/widgets/countdown_gradient_arc_painter.dart';
+import '../core/widgets/scale_tap_button.dart';
 import '../core/utils/contact_name_mask.dart';
 import '../core/utils/emergency_number_validator.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
@@ -964,7 +965,7 @@ class _CountdownScreenState extends State<CountdownScreen>
       button: true,
       onTap: onTap,
       excludeSemantics: true,
-      child: _ScaleTapButton(
+      child: ScaleTapButton(
         onTap: onTap,
         child: Container(
           decoration: BoxDecoration(
@@ -980,54 +981,6 @@ class _CountdownScreenState extends State<CountdownScreen>
           child: Center(child: child),
         ),
       ),
-    );
-  }
-}
-
-class _ScaleTapButton extends StatefulWidget {
-  final Widget child;
-  final VoidCallback onTap;
-  const _ScaleTapButton({required this.child, required this.onTap});
-
-  @override
-  State<_ScaleTapButton> createState() => _ScaleTapButtonState();
-}
-
-class _ScaleTapButtonState extends State<_ScaleTapButton>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _ctrl;
-  late Animation<double> _scale;
-
-  @override
-  void initState() {
-    super.initState();
-    _ctrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 80),
-      reverseDuration: const Duration(milliseconds: 150),
-    );
-    _scale = Tween<double>(
-      begin: 1.0,
-      end: 0.9,
-    ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut));
-  }
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTapDown: (_) => _ctrl.forward(),
-      onTapUp: (_) {
-        _ctrl.reverse();
-        widget.onTap();
-      },
-      onTapCancel: () => _ctrl.reverse(),
-      child: ScaleTransition(scale: _scale, child: widget.child),
     );
   }
 }
