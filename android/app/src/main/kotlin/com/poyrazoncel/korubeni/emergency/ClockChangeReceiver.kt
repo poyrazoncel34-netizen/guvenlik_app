@@ -18,6 +18,16 @@ class ClockChangeReceiver : BroadcastReceiver() {
             }
 
             EmergencySessionRuntime.coordinator(context).reconcileAfterClockChange()
+            // The Dart projections hold wall deadlines too; a running engine must
+            // re-read the rebased ones (audit Y-01). Emit only, never persist: the
+            // single pending-trigger slot may hold a dispatch outcome, and a cold
+            // start re-reads every session anyway.
+            EmergencyEventBus.emit(
+                mapOf(
+                    "type" to "safetyClockChanged",
+                    "timestamp" to System.currentTimeMillis(),
+                ),
+            )
         }
     }
 }

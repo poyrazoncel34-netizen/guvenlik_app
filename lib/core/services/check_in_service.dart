@@ -25,7 +25,8 @@ import '../services/haptic_service.dart';
 import '../services/local_logger_service.dart';
 import '../services/notification_service.dart';
 import '../services/check_in_projection_store.dart';
-import '../services/countdown_clock.dart';
+import '../services/safety_clock.dart';
+import '../services/safety_session_status_copy.dart';
 import '../services/native_emergency_history.dart';
 import '../utils/emergency_number_validator.dart';
 
@@ -41,20 +42,24 @@ class CheckInService extends ChangeNotifier {
     EmergencyPlatformService? platform,
     ContactsRepository? contactsRepository,
     bool sideEffectsEnabled = true,
+    SafetyClock clock = SafetyClock.system,
   }) : _platform = platform ?? EmergencyPlatformService.instance,
        _contactsRepositoryOverride = contactsRepository,
-       _sideEffectsEnabled = sideEffectsEnabled;
+       _sideEffectsEnabled = sideEffectsEnabled,
+       _clock = clock;
 
   factory CheckInService.forTesting({
     required String sessionId,
     required EmergencyPlatformService platform,
     required ContactsRepository contactsRepository,
     bool sideEffectsEnabled = false,
+    SafetyClock clock = SafetyClock.system,
   }) => CheckInService._(
     sessionId,
     platform: platform,
     contactsRepository: contactsRepository,
     sideEffectsEnabled: sideEffectsEnabled,
+    clock: clock,
   );
 
   /// Check-in session controller (default).
@@ -71,6 +76,7 @@ class CheckInService extends ChangeNotifier {
   final EmergencyPlatformService _platform;
   final ContactsRepository? _contactsRepositoryOverride;
   final bool _sideEffectsEnabled;
+  final SafetyClock _clock;
 
   ContactsRepository get _contactsRepository =>
       _contactsRepositoryOverride ?? serviceLocator<ContactsRepository>();
@@ -92,6 +98,8 @@ class CheckInService extends ChangeNotifier {
   Timer? _tickTimer;
   DateTime? _endAt;
   DateTime? _graceEndAt;
+  MonotonicDeadline? _mainLeft;
+  MonotonicDeadline? _graceLeft;
   bool _isActive = false;
   bool _isGracePeriod = false;
   bool _emergencyInProgress = false;
@@ -166,7 +174,7 @@ class CheckInService extends ChangeNotifier {
     }
 
     final totalSeconds = minutes * 60;
-    final mainDeadline = DateTime.now().add(Duration(seconds: totalSeconds));
+    final mainDeadline = _clock.now().add(Duration(seconds: totalSeconds));
     final finalDeadline = mainDeadline.add(
       const Duration(seconds: _gracePeriodSeconds),
     );
@@ -196,8 +204,7 @@ class CheckInService extends ChangeNotifier {
     _remainingSeconds = totalSeconds;
     _isActive = true;
     _isGracePeriod = false;
-    _endAt = result.mainDeadline;
-    _graceEndAt = result.finalDeadline;
+    _adoptDeadlines(result.mainDeadline, result.finalDeadline);
     _nativeScheduleDegraded = false;
 
     // Native ARMED is authoritative. A projection write failure must not turn
@@ -265,7 +272,7 @@ class CheckInService extends ChangeNotifier {
       );
     }
 
-    final mainDeadline = DateTime.now().add(Duration(seconds: _totalSeconds));
+    final mainDeadline = _clock.now().add(Duration(seconds: _totalSeconds));
     final finalDeadline = mainDeadline.add(
       const Duration(seconds: _gracePeriodSeconds),
     );
@@ -280,8 +287,7 @@ class CheckInService extends ChangeNotifier {
 
     _sessionToken = result.sessionToken;
     _isGracePeriod = false;
-    _endAt = result.mainDeadline;
-    _graceEndAt = result.finalDeadline;
+    _adoptDeadlines(result.mainDeadline, result.finalDeadline);
     _remainingSeconds = _totalSeconds;
     await _bestEffort(_persistState);
     if (_sideEffectsEnabled) {
@@ -382,8 +388,7 @@ class CheckInService extends ChangeNotifier {
     if (!snapshot.isPresent) return;
     _sessionToken = snapshot.token;
     _armedTarget = snapshot.target;
-    _endAt = snapshot.mainDeadline;
-    _graceEndAt = snapshot.finalDeadline;
+    _adoptDeadlines(snapshot.mainDeadline, snapshot.finalDeadline);
     _nativeScheduleDegraded = false;
     if (snapshot.lifecycleState.isTerminal) {
       if (_sideEffectsEnabled) {
@@ -401,7 +406,7 @@ class CheckInService extends ChangeNotifier {
         ? snapshot.mainDurationSeconds!
         : totalSeconds > 0
         ? totalSeconds
-        : (_endAt?.difference(DateTime.now()).inSeconds ?? 1).clamp(1, 86400);
+        : (_endAt?.difference(_clock.now()).inSeconds ?? 1).clamp(1, 86400);
     if (!_isActive) {
       _cancelTicker();
       notifyListeners();
@@ -412,13 +417,12 @@ class CheckInService extends ChangeNotifier {
   }
 
   Future<void> _reconcileWithClock() async {
-    if (!_isActive || _endAt == null || _graceEndAt == null) {
-      return;
-    }
+    final mainLeft = _mainLeft;
+    final graceLeft = _graceLeft;
+    if (!_isActive || mainLeft == null || graceLeft == null) return;
 
     // Rounded UP: truncating inSeconds reached native deadlines early.
-    final now = DateTime.now();
-    final mainRemaining = CountdownClock.secondsUntil(_endAt!, now: now);
+    final mainRemaining = mainLeft.secondsLeft;
     if (mainRemaining > 0) {
       _isGracePeriod = false;
       _remainingSeconds = mainRemaining;
@@ -431,7 +435,7 @@ class CheckInService extends ChangeNotifier {
     }
 
     _isGracePeriod = true;
-    final graceRemaining = CountdownClock.secondsUntil(_graceEndAt!, now: now);
+    final graceRemaining = graceLeft.secondsLeft;
     if (graceRemaining > 0) {
       _remainingSeconds = graceRemaining;
       if (_sideEffectsEnabled) {
@@ -448,13 +452,13 @@ class CheckInService extends ChangeNotifier {
   void _startMainTicker() {
     _cancelTicker();
     _tickTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-      final deadline = _endAt;
+      final deadline = _mainLeft;
       if (!_isActive || deadline == null || _isGracePeriod) {
         _cancelTicker();
         return;
       }
 
-      final remaining = CountdownClock.secondsUntil(deadline);
+      final remaining = deadline.secondsLeft;
       if (remaining <= 0) {
         _onMainTimerExpired();
         return;
@@ -468,13 +472,13 @@ class CheckInService extends ChangeNotifier {
   void _startGraceTicker() {
     _cancelTicker();
     _tickTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-      final deadline = _graceEndAt;
+      final deadline = _graceLeft;
       if (!_isActive || deadline == null || !_isGracePeriod) {
         _cancelTicker();
         return;
       }
 
-      final remaining = CountdownClock.secondsUntil(deadline);
+      final remaining = deadline.secondsLeft;
       if (remaining <= 0) {
         _triggerEmergency();
         return;
@@ -492,14 +496,14 @@ class CheckInService extends ChangeNotifier {
 
     _cancelTicker();
     _isGracePeriod = true;
-    final finalDeadline = _graceEndAt;
+    final finalDeadline = _graceLeft;
     if (finalDeadline == null) {
       await _triggerEmergency();
       return;
     }
-    _remainingSeconds = CountdownClock.secondsUntil(
-      finalDeadline,
-    ).clamp(0, _gracePeriodSeconds).toInt();
+    _remainingSeconds = finalDeadline.secondsLeft
+        .clamp(0, _gracePeriodSeconds)
+        .toInt();
 
     await _bestEffort(_persistState);
     if (_sideEffectsEnabled) {
@@ -678,24 +682,15 @@ class CheckInService extends ChangeNotifier {
   Future<void> _startBackgroundProtection() async {
     await KoruBeniForegroundService.start(owner: _foregroundOwner);
 
-    final String label;
-    final String body;
-    if (_isSafeWalk) {
-      label = "foreground_active_title".tr();
-      body = "foreground_safe_walk_status".tr(
-        namedArgs: {'time': _formatDuration(_remainingSeconds)},
-      );
-    } else {
-      label = _isGracePeriod
-          ? "check_in_grace_label".tr()
-          : "check_in_title".tr();
-      body =
-          '${"check_in_remaining".tr()}: ${_formatDuration(_remainingSeconds)}';
-    }
+    final copy = SafetySessionStatusCopy.of(
+      isSafeWalk: _isSafeWalk,
+      isGracePeriod: _isGracePeriod,
+      remainingSeconds: _remainingSeconds,
+    );
     KoruBeniForegroundService.updateNotification(
       owner: _foregroundOwner,
-      title: label,
-      content: body,
+      title: copy.title,
+      content: copy.body,
     );
   }
 
@@ -711,8 +706,7 @@ class CheckInService extends ChangeNotifier {
     _cancelTicker();
     _isActive = false;
     _isGracePeriod = false;
-    _graceEndAt = null;
-    _endAt = null;
+    _adoptDeadlines(null, null);
     _remainingSeconds = 0;
     _totalSeconds = 0;
     _nativeScheduleDegraded = false;
@@ -737,8 +731,10 @@ class CheckInService extends ChangeNotifier {
       return;
     }
     _sessionToken = snapshot.token ?? token;
-    _endAt = snapshot.mainDeadline ?? _endAt;
-    _graceEndAt = snapshot.finalDeadline ?? _graceEndAt;
+    _adoptDeadlines(
+      snapshot.mainDeadline ?? _endAt,
+      snapshot.finalDeadline ?? _graceEndAt,
+    );
     _armedTarget = snapshot.target ?? _armedTarget;
     await _reconcileWithClock();
     if (_sideEffectsEnabled && _isGracePeriod) {
@@ -754,10 +750,15 @@ class CheckInService extends ChangeNotifier {
     await _triggerEmergency();
   }
 
-  String _formatDuration(int totalSeconds) {
-    final minutes = totalSeconds ~/ 60;
-    final seconds = totalSeconds % 60;
-    return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+  /// Native wall deadlines, mirrored on the monotonic clock as of now: a
+  /// wall-clock change after this cannot move what the tickers count (Y-01).
+  void _adoptDeadlines(DateTime? main, DateTime? finalDeadline) {
+    _endAt = main;
+    _graceEndAt = finalDeadline;
+    _mainLeft = main == null ? null : MonotonicDeadline.fromWall(_clock, main);
+    _graceLeft = finalDeadline == null
+        ? null
+        : MonotonicDeadline.fromWall(_clock, finalDeadline);
   }
 
   void _cancelTicker() {
