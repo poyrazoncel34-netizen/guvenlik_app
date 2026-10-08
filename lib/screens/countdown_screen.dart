@@ -30,6 +30,7 @@ import '../core/services/emergency_platform_service.dart';
 import '../core/services/emergency_result_policy.dart';
 import '../core/services/emergency_session_contract.dart';
 import '../core/services/panic_arm_policy.dart';
+import '../core/services/panic_reattachment.dart';
 import '../core/services/pin_verification_service.dart';
 import '../core/widgets/countdown_gradient_arc_painter.dart';
 import '../core/widgets/scale_tap_button.dart';
@@ -49,6 +50,8 @@ class CountdownScreen extends StatefulWidget {
   final bool maskContactIdentity;
   /// Wall time for the native deadline, monotonic time for the countdown (Y-04).
   final SafetyClock safetyClock;
+  /// A native session that outlived its screen (A-11): adopted, never re-armed.
+  final PanicReattachment? reattach;
 
   const CountdownScreen({
     super.key,
@@ -60,6 +63,7 @@ class CountdownScreen extends StatefulWidget {
     this.dispatchPipeline,
     this.maskContactIdentity = false,
     this.safetyClock = SafetyClock.system,
+    this.reattach,
   });
 
   @override
@@ -178,6 +182,18 @@ class _CountdownScreenState extends State<CountdownScreen>
   /// access is required at arm time; a distinct inexact alarm is retained only
   /// as a best-effort backup if that access is revoked after arming.
   Future<ArmResult> _scheduleNativeBackupAlarm() async {
+    final session = widget.reattach;
+    if (session != null) {
+      // Native's token, deadline and target exactly as stored: re-arming would
+      // be refused (activeSessionExists) and any new deadline would drift.
+      _armedTargetNumber = session.target;
+      _countdownDeadline = MonotonicDeadline.fromWall(
+        widget.safetyClock,
+        session.armed.finalDeadline,
+      );
+      _sessionToken = session.armed.sessionToken;
+      return _armResult = session.armed;
+    }
     if (widget.entitlementDecision != EntitlementDecision.authorized) {
       return _recordRejectedArm(
         widget.entitlementDecision == EntitlementDecision.denied

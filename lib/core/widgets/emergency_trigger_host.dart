@@ -13,6 +13,7 @@ import '../services/check_in_expiry_coordinator.dart';
 import '../services/check_in_service.dart';
 import '../services/native_emergency_history.dart';
 import '../services/panic_countdown_guard.dart';
+import '../services/panic_reattachment.dart';
 import '../services/emergency_platform_service.dart';
 import '../services/emergency_session_contract.dart';
 import '../services/local_logger_service.dart';
@@ -31,10 +32,19 @@ class EmergencyTriggerHost extends StatefulWidget {
   @visibleForTesting
   final Widget Function(EntitlementDecision decision)? countdownBuilder;
 
+  /// Overrides for the A-11 re-show path; production uses native discovery
+  /// and the real countdown in adoption mode.
+  @visibleForTesting
+  final Future<PanicReattachment?> Function()? discoverArmedPanic;
+  @visibleForTesting
+  final Widget Function(PanicReattachment session)? reattachBuilder;
+
   const EmergencyTriggerHost({
     super.key,
     required this.child,
     this.countdownBuilder,
+    this.discoverArmedPanic,
+    this.reattachBuilder,
   });
 
   @override
@@ -63,8 +73,50 @@ class EmergencyTriggerHostState extends State<EmergencyTriggerHost>
     unawaited(_reconcilePendingHistory(waitForTranslations: true));
     unawaited(EmergencyReadinessService.instance.checkReadiness());
     _bindPlatformEvents();
+    unawaited(_reshowArmedPanic());
     _consumeQuickPanicRequest();
     _startForegroundTriggers();
+  }
+
+  /// A panic countdown whose screen died with its process (audit A-11).
+  ///
+  /// Native still holds the session ARMED and calls at its deadline; this
+  /// re-shows the PIN-cancel surface for whatever time is left. It adopts
+  /// native's token, deadline and target and never arms -- the same owner
+  /// guard as every other entry keeps it to one countdown. Shown without the
+  /// app PIN, like the quick-access entries, so the contact is masked.
+  Future<void> _reshowArmedPanic() async {
+    if (_countdownOpen || PanicCountdownGuard.isHeld) return;
+    final session = await (widget.discoverArmedPanic?.call() ??
+        PanicReattachment.discover(EmergencyPlatformService.instance));
+    if (session == null || !mounted) return;
+    if (_countdownOpen || PanicCountdownGuard.isHeld) return;
+    var navigator = rootNavigatorKey.currentState;
+    if (navigator == null) {
+      await WidgetsBinding.instance.endOfFrame;
+      if (!mounted) return;
+      navigator = rootNavigatorKey.currentState;
+      if (navigator == null) return;
+    }
+    final root = navigator;
+    _countdownOpen = true;
+    try {
+      final opened = PanicCountdownGuard.open(
+        this,
+        () => root.push(
+          PageRouteBuilder(
+            pageBuilder: (_, _, _) =>
+                widget.reattachBuilder?.call(session) ??
+                CountdownScreen(reattach: session, maskContactIdentity: true),
+            transitionDuration: Duration.zero,
+            reverseTransitionDuration: Duration.zero,
+          ),
+        ),
+      );
+      if (opened != null) await opened;
+    } finally {
+      _countdownOpen = false;
+    }
   }
 
   /// A widget or Quick Settings tap that happened before Flutter was attached.
@@ -85,6 +137,7 @@ class EmergencyTriggerHostState extends State<EmergencyTriggerHost>
       CheckInService.safeWalk.handleAppResumed();
       unawaited(_reconcilePendingHistory());
       _consumePendingTrigger();
+      unawaited(_reshowArmedPanic());
       _consumeQuickPanicRequest();
       // Re-auth after prolonged background
       AppLifecycleHandler.instance.onResumed();
