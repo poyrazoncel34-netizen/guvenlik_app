@@ -66,8 +66,16 @@ ROOT_DOCS = (
 
 
 def tracked_files(repo: Path) -> list[str]:
+    """Repository files: tracked, plus untracked files git does not ignore.
+
+    Deliberately NOT "whatever exists on this disk". `.claude/` is git-ignored
+    local agent tooling; citations into it resolved on a developer machine and
+    failed on every clean checkout -- CI -- so the gate's verdict depended on
+    who ran it.
+    """
     out = subprocess.run(
-        ["git", "-C", str(repo), "ls-files"],
+        ["git", "-C", str(repo), "ls-files", "--cached", "--others",
+         "--exclude-standard"],
         check=True,
         capture_output=True,
         text=True,
@@ -99,7 +107,7 @@ def scan(repo: Path) -> dict[str, object]:
         text = (repo / document).read_text(encoding="utf-8", errors="replace")
         for number, line in enumerate(text.split("\n"), 1):
             for kind, cited in CITATION.findall(line):
-                if cited in present or (repo / cited).exists():
+                if cited in present:
                     exact += 1
                 elif by_basename.get(os.path.basename(cited)):
                     abbreviated += 1
