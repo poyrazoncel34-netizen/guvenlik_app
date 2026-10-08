@@ -3,6 +3,7 @@ package com.poyrazoncel.korubeni.notifications
 import android.content.ComponentName
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.os.Build
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver
@@ -19,10 +20,7 @@ class ScheduledNotificationManifestInstrumentationTest {
 
     @Test
     fun installedPackageDeclaresScheduledDeliveryReceiver() {
-        val info = packageManager.getReceiverInfo(
-            ComponentName(context, ScheduledNotificationReceiver::class.java),
-            PackageManager.ComponentInfoFlags.of(0),
-        )
+        val info = receiverInfo(ComponentName(context, ScheduledNotificationReceiver::class.java))
 
         assertTrue(info.enabled)
         assertFalse("scheduled notifications are app-private", info.exported)
@@ -31,9 +29,8 @@ class ScheduledNotificationManifestInstrumentationTest {
     @Test
     fun installedPackageRoutesBootToPluginRescheduler() {
         val expected = ComponentName(context, ScheduledNotificationBootReceiver::class.java)
-        val matches = packageManager.queryBroadcastReceivers(
+        val matches = bootReceivers(
             Intent(Intent.ACTION_BOOT_COMPLETED).setPackage(context.packageName),
-            PackageManager.ResolveInfoFlags.of(0),
         )
 
         assertTrue(
@@ -44,4 +41,22 @@ class ScheduledNotificationManifestInstrumentationTest {
             },
         )
     }
+
+    // The *Flags.of overloads exist only from API 33; minSdk is 29, and on an
+    // API 29 emulator they threw NoSuchMethodError (chaos audit 2026-10-08).
+    @Suppress("DEPRECATION")
+    private fun receiverInfo(component: ComponentName) =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            packageManager.getReceiverInfo(component, PackageManager.ComponentInfoFlags.of(0))
+        } else {
+            packageManager.getReceiverInfo(component, 0)
+        }
+
+    @Suppress("DEPRECATION")
+    private fun bootReceivers(intent: Intent) =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            packageManager.queryBroadcastReceivers(intent, PackageManager.ResolveInfoFlags.of(0))
+        } else {
+            packageManager.queryBroadcastReceivers(intent, 0)
+        }
 }
