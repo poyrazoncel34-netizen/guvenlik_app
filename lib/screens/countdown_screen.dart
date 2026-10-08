@@ -20,6 +20,7 @@ import '../core/widgets/emergency_failure_dialog.dart';
 import 'emergency_call_screen.dart';
 import '../core/services/foreground_service.dart';
 import '../core/services/countdown_announcement.dart';
+import '../core/services/countdown_pin_meter.dart';
 import '../core/services/haptic_service.dart';
 import '../core/services/reduced_motion_policy.dart';
 import '../core/services/dispatch_ledger_recorder.dart';
@@ -74,7 +75,7 @@ class _CountdownScreenState extends State<CountdownScreen>
   String _pin = "";
   PinState _pinState = PinState.loading;
   bool _verificationInProgress = false;
-  DateTime? _lastWrongPinEvaluation;
+  final CountdownPinMeter _pinMeter = CountdownPinMeter();
   late AnimationController _shakeController;
   late AnimationController _tickBounceController;
   late AnimationController _glowController;
@@ -572,6 +573,8 @@ class _CountdownScreenState extends State<CountdownScreen>
   }
 
   Future<void> _verifyPinAndMaybeCancel(String candidate) async {
+    final refusal = widget.isTestMode ? await _pinMeter.rehearsalRefusal() : null;
+    if (refusal != null) return _rejectPinEntry(refusal);
     final verification = await _pinVerificationService.verify(candidate);
     if (!mounted) return;
     _pinState = verification.state;
@@ -585,23 +588,15 @@ class _CountdownScreenState extends State<CountdownScreen>
       return;
     }
 
-    final now = DateTime.now();
-    final shouldEvaluateWrongPin =
-        verification.state == PinState.configured &&
-        (_lastWrongPinEvaluation == null ||
-            now.difference(_lastWrongPinEvaluation!) >=
-                const Duration(seconds: 1));
-    _lastWrongPinEvaluation = shouldEvaluateWrongPin
-        ? now
-        : _lastWrongPinEvaluation;
-    if (shouldEvaluateWrongPin) {
-      await PinLockoutService.instance.registerFailure().catchError((
-        Object error,
-      ) {
-        debugPrint('PinLockoutService.registerFailure failed: $error');
-        return const PinLockoutState(failedAttempts: 0, lockedUntil: null);
-      });
-    }
+    await _pinMeter.recordMiss(verification.state);
+    _rejectPinEntry(
+      verification.state == PinState.readFailed
+          ? 'pin_state_read_failed'.tr()
+          : "pin_mismatch".tr(),
+    );
+  }
+
+  void _rejectPinEntry(String message) {
     if (!mounted) return;
     ReducedMotionPolicy.playOnce(_shakeController, reduced: _reduceMotion);
     HapticFeedback.vibrate();
@@ -611,11 +606,7 @@ class _CountdownScreenState extends State<CountdownScreen>
     });
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(
-          verification.state == PinState.readFailed
-              ? 'pin_state_read_failed'.tr()
-              : "pin_mismatch".tr(),
-        ),
+        content: Text(message),
         backgroundColor: AppColors.emergency,
       ),
     );
