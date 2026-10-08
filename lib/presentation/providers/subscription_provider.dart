@@ -139,6 +139,9 @@ class SubscriptionProvider extends ChangeNotifier {
   /// remains unknown until a current Trusted Entitlements result is applied.
   Future<void> initializeFromPriorProHint() async {
     if (kIsWeb || !await _rcService.hasPriorProInitializationHint()) return;
+    // Local read first: the anchor is what authorizes an offline press, and
+    // without it the SOS looked locked until the first press (audit Y-03).
+    await ensureOfflineGraceLoaded();
     await initialize();
   }
 
