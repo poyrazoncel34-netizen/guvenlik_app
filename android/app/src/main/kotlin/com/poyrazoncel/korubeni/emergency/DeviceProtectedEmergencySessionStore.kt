@@ -84,6 +84,7 @@ class DeviceProtectedEmergencySessionStore(context: Context) : EmergencySessionS
                         key(prefix, "elapsedBootCount"),
                         UNKNOWN_BOOT_COUNT,
                     ),
+                    elapsedBootId = prefs.getString(key(prefix, "elapsedBootId"), "") ?: "",
                     elapsedStampMs = prefs.getLong(key(prefix, "elapsedStampMs"), -1L),
                     schedulingMode = schedulingMode,
                     callRequestOutcome = callOutcome,
@@ -137,6 +138,7 @@ class DeviceProtectedEmergencySessionStore(context: Context) : EmergencySessionS
                 envelope.elapsedRealtimeDeadlineMs,
             )
             .putInt(key(prefix, "elapsedBootCount"), envelope.elapsedBootCount)
+            .putString(key(prefix, "elapsedBootId"), envelope.elapsedBootId)
             .putLong(key(prefix, "elapsedStampMs"), envelope.elapsedStampMs)
             .putString(key(prefix, "schedulingMode"), envelope.schedulingMode.wireValue)
             .putString(

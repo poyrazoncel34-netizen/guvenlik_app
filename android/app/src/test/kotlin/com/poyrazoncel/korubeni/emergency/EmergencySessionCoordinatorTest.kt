@@ -551,6 +551,8 @@ class EmergencySessionCoordinatorTest {
         val store: FakeStore = FakeStore(),
     ) {
         var bootReadFails = false
+        /** Kernel boot id (`/proc/sys/kernel/random/boot_id`); null = unreadable. */
+        var bootId: String? = "boot-$boot"
         val calls = FakeCalls()
         val alarms = FakeAlarms()
         val fallback = FakeFallback()
@@ -572,11 +574,13 @@ class EmergencySessionCoordinatorTest {
                 if (bootReadFails) throw IllegalStateException("settings unavailable")
                 boot
             },
+            bootId = { bootId },
         )
 
         /** Reboot: a new boot identity and an elapsed clock restarted near zero. */
         fun reboot(atWall: Long, elapsedSinceBoot: Long) {
             boot += 1
+            bootId = bootId?.let { "boot-$boot" }
             wall = atWall
             elapsed = elapsedSinceBoot
         }
@@ -713,6 +717,121 @@ class EmergencySessionCoordinatorTest {
 
         assertEquals(30_000L + 60_000L, clocks.alarms.scheduled.last().elapsedRealtimeDeadlineMs)
         assertEquals(41, clocks.store.current!!.elapsedBootCount)
+    }
+
+    // Audit A-02r (chaos audit 2026-10-08): with BOOT_COUNT unreadable and the
+    // new boot already past the old elapsed stamp, neither signal proved a
+    // reboot, the previous boot's elapsed deadline was trusted, and TIME_SET-
+    // before-boot still moved the deadline -- by up to the session length, or
+    // turned a days-overdue session into a fresh call. The kernel boot id is
+    // a second identity that does not depend on Settings.
+    @Test
+    fun `with BOOT_COUNT unreadable the kernel boot id still tells a new boot`() {
+        val clocks = BootClocks(elapsed = 50_000L)
+        clocks.coordinator.arm(validArmRequest(randomId = "boot-id-only"))
+        clocks.bootReadFails = true
+        // New boot, uptime already past the old stamp; TIME_SET arrives first.
+        clocks.reboot(atWall = now + 60_500L, elapsedSinceBoot = 70_000L)
+        clocks.coordinator.reconcileAfterClockChange()
+
+        assertTrue(
+            "deadline moved to ${clocks.store.current!!.finalDeadlineMs - now} ms",
+            clocks.store.current!!.finalDeadlineMs <= now + 121_000L,
+        )
+    }
+
+    @Test
+    fun `with only the boot id known a same-boot clock change keeps the remaining`() {
+        val clocks = BootClocks(elapsed = 50_000L)
+        clocks.bootReadFails = true
+        clocks.coordinator.arm(validArmRequest(randomId = "boot-id-same-boot"))
+
+        clocks.elapsed += 30_000L
+        clocks.wall = now + 30_000L + 3_600_000L
+        clocks.coordinator.reconcileAfterClockChange()
+
+        assertEquals(clocks.wall + 90_000L, clocks.store.current!!.finalDeadlineMs)
+        assertEquals(0, clocks.calls.targets.size)
+    }
+
+    @Test
+    fun `a record from before boot identities is stamped at the next current-boot reconcile`() {
+        val clocks = BootClocks(elapsed = 50_000L)
+        clocks.coordinator.arm(validArmRequest(randomId = "legacy-record"))
+        val armed = clocks.store.current!!
+        clocks.store.current = armed.copy(
+            elapsedBootCount = UNKNOWN_BOOT_COUNT,
+            elapsedBootId = "",
+            elapsedStampMs = -1L,
+        )
+
+        clocks.elapsed += 10_000L
+        clocks.wall += 10_000L
+        clocks.coordinator.reconcileCurrentBoot()
+
+        val upgraded = clocks.store.current!!
+        assertEquals(clocks.boot, upgraded.elapsedBootCount)
+        assertEquals(clocks.bootId, upgraded.elapsedBootId)
+        assertEquals(clocks.elapsed, upgraded.elapsedStampMs)
+        assertEquals(armed.finalDeadlineMs, upgraded.finalDeadlineMs)
+        assertEquals(clocks.elapsed + 110_000L, upgraded.elapsedRealtimeDeadlineMs)
+
+        // ...so the next reboot is recognised even if TIME_SET wins the race.
+        clocks.reboot(atWall = now + 60_500L, elapsedSinceBoot = 90_000L)
+        clocks.coordinator.reconcileAfterClockChange()
+        assertTrue(clocks.store.current!!.finalDeadlineMs <= now + 121_000L)
+    }
+
+    @Test
+    fun `whichever broadcast arrives first, a known boot identity gives the same deadline`() {
+        val random = java.util.Random(20261008L)
+        repeat(400) { case ->
+            val armElapsed = 1_000L + random.nextInt(600_000)
+            // Not within the correction of the 120 s deadline: there "due now"
+            // in one order and "due in under a second" in the other is the
+            // correction itself, not an ordering defect.
+            var downtime = 5_000L + random.nextInt(200_000)
+            if (kotlin.math.abs(downtime - 120_000L) < 2_000L) downtime += 4_000L
+            val newUptime = 1_000L + random.nextInt(900_000)
+            val correction = random.nextInt(2_001) - 1_000L
+            // At least one identity readable in both boots.
+            val countReadable = random.nextBoolean()
+            val idReadable = !countReadable || random.nextBoolean()
+
+            fun finalDeadline(timeSetFirst: Boolean): Long {
+                val clocks = BootClocks(elapsed = armElapsed)
+                clocks.bootReadFails = !countReadable
+                if (!idReadable) clocks.bootId = null
+                clocks.coordinator.arm(validArmRequest(randomId = "order-$case-$timeSetFirst"))
+                clocks.reboot(atWall = now + downtime, elapsedSinceBoot = newUptime)
+                if (timeSetFirst) {
+                    clocks.wall += correction
+                    clocks.coordinator.reconcileAfterClockChange()
+                    clocks.coordinator.reconcileAfterBoot()
+                } else {
+                    clocks.coordinator.reconcileAfterBoot()
+                    clocks.wall += correction
+                    clocks.coordinator.reconcileAfterClockChange()
+                }
+                val session = clocks.store.current!!
+                return if (session.lifecycleState == LifecycleState.ARMED) {
+                    session.finalDeadlineMs
+                } else {
+                    -session.lifecycleState.ordinal.toLong()
+                }
+            }
+
+            val first = finalDeadline(true)
+            val second = finalDeadline(false)
+            if (first < 0 || second < 0) {
+                assertEquals("case $case: terminal state differs by order", first, second)
+            } else {
+                assertTrue(
+                    "case $case: order moved the deadline by ${first - second} ms",
+                    kotlin.math.abs(first - second) <= kotlin.math.abs(correction),
+                )
+            }
+        }
     }
 
     @Test

@@ -22,6 +22,8 @@ class EmergencySessionCoordinator(
     private val warningPoster: EmergencyWarningPoster = EmergencyWarningPoster { _, _ -> false },
     /** Identity of the current boot ([UNKNOWN_BOOT_COUNT] when unavailable). */
     private val bootCount: () -> Int = { UNKNOWN_BOOT_COUNT },
+    /** Kernel boot id: the second identity when [bootCount] is unreadable. */
+    private val bootId: () -> String? = { null },
 ) {
     fun arm(request: ArmRequest): ArmResult = synchronized(PROCESS_LOCK) {
         if (request.protocolVersion != EMERGENCY_PROTOCOL_VERSION) {
@@ -124,6 +126,7 @@ class EmergencySessionCoordinator(
             finalDeadlineMs = request.finalDeadlineMs,
             elapsedRealtimeDeadlineMs = elapsedDeadline,
             elapsedBootCount = currentBootCount(),
+            elapsedBootId = currentBootId(),
             elapsedStampMs = elapsedNow,
             schedulingMode = SchedulingMode.NONE,
             mainDurationMs = revisionFrom?.mainDurationMs ?: (request.mainDeadlineMs - now),
@@ -633,7 +636,11 @@ class EmergencySessionCoordinator(
             }
             return
         }
-        if (!alwaysRebaseElapsed && !isFromAnotherBoot(envelope)) {
+        // A record older than the boot identities is re-tied to this boot now,
+        // while wall time is authoritative, so a later TIME_SET can tell (A-02r).
+        if (!alwaysRebaseElapsed && envelope.elapsedStampMs >= 0L &&
+            !isFromAnotherBoot(envelope)
+        ) {
             scheduleBestEffort(envelope)
             return
         }
@@ -642,6 +649,7 @@ class EmergencySessionCoordinator(
             elapsedRealtimeDeadlineMs = elapsedNow +
                 (envelope.finalDeadlineMs - wallClockMs()).coerceAtLeast(0L),
             elapsedBootCount = currentBootCount(),
+            elapsedBootId = currentBootId(),
             elapsedStampMs = elapsedNow,
         )
         // Scheduled even if the commit fails: the stored copy keeps its old
@@ -658,24 +666,37 @@ class EmergencySessionCoordinator(
         UNKNOWN_BOOT_COUNT
     }
 
+    /** [bootId], with any failure read as unknown (""). */
+    private fun currentBootId(): String = try {
+        bootId().orEmpty()
+    } catch (_: Exception) {
+        ""
+    }
+
     /**
      * Whether [envelope]'s elapsed deadline was written in an earlier boot.
      *
      * elapsedRealtime restarts at zero on every boot, so that deadline is then
      * the previous boot's uptime plus the remaining time. Two independent
-     * signals: a different BOOT_COUNT, or an elapsed clock now BELOW the one
-     * recorded when the deadline was written (it never runs backwards within a
-     * boot). With neither known -- a record older than both fields -- the
-     * historical same-boot assumption stands rather than a guess.
+     * signals: a different BOOT_COUNT (or, when BOOT_COUNT is unreadable, a
+     * different kernel boot id), or an elapsed clock now BELOW the one recorded
+     * when the deadline was written (it never runs backwards within a boot).
+     * With none known the historical same-boot assumption stands rather than a
+     * guess: treating an unknown as "another boot" would apply a same-boot clock
+     * change to the deadline, and which error to prefer is a product decision.
      */
     private fun isFromAnotherBoot(envelope: EmergencySessionEnvelope): Boolean {
         if (envelope.elapsedStampMs >= 0L && elapsedRealtimeMs() < envelope.elapsedStampMs) {
             return true
         }
         val current = currentBootCount()
-        return current != UNKNOWN_BOOT_COUNT &&
-            envelope.elapsedBootCount != UNKNOWN_BOOT_COUNT &&
-            envelope.elapsedBootCount != current
+        if (current != UNKNOWN_BOOT_COUNT && envelope.elapsedBootCount != UNKNOWN_BOOT_COUNT) {
+            return envelope.elapsedBootCount != current
+        }
+        // BOOT_COUNT unreadable on either side: the kernel boot id (A-02r).
+        val id = currentBootId()
+        return id.isNotEmpty() && envelope.elapsedBootId.isNotEmpty() &&
+            envelope.elapsedBootId != id
     }
 
     /** Preserve elapsed duration when the user/network changes wall time. */

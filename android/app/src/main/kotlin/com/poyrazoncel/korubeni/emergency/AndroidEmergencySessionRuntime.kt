@@ -24,6 +24,7 @@ object EmergencySessionRuntime {
             callRequester = AndroidEmergencyCallRequester(appContext),
             capabilityProvider = AndroidEmergencyCapabilityProvider(appContext),
             bootCount = { BootIdentity.current(appContext) },
+            bootId = { BootIdentity.bootId() },
             warningPoster = EmergencyWarningPoster { envelope, preWarning ->
                 val copy = if (preWarning) NativeNotificationText.preWarning(appContext) else NativeNotificationText.graceStarted(appContext, envelope.token.kind.wireValue)
                 EmergencyNotificationHelper.showAlert(

@@ -177,6 +177,8 @@ data class EmergencySessionEnvelope(
     val elapsedRealtimeDeadlineMs: Long,
     /** The boot [elapsedRealtimeDeadlineMs] belongs to; meaningless in any other. */
     val elapsedBootCount: Int = UNKNOWN_BOOT_COUNT,
+    /** Kernel boot id of that boot, "" when unknown (audit A-02r). */
+    val elapsedBootId: String = "",
     /**
      * elapsedRealtime when [elapsedRealtimeDeadlineMs] was written, -1 when
      * unknown. Within one boot that clock never runs backwards, so a smaller
