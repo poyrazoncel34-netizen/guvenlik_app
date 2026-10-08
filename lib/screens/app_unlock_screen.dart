@@ -13,6 +13,7 @@ import '../core/motion.dart';
 import '../core/navigation/app_navigator.dart';
 import '../core/constants/app_constants.dart';
 import '../core/services/app_reset_service.dart';
+import '../core/services/safety_clock.dart';
 import '../core/services/emergency_session_contract.dart';
 import '../core/services/local_logger_service.dart';
 import '../core/services/pin_lockout_service.dart';
@@ -28,7 +29,15 @@ import '../core/widgets/overlay_touch_shield.dart';
 class AppUnlockScreen extends StatefulWidget {
   final VoidCallback onUnlocked;
 
-  const AppUnlockScreen({super.key, required this.onUnlocked});
+  /// Monotonic time for the keypad lockout: a changed wall clock must not
+  /// open it (audit Y-05). Injectable for tests.
+  final SafetyClock clock;
+
+  const AppUnlockScreen({
+    super.key,
+    required this.onUnlocked,
+    this.clock = SafetyClock.system,
+  });
 
   @override
   State<AppUnlockScreen> createState() => _AppUnlockScreenState();
@@ -50,7 +59,7 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> with OverlayTouchShie
   bool _verifying = false;
   bool _loading = true;
 
-  DateTime? _lockoutEndTime;
+  MonotonicDeadline? _lockout;
   StreamSubscription<int>? _lockoutSubscription;
   int _lockoutRemaining = 0;
 
@@ -80,8 +89,14 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> with OverlayTouchShie
     }
   }
 
-  bool get _isLockedOut =>
-      _lockoutEndTime != null && DateTime.now().isBefore(_lockoutEndTime!);
+  bool get _isLockedOut => _lockout != null && !_lockout!.isDue;
+
+  /// The service's remaining time, re-anchored on the monotonic clock.
+  MonotonicDeadline? _lockoutFor(DateTime? lockedUntil) {
+    if (lockedUntil == null) return null;
+    final left = lockedUntil.difference(DateTime.now());
+    return left > Duration.zero ? MonotonicDeadline(widget.clock, left) : null;
+  }
 
   Future<void> _syncLockoutState() async {
     PinLockoutState state;
@@ -105,7 +120,7 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> with OverlayTouchShie
       state = _unreadableLockoutState();
     } catch (_) {
       // Deliberately catches Error too, against the Dart style rule, and the
-      // rule loses here on purpose: this screen's `_lockoutEndTime` is the only
+      // rule loses here on purpose: this screen's `_lockout` is the only
       // thing enforcing the lockout, so ANY failure to read the counters must
       // fail closed. Letting an Error through would leave the keypad open with
       // no trace -- the exact fail-open the sealed read type above was added to
@@ -116,7 +131,7 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> with OverlayTouchShie
     }
     if (!mounted) return;
     setState(() {
-      _lockoutEndTime = state.lockedUntil;
+      _lockout = _lockoutFor(state.lockedUntil);
       _lockoutRemaining = state.remainingSeconds;
     });
     // `countdownStream` re-reads the counters once a second; starting it on a
@@ -131,7 +146,7 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> with OverlayTouchShie
   void _applyReadableLockout(PinLockoutState state) {
     if (!mounted) return;
     setState(() {
-      _lockoutEndTime = state.lockedUntil;
+      _lockout = _lockoutFor(state.lockedUntil);
       _lockoutRemaining = state.remainingSeconds;
     });
     if (state.isLocked) {
@@ -142,7 +157,7 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> with OverlayTouchShie
   /// What to believe when the brute-force counters cannot be read.
   ///
   /// NOT "zero failures, not locked". `PinVerificationService.verify()` never
-  /// consults `PinLockoutService`; this screen's `_lockoutEndTime` is the ONLY
+  /// consults `PinLockoutService`; this screen's `_lockout` is the ONLY
   /// thing enforcing the lockout, so treating an unreadable counter as clean
   /// silently hands an attacker unlimited guesses. Failing closed for one
   /// backoff step is recoverable -- "PIN'imi unuttum" stays reachable while
@@ -185,7 +200,8 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> with OverlayTouchShie
     );
     if (!mounted) return;
     setState(() {
-      _lockoutEndTime = DateTime.now().add(
+      _lockout = MonotonicDeadline(
+        widget.clock,
         const Duration(seconds: PinLockoutService.baseLockoutSeconds),
       );
       _lockoutRemaining = PinLockoutService.baseLockoutSeconds;
@@ -211,9 +227,10 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> with OverlayTouchShie
           }
           setState(() {
             _lockoutRemaining = remaining;
-            if (remaining == 0) {
-              _lockoutEndTime = null;
-            }
+            // Each tick carries the service's monotonic remaining (Y-05).
+            _lockout = remaining == 0
+                ? null
+                : MonotonicDeadline(widget.clock, Duration(seconds: remaining));
           });
         });
   }
@@ -271,7 +288,7 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> with OverlayTouchShie
       } else {
         HapticFeedback.vibrate();
         setState(() => _pin = '');
-        // Awaited, not fire-and-forget. This screen's `_lockoutEndTime` is the
+        // Awaited, not fire-and-forget. This screen's `_lockout` is the
         // ONLY thing enforcing the lockout -- `PinVerificationService.verify()`
         // never consults `PinLockoutService` -- so a failed attempt that cannot
         // be debited must still cost the attacker something. The previous
@@ -294,7 +311,7 @@ class _AppUnlockScreenState extends State<AppUnlockScreen> with OverlayTouchShie
         }
         if (!mounted) return;
         setState(() {
-          _lockoutEndTime = state.lockedUntil;
+          _lockout = _lockoutFor(state.lockedUntil);
           _lockoutRemaining = state.remainingSeconds;
         });
         if (state.isLocked) {
