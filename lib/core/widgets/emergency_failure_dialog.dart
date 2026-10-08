@@ -7,6 +7,7 @@ import '../design_tokens.dart';
 import '../services/android_intent_service.dart';
 import '../services/emergency_result_policy.dart';
 import 'dispatch_outcome_list.dart';
+import '../navigation/own_route.dart';
 
 /// The FULLSCREEN BLOCKING failure surface. The user MUST interact: no silent
 /// dismissal, no SnackBar. This is the fail-safe of last resort.
@@ -182,7 +183,10 @@ abstract final class EmergencyFailureDialog {
               child: TextButton(
                 onPressed: () {
                   Navigator.pop(ctx);
-                  if (popHostOnDismiss) Navigator.pop(context);
+                  // The host's OWN route: something may sit above it.
+                  if (popHostOnDismiss && context.mounted) {
+                    OwnRoute.pop(context);
+                  }
                 },
                 child: Text(
                   'emergency_dismiss'.tr(),

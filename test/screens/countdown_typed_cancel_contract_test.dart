@@ -35,7 +35,8 @@ void main() {
     final nativeCancel = body.indexOf('cancelEmergencySession');
     final confirmed = body.indexOf('isConfirmedCancelled');
     final activityLog = body.indexOf('ActivityService.logEvent');
-    final navigatorPop = body.indexOf('Navigator.pop');
+    // The exit closes the countdown's OWN route (OwnRoute), never the top one.
+    final navigatorPop = body.indexOf('OwnRoute.pop');
     expect(nativeCancel, isNot(-1));
     expect(confirmed, greaterThan(nativeCancel));
     expect(activityLog, greaterThan(confirmed));

@@ -6,6 +6,7 @@ import 'package:easy_localization/easy_localization.dart';
 import '../core/di/service_locator.dart';
 import '../core/app_colors.dart';
 import '../core/motion.dart';
+import '../core/navigation/own_route.dart';
 import '../core/services/contact_service.dart';
 import '../domain/repositories/contacts_repository.dart';
 import '../core/services/activity_service.dart';
@@ -313,7 +314,7 @@ class _CountdownScreenState extends State<CountdownScreen>
             backgroundColor: AppColors.success,
           ),
         );
-        Navigator.pop(context, true);
+        OwnRoute.pop(context, true);
       }
       return;
     }
@@ -355,7 +356,7 @@ class _CountdownScreenState extends State<CountdownScreen>
               );
           if (dispatch.wasCancelled) {
             unawaited(KoruBeniForegroundService.stop(owner: _foregroundOwner));
-            if (mounted) Navigator.pop(context);
+            if (mounted) OwnRoute.pop(context);
             return null;
           }
           if (dispatch.requestWasSubmitted) {
@@ -409,7 +410,7 @@ class _CountdownScreenState extends State<CountdownScreen>
       _isNavigating = true;
       _handoffToEmergencyScreen = true;
       try {
-        Navigator.pushReplacement(
+        OwnRoute.replace(
           context,
           MaterialPageRoute(
             builder: (context) => EmergencyCallScreen(
@@ -535,9 +536,7 @@ class _CountdownScreenState extends State<CountdownScreen>
     // the notification plugin is awaited internally. A stalled plugin channel
     // must not trap the user on an active-looking countdown.
     unawaited(KoruBeniForegroundService.stop(owner: _foregroundOwner));
-    if (mounted) {
-      Navigator.pop(context);
-    }
+    if (mounted) OwnRoute.pop(context);
   }
 
   void _handlePinInput(String key) {
