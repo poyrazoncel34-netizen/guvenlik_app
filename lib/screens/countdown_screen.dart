@@ -107,6 +107,8 @@ class _CountdownScreenState extends State<CountdownScreen>
   String get _foregroundOwner => 'countdown:$_dispatchId';
   SessionToken? _sessionToken;
   ArmResult? _armResult;
+  Future<ArmResult>? _armInFlight; // a cancel settles this first (Y-07)
+  bool _cancelBeforeArm = false;
   String? _armedTargetNumber;
   String? _armedTargetName;
 
@@ -251,8 +253,9 @@ class _CountdownScreenState extends State<CountdownScreen>
     }
     // Arm native AlarmManager backup BEFORE the Dart timer starts, so a Doze
     // transition during this window cannot leave us without a safety net.
-    final armResult = await _scheduleNativeBackupAlarm();
-    if (!mounted || _timer != null) return;
+    if (_cancelBeforeArm) return;
+    final armResult = await (_armInFlight = _scheduleNativeBackupAlarm());
+    if (!mounted || _timer != null || _cancelBeforeArm) return;
     if (!PanicArmPolicy.shouldStartCountdown(armResult)) {
       // Ownership is released synchronously. The platform notification update
       // is best-effort and must not delay the fail-closed rejection UI.
@@ -484,12 +487,18 @@ class _CountdownScreenState extends State<CountdownScreen>
     _isNavigating = true;
     _timer?.cancel();
     _timer = null;
+    // The PIN pad is live before the native arm has answered (Y-07). Settle the
+    // arm first, so the cancel targets what was armed; an arm that has not
+    // started never will, so a null result then means no native session.
+    _cancelBeforeArm = !widget.isTestMode && _armResult == null;
+    if (_cancelBeforeArm) await _armInFlight;
     final token = _sessionToken;
     final cancelResult = token == null
         ? null
         : await _emergencyPlatformService.cancelEmergencySession(token);
     final definitivelyNoNativeSession =
-        token == null && (widget.isTestMode || _armResult is ArmRejected);
+        token == null &&
+        (widget.isTestMode || _armResult is ArmRejected || _armResult == null);
     final cancellationConfirmed =
         definitivelyNoNativeSession ||
         (cancelResult?.isConfirmedCancelled ?? false);
