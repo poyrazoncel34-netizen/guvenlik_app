@@ -28,6 +28,7 @@ import 'package:guvenlik_app/core/navigation/pending_destination_service.dart';
 import 'package:guvenlik_app/core/security/secure_storage.dart';
 import 'package:guvenlik_app/core/security/secure_storage_keys.dart';
 import 'package:guvenlik_app/core/services/app_lifecycle_handler.dart';
+import 'package:guvenlik_app/core/services/panic_countdown_guard.dart';
 import 'package:guvenlik_app/core/services/subscription_access_state.dart';
 import 'package:guvenlik_app/core/services/local_database_service.dart';
 import 'package:guvenlik_app/core/services/location_service.dart';
@@ -253,9 +254,11 @@ void main() {
     serviceLocator.registerSingleton<ConsentManager>(consent);
     AppLifecycleHandler.instance.resetForTest();
     PendingDestinationService.instance.clear();
+    PanicCountdownGuard.resetForTesting();
   });
 
   tearDown(() async {
+    PanicCountdownGuard.resetForTesting();
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(pathProviderChannel, null);
     AppLifecycleHandler.instance.resetForTest();
@@ -401,6 +404,90 @@ void main() {
       storage.gate!.complete();
       await tester.pump(const Duration(seconds: 3));
       expect(AppLifecycleHandler.instance.lockActive.value, isFalse);
+    },
+  );
+
+  // A link pushed over a live panic countdown hid its PIN-cancel pad, and at
+  // the deadline the countdown's own navigation then hit the LINK's route
+  // (reproduced on an API 35 emulator with Test Mode + korubeni://open/timeline:
+  // the rehearsal was left stuck at zero). Links wait for the countdown.
+  testWidgets('a link arriving during a live panic countdown waits until it '
+      'closes', (tester) async {
+    await _pumpApp(tester);
+    final opened = PanicCountdownGuard.open(
+      Object(),
+      () => rootNavigatorKey.currentState!.push<void>(
+        MaterialPageRoute<void>(
+          builder: (_) =>
+              const Scaffold(body: Center(child: Text('COUNTDOWN'))),
+        ),
+      ),
+    );
+    expect(opened, isNotNull);
+    await _settle(tester, rounds: 3);
+
+    _parkTimelineLink();
+    await _settle(tester);
+
+    expect(
+      find.byType(SafetyTimelineScreen),
+      findsNothing,
+      reason: 'the timeline opened over the live countdown (A-06)',
+    );
+    expect(find.text('COUNTDOWN'), findsOneWidget);
+    expect(PendingDestinationService.instance.hasPending, isTrue);
+
+    rootNavigatorKey.currentState!.pop();
+    await _settle(tester);
+    expect(find.byType(SafetyTimelineScreen), findsOneWidget);
+    expect(PendingDestinationService.instance.hasPending, isFalse);
+  });
+
+  testWidgets(
+    'a countdown that opens during the subscription gate defers a gated link',
+    (tester) async {
+      final subscription = _GatedSubscription();
+      late BuildContext routerContext;
+      await tester.pumpWidget(
+        ChangeNotifierProvider<SubscriptionProvider>.value(
+          value: subscription,
+          child: MaterialApp(
+            navigatorKey: rootNavigatorKey,
+            home: Builder(
+              builder: (context) {
+                routerContext = context;
+                return const Scaffold(body: Text('home'));
+              },
+            ),
+          ),
+        ),
+      );
+
+      final outcome = DestinationRouter.route(
+        routerContext,
+        AppDestination.checkIn,
+        selectTab: (_) {},
+      );
+      await tester.pump();
+      // A volume-key panic lands while the store answer is pending.
+      PanicCountdownGuard.open(
+        Object(),
+        () => rootNavigatorKey.currentState!.push<void>(
+          MaterialPageRoute<void>(
+            builder: (_) => const Scaffold(body: Text('COUNTDOWN')),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      DestinationRouteOutcome? result;
+      unawaited(outcome.then((value) => result = value));
+      subscription.resolveGate.complete();
+      await tester.pump();
+      await tester.pump();
+
+      expect(find.byType(CheckInScreen), findsNothing);
+      expect(result, DestinationRouteOutcome.deferredByCountdown);
     },
   );
 

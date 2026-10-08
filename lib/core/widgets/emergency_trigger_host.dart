@@ -295,7 +295,11 @@ class EmergencyTriggerHostState extends State<EmergencyTriggerHost>
     // `PanicButton` already had this ordering right (`_pointerDown` is set in
     // the synchronous tap handler); this is the same invariant for the
     // quick-access entries.
-    if (_countdownOpen) {
+    //
+    // A countdown another entry point holds is this press already answered.
+    // Resolving entitlement anyway could put a paywall or message ABOVE that
+    // countdown's PIN-cancel pad (audit A-05), so refuse before any await.
+    if (_countdownOpen || PanicCountdownGuard.isHeld) {
       return;
     }
     _countdownOpen = true;

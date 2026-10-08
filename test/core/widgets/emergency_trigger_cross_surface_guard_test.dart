@@ -83,7 +83,13 @@ void main() {
             'countdown; its arm is rejected natively (activeSessionExists) and '
             'the blocking failure dialog covers the real PIN-cancel pad',
       );
-      expect(provider.resolveCalls, 1, reason: 'the trigger was evaluated');
+      expect(
+        provider.resolveCalls,
+        0,
+        reason:
+            'refused synchronously: resolving entitlement here is what could '
+            'open a paywall over the live countdown (audit A-05)',
+      );
 
       rootNavigatorKey.currentState!.pop();
       await harness.settle(tester);
@@ -135,6 +141,50 @@ void main() {
       rootNavigatorKey.currentState!.pop();
       await harness.settle(tester);
       expect(PanicCountdownGuard.isHeld, isFalse);
+      await harness.drainHostTimers(tester);
+    },
+  );
+
+  testWidgets(
+    'a quick-access press over an open countdown opens no paywall or message '
+    'on top of its PIN-cancel pad',
+    (tester) async {
+      // Verified free: the one state whose rejection surface is a full-screen
+      // paywall route. Reached here when the press arrives while the store
+      // has just answered "free" (an expiry or a refund mid-session).
+      final provider = harness.ParkedSubscriptionProvider(
+        const SubscriptionAccessState(
+          status: SubscriptionAccessStatus.verifiedFree,
+          lastVerifiedPro: false,
+        ),
+      );
+      provider.gate.complete();
+      expect(provider.access.shouldShowPaywall, isTrue);
+      final observer = harness.PushCounter();
+      final state = await harness.pumpHost(
+        tester,
+        provider: provider,
+        observer: observer,
+      );
+
+      await _openPanicButtonCountdown(Object());
+      await harness.settle(tester);
+      observer.pushed.clear();
+
+      // Not awaited: a paywall route, once pushed, completes only when closed.
+      unawaited(state.triggerPanicForTest());
+      await harness.settle(tester);
+
+      expect(
+        observer.pushed,
+        isEmpty,
+        reason: 'a paywall was pushed above the live countdown (A-05)',
+      );
+      expect(find.byType(SnackBar), findsNothing);
+      expect(find.text('PANIC_BUTTON_COUNTDOWN'), findsOneWidget);
+
+      rootNavigatorKey.currentState!.pop();
+      await harness.settle(tester);
       await harness.drainHostTimers(tester);
     },
   );

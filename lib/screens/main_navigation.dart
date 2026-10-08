@@ -24,6 +24,7 @@ import 'settings_page.dart';
 import '../core/services/app_lifecycle_handler.dart';
 import '../core/services/connectivity_service.dart';
 import '../core/services/emergency_session_contract.dart';
+import '../core/services/panic_countdown_guard.dart';
 import '../core/services/pin_verification_service.dart';
 import '../core/services/timeline_resume_service.dart';
 import '../core/navigation/deep_link_channel.dart';
@@ -131,6 +132,8 @@ class _MainNavigationState extends State<MainNavigation>
     // ...and, because this widget outlives the RESUME lock (a route pushed
     // above it), not while that lock is up. A parked link waits for unlock.
     AppLifecycleHandler.instance.lockActive.addListener(_onPendingDestination);
+    // Nor over a live panic countdown: a parked link waits for it to close.
+    PanicCountdownGuard.held.addListener(_onPendingDestination);
     // Firebase services removed (offline-first)
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _runStartupChecks();
@@ -177,7 +180,10 @@ class _MainNavigationState extends State<MainNavigation>
 
   Future<void> _routePending() async {
     if (_routing || !mounted) return;
-    if (AppLifecycleHandler.instance.lockActive.value) return;
+    if (AppLifecycleHandler.instance.lockActive.value ||
+        PanicCountdownGuard.isHeld) {
+      return;
+    }
     _routing = true;
     try {
       final source = PendingDestinationService.instance.pendingSource;
@@ -190,8 +196,10 @@ class _MainNavigationState extends State<MainNavigation>
       );
       // Re-park for after unlock -- unless a newer link arrived meanwhile:
       // the park holds the LATEST destination, never an older one.
-      if (outcome == DestinationRouteOutcome.deferredByLock &&
-          !PendingDestinationService.instance.hasPending) {
+      final deferred =
+          outcome == DestinationRouteOutcome.deferredByLock ||
+          outcome == DestinationRouteOutcome.deferredByCountdown;
+      if (deferred && !PendingDestinationService.instance.hasPending) {
         PendingDestinationService.instance.submitDestination(
           accepted.destination,
           parameters: accepted.parameters,
@@ -211,6 +219,7 @@ class _MainNavigationState extends State<MainNavigation>
     AppLifecycleHandler.instance.lockActive.removeListener(
       _onPendingDestination,
     );
+    PanicCountdownGuard.held.removeListener(_onPendingDestination);
     _tabFadeController.removeListener(_swapAtTrough);
     _tabFadeController.dispose();
     _restoredIndex.dispose();

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../services/app_lifecycle_handler.dart';
+import '../services/panic_countdown_guard.dart';
 import '../services/subscription_gate.dart';
 import '../../screens/check_in_screen.dart';
 import '../../screens/safety_timeline_screen.dart';
@@ -23,19 +24,17 @@ abstract final class DestinationRouter {
     AppDestination destination, {
     required void Function(int index) selectTab,
   }) async {
-    if (AppLifecycleHandler.instance.lockActive.value) {
-      return DestinationRouteOutcome.deferredByLock;
-    }
+    final blocked = _deferral();
+    if (blocked != null) return blocked;
     final feature = destination.gatedFeature;
     if (feature != null) {
       final allowed = await SubscriptionGate.ensureAccess(context, feature);
       if (!allowed) return DestinationRouteOutcome.refusedByEntitlement;
       if (!context.mounted) return DestinationRouteOutcome.contextGone;
-      // The gate can take seconds; the re-auth lock may have gone up since.
-      // Pushing now would put the destination ABOVE the lock.
-      if (AppLifecycleHandler.instance.lockActive.value) {
-        return DestinationRouteOutcome.deferredByLock;
-      }
+      // The gate can take seconds; the re-auth lock may have gone up since,
+      // or a panic countdown opened. Pushing now would land ABOVE either.
+      final late = _deferral();
+      if (late != null) return late;
     }
 
     final tab = destination.tabIndex;
@@ -63,6 +62,19 @@ abstract final class DestinationRouter {
     );
     return DestinationRouteOutcome.shown;
   }
+
+  /// Why routing must wait right now, or null when it may proceed.
+  static DestinationRouteOutcome? _deferral() {
+    if (AppLifecycleHandler.instance.lockActive.value) {
+      return DestinationRouteOutcome.deferredByLock;
+    }
+    // A live panic countdown owns the screen: a destination above it hides
+    // the PIN-cancel pad while the clock runs (audit A-06).
+    if (PanicCountdownGuard.isHeld) {
+      return DestinationRouteOutcome.deferredByCountdown;
+    }
+    return null;
+  }
 }
 
 enum DestinationRouteOutcome {
@@ -81,4 +93,8 @@ enum DestinationRouteOutcome {
   /// The re-auth lock is up. Nothing was shown; the caller re-parks the
   /// destination so it is routed after unlock, never over the lock.
   deferredByLock,
+
+  /// A panic countdown is on screen. Nothing was shown; the caller re-parks
+  /// the destination so it is routed once the countdown has closed.
+  deferredByCountdown,
 }
