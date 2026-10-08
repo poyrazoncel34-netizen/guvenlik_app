@@ -11,6 +11,11 @@ class ActivityService {
   static const String _legacyStorageKey = 'activity_events';
   static const int _retentionLimit = 200;
 
+  /// Disambiguates generated ids within one process (audit A-09): the id
+  /// used to be the bare millisecond, and a second event in that millisecond
+  /// failed `INSERT OR ABORT` and disappeared from the safety history.
+  static int _sequence = 0;
+
   static Future<List<ActivityEvent>> getEvents() async {
     final db = await serviceLocator<LocalDatabaseService>().database;
     final rows = await db.query('activity_events', orderBy: 'timestamp DESC');
@@ -47,7 +52,7 @@ class ActivityService {
     DateTime? timestamp,
   }) async {
     final event = ActivityEvent(
-      id: eventId ?? DateTime.now().millisecondsSinceEpoch.toString(),
+      id: eventId ?? '${DateTime.now().millisecondsSinceEpoch}-${_sequence++}',
       type: type,
       title: title,
       description: description,
