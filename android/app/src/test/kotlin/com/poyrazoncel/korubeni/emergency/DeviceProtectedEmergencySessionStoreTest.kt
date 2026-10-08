@@ -42,6 +42,32 @@ class DeviceProtectedEmergencySessionStoreTest {
     }
 
     @Test
+    fun `boot identity of the elapsed deadline round-trips and legacy records read as unknown`() {
+        val store = DeviceProtectedEmergencySessionStore(context)
+        assertTrue(
+            store.write(armedEnvelope().copy(elapsedBootCount = 42, elapsedStampMs = 9_000L)),
+        )
+        val stored = (store.read(SessionSlot.LONG_RUNNING) as SessionRead.Present).envelope
+        assertEquals(42, stored.elapsedBootCount)
+        assertEquals(9_000L, stored.elapsedStampMs)
+
+        // A record written before the fields existed (audit A-02) is still a
+        // valid ARMED session -- its boot is simply unknown, never corrupted.
+        rawPrefs.edit()
+            .remove("session_long_elapsedBootCount")
+            .remove("session_long_elapsedStampMs")
+            .commit()
+        val legacy = store.read(SessionSlot.LONG_RUNNING)
+        assertTrue(legacy is SessionRead.Present)
+        assertEquals(
+            UNKNOWN_BOOT_COUNT,
+            (legacy as SessionRead.Present).envelope.elapsedBootCount,
+        )
+        assertEquals(-1L, legacy.envelope.elapsedStampMs)
+        assertEquals(LifecycleState.ARMED, legacy.envelope.lifecycleState)
+    }
+
+    @Test
     fun `unknown schema is corrupted and never interpreted as armed`() {
         rawPrefs.edit()
             .putInt("session_long_schemaVersion", 99)

@@ -536,6 +536,199 @@ class EmergencySessionCoordinatorTest {
         assertEquals(LifecycleState.MANUAL_ACTION_REQUIRED, store.current?.lifecycleState)
     }
 
+    // Audit A-02. The elapsed-realtime deadline is only meaningful in the boot
+    // that wrote it, and nothing ordered TIME_SET after the boot reconcile:
+    // ClockChangeReceiver is direct-boot aware and TIME_SET travels on the
+    // foreground broadcast queue while LOCKED_BOOT_COMPLETED is delivered
+    // serially to every direct-boot receiver. When TIME_SET won, the previous
+    // boot's elapsed deadline (uptime + remaining) was read against an elapsed
+    // clock that had restarted at zero, pushing the session out by the whole
+    // previous uptime -- days, on a phone that rarely reboots.
+    private inner class BootClocks(
+        var wall: Long = now,
+        var elapsed: Long = 3L * 24L * 3_600_000L,
+        var boot: Int = 41,
+        val store: FakeStore = FakeStore(),
+    ) {
+        var bootReadFails = false
+        val calls = FakeCalls()
+        val alarms = FakeAlarms()
+        val fallback = FakeFallback()
+        val coordinator = EmergencySessionCoordinator(
+            store = store,
+            alarmScheduler = alarms,
+            fallbackPoster = fallback,
+            callRequester = calls,
+            capabilityProvider = { request ->
+                readyCapabilities.copy(
+                    pinConfigured = request.pinConfigured,
+                    callableTarget = EmergencyTargetValidator.isCallable(request.target),
+                    entitlementDecision = request.entitlementDecision,
+                )
+            },
+            wallClockMs = { wall },
+            elapsedRealtimeMs = { elapsed },
+            bootCount = {
+                if (bootReadFails) throw IllegalStateException("settings unavailable")
+                boot
+            },
+        )
+
+        /** Reboot: a new boot identity and an elapsed clock restarted near zero. */
+        fun reboot(atWall: Long, elapsedSinceBoot: Long) {
+            boot += 1
+            wall = atWall
+            elapsed = elapsedSinceBoot
+        }
+    }
+
+    @Test
+    fun `TIME_SET in a new boot before the boot reconcile does not inherit the old uptime`() {
+        val clocks = BootClocks()
+        clocks.coordinator.arm(validArmRequest(randomId = "time-set-before-boot"))
+
+        // Rebooted a minute later; network time nudges the clock by +500 ms and
+        // its TIME_SET reaches the app before LOCKED_BOOT_COMPLETED.
+        clocks.reboot(atWall = now + 60_500L, elapsedSinceBoot = 30_000L)
+        clocks.coordinator.reconcileAfterClockChange()
+
+        val afterClockChange = clocks.store.current!!.finalDeadlineMs
+        assertTrue(
+            "final deadline moved by ${(afterClockChange - (now + 120_000L)) / 3_600_000L} h",
+            afterClockChange <= now + 121_000L,
+        )
+        clocks.coordinator.reconcileAfterBoot()
+        assertEquals(LifecycleState.ARMED, clocks.store.current?.lifecycleState)
+        assertTrue(clocks.store.current!!.finalDeadlineMs <= now + 121_000L)
+        assertEquals(0, clocks.calls.targets.size)
+    }
+
+    @Test
+    fun `a deadline missed across a reboot still dispatches when TIME_SET arrives first`() {
+        val clocks = BootClocks()
+        clocks.coordinator.arm(validArmRequest(randomId = "missed-across-reboot"))
+
+        // Off for the deadline; back 80 s after it -- inside the 5 minute
+        // automatic window the boot path honours.
+        clocks.reboot(atWall = now + 200_000L, elapsedSinceBoot = 20_000L)
+        clocks.coordinator.reconcileAfterClockChange()
+        clocks.coordinator.reconcileAfterBoot()
+
+        assertEquals(listOf("+905001234567"), clocks.calls.targets)
+        assertEquals(
+            LifecycleState.REQUEST_SUBMITTED_UNCONFIRMED,
+            clocks.store.current?.lifecycleState,
+        )
+    }
+
+    @Test
+    fun `boot and TIME_SET order changes the deadline by at most the clock correction`() {
+        fun finalDeadline(timeSetFirst: Boolean): Long {
+            val clocks = BootClocks()
+            clocks.coordinator.arm(validArmRequest(randomId = "order-$timeSetFirst"))
+            clocks.reboot(atWall = now + 60_000L, elapsedSinceBoot = 30_000L)
+            val correction = 500L
+            if (timeSetFirst) {
+                clocks.wall += correction
+                clocks.coordinator.reconcileAfterClockChange()
+                clocks.coordinator.reconcileAfterBoot()
+            } else {
+                clocks.coordinator.reconcileAfterBoot()
+                clocks.wall += correction
+                clocks.coordinator.reconcileAfterClockChange()
+            }
+            return clocks.store.current!!.finalDeadlineMs
+        }
+
+        val difference = kotlin.math.abs(finalDeadline(true) - finalDeadline(false))
+        assertTrue("order changed the deadline by $difference ms", difference <= 500L)
+    }
+
+    @Test
+    fun `after the boot reconcile a clock change in that boot keeps the monotonic remaining`() {
+        val clocks = BootClocks()
+        clocks.coordinator.arm(validArmRequest(randomId = "boot-then-clock-change"))
+        clocks.reboot(atWall = now + 60_000L, elapsedSinceBoot = 30_000L)
+        clocks.coordinator.reconcileAfterBoot()
+
+        // Same (new) boot: 10 s later the user sets the clock back one hour.
+        // The boot reconcile must have re-tied the elapsed deadline to THIS
+        // boot, or the change is mistaken for another reboot and applied.
+        clocks.elapsed += 10_000L
+        clocks.wall = now + 70_000L - 3_600_000L
+        clocks.coordinator.reconcileAfterClockChange()
+
+        assertEquals(clocks.wall + 50_000L, clocks.store.current!!.finalDeadlineMs)
+    }
+
+    @Test
+    fun `an unlock-time reconcile in a new boot schedules a rebuilt elapsed deadline`() {
+        val clocks = BootClocks()
+        clocks.coordinator.arm(validArmRequest(randomId = "unlock-before-boot"))
+        clocks.reboot(atWall = now + 60_000L, elapsedSinceBoot = 30_000L)
+
+        // USER_UNLOCKED / package replace / exact-alarm grant, before the boot
+        // reconcile: it used to schedule the old boot's elapsed deadline.
+        clocks.coordinator.reconcileCurrentBoot()
+
+        val scheduled = clocks.alarms.scheduled.last()
+        assertEquals(30_000L + 60_000L, scheduled.elapsedRealtimeDeadlineMs)
+        assertEquals(clocks.boot, clocks.store.current!!.elapsedBootCount)
+    }
+
+    @Test
+    fun `TIME_SET first after a reboot long past the deadline offers instead of dialling`() {
+        val clocks = BootClocks()
+        clocks.coordinator.arm(validArmRequest(randomId = "time-set-long-overdue"))
+        clocks.reboot(atWall = now + 120_000L + 10L * 60_000L, elapsedSinceBoot = 25_000L)
+
+        clocks.coordinator.reconcileAfterClockChange()
+
+        assertEquals(0, clocks.calls.targets.size)
+        assertEquals(listOf(FallbackReason.OVERDUE_NOT_DISPATCHED), clocks.fallback.reasons)
+        assertEquals(LifecycleState.MANUAL_ACTION_REQUIRED, clocks.store.current?.lifecycleState)
+    }
+
+    @Test
+    fun `an unreadable boot identity never blocks a due dispatch`() {
+        val clocks = BootClocks()
+        clocks.coordinator.arm(validArmRequest(randomId = "boot-read-throws"))
+        clocks.reboot(atWall = now + 150_000L, elapsedSinceBoot = 20_000L)
+        clocks.bootReadFails = true
+
+        clocks.coordinator.reconcileAfterClockChange()
+        clocks.coordinator.reconcileAfterBoot()
+
+        assertEquals(listOf("+905001234567"), clocks.calls.targets)
+    }
+
+    @Test
+    fun `a rebase whose commit fails still schedules the rebuilt deadline`() {
+        // Writes: 1 PREPARING, 2 ARMED, 3 the rebase -- which fails.
+        val clocks = BootClocks(store = FakeStore(failWritesAt = setOf(3)))
+        clocks.coordinator.arm(validArmRequest(randomId = "rebase-commit-fails"))
+        clocks.reboot(atWall = now + 60_000L, elapsedSinceBoot = 30_000L)
+
+        clocks.coordinator.reconcileAfterClockChange()
+
+        assertEquals(30_000L + 60_000L, clocks.alarms.scheduled.last().elapsedRealtimeDeadlineMs)
+        assertEquals(41, clocks.store.current!!.elapsedBootCount)
+    }
+
+    @Test
+    fun `TIME_SET in the arming boot still keeps the monotonic remaining duration`() {
+        val clocks = BootClocks(elapsed = 50_000L)
+        clocks.coordinator.arm(validArmRequest(randomId = "same-boot-clock-change"))
+
+        // Same boot: 30 s later the user sets the clock back one hour.
+        clocks.elapsed += 30_000L
+        clocks.wall = now + 30_000L - 3_600_000L
+        clocks.coordinator.reconcileAfterClockChange()
+
+        assertEquals(clocks.wall + 90_000L, clocks.store.current!!.finalDeadlineMs)
+        assertEquals(0, clocks.calls.targets.size)
+    }
+
     @Test
     fun `unattended arm is rejected when exact alarms are unavailable`() {
         val fixture = Fixture(

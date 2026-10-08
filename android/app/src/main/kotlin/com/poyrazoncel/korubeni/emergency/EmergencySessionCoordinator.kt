@@ -20,6 +20,8 @@ class EmergencySessionCoordinator(
     private val wallClockMs: () -> Long = { System.currentTimeMillis() },
     private val elapsedRealtimeMs: () -> Long = { android.os.SystemClock.elapsedRealtime() },
     private val warningPoster: EmergencyWarningPoster = EmergencyWarningPoster { _, _ -> false },
+    /** Identity of the current boot ([UNKNOWN_BOOT_COUNT] when unavailable). */
+    private val bootCount: () -> Int = { UNKNOWN_BOOT_COUNT },
 ) {
     fun arm(request: ArmRequest): ArmResult = synchronized(PROCESS_LOCK) {
         if (request.protocolVersion != EMERGENCY_PROTOCOL_VERSION) {
@@ -111,7 +113,8 @@ class EmergencySessionCoordinator(
             generation = generation,
             kind = request.kind,
         )
-        val elapsedDeadline = elapsedRealtimeMs() +
+        val elapsedNow = elapsedRealtimeMs()
+        val elapsedDeadline = elapsedNow +
             (request.finalDeadlineMs - now).coerceAtLeast(0L)
         val preparing = EmergencySessionEnvelope(
             token = token,
@@ -120,6 +123,8 @@ class EmergencySessionCoordinator(
             mainDeadlineMs = request.mainDeadlineMs,
             finalDeadlineMs = request.finalDeadlineMs,
             elapsedRealtimeDeadlineMs = elapsedDeadline,
+            elapsedBootCount = currentBootCount(),
+            elapsedStampMs = elapsedNow,
             schedulingMode = SchedulingMode.NONE,
             mainDurationMs = revisionFrom?.mainDurationMs ?: (request.mainDeadlineMs - now),
         )
@@ -575,26 +580,12 @@ class EmergencySessionCoordinator(
 
     private fun reconcile(rebaseElapsedFromWall: Boolean) = synchronized(PROCESS_LOCK) {
         SessionSlot.entries.forEach { slot ->
-            var envelope = (store.read(slot) as? SessionRead.Present)?.envelope ?: return@forEach
+            val envelope = (store.read(slot) as? SessionRead.Present)?.envelope ?: return@forEach
             when (envelope.lifecycleState) {
-                LifecycleState.ARMED -> {
-                    if (wallClockMs() >= envelope.finalDeadlineMs) {
-                        if (wallClockMs() - envelope.finalDeadlineMs > MAX_OVERDUE_DISPATCH_MS) {
-                            offerOverdueInsteadOfDialling(envelope)
-                        } else {
-                            claimAndDispatch(envelope.token)
-                        }
-                    } else {
-                        if (rebaseElapsedFromWall) {
-                            val rebased = envelope.copy(
-                                elapsedRealtimeDeadlineMs = elapsedRealtimeMs() +
-                                    (envelope.finalDeadlineMs - wallClockMs()).coerceAtLeast(0L),
-                            )
-                            if (store.write(rebased)) envelope = rebased
-                        }
-                        scheduleBestEffort(envelope)
-                    }
-                }
+                LifecycleState.ARMED -> reconcileArmedFromWall(
+                    envelope,
+                    alwaysRebaseElapsed = rebaseElapsedFromWall,
+                )
                 LifecycleState.CLAIMED -> {
                     if (wallClockMs() - envelope.finalDeadlineMs > MAX_OVERDUE_DISPATCH_MS) {
                         // CLAIMED is a durable uncertainty boundary, not
@@ -624,11 +615,81 @@ class EmergencySessionCoordinator(
         }
     }
 
+    /**
+     * The wall deadline is the only reference that survives a reboot: an
+     * overdue session is dispatched or offered, a pending one is scheduled, and
+     * its elapsed deadline is rebuilt for THIS boot when [alwaysRebaseElapsed]
+     * or when it was written in another boot.
+     */
+    private fun reconcileArmedFromWall(
+        envelope: EmergencySessionEnvelope,
+        alwaysRebaseElapsed: Boolean,
+    ) {
+        if (wallClockMs() >= envelope.finalDeadlineMs) {
+            if (wallClockMs() - envelope.finalDeadlineMs > MAX_OVERDUE_DISPATCH_MS) {
+                offerOverdueInsteadOfDialling(envelope)
+            } else {
+                claimAndDispatch(envelope.token)
+            }
+            return
+        }
+        if (!alwaysRebaseElapsed && !isFromAnotherBoot(envelope)) {
+            scheduleBestEffort(envelope)
+            return
+        }
+        val elapsedNow = elapsedRealtimeMs()
+        val rebased = envelope.copy(
+            elapsedRealtimeDeadlineMs = elapsedNow +
+                (envelope.finalDeadlineMs - wallClockMs()).coerceAtLeast(0L),
+            elapsedBootCount = currentBootCount(),
+            elapsedStampMs = elapsedNow,
+        )
+        // Scheduled even if the commit fails: the stored copy keeps its old
+        // boot stamp, so the next reconcile rebases again, and the old elapsed
+        // deadline may be the previous boot's uptime away.
+        store.write(rebased)
+        scheduleBestEffort(rebased)
+    }
+
+    /** [bootCount], with any failure read as an unknown boot. */
+    private fun currentBootCount(): Int = try {
+        bootCount()
+    } catch (_: Exception) {
+        UNKNOWN_BOOT_COUNT
+    }
+
+    /**
+     * Whether [envelope]'s elapsed deadline was written in an earlier boot.
+     *
+     * elapsedRealtime restarts at zero on every boot, so that deadline is then
+     * the previous boot's uptime plus the remaining time. Two independent
+     * signals: a different BOOT_COUNT, or an elapsed clock now BELOW the one
+     * recorded when the deadline was written (it never runs backwards within a
+     * boot). With neither known -- a record older than both fields -- the
+     * historical same-boot assumption stands rather than a guess.
+     */
+    private fun isFromAnotherBoot(envelope: EmergencySessionEnvelope): Boolean {
+        if (envelope.elapsedStampMs >= 0L && elapsedRealtimeMs() < envelope.elapsedStampMs) {
+            return true
+        }
+        val current = currentBootCount()
+        return current != UNKNOWN_BOOT_COUNT &&
+            envelope.elapsedBootCount != UNKNOWN_BOOT_COUNT &&
+            envelope.elapsedBootCount != current
+    }
+
     /** Preserve elapsed duration when the user/network changes wall time. */
     fun reconcileAfterClockChange() = synchronized(PROCESS_LOCK) {
         SessionSlot.entries.forEach { slot ->
             val envelope = (store.read(slot) as? SessionRead.Present)?.envelope ?: return@forEach
             if (envelope.lifecycleState != LifecycleState.ARMED) return@forEach
+            if (isFromAnotherBoot(envelope)) {
+                // TIME_SET of a new boot delivered before that boot's own
+                // reconcile (audit A-02): broadcast order is not guaranteed, so
+                // do here exactly what the boot reconcile would do.
+                reconcileArmedFromWall(envelope, alwaysRebaseElapsed = true)
+                return@forEach
+            }
             val remaining = (
                 envelope.elapsedRealtimeDeadlineMs - elapsedRealtimeMs()
             ).coerceAtLeast(0L)

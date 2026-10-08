@@ -4,6 +4,9 @@ const val EMERGENCY_PROTOCOL_VERSION = 1
 const val EMERGENCY_SESSION_SCHEMA_VERSION = 1
 const val FALLBACK_TARGET_RETENTION_MS = 24L * 60L * 60L * 1_000L
 
+/** Boot identity not known: no Settings.Global.BOOT_COUNT, or a record older than it. */
+const val UNKNOWN_BOOT_COUNT = -1
+
 enum class SessionKind(val wireValue: String) {
     PANIC("panic"),
     CHECK_IN("checkIn"),
@@ -172,6 +175,14 @@ data class EmergencySessionEnvelope(
     val mainDeadlineMs: Long,
     val finalDeadlineMs: Long,
     val elapsedRealtimeDeadlineMs: Long,
+    /** The boot [elapsedRealtimeDeadlineMs] belongs to; meaningless in any other. */
+    val elapsedBootCount: Int = UNKNOWN_BOOT_COUNT,
+    /**
+     * elapsedRealtime when [elapsedRealtimeDeadlineMs] was written, -1 when
+     * unknown. Within one boot that clock never runs backwards, so a smaller
+     * reading later proves another boot even without [elapsedBootCount].
+     */
+    val elapsedStampMs: Long = -1L,
     val schedulingMode: SchedulingMode,
     val callRequestOutcome: CallRequestOutcome = CallRequestOutcome.NOT_ATTEMPTED,
     val fallbackOutcome: FallbackOutcome = FallbackOutcome.NOT_ATTEMPTED,

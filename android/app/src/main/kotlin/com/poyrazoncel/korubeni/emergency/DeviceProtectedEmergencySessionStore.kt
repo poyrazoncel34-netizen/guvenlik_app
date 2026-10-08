@@ -79,6 +79,12 @@ class DeviceProtectedEmergencySessionStore(context: Context) : EmergencySessionS
                     mainDeadlineMs = mainDeadline,
                     finalDeadlineMs = finalDeadline,
                     elapsedRealtimeDeadlineMs = elapsedDeadline,
+                    // Absent on records written before the field existed.
+                    elapsedBootCount = prefs.getInt(
+                        key(prefix, "elapsedBootCount"),
+                        UNKNOWN_BOOT_COUNT,
+                    ),
+                    elapsedStampMs = prefs.getLong(key(prefix, "elapsedStampMs"), -1L),
                     schedulingMode = schedulingMode,
                     callRequestOutcome = callOutcome,
                     fallbackOutcome = fallbackOutcome,
@@ -130,6 +136,8 @@ class DeviceProtectedEmergencySessionStore(context: Context) : EmergencySessionS
                 key(prefix, "elapsedRealtimeDeadlineMs"),
                 envelope.elapsedRealtimeDeadlineMs,
             )
+            .putInt(key(prefix, "elapsedBootCount"), envelope.elapsedBootCount)
+            .putLong(key(prefix, "elapsedStampMs"), envelope.elapsedStampMs)
             .putString(key(prefix, "schedulingMode"), envelope.schedulingMode.wireValue)
             .putString(
                 key(prefix, "callRequestOutcome"),
