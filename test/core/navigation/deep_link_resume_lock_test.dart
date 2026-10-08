@@ -30,6 +30,8 @@ import 'package:guvenlik_app/core/security/secure_storage_keys.dart';
 import 'package:guvenlik_app/core/services/app_lifecycle_handler.dart';
 import 'package:guvenlik_app/core/services/panic_countdown_guard.dart';
 import 'package:guvenlik_app/core/services/subscription_access_state.dart';
+import 'package:guvenlik_app/core/services/subscription_gate.dart';
+import 'package:guvenlik_app/screens/subscription/paywall_screen.dart';
 import 'package:guvenlik_app/core/services/local_database_service.dart';
 import 'package:guvenlik_app/core/services/location_service.dart';
 import 'package:guvenlik_app/domain/repositories/location_repository.dart';
@@ -81,6 +83,39 @@ class _GatedSubscription extends SubscriptionProvider {
   Future<SubscriptionAccessState> resolveAccess() async {
     await resolveGate.future;
     return _pro;
+  }
+}
+
+/// Free until the test says otherwise; resolution parked on [resolveGate].
+class _GatedFreeSubscription extends SubscriptionProvider {
+  final Completer<void> resolveGate = Completer<void>();
+  bool pro = false;
+
+  @override
+  SubscriptionAccessState get access => pro
+      ? SubscriptionAccessState(
+          status: SubscriptionAccessStatus.verifiedPro,
+          lastVerifiedPro: true,
+          lastVerifiedProAt: DateTime.now(),
+        )
+      : const SubscriptionAccessState(
+          status: SubscriptionAccessStatus.verifiedFree,
+          lastVerifiedPro: false,
+        );
+
+  @override
+  Future<void> ensureOfflineGraceLoaded() async {}
+
+  @override
+  Future<void> initialize() async {}
+
+  @override
+  Future<void> refresh() async {}
+
+  @override
+  Future<SubscriptionAccessState> resolveAccess() async {
+    await resolveGate.future;
+    return access;
   }
 }
 
@@ -539,6 +574,69 @@ void main() {
     );
     expect(find.byType(SafetyTimelineScreen), findsWidgets);
   });
+
+  // A-07 (chaos audit 2026-10-08): a refused paid action pushed the paywall
+  // even when the resume lock had risen while access was resolving -- e.g. a
+  // home-screen widget panic from a free account after more than two minutes
+  // in the background: the lock and the quick-panic resolution start on the
+  // same resume and the paywall slid over the PIN lock two seconds later.
+  // The rejection now waits for the unlock and asks again.
+  for (final becomesPro in <bool>[false, true]) {
+    testWidgets(
+      'a paywall due while the lock rises waits for the unlock'
+      '${becomesPro ? ' and is skipped once the account is Pro' : ''}',
+      (tester) async {
+        final subscription = _GatedFreeSubscription();
+        late BuildContext gateContext;
+        await tester.pumpWidget(
+          ChangeNotifierProvider<SubscriptionProvider>.value(
+            value: subscription,
+            child: MaterialApp(
+              navigatorKey: rootNavigatorKey,
+              home: Builder(
+                builder: (context) {
+                  gateContext = context;
+                  return const Scaffold(body: Text('home'));
+                },
+              ),
+            ),
+          ),
+        );
+
+        bool? allowed;
+        unawaited(
+          SubscriptionGate.ensureAccess(
+            gateContext,
+            PremiumFeature.checkIn,
+          ).then((value) => allowed = value),
+        );
+        await tester.pump();
+        _backgroundPastThreshold();
+        unawaited(AppLifecycleHandler.instance.onResumed());
+        await _settle(tester, rounds: 5);
+        expect(find.byType(AppUnlockScreen), findsOneWidget);
+
+        subscription.resolveGate.complete();
+        await _settle(tester);
+        expect(
+          find.byType(PaywallScreen),
+          findsNothing,
+          reason: 'the paywall slid over the PIN lock',
+        );
+        expect(find.byType(AppUnlockScreen), findsOneWidget);
+
+        if (becomesPro) subscription.pro = true;
+        _unlock(tester);
+        await _settle(tester);
+        expect(AppLifecycleHandler.instance.lockActive.value, isFalse);
+        expect(
+          find.byType(PaywallScreen),
+          becomesPro ? findsNothing : findsOneWidget,
+        );
+        if (becomesPro) expect(allowed, isFalse);
+      },
+    );
+  }
 
   // A-08, the in-flight half: a link parked while another is still being
   // routed (here: waiting on the Pro gate) is routed as soon as that routing

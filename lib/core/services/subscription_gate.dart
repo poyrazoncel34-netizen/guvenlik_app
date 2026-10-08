@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 
 import '../constants/feature_access_matrix.dart';
 import '../navigation/app_navigator.dart';
+import 'app_lifecycle_handler.dart';
 import 'subscription_access_state.dart';
 import '../../presentation/providers/subscription_provider.dart';
 import '../../screens/subscription/paywall_screen.dart';
@@ -161,6 +162,15 @@ class SubscriptionGate {
     PremiumFeature? lockedFeature,
   }) async {
     if (!context.mounted) return;
+    // Resolving access can outlast a resume: a paywall pushed now would land
+    // ABOVE the PIN lock (audit A-07). Wait for the unlock, then ask again --
+    // the account may be Pro by then, or the user gone.
+    if (await _waitedForUnlock() &&
+        (!context.mounted ||
+            !context.read<SubscriptionProvider>().access.shouldShowPaywall)) {
+      return;
+    }
+    if (!context.mounted) return;
     await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => PaywallScreen(
@@ -173,6 +183,21 @@ class SubscriptionGate {
     if (context.mounted) {
       await context.read<SubscriptionProvider>().refresh();
     }
+  }
+
+  /// Waits while the resume lock is up; true when it had to.
+  static Future<bool> _waitedForUnlock() async {
+    final lock = AppLifecycleHandler.instance.lockActive;
+    if (!lock.value) return false;
+    final unlocked = Completer<void>();
+    void listener() {
+      if (!lock.value && !unlocked.isCompleted) unlocked.complete();
+    }
+
+    lock.addListener(listener);
+    await unlocked.future;
+    lock.removeListener(listener);
+    return true;
   }
 
   static String featureTitleKey(PremiumFeature feature) {
