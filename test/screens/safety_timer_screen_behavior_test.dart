@@ -14,6 +14,7 @@ import 'package:guvenlik_app/core/services/contact_service.dart';
 import 'package:guvenlik_app/core/services/emergency_platform_service.dart';
 import 'package:guvenlik_app/core/services/emergency_session_contract.dart';
 import 'package:guvenlik_app/core/services/local_database_service.dart';
+import 'package:guvenlik_app/core/services/subscription_access_state.dart';
 import 'package:guvenlik_app/domain/repositories/contacts_repository.dart';
 import 'package:guvenlik_app/presentation/providers/contacts_provider.dart';
 import 'package:guvenlik_app/presentation/providers/home_provider.dart';
@@ -100,6 +101,24 @@ class _ContactsRepository implements ContactsRepository {
   }
 }
 
+/// A verified subscriber, answered locally (no store in a widget test).
+class _ProSubscription extends SubscriptionProvider {
+  static final SubscriptionAccessState _pro = SubscriptionAccessState(
+    status: SubscriptionAccessStatus.verifiedPro,
+    lastVerifiedPro: true,
+    lastVerifiedProAt: DateTime.now(),
+  );
+
+  @override
+  SubscriptionAccessState get access => _pro;
+
+  @override
+  Future<void> ensureOfflineGraceLoaded() async {}
+
+  @override
+  Future<SubscriptionAccessState> resolveAccess() async => _pro;
+}
+
 class _Host extends StatelessWidget {
   const _Host({required this.destination});
 
@@ -159,7 +178,11 @@ void main() {
     await serviceLocator.reset();
   });
 
-  Future<void> pumpDestination(WidgetTester tester, Widget destination) async {
+  Future<void> pumpDestination(
+    WidgetTester tester,
+    Widget destination, {
+    SubscriptionProvider Function()? subscription,
+  }) async {
     tester.view.devicePixelRatio = 1;
     tester.view.physicalSize = const Size(900, 1800);
     addTearDown(tester.view.resetDevicePixelRatio);
@@ -182,7 +205,7 @@ void main() {
                 value: _NoopHomeProvider(),
               ),
               ChangeNotifierProvider<SubscriptionProvider>(
-                create: (_) => SubscriptionProvider(),
+                create: (_) => subscription?.call() ?? SubscriptionProvider(),
               ),
             ],
             child: MaterialApp(
@@ -289,6 +312,113 @@ void main() {
     service.dispose();
     services.remove(service);
   }
+
+  // Audit §17 rapid input. Nothing guarded the start handler itself: a double
+  // tap ran two start flows, the second reached the service while the first
+  // was arming (operationInProgress) or had armed (sessionAlreadyActive), and
+  // its rejection was shown as "Güvenlik oturumu kurulmadı" -- on top of a
+  // session that WAS running.
+  Future<List<String>> countArms(WidgetTester tester) async {
+    final arms = <String>[];
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, (call) async {
+          if (call.method == 'armEmergencySession') {
+            arms.add(call.method);
+            return armedResponse(call);
+          }
+          return <String, Object?>{'type': 'absent'};
+        });
+    // The exact-alarm precheck goes through the production singleton channel.
+    const production = MethodChannel(EmergencyPlatformService.channelName);
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(
+          production,
+          (call) async => call.method == 'canScheduleExactAlarms' ? true : null,
+        );
+    addTearDown(
+      () => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(production, null),
+    );
+    // A configured PIN, as every real user has after onboarding.
+    await tester.runAsync(
+      () => secureStorage.write(key: SecureStorageKeys.userPin, value: '2468'),
+    );
+    await tester.runAsync(
+      () => secureStorage.write(
+        key: SecureStorageKeys.emergencyContactsV1,
+        value: jsonEncode(<String, Object?>{
+          'version': 1,
+          'contacts': <Object?>[
+            const EmergencyContact(
+              name: 'Acil Kişi',
+              phone: '+905551112233',
+              isPrimary: true,
+            ).toSecureJson(),
+          ],
+        }),
+      ),
+    );
+    return arms;
+  }
+
+  Future<void> drive(WidgetTester tester) async {
+    for (var i = 0; i < 8; i++) {
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 30)),
+      );
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+  }
+
+  testWidgets('CHK-DT: a double tap on a duration arms ONE session and shows '
+      'no false failure', (tester) async {
+    final arms = await countArms(tester);
+    final service = makeService(EmergencySessionKind.checkIn);
+    await pumpDestination(
+      tester,
+      CheckInScreen(service: service),
+      subscription: _ProSubscription.new,
+    );
+
+    await tester.tap(find.text('15 dk'));
+    await tester.tap(find.text('15 dk'));
+    await drive(tester);
+
+    expect(arms, hasLength(1));
+    expect(service.isActive, isTrue);
+    expect(
+      find.byType(SnackBar),
+      findsNothing,
+      reason: 'the second tap reported a failure for a session that started',
+    );
+    await disposeActiveService(tester, service);
+  });
+
+  testWidgets('SWK-DT: a double tap on Start arms ONE walk and shows no '
+      'false failure', (tester) async {
+    final arms = await countArms(tester);
+    final service = makeService(EmergencySessionKind.safeWalk);
+    await pumpDestination(
+      tester,
+      SafeWalkScreen(controller: service),
+      subscription: _ProSubscription.new,
+    );
+
+    final start = find.text('safe_walk_start'.tr());
+    await tester.ensureVisible(start);
+    await tester.tap(start);
+    await tester.tap(start);
+    await drive(tester);
+
+    expect(arms, hasLength(1));
+    expect(service.isActive, isTrue);
+    expect(
+      find.byType(SnackBar),
+      findsNothing,
+      reason: 'the second tap reported a failure for a session that started',
+    );
+    await disposeActiveService(tester, service);
+  });
 
   testWidgets('SWK-01: every production duration chip changes selection', (
     tester,

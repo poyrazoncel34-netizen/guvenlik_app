@@ -179,7 +179,22 @@ class _CheckInScreenState extends State<CheckInScreen>
     );
   }
 
+  /// One start at a time. A second tap used to run its own start flow, be
+  /// refused by the service (operationInProgress / sessionAlreadyActive) and
+  /// report a setup failure over the session the first tap had just started.
+  bool _startInFlight = false;
+
   Future<void> _startCheckIn(int minutes) async {
+    if (_startInFlight) return;
+    _startInFlight = true;
+    try {
+      await _startCheckInOnce(minutes);
+    } finally {
+      _startInFlight = false;
+    }
+  }
+
+  Future<void> _startCheckInOnce(int minutes) async {
     final currentContext = context;
     if (!await _hasEmergencyContact()) {
       if (!currentContext.mounted) return;
