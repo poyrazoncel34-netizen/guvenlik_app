@@ -1,0 +1,16 @@
+flakiness run 2026-10-08 08:12:33 HEAD=dcc1622 (concurrent with per-commit validation: deliberately under load)
+critical-set run 1 exit=0 +60: All tests
+critical-set run 2 exit=0 +60: All tests
+critical-set run 3 exit=0 +60: All tests
+critical-set run 4 exit=0 +60: All tests
+critical-set run 5 exit=0 +60: All tests
+critical-set run 6 exit=0 +60: All tests
+critical-set run 7 exit=0 +60: All tests
+critical-set run 8 exit=0 +60: All tests
+critical-set run 9 exit=0 +60: All tests
+critical-set run 10 exit=0 +60: All tests
+fuzz run 1 exit=0 +26: All tests
+fuzz run 2 exit=0 +26: All tests
+fuzz run 3 exit=0 +26: All tests
+fuzz FUZZ_SCALE=4 (104 seeds) exit=0 +104: All tests
+DONE 2026-10-08 08:23:07

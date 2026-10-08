@@ -1,0 +1,18 @@
+per-commit validation 2026-10-08 08:02:07
+3453b5e767093ca58053a073db4541652e0ddfa9 analyze=0 test=0 (+2125: All tests) kotlin=- | test(infra): belge alinti kapisi yerel ignore edilmis dosyalari kanit saymiyor
+39bb44090204410a8895670c3442fea953a0a198 analyze=0 test=0 (+2125: All tests) kotlin=- | test(infra): mutlak-iddia kapisi yalniz depo dosyalarini ve onbellekle tarar
+216ff3cb60d7ebd8688a5ae37270637b6c62b3fc analyze=0 test=0 (+2133: All tests) kotlin=- | fix(safety): geri sayim yalniz kendi route'unu kapatiyor ve degistiriyor
+ad46474d3e7b14e6e34afce343cdba36f50d8841 analyze=0 test=0 (+2134: All tests) kotlin=- | fix(safety): gonderim baslarken dogrulanan dogru PIN yanlis PIN sayilmiyor
+31de015bb8024fcb3e6a698b3a3e294064b20406 analyze=0 test=0 (+2144: All tests) kotlin=- | fix(security): devam kilidi yalniz dogrulanmis acma veya silmeyle kalkiyor
+c2def35c3774d4689c9f4f45b6dd71d34b1216d5 analyze=0 test=0 (+2147: All tests) kotlin=- | fix(safety): canli geri sayimin ustune baglanti ve paywall acilmiyor
+0f14ed5755d1f9a1e5f6213e0c5bf51af457db83 analyze=0 test=0 (+2173: All tests) kotlin=- | test: navigasyon guvenligi icin tohumlu durumlu kullanici fuzz'i
+c33d7223c2d10b6c364b08ddfdeba2c1b2f79d8c analyze=0 test=0 (+2173: All tests) kotlin=0 | fix(native): yeni acilista TIME_SET onceki acilisin suresiyle son tarihi kaydirmiyor
+2725a59887398f43f22847a672891a397c51075d analyze=0 test=0 (+2173: All tests) kotlin=0 | fix(native): siren calarken surec olurse alarm sesi sonraki acilista geri yukleniyor
+c1e24a21a7c675871b37cbf58fd1072497dd9968 analyze=0 test=0 (+2176: All tests) kotlin=- | fix: ayni milisaniyedeki guvenlik olaylari zaman cizelgesinden dusmuyor
+919009560c2bee03363c4c6322549c34688c310b analyze=0 test=0 (+2177: All tests) kotlin=- | fix(ux): okunamayan guvenlik kayitlari zaman cizelgesini yuklemede birakmiyor
+9438fa2a0e7fbb8974cf19b49f0408159c1cc172 analyze=0 test=0 (+2179: All tests) kotlin=- | fix(ux): acil kisi kayitliyken hazirlik karti kisi eklemeyi istemiyor
+e3415a151055f711e457f3d7e23823a7742fa3f0 analyze=0 test=0 (+2181: All tests) kotlin=- | fix(ux): Check-In ve Guvenli Yuruyus cift dokunusta sahte hata gostermiyor
+DONE 2026-10-08 08:43:56
+dcc1622a76132eb7134004e5f05e1c52a0665a78 analyze=0 test=1 (+2181 -1: Some tests) kotlin=- | fix(ux): riza kapisi onayin nereden verilecegini soyluyor
+(dcc1622 NAV-02 kırmızısı: test eski metni sabitliyordu; test güncellenip commit 5081f10 olarak amend edildi)
+5081f10adf48a3ab82f9d000eece924ded120e54 analyze=0 test=0 (+2182: All tests) kotlin=- | fix(ux): riza kapisi onayin nereden verilecegini soyluyor

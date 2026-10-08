@@ -10,6 +10,38 @@ Surumleme: `pubspec.yaml` 1.0.0+1'de SABITTIR; gercek `versionCode`
 ## Yayinlanmadi
 
 ### Duzeltildi
+- Panik geri sayimi veya Test Modu provasi surerken bir baglantiyla baska
+  bir ekran acilirsa, geri sayim bitince yanlislikla O ekran kapaniyordu;
+  prova "0 saniye"de kalip geri tusu ve PIN ile kapatilamiyordu, gercek panikte
+  ise ust uste acik kilit ekrani arama sonucu ekraniyla degistirilebiliyordu.
+  Geri sayim artik yalnizca kendisini kapatiyor; geri sayim surerken gelen
+  baglantilar ve odeme ekrani geri sayim bitene kadar bekliyor.
+- Widget, Hizli Ayarlar veya ses tuslariyla baslatilan panikten sonra arama
+  sonucu ekranindaki "bitir" dugmesi, 2 dakikadan uzun arka plandan donuste
+  acilan PIN kilidini de kapatiyordu. Kilit artik yalnizca dogru PIN ile veya
+  "PIN'i unuttum" ile verilerin silinmesiyle kalkiyor; kilit, calisan bir
+  panik geri sayiminin ustune acilmiyor, geri sayim bitince geliyor.
+- Panik geri sayiminin son aninda girilen dogru PIN, dogrulama arama baslatildiktan
+  sonra bittiyse yanlis PIN sayiliyordu.
+- Telefon yeniden baslarken saat agdan guncellenirse, suren bir Check-In veya
+  Guvenli Yuruyus oturumunun son tarihi telefonun onceki acik kalma suresi
+  kadar (gunlerce) ileri kayabiliyordu. Yeniden baslatma sonrasi son tarih
+  artik saatin guncellenme sirasindan bagimsiz olarak dogru hesaplaniyor.
+- Siren calarken uygulama sistem tarafindan kapatilirsa alarm ses seviyesi
+  en yuksekte kaliyordu. Uygulama bir sonraki acilisinda, siz arada degistirmediyseniz,
+  eski seviyeyi geri yukluyor.
+- Ayni anda kaydedilen iki guvenlik olayindan biri Guvenlik Zaman
+  Cizelgesi'nden dusebiliyordu.
+- Guvenlik kayitlari okunamazsa Zaman Cizelgesi surekli yukleniyor gorunuyor,
+  notlariniz da gosterilmiyordu. Artik notlar gosteriliyor ve listenin eksik
+  olabilecegi belirtiliyor.
+- Acil kisi kayitliyken hazirlik karti hala "Once acil kisini ekleyelim"
+  diyordu.
+- Check-In suresine veya Guvenli Yuruyus "Basla"ya iki kez hizlica dokunulunca
+  oturum basladigi halde "Guvenlik oturumu kurulmadi" uyarisi cikiyordu.
+- Bir ozellik icin gereken onay verilmemisken uygulama yalnizca "ilgili onay
+  gereklidir" diyordu. Artik onayin nereden verilecegini (Ayarlar > Yasal
+  Bilgiler & KVKK > Riza Yonetimi) soyluyor.
 - Telefonun guvenli anahtar deposunda bir okuma hatasi olursa uygulama
   PIN'i (ayni sekilde acil kisileri veya PIN deneme sayacini) sessizce
   siliyor ve PIN sormadan yeni PIN kurulumunu aciyordu. Artik uygulama kilitli

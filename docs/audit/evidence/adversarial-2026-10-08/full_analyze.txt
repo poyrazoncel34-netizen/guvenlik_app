@@ -1,0 +1,3 @@
+Analyzing guvenlik_app...                                       
+No issues found! (ran in 2.9s)
+ANALYZE_EXIT=0

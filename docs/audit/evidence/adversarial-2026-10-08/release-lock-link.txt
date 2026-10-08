@@ -1,0 +1,17 @@
+smoke release lastUpdateTime: lastUpdateTime=2026-10-0809:13:32
+HOME 09:17:41
+LINK 09:19:50
+== after link (expect lock on top)
+Uygulama kilidi. PIN ile açın. [0, 0, 1080, 2400]
+Yasal Bilgiler [954, 139, 1080, 265]
+KoruBeni [385, 627, 695, 732]
+screencap mean luminance (0=black): 0.53
+pin entered
+== after unlock (expect timeline)
+Geri [11, 139, 137, 265]
+Güvenlik Zaman Çizelgesi [273, 174, 807, 229]
+== after back
+Çevrimdışı Mod [0, 0, 0, 0]
+Hoş Geldiniz [63, 181, 1017, 267]
+== logcat FATAL/ANR/E-flutter: 0
+DONE

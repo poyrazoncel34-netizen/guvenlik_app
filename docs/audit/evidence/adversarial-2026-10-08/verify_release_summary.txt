@@ -1,0 +1,15 @@
+verify_release.sh — HEAD 5081f10 (calisma agacinda yalniz CHANGELOG ve docs degisik) — 2026-10-08 09:10:37
+  ✓ PASS  temiz yerel build zemini hazir
+  ✓ PASS  analyze temiz
+CRITICAL_COVERAGE_PASS
+  ✓ PASS  tum testler yesil; kritik safety coverage kapisi gecti
+  ✓ PASS  AAB, imza ve birlesik Android release yuzeyi dogrulandi: build/app/outputs/bundle/smokeRelease/app-smoke-release.aab
+  ✓ PASS  lint + Kotlin unit + instrumentation derlemesi yesil
+✅ All 8 native libraries are 16 KB page-size compatible.
+  ✓ PASS  tum native kutuphaneler 16KB uyumlu
+  ✓ PASS  etiketli yayin lisans/notices kapisi yesil
+=== KOD/SMOKE DOGRULAMA YESIL — 5/5 kod+smoke kapisi gecti ===
+LOCAL_CANDIDATE_PASS
+TAGGED_RELEASE_GATES_LOCAL_PASS
+VERIFY_RELEASE_EXIT=0
++2182: All tests
