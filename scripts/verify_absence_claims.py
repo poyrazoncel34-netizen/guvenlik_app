@@ -92,8 +92,10 @@ Exit code 0 == ABSENCE_CLAIMS_PASS.
 from __future__ import annotations
 
 import argparse
+import functools
 import json
 import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -273,16 +275,9 @@ def target_exists(repo: Path, target: str) -> bool:
         if not base.exists():
             return False
         rx = re.compile(pattern, re.I)
-        for path in sorted(base.rglob("*")):
-            if not path.is_file():
-                continue
-            try:
-                text = path.read_text(encoding="utf-8")
-            except (UnicodeDecodeError, OSError):
-                continue
-            if rx.search(text):
-                return True
-        return False
+        return any(
+            rx.search(text) for _, text in _repository_texts(repo, directory)
+        )
     path_part, _, heading = target.partition("#")
     path = repo / path_part
     if not path.exists():
@@ -290,6 +285,49 @@ def target_exists(repo: Path, target: str) -> bool:
     if not heading:
         return True
     return heading in path.read_text(encoding="utf-8")
+
+
+@functools.lru_cache(maxsize=None)
+def _repository_texts(repo: Path, directory: str) -> tuple:
+    """(path, text) for every readable REPOSITORY file under `directory`.
+
+    Repository files are the tracked ones plus untracked files git does not
+    ignore -- what a clean checkout or a pending commit contains. Ignored local
+    artefacts are excluded on purpose: a developer tree carried six ignored
+    ~200 MB APKs under docs/audit/evidence/, which this scan re-read for every
+    grep claim (12 s alone, past the 30 s test budget under a parallel suite)
+    and which no CI checkout has, so a verdict could depend on them.
+
+    Cached: many claims grep the same directory. Falls back to walking the
+    directory when `repo` is not a git work tree (fixtures in a temp dir).
+    """
+    base = repo / directory
+    try:
+        toplevel = subprocess.run(
+            ["git", "-C", str(repo), "rev-parse", "--show-toplevel"],
+            capture_output=True, check=True, text=True,
+        ).stdout.strip()
+        if Path(toplevel).resolve() != repo.resolve():
+            # A fixture nested inside another work tree (possibly in one of its
+            # ignored directories) must be walked, not read through git.
+            raise OSError("not the repository root")
+        listed = subprocess.run(
+            ["git", "-C", str(repo), "ls-files", "-z", "--cached", "--others",
+             "--exclude-standard", "--", directory],
+            capture_output=True, check=True,
+        ).stdout.decode("utf-8").split("\0")
+        paths = sorted(repo / name for name in listed if name)
+    except (OSError, subprocess.CalledProcessError):
+        paths = sorted(base.rglob("*"))
+    texts = []
+    for path in paths:
+        if not path.is_file():
+            continue
+        try:
+            texts.append((path, path.read_text(encoding="utf-8")))
+        except (UnicodeDecodeError, OSError):
+            continue
+    return tuple(texts)
 
 
 # A path a row cites as evidence. Restricted to the four repository-internal
