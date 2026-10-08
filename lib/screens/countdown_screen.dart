@@ -386,7 +386,9 @@ class _CountdownScreenState extends State<CountdownScreen>
       },
       recordCriticalOutcome: DispatchLedgerRecorder.recordCallTargets,
       shouldRunBestEffort: (result) => result != null,
-      bestEffortOperations: EmergencyBookkeeping.panicStepsWithDefaultCopy(),
+      bestEffortOperations: EmergencyBookkeeping.panicStepsWithDefaultCopy(
+        nativeJournal: _sessionToken != null,
+      ),
     );
     final callResult = execution.result;
     final ledger = execution.ledger;

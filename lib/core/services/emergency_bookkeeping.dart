@@ -65,10 +65,19 @@ abstract final class EmergencyBookkeeping {
   ];
 
   /// The panic path's step list with this app's copy already resolved.
-  static List<BestEffortStep> panicStepsWithDefaultCopy() => panicSteps(
-    historyOperation: () => NativeEmergencyHistory.reconcilePending(
-      EmergencyPlatformService.instance,
-    ),
+  ///
+  /// [nativeJournal] is whether a native session exists to journal the
+  /// outcome. A countdown armed for a foreground-dial reason has none: its
+  /// timeline row must be written here, or the panic is missing from the
+  /// user's history (chaos audit Y-08).
+  static List<BestEffortStep> panicStepsWithDefaultCopy({
+    required bool nativeJournal,
+  }) => panicSteps(
+    historyOperation: nativeJournal
+        ? () => NativeEmergencyHistory.reconcilePending(
+            EmergencyPlatformService.instance,
+          )
+        : null,
     eventTitle: 'countdown_emergency_title'.tr(),
     eventDescription: 'countdown_emergency_desc'.tr(),
     alertTitle: 'countdown_emergency_title'.tr(),

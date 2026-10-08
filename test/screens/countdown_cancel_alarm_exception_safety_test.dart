@@ -71,7 +71,9 @@ void main() {
             'ordered nor given a per-target outcome',
       );
     }
-    expect(body, contains('EmergencyBookkeeping.panicStepsWithDefaultCopy()'));
+    expect(body, contains('EmergencyBookkeeping.panicStepsWithDefaultCopy('));
+    // Y-08: no native session means no native journal row.
+    expect(body, contains('nativeJournal: _sessionToken != null'));
   });
 
   test('every bookkeeping call lives behind a labelled step', () {
