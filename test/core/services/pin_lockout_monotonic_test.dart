@@ -6,6 +6,8 @@
 // without it, the wall deadline still counts but can never exceed the longest
 // lockout the policy can impose.
 
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guvenlik_app/core/di/service_locator.dart';
 import 'package:guvenlik_app/core/security/secure_storage.dart';
@@ -17,6 +19,12 @@ class _Storage extends SecureStorage {
   /// A write to this key throws once: the process died mid-lockout-write.
   String? failWriteOf;
 
+  /// A delete of this key throws once: the process died mid-delete.
+  String? failDeleteOf;
+
+  /// While set, every read waits on it: a keystore call that never returns.
+  Completer<void>? hang;
+
   /// Every operation yields first, so concurrent callers interleave.
   bool interleave = false;
   Future<void> _yield() async {
@@ -26,6 +34,7 @@ class _Storage extends SecureStorage {
   @override
   Future<String?> read({required String key}) async {
     await _yield();
+    await hang?.future;
     return values[key];
   }
 
@@ -42,6 +51,10 @@ class _Storage extends SecureStorage {
   @override
   Future<void> delete({required String key}) async {
     await _yield();
+    if (key == failDeleteOf) {
+      failDeleteOf = null;
+      throw Exception('process died');
+    }
     values.remove(key);
   }
 
@@ -55,8 +68,10 @@ void main() {
   late DateTime wall;
   late MonotonicReading? reading;
   late PinLockoutService service;
+  late Duration process;
 
   setUp(() async {
+    process = Duration.zero;
     await serviceLocator.reset();
     storage = _Storage();
     serviceLocator.registerSingleton<SecureStorage>(storage);
@@ -66,6 +81,7 @@ void main() {
       monotonic: () async => reading,
       now: () => wall,
       monotonicRequired: () => true,
+      processElapsed: () => process,
     );
   });
 
@@ -297,11 +313,11 @@ void main() {
       await lockFor30Seconds();
       reading = null;
       wall = wall.add(const Duration(hours: 1));
-      expect(
-        (await read()).isLocked,
-        isTrue,
-        reason: 'unproven expiry stays locked',
-      );
+      final held = await read();
+      expect(held.isLocked, isTrue, reason: 'unproven expiry stays locked');
+      // The unlock screen opens its keypad on remainingSeconds == 0 (security
+      // review HIGH): a sub-second hold was no hold there.
+      expect(held.remainingSeconds, greaterThanOrEqualTo(1));
 
       reading = (elapsedMs: 1005000, bootCount: 17, bootId: null);
       final state = await read();
@@ -342,9 +358,127 @@ void main() {
       await lockFor30Seconds();
       storage.values.remove('pin_lockout_until_ms');
       reading = null;
-      expect((await read()).isLocked, isTrue);
+      expect((await read()).remainingSeconds, greaterThanOrEqualTo(1));
     },
   );
+
+  // Security review HIGH, second half: holding forever while reads keep
+  // failing would lock the owner out of the whole app (the unlock screen
+  // gates panic too). The hold is bounded on this process's own clock --
+  // which nobody can set -- after which the wall decides; the keys stay, so
+  // the first read that succeeds measures it again.
+  test('failing reads hold the lock for a bounded window, then the wall '
+      'decides without forgetting', () async {
+    await lockFor30Seconds();
+    reading = null;
+    wall = wall.add(const Duration(hours: 1));
+    expect((await read()).isLocked, isTrue);
+    process += const Duration(seconds: 29);
+    expect((await read()).remainingSeconds, greaterThanOrEqualTo(1));
+    process += const Duration(seconds: 2);
+    expect((await read()).isLocked, isFalse);
+
+    reading = (elapsedMs: 1005000, bootCount: 17, bootId: null);
+    expect((await read()).remainingSeconds, inInclusiveRange(24, 25));
+
+    // That proof ends the episode: a later run of failed reads gets a hold
+    // of its own, not the one already used up.
+    reading = null;
+    expect((await read()).remainingSeconds, greaterThanOrEqualTo(1));
+  });
+
+  // Security review LOW: a lockout registered without a monotonic reading
+  // writes its length first; killed before the wall key, that length alone
+  // read as "not locked".
+  test('a pending lockout write cut short before its wall key still locks', () async {
+    reading = null;
+    storage.values['pin_lockout_failed_attempts'] = '4';
+    storage.failWriteOf = 'pin_lockout_until_ms';
+    await expectLater(service.registerFailure(), throwsException);
+    expect((await read()).remainingSeconds, greaterThanOrEqualTo(1));
+
+    reading = (elapsedMs: 15000, bootCount: 18, bootId: null);
+    expect((await read()).remainingSeconds, inInclusiveRange(28, 30));
+  });
+
+  // ...and so no delete may leave that length behind on its own: after a
+  // correct PIN (reset) or an expiry, it would re-lock the owner in full.
+  test('an expiry or reset cut short never leaves a lone lockout length', () async {
+    await lockFor30Seconds();
+    advance(const Duration(seconds: 31));
+    storage.failDeleteOf = 'pin_lockout_duration_ms';
+    await expectLater(service.readState(), throwsException);
+    expect((await read()).isLocked, isFalse, reason: 'expiry retried');
+
+    await lockFor30Seconds();
+    advance(const Duration(seconds: 31));
+    storage.failDeleteOf = 'pin_lockout_duration_ms';
+    await expectLater(service.reset(), throwsException);
+    expect((await read()).isLocked, isFalse, reason: 'reset cut short');
+  });
+
+  // Security review MEDIUM: one keystore call that never returns used to
+  // stall only itself; behind the new lock it stalled every later PIN check,
+  // the countdown's PIN pad included.
+  test('a hung storage call does not wedge every later lockout read', () async {
+    service = PinLockoutService.forTesting(
+      monotonic: () async => reading,
+      now: () => wall,
+      monotonicRequired: () => true,
+      processElapsed: () => process,
+      lockWait: const Duration(milliseconds: 50),
+    );
+    await lockFor30Seconds();
+    storage.hang = Completer<void>();
+    unawaited(service.readState());
+    await Future<void>.delayed(Duration.zero);
+    storage.hang = null;
+
+    final later = await service.readState().timeout(const Duration(seconds: 2));
+    expect((later as PinLockoutReadable).state.isLocked, isTrue);
+  });
+
+  // Flutter review residual: each later call still waited the whole lockWait
+  // for the same stuck holder -- about three per PIN attempt, longer than the
+  // panic countdown. Once found stuck, the lock steps aside until it returns.
+  test('once a holder is found stuck, later calls do not wait for it again', () async {
+    service = PinLockoutService.forTesting(
+      monotonic: () async => reading,
+      now: () => wall,
+      monotonicRequired: () => true,
+      processElapsed: () => process,
+      lockWait: const Duration(seconds: 1),
+    );
+    await lockFor30Seconds();
+    storage.hang = Completer<void>();
+    unawaited(service.readState());
+    await Future<void>.delayed(Duration.zero);
+    storage.hang = null;
+    await service.readState().timeout(const Duration(seconds: 3));
+
+    final third = await service.readState().timeout(
+      const Duration(milliseconds: 500),
+    );
+    expect(third, isA<PinLockoutReadable>());
+  });
+
+  // Flutter review residual: the hold's start survived a reset and a new
+  // lockout, so the next lockout's failed reads got no hold at all.
+  test('a correct PIN ends a hold episode: the next lockout gets its own', () async {
+    await lockFor30Seconds();
+    reading = null;
+    wall = wall.add(const Duration(hours: 1));
+    await read();
+    process += const Duration(seconds: 31);
+    expect((await read()).isLocked, isFalse);
+    await service.reset();
+
+    reading = (elapsedMs: 2000000, bootCount: 17, bootId: null);
+    await lockFor30Seconds();
+    reading = null;
+    wall = wall.add(const Duration(hours: 1));
+    expect((await read()).remainingSeconds, greaterThanOrEqualTo(1));
+  });
 
   // The stamp and the restart length came from failedAttempts, which is
   // written LAST: a process killed before it left the old count, and at the

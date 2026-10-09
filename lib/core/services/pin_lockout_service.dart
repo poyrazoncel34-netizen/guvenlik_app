@@ -75,10 +75,14 @@ class PinLockoutService {
     Future<MonotonicReading?> Function()? monotonic,
     DateTime Function()? now,
     bool Function()? monotonicRequired,
+    Duration Function()? processElapsed,
+    Duration lockWait = const Duration(seconds: 5),
   }) : _monotonic =
            monotonic ?? EmergencyPlatformService.instance.readMonotonicClock,
        _now = now ?? DateTime.now,
-       _monotonicRequired = monotonicRequired ?? _bridgePresent;
+       _monotonicRequired = monotonicRequired ?? _bridgePresent,
+       _processElapsed = processElapsed ?? _processClock,
+       _lockWait = lockWait;
 
   static final PinLockoutService instance = PinLockoutService._();
 
@@ -87,10 +91,14 @@ class PinLockoutService {
     required Future<MonotonicReading?> Function() monotonic,
     required DateTime Function() now,
     bool Function()? monotonicRequired,
+    Duration Function()? processElapsed,
+    Duration lockWait = const Duration(seconds: 5),
   }) => PinLockoutService._(
     monotonic: monotonic,
     now: now,
     monotonicRequired: monotonicRequired,
+    processElapsed: processElapsed,
+    lockWait: lockWait,
   );
 
   final Future<MonotonicReading?> Function() _monotonic;
@@ -99,6 +107,15 @@ class PinLockoutService {
   /// Whether a failed monotonic read is a transient fault (true) rather than
   /// a platform with no monotonic clock at all. Asked only after a read failed.
   final bool Function() _monotonicRequired;
+
+  /// This process's own uptime: nobody can set it (it skips deep sleep,
+  /// which only makes a hold measured on it last longer).
+  final Duration Function() _processElapsed;
+  static final Stopwatch _process = Stopwatch()..start();
+  static Duration _processClock() => _process.elapsed;
+
+  /// How long a caller waits for the lock before running without it.
+  final Duration _lockWait;
 
   static bool _bridgePresent() {
     final platform = EmergencyPlatformService.instance;
@@ -109,13 +126,37 @@ class PinLockoutService {
   /// a lockout expired must not delete the keys of one registered meanwhile.
   /// An idle service runs the call at once: chaining every call onto the last
   /// one's future would tie this singleton to whichever zone ran it first.
+  /// A body must never call the public methods: it would wait for itself.
   bool _busy = false;
-  final Queue<Completer<void>> _waiting = Queue<Completer<void>>();
+  final Queue<Completer<bool>> _waiting = Queue<Completer<bool>>();
+  Completer<bool>? _handedTo;
+
+  /// The holder outlived [_lockWait] on a call that never returns (a hung
+  /// keystore call): until it does, calls run without the lock, as before it
+  /// existed, rather than each stall behind it -- the countdown's PIN pad
+  /// included.
+  bool _holderStuck = false;
+
   Future<T> _serialized<T>(Future<T> Function() body) async {
     if (_busy) {
-      final turn = Completer<void>();
+      if (_holderStuck) return body();
+      final turn = Completer<bool>();
       _waiting.add(turn);
-      await turn.future;
+      bool owned;
+      try {
+        owned = await turn.future.timeout(_lockWait);
+      } on TimeoutException {
+        if (_waiting.remove(turn)) {
+          _holderStuck = true;
+          for (final waiter in _waiting) {
+            waiter.complete(false);
+          }
+          _waiting.clear();
+          return body();
+        }
+        owned = identical(_handedTo, turn);
+      }
+      if (!owned) return body();
     }
     _busy = true;
     try {
@@ -123,8 +164,10 @@ class PinLockoutService {
     } finally {
       if (_waiting.isEmpty) {
         _busy = false;
+        _holderStuck = false;
       } else {
-        _waiting.removeFirst().complete();
+        final next = _handedTo = _waiting.removeFirst();
+        next.complete(true);
       }
     }
   }
@@ -195,11 +238,13 @@ class PinLockoutService {
         (lockedUntilRaw != null && lockedUntilMs == null)) {
       return const PinLockoutUnreadable();
     }
-    // An elapsed deadline without its wall key is a lockout write cut short
-    // (elapsed keys are written first): still a lockout, never "none".
+    // An elapsed deadline or a lockout length without its wall key is a
+    // lockout write cut short (both are written before it): still a lockout,
+    // never "none". Deletes remove the length first, so none leaves it alone.
     final cutShort =
         lockedUntilMs == null &&
-        await _secureStorage.read(key: _lockedUntilElapsedKey) != null;
+        (await _secureStorage.read(key: _lockedUntilElapsedKey) != null ||
+            await _secureStorage.read(key: _lockedDurationKey) != null);
     if (lockedUntilMs == null && !cutShort) {
       return PinLockoutReadable(
         PinLockoutState(failedAttempts: failedAttempts, lockedUntil: null),
@@ -215,8 +260,8 @@ class PinLockoutService {
       // Ran out where it was measured: forget it, so a LATER reboot has
       // nothing to restart. The attempt count stays. An expiry nothing proved
       // keeps the keys for the next read that can prove it.
-      await _secureStorage.delete(key: _lockedUntilKey);
       await _clearMonotonicDeadline();
+      await _secureStorage.delete(key: _lockedUntilKey);
     }
     return PinLockoutReadable(
       PinLockoutState(
@@ -240,11 +285,12 @@ class PinLockoutService {
   /// boot. Only without any monotonic reading does the wall deadline count,
   /// never for longer than the longest lockout the policy can impose.
   ///
-  /// [proven] is false where the answer rests on nothing the user cannot set:
-  /// a deadline stored on elapsedRealtime whose read failed now (a 500 ms
-  /// channel timeout) stays locked, at least [_unprovenLock], until a read
-  /// succeeds -- only on a platform with no bridge at all does the wall
-  /// decide. Clock forward plus one failed read used to end and FORGET it.
+  /// `proven` is false where the answer rests on something the user can set.
+  /// A deadline stored on elapsedRealtime whose read failed now (a 500 ms
+  /// channel timeout) stays locked -- for [_unprovenHold] of this process's
+  /// time at most, then the wall decides -- and is never forgotten unproven:
+  /// clock forward plus one failed read used to end and FORGET it. Only on a
+  /// platform with no bridge at all does the wall decide at once.
   Future<({Duration remaining, bool proven})> _remaining(
     DateTime? wallUntil,
     int failedAttempts,
@@ -273,13 +319,16 @@ class PinLockoutService {
     if (reading == null) {
       final left = _capped((wallUntil ?? _now()).difference(_now()));
       if ((elapsedUntil != null || pending) && _monotonicRequired()) {
-        return (
-          remaining: left < _unprovenLock ? _unprovenLock : left,
-          proven: false,
-        );
+        final since = _unprovenSince ??= _processElapsed();
+        final hold = _unprovenHold - (_processElapsed() - since);
+        if (hold > Duration.zero) {
+          final floor = hold < _visibleHold ? _visibleHold : hold;
+          return (remaining: left > floor ? left : floor, proven: false);
+        }
       }
       return (remaining: left, proven: elapsedUntil == null && !pending);
     }
+    _unprovenSince = null;
     if (elapsedUntil == null) {
       // Wall-only, reboot + clock forward ended it: tie it to this boot for
       // its full length -- fail-closed, as a reboot restarts one.
@@ -298,7 +347,17 @@ class PinLockoutService {
     );
   }
 
-  static const Duration _unprovenLock = Duration(seconds: 1);
+  /// Process time at which reads first failed to prove a stored lockout's
+  /// expiry; any read that proves it clears this.
+  Duration? _unprovenSince;
+
+  /// Failing reads hold a lockout the wall calls over for this long, never
+  /// longer: the unlock screen gates the whole app, panic included.
+  static const Duration _unprovenHold = Duration(seconds: 30);
+
+  /// What a held lockout reports at least: the unlock screen opens its keypad
+  /// at 0 whole seconds, so a sub-second hold was no hold there.
+  static const Duration _visibleHold = Duration(seconds: 2);
 
   static Duration _capped(Duration value) {
     const cap = Duration(seconds: maxLockoutSeconds);
@@ -361,6 +420,7 @@ class PinLockoutService {
   Future<PinLockoutState> registerFailure() => _serialized(_registerFailure);
 
   Future<PinLockoutState> _registerFailure() async {
+    _unprovenSince = null; // a new lockout gets a hold of its own
     final read = await _readState();
     final current = switch (read) {
       PinLockoutReadable(:final state) => state,
@@ -412,8 +472,8 @@ class PinLockoutService {
         value: '${lockedUntil.millisecondsSinceEpoch}',
       );
     } else {
-      await _secureStorage.delete(key: _lockedUntilKey);
       await _clearMonotonicDeadline();
+      await _secureStorage.delete(key: _lockedUntilKey);
     }
 
     await _secureStorage.write(
@@ -430,21 +490,24 @@ class PinLockoutService {
   Future<void> reset() => _serialized(_reset);
 
   Future<void> _reset() async {
+    // The length first and alone: left behind by itself it reads as a
+    // lockout cut short and would re-lock the owner who just got it right.
+    await _secureStorage.delete(key: _lockedDurationKey);
     await Future.wait([
       _secureStorage.delete(key: _failedAttemptsKey),
       _secureStorage.delete(key: _lockedUntilKey),
       _secureStorage.delete(key: _lockedUntilElapsedKey),
       _secureStorage.delete(key: _lockedBootKey),
       _secureStorage.delete(key: _lockedBootIdKey),
-      _secureStorage.delete(key: _lockedDurationKey),
     ]);
   }
 
+  /// Length first (see [_reset]), wall key -- deleted by the caller -- last.
   Future<void> _clearMonotonicDeadline() async {
+    await _secureStorage.delete(key: _lockedDurationKey);
     await _secureStorage.delete(key: _lockedUntilElapsedKey);
     await _secureStorage.delete(key: _lockedBootKey);
     await _secureStorage.delete(key: _lockedBootIdKey);
-    await _secureStorage.delete(key: _lockedDurationKey);
   }
 
   /// Ticks the remaining lockout seconds for a screen that is already locked.
