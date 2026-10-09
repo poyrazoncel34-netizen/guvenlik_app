@@ -171,7 +171,7 @@
   "settings_share_text": "KoruBeni - Ücretsiz: acil kişi, sahte çağrı, siren, konum, güvenlik geçmişi ve gerçek arama yapmayan test modu. Pro ile Panik/SOS ve güvenlik zamanlayıcıları. İndir: https://play.google.com/store/apps/details?id=com.poyrazoncel.korubeni",
   "settings_share_text_ios": "KoruBeni yalnızca Android ve Google Play dağıtımı içindir.",
   "safe_walk_title": "Güvenli Yürüyüş",
-  "safe_walk_desc": "Bir zamanlayıcı başlatın. Süre dolduğunda\n'Güvendeyim' butonuna basmazsanız, uygulama\naçıkken acil akış hazırlanır.",
+  "safe_walk_desc": "Bir zamanlayıcı başlatın. Süre dolduğunda\n'Güvendeyim' butonuna basmazsanız 60 saniyelik\nek süre başlar ve bir uyarı gösterilmeye çalışılır;\nek süre sonunda acil arama akışı başlatılır.",
   "safe_walk_select_duration": "Süre Seçin",
   "safe_walk_start": "Yürüyüşe Başla",
   "safe_walk_safe": "Güvendeyim",

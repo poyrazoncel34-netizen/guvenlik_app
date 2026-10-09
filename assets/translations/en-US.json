@@ -171,7 +171,7 @@
   "settings_share_text": "KoruBeni - Free: emergency contact, fake call, siren, location, safety history and a test mode that places no real call. Pro adds Panic/SOS and safety timers. Download: https://play.google.com/store/apps/details?id=com.poyrazoncel.korubeni",
   "settings_share_text_ios": "KoruBeni is distributed only for Android on Google Play.",
   "safe_walk_title": "Safe Walk",
-  "safe_walk_desc": "Start a timer. If the time runs out and\nyou don't press 'I'm Safe', the emergency\nflow is prepared while the app is open.",
+  "safe_walk_desc": "Start a timer. If the time runs out and\nyou don't press 'I'm Safe', a 60-second grace\nperiod starts and a warning is attempted;\nwhen it ends the emergency call flow starts.",
   "safe_walk_select_duration": "Select Duration",
   "safe_walk_start": "Start Walk",
   "safe_walk_safe": "I'm Safe",
