@@ -173,38 +173,26 @@ class _CountdownScreenState extends State<CountdownScreen>
 
   Future<void> _loadEmergencyContact() async {
     final contact = await _contactsRepository.getPrimaryEmergencyContact();
-    if (mounted) {
-      setState(() => _emergencyContact = contact);
-    }
+    if (mounted) setState(() => _emergencyContact = contact);
   }
 
   /// Arm the native authority before starting the Dart projection. Exact-alarm
   /// access is required at arm time; a distinct inexact alarm is retained only
   /// as a best-effort backup if that access is revoked after arming.
   Future<ArmResult> _scheduleNativeBackupAlarm() async {
-    final session = widget.reattach;
-    if (session != null) {
-      // Native's token, deadline and target exactly as stored: re-arming would
-      // be refused (activeSessionExists) and any new deadline would drift.
-      _armedTargetNumber = session.target;
-      _countdownDeadline = MonotonicDeadline.fromWall(
-        widget.safetyClock,
-        session.armed.finalDeadline,
-      );
-      _sessionToken = session.armed.sessionToken;
-      return _armResult = session.armed;
-    }
+    final reattach = widget.reattach;
+    if (reattach != null) return _adopt(reattach);
     if (widget.entitlementDecision != EntitlementDecision.authorized) {
-      return _recordRejectedArm(
+      return _record(ArmRejected(
         widget.entitlementDecision == EntitlementDecision.denied
             ? 'entitlementDenied'
             : 'entitlementUnknown',
-      );
+      ));
     }
     if (_pinState != PinState.configured) {
-      return _recordRejectedArm(
+      return _record(ArmRejected(
         _pinState == PinState.readFailed ? 'pinReadFailed' : 'pinNotConfigured',
-      );
+      ));
     }
 
     ArmResult result;
@@ -221,7 +209,7 @@ class _CountdownScreenState extends State<CountdownScreen>
       // A safety session is bound only to the explicitly selected primary.
       // Silently falling back to list order can dispatch to the wrong person.
       if (primaryNumber == null) {
-        return _recordRejectedArm('callableTargetMissing');
+        return _record(const ArmRejected('callableTargetMissing'));
       }
 
       _armedTargetNumber = AndroidIntentService.normalizePhoneNumber(
@@ -247,16 +235,28 @@ class _CountdownScreenState extends State<CountdownScreen>
       debugPrint('CountdownScreen: Native session arm failed');
       result = const ArmUnknown('flutterArmException');
     }
+    final orphan = PanicReattachment.behindRefusal(
+      result,
+      _emergencyPlatformService,
+      clock: widget.safetyClock,
+    );
+    final adopted = orphan == null ? null : await orphan;
+    return adopted == null ? _record(result) : _adopt(adopted);
+  }
+
+  /// A rejected proposal records no token: it is not an active session.
+  ArmResult _record(ArmResult result) {
     _armResult = result;
     _sessionToken = PanicArmPolicy.activeOrUncertainToken(result);
     return result;
   }
 
-  ArmRejected _recordRejectedArm(String reasonCode) {
-    final result = ArmRejected(reasonCode);
-    _armResult = result;
-    _sessionToken = null;
-    return result;
+  /// Native's token, deadline and target exactly as stored: re-arming would
+  /// be refused (activeSessionExists) and any new deadline would drift.
+  ArmResult _adopt(PanicReattachment session) {
+    _armedTargetNumber = session.target;
+    _countdownDeadline = session.deadlineOn(widget.safetyClock);
+    return _record(session.armed);
   }
 
   Future<void> _startCountdown() async {

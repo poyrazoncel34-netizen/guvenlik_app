@@ -150,7 +150,11 @@ void main() {
     'kind': 'panic',
   };
 
-  Future<void> openReattached(WidgetTester tester, _FakeClock clock) async {
+  Future<void> openReattached(
+    WidgetTester tester,
+    _FakeClock clock, {
+    bool freshTrigger = false,
+  }) async {
     tester.view.physicalSize = const Size(1080, 2400);
     tester.view.devicePixelRatio = 2.625;
     addTearDown(tester.view.reset);
@@ -161,6 +165,11 @@ void main() {
     ) async {
       nativeCalls.add(call);
       switch (call.method) {
+        case 'armEmergencySession':
+          return <String, Object?>{
+            'type': 'rejected',
+            'reasonCode': 'activeSessionExists',
+          };
         case 'discoverEmergencySession':
           return <String, Object?>{
             'type': 'present',
@@ -198,10 +207,12 @@ void main() {
       methodChannel: channel,
       defaultTimeout: const Duration(seconds: 30),
     );
-    final session = await tester.runAsync(
-      () => PanicReattachment.discover(platform, clock: clock),
-    );
-    expect(session, isNotNull);
+    final session = freshTrigger
+        ? null
+        : await tester.runAsync(
+            () => PanicReattachment.discover(platform, clock: clock),
+          );
+    expect(session != null || freshTrigger, isTrue);
     await tester.pumpWidget(
       EasyLocalization(
         supportedLocales: const <Locale>[Locale('tr', 'TR')],
@@ -221,6 +232,7 @@ void main() {
                     builder: (_) => CountdownScreen(
                       reattach: session,
                       maskContactIdentity: true,
+                      entitlementDecision: EntitlementDecision.authorized,
                       pinVerificationService: PinVerificationService.forTesting(
                         secureStorage: _PinStorage(),
                         operationTimeout: const Duration(seconds: 30),
@@ -315,5 +327,37 @@ void main() {
     expect(dialled, isEmpty);
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump(const Duration(seconds: 13));
+  });
+
+  // Review of A-11: the re-show claims the countdown slot only after polling
+  // for the navigator. A widget, tile or volume trigger landing in that window
+  // opened a FRESH countdown; native refused its arm (activeSessionExists) and
+  // the failure dialog covered the screen while the real armed session had no
+  // PIN-cancel surface at all. The refused countdown now adopts that session.
+  testWidgets('a fresh trigger refused for an orphaned armed session adopts '
+      'it instead of showing a failure dialog', (tester) async {
+    final semantics = tester.ensureSemantics();
+    final clock = _FakeClock();
+    await openReattached(tester, clock, freshTrigger: true);
+    await settle(tester);
+
+    expect(methods(), contains('armEmergencySession'));
+    expect(find.text('emergency_dismiss'.tr()), findsNothing);
+    expect(
+      find.bySemanticsLabel(CountdownAnnouncement.labelFor(6)),
+      findsOneWidget,
+      reason: 'the adopted session had six seconds left at native',
+    );
+
+    for (final digit in _pin.split('')) {
+      await tester.tap(find.bySemanticsLabel(digit));
+      await tester.pump(const Duration(milliseconds: 50));
+    }
+    await settle(tester);
+
+    expect(randomIdOf('cancelEmergencySession'), _randomId);
+    expect(find.byType(CountdownScreen), findsNothing);
+    expect(methods(), isNot(contains('dispatchEmergencySession')));
+    semantics.dispose();
   });
 }

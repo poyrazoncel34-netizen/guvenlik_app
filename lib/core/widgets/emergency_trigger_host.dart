@@ -14,6 +14,7 @@ import '../services/check_in_service.dart';
 import '../services/native_emergency_history.dart';
 import '../services/panic_countdown_guard.dart';
 import '../services/panic_reattachment.dart';
+import '../services/safety_clock.dart';
 import '../services/emergency_platform_service.dart';
 import '../services/emergency_session_contract.dart';
 import '../services/local_logger_service.dart';
@@ -39,12 +40,16 @@ class EmergencyTriggerHost extends StatefulWidget {
   @visibleForTesting
   final Widget Function(PanicReattachment session)? reattachBuilder;
 
+  /// Bounds the re-show's wait for the navigator; injectable for tests.
+  final SafetyClock safetyClock;
+
   const EmergencyTriggerHost({
     super.key,
     required this.child,
     this.countdownBuilder,
     this.discoverArmedPanic,
     this.reattachBuilder,
+    this.safetyClock = SafetyClock.system,
   });
 
   @override
@@ -93,12 +98,12 @@ class EmergencyTriggerHostState extends State<EmergencyTriggerHost>
     // Cold start: the session is found ~0.8 s after launch, before the root
     // Navigator exists, and the first frame is deferred while startup loads
     // (API 35 emulator) -- one endOfFrame was not enough and the re-show was
-    // dropped. Poll on a timer, never on frames, bounded by native's deadline.
+    // dropped. Poll on a timer, never on frames, bounded by native's deadline
+    // measured monotonically: a clock change during the wait must not end it.
+    final left = session.deadlineOn(widget.safetyClock);
     var navigator = rootNavigatorKey.currentState;
     while (navigator == null) {
-      if (!mounted || !session.armed.finalDeadline.isAfter(DateTime.now())) {
-        return;
-      }
+      if (!mounted || left.isDue) return;
       await Future<void>.delayed(const Duration(milliseconds: 50));
       navigator = rootNavigatorKey.currentState;
     }

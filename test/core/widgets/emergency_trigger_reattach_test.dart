@@ -12,6 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guvenlik_app/core/navigation/app_navigator.dart';
+import 'package:guvenlik_app/core/services/safety_clock.dart';
 import 'package:guvenlik_app/core/services/emergency_platform_service.dart';
 import 'package:guvenlik_app/core/services/emergency_session_contract.dart';
 import 'package:guvenlik_app/core/services/panic_countdown_guard.dart';
@@ -167,10 +168,25 @@ class _LateAppState extends State<_LateApp> {
       _ready ? widget.app : const SizedBox.shrink();
 }
 
+/// Real time, except that every wall reading after the first is an hour
+/// ahead: a clock change landing while the host waits for the navigator.
+class _JumpAfterFirstRead implements SafetyClock {
+  var _reads = 0;
+
+  @override
+  DateTime now() => DateTime.now().add(
+    _reads++ == 0 ? Duration.zero : const Duration(hours: 1),
+  );
+
+  @override
+  Duration get monotonic => SafetyClock.system.monotonic;
+}
+
 Future<void> _pumpHost(
   WidgetTester tester,
   PushCounter observer, {
   Duration? navigatorDelay,
+  SafetyClock safetyClock = SafetyClock.system,
 }) async {
   final provider = ParkedSubscriptionProvider(
     const SubscriptionAccessState.uninitialized(),
@@ -189,6 +205,7 @@ Future<void> _pumpHost(
             countdownBuilder: (_) => const _StubCountdown(),
             discoverArmedPanic: _armedPanic,
             reattachBuilder: _StubReattached.new,
+            safetyClock: safetyClock,
             child: Builder(
               builder: (context) {
                 final app = MaterialApp(
@@ -323,6 +340,31 @@ void main() {
       navigatorDelay: const Duration(milliseconds: 1500),
     );
     // The host was built inside runAsync, so its timers run on REAL time.
+    for (var i = 0; i < 10; i++) {
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 250)),
+      );
+      await tester.pump(const Duration(milliseconds: 50));
+    }
+
+    expect(find.text('REATTACHED countdown-reattach-1'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await drainHostTimers(tester);
+  });
+
+  // Review of A-11: the wait for the navigator was bounded by the WALL clock,
+  // the very clock this series stopped trusting; a +1 h change during the
+  // wait dropped the re-show while native still held the session ARMED.
+  testWidgets('a clock change while waiting for the navigator does not drop '
+      'the re-show', (tester) async {
+    _installNative(tester, armed: true);
+    final observer = PushCounter();
+    await _pumpHost(
+      tester,
+      observer,
+      navigatorDelay: const Duration(milliseconds: 1500),
+      safetyClock: _JumpAfterFirstRead(),
+    );
     for (var i = 0; i < 10; i++) {
       await tester.runAsync(
         () => Future<void>.delayed(const Duration(milliseconds: 250)),

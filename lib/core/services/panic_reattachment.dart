@@ -22,6 +22,26 @@ final class PanicReattachment {
   /// The immutable arming-time target, for the foreground dial fallback.
   final String? target;
 
+  /// The countdown deadline: native's own, measured from now on.
+  MonotonicDeadline deadlineOn(SafetyClock clock) =>
+      MonotonicDeadline.fromWall(clock, armed.finalDeadline);
+
+  /// The orphaned session behind an `activeSessionExists` refusal; null,
+  /// synchronously and without a platform call, for any other result.
+  ///
+  /// The re-show claims the countdown slot only after polling for the root
+  /// navigator. A widget, tile or volume trigger landing in that window opened
+  /// a fresh countdown, native refused its arm, and the failure dialog covered
+  /// the screen while the real session had no PIN-cancel surface at all
+  /// (review of A-11). The refused countdown adopts that session instead.
+  static Future<PanicReattachment?>? behindRefusal(
+    ArmResult result,
+    EmergencyPlatformService platform, {
+    SafetyClock clock = SafetyClock.system,
+  }) => result is ArmRejected && result.reasonCode == 'activeSessionExists'
+      ? discover(platform, clock: clock)
+      : null;
+
   /// The session to re-show, or null when there is nothing to cancel any more.
   static Future<PanicReattachment?> discover(
     EmergencyPlatformService platform, {
