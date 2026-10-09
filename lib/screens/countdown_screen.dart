@@ -288,7 +288,7 @@ class _CountdownScreenState extends State<CountdownScreen>
       );
       return;
     }
-    _startDartCountdownTimer();
+    setState(_startDartCountdownTimer); // heading follows _armResult (Y-11)
   }
 
   void _startDartCountdownTimer() {
@@ -730,7 +730,7 @@ class _CountdownScreenState extends State<CountdownScreen>
                                   child: Semantics(
                                     header: true,
                                     child: Text(
-                                      "countdown_warning_title".tr(),
+                                      PanicArmPolicy.countdownTitleKey(_armResult).tr(),
                                       style: const TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.w800,

@@ -903,6 +903,23 @@ class EmergencySessionCoordinatorTest {
         assertEquals(null, fixture.store.current)
     }
 
+    // Y-11 review: CALL_PHONE was checked first, so with both refused the
+    // panic got callPermissionDenied -- a dialer-only countdown -- instead of
+    // the exact-alarm refusal that offers background protection.
+    @Test
+    fun `missing exact alarm outranks a refused call permission`() {
+        val fixture = Fixture(
+            capabilities = readyCapabilities.copy(
+                exactAlarmGranted = false,
+                callPermissionGranted = false,
+            ),
+        )
+
+        val result = fixture.coordinator.arm(validArmRequest())
+
+        assertEquals("exactAlarmDenied", (result as ArmResult.Rejected).reasonCode)
+    }
+
     @Test
     fun `target is an immutable normalized snapshot for an armed generation`() {
         val fixture = Fixture()

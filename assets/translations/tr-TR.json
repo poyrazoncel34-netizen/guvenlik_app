@@ -197,6 +197,7 @@
   "safe_walk_completed_desc": "Güvenli şekilde hedefe ulaştınız",
   "safe_walk_minutes": "{min} dk",
   "countdown_warning_title": "Acil uyarı devreye giriyor",
+  "countdown_limited_protection_title": "Sınırlı koruma — uygulama kapanırsa arama yapılmaz",
   "countdown_seconds": "saniye",
   "countdown_seconds_remaining": "{seconds} saniye kaldı",
   "countdown_enter_pin": "İptal için PIN kodunuzu girin",

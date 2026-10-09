@@ -230,6 +230,9 @@ void main() {
 
     expect(find.text(tr('panic_exact_alarm_required')), findsNothing);
     expect(find.text(tr('background_protection_open')), findsNothing);
+    // No native session behind it: the countdown says so before it runs.
+    expect(find.text(tr('countdown_limited_protection_title')), findsOneWidget);
+    expect(find.text(tr('countdown_warning_title')), findsNothing);
     for (var i = 0; i < 14; i++) {
       clock.elapsed += const Duration(seconds: 1);
       await tester.pump(const Duration(seconds: 1));

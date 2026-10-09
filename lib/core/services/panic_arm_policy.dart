@@ -57,6 +57,15 @@ abstract final class PanicArmPolicy {
       ? (armedTarget ?? '')
       : '';
 
+  /// Heading of the running countdown. A dialer-only countdown has no native
+  /// session behind it, so a process death during it calls nobody; it must
+  /// not carry the heading of a protected one (Y-11, owner decision).
+  static String countdownTitleKey(ArmResult? result) =>
+      result != null &&
+          dispositionFor(result) == PanicArmDisposition.foregroundDialCountdown
+      ? 'countdown_limited_protection_title'
+      : 'countdown_warning_title';
+
   static PanicArmDisposition dispositionFor(ArmResult result) {
     if (result is Armed) {
       return PanicArmDisposition.nativeProtectedCountdown;

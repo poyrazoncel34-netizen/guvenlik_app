@@ -104,6 +104,34 @@ void main() {
     });
   });
 
+  // Y-11 review: a dialer-only countdown has no native session, so a process
+  // death during it calls nobody. It must not look like a protected one.
+  test('only a foreground dial countdown is titled limited protection', () {
+    const limited = 'countdown_limited_protection_title';
+    expect(
+      PanicArmPolicy.countdownTitleKey(
+        const ArmRejected('callPermissionDenied', rejectedToken: token),
+      ),
+      limited,
+    );
+    for (final result in <ArmResult?>[
+      null,
+      Armed(
+        sessionToken: token,
+        mainDeadline: DateTime.fromMillisecondsSinceEpoch(10000),
+        finalDeadline: DateTime.fromMillisecondsSinceEpoch(10000),
+      ),
+      const ArmUnknown('timeout', uncertainToken: token),
+      const ArmRejected('exactAlarmDenied', rejectedToken: token),
+    ]) {
+      expect(
+        PanicArmPolicy.countdownTitleKey(result),
+        'countdown_warning_title',
+        reason: '$result',
+      );
+    }
+  });
+
   test('rejected diagnostic token is never treated as an active session', () {
     expect(
       PanicArmPolicy.activeOrUncertainToken(

@@ -145,8 +145,10 @@ data class CapabilitySnapshot(
         !telephonyCalling -> "telephonyUnavailable"
         !telecomAvailable -> "telecomUnavailable"
         !dialHandlerAvailable -> "dialHandlerUnavailable"
-        !callPermissionGranted -> "callPermissionDenied"
+        // Before CALL_PHONE (Y-11 review): with both refused, the panic must
+        // get the exact-alarm refusal, not a dialer-only countdown.
         !exactAlarmGranted -> "exactAlarmDenied"
+        !callPermissionGranted -> "callPermissionDenied"
         !notificationsEnabled -> "notificationsDisabled"
         !alertChannelHigh -> "alertChannelNotHigh"
         else -> null

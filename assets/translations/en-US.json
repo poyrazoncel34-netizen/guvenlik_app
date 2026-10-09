@@ -197,6 +197,7 @@
   "safe_walk_completed_desc": "You reached your destination safely",
   "safe_walk_minutes": "{min} min",
   "countdown_warning_title": "Emergency alert activating",
+  "countdown_limited_protection_title": "Limited protection — if the app closes, no call is made",
   "countdown_seconds": "seconds",
   "countdown_seconds_remaining": "{seconds} seconds remaining",
   "countdown_enter_pin": "Enter your PIN to cancel",
