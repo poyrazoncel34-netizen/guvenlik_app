@@ -1,12 +1,14 @@
 package com.poyrazoncel.korubeni.emergency
 
+import android.content.Context
+import android.content.ContextWrapper
 import android.content.Intent
 import android.os.Looper
 import io.flutter.plugin.common.EventChannel
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -34,6 +36,19 @@ class ClockChangeEventTest {
         override fun error(errorCode: String?, errorMessage: String?, errorDetails: Any?) = Unit
         override fun endOfStream() = Unit
     }
+
+    private class ThrowingDeviceStorageContext(base: Context) : ContextWrapper(base) {
+        override fun getApplicationContext(): Context = this
+
+        override fun createDeviceProtectedStorageContext(): Context {
+            throw IllegalStateException("injected device-protected storage failure")
+        }
+    }
+
+    // The bus is a process-wide object: a sink leaked by another test would make
+    // the no-engine case below pass without exercising the no-sink path.
+    @Before
+    fun detachFirst() = EmergencyEventBus.detach()
 
     @After
     fun detach() = EmergencyEventBus.detach()
@@ -69,10 +84,25 @@ class ClockChangeEventTest {
         ClockChangeReceiver().onReceive(context, Intent(Intent.ACTION_TIME_CHANGED))
         Shadows.shadowOf(Looper.getMainLooper()).idle()
 
-        assertTrue(
+        assertEquals(
             "a dispatch outcome waiting for Dart must not be overwritten",
-            prefs.getString(EmergencyPrefs.KEY_PENDING_TRIGGER, null)!!.contains("emergencySessionDispatched"),
+            "{\"type\":\"emergencySessionDispatched\"}",
+            prefs.getString(EmergencyPrefs.KEY_PENDING_TRIGGER, null),
         )
+    }
+
+    @Test
+    fun `a reconcile that fails still tells a running engine to re-read`() {
+        val sink = RecordingSink()
+        EmergencyEventBus.attach(sink)
+
+        ClockChangeReceiver().onReceive(
+            ThrowingDeviceStorageContext(context),
+            Intent(Intent.ACTION_TIME_CHANGED),
+        )
+        Shadows.shadowOf(Looper.getMainLooper()).idle()
+
+        assertEquals(1, sink.events.size)
     }
 
     @Test

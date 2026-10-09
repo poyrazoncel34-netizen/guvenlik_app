@@ -754,6 +754,43 @@ class EmergencySessionCoordinatorTest {
         assertEquals(0, clocks.calls.targets.size)
     }
 
+    // Review of A-02r: with both BOOT_COUNTs known the kernel boot id was never
+    // consulted. BOOT_COUNT depends on when Settings increments it relative to
+    // the boot receivers and on its write reaching disk; the kernel id is
+    // unique per boot by construction, so it decides whenever both sides have it.
+    @Test
+    fun `an equal BOOT_COUNT does not hide a new boot the kernel id can see`() {
+        val clocks = BootClocks(elapsed = 50_000L)
+        clocks.coordinator.arm(validArmRequest(randomId = "stale-count"))
+        clocks.reboot(atWall = now + 60_500L, elapsedSinceBoot = 70_000L)
+        clocks.boot -= 1 // not incremented yet when TIME_SET arrives
+        clocks.coordinator.reconcileAfterClockChange()
+
+        assertTrue(
+            "deadline moved to ${clocks.store.current!!.finalDeadlineMs - now} ms",
+            clocks.store.current!!.finalDeadlineMs <= now + 121_000L,
+        )
+    }
+
+    @Test
+    fun `a BOOT_COUNT incremented after the boot reconcile keeps a same-boot clock change`() {
+        val clocks = BootClocks(elapsed = 50_000L)
+        clocks.coordinator.arm(validArmRequest(randomId = "late-count"))
+        clocks.reboot(atWall = now + 60_000L, elapsedSinceBoot = 10_000L)
+        clocks.boot -= 1
+        clocks.coordinator.reconcileAfterBoot() // stamps the stale count
+        clocks.boot += 1
+
+        clocks.elapsed += 30_000L
+        clocks.wall += 30_000L + 3_600_000L
+        clocks.coordinator.reconcileAfterClockChange()
+
+        val session = clocks.store.current!!
+        assertEquals(LifecycleState.ARMED, session.lifecycleState)
+        assertEquals(clocks.wall + 30_000L, session.finalDeadlineMs)
+        assertEquals(0, clocks.calls.targets.size)
+    }
+
     @Test
     fun `a record from before boot identities is stamped at the next current-boot reconcile`() {
         val clocks = BootClocks(elapsed = 50_000L)
@@ -797,6 +834,9 @@ class EmergencySessionCoordinatorTest {
             // At least one identity readable in both boots.
             val countReadable = random.nextBoolean()
             val idReadable = !countReadable || random.nextBoolean()
+            // Inconsistent identities too: a BOOT_COUNT not yet incremented
+            // when the first broadcast of the new boot arrives.
+            val countStale = countReadable && idReadable && random.nextInt(4) == 0
 
             fun finalDeadline(timeSetFirst: Boolean): Long {
                 val clocks = BootClocks(elapsed = armElapsed)
@@ -804,6 +844,7 @@ class EmergencySessionCoordinatorTest {
                 if (!idReadable) clocks.bootId = null
                 clocks.coordinator.arm(validArmRequest(randomId = "order-$case-$timeSetFirst"))
                 clocks.reboot(atWall = now + downtime, elapsedSinceBoot = newUptime)
+                if (countStale) clocks.boot -= 1
                 if (timeSetFirst) {
                     clocks.wall += correction
                     clocks.coordinator.reconcileAfterClockChange()

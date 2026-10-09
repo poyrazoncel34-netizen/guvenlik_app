@@ -677,10 +677,13 @@ class EmergencySessionCoordinator(
      * Whether [envelope]'s elapsed deadline was written in an earlier boot.
      *
      * elapsedRealtime restarts at zero on every boot, so that deadline is then
-     * the previous boot's uptime plus the remaining time. Two independent
-     * signals: a different BOOT_COUNT (or, when BOOT_COUNT is unreadable, a
-     * different kernel boot id), or an elapsed clock now BELOW the one recorded
-     * when the deadline was written (it never runs backwards within a boot).
+     * the previous boot's uptime plus the remaining time. Signals: an elapsed
+     * clock now BELOW the one recorded when the deadline was written (it never
+     * runs backwards within a boot), then the kernel boot id, then BOOT_COUNT.
+     * The kernel id is unique per boot by construction and decides whenever
+     * both sides have one; BOOT_COUNT depends on when Settings increments it
+     * relative to the boot receivers, and a count stamped before that increment
+     * made a later same-boot clock change look foreign (review of A-02r).
      * With none known the historical same-boot assumption stands rather than a
      * guess: treating an unknown as "another boot" would apply a same-boot clock
      * change to the deadline, and which error to prefer is a product decision.
@@ -689,14 +692,13 @@ class EmergencySessionCoordinator(
         if (envelope.elapsedStampMs >= 0L && elapsedRealtimeMs() < envelope.elapsedStampMs) {
             return true
         }
-        val current = currentBootCount()
-        if (current != UNKNOWN_BOOT_COUNT && envelope.elapsedBootCount != UNKNOWN_BOOT_COUNT) {
-            return envelope.elapsedBootCount != current
-        }
-        // BOOT_COUNT unreadable on either side: the kernel boot id (A-02r).
         val id = currentBootId()
-        return id.isNotEmpty() && envelope.elapsedBootId.isNotEmpty() &&
-            envelope.elapsedBootId != id
+        if (id.isNotEmpty() && envelope.elapsedBootId.isNotEmpty()) {
+            return envelope.elapsedBootId != id
+        }
+        val current = currentBootCount()
+        return current != UNKNOWN_BOOT_COUNT && envelope.elapsedBootCount != UNKNOWN_BOOT_COUNT &&
+            envelope.elapsedBootCount != current
     }
 
     /** Preserve elapsed duration when the user/network changes wall time. */
