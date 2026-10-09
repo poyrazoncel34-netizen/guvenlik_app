@@ -72,11 +72,47 @@ void main() {
       final tap = source.lastIndexOf('BackgroundProtectionTap(', notice);
       expect(notice, isNot(-1), reason: path);
       expect(tap, isNot(-1), reason: '$path: the notice must open settings');
+      // Enclosed, not merely nearby: the notice lies inside the wrapper's own
+      // argument list (review M5 -- a distance check passed a wrapper that
+      // closed before the notice).
+      final open = tap + 'BackgroundProtectionTap'.length;
       expect(
-        notice - tap,
-        lessThan(1200),
+        notice,
+        inExclusiveRange(open, _closeOf(source, open)),
         reason: '$path: the wrapper must enclose the notice',
       );
     }
   });
+}
+
+/// Index just past the parenthesis matching the one at [open], skipping
+/// string literals and line comments; -1 when unbalanced.
+int _closeOf(String source, int open) {
+  var depth = 0;
+  String? quote;
+  for (var i = open; i < source.length; i++) {
+    final c = source[i];
+    if (quote != null) {
+      if (c == '\\') {
+        i++;
+      } else if (c == quote) {
+        quote = null;
+      }
+      continue;
+    }
+    if (c == '/' && i + 1 < source.length && source[i + 1] == '/') {
+      final end = source.indexOf('\n', i);
+      if (end == -1) return -1;
+      i = end;
+      continue;
+    }
+    if (c == "'" || c == '"') {
+      quote = c;
+    } else if (c == '(') {
+      depth++;
+    } else if (c == ')' && --depth == 0) {
+      return i + 1;
+    }
+  }
+  return -1;
 }

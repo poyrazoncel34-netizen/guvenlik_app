@@ -216,6 +216,25 @@ void main() {
       findsOneWidget,
       reason: 'the refusal stays up while the user is in Settings',
     );
+
+    // The second offer is a real call to the armed contact (review M5).
+    final launched = <String>[];
+    const launcher = MethodChannel('plugins.flutter.io/url_launcher');
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(launcher, (
+      call,
+    ) async {
+      launched.add('${call.method} ${call.arguments}');
+      return true;
+    });
+    addTearDown(
+      () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        launcher,
+        null,
+      ),
+    );
+    await tester.tap(find.text(tr('emergency_manual_call_now')));
+    await tester.pump();
+    expect(launched.join(), contains('tel:$kContactPhone'));
   });
 
   testWidgets('control: a refused CALL_PHONE keeps the dialer countdown', (
