@@ -229,6 +229,40 @@ void main() {
       expect(find.byType(EmergencyCallScreen), findsOneWidget);
     });
 
+    // On a 1080x2400 px / 420 dpi emulator (411x914 dp) the link, placed at
+    // the end of the scroll view, overflowed it and was cut through its text
+    // at rest. The link and what the request means must be readable without
+    // scrolling.
+    testWidgets('on a 411x914 dp phone the link and the request banner are '
+        'fully visible at rest', (tester) async {
+      tester.view.physicalSize = const Size(1080, 2400);
+      tester.view.devicePixelRatio = 2.625;
+      addTearDown(tester.view.reset);
+      await pumpResult(
+        tester,
+        result: EmergencyCallResult.requested('+905551112233'),
+      );
+
+      bool fullyVisible(Finder f) {
+        final rect = tester.getRect(f);
+        final screen = Offset.zero & const Size(1080 / 2.625, 2400 / 2.625);
+        if (rect.top < screen.top || rect.bottom > screen.bottom) return false;
+        final scrollable = find.ancestor(of: f, matching: find.byType(Scrollable));
+        if (scrollable.evaluate().isEmpty) return true;
+        final viewport = tester.getRect(scrollable.first);
+        return viewport.top <= rect.top && rect.bottom <= viewport.bottom;
+      }
+
+      // The status card's long hint is checked on the device: the test font
+      // is far wider than Roboto, so it wraps into more lines here.
+      for (final key in <String>[
+        'emergency_open_phone_app',
+        'emergency_flow_requested_body',
+      ]) {
+        expect(fullyVisible(find.text(tr(key))), isTrue, reason: key);
+      }
+    });
+
     testWidgets('a dialer fallback asks for the green button without claiming '
         'the call did not go', (tester) async {
       await pumpResult(

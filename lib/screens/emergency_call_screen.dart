@@ -432,26 +432,6 @@ class _EmergencyCallScreenState extends State<EmergencyCallScreen>
                         title: 'emergency_status_call'.tr(),
                         presentation: callPresentation,
                       ),
-                      if (widget.callResult.requiresVerification &&
-                          widget.phone.isNotEmpty) ...[
-                        const SizedBox(height: 8),
-                        // Accepted is not connected, and the call can still
-                        // fail (MEDIUM-7): a quiet way to the dialer, number
-                        // filled in, that places nothing by itself.
-                        TextButton.icon(
-                          onPressed: () => unawaited(
-                            AndroidIntentService.openDialer(widget.phone),
-                          ),
-                          icon: const Icon(
-                            Icons.dialpad_rounded,
-                            size: IconSizes.listItem,
-                          ),
-                          label: Text('emergency_open_phone_app'.tr()),
-                          style: TextButton.styleFrom(
-                            foregroundColor: Colors.white70,
-                          ),
-                        ),
-                      ],
                       ...DispatchOutcomeList.build(widget.dispatchLedger),
                     ],
                   ),
@@ -469,7 +449,27 @@ class _EmergencyCallScreenState extends State<EmergencyCallScreen>
                         fontSize: 12,
                       ),
                     ),
-                    const SizedBox(height: 22),
+                    // Accepted is not connected, and the call can still fail
+                    // (MEDIUM-7): a quiet way to the dialer, number filled in,
+                    // that places nothing by itself. Here, not in the scroll
+                    // view: there it overflowed a 914 dp screen and was cut.
+                    if (widget.callResult.requiresVerification &&
+                        widget.phone.isNotEmpty)
+                      TextButton.icon(
+                        onPressed: () => unawaited(
+                          AndroidIntentService.openDialer(widget.phone),
+                        ),
+                        icon: const Icon(
+                          Icons.dialpad_rounded,
+                          size: IconSizes.listItem,
+                        ),
+                        label: Text('emergency_open_phone_app'.tr()),
+                        style: TextButton.styleFrom(
+                          foregroundColor: Colors.white70,
+                        ),
+                      )
+                    else
+                      const SizedBox(height: 22),
                     Semantics(
                       button: true,
                       label: "emergency_call_end".tr(),
