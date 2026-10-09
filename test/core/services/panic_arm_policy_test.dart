@@ -108,12 +108,19 @@ void main() {
   // death during it calls nobody. It must not look like a protected one.
   test('only a foreground dial countdown is titled limited protection', () {
     const limited = 'countdown_limited_protection_title';
-    expect(
-      PanicArmPolicy.countdownTitleKey(
-        const ArmRejected('callPermissionDenied', rejectedToken: token),
-      ),
-      limited,
-    );
+    for (final reason in <String>{
+      'callPermissionDenied',
+      'notificationsDisabled',
+      'alertChannelNotHigh',
+    }) {
+      expect(
+        PanicArmPolicy.countdownTitleKey(
+          ArmRejected(reason, rejectedToken: token),
+        ),
+        limited,
+        reason: reason,
+      );
+    }
     for (final result in <ArmResult?>[
       null,
       Armed(

@@ -87,6 +87,11 @@ void main() {
 
 /// Index just past the parenthesis matching the one at [open], skipping
 /// string literals and line comments; -1 when unbalanced.
+///
+/// A scanner for two known widget trees, not a Dart parser: raw strings
+/// ending in a backslash, triple-quoted strings holding a lone quote, block
+/// comments and `)` inside interpolations are not handled. Most of those
+/// end the range early or never, which fails the test rather than passes it.
 int _closeOf(String source, int open) {
   var depth = 0;
   String? quote;

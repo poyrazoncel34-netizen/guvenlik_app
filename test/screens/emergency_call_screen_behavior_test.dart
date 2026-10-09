@@ -240,6 +240,7 @@ void main() {
 
       expect(find.byType(AlertDialog), findsOneWidget);
       expect(find.text(tr('failsafe_dialer_title')), findsOneWidget);
+      expect(find.text(tr('emergency_open_phone_app')), findsNothing);
       expect(find.textContaining('henüz gitmedi'), findsNothing);
       expect(find.textContaining('Arama bağlanmadı'), findsNothing);
     });
