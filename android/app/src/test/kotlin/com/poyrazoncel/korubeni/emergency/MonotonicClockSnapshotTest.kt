@@ -2,6 +2,7 @@ package com.poyrazoncel.korubeni.emergency
 
 import android.provider.Settings
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -30,5 +31,15 @@ class MonotonicClockSnapshotTest {
         val snapshot = MonotonicClockSnapshot.of(context) { 1L }
 
         assertEquals(UNKNOWN_BOOT_COUNT, snapshot["bootCount"])
+    }
+
+    // Review of Y-05: Dart decides "same boot" for the PIN lockout from this
+    // snapshot; without the kernel id a device that cannot read BOOT_COUNT
+    // fell back to the settable wall clock.
+    @Test
+    fun `reports the kernel boot id, or null when it cannot be read`() {
+        val id = "0f1e2d3c-4b5a-6978-8796-a5b4c3d2e1f0"
+        assertEquals(id, MonotonicClockSnapshot.of(context, bootId = { id }) { 1L }["bootId"])
+        assertNull(MonotonicClockSnapshot.of(context, bootId = { null }) { 1L }["bootId"])
     }
 }

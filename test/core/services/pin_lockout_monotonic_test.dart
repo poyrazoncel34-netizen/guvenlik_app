@@ -13,11 +13,20 @@ import 'package:guvenlik_app/core/services/pin_lockout_service.dart';
 
 class _Storage extends SecureStorage {
   final Map<String, String> values = <String, String>{};
+
+  /// A write to this key throws once: the process died mid-lockout-write.
+  String? failWriteOf;
   @override
   Future<String?> read({required String key}) async => values[key];
   @override
-  Future<void> write({required String key, required String value}) async =>
-      values[key] = value;
+  Future<void> write({required String key, required String value}) async {
+    if (key == failWriteOf) {
+      failWriteOf = null;
+      throw Exception('process died');
+    }
+    values[key] = value;
+  }
+
   @override
   Future<void> delete({required String key}) async => values.remove(key);
   @override
@@ -36,7 +45,7 @@ void main() {
     storage = _Storage();
     serviceLocator.registerSingleton<SecureStorage>(storage);
     wall = DateTime.now();
-    reading = (elapsedMs: 1000000, bootCount: 17);
+    reading = (elapsedMs: 1000000, bootCount: 17, bootId: null);
     service = PinLockoutService.forTesting(
       monotonic: () async => reading,
       now: () => wall,
@@ -60,6 +69,7 @@ void main() {
     reading = (
       elapsedMs: current.elapsedMs + by.inMilliseconds,
       bootCount: current.bootCount,
+      bootId: current.bootId,
     );
     wall = wall.add(by).add(wallJump);
   }
@@ -96,7 +106,7 @@ void main() {
 
   test('after a reboot the wall deadline counts again', () async {
     await lockFor30Seconds();
-    reading = (elapsedMs: 15000, bootCount: 18);
+    reading = (elapsedMs: 15000, bootCount: 18, bootId: null);
     wall = wall.add(const Duration(seconds: 5));
 
     final state = await read();
@@ -107,7 +117,7 @@ void main() {
   test('a clock moved back across a reboot cannot lock the owner out for '
       'longer than the policy maximum', () async {
     await lockFor30Seconds();
-    reading = (elapsedMs: 15000, bootCount: 18);
+    reading = (elapsedMs: 15000, bootCount: 18, bootId: null);
     wall = wall.subtract(const Duration(hours: 2));
 
     final state = await read();
@@ -131,6 +141,65 @@ void main() {
         lessThanOrEqualTo(PinLockoutService.maxLockoutSeconds),
       );
       expect(state.isLocked, isTrue);
+    },
+  );
+
+  // Review of Y-05: the snapshot carried only BOOT_COUNT, so a device that
+  // cannot read it fell back to the settable wall clock entirely. The kernel
+  // boot id decides there, as it does natively (A-02r).
+  test('with BOOT_COUNT unreadable the kernel boot id keeps the lockout '
+      'monotonic', () async {
+    reading = (elapsedMs: 1000000, bootCount: -1, bootId: 'boot-a');
+    await lockFor30Seconds();
+    advance(const Duration(seconds: 1), wallJump: const Duration(hours: 1));
+
+    final state = await read();
+    expect(state.isLocked, isTrue);
+    expect(state.remainingSeconds, inInclusiveRange(27, 29));
+  });
+
+  test(
+    'a new kernel boot id is a new boot even with an equal BOOT_COUNT',
+    () async {
+      reading = (elapsedMs: 1000000, bootCount: 17, bootId: 'boot-a');
+      await lockFor30Seconds();
+      // Rebooted; uptime happens to be past the old deadline.
+      reading = (elapsedMs: 2000000, bootCount: 17, bootId: 'boot-b');
+      wall = wall.add(const Duration(seconds: 5));
+
+      final state = await read();
+      expect(state.isLocked, isTrue, reason: 'the wall deadline counts');
+      expect(state.remainingSeconds, inInclusiveRange(23, 25));
+    },
+  );
+
+  // Review of Y-05: the wall deadline was written before the elapsed keys. A
+  // process killed between the two left a FRESH wall deadline next to the
+  // EXPIRED elapsed deadline of an earlier lockout in the same boot, and the
+  // expired one decided: unlocked.
+  test(
+    'a lockout write cut short never leaves an expired deadline in charge',
+    () async {
+      await lockFor30Seconds();
+      advance(const Duration(seconds: 31));
+      expect((await read()).isLocked, isFalse);
+
+      storage.failWriteOf = 'pin_lockout_until_ms';
+      await expectLater(service.registerFailure(), throwsException);
+      storage.values['pin_lockout_failed_attempts'] = '5';
+      storage.failWriteOf = 'pin_lockout_until_elapsed_ms';
+      await expectLater(service.registerFailure(), throwsException);
+
+      // Whatever got written, an expired elapsed deadline must not decide.
+      final stored = storage.values['pin_lockout_until_elapsed_ms'];
+      if (stored != null) {
+        expect(
+          int.parse(stored),
+          greaterThan(reading!.elapsedMs),
+          reason: 'a stored elapsed deadline must belong to the newest lockout',
+        );
+      }
+      expect((await read()).isLocked, isTrue);
     },
   );
 

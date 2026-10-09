@@ -10,15 +10,18 @@ import android.os.SystemClock
  * The PIN lockout stored a wall-clock deadline: on an API 35 emulator moving
  * the clock forward one hour ended an 86 s lockout at once, and moving it back
  * two hours locked the owner out for 7431 s. elapsedRealtime cannot be set by
- * the user and counts deep sleep; [bootCount] tells Dart whether a stored
- * elapsed deadline belongs to this boot at all.
+ * the user and counts deep sleep; the kernel boot id and [bootCount] tell
+ * Dart whether a stored elapsed deadline belongs to this boot at all, in the
+ * coordinator's order (A-02r): the id where both sides have one.
  */
 object MonotonicClockSnapshot {
     fun of(
         context: Context,
+        bootId: () -> String? = { BootIdentity.bootId() },
         elapsedRealtimeMs: () -> Long = { SystemClock.elapsedRealtime() },
-    ): Map<String, Any> = mapOf(
+    ): Map<String, Any?> = mapOf(
         "elapsedRealtimeMs" to elapsedRealtimeMs(),
         "bootCount" to BootIdentity.current(context),
+        "bootId" to bootId(),
     )
 }

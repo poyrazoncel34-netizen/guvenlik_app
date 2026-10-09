@@ -7,8 +7,21 @@ import '../di/service_locator.dart';
 import '../security/secure_storage.dart';
 import 'emergency_platform_service.dart';
 
-/// elapsedRealtime (ms) and the boot it belongs to, from native.
-typedef MonotonicReading = ({int elapsedMs, int bootCount});
+/// elapsedRealtime (ms) and the boot it belongs to, from native: BOOT_COUNT
+/// (-1 when unreadable) and the kernel boot id (null when unreadable).
+typedef MonotonicReading = ({int elapsedMs, int bootCount, String? bootId});
+
+extension MonotonicBoot on MonotonicReading {
+  /// Whether this reading is provably from the boot identified by [count] and
+  /// [id], in the native coordinator's order (A-02r): the kernel id when both
+  /// sides have one -- unique per boot by construction -- else BOOT_COUNT
+  /// when both know it. Unprovable is "not the same boot".
+  bool isSameBootAs(int count, String? id) {
+    final own = bootId;
+    if (own != null && id != null) return own == id;
+    return bootCount != -1 && count != -1 && bootCount == count;
+  }
+}
 
 class PinLockoutState {
   final int failedAttempts;
@@ -80,6 +93,7 @@ class PinLockoutService {
   // The same deadline on elapsedRealtime, and the boot it belongs to (Y-05).
   static const String _lockedUntilElapsedKey = 'pin_lockout_until_elapsed_ms';
   static const String _lockedBootKey = 'pin_lockout_boot_count';
+  static const String _lockedBootIdKey = 'pin_lockout_boot_id';
   static const int _unknownBoot = -1;
 
   /// Consecutive failures that trigger the first lockout.
@@ -164,13 +178,15 @@ class PinLockoutService {
     final elapsedUntil = int.tryParse(
       await _secureStorage.read(key: _lockedUntilElapsedKey) ?? '',
     );
-    final boot = int.tryParse(
-      await _secureStorage.read(key: _lockedBootKey) ?? '',
-    );
-    final reading = elapsedUntil != null && boot != null && boot != _unknownBoot
+    final boot =
+        int.tryParse(await _secureStorage.read(key: _lockedBootKey) ?? '') ??
+        _unknownBoot;
+    final bootId = await _secureStorage.read(key: _lockedBootIdKey);
+    final reading =
+        elapsedUntil != null && (boot != _unknownBoot || bootId != null)
         ? await _readMonotonic()
         : null;
-    final left = reading != null && reading.bootCount == boot
+    final left = reading != null && reading.isSameBootAs(boot, bootId)
         ? Duration(milliseconds: elapsedUntil! - reading.elapsedMs)
         : wallUntil.difference(_now());
     const cap = Duration(seconds: maxLockoutSeconds);
@@ -206,11 +222,14 @@ class PinLockoutService {
       final seconds = lockoutSecondsFor(failedAttempts);
       lockedUntil = _now().add(Duration(seconds: seconds));
       final reading = await _readMonotonic();
-      await _secureStorage.write(
-        key: _lockedUntilKey,
-        value: '${lockedUntil.millisecondsSinceEpoch}',
-      );
-      if (reading != null && reading.bootCount != _unknownBoot) {
+      // The elapsed keys go FIRST. Written after the wall deadline, a process
+      // killed in between left this fresh wall deadline beside an earlier,
+      // expired elapsed one from the same boot, and that one decided: unlocked.
+      // This way round an interrupted write leaves the newer elapsed deadline
+      // (locked) or none at all (the wall deadline decides).
+      final bootId = reading?.bootId;
+      if (reading != null &&
+          (reading.bootCount != _unknownBoot || bootId != null)) {
         await _secureStorage.write(
           key: _lockedUntilElapsedKey,
           value: '${reading.elapsedMs + seconds * 1000}',
@@ -219,9 +238,16 @@ class PinLockoutService {
           key: _lockedBootKey,
           value: '${reading.bootCount}',
         );
+        await (bootId == null
+            ? _secureStorage.delete(key: _lockedBootIdKey)
+            : _secureStorage.write(key: _lockedBootIdKey, value: bootId));
       } else {
         await _clearMonotonicDeadline();
       }
+      await _secureStorage.write(
+        key: _lockedUntilKey,
+        value: '${lockedUntil.millisecondsSinceEpoch}',
+      );
     } else {
       await _secureStorage.delete(key: _lockedUntilKey);
       await _clearMonotonicDeadline();
@@ -244,12 +270,14 @@ class PinLockoutService {
       _secureStorage.delete(key: _lockedUntilKey),
       _secureStorage.delete(key: _lockedUntilElapsedKey),
       _secureStorage.delete(key: _lockedBootKey),
+      _secureStorage.delete(key: _lockedBootIdKey),
     ]);
   }
 
   Future<void> _clearMonotonicDeadline() async {
     await _secureStorage.delete(key: _lockedUntilElapsedKey);
     await _secureStorage.delete(key: _lockedBootKey);
+    await _secureStorage.delete(key: _lockedBootIdKey);
   }
 
   /// Ticks the remaining lockout seconds for a screen that is already locked.

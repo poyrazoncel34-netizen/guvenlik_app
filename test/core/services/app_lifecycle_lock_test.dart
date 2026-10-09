@@ -184,7 +184,7 @@ void main() {
         now: () => now,
         secureStorage: storage,
         monotonic: () async => monotonicAvailable
-            ? (elapsedMs: elapsedMs, bootCount: 17)
+            ? (elapsedMs: elapsedMs, bootCount: 17, bootId: null)
             : null,
       );
       await tester.pumpWidget(
