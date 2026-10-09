@@ -1,0 +1,20 @@
+
+com.poyrazoncel.korubeni.emergency.BootIdentityInstrumentationTest:.
+com.poyrazoncel.korubeni.emergency.EmergencySessionAlarmInstrumentationTest:..
+com.poyrazoncel.korubeni.emergency.NativeDozeDispatchProbeTest:
+com.poyrazoncel.korubeni.emergency.NativeDozeDispatchProbeTest:
+com.poyrazoncel.korubeni.emergency.OverdueSessionProbeTest:
+com.poyrazoncel.korubeni.emergency.OverdueSessionProbeTest:
+com.poyrazoncel.korubeni.emergency.Phase3RebootProbeTest:
+com.poyrazoncel.korubeni.emergency.Phase3RebootProbeTest:
+com.poyrazoncel.korubeni.emergency.Stage4ReconciliationInstrumentationTest:
+com.poyrazoncel.korubeni.emergency.Stage4ReconciliationInstrumentationTest:
+com.poyrazoncel.korubeni.emergency.SupportedOsBoundaryInstrumentationTest:..
+com.poyrazoncel.korubeni.integrity.DeviceIntegrityEmulatorProbeTest:..
+com.poyrazoncel.korubeni.notifications.ScheduledNotificationManifestInstrumentationTest:..
+
+Time: 0.794
+
+OK (19 tests)
+
+

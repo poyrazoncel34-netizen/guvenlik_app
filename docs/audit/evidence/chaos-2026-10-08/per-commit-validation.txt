@@ -1,0 +1,25 @@
+per-commit validation 2026-10-09 09:44:04 base=3a1f992 head=943bea91c074a2b3ca02f08db274d2295e0522ba worktree=clean
+680fe2225722e878b83e7dc6bfd09207ab0299f2 analyze=0 test=[+2182: All tests passed] kotlin=- | refactor: geri sayim tus dugmesi ayri widget dosyasina tasindi
+8980a5df935363b6380740082a7516bbdf0181c5 analyze=0 test=[+2189: All tests passed] kotlin=- | fix(safety): panik geri sayimi saat degisiminde erken sifira inmiyor
+274e4b3be890a66cb12c0317789993b4ec044ef8 analyze=0 test=[+2194: All tests passed] kotlin=0 | fix(safety): Check-In ve Guvenli Yuruyus saat degisiminde yanlis sure gostermiyor
+1147941c1179cfdb85014581372ca2753732548d analyze=0 test=[+2197: All tests passed] kotlin=- | fix(security): Test Modu provasi kilit suresince PIN dogrulamiyor
+53309f88d29a67afd83bc079ffde51a73e52ebfd analyze=0 test=[+2200: All tests passed] kotlin=- | fix(safety): native arm bitmeden girilen dogru PIN geri sayimi iptal ediyor
+ec29702abd2a18b6218df9deb898e0d11806b3d9 analyze=0 test=[+2203: All tests passed] kotlin=- | fix: native oturumu olmayan panik guvenlik zaman cizelgesine yaziliyor
+2b175a7735db1ef81aa989b94fe9ddb6bdd10445 analyze=0 test=[+2205: All tests passed] kotlin=- | fix: cevrimdisi dogrulanan Pro abonede SOS ilk basisa kadar kilitli gorunmuyor
+fd9b5fb00d2730c9403fc12aab7acc06729c1f05 analyze=0 test=[+2217: All tests passed] kotlin=- | fix(safety): surec olumunden sonra silahli panik geri sayimi yeniden gosteriliyor
+3ce7e72f16498dd365e3dffe81f167281bc5923f analyze=0 test=[+2217: All tests passed] kotlin=0 | fix(native): BOOT_COUNT okunamazsa cekirdek boot_id yeni acilisi ayirt ediyor
+005de751e6758c6749f2c6236c2a88e16e362a33 analyze=0 test=[+2224: All tests passed] kotlin=0 | fix(security): PIN kilidi saat degistirilerek kisaltilamiyor ya da uzatilamiyor
+7cc6587a02a7e464dc80eee12bd02534d98f6538 analyze=0 test=[+2226: All tests passed] kotlin=- | fix: acik bir baglanti ekrani varken gelen ikinci baglanti sonraki devami beklemiyor
+120f99d4fcb96137a774908be23c4a81b41ad411 analyze=0 test=[+2228: All tests passed] kotlin=- | fix: kilit yukselirken gereken paywall PIN kilidinin ustune acilmiyor
+30d85e236ab8d8fc39ef76e7dd51c156a535354c analyze=0 test=[+2513: All tests passed] kotlin=- | test: saat degisimi icin tohumlu durumlu Check-In fuzz'i
+c63173619c19241b0c374b4ace910ec22b8bc8d5 analyze=0 test=[+2514: All tests passed] kotlin=- | fix(safety): yeniden gosterilen panik geri sayimi soguk acilista kaybolmuyor
+25fe9d919cac990b41a869408d7cdc33f0e1e130 analyze=0 test=[+2515: All tests passed] kotlin=- | fix(security): kilit ekrani tus takimini saat ileri alininca acmiyor
+c40d7490937dec761bc8467dc209c6f7f76f1f19 analyze=0 test=[+2515: All tests passed] kotlin=0 | test(android): bildirim manifest enstrumantasyon testi API 29'da calisiyor
+e1192a319154120a12f2230ec8fa5ae55e769192 analyze=0 test=[+2519: All tests passed] kotlin=- | fix(security): saat geri alinarak yeniden kimlik dogrulama kilidi atlanamiyor
+e5e786b1a7a28c157ad1480981c6ce05ea32b931 analyze=0 test=[+2526: All tests passed] kotlin=- | fix(safety): guvenlik sayaclari cihaz uykusunu sayan saatle ilerliyor (Y-12)
+9eeb73d56ed4fd0e8a659db854a73e2ed3706355 analyze=0 test=[+2526: All tests passed] kotlin=0 | fix(native): cekirdek boot_id varsa acilis karari BOOT_COUNT'tan once ondan
+0c3a94a21df2d008b19b342addf1982a45c853e2 analyze=0 test=[+2529: All tests passed] kotlin=0 | fix(security): PIN kilidi BOOT_COUNT okunamazken de monotonik; yarim yazim kilidi acmiyor
+2d39f39f85e65a3a9c9f2ad5b344dd4cb8c26a90 analyze=0 test=[+2531: All tests passed] kotlin=- | fix(security): native saat okunamazsa devam kilidi saat geri alma ile atlanamiyor
+b24ee18917a7d3af200b2c9d3a29c730474d7f40 analyze=0 test=[+2533: All tests passed] kotlin=- | fix(safety): reddedilen taze panik, ekrani olmayan silahli oturumu benimsiyor
+943bea91c074a2b3ca02f08db274d2295e0522ba analyze=0 test=[+2534: All tests passed] kotlin=- | test: arm oncesi iptal ArmUnknown dalini kapsiyor, sabit gercek-zaman dilimleri yerine kosul bekliyor
+DONE 2026-10-09 11:05:41

@@ -1,0 +1,9 @@
+clock fuzz MUTANT (Y-01 reverted: wall-based ticker) pristine=bf45bf640f39 injected=3aae653ca289
+   1 I1 grace 0:14:59.225000 early; FUZZ_SEED=20261231 after tick 0:00:00.775000 (34 steps)
+   1 I1 grace 0:14:59.222000 early; FUZZ_SEED=20261185 after clock 2:14:44.000000 (TIME_SET late) (37
+   1 I1 grace 0:14:59.159000 early; FUZZ_SEED=20261104 after tick 0:00:00.841000 (5 steps)
+   1 I1 grace 0:14:59.145000 early; FUZZ_SEED=20261210 after tick 0:00:00.855000 (20 steps)
+   1 I1 grace 0:14:58.915000 early; FUZZ_SEED=20261168 after tick 0:00:01.085000 (28 steps)
+   1 I1 grace 0:14:58.881000 early; FUZZ_SEED=20261170 after tick 0:00:01.119000 (3 steps)
++201 -84
+restored=bf45bf640f39

@@ -1,0 +1,17 @@
+// Device probe for audit Y-12: is SafetyClock.system on the boot clock?
+import 'dart:ffi';
+import 'dart:io' show pid;
+
+import 'package:flutter/widgets.dart';
+import 'package:guvenlik_app/core/services/boot_clock.dart';
+import 'package:guvenlik_app/core/services/safety_clock.dart';
+
+void main() {
+  final read = BootClock.forPlatform();
+  final bootUs = read?.call();
+  final system = SafetyClock.system.monotonic;
+  // ignore: avoid_print
+  print('Y12PROBE abi=${Abi.current()} reader=${read != null} bootUs=$bootUs '
+      'systemMonotonicUs=${system.inMicroseconds} pid=$pid');
+  runApp(const SizedBox());
+}

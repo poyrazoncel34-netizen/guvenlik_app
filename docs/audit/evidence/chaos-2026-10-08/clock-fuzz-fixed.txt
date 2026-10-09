@@ -1,0 +1,3 @@
+clock fuzz (fixed code) start 17:34:01 HEAD=120f99d plan=120x10+110x40+55x120
+00:07 +285: All tests passed!
+end 17:34:10

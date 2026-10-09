@@ -1,0 +1,29 @@
+verify_release.sh start 2026-10-09 11:13:17 HEAD=3625d2a (worktree: CHANGELOG.md + docs/audit kanit dosyalari commit edilmemis)
+=== KoruBeni yayin dogrulama zinciri ===
+[hazirlik] temiz build ara dizini + bagimlilik cozumu
+  ✓ PASS  temiz yerel build zemini hazir
+[1/6] flutter analyze (sifir sorun sarti)
+No issues found! (ran in 3.5s)
+  ✓ PASS  analyze temiz
+[2/6] flutter test + kritik safety coverage (tam paket)
+flutter test: +2538: All tests passed!
+CRITICAL_COVERAGE_PASS
+  ✓ PASS  tum testler yesil; kritik safety coverage kapisi gecti
+[3/6] imzali NON_RELEASE_SMOKE AAB (registrant'i yeniler; gradle'dan ONCE)
+  ✓ PASS  AAB, imza ve birlesik Android release yuzeyi dogrulandi: build/app/outputs/bundle/smokeRelease/app-smoke-release.aab
+[4/6] Android lint + Kotlin unit + instrumentation derleme (build'den SONRA)
+  ✓ PASS  lint + Kotlin unit + instrumentation derlemesi yesil
+[5/6] 16KB sayfa boyutu hizalamasi
+  ✓ PASS  tum native kutuphaneler 16KB uyumlu
+[6/6] etiketli-yayin blocker durumu (SBOM lisans kanidi + notices paritesi)
+  ✓ PASS  etiketli yayin lisans/notices kapisi yesil
+=== KOD/SMOKE DOGRULAMA YESIL — 5/5 kod+smoke kapisi gecti ===
+EXIT=0 end 2026-10-09 11:20:00
+critical coverage (min 90%): PASS
+  lib/core/services/emergency_session_contract.dart 122/122 100.00%
+  lib/core/services/emergency_platform_service.dart 310/319 97.18%
+  lib/core/services/emergency_snapshot_parser.dart 48/48 100.00%
+  lib/core/services/pin_verification_service.dart 75/78 96.15%
+  lib/core/services/check_in_service.dart 339/356 95.22%
+  lib/core/services/check_in_projection_store.dart 26/27 96.30%
+  lib/core/services/contact_service.dart 296/318 93.08%

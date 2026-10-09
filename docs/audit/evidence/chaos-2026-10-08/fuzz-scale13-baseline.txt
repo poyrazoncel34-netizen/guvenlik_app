@@ -1,0 +1,5 @@
+fuzz FUZZ_SCALE=13 start 14:29:07 HEAD=3a1f992
+EmergencyCallScreen: WakelockPlus.disable failed: PlatformException(channel-error, Unable to establish connection on channel: "dev.flutter.pigeon.wakelock_plus_platform_interface.WakelockPlusApi.toggle"., null, null)
+EmergencyCallScreen: WakelockPlus.disable failed: PlatformException(channel-error, Unable to establish connection on channel: "dev.flutter.pigeon.wakelock_plus_platform_interface.WakelockPlusApi.toggle"., null, null)
+06:34 +338: seed 20261344: 120 random user actions keep the navigation-safety invariants                                                                                                               06:34 +338: All tests passed!                                                                                                                                                                          
+exit= end 14:35:50
