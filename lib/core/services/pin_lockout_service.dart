@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:collection';
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
@@ -73,9 +74,11 @@ class PinLockoutService {
   PinLockoutService._({
     Future<MonotonicReading?> Function()? monotonic,
     DateTime Function()? now,
+    bool Function()? monotonicRequired,
   }) : _monotonic =
            monotonic ?? EmergencyPlatformService.instance.readMonotonicClock,
-       _now = now ?? DateTime.now;
+       _now = now ?? DateTime.now,
+       _monotonicRequired = monotonicRequired ?? _bridgePresent;
 
   static final PinLockoutService instance = PinLockoutService._();
 
@@ -83,10 +86,48 @@ class PinLockoutService {
   factory PinLockoutService.forTesting({
     required Future<MonotonicReading?> Function() monotonic,
     required DateTime Function() now,
-  }) => PinLockoutService._(monotonic: monotonic, now: now);
+    bool Function()? monotonicRequired,
+  }) => PinLockoutService._(
+    monotonic: monotonic,
+    now: now,
+    monotonicRequired: monotonicRequired,
+  );
 
   final Future<MonotonicReading?> Function() _monotonic;
   final DateTime Function() _now;
+
+  /// Whether a failed monotonic read is a transient fault (true) rather than
+  /// a platform with no monotonic clock at all. Asked only after a read failed.
+  final bool Function() _monotonicRequired;
+
+  static bool _bridgePresent() {
+    final platform = EmergencyPlatformService.instance;
+    return platform.isSupported && !platform.platformBridgeMissing;
+  }
+
+  /// Serializes [readState], [registerFailure] and [reset]: a read that found
+  /// a lockout expired must not delete the keys of one registered meanwhile.
+  /// An idle service runs the call at once: chaining every call onto the last
+  /// one's future would tie this singleton to whichever zone ran it first.
+  bool _busy = false;
+  final Queue<Completer<void>> _waiting = Queue<Completer<void>>();
+  Future<T> _serialized<T>(Future<T> Function() body) async {
+    if (_busy) {
+      final turn = Completer<void>();
+      _waiting.add(turn);
+      await turn.future;
+    }
+    _busy = true;
+    try {
+      return await body();
+    } finally {
+      if (_waiting.isEmpty) {
+        _busy = false;
+      } else {
+        _waiting.removeFirst().complete();
+      }
+    }
+  }
 
   static const String _failedAttemptsKey = 'pin_lockout_failed_attempts';
   static const String _lockedUntilKey = 'pin_lockout_until_ms';
@@ -94,6 +135,9 @@ class PinLockoutService {
   static const String _lockedUntilElapsedKey = 'pin_lockout_until_elapsed_ms';
   static const String _lockedBootKey = 'pin_lockout_boot_count';
   static const String _lockedBootIdKey = 'pin_lockout_boot_id';
+  // The length of the lockout those deadlines end: the attempt count that
+  // implies it is written last and may be stale after a cut-short write.
+  static const String _lockedDurationKey = 'pin_lockout_duration_ms';
   static const int _unknownBoot = -1;
 
   /// Consecutive failures that trigger the first lockout.
@@ -140,7 +184,9 @@ class PinLockoutService {
   ///
   /// Storage faults still throw. `PlatformException` from flutter_secure_storage
   /// is input, not a bug, and callers catch it with `on Exception`.
-  Future<PinLockoutRead> readState() async {
+  Future<PinLockoutRead> readState() => _serialized(_readState);
+
+  Future<PinLockoutRead> _readState() async {
     final failedRaw = await _secureStorage.read(key: _failedAttemptsKey);
     final lockedUntilRaw = await _secureStorage.read(key: _lockedUntilKey);
     final failedAttempts = int.tryParse(failedRaw ?? '') ?? 0;
@@ -159,15 +205,16 @@ class PinLockoutService {
         PinLockoutState(failedAttempts: failedAttempts, lockedUntil: null),
       );
     }
-    final remaining = await _remaining(
+    final (:remaining, :proven) = await _remaining(
       lockedUntilMs == null
-          ? _now()
+          ? null
           : DateTime.fromMillisecondsSinceEpoch(lockedUntilMs),
-      Duration(seconds: lockoutSecondsFor(failedAttempts)),
+      failedAttempts,
     );
-    if (remaining <= Duration.zero) {
+    if (proven && remaining <= Duration.zero) {
       // Ran out where it was measured: forget it, so a LATER reboot has
-      // nothing to restart. The attempt count stays.
+      // nothing to restart. The attempt count stays. An expiry nothing proved
+      // keeps the keys for the next read that can prove it.
       await _secureStorage.delete(key: _lockedUntilKey);
       await _clearMonotonicDeadline();
     }
@@ -192,7 +239,16 @@ class PinLockoutService {
   /// in a NEW boot now restarts for its full [duration] and is tied to that
   /// boot. Only without any monotonic reading does the wall deadline count,
   /// never for longer than the longest lockout the policy can impose.
-  Future<Duration> _remaining(DateTime wallUntil, Duration duration) async {
+  ///
+  /// [proven] is false where the answer rests on nothing the user cannot set:
+  /// a deadline stored on elapsedRealtime whose read failed now (a 500 ms
+  /// channel timeout) stays locked, at least [_unprovenLock], until a read
+  /// succeeds -- only on a platform with no bridge at all does the wall
+  /// decide. Clock forward plus one failed read used to end and FORGET it.
+  Future<({Duration remaining, bool proven})> _remaining(
+    DateTime? wallUntil,
+    int failedAttempts,
+  ) async {
     final elapsedUntil = int.tryParse(
       await _secureStorage.read(key: _lockedUntilElapsedKey) ?? '',
     );
@@ -200,18 +256,42 @@ class PinLockoutService {
         int.tryParse(await _secureStorage.read(key: _lockedBootKey) ?? '') ??
         _unknownBoot;
     final bootId = await _secureStorage.read(key: _lockedBootIdKey);
+    final storedMs = int.tryParse(
+      await _secureStorage.read(key: _lockedDurationKey) ?? '',
+    );
+    final duration = _capped(
+      storedMs != null && storedMs > 0
+          ? Duration(milliseconds: storedMs)
+          : Duration(seconds: lockoutSecondsFor(failedAttempts)),
+    );
     final reading = elapsedUntil == null ? null : await _readMonotonic();
-    const cap = Duration(seconds: maxLockoutSeconds);
     if (reading == null) {
-      final left = wallUntil.difference(_now());
-      return left > cap ? cap : left;
+      final left = _capped((wallUntil ?? _now()).difference(_now()));
+      if (elapsedUntil != null && _monotonicRequired()) {
+        return (
+          remaining: left < _unprovenLock ? _unprovenLock : left,
+          proven: false,
+        );
+      }
+      return (remaining: left, proven: elapsedUntil == null);
     }
     if (_fromAnotherBoot(reading, boot, bootId, elapsedUntil! - duration.inMilliseconds)) {
-      await _anchor(reading, duration > cap ? cap : duration);
-      return duration > cap ? cap : duration;
+      await _anchor(reading, duration);
+      return (remaining: duration, proven: true);
     }
-    final left = Duration(milliseconds: elapsedUntil - reading.elapsedMs);
-    return left > cap ? cap : left;
+    return (
+      remaining: _capped(
+        Duration(milliseconds: elapsedUntil - reading.elapsedMs),
+      ),
+      proven: true,
+    );
+  }
+
+  static const Duration _unprovenLock = Duration(seconds: 1);
+
+  static Duration _capped(Duration value) {
+    const cap = Duration(seconds: maxLockoutSeconds);
+    return value > cap ? cap : value;
   }
 
   /// Whether [reading] provably belongs to a later boot than the stored
@@ -235,6 +315,10 @@ class PinLockoutService {
   /// Ties a lockout of [length] to [reading]'s boot, starting now. Elapsed
   /// keys first, wall key last (see [registerFailure]).
   Future<void> _anchor(MonotonicReading reading, Duration length) async {
+    await _secureStorage.write(
+      key: _lockedDurationKey,
+      value: '${length.inMilliseconds}',
+    );
     await _secureStorage.write(
       key: _lockedUntilElapsedKey,
       value: '${reading.elapsedMs + length.inMilliseconds}',
@@ -263,8 +347,10 @@ class PinLockoutService {
   /// An unreadable counter is treated as "the real count is unknown", and the
   /// attempt is debited from the base threshold rather than from zero: a corrupt
   /// counter must never buy the attacker a fresh set of free guesses.
-  Future<PinLockoutState> registerFailure() async {
-    final read = await readState();
+  Future<PinLockoutState> registerFailure() => _serialized(_registerFailure);
+
+  Future<PinLockoutState> _registerFailure() async {
+    final read = await _readState();
     final current = switch (read) {
       PinLockoutReadable(:final state) => state,
       PinLockoutUnreadable() => const PinLockoutState(
@@ -288,6 +374,10 @@ class PinLockoutService {
       // Stored even with no boot identity: the elapsed clock at lock time
       // still tells a reboot (it restarts near zero) for most of a boot.
       if (reading != null) {
+        await _secureStorage.write(
+          key: _lockedDurationKey,
+          value: '${seconds * 1000}',
+        );
         await _secureStorage.write(
           key: _lockedUntilElapsedKey,
           value: '${reading.elapsedMs + seconds * 1000}',
@@ -322,13 +412,16 @@ class PinLockoutService {
     );
   }
 
-  Future<void> reset() async {
+  Future<void> reset() => _serialized(_reset);
+
+  Future<void> _reset() async {
     await Future.wait([
       _secureStorage.delete(key: _failedAttemptsKey),
       _secureStorage.delete(key: _lockedUntilKey),
       _secureStorage.delete(key: _lockedUntilElapsedKey),
       _secureStorage.delete(key: _lockedBootKey),
       _secureStorage.delete(key: _lockedBootIdKey),
+      _secureStorage.delete(key: _lockedDurationKey),
     ]);
   }
 
@@ -336,6 +429,7 @@ class PinLockoutService {
     await _secureStorage.delete(key: _lockedUntilElapsedKey);
     await _secureStorage.delete(key: _lockedBootKey);
     await _secureStorage.delete(key: _lockedBootIdKey);
+    await _secureStorage.delete(key: _lockedDurationKey);
   }
 
   /// Ticks the remaining lockout seconds for a screen that is already locked.

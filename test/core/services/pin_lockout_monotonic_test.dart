@@ -16,10 +16,22 @@ class _Storage extends SecureStorage {
 
   /// A write to this key throws once: the process died mid-lockout-write.
   String? failWriteOf;
+
+  /// Every operation yields first, so concurrent callers interleave.
+  bool interleave = false;
+  Future<void> _yield() async {
+    if (interleave) await Future<void>.delayed(Duration.zero);
+  }
+
   @override
-  Future<String?> read({required String key}) async => values[key];
+  Future<String?> read({required String key}) async {
+    await _yield();
+    return values[key];
+  }
+
   @override
   Future<void> write({required String key, required String value}) async {
+    await _yield();
     if (key == failWriteOf) {
       failWriteOf = null;
       throw Exception('process died');
@@ -28,7 +40,11 @@ class _Storage extends SecureStorage {
   }
 
   @override
-  Future<void> delete({required String key}) async => values.remove(key);
+  Future<void> delete({required String key}) async {
+    await _yield();
+    values.remove(key);
+  }
+
   @override
   Future<void> deleteAll() async => values.clear();
 }
@@ -49,6 +65,7 @@ void main() {
     service = PinLockoutService.forTesting(
       monotonic: () async => reading,
       now: () => wall,
+      monotonicRequired: () => true,
     );
   });
 
@@ -269,6 +286,109 @@ void main() {
       expect((await read()).isLocked, isTrue);
     },
   );
+
+  // Review of the reboot policy (security + flutter reviewers): the expired
+  // lockout was forgotten even when the wall clock -- with the monotonic read
+  // failed -- had decided "expired". Clock forward + one timed-out read then
+  // erased a live lockout for good, and a cut-short write read as expired.
+  test(
+    'a failed monotonic read neither ends nor forgets a live lockout',
+    () async {
+      await lockFor30Seconds();
+      reading = null;
+      wall = wall.add(const Duration(hours: 1));
+      expect(
+        (await read()).isLocked,
+        isTrue,
+        reason: 'unproven expiry stays locked',
+      );
+
+      reading = (elapsedMs: 1005000, bootCount: 17, bootId: null);
+      final state = await read();
+      expect(state.isLocked, isTrue);
+      expect(
+        state.remainingSeconds,
+        inInclusiveRange(24, 25),
+        reason: 'the keys were kept: monotonic time still decides',
+      );
+    },
+  );
+
+  test('where no monotonic clock exists the wall still decides', () async {
+    service = PinLockoutService.forTesting(
+      monotonic: () async => reading,
+      now: () => wall,
+      monotonicRequired: () => false,
+    );
+    await lockFor30Seconds();
+    reading = null;
+    wall = wall.add(const Duration(minutes: 1));
+    expect((await read()).isLocked, isFalse);
+
+    // Only the wall said so -- a clock moved forward says the same. A later
+    // process whose bridge works still finds the lockout, measured monotonically.
+    service = PinLockoutService.forTesting(
+      monotonic: () async => reading,
+      now: () => wall,
+      monotonicRequired: () => true,
+    );
+    reading = (elapsedMs: 1005000, bootCount: 17, bootId: null);
+    expect((await read()).remainingSeconds, inInclusiveRange(24, 25));
+  });
+
+  test(
+    'a cut-short write read without a monotonic clock is still locked',
+    () async {
+      await lockFor30Seconds();
+      storage.values.remove('pin_lockout_until_ms');
+      reading = null;
+      expect((await read()).isLocked, isTrue);
+    },
+  );
+
+  // The stamp and the restart length came from failedAttempts, which is
+  // written LAST: a process killed before it left the old count, and at the
+  // first lockout lockoutSecondsFor(4) == 0 -- a reboot then erased it.
+  test('the lockout length is stored with its deadline, so an attempts write '
+      'cut short does not shrink a reboot restart', () async {
+    storage.values['pin_lockout_failed_attempts'] = '4';
+    storage.failWriteOf = 'pin_lockout_failed_attempts';
+    await expectLater(service.registerFailure(), throwsException);
+    expect(storage.values['pin_lockout_failed_attempts'], '4');
+
+    reading = (elapsedMs: 15000, bootCount: 18, bootId: null);
+    final state = await read();
+    expect(state.isLocked, isTrue);
+    expect(state.remainingSeconds, inInclusiveRange(28, 30));
+  });
+
+  test('a read deciding "expired" never deletes a lockout registered '
+      'concurrently', () async {
+    await lockFor30Seconds();
+    advance(const Duration(seconds: 31));
+    storage.interleave = true;
+    // Readers start at every step of the failure's write, so one of them
+    // reads the old, expired keys and deletes after the new ones are written.
+    final failure = service.registerFailure();
+    final reads = <Future<PinLockoutRead>>[];
+    for (var i = 0; i < 30; i++) {
+      reads.add(service.readState());
+      await Future<void>.delayed(Duration.zero);
+    }
+    await Future.wait<Object>([...reads, failure]);
+    storage.interleave = false;
+
+    final state = await read();
+    expect(state.isLocked, isTrue, reason: 'the new lockout must survive');
+    for (final key in const [
+      'pin_lockout_until_ms',
+      'pin_lockout_until_elapsed_ms',
+      'pin_lockout_boot_count',
+      'pin_lockout_duration_ms',
+    ]) {
+      expect(storage.values[key], isNotNull, reason: '$key of the new lockout');
+    }
+  });
 
   test('reset forgets every lockout key', () async {
     await lockFor30Seconds();
