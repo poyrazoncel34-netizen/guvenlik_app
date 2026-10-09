@@ -10,6 +10,36 @@ Surumleme: `pubspec.yaml` 1.0.0+1'de SABITTIR; gercek `versionCode`
 ## Yayinlanmadi
 
 ### Duzeltildi
+- Telefonun saati panik geri sayimi sirasinda ileri alinirsa geri sayim aninda
+  bitiyor, PIN ile iptal ekrani kayboluyor ve arama ekrani aciliyordu; otomatik
+  arama ise yine asil surede gidiyordu. Geri sayim artik saat degisikliklerinden
+  etkilenmiyor.
+- Check-In veya Guvenli Yuruyus surerken telefonun saati degisirse ekran yanlis
+  kalan sure gosteriyordu (saat geri alininca saatlerce, ileri alininca "Sure
+  doldu"). Ekran artik asil kalan sureyi gosteriyor.
+- PIN kilidi telefonun saati ileri alinarak kaldirilabiliyor, geri alininca
+  saatlerce surebiliyordu. Kilit artik saat degisikliklerinden etkilenmiyor.
+- Uygulama arka plandayken telefonun saati geri alinirsa, 2 dakikadan uzun arka
+  plandan donuste istenen PIN kilidi atlanabiliyordu.
+- Test Modu provasi, PIN kilidi suresince dogru PIN'i kabul edebiliyordu. Prova
+  artik kilit surerken PIN denemesi kabul etmiyor.
+- Panik geri sayimi sirasinda uygulama sistem tarafindan kapatilirsa, yeniden
+  acildiginda geri sayim ve PIN ile iptal ekrani geri gelmiyor, arama sure
+  dolunca yapiliyordu. Geri sayim artik kalan sureyle yeniden gosteriliyor.
+- Ayni durumda uygulama widget, hizli ayar kutucugu veya ses tuslariyla yeniden
+  acilirsa "Hicbir islem tamamlanmadi" hatasi cikiyor ve PIN ile iptal mumkun
+  olmuyordu; arama ise sure dolunca yine yapiliyordu. Artik suren geri sayim
+  gosteriliyor ve iptal edilebiliyor.
+- Geri sayim baslar baslamaz girilen dogru PIN bazen "iptal dogrulanamadi"
+  sayiliyor, sure sonunda yanlislikla "arama basarisiz" uyarisi cikabiliyordu.
+- Arama veya bildirim izni olmadiginda baslatilan panik Guvenlik Zaman
+  Cizelgesi'ne yazilmiyordu.
+- Abonelik dogrulamasi gecici olarak yapilamadiginda Pro uyelerin panik dugmesi,
+  ilk basisa kadar "Kilitli" gorunuyordu.
+- Bir baglanti ekrani acikken gelen ikinci baglanti hemen acilmiyor, cok sonra
+  beklenmedik bir anda aciliyordu.
+- 2 dakikadan uzun arka plandan sonra odeme ekrani PIN kilidinin ustunde
+  acilabiliyordu.
 - Panik geri sayimi veya Test Modu provasi surerken bir baglantiyla baska
   bir ekran acilirsa, geri sayim bitince yanlislikla O ekran kapaniyordu;
   prova "0 saniye"de kalip geri tusu ve PIN ile kapatilamiyordu, gercek panikte
