@@ -184,7 +184,7 @@
   "safe_walk_exit_message": "Güvenli yürüyüş şu anda aktif. 'İptal Et ve Çık' seçeneği oturumu sonlandırır, sayaç durur ve acil durum tetiklenmez.",
   "safe_walk_exit_stay": "Kal",
   "safe_walk_exit_cancel": "İptal Et ve Çık",
-  "timer_scheduling_degraded": "Kesin alarm izni olmadan güvenlik zamanlayıcısı kurulmaz.",
+  "timer_scheduling_degraded": "Arka plan koruması kapalı veya doğrulanamıyor. Süre dolduğunda uyarı ve arama birkaç dakika gecikebilir. Açmak için dokunun.",
   "exact_alarm_degraded_title": "Kesin alarm izni gerekli",
   "exact_alarm_degraded_body": "Bu zamanlı işlem kesin alarm izni olmadan kurulamaz. Alarm ayarını açın; uygulamaya döndüğünüzde işlemi yeniden başlatın.",
   "exact_alarm_degraded_settings": "Alarm ayarlarını aç",

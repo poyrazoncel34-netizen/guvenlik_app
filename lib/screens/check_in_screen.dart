@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:provider/provider.dart';
+import '../core/widgets/background_protection_tap.dart';
 import '../core/app_colors.dart';
 import '../core/constants/app_constants.dart';
 import '../core/services/check_in_service.dart';
@@ -552,7 +553,7 @@ class _CheckInScreenState extends State<CheckInScreen>
             const SizedBox(height: 24),
           ],
           if (_service.nativeScheduleDegraded) ...[
-            Container(
+            BackgroundProtectionTap(child: Container(
               width: double.infinity,
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -581,7 +582,7 @@ class _CheckInScreenState extends State<CheckInScreen>
                   ),
                 ],
               ),
-            ),
+            )),
             const SizedBox(height: 24),
           ],
           // Countdown circle

@@ -184,7 +184,7 @@
   "safe_walk_exit_message": "Safe walk is currently active. Choosing 'Cancel & Exit' ends the session, stops the timer, and prevents the emergency flow from triggering.",
   "safe_walk_exit_stay": "Stay",
   "safe_walk_exit_cancel": "Cancel & Exit",
-  "timer_scheduling_degraded": "A safety timer is not armed without exact-alarm access.",
+  "timer_scheduling_degraded": "Background protection is off or could not be verified. The warning and call may be several minutes late when time runs out. Tap to turn it on.",
   "exact_alarm_degraded_title": "Exact-alarm access required",
   "exact_alarm_degraded_body": "This timed action cannot be armed without exact-alarm access. Open alarm settings, then retry after returning to the app.",
   "exact_alarm_degraded_settings": "Open alarm settings",

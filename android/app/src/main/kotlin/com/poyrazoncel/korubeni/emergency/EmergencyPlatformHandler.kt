@@ -63,7 +63,7 @@ class EmergencyPlatformHandler(
                     }
                     result.success(if (read is ReadSessionResult.Present && read.envelope.token.kind != kind) {
                         ReadSessionResult.Absent.toMap()
-                    } else read.toMap())
+                    } else SessionReadWire.of(read, canScheduleExactAlarms()))
                 }
                 "readEmergencySession" -> {
                     result.success(readEmergencySession(call))
@@ -194,7 +194,7 @@ class EmergencyPlatformHandler(
         if (read is ReadSessionResult.Present && read.envelope.token != token) {
             return ReadSessionResult.Absent.toMap()
         }
-        return read.toMap()
+        return SessionReadWire.of(read, canScheduleExactAlarms())
     }
 
     private fun getEmergencyCapabilities(call: MethodCall): CapabilitySnapshot {

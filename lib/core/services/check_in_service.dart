@@ -389,7 +389,7 @@ class CheckInService extends ChangeNotifier {
     _sessionToken = snapshot.token;
     _armedTarget = snapshot.target;
     _adoptDeadlines(snapshot.mainDeadline, snapshot.finalDeadline);
-    _nativeScheduleDegraded = false;
+    _nativeScheduleDegraded = !snapshot.exactAlarmPermitted; // Y-14
     if (snapshot.lifecycleState.isTerminal) {
       if (_sideEffectsEnabled) {
         await NativeEmergencyHistory.reconcilePending(_platform);

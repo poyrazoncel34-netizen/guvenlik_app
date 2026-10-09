@@ -97,8 +97,10 @@ void main() {
     String target = '+905551112233',
     String callOutcome = 'notAttempted',
     String fallbackOutcome = 'notAttempted',
+    bool? exactAlarmPermitted,
   }) => <String, Object?>{
     'type': 'present',
+    'exactAlarmPermitted': ?exactAlarmPermitted,
     'session': <String, Object?>{
       'token': token.toMap(),
       'lifecycleState': state,
@@ -641,5 +643,37 @@ void main() {
 
     expect(service.isGracePeriod, isTrue);
     expect(service.sessionToken, fixedToken);
+  });
+
+  // Y-14: an armed session whose exact alarms Android deleted (permission
+  // revoked) must not look protected.
+  test('an armed session without exact-alarm access is shown degraded, and '
+      'recovers when access returns', () async {
+    final now = DateTime.now();
+    SharedPreferences.setMockInitialValues(<String, Object>{
+      'check_in_state_v2': jsonEncode(persistedProjection()),
+    });
+    var permitted = false;
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, (call) async {
+          if (call.method == 'discoverEmergencySession' ||
+              call.method == 'readEmergencySession') {
+            return present(
+              mainDeadline: now.add(const Duration(minutes: 13)),
+              finalDeadline: now.add(const Duration(minutes: 14)),
+              exactAlarmPermitted: permitted,
+            );
+          }
+          return null;
+        });
+
+    await service.initialize();
+    expect(service.isActive, isTrue);
+    expect(service.nativeScheduleDegraded, isTrue);
+
+    permitted = true;
+    await service.handleAppResumed();
+    expect(service.isActive, isTrue);
+    expect(service.nativeScheduleDegraded, isFalse);
   });
 }

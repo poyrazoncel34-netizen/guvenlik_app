@@ -60,4 +60,33 @@ void main() {
       );
     }
   });
+
+  // Y-14 (closure audit 2026-10-09): revoking exact-alarm access during an
+  // armed Check-In killed the app and deleted the exact alarms; only inexact
+  // backups (10-12 min windows) remained while the screen still showed a fully
+  // protected countdown. Native reports the LIVE permission with every read.
+  test('the live exact-alarm permission travels with a present read', () {
+    expect(
+      parseSessionSnapshot({
+        'type': 'present',
+        'session': session(),
+        'exactAlarmPermitted': false,
+      }).exactAlarmPermitted,
+      isFalse,
+    );
+    expect(
+      parseSessionSnapshot({
+        'type': 'present',
+        'session': session(),
+        'exactAlarmPermitted': true,
+      }).exactAlarmPermitted,
+      isTrue,
+    );
+    expect(
+      parseSessionSnapshot({'type': 'present', 'session': session()})
+          .exactAlarmPermitted,
+      isTrue,
+      reason: 'an older native build without the field is not a revocation',
+    );
+  });
 }

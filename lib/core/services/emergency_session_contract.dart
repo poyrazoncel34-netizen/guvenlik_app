@@ -294,8 +294,13 @@ class SessionSnapshot {
     this.reasonCode,
     this.mainDurationSeconds,
     this.completedAt,
+    this.exactAlarmPermitted = true,
   });
 
+  /// Whether Android lets the app schedule exact alarms NOW (Y-14). Revoking
+  /// the access deletes an armed session's exact alarms; only the inexact
+  /// backups, minutes late, remain.
+  final bool exactAlarmPermitted;
   final int? mainDurationSeconds;
   final DateTime? completedAt;
   final SessionReadStatus status;
