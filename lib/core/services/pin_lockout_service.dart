@@ -149,14 +149,28 @@ class PinLockoutService {
         (lockedUntilRaw != null && lockedUntilMs == null)) {
       return const PinLockoutUnreadable();
     }
-    if (lockedUntilMs == null) {
+    // An elapsed deadline without its wall key is a lockout write cut short
+    // (elapsed keys are written first): still a lockout, never "none".
+    final cutShort =
+        lockedUntilMs == null &&
+        await _secureStorage.read(key: _lockedUntilElapsedKey) != null;
+    if (lockedUntilMs == null && !cutShort) {
       return PinLockoutReadable(
         PinLockoutState(failedAttempts: failedAttempts, lockedUntil: null),
       );
     }
     final remaining = await _remaining(
-      DateTime.fromMillisecondsSinceEpoch(lockedUntilMs),
+      lockedUntilMs == null
+          ? _now()
+          : DateTime.fromMillisecondsSinceEpoch(lockedUntilMs),
+      Duration(seconds: lockoutSecondsFor(failedAttempts)),
     );
+    if (remaining <= Duration.zero) {
+      // Ran out where it was measured: forget it, so a LATER reboot has
+      // nothing to restart. The attempt count stays.
+      await _secureStorage.delete(key: _lockedUntilKey);
+      await _clearMonotonicDeadline();
+    }
     return PinLockoutReadable(
       PinLockoutState(
         failedAttempts: failedAttempts,
@@ -167,14 +181,18 @@ class PinLockoutService {
     );
   }
 
-  /// Time left on a lockout (audit Y-05).
+  /// Time left on a lockout (audit Y-05; reboot policy: owner decision
+  /// 2026-10-09).
   ///
   /// The wall deadline alone let a user-set clock end a lockout at once
   /// (+1 h: an 86 s lockout gone) or stretch it (-2 h: 7431 s). Within the
-  /// boot that set it, elapsedRealtime -- which nobody can set -- decides;
-  /// across a reboot, or without a reading, the wall deadline still counts but
+  /// boot that set it, elapsedRealtime -- which nobody can set -- decides.
+  /// Across a reboot the wall deadline used to decide, so reboot + clock
+  /// forward ended any lockout for the price of one restart: a lockout found
+  /// in a NEW boot now restarts for its full [duration] and is tied to that
+  /// boot. Only without any monotonic reading does the wall deadline count,
   /// never for longer than the longest lockout the policy can impose.
-  Future<Duration> _remaining(DateTime wallUntil) async {
+  Future<Duration> _remaining(DateTime wallUntil, Duration duration) async {
     final elapsedUntil = int.tryParse(
       await _secureStorage.read(key: _lockedUntilElapsedKey) ?? '',
     );
@@ -182,15 +200,54 @@ class PinLockoutService {
         int.tryParse(await _secureStorage.read(key: _lockedBootKey) ?? '') ??
         _unknownBoot;
     final bootId = await _secureStorage.read(key: _lockedBootIdKey);
-    final reading =
-        elapsedUntil != null && (boot != _unknownBoot || bootId != null)
-        ? await _readMonotonic()
-        : null;
-    final left = reading != null && reading.isSameBootAs(boot, bootId)
-        ? Duration(milliseconds: elapsedUntil! - reading.elapsedMs)
-        : wallUntil.difference(_now());
+    final reading = elapsedUntil == null ? null : await _readMonotonic();
     const cap = Duration(seconds: maxLockoutSeconds);
+    if (reading == null) {
+      final left = wallUntil.difference(_now());
+      return left > cap ? cap : left;
+    }
+    if (_fromAnotherBoot(reading, boot, bootId, elapsedUntil! - duration.inMilliseconds)) {
+      await _anchor(reading, duration > cap ? cap : duration);
+      return duration > cap ? cap : duration;
+    }
+    final left = Duration(milliseconds: elapsedUntil - reading.elapsedMs);
     return left > cap ? cap : left;
+  }
+
+  /// Whether [reading] provably belongs to a later boot than the stored
+  /// deadline: a different kernel boot id, else a different BOOT_COUNT, else
+  /// an elapsed clock below the one at lock time ([stampMs]) -- it never runs
+  /// backwards within a boot. With nothing to tell, the same boot.
+  static bool _fromAnotherBoot(
+    MonotonicReading reading,
+    int boot,
+    String? bootId,
+    int stampMs,
+  ) {
+    final id = reading.bootId;
+    if (id != null && bootId != null) return id != bootId;
+    if (reading.bootCount != _unknownBoot && boot != _unknownBoot) {
+      return reading.bootCount != boot;
+    }
+    return reading.elapsedMs < stampMs;
+  }
+
+  /// Ties a lockout of [length] to [reading]'s boot, starting now. Elapsed
+  /// keys first, wall key last (see [registerFailure]).
+  Future<void> _anchor(MonotonicReading reading, Duration length) async {
+    await _secureStorage.write(
+      key: _lockedUntilElapsedKey,
+      value: '${reading.elapsedMs + length.inMilliseconds}',
+    );
+    await _secureStorage.write(key: _lockedBootKey, value: '${reading.bootCount}');
+    final bootId = reading.bootId;
+    await (bootId == null
+        ? _secureStorage.delete(key: _lockedBootIdKey)
+        : _secureStorage.write(key: _lockedBootIdKey, value: bootId));
+    await _secureStorage.write(
+      key: _lockedUntilKey,
+      value: '${_now().add(length).millisecondsSinceEpoch}',
+    );
   }
 
   Future<MonotonicReading?> _readMonotonic() async {
@@ -228,8 +285,9 @@ class PinLockoutService {
       // This way round an interrupted write leaves the newer elapsed deadline
       // (locked) or none at all (the wall deadline decides).
       final bootId = reading?.bootId;
-      if (reading != null &&
-          (reading.bootCount != _unknownBoot || bootId != null)) {
+      // Stored even with no boot identity: the elapsed clock at lock time
+      // still tells a reboot (it restarts near zero) for most of a boot.
+      if (reading != null) {
         await _secureStorage.write(
           key: _lockedUntilElapsedKey,
           value: '${reading.elapsedMs + seconds * 1000}',

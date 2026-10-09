@@ -104,14 +104,80 @@ void main() {
     expect(state.failedAttempts, 5, reason: 'the count itself is kept');
   });
 
-  test('after a reboot the wall deadline counts again', () async {
+  // Owner decision 2026-10-09: rebooting must not reset the lockout. Across a
+  // reboot the wall deadline used to decide, so reboot + clock forward ended
+  // any lockout for the price of one restart. Now a lockout found active in a
+  // new boot restarts for its full duration, tied to the new boot.
+  test(
+    'a reboot restarts an active lockout instead of trusting the wall',
+    () async {
+      await lockFor30Seconds();
+      reading = (elapsedMs: 15000, bootCount: 18, bootId: null);
+      wall = wall.add(const Duration(days: 1));
+
+      final state = await read();
+      expect(state.isLocked, isTrue);
+      expect(state.remainingSeconds, inInclusiveRange(28, 30));
+    },
+  );
+
+  test('after the restart the new boot runs it monotonically: +1 day, -1 day '
+      'and a process kill change nothing', () async {
     await lockFor30Seconds();
     reading = (elapsedMs: 15000, bootCount: 18, bootId: null);
-    wall = wall.add(const Duration(seconds: 5));
+    await read();
+
+    advance(const Duration(seconds: 10), wallJump: const Duration(days: 1));
+    expect((await read()).remainingSeconds, inInclusiveRange(18, 20));
+    advance(const Duration(seconds: 1), wallJump: const Duration(days: -2));
+    expect((await read()).remainingSeconds, inInclusiveRange(17, 19));
+
+    // A fresh service instance is a process restart.
+    service = PinLockoutService.forTesting(
+      monotonic: () async => reading,
+      now: () => wall,
+    );
+    expect((await read()).isLocked, isTrue);
+    advance(const Duration(seconds: 20));
+    expect((await read()).isLocked, isFalse);
+  });
+
+  test('two reboots in a row keep it locked', () async {
+    await lockFor30Seconds();
+    reading = (elapsedMs: 15000, bootCount: 18, bootId: null);
+    await read();
+    reading = (elapsedMs: 9000, bootCount: 19, bootId: null);
+    wall = wall.add(const Duration(hours: 5));
 
     final state = await read();
     expect(state.isLocked, isTrue);
-    expect(state.remainingSeconds, inInclusiveRange(23, 25));
+    expect(state.remainingSeconds, inInclusiveRange(28, 30));
+  });
+
+  test('a lockout that ran out in its own boot is forgotten, so a later '
+      'reboot does not restart it', () async {
+    await lockFor30Seconds();
+    advance(const Duration(seconds: 31));
+    expect((await read()).isLocked, isFalse);
+
+    reading = (elapsedMs: 15000, bootCount: 18, bootId: null);
+    final state = await read();
+    expect(state.isLocked, isFalse);
+    expect(state.failedAttempts, 5, reason: 'the attempt count is kept');
+  });
+
+  test('with no boot identity on either side an elapsed clock below the lock '
+      'stamp is a reboot; above it, the same boot', () async {
+    reading = (elapsedMs: 1000000, bootCount: -1, bootId: null);
+    await lockFor30Seconds();
+
+    advance(const Duration(seconds: 5), wallJump: const Duration(days: 1));
+    expect((await read()).remainingSeconds, inInclusiveRange(24, 25));
+
+    reading = (elapsedMs: 4000, bootCount: -1, bootId: null);
+    final state = await read();
+    expect(state.isLocked, isTrue);
+    expect(state.remainingSeconds, inInclusiveRange(28, 30));
   });
 
   test('a clock moved back across a reboot cannot lock the owner out for '
@@ -126,6 +192,7 @@ void main() {
       state.remainingSeconds,
       lessThanOrEqualTo(PinLockoutService.maxLockoutSeconds),
     );
+    expect(state.remainingSeconds, inInclusiveRange(28, 30));
   });
 
   test(
@@ -168,8 +235,8 @@ void main() {
       wall = wall.add(const Duration(seconds: 5));
 
       final state = await read();
-      expect(state.isLocked, isTrue, reason: 'the wall deadline counts');
-      expect(state.remainingSeconds, inInclusiveRange(23, 25));
+      expect(state.isLocked, isTrue, reason: 'a new boot restarts it');
+      expect(state.remainingSeconds, inInclusiveRange(28, 30));
     },
   );
 
