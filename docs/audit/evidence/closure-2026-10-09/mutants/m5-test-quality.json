@@ -1,0 +1,29 @@
+[
+ {
+  "id": "M5-a wrapper closes before the notice (NEW test)",
+  "file": "lib/screens/check_in_screen.dart",
+  "old": "BackgroundProtectionTap(child: Container(",
+  "new": "BackgroundProtectionTap(child: const SizedBox.shrink()), Column(children: [Container(",
+  "tests": [
+   "test/core/widgets/background_protection_tap_test.dart"
+  ]
+ },
+ {
+  "id": "M5-a' same mutant vs the OLD distance test (expected to SURVIVE)",
+  "file": "lib/screens/check_in_screen.dart",
+  "old": "BackgroundProtectionTap(child: Container(",
+  "new": "BackgroundProtectionTap(child: const SizedBox.shrink()), Column(children: [Container(",
+  "tests": [
+   "test/core/widgets/zz_old_wrapper_tmp_test.dart"
+  ]
+ },
+ {
+  "id": "M5-b manual call in the exact-alarm refusal opens nothing",
+  "file": "lib/core/widgets/emergency_failure_dialog.dart",
+  "old": "                    await AndroidIntentService.openDialer(phoneNumber);",
+  "new": "                    await Future<void>.value();",
+  "tests": [
+   "test/screens/countdown_exact_alarm_required_test.dart"
+  ]
+ }
+]

@@ -1,0 +1,34 @@
+lockout matrix 36 serial=emulator-5558 build=ebe5acd debug sha1 cf4dccc2a4ba lastUpdateTime=2026-10-09 19:57:01 start=20:15:19
+PIN 1357
+PIN 1357
+PIN 1357
+PIN 1357
+PIN 1357
+band after wrong PINs: Kilitli: 25s
+1 lock -> kill -9 -> reopen | band=Kilitli: 19s | correct PIN opened app=False | dev=20:16:00
+--- escalate to 240 s (failures 6, 7, 8 each after the previous lockout ends)
+PIN 1357
+band after wrong PINs: Kilitli: 56s
+PIN 1357
+band after wrong PINs: Kilitli: 116s
+PIN 1357
+band after wrong PINs: Kilitli: 236s
+--- escalated at 20:19:42
+2 lock -> force-stop -> reopen | band=Kilitli: 231s | correct PIN opened app=False | dev=20:19:52
+3 lock -> wall +1 h | band=Kilitli: 221s | correct PIN opened app=False | dev=21:20:03
+4 lock -> wall +1 day (+25 h total) | band=Kilitli: 211s | correct PIN opened app=False | dev=21:20:13
+5 lock -> wall -1 day (from real) | band=Kilitli: 201s | correct PIN opened app=False | dev=20:20:23
+6 lock -> timezone Europe/Istanbul -> America/New_York | band=Kilitli: 189s | correct PIN opened app=False | dev=13:20:34
+7 lock -> automatic time ON | band=Kilitli: 178s | correct PIN opened app=False | dev=20:20:46
+--- reboots
+8 lock -> reboot | band=Kilitli: 237s | correct PIN opened app=False | dev=20:21:22
+9 lock -> reboot -> wall +1 h | band=Kilitli: 237s | correct PIN opened app=False | dev=21:21:55
+10 lock -> reboot -> wall +1 day | band=Kilitli: 237s | correct PIN opened app=False | dev=20:22:31
+11 lock -> reboot -> wall -1 day | band=Kilitli: 237s | correct PIN opened app=False | dev=20:23:05
+12 lock -> reboot -> timezone Asia/Tokyo | band=Kilitli: 236s | correct PIN opened app=False | dev=02:23:42
+13 lock -> reboot -> open -> kill -9 -> reopen | band=Kilitli: 229s | correct PIN opened app=False | dev=20:24:25
+14 lock -> two reboots in a row | band=Kilitli: 236s | correct PIN opened app=False | dev=20:25:46
+--- 15: let the lockout run out on screen in this boot, then reboot
+band none
+15 lockout ran out on screen (same boot) -> reboot: not restarted; correct PIN opens | band=none | correct PIN opened app=True | dev=20:30:11
+end=20:30:12

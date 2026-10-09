@@ -1,0 +1,21 @@
+lockout matrix API 36 build sha1 773876905b05 lastUpdateTime 2026-10-09 13:15:45 (working tree on 3a8ea49 + lockout reboot change)
+LOCKED: Kilitli: 26s at 13:16:51
+1 lock -> kill -9 -> reopen | band=Kilitli: 17s | correct PIN opened app=False | dev=13:17:07
+--- lockout escalated to 240 s at ~13:20:41
+2 lock -> force-stop -> reopen | band=Kilitli: 220s | correct PIN opened app=False | dev=13:21:04
+3 lock -> wall +1 h | band=Kilitli: 206s | correct PIN opened app=False | dev=14:21:17
+4 lock -> wall +1 day (+25 h total) | band=Kilitli: 193s | correct PIN opened app=False | dev=14:21:30
+5 lock -> wall -1 day (from real) | band=Kilitli: 179s | correct PIN opened app=False | dev=13:21:43
+6 lock -> timezone Europe/Istanbul -> America/New_York | band=Kilitli: 166s | correct PIN opened app=False | dev=06:21:56
+7 lock -> automatic time ON | band=Kilitli: 150s | correct PIN opened app=False | dev=13:22:12
+--- reboots (remaining before reboot ~150 s)
+8 lock -> reboot | band=none | correct PIN opened app=False | dev=13:23:11
+9 lock -> reboot -> wall +1 h | band=none | correct PIN opened app=False | dev=14:23:57
+(probe for 8/9 above read the screen before the cold start finished; screen showed 'Kilitli: 226s' right after = restarted 240 s lockout)
+9b (same boot as 9) lock -> reboot -> +1 h, re-probed | band=Kilitli: 207s | correct PIN opened app=False | dev=14:24:31
+10 lock -> reboot -> wall +1 day | band=Kilitli: 236s | correct PIN opened app=False | dev=13:25:24
+11 lock -> reboot -> wall -1 day | band=Kilitli: 236s | correct PIN opened app=False | dev=13:26:27
+12 lock -> reboot -> timezone Asia/Tokyo | band=Kilitli: 237s | correct PIN opened app=False | dev=19:27:16
+13 lock -> reboot -> open -> kill -9 -> reopen | band=Kilitli: 229s | correct PIN opened app=False | dev=13:27:55
+14 lock -> two reboots in a row | band=Kilitli: 237s | correct PIN opened app=False | dev=13:28:49
+15 lockout ran out on screen (same boot) -> reboot: not restarted; correct PIN opens | band=none | correct PIN opened app=True | dev=13:33:18

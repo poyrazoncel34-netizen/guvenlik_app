@@ -3,7 +3,7 @@
 import subprocess, sys, re, time, os, html
 ADB = os.path.expanduser('~/Library/Android/sdk/platform-tools/adb')
 def sh(*a):
-    return subprocess.run([ADB, *a], capture_output=True, text=True).stdout
+    return subprocess.run([ADB, *a], capture_output=True, text=True, encoding='utf-8', errors='replace').stdout
 def dump():
     for _ in range(4):
         out = sh('exec-out', 'uiautomator', 'dump', '/dev/tty')

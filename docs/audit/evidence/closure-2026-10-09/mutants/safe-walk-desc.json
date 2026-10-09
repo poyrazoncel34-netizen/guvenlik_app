@@ -1,0 +1,20 @@
+[
+ {
+  "id": "SW-1 code grace changes, copy does not",
+  "file": "lib/core/services/check_in_service.dart",
+  "old": "static const int _gracePeriodSeconds = 60;",
+  "new": "static const int _gracePeriodSeconds = 90;",
+  "tests": [
+   "test/screens/safe_walk_desc_copy_test.dart"
+  ]
+ },
+ {
+  "id": "SW-2 old 'uygulama acikken' copy",
+  "file": "assets/translations/tr-TR.json",
+  "old": "\"safe_walk_desc\": \"Bir zamanlayıcı başlatın. Süre dolduğunda\\n'Güvendeyim' butonuna basmazsanız 60 saniyelik\\nek süre başlar ve bir uyarı gösterilmeye çalışılır;\\nek süre sonunda acil arama akışı başlatılır.\"",
+  "new": "\"safe_walk_desc\": \"Bir zamanlayıcı başlatın. Süre dolduğunda\\n'Güvendeyim' butonuna basmazsanız, uygulama\\naçıkken acil akış hazırlanır.\"",
+  "tests": [
+   "test/screens/safe_walk_desc_copy_test.dart"
+  ]
+ }
+]

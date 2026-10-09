@@ -1,0 +1,191 @@
+[
+ {
+  "id": "LK-R1 forget unproven expiry",
+  "file": "lib/core/services/pin_lockout_service.dart",
+  "old": "if (proven && remaining <= Duration.zero) {",
+  "new": "if (remaining <= Duration.zero) {",
+  "tests": [
+   "test/core/services/pin_lockout_monotonic_test.dart"
+  ]
+ },
+ {
+  "id": "LK-R2 failed read -> wall decides",
+  "file": "lib/core/services/pin_lockout_service.dart",
+  "old": "if ((elapsedUntil != null || pending) && _monotonicRequired()) {",
+  "new": "if (false) {",
+  "tests": [
+   "test/core/services/pin_lockout_monotonic_test.dart"
+  ]
+ },
+ {
+  "id": "LK-R3 bridge-missing ignored",
+  "file": "lib/core/services/pin_lockout_service.dart",
+  "old": "_monotonicRequired = monotonicRequired ?? _bridgePresent,",
+  "new": "_monotonicRequired = (() => true),",
+  "tests": [
+   "test/core/services/pin_lockout_monotonic_test.dart"
+  ]
+ },
+ {
+  "id": "LK-R4 stored duration ignored",
+  "file": "lib/core/services/pin_lockout_service.dart",
+  "old": "storedMs != null && storedMs > 0",
+  "new": "storedMs != null && storedMs < 0",
+  "tests": [
+   "test/core/services/pin_lockout_monotonic_test.dart"
+  ]
+ },
+ {
+  "id": "LK-R5 no serialization",
+  "file": "lib/core/services/pin_lockout_service.dart",
+  "old": "Future<PinLockoutRead> readState() => _serialized(_readState);",
+  "new": "Future<PinLockoutRead> readState() => _readState();",
+  "tests": [
+   "test/core/services/pin_lockout_monotonic_test.dart"
+  ]
+ },
+ {
+  "id": "LK-R6 duration key not written at lock",
+  "file": "lib/core/services/pin_lockout_service.dart",
+  "old": "      if (reading != null) {\n        await _secureStorage.write(\n          key: _lockedDurationKey,",
+  "new": "      if (reading != null) {\n        await _secureStorage.write(\n          key: 'unused_duration',",
+  "tests": [
+   "test/core/services/pin_lockout_monotonic_test.dart"
+  ]
+ },
+ {
+  "id": "LK-R7 lock never waits",
+  "file": "lib/core/services/pin_lockout_service.dart",
+  "old": "    if (_busy) {\n      if (_holderStuck) return body();",
+  "new": "    if (false) {\n      if (_holderStuck) return body();",
+  "tests": [
+   "test/core/services/pin_lockout_monotonic_test.dart"
+  ]
+ },
+ {
+  "id": "LK-M2a no pending marker at wall-only lock",
+  "file": "lib/core/services/pin_lockout_service.dart",
+  "old": "        await _clearMonotonicDeadline();\n        await _secureStorage.write(\n          key: _lockedDurationKey,",
+  "new": "        await _clearMonotonicDeadline();\n        await _secureStorage.write(\n          key: 'unused_marker',",
+  "tests": [
+   "test/core/services/pin_lockout_monotonic_test.dart"
+  ]
+ },
+ {
+  "id": "LK-M2b marker ignored on read",
+  "file": "lib/core/services/pin_lockout_service.dart",
+  "old": "final pending = elapsedUntil == null && storedMs != null;",
+  "new": "final pending = false;",
+  "tests": [
+   "test/core/services/pin_lockout_monotonic_test.dart"
+  ]
+ },
+ {
+  "id": "LK-M2c marker read but not anchored",
+  "file": "lib/core/services/pin_lockout_service.dart",
+  "old": "      await _anchor(reading, duration);\n      return (remaining: duration, proven: true);\n    }\n    if (_fromAnotherBoot",
+  "new": "      return (remaining: _capped((wallUntil ?? _now()).difference(_now())), proven: true);\n    }\n    if (_fromAnotherBoot",
+  "tests": [
+   "test/core/services/pin_lockout_monotonic_test.dart"
+  ]
+ },
+ {
+  "id": "LK-H1 no visible floor (sub-second hold)",
+  "file": "lib/core/services/pin_lockout_service.dart",
+  "old": "final floor = hold < _visibleHold ? _visibleHold : hold;",
+  "new": "final floor = hold;",
+  "tests": [
+   "test/core/services/pin_lockout_monotonic_test.dart"
+  ]
+ },
+ {
+  "id": "LK-H2 hold unbounded",
+  "file": "lib/core/services/pin_lockout_service.dart",
+  "old": "        if (hold > Duration.zero) {",
+  "new": "        if (true) {",
+  "tests": [
+   "test/core/services/pin_lockout_monotonic_test.dart"
+  ]
+ },
+ {
+  "id": "LK-H3 hold restarts on every failed read",
+  "file": "lib/core/services/pin_lockout_service.dart",
+  "old": "final since = _unprovenSince ??= _processElapsed();",
+  "new": "final since = _processElapsed();",
+  "tests": [
+   "test/core/services/pin_lockout_monotonic_test.dart"
+  ]
+ },
+ {
+  "id": "LK-H4 proven read does not end the episode",
+  "file": "lib/core/services/pin_lockout_service.dart",
+  "old": "    _unprovenSince = null;\n",
+  "new": "\n",
+  "tests": [
+   "test/core/services/pin_lockout_monotonic_test.dart"
+  ]
+ },
+ {
+  "id": "LK-W1 waiter never gives up on a stuck holder",
+  "file": "lib/core/services/pin_lockout_service.dart",
+  "old": "          for (final waiter in _waiting) {\n            waiter.complete(false);\n          }\n          _waiting.clear();\n          return body();",
+  "new": "          for (final waiter in _waiting) {\n            waiter.complete(false);\n          }\n          _waiting.clear();\n          return Completer<T>().future;",
+  "tests": [
+   "test/core/services/pin_lockout_monotonic_test.dart"
+  ]
+ },
+ {
+  "id": "LK-C1 lone length not read as cut short",
+  "file": "lib/core/services/pin_lockout_service.dart",
+  "old": "        (await _secureStorage.read(key: _lockedUntilElapsedKey) != null ||\n            await _secureStorage.read(key: _lockedDurationKey) != null);",
+  "new": "        (await _secureStorage.read(key: _lockedUntilElapsedKey) != null);",
+  "tests": [
+   "test/core/services/pin_lockout_monotonic_test.dart"
+  ]
+ },
+ {
+  "id": "LK-D1 reset deletes the length in parallel",
+  "file": "lib/core/services/pin_lockout_service.dart",
+  "old": "    await _secureStorage.delete(key: _lockedDurationKey);\n    await Future.wait([",
+  "new": "    await Future.wait([\n      _secureStorage.delete(key: _lockedDurationKey),",
+  "tests": [
+   "test/core/services/pin_lockout_monotonic_test.dart"
+  ]
+ },
+ {
+  "id": "LK-D2 clear deletes the length last",
+  "file": "lib/core/services/pin_lockout_service.dart",
+  "old": "  Future<void> _clearMonotonicDeadline() async {\n    await _secureStorage.delete(key: _lockedDurationKey);\n    await _secureStorage.delete(key: _lockedUntilElapsedKey);\n    await _secureStorage.delete(key: _lockedBootKey);\n    await _secureStorage.delete(key: _lockedBootIdKey);",
+  "new": "  Future<void> _clearMonotonicDeadline() async {\n    await _secureStorage.delete(key: _lockedUntilElapsedKey);\n    await _secureStorage.delete(key: _lockedBootKey);\n    await _secureStorage.delete(key: _lockedBootIdKey);\n    await _secureStorage.delete(key: _lockedDurationKey);",
+  "tests": [
+   "test/core/services/pin_lockout_monotonic_test.dart"
+  ]
+ },
+ {
+  "id": "LK-W2 stuck holder never recorded",
+  "file": "lib/core/services/pin_lockout_service.dart",
+  "old": "          _holderStuck = true;\n",
+  "new": "\n",
+  "tests": [
+   "test/core/services/pin_lockout_monotonic_test.dart"
+  ]
+ },
+ {
+  "id": "LK-W3 new callers queue behind a stuck holder",
+  "file": "lib/core/services/pin_lockout_service.dart",
+  "old": "      if (_holderStuck) return body();\n",
+  "new": "\n",
+  "tests": [
+   "test/core/services/pin_lockout_monotonic_test.dart"
+  ]
+ },
+ {
+  "id": "LK-E1 a new lockout inherits the old hold episode",
+  "file": "lib/core/services/pin_lockout_service.dart",
+  "old": "    _unprovenSince = null; // a new lockout gets a hold of its own\n",
+  "new": "\n",
+  "tests": [
+   "test/core/services/pin_lockout_monotonic_test.dart"
+  ]
+ }
+]

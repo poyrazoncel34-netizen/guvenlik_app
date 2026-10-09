@@ -1,0 +1,46 @@
+[
+ {
+  "id": "DL-1 link on every result",
+  "file": "lib/screens/emergency_call_screen.dart",
+  "old": "                    if (widget.callResult.requiresVerification &&\n                        widget.phone.isNotEmpty)\n                      TextButton.icon(",
+  "new": "                    if (true &&\n                        widget.phone.isNotEmpty)\n                      TextButton.icon(",
+  "tests": [
+   "test/screens/emergency_call_screen_behavior_test.dart"
+  ]
+ },
+ {
+  "id": "DL-2 link never shown",
+  "file": "lib/screens/emergency_call_screen.dart",
+  "old": "                    if (widget.callResult.requiresVerification &&\n                        widget.phone.isNotEmpty)\n                      TextButton.icon(",
+  "new": "                    if (false &&\n                        widget.phone.isNotEmpty)\n                      TextButton.icon(",
+  "tests": [
+   "test/screens/emergency_call_screen_behavior_test.dart"
+  ]
+ },
+ {
+  "id": "DL-3 link opens nothing",
+  "file": "lib/screens/emergency_call_screen.dart",
+  "old": "                        onPressed: () => unawaited(\n                          AndroidIntentService.openDialer(widget.phone),",
+  "new": "                        onPressed: () => unawaited(\n                          Future<bool>.value(false),",
+  "tests": [
+   "test/screens/emergency_call_screen_behavior_test.dart"
+  ]
+ },
+ {
+  "id": "DL-4 link back at the end of the scroll view (6e13bab placement)",
+  "file": "lib/screens/emergency_call_screen.dart",
+  "tests": [
+   "test/screens/emergency_call_screen_behavior_test.dart"
+  ],
+  "edits": [
+   [
+    "                    if (widget.callResult.requiresVerification &&\n                        widget.phone.isNotEmpty)\n                      TextButton.icon(\n                        onPressed: () => unawaited(\n                          AndroidIntentService.openDialer(widget.phone),\n                        ),\n                        icon: const Icon(\n                          Icons.dialpad_rounded,\n                          size: IconSizes.listItem,\n                        ),\n                        label: Text('emergency_open_phone_app'.tr()),\n                        style: TextButton.styleFrom(\n                          foregroundColor: Colors.white70,\n                        ),\n                      )\n                    else\n                      const SizedBox(height: 22),",
+    "                    const SizedBox(height: 22),"
+   ],
+   [
+    "                        presentation: callPresentation,\n                      ),\n",
+    "                        presentation: callPresentation,\n                      ),\n                      if (widget.callResult.requiresVerification &&\n                          widget.phone.isNotEmpty) ...[\n                        const SizedBox(height: 8),\n                        TextButton.icon(\n                          onPressed: () => unawaited(\n                            AndroidIntentService.openDialer(widget.phone),\n                          ),\n                          icon: const Icon(\n                            Icons.dialpad_rounded,\n                            size: IconSizes.listItem,\n                          ),\n                          label: Text('emergency_open_phone_app'.tr()),\n                          style: TextButton.styleFrom(\n                            foregroundColor: Colors.white70,\n                          ),\n                        ),\n                      ],\n"
+   ]
+  ]
+ }
+]

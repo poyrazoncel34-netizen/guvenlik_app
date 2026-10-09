@@ -1,0 +1,42 @@
+[
+ {
+  "id": "PA-1 title never limited",
+  "file": "lib/core/services/panic_arm_policy.dart",
+  "old": "      ? 'countdown_limited_protection_title'",
+  "new": "      ? 'countdown_warning_title'",
+  "tests": [
+   "test/core/services/panic_arm_policy_test.dart",
+   "test/screens/countdown_exact_alarm_required_test.dart"
+  ]
+ },
+ {
+  "id": "PA-2 heading not rebuilt at start",
+  "file": "lib/screens/countdown_screen.dart",
+  "old": "    setState(_startDartCountdownTimer); // heading follows _armResult (Y-11)",
+  "new": "    _startDartCountdownTimer();",
+  "tests": [
+   "test/core/services/panic_arm_policy_test.dart",
+   "test/screens/countdown_exact_alarm_required_test.dart"
+  ]
+ },
+ {
+  "id": "PA-3 screen keeps fixed heading",
+  "file": "lib/screens/countdown_screen.dart",
+  "old": "PanicArmPolicy.countdownTitleKey(_armResult).tr(),",
+  "new": "\"countdown_warning_title\".tr(),",
+  "tests": [
+   "test/core/services/panic_arm_policy_test.dart",
+   "test/screens/countdown_exact_alarm_required_test.dart"
+  ]
+ },
+ {
+  "id": "PA-4 native: CALL_PHONE before exact alarm",
+  "file": "android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/EmergencySessionModels.kt",
+  "old": "        !exactAlarmGranted -> \"exactAlarmDenied\"\n        !callPermissionGranted -> \"callPermissionDenied\"\n",
+  "new": "        !callPermissionGranted -> \"callPermissionDenied\"\n        !exactAlarmGranted -> \"exactAlarmDenied\"\n",
+  "tests": [
+   "*EmergencySessionCoordinatorTest*"
+  ],
+  "kind": "gradle"
+ }
+]
