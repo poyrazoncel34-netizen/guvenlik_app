@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guvenlik_app/core/services/call_service.dart';
 import 'package:guvenlik_app/screens/emergency_call_screen.dart';
@@ -183,6 +184,51 @@ void main() {
       expect(find.text(tr('emergency_manual_call_now')), findsNothing);
     });
 
+    // Security review MEDIUM-7: Telecom can accept the request and the call
+    // still fail (no signal). With the manual call gone, the screen left no
+    // way to the dialer. A quiet link opens the phone app with the number
+    // filled in -- it places nothing; the user still presses call.
+    testWidgets('an accepted request keeps a quiet way to the phone app that '
+        'dials nothing by itself', (tester) async {
+      final launched = <String>[];
+      const launcher = MethodChannel('plugins.flutter.io/url_launcher');
+      tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(launcher, (
+        call,
+      ) async {
+        launched.add('${call.method} ${call.arguments}');
+        return true;
+      });
+      addTearDown(
+        () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+          launcher,
+          null,
+        ),
+      );
+      await pumpResult(
+        tester,
+        result: EmergencyCallResult.requested('+905551112233'),
+      );
+
+      final link = find.text(tr('emergency_open_phone_app'));
+      expect(link, findsOneWidget);
+      final button = find.ancestor(
+        of: link,
+        matching: find.byWidgetPredicate((w) => w is TextButton),
+      );
+      expect(tester.getRect(button).height, greaterThanOrEqualTo(48));
+      expect(
+        tester.getSemantics(button),
+        containsSemantics(isButton: true, label: tr('emergency_open_phone_app')),
+      );
+      expect(launched, isEmpty);
+
+      await tester.ensureVisible(link);
+      await tester.tap(link);
+      await tester.pump();
+      expect(launched.join(), contains('tel:+905551112233'));
+      expect(find.byType(EmergencyCallScreen), findsOneWidget);
+    });
+
     testWidgets('a dialer fallback asks for the green button without claiming '
         'the call did not go', (tester) async {
       await pumpResult(
@@ -208,6 +254,11 @@ void main() {
       expect(find.byType(AlertDialog), findsOneWidget);
       expect(find.text(tr('failsafe_title')), findsOneWidget);
       expect(find.text(tr('emergency_manual_call_now')), findsOneWidget);
+      expect(
+        find.text(tr('emergency_open_phone_app')),
+        findsNothing,
+        reason: 'a real failure gets the manual call, not the quiet link',
+      );
     });
   });
 }

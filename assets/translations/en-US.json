@@ -567,6 +567,7 @@
   "emergency_call_failed_status": "Could not start the call",
   "emergency_call_started_hint": "Your device initiated the call. Connection depends on carrier and device — verify the other party answered.",
   "emergency_call_requested_hint": "Android accepted the call request. KoruBeni cannot verify the connection; your phone's call screen shows the call status.",
+  "emergency_open_phone_app": "Open the phone app",
   "emergency_call_manual_hint": "The dialer is open. Tap the call button on your device to place the emergency call.",
   "emergency_call_failed_hint": "This step could not be started. Call 112 or your emergency contact manually.",
   "emergency_location_status_gps": "Live GPS location was prepared",
