@@ -3,7 +3,6 @@ package com.poyrazoncel.korubeni.emergency
 import android.app.Activity
 import android.app.AlarmManager
 import android.content.ComponentName
-import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -63,7 +62,7 @@ class EmergencyPlatformHandler(
                     }
                     result.success(if (read is ReadSessionResult.Present && read.envelope.token.kind != kind) {
                         ReadSessionResult.Absent.toMap()
-                    } else SessionReadWire.of(read, canScheduleExactAlarms()))
+                    } else SessionReadWire.of(read) { canScheduleExactAlarms() })
                 }
                 "readEmergencySession" -> {
                     result.success(readEmergencySession(call))
@@ -126,8 +125,7 @@ class EmergencyPlatformHandler(
                     result.success(canScheduleExactAlarms())
                 }
                 "requestExactAlarmPermission" -> {
-                    openExactAlarmSettings()
-                    result.success(true)
+                    result.success(openExactAlarmSettings())
                 }
                 "readMonotonicClock" -> {
                     result.success(MonotonicClockSnapshot.of(context))
@@ -194,7 +192,7 @@ class EmergencyPlatformHandler(
         if (read is ReadSessionResult.Present && read.envelope.token != token) {
             return ReadSessionResult.Absent.toMap()
         }
-        return SessionReadWire.of(read, canScheduleExactAlarms())
+        return SessionReadWire.of(read) { canScheduleExactAlarms() }
     }
 
     private fun getEmergencyCapabilities(call: MethodCall): CapabilitySnapshot {
@@ -340,12 +338,8 @@ class EmergencyPlatformHandler(
         return alarmManager?.canScheduleExactAlarms() == true
     }
 
-    private fun openExactAlarmSettings() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return
-        try {
-            context.startActivity(ExactAlarmSettingsIntent.request(context.packageName))
-        } catch (_: ActivityNotFoundException) {
-            context.startActivity(ExactAlarmSettingsIntent.appDetails(context.packageName))
-        }
+    private fun openExactAlarmSettings(): Boolean {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return false
+        return ExactAlarmSettingsIntent.open(context)
     }
 }
