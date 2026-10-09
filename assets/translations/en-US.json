@@ -1014,5 +1014,7 @@
   "native_history_fallback_failed": "The call notification is unavailable; use your phone app to call your contact if needed.",
   "native_history_fallback_expired": "The manual call notification has expired; use your phone app if needed.",
   "native_history_recorded_time": "The time shown is when this result was recorded in the app.",
-  "overlay_touch_warning": "Another app is drawing over this screen. What you enter here may be visible; close that app before continuing."
+  "overlay_touch_warning": "Another app is drawing over this screen. What you enter here may be visible; close that app before continuing.",
+  "panic_exact_alarm_required": "Background protection is off. Without it the countdown cannot call if the app is closed, so the panic was not started. Turn on background protection, or call your emergency contact now.",
+  "background_protection_open": "Turn on background protection"
 }

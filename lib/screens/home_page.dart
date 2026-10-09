@@ -31,6 +31,7 @@ import 'battery_optimization_wizard.dart';
 import '../core/services/emergency_readiness_service.dart';
 import '../core/services/notification_service.dart';
 import '../core/services/rehearsal_record_service.dart';
+import '../core/widgets/background_protection_fix.dart';
 import '../core/widgets/exact_alarm_permission_guard.dart';
 import '../core/widgets/readiness_card.dart';
 import '../core/utils/permission_helper.dart';
@@ -139,13 +140,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     setState(() => _lastRehearsalAt = recorded);
   }
 
-  void _openBatteryWizard() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => const BatteryOptimizationWizard()),
-    );
-  }
-
   @override
   void dispose() {
     EmergencyReadinessService.instance.removeListener(_onReadinessChanged);
@@ -239,7 +233,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                         lastRehearsalAt: _lastRehearsalAt,
                         onFixEmergencyContact: _navigateToContacts,
                         onFixCallPermission: _requestCallPhonePermission,
-                        onFixBackground: _openBatteryWizard,
+                        onFixBackground: () => BackgroundProtectionFix.open(
+                          context,
+                          readiness: EmergencyReadinessService.instance.lastState,
+                        ),
                         onFixLocation: _requestLocationPermission,
                         onFixContacts: _requestContactsPermission,
                         onRunRehearsal: _startTestMode,

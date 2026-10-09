@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:guvenlik_app/core/services/emergency_result_policy.dart';
 import 'package:guvenlik_app/core/services/emergency_session_contract.dart';
 import 'package:guvenlik_app/core/services/panic_arm_policy.dart';
 
@@ -15,7 +16,6 @@ void main() {
     () {
       for (final reason in <String>{
         'callPermissionDenied',
-        'exactAlarmDenied',
         'notificationsDisabled',
         'alertChannelNotHigh',
       }) {
@@ -55,6 +55,54 @@ void main() {
       }
     },
   );
+
+  // Y-11 (owner decision 2026-10-09): without exact-alarm access there is no
+  // native backup, so a countdown that looks protected must not start. On an
+  // API 36 clean install the dialer-only countdown looked identical to a
+  // protected one and a process death during it called nobody.
+  group('Y-11: exact-alarm access missing', () {
+    const denied = ArmRejected('exactAlarmDenied', rejectedToken: token);
+
+    test('blocks the protected countdown', () {
+      expect(PanicArmPolicy.dispositionFor(denied), PanicArmDisposition.blocked);
+      expect(PanicArmPolicy.shouldStartCountdown(denied), isFalse);
+      expect(
+        PanicArmPolicy.blockedMessageKey(denied),
+        EmergencyResultPolicy.exactAlarmRequiredBodyKey,
+      );
+    });
+
+    EmergencyFailureCopy copyFor(ArmResult result) =>
+        EmergencyResultPolicy.failureCopy(
+          reason: EmergencyFailureReason.armRejected,
+          bodyKeyOverride: PanicArmPolicy.blockedMessageKey(result),
+        );
+
+    test('offers background protection and a call to the armed target', () {
+      expect(copyFor(denied).offersBackgroundProtection, isTrue);
+      expect(
+        PanicArmPolicy.manualDialNumber(denied, '+905001234567'),
+        '+905001234567',
+      );
+    });
+
+    test('no other refusal offers the exact-alarm settings', () {
+      for (final reason in <String>{
+        'callPermissionDenied',
+        'notificationsDisabled',
+        'entitlementDenied',
+        'platformBridgeMissing',
+      }) {
+        expect(
+          copyFor(
+            ArmRejected(reason, rejectedToken: token),
+          ).offersBackgroundProtection,
+          isFalse,
+          reason: reason,
+        );
+      }
+    });
+  });
 
   test('rejected diagnostic token is never treated as an active session', () {
     expect(

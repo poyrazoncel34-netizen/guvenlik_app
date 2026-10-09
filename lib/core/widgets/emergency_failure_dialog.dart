@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import '../app_colors.dart';
 import '../design_tokens.dart';
 import '../services/android_intent_service.dart';
+import '../services/emergency_platform_service.dart';
 import '../services/emergency_result_policy.dart';
 import 'dispatch_outcome_list.dart';
 import '../navigation/own_route.dart';
@@ -146,6 +147,29 @@ abstract final class EmergencyFailureDialog {
                     backgroundColor: AppColors.emergency,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+            // Y-11: the refusal the user can fix here. The dialog stays up;
+            // the panic is pressed again after returning from Settings.
+            if (copy.offersBackgroundProtection)
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () => EmergencyPlatformService.instance
+                      .requestExactAlarmPermission(),
+                  icon: const Icon(
+                    Icons.settings_rounded,
+                    size: IconSizes.listItem,
+                  ),
+                  label: Text('background_protection_open'.tr()),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    side: const BorderSide(color: Colors.white38),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),

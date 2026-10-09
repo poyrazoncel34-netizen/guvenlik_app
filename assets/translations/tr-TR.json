@@ -1014,5 +1014,7 @@
   "native_history_fallback_failed": "Arama bildirimine erişim doğrulanamadı; gerekirse kişini telefon uygulamasından ara.",
   "native_history_fallback_expired": "Elle arama bildiriminin süresi doldu; gerekirse telefon uygulamasını kullan.",
   "native_history_recorded_time": "Gösterilen zaman, bu sonucun uygulamaya kaydedildiği zamandır.",
-  "overlay_touch_warning": "Başka bir uygulama bu ekranın üstüne çiziyor. Girdiğiniz bilgiler görünüyor olabilir; devam etmeden önce o uygulamayı kapatın."
+  "overlay_touch_warning": "Başka bir uygulama bu ekranın üstüne çiziyor. Girdiğiniz bilgiler görünüyor olabilir; devam etmeden önce o uygulamayı kapatın.",
+  "panic_exact_alarm_required": "Arka plan koruması kapalı. Bu izin olmadan uygulama kapanırsa geri sayım arama yapamaz; bu yüzden panik başlatılmadı. Arka plan korumasını açın ya da acil kişinizi şimdi arayın.",
+  "background_protection_open": "Arka plan korumasını aç"
 }

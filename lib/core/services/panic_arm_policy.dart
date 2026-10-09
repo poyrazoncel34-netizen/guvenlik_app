@@ -1,4 +1,5 @@
 import 'emergency_platform_channel.dart';
+import 'emergency_result_policy.dart';
 import 'emergency_session_contract.dart';
 
 /// Determines what the visible Panic countdown may do after the native arm
@@ -13,9 +14,11 @@ enum PanicArmDisposition {
 }
 
 abstract final class PanicArmPolicy {
+  /// Without exact-alarm access there is no native backup at all, so it is
+  /// NOT here (Y-11, owner decision 2026-10-09): a dialer-only countdown looked
+  /// exactly like a protected one, and a process death during it called nobody.
   static const Set<String> _foregroundDialReasons = <String>{
     'callPermissionDenied',
-    'exactAlarmDenied',
     'notificationsDisabled',
     'alertChannelNotHigh',
   };
@@ -32,13 +35,15 @@ abstract final class PanicArmPolicy {
       'pinReadFailed' => 'pin_state_read_failed',
       'targetNotCallable' ||
       'callableTargetMissing' => 'timer_emergency_contact_required',
+      'exactAlarmDenied' => EmergencyResultPolicy.exactAlarmRequiredBodyKey,
       _ => 'safety_session_not_ready',
     };
   }
 
   /// Number the blocked-arm dialog may offer for a MANUAL call, or ''.
   ///
-  /// Only a missing native bridge qualifies. By the time the native arm is
+  /// A missing native bridge, and missing exact-alarm access (Y-11: "call
+  /// your contact now" beside "turn on background protection"), qualify. By the time the native arm is
   /// invoked, entitlement, PIN and a callable target have already been
   /// verified; what is absent is only the automatic, Doze-proof session. The
   /// system dialer is reached over a separate channel, so the user is offered
@@ -47,7 +52,8 @@ abstract final class PanicArmPolicy {
   /// failure, where offering a call would bypass the gate that refused.
   static String manualDialNumber(ArmResult result, String? armedTarget) =>
       result is ArmRejected &&
-          result.reasonCode == EmergencyPlatformChannel.bridgeMissingReason
+          (result.reasonCode == EmergencyPlatformChannel.bridgeMissingReason ||
+              result.reasonCode == 'exactAlarmDenied')
       ? (armedTarget ?? '')
       : '';
 

@@ -3,6 +3,7 @@ package com.poyrazoncel.korubeni.emergency
 import android.app.Activity
 import android.app.AlarmManager
 import android.content.ComponentName
+import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -341,9 +342,10 @@ class EmergencyPlatformHandler(
 
     private fun openExactAlarmSettings() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return
-        val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        try {
+            context.startActivity(ExactAlarmSettingsIntent.request(context.packageName))
+        } catch (_: ActivityNotFoundException) {
+            context.startActivity(ExactAlarmSettingsIntent.appDetails(context.packageName))
         }
-        context.startActivity(intent)
     }
 }

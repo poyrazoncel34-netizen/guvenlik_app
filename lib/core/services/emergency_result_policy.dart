@@ -127,6 +127,11 @@ class EmergencyFailureCopy {
 
   /// How many targets the copy is allowed to say were reached.
   int get reachedCount => ledger?.reachedCount ?? 0;
+
+  /// Whether the surface offers the exact-alarm settings: the one refusal the
+  /// user can fix from here (Y-11).
+  bool get offersBackgroundProtection =>
+      bodyKey == EmergencyResultPolicy.exactAlarmRequiredBodyKey;
 }
 
 /// One dispatch's user-facing outcome, decided from the call result AND the
@@ -157,6 +162,9 @@ abstract final class EmergencyResultPolicy {
       'emergency_unconfirmed_failure_title';
   static const String unconfirmedFailureBodyKey =
       'emergency_unconfirmed_failure_body';
+
+  /// A panic refused for missing exact-alarm access (Y-11).
+  static const String exactAlarmRequiredBodyKey = 'panic_exact_alarm_required';
 
   /// The invariant in one expression: an absolute "nothing completed" claim is
   /// supported only by a ledger that reached nothing AND left nothing unknown
