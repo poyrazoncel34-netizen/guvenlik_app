@@ -174,6 +174,38 @@ Surumleme: `pubspec.yaml` 1.0.0+1'de SABITTIR; gercek `versionCode`
   (sayac "0 hata" sayiliyor, hicbir kayit dusulmuyordu). Okunamayan sayac artik
   kilitli kabul ediliyor ve yerel kayda geciyor; "PIN'imi unuttum" erisilebilir
   kaliyor.
+- Android 14 ve uzerinde temiz kurulumda "alarm ve hatirlatici" izni kapali
+  geliyor. Bu izin olmadan baslayan panik geri sayimi korumali geri sayimla
+  ayni gorunuyor, uygulama kapanirsa ise kimse aranmiyordu. Panik artik bu izin
+  olmadan baslamiyor: "Arka plan korumasini ac" uygulamanin kendi izin
+  anahtarini aciyor (genel liste yerine), "Simdi Ara" acil kisiyi hemen aramayi
+  sunuyor. Ana sayfadaki "Arka Plan Hazirligi" de pil sihirbazi yerine eksik
+  izni aciyor.
+- Arama izni verilmemisken baslayan, arka plan korumasi olmayan panik geri
+  sayimi artik "Sinirli koruma — uygulama kapanirsa arama yapilmaz" basligiyla
+  gorunuyor. Arama ve alarm izni birlikte eksikse alarm izni isteniyor.
+- Check-In veya Guvenli Yuruyus surerken alarm izni kapatilirsa uyari ve arama
+  birkac dakika gecikebiliyor, ekran ise tam korumali gorunuyordu. Artik
+  "Arka plan korumasi kapali veya dogrulanamiyor" uyarisi cikiyor; dokununca
+  izin sayfasi aciliyor, izin geri verilince tam zamanli alarmlar yeniden
+  kuruluyor.
+- Android arama istegini kabul ettikten 5 saniye sonra ekran, arama ayni
+  telefonda calarken "Yardim cagrisi henuz gitmedi / Arama baglanmadi ...
+  manuel arayin" diyordu. Artik "Arama istegi gonderildi" deniyor ve
+  KoruBeni'nin aramanin baglanip baglanmadigini dogrulayamadigi aciklaniyor;
+  ikinci bir aramaya itilmiyor. "Telefon uygulamasini ac" baglantisi numarayi
+  doldurulmus arayiciyi aciyor. Gercek basarisizlikta manuel arama teklifi
+  kaliyor.
+- PIN kilidi telefon yeniden baslatilip saat ileri alinarak kaldirilabiliyordu.
+  Etkin bir kilit artik yeniden baslatmadan sonra tam suresiyle yeniden
+  basliyor; saat, saat dilimi ve otomatik saat degisiklikleri onu kaldirmiyor.
+- Check-In veya Guvenli Yuruyus'un son uyari bildirimi gosterilemediginde
+  (or. bildirimler kapaliysa) bu, nedeniyle Guvenlik Zaman Cizelgesi'ne
+  yaziliyor. Guvenli Yuruyus tanitimi ek sureyi ve uyarinin en iyi caba
+  oldugunu acikliyor.
+- Uygulama ici metinler var olmayan bir "konum oturumu" ozelliginden soz
+  ediyordu; kaldirildi. Gizlilik detayi harita karolarinin cihazda
+  onbellege alindigini ve verileri silince silindigini soyluyor.
 
 ### Degistirildi
 - Paywall ve magaza metnindeki "Gelismis guvenlik otomasyonlari" faydasi
