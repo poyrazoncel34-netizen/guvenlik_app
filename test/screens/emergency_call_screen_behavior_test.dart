@@ -47,6 +47,7 @@ void main() {
     WidgetTester tester, {
     String name = 'Acil Kişi',
     String phone = '+905551112233',
+    EmergencyCallResult? result,
   }) async {
     await tester.pumpWidget(
       EasyLocalization(
@@ -64,7 +65,7 @@ void main() {
               screen: EmergencyCallScreen(
                 name: name,
                 phone: phone,
-                callResult: EmergencyCallResult.failed(phone),
+                callResult: result ?? EmergencyCallResult.failed(phone),
               ),
             ),
           ),
@@ -139,5 +140,74 @@ void main() {
 
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump();
+  });
+
+  // Y-02 (owner decision 2026-10-09): Android Telecom ACCEPTING the request is
+  // REQUEST_SUBMITTED_UNCONFIRMED -- not a failure. Five seconds after every
+  // accepted request the screen said "Yardım çağrısı henüz gitmedi / Arama
+  // bağlanmadı ... manuel arayın" and asked for the green call button, while
+  // the call was ringing on the same phone (API 35/36 emulators): a push
+  // toward a second, unnecessary call.
+  group('Y-02: what each call result is allowed to claim', () {
+    Map<String, dynamic> catalogue() =>
+        jsonDecode(File('assets/translations/tr-TR.json').readAsStringSync())
+            as Map<String, dynamic>;
+    String tr(String key) => catalogue()[key] as String;
+
+    testWidgets('an accepted request claims neither failure nor connection, '
+        'and offers no second call', (tester) async {
+      await pumpResult(
+        tester,
+        result: EmergencyCallResult.requested('+905551112233'),
+      );
+      await tester.pump(const Duration(seconds: 6));
+      await tester.pump();
+
+      expect(find.byType(AlertDialog), findsNothing);
+      expect(find.text(tr('emergency_flow_requested_title')), findsOneWidget);
+      expect(
+        find.textContaining('doğrulayamaz'),
+        findsWidgets,
+        reason: 'the user is told what KoruBeni cannot know',
+      );
+      // Claims, not words: "bağlanıp bağlanmadığını ... doğrulayamaz" is the
+      // required disclaimer and contains "bağlanmadı".
+      for (final forbidden in <String>[
+        'henüz gitmedi',
+        'Arama bağlanmadı',
+        'yeşil arama',
+        'cevapladı',
+      ]) {
+        expect(find.textContaining(forbidden), findsNothing, reason: forbidden);
+      }
+      expect(find.text(tr('emergency_manual_call_now')), findsNothing);
+    });
+
+    testWidgets('a dialer fallback asks for the green button without claiming '
+        'the call did not go', (tester) async {
+      await pumpResult(
+        tester,
+        result: EmergencyCallResult.dialer('+905551112233'),
+      );
+      await tester.pump(const Duration(seconds: 6));
+      await tester.pump();
+
+      expect(find.byType(AlertDialog), findsOneWidget);
+      expect(find.text(tr('failsafe_dialer_title')), findsOneWidget);
+      expect(find.textContaining('henüz gitmedi'), findsNothing);
+      expect(find.textContaining('Arama bağlanmadı'), findsNothing);
+    });
+
+    testWidgets('a failed request says so and offers the manual call', (
+      tester,
+    ) async {
+      await pumpResult(tester);
+      await tester.pump(const Duration(seconds: 6));
+      await tester.pump();
+
+      expect(find.byType(AlertDialog), findsOneWidget);
+      expect(find.text(tr('failsafe_title')), findsOneWidget);
+      expect(find.text(tr('emergency_manual_call_now')), findsOneWidget);
+    });
   });
 }

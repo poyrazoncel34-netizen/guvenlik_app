@@ -98,7 +98,14 @@ class _EmergencyCallScreenState extends State<EmergencyCallScreen>
   }
 
   void _scheduleFailSafe() {
-    if (widget.callResult.isConfirmed) return;
+    // Y-02 (owner decision 2026-10-09): Telecom ACCEPTING the request is
+    // REQUEST_SUBMITTED_UNCONFIRMED, not a failure. Saying "help has not been
+    // dispatched / the call did not connect" five seconds after it -- while
+    // the call rang on the same phone -- pushed toward a second call.
+    if (widget.callResult.isConfirmed ||
+        widget.callResult.requiresVerification) {
+      return;
+    }
 
     // Call requires user action or failed — trigger fail-safe after 5s
     _failSafeTimer = Timer(const Duration(seconds: 5), () {
@@ -127,6 +134,9 @@ class _EmergencyCallScreenState extends State<EmergencyCallScreen>
   }
 
   Future<void> _showFailSafeAlert() async {
+    // A dialer was opened: whether the user pressed call is unknown, so the
+    // copy asks for the button instead of claiming the call did not go.
+    final dialer = widget.callResult.requiresUserAction;
     await showDialog<void>(
       context: context,
       barrierDismissible: false,
@@ -158,7 +168,7 @@ class _EmergencyCallScreenState extends State<EmergencyCallScreen>
               Semantics(
                 header: true,
                 child: Text(
-                  'failsafe_title'.tr(),
+                  (dialer ? 'failsafe_dialer_title' : 'failsafe_title').tr(),
                   style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w900,
@@ -169,7 +179,7 @@ class _EmergencyCallScreenState extends State<EmergencyCallScreen>
               ),
               const SizedBox(height: 12),
               Text(
-                'failsafe_body'.tr(),
+                (dialer ? 'failsafe_dialer_body' : 'failsafe_body').tr(),
                 style: const TextStyle(
                   fontSize: 14,
                   color: Colors.white70,
@@ -338,6 +348,7 @@ class _EmergencyCallScreenState extends State<EmergencyCallScreen>
       requiresAttention: requiresAttention,
       hasFailure: hasFailure,
       anythingConfirmed: callConfirmed,
+      requestSubmitted: widget.callResult.requiresVerification,
     );
 
     return Scaffold(
@@ -600,7 +611,19 @@ class _EmergencyCallScreenState extends State<EmergencyCallScreen>
     required bool requiresAttention,
     required bool hasFailure,
     required bool anythingConfirmed,
+    required bool requestSubmitted,
   }) {
+    // Y-02: an accepted request is reported as exactly that -- neither as a
+    // failure nor as a connected call.
+    if (requestSubmitted && !hasFailure) {
+      return _StatusPresentation(
+        icon: Icons.phone_forwarded_rounded,
+        color: AppColors.primary,
+        summary: 'emergency_flow_requested_title'.tr(),
+        detail: 'emergency_flow_requested_body'.tr(),
+      );
+    }
+
     // If ANYTHING requires user action, header is WARNING — never green
     if (requiresAttention) {
       return _StatusPresentation(
@@ -647,10 +670,9 @@ class _EmergencyCallScreenState extends State<EmergencyCallScreen>
       case EmergencyCallStatus.callRequested:
         return _StatusPresentation(
           icon: Icons.phone_in_talk_rounded,
-          color: AppColors.warning,
+          color: AppColors.primary,
           summary: result.statusMessage,
           detail: 'emergency_call_requested_hint'.tr(),
-          requiresAction: true,
         );
       case EmergencyCallStatus.dialerRequested:
         return _StatusPresentation(
