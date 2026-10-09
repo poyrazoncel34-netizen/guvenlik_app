@@ -41,19 +41,23 @@ class AppLifecycleHandler {
     DateTime Function()? now,
     SecureStorage? secureStorage,
     Future<MonotonicReading?> Function()? monotonic,
+    bool Function()? monotonicRequired,
   }) : _now = now ?? DateTime.now,
        _secureStorage = secureStorage,
        _monotonic =
-           monotonic ?? EmergencyPlatformService.instance.readMonotonicClock;
+           monotonic ?? EmergencyPlatformService.instance.readMonotonicClock,
+       _monotonicRequired = monotonicRequired ?? _nativeClockInstalled;
 
   factory AppLifecycleHandler.forTesting({
     required DateTime Function() now,
     required SecureStorage secureStorage,
     Future<MonotonicReading?> Function()? monotonic,
+    bool monotonicRequired = false,
   }) => AppLifecycleHandler._(
     now: now,
     secureStorage: secureStorage,
     monotonic: monotonic ?? () async => null,
+    monotonicRequired: () => monotonicRequired,
   );
 
   static final AppLifecycleHandler instance = AppLifecycleHandler._()
@@ -66,6 +70,15 @@ class AppLifecycleHandler {
   /// The wall clock alone let a clock set back skip the lock (audit Y-10).
   final Future<MonotonicReading?> Function() _monotonic;
   Future<MonotonicReading?>? _pausedReading;
+
+  /// Whether this platform HAS that clock, so an unanswered read is a fault
+  /// rather than an absence.
+  final bool Function() _monotonicRequired;
+
+  static bool _nativeClockInstalled() {
+    final platform = EmergencyPlatformService.instance;
+    return platform.isSupported && !platform.platformBridgeMissing;
+  }
 
   /// How many seconds in background before requiring re-auth.
   static const int lockAfterSeconds = 120; // 2 minutes
@@ -127,13 +140,18 @@ class AppLifecycleHandler {
   }
 
   /// Whether elapsedRealtime says the background lasted the lock threshold.
+  ///
+  /// Fails closed where the native clock exists: a read that went unanswered
+  /// (a 500 ms timeout while another app launches) used to fall back to the
+  /// wall clock alone, and with it the clock-set-back bypass. One living
+  /// process cannot span a reboot, so a reading that ran backwards is no
+  /// measurement either.
   Future<bool> _monotonicSaysLong(Future<MonotonicReading?>? paused) async {
     final before = await paused;
-    if (before == null) return false;
-    final after = await _readMonotonic();
-    return after != null &&
-        after.bootCount == before.bootCount &&
-        after.elapsedMs - before.elapsedMs >= lockAfterSeconds * 1000;
+    final after = before == null ? null : await _readMonotonic();
+    if (before == null || after == null) return _monotonicRequired();
+    final elapsedMs = after.elapsedMs - before.elapsedMs;
+    return elapsedMs < 0 || elapsedMs >= lockAfterSeconds * 1000;
   }
 
   /// Visible for tests: the background clock, or null when the app is foreground.

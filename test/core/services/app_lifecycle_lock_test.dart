@@ -173,6 +173,7 @@ void main() {
       required Duration wallJump,
       required Duration realElapsed,
       required bool monotonicAvailable,
+      bool monotonicRequired = false,
     }) async {
       SharedPreferences.setMockInitialValues(<String, Object>{});
       await serviceLocator.reset();
@@ -186,6 +187,7 @@ void main() {
         monotonic: () async => monotonicAvailable
             ? (elapsedMs: elapsedMs, bootCount: 17, bootId: null)
             : null,
+        monotonicRequired: monotonicRequired,
       );
       await tester.pumpWidget(
         MaterialApp(
@@ -238,6 +240,35 @@ void main() {
         monotonicAvailable: true,
       );
       expect(find.byType(AppUnlockScreen), findsOneWidget);
+      await serviceLocator.reset();
+    });
+
+    // Review of Y-10: a reading that failed (a 500 ms timeout under load as
+    // another app launches) silently fell back to the wall clock, and with it
+    // the clock-set-back bypass. Where the native clock exists, an unanswered
+    // read now locks.
+    testWidgets('a native clock that does not answer still locks a clock set '
+        'back', (tester) async {
+      await resumeAfter(
+        tester,
+        wallJump: const Duration(hours: -1),
+        realElapsed: const Duration(seconds: 10),
+        monotonicAvailable: false,
+        monotonicRequired: true,
+      );
+      expect(find.byType(AppUnlockScreen), findsOneWidget);
+      await serviceLocator.reset();
+    });
+
+    testWidgets('where there is no native clock a short background is not '
+        'locked', (tester) async {
+      await resumeAfter(
+        tester,
+        wallJump: Duration.zero,
+        realElapsed: const Duration(seconds: 10),
+        monotonicAvailable: false,
+      );
+      expect(find.byType(AppUnlockScreen), findsNothing);
       await serviceLocator.reset();
     });
 
