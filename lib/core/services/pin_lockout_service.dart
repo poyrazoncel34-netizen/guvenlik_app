@@ -264,18 +264,29 @@ class PinLockoutService {
           ? Duration(milliseconds: storedMs)
           : Duration(seconds: lockoutSecondsFor(failedAttempts)),
     );
-    final reading = elapsedUntil == null ? null : await _readMonotonic();
+    // A stored length without an elapsed deadline: registered while the
+    // monotonic read failed (security review MEDIUM-2).
+    final pending = elapsedUntil == null && storedMs != null;
+    final reading = elapsedUntil == null && !pending
+        ? null
+        : await _readMonotonic();
     if (reading == null) {
       final left = _capped((wallUntil ?? _now()).difference(_now()));
-      if (elapsedUntil != null && _monotonicRequired()) {
+      if ((elapsedUntil != null || pending) && _monotonicRequired()) {
         return (
           remaining: left < _unprovenLock ? _unprovenLock : left,
           proven: false,
         );
       }
-      return (remaining: left, proven: elapsedUntil == null);
+      return (remaining: left, proven: elapsedUntil == null && !pending);
     }
-    if (_fromAnotherBoot(reading, boot, bootId, elapsedUntil! - duration.inMilliseconds)) {
+    if (elapsedUntil == null) {
+      // Wall-only, reboot + clock forward ended it: tie it to this boot for
+      // its full length -- fail-closed, as a reboot restarts one.
+      await _anchor(reading, duration);
+      return (remaining: duration, proven: true);
+    }
+    if (_fromAnotherBoot(reading, boot, bootId, elapsedUntil - duration.inMilliseconds)) {
       await _anchor(reading, duration);
       return (remaining: duration, proven: true);
     }
@@ -391,6 +402,10 @@ class PinLockoutService {
             : _secureStorage.write(key: _lockedBootIdKey, value: bootId));
       } else {
         await _clearMonotonicDeadline();
+        await _secureStorage.write(
+          key: _lockedDurationKey,
+          value: '${seconds * 1000}',
+        );
       }
       await _secureStorage.write(
         key: _lockedUntilKey,

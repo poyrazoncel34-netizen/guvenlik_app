@@ -390,6 +390,23 @@ void main() {
     }
   });
 
+  // Security review MEDIUM-2: a lockout registered while the monotonic read
+  // failed stayed wall-only for good, so reboot + clock forward still ended
+  // it. The first read that has a monotonic clock now ties it to its boot,
+  // restarting it fail-closed as a reboot does.
+  test('a lockout registered without a monotonic reading is tied to the boot '
+      'by the first read that has one', () async {
+    reading = null;
+    await lockFor30Seconds();
+    reading = (elapsedMs: 15000, bootCount: 18, bootId: null);
+    wall = wall.add(const Duration(days: 1));
+
+    final state = await read();
+    expect(state.isLocked, isTrue);
+    expect(state.remainingSeconds, inInclusiveRange(28, 30));
+    expect(storage.values['pin_lockout_until_elapsed_ms'], '45000');
+  });
+
   test('reset forgets every lockout key', () async {
     await lockFor30Seconds();
     await service.reset();
