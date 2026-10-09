@@ -31,6 +31,7 @@ abstract final class NativeEmergencyHistory {
       FallbackOutcome.expired => 'native_history_fallback_expired',
       FallbackOutcome.notAttempted => null,
     };
+    final warningKey = _warningKey(token.kind, snapshot.graceWarningOutcome);
     await ActivityService.logEvent(
       eventId: eventId(token),
       timestamp: snapshot.completedAt,
@@ -39,9 +40,23 @@ abstract final class NativeEmergencyHistory {
       description: [
         callKey.tr(),
         if (fallbackKey != null) fallbackKey.tr(),
+        if (warningKey != null) warningKey.tr(),
         if (snapshot.completedAt == null) 'native_history_recorded_time'.tr(),
       ].join(' '),
     );
+  }
+
+  /// Why the Check-In / Safe Walk final warning was not shown (A-03, owner
+  /// decision 2026-10-09). The warning is best effort and never moves the
+  /// final deadline; the timeline says when it did not reach the user.
+  static String? _warningKey(EmergencySessionKind kind, String? outcome) {
+    if (kind == EmergencySessionKind.panic) return null;
+    return switch (outcome) {
+      'failed' => 'native_history_warning_failed',
+      'notAttempted' => 'native_history_warning_missed',
+      'unknown' => 'native_history_warning_unknown',
+      _ => null,
+    };
   }
 
   /// Whether the translation catalogue is loaded.

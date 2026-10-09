@@ -89,6 +89,7 @@ SessionSnapshot parseSessionSnapshot(
     reasonCode: map['reasonCode']?.toString(),
     // Absent on older native builds: no evidence of a revocation.
     exactAlarmPermitted: map['exactAlarmPermitted'] != false,
+    graceWarningOutcome: session['graceWarningOutcome']?.toString(),
   );
 }
 

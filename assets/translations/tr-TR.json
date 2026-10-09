@@ -502,7 +502,7 @@
   "check_in_setup_title": "Kontrol Noktası Ayarla",
   "check_in_setup_desc": "Belirli bir süre ayarlayın. Süre dolunca\n'Güvendeyim' butonuna basmazsanız,\nacil durum akışı hazırlanır.",
   "check_in_select_duration": "Süre Seçin",
-  "check_in_warning": "Süre dolduğunda 60 saniyelik ek süre beklenir. Bu sürede de yanıt vermezseniz uygulama açıksa acil arama akışı hazırlanır; arka planda davranış cihaz izinlerine bağlıdır.",
+  "check_in_warning": "Süre dolduğunda 60 saniyelik ek süre başlar ve bir uyarı bildirimi gösterilmeye çalışılır. Uyarı gösterilemese bile (ör. bildirimler kapalıysa) ek süre sonunda acil arama akışı başlatılır; arka planda davranış cihaz izinlerine bağlıdır.",
   "check_in_im_safe": "Güvendeyim ✓",
   "check_in_safe_confirmed": "Güvende olduğunuz kaydedildi! Zamanlayıcı sıfırlandı.",
   "check_in_cancel": "İptal Et",
@@ -1020,5 +1020,8 @@
   "emergency_flow_requested_title": "Arama isteği gönderildi",
   "emergency_flow_requested_body": "Arama isteği gönderildi. KoruBeni aramanın bağlanıp bağlanmadığını veya karşı tarafın cevap verip vermediğini doğrulayamaz.",
   "failsafe_dialer_title": "Aramayı sizin başlatmanız gerekiyor",
-  "failsafe_dialer_body": "Otomatik arama yapılamadı; arama ekranı açıldı. Yeşil arama tuşuna basmadıysanız aşağıdaki numarayı şimdi arayın."
+  "failsafe_dialer_body": "Otomatik arama yapılamadı; arama ekranı açıldı. Yeşil arama tuşuna basmadıysanız aşağıdaki numarayı şimdi arayın.",
+  "native_history_warning_failed": "Son uyarı bildirimi gösterilemedi (bildirimler kapalı olabilir); son tarih değişmedi.",
+  "native_history_warning_missed": "Son uyarı zamanında gösterilemedi; son tarih değişmedi.",
+  "native_history_warning_unknown": "Son uyarının gösterilip gösterilmediği doğrulanamadı; son tarih değişmedi."
 }

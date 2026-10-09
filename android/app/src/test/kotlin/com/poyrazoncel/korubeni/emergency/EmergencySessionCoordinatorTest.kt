@@ -1212,6 +1212,52 @@ class EmergencySessionCoordinatorTest {
         assertEquals(0, fixture.calls.targets.size)
     }
 
+    // A-03 (owner decision 2026-10-09): the final warning is BEST EFFORT and
+    // never moves or cancels the final deadline. A warning that was never
+    // shown stays "notAttempted" in the record the terminal journal carries,
+    // which is what the safety timeline reads to say so.
+    @Test
+    fun `a final warning that arrives too late is never shown and the call still goes once`() {
+        var posts = 0
+        val fixture = Fixture(warningPoster = EmergencyWarningPoster { _, _ -> posts++; true })
+        val token = (fixture.coordinator.arm(validArmRequest()) as ArmResult.Armed).token
+        fixture.advanceToFinalDeadline()
+        fixture.coordinator.claimAndDispatch(token)
+        fixture.coordinator.claimAndDispatch(token)
+        // The late grace alarm, after the dispatch already ran:
+        assertEquals("stale", fixture.coordinator.warn(token, false))
+
+        assertEquals(0, posts)
+        assertEquals(1, fixture.calls.targets.size)
+        assertEquals("notAttempted", fixture.store.current!!.graceWarningOutcome)
+    }
+
+    @Test
+    fun `a late warning on a still-armed overdue session never cancels it`() {
+        val fixture = Fixture(warningPoster = EmergencyWarningPoster { _, _ -> true })
+        val token = (fixture.coordinator.arm(validArmRequest()) as ArmResult.Armed).token
+        fixture.advanceToFinalDeadline()
+        assertEquals("stale", fixture.coordinator.warn(token, false))
+
+        assertEquals(LifecycleState.ARMED, fixture.store.current!!.lifecycleState)
+        fixture.coordinator.claimAndDispatch(token)
+        assertEquals(1, fixture.calls.targets.size)
+        assertEquals("notAttempted", fixture.store.current!!.graceWarningOutcome)
+    }
+
+    @Test
+    fun `a warning the system refused to post is recorded as failed and the call still goes`() {
+        val fixture = Fixture(warningPoster = EmergencyWarningPoster { _, _ -> false })
+        val token = (fixture.coordinator.arm(validArmRequest()) as ArmResult.Armed).token
+        fixture.advanceTo(now + 60_000L)
+        assertEquals("failed", fixture.coordinator.warn(token, false))
+        fixture.advanceToFinalDeadline()
+        fixture.coordinator.claimAndDispatch(token)
+
+        assertEquals(1, fixture.calls.targets.size)
+        assertEquals("failed", fixture.store.current!!.graceWarningOutcome)
+    }
+
     @Test
     fun `warning durable claim failure posts nothing and retry preserves same generation`() {
         var posts = 0

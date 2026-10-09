@@ -295,7 +295,13 @@ class SessionSnapshot {
     this.mainDurationSeconds,
     this.completedAt,
     this.exactAlarmPermitted = true,
+    this.graceWarningOutcome,
   });
+
+  /// Native's record of the Check-In / Safe Walk final warning: "posted",
+  /// "failed", "unknown" (post never confirmed) or "notAttempted" (it never
+  /// ran). Null from an older native build (A-03).
+  final String? graceWarningOutcome;
 
   /// Whether Android lets the app schedule exact alarms NOW (Y-14). Revoking
   /// the access deletes an armed session's exact alarms; only the inexact

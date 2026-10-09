@@ -502,7 +502,7 @@
   "check_in_setup_title": "Set Up Check-In",
   "check_in_setup_desc": "Set a timer. If the time runs out and\nyou don't press 'I'm Safe',\nan emergency flow will be prepared.",
   "check_in_select_duration": "Select Duration",
-  "check_in_warning": "When time runs out, a 60-second grace period begins. If you don't respond and the app is open, the emergency call flow is prepared; background behavior depends on device permissions.",
+  "check_in_warning": "When time runs out a 60-second grace period starts and a warning notification is attempted. Even if the warning cannot be shown (for example with notifications off), the emergency call flow starts when the grace period ends; background behaviour depends on device permissions.",
   "check_in_im_safe": "I'm Safe ✓",
   "check_in_safe_confirmed": "Your safety has been confirmed! Timer reset.",
   "check_in_cancel": "Cancel",
@@ -1020,5 +1020,8 @@
   "emergency_flow_requested_title": "Call request sent",
   "emergency_flow_requested_body": "The call request was sent. KoruBeni cannot verify whether the call connected or whether anyone answered.",
   "failsafe_dialer_title": "You need to start the call",
-  "failsafe_dialer_body": "Automatic calling was not possible; the dialer was opened. If you have not pressed the green call button, call the number below now."
+  "failsafe_dialer_body": "Automatic calling was not possible; the dialer was opened. If you have not pressed the green call button, call the number below now.",
+  "native_history_warning_failed": "The final warning notification could not be shown (notifications may be off); the deadline did not change.",
+  "native_history_warning_missed": "The final warning could not be shown in time; the deadline did not change.",
+  "native_history_warning_unknown": "Whether the final warning was shown could not be verified; the deadline did not change."
 }
