@@ -131,6 +131,7 @@ void main() {
   late List<String> nativeCalls;
   late List<String> dialled;
   Completer<void>? armGate;
+  var armAnswersUnknown = false;
 
   setUp(() async {
     SharedPreferences.setMockInitialValues(<String, Object>{});
@@ -141,6 +142,7 @@ void main() {
     nativeCalls = <String>[];
     dialled = <String>[];
     armGate = null;
+    armAnswersUnknown = false;
     lockoutResetGate = null;
   });
 
@@ -171,6 +173,13 @@ void main() {
           'generation': arguments['requestedGeneration'],
           'kind': arguments['kind'],
         };
+        if (armAnswersUnknown) {
+          return <String, Object?>{
+            'type': 'unknown',
+            'reasonCode': 'commitUncertain',
+            'token': token,
+          };
+        }
         return <String, Object?>{
           'type': 'armed',
           'token': token,
@@ -238,7 +247,11 @@ void main() {
     );
     await tester.pump();
     await tester.tap(find.text('open'));
-    for (var i = 0; i < 6; i++) {
+    // Waits for a condition, not a fixed number of real-time slices: the
+    // machine running this suite is shared with emulators, and a fixed 120 ms
+    // was the one assumption here that load could break.
+    for (var i = 0; i < 6 || (armInFlight && i < 200); i++) {
+      if (i >= 6 && nativeCalls.contains('armEmergencySession')) break;
       await tester.runAsync(
         () => Future<void>.delayed(const Duration(milliseconds: 20)),
       );
@@ -352,6 +365,21 @@ void main() {
         contactsDuringCancel: true,
       );
       expect(nativeCalls, isNot(contains('armEmergencySession')));
+    },
+  );
+
+  // Review of Y-07: the branch where the original defect restarted the timer
+  // without a deadline -- an arm in flight that ends neither armed nor
+  // rejected. Its uncertain token is the session to cancel.
+  testWidgets(
+    'a correct PIN entered while the arm in flight ends UNKNOWN cancels that '
+    'uncertain session instead of resuming or dialling',
+    (tester) async {
+      armGate = Completer<void>();
+      armAnswersUnknown = true;
+      contacts.gate.complete();
+      await enterPinBeforeArmAndExpectCancel(tester, armInFlight: true);
+      expect(nativeCalls.where((m) => m == 'cancelEmergencySession').length, 1);
     },
   );
 }
