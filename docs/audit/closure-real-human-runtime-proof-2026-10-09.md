@@ -42,6 +42,7 @@ Ham çıktılar: [`evidence/closure-2026-10-09/rc-gate/`](evidence/closure-2026-
 | Instrumentation API 35 | **PASS** OK (19 test) | `instrumentation-api35.txt` |
 | P9 force-stop → aç, API 36 | **PASS** 4 → 0 → 4 (makine yeniden başlatması sonrası, aynı RC APK baytı baytına yeniden derlendi `f2e3078e…`) | `rc-fix-probes-api36-rerun3-p8-p9.out.txt` |
 | P8 A-03, API 36, RC | **PASS** — Check-In 15 dk `armed` (ana 16:21:36, son 16:22:36), bildirim izni geri alındı → `graceWarningOutcome=failed`; Telecom çağrısı **16:22:36.671** (son tarihle aynı saniye, kaymadı), tek çağrı (`com.poyrazoncel.korubeni`), `requestSubmittedUnconfirmed`; zaman çizelgesinde "Son uyarı bildirimi gösterilemedi" nedeni. Önceki 4 deneme prob kusuruydu (ekran uykusu, modem kalıntı çağrısı, geri yüklenen rota, var olmayan "5 dk" seçeneği) | `rc-fix-probes-api36-p8-final.out.txt`, `rc-fix-probes.md` |
+| Y-13 yarışı, API 36, RC | **PASS** — panik native `armed` (son 16:37:00.5) → 16:36:51 `kill -9` → aynı saniye widget ile soğuk açılış → 2 sn sonra geri sayım tuş takımı ("8 saniye", korumalı başlık, hata diyaloğu YOK) → PIN → `cancelled`; Telecom çağrısı 1 → 1 (yeni çağrı yok), CALL/DIAL/FATAL 0. İlk 4 deneme panik kurulmadan koştu (geri yüklenen rota, kilit ekranı, ilk panik bilgilendirmesi) — kayıtta açıkça | `y13-race-rc-api36.txt`, `y13_race_after_pin_rc.png` |
 <!-- RC-ROWS -->
 
 
@@ -125,7 +126,7 @@ Sütunlar: ID · Önem · Durum · Yeniden üretim · Kök neden · Düzeltme ·
 | Alan | Hüküm | Gerekçe / kanıt |
 |---|---|---|
 | CODE | **PASS** | §0 tüm yerel kapılar; 58/58 karşı-olgusal + 7/7 güvenlik mutantı; açık kod kusuru yok — OD-1/OD-2 sahip kararını bekleyen DAVRANIŞLAR (§3) |
-| RUNTIME-HUMAN | **PASS (emülatör sınırı içinde)** — RC'de her düzeltmenin kullanıcı yolu (P1–P9), 3 matris + release smoke, kilit matrisi, yükseltme ve 110 kaos dizisi geçti; Y-02 C (telefon yeteneği yok) emülatörde kanıtlanamaz, Y-02 D yalnız kaynak; Y-13 yarışı RC'de yalnız dolaylı (widget/kutucuk + kill/aç) | §0 matrisler, kilit matrisi, yükseltme, P1–P9, 110 kaos dizisi |
+| RUNTIME-HUMAN | **PASS (emülatör sınırı içinde)** — RC'de her düzeltmenin kullanıcı yolu (P1–P9), 3 matris + release smoke, kilit matrisi, yükseltme ve 110 kaos dizisi geçti; Y-02 C (telefon yeteneği yok) emülatörde kanıtlanamaz, Y-02 D yalnız kaynak; Y-13 yarışı RC'de PASS (silahlı panik → kill −9 → widget soğuk açılış → PIN iptal, ek çağrı yok) | §0 matrisler, kilit matrisi, yükseltme, P1–P9, 110 kaos dizisi |
 | DEVICE | **UNKNOWN — PHYSICAL DEVICE REQUIRED** | emülatör: API 29/35/36 PASS; Doze, OEM öldürme, gerçek SIM ile bağlantı, gerçek uyku (Y-12), GMS'siz donanım → fiziksel cihaz |
 | COMMERCE | **UNKNOWN — EXTERNAL SYSTEM REQUIRED** | RevenueCat / Play Billing satın alma, yenileme, iade test edilmedi (Pro yalnız test çapası) |
 | RELEASE | **PASS (yerel aday) / UNKNOWN (üretim) — EXTERNAL SYSTEM REQUIRED** | smoke AAB imzalı, 16 KB, lint, OSV, gizli anahtar PASS; üretim play AAB'si gerçek `goog_` anahtarı ve Play Console/release.yml sırları ister; yayın imzalı yükseltme derlenemedi |

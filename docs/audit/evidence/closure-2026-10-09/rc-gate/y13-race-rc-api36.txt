@@ -1,0 +1,49 @@
+Y-13 race on RC ff945ee debug sha256 f2e3078eef3f68cf, API 36 emulator-5558, lastUpdateTime=2026-10-10 15:50:29; telecom calls before=1
+ARMED-SEEN 16:26:57 
+KILLED 16:26:57
+WIDGET cold start 16:26:57
+PAD visible 16:26:59
+CDPIN 2468 16:26:59
+STATE string name="session_panic_lifecycleState">cancelled
+telecom calls after=1
+logcat CALL/DIAL/FATAL/flutter-errors: 0
+--- run 1 above did NOT reach home (app on the timeline): the panic never armed, so it only showed a widget cold-start countdown + PIN cancel; run 2 below is the real race
+run 2: telecom calls before=1
+ARMED-SEEN 16:29:16 string name="session_panic_lifecycleState">cancelled 
+KILLED 16:29:16 pid_now=
+WIDGET cold start 16:29:16
+PAD visible 16:29:18
+CDPIN 2468 16:29:18
+STATE string name="session_panic_lifecycleState">cancelled
+telecom calls after=1
+logcat CALL/DIAL/FATAL/flutter-errors: 0
+--- run 2 also did not reach home: the app was on its lock screen (correct after a quick-access cancel) and the loop did not unlock; run 3 unlocks first
+run 3: telecom calls before=1
+ARMED-SEEN 16:32:39 string name="session_panic_lifecycleState">cancelled 
+KILLED 16:32:39 pid_now=
+WIDGET cold start 16:32:39
+PAD visible 16:32:41
+CDPIN 2468 16:32:41
+STATE string name="session_panic_lifecycleState">cancelled
+telecom calls after=1
+logcat CALL/DIAL/FATAL/flutter-errors: 0
+--- run 3 also missed home (unlock lands on the restored timeline route); run 4: unlock -> 'Geri' -> home confirmed
+run 4: home confirmed; telecom calls before=1
+ARMED-SEEN 16:34:25 string name="session_panic_lifecycleState">cancelled 
+KILLED 16:34:25 pid_now=
+WIDGET cold start 16:34:25
+PAD visible 16:34:27
+CDPIN 2468 16:34:28
+STATE string name="session_panic_lifecycleState">cancelled
+telecom calls after=1
+logcat CALL/DIAL/FATAL/flutter-errors: 0
+--- run 4 also never armed: on a fresh install the FIRST in-app panic shows the one-time 'Panik Butonu — Bilgilendirme' notice; it was dismissed, then run 5
+run 5: telecom calls before=1
+ARMED-SEEN 16:36:51 string name="session_panic_lifecycleState">armed long name="session_panic_finalDeadlineMs" value="1791639420509" /> 
+KILLED 16:36:51 pid_now=
+WIDGET cold start 16:36:51
+PAD visible 16:36:53
+CDPIN 2468 16:36:53
+STATE string name="session_panic_lifecycleState">cancelled
+telecom calls after=1
+logcat CALL/DIAL/FATAL/flutter-errors: 0
