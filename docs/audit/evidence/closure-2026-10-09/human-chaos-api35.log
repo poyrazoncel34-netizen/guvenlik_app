@@ -1,0 +1,183 @@
+  0 OK  13:44:45 '05551234567' -> 'Rıza Yönetimi' acts=6 calls=0 fatal=0
+  1 OK  13:47:24 'Rıza Yönetimi' -> 'Yasal Bilgiler' acts=3 calls=0 fatal=0
+  2 OK  13:47:39 'Yasal Bilgiler' -> 'Yasal Bilgiler' acts=8 calls=0 fatal=0
+NOPAD 2
+NOPAD 2
+  3 OK  13:48:09 'Yasal Bilgiler' -> 'Uygulama kilidi. PIN ile açın.' acts=11 calls=0 fatal=0
+PIN 1357
+  4 OK  13:49:26 'Uygulama kilidi. PIN ile açın.' -> 'Uygulama kilidi. PIN ile açın.' acts=12 calls=0 fatal=0
+PIN 2468
+  5 OK  13:50:15 'Uygulama kilidi. PIN ile açın.' -> 'Çevrimdışı Mod' acts=12 calls=0 fatal=0
+NOPAD 1
+  6 OK  13:51:04 'Çevrimdışı Mod' -> 'Kişi kaldırılsın mı?' acts=12 calls=1 fatal=0
+NOPAD 2
+NOPAD 2
+  7 OK  13:59:25 'Kişi kaldırılsın mı?' -> 'Acil durum geri sayımı. PIN ile iptal ed' acts=7 calls=0 fatal=0
+NOPAD 1
+Traceback (most recent call last):
+  File "/Users/poyrazoncel/Projects/guvenlik_app/docs/audit/evidence/chaos-2026-10-08/tools/human_chaos.py", line 143, in <module>
+    main()
+  File "/Users/poyrazoncel/Projects/guvenlik_app/docs/audit/evidence/chaos-2026-10-08/tools/human_chaos.py", line 122, in main
+    bad, calls, dup, states, corrupt, alive = check(0)
+                                              ^^^^^^^^
+  File "/Users/poyrazoncel/Projects/guvenlik_app/docs/audit/evidence/chaos-2026-10-08/tools/human_chaos.py", line 96, in check
+    logs = sh('shell', 'logcat', '-d', '-v', 'time', timeout=60)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/poyrazoncel/Projects/guvenlik_app/docs/audit/evidence/chaos-2026-10-08/tools/human_chaos.py", line 25, in sh
+    return subprocess.run([ui.ADB, *a], capture_output=True, text=True, timeout=timeout).stdout
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.11/3.11.14/Frameworks/Python.framework/Versions/3.11/lib/python3.11/subprocess.py", line 550, in run
+    stdout, stderr = process.communicate(input, timeout=timeout)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.11/3.11.14/Frameworks/Python.framework/Versions/3.11/lib/python3.11/subprocess.py", line 1209, in communicate
+    stdout, stderr = self._communicate(input, endtime, timeout)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.11/3.11.14/Frameworks/Python.framework/Versions/3.11/lib/python3.11/subprocess.py", line 2153, in _communicate
+    stdout = self._translate_newlines(stdout,
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.11/3.11.14/Frameworks/Python.framework/Versions/3.11/lib/python3.11/subprocess.py", line 1086, in _translate_newlines
+    data = data.decode(encoding, errors)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeDecodeError: 'utf-8' codec can't decode byte 0xc0 in position 36145: invalid start byte
+  0 OK  14:03:15 '05551234567' -> 'Uygulama kilidi. PIN ile açın.' acts=8 calls=0 fatal=0
+  1 OK  14:03:42 'Uygulama kilidi. PIN ile açın.' -> 'Uygulama kilidi. PIN ile açın.' acts=6 calls=0 fatal=0
+  2 OK  14:04:09 'Uygulama kilidi. PIN ile açın.' -> 'Destroy and create new WebView' acts=11 calls=0 fatal=0
+  3 BAD 14:04:50 'Destroy and create new WebView' -> 'WebView Browser Tester 124.0.6367.219' acts=11 calls=0 fatal=56
+--- restart with seed 20261011 (driver: foreground guard + per-process fatal filter) 14:06:10
+  0 OK  14:06:13 'Search' -> 'Search' acts=10 calls=0 fatal=0
+PIN 2468
+NOPAD 1
+  1 OK  14:06:49 'Search' -> 'Acil Kişi Seç' acts=6 calls=0 fatal=0
+  2 OK  14:07:38 'Acil Kişi Seç' -> 'Search' acts=6 calls=0 fatal=0
+  3 OK  14:08:04 'Search' -> 'Search' acts=6 calls=0 fatal=0
+PIN 1357
+  4 OK  14:08:30 'Search' -> 'Acil durum geri sayımı. PIN ile iptal ed' acts=8 calls=0 fatal=0
+  5 OK  14:09:44 '05551234567' -> 'Uygulama kilidi. PIN ile açın.' acts=8 calls=1 fatal=0
+PIN 2468
+  6 OK  14:11:04 'Uygulama kilidi. PIN ile açın.' -> 'Acil durum geri sayımı. PIN ile iptal ed' acts=3 calls=0 fatal=0
+PIN 1357
+PIN 1357
+PIN 2468
+  7 OK  14:11:27 'Acil durum geri sayımı. PIN ile iptal ed' -> 'Uygulama kilidi. PIN ile açın.' acts=12 calls=2 fatal=0
+  8 OK  14:13:17 'Uygulama kilidi. PIN ile açın.' -> 'Uygulama kilidi. PIN ile açın.' acts=10 calls=0 fatal=0
+NOPAD 2
+  9 OK  14:13:57 'Uygulama kilidi. PIN ile açın.' -> 'Uygulama kilidi. PIN ile açın.' acts=8 calls=0 fatal=0
+PIN 2468
+ 10 OK  14:14:48 'Uygulama kilidi. PIN ile açın.' -> 'Uygulama kilidi. PIN ile açın.' acts=12 calls=0 fatal=0
+PIN 1357
+ 11 OK  14:15:38 'Uygulama kilidi. PIN ile açın.' -> 'Uygulama kilidi. PIN ile açın.' acts=11 calls=0 fatal=0
+ 12 OK  14:16:21 'Uygulama kilidi. PIN ile açın.' -> '05551234567' acts=7 calls=1 fatal=0
+NOPAD 1
+ 13 OK  14:16:51 '05551234567' -> '?' acts=3 calls=0 fatal=0
+PIN 2468
+NOPAD 2
+ 14 OK  14:26:22 '?' -> '?' acts=10 calls=1 fatal=0
+NOPAD 2
+ 15 OK  14:29:40 '?' -> 'Uygulama kilidi. PIN ile açın.' acts=5 calls=0 fatal=0
+ 16 OK  14:31:14 'Uygulama kilidi. PIN ile açın.' -> 'Yasal Bilgiler' acts=7 calls=0 fatal=0
+ 17 OK  14:31:37 'Yasal Bilgiler' -> 'WebView Browser Tester 124.0.6367.219' acts=5 calls=0 fatal=0
+NOPAD 1
+ 18 OK  14:31:56 'WebView Browser Tester 124.0.6367.219' -> 'Uygulama kilidi. PIN ile açın.' acts=11 calls=0 fatal=0
+ 19 OK  14:32:46 'Uygulama kilidi. PIN ile açın.' -> 'WebView Browser Tester 124.0.6367.219' acts=9 calls=0 fatal=0
+NOPAD 2
+ 20 OK  14:33:16 'WebView Browser Tester 124.0.6367.219' -> 'Rıza Yönetimi' acts=12 calls=0 fatal=0
+ 21 OK  14:34:17 'Rıza Yönetimi' -> 'Uygulama kilidi. PIN ile açın.' acts=11 calls=0 fatal=0
+ 22 OK  14:34:51 'Uygulama kilidi. PIN ile açın.' -> 'Uygulama kilidi. PIN ile açın.' acts=3 calls=0 fatal=0
+NOPAD 2
+ 23 OK  14:35:08 'Uygulama kilidi. PIN ile açın.' -> 'Uygulama kilidi. PIN ile açın.' acts=12 calls=0 fatal=0
+NOPAD 2
+ 24 OK  14:36:26 'Uygulama kilidi. PIN ile açın.' -> 'Uygulama kilidi. PIN ile açın.' acts=8 calls=0 fatal=0
+ 25 OK  14:37:20 'Uygulama kilidi. PIN ile açın.' -> 'Uygulama kilidi. PIN ile açın.' acts=11 calls=0 fatal=0
+ 26 OK  14:38:13 'Uygulama kilidi. PIN ile açın.' -> 'Rıza Yönetimi' acts=5 calls=0 fatal=0
+ 27 OK  14:38:35 'Rıza Yönetimi' -> 'Yasal Bilgiler' acts=9 calls=0 fatal=0
+NOPAD 1
+ 28 OK  14:39:12 'Yasal Bilgiler' -> 'Uygulama kilidi. PIN ile açın.' acts=11 calls=1 fatal=0
+ 29 OK  14:40:59 'Uygulama kilidi. PIN ile açın.' -> 'Yasal Bilgiler' acts=3 calls=0 fatal=0
+ 30 OK  14:41:15 'Yasal Bilgiler' -> 'Uygulama kilidi. PIN ile açın.' acts=4 calls=0 fatal=0
+NOPAD 2
+ 31 OK  14:41:34 'Uygulama kilidi. PIN ile açın.' -> 'Rızayı Geri Çek' acts=12 calls=0 fatal=0
+ 32 BAD 14:42:33 'Rızayı Geri Çek' -> '?' acts=3 calls=0 fatal=0
+--- host rebooted at ~14:42 (seq 20261011/32 relaunch failure = emulator gone with host); continue seed 20261012 at 18:36:57 on API35 emulator-5554, same build 0353522 (lastUpdateTime 2026-10-09 13:41:24)
+NOPAD 2
+  0 OK  18:36:59 'Search' -> 'Rızayı Geri Çek' acts=9 calls=0 fatal=0
+  1 OK  18:37:48 'Rızayı Geri Çek' -> 'Yasal Bilgiler' acts=5 calls=0 fatal=0
+  2 OK  18:38:08 'Yasal Bilgiler' -> 'WebView Browser Tester 124.0.6367.219' acts=4 calls=0 fatal=0
+  3 OK  18:38:22 'WebView Browser Tester 124.0.6367.219' -> 'Rıza Yönetimi' acts=4 calls=0 fatal=0
+  4 OK  18:38:37 'Rıza Yönetimi' -> 'Yasal Bilgiler' acts=11 calls=0 fatal=0
+NOPAD 1
+  5 OK  18:39:20 'Yasal Bilgiler' -> 'Acil durum geri sayımı. PIN ile iptal ed' acts=12 calls=0 fatal=0
+  6 OK  18:40:18 'Acil durum geri sayımı. PIN ile iptal ed' -> 'stop searching' acts=5 calls=0 fatal=0
+  7 OK  18:40:40 'stop searching' -> 'Yasal Bilgiler' acts=11 calls=0 fatal=0
+  8 OK  18:43:32 'Yasal Bilgiler' -> 'KoruBeni yükleniyor' acts=6 calls=0 fatal=0
+  9 OK  18:44:11 'Uygulama kilidi. PIN ile açın.' -> 'Yasal Bilgiler' acts=6 calls=0 fatal=0
+NOPAD 2
+ 10 OK  18:44:37 'Yasal Bilgiler' -> '?' acts=7 calls=0 fatal=0
+ 11 OK  18:45:40 'Uygulama kilidi. PIN ile açın.' -> 'Yasal Bilgiler' acts=7 calls=0 fatal=0
+ 12 OK  18:46:05 'Yasal Bilgiler' -> 'WebView Browser Tester 124.0.6367.219' acts=11 calls=0 fatal=0
+NOPAD 2
+ 13 OK  18:46:59 'WebView Browser Tester 124.0.6367.219' -> 'Yasal Bilgiler' acts=7 calls=0 fatal=0
+ 14 OK  18:48:01 'Yasal Bilgiler' -> 'More options' acts=12 calls=0 fatal=0
+ 15 OK  18:48:58 'More options' -> 'Uygulama kilidi. PIN ile açın.' acts=9 calls=0 fatal=0
+ 16 OK  18:49:32 'Uygulama kilidi. PIN ile açın.' -> 'Uygulama kilidi. PIN ile açın.' acts=11 calls=0 fatal=0
+ 17 OK  18:50:22 'Uygulama kilidi. PIN ile açın.' -> 'Search' acts=4 calls=0 fatal=0
+NOPAD 2
+ 18 OK  18:50:50 'Search' -> 'Uygulama kilidi. PIN ile açın.' acts=9 calls=0 fatal=0
+NOPAD 2
+ 19 OK  18:51:52 'Uygulama kilidi. PIN ile açın.' -> 'Yasal Bilgiler' acts=8 calls=0 fatal=0
+NOPAD 2
+NOPAD 2
+ 20 OK  18:52:44 'Yasal Bilgiler' -> '?' acts=12 calls=1 fatal=0
+NOPAD 1
+ 21 OK  18:55:49 '?' -> 'Uygulama kilidi. PIN ile açın.' acts=9 calls=0 fatal=0
+ 22 OK  19:04:40 'Uygulama kilidi. PIN ile açın.' -> 'Yasal Bilgiler' acts=9 calls=0 fatal=0
+ 23 OK  19:05:09 'Yasal Bilgiler' -> 'Yasal Bilgiler' acts=3 calls=0 fatal=0
+ 24 OK  19:05:27 'Yasal Bilgiler' -> 'Uygulama kilidi. PIN ile açın.' acts=7 calls=0 fatal=0
+ 25 OK  19:05:57 'Uygulama kilidi. PIN ile açın.' -> 'Yasal Bilgiler' acts=12 calls=1 fatal=0
+ 26 OK  19:07:22 'Yasal Bilgiler' -> 'Yasal Bilgiler' acts=7 calls=0 fatal=0
+ 27 OK  19:07:47 'Yasal Bilgiler' -> 'Rıza Yönetimi' acts=4 calls=0 fatal=0
+ 28 OK  19:08:03 'Rıza Yönetimi' -> 'Yasal Bilgiler' acts=6 calls=0 fatal=0
+ 29 OK  19:08:22 'Yasal Bilgiler' -> 'WebView Browser Tester 124.0.6367.219' acts=5 calls=0 fatal=0
+ 30 OK  19:08:38 'WebView Browser Tester 124.0.6367.219' -> 'Yasal Bilgiler' acts=3 calls=0 fatal=0
+ 31 OK  19:08:49 'Yasal Bilgiler' -> 'Acil durum geri sayımı. PIN ile iptal ed' acts=3 calls=0 fatal=0
+ 32 OK  19:09:04 'Calling…' -> 'Uygulama kilidi. PIN ile açın.' acts=3 calls=1 fatal=0
+ 33 OK  19:10:02 'Uygulama kilidi. PIN ile açın.' -> 'Yasal Bilgiler' acts=7 calls=0 fatal=0
+ 34 OK  19:10:26 'Yasal Bilgiler' -> 'Yasal Bilgiler' acts=6 calls=0 fatal=0
+ 35 OK  19:10:44 'Yasal Bilgiler' -> 'Uygulama kilidi. PIN ile açın.' acts=10 calls=0 fatal=0
+ 36 OK  19:11:14 'Uygulama kilidi. PIN ile açın.' -> 'WebView Browser Tester 124.0.6367.219' acts=3 calls=0 fatal=0
+ 37 OK  19:11:28 'WebView Browser Tester 124.0.6367.219' -> 'Rızayı Geri Çek' acts=8 calls=0 fatal=0
+NOPAD 1
+ 38 OK  19:11:54 'Rızayı Geri Çek' -> 'Yasal Bilgiler' acts=7 calls=0 fatal=0
+NOPAD 1
+ 39 OK  19:12:35 'Yasal Bilgiler' -> 'WebView Browser Tester 124.0.6367.219' acts=8 calls=0 fatal=0
+ 40 OK  19:13:25 'WebView Browser Tester 124.0.6367.219' -> 'Rıza Yönetimi' acts=3 calls=0 fatal=0
+ 41 OK  19:13:38 'Rıza Yönetimi' -> 'Rızayı Geri Çek' acts=12 calls=0 fatal=0
+ 42 OK  19:14:10 'Rızayı Geri Çek' -> 'Rızayı Geri Çek' acts=5 calls=0 fatal=0
+ 43 OK  19:14:25 'Rızayı Geri Çek' -> 'Yasal Bilgiler' acts=10 calls=0 fatal=0
+ 44 OK  19:14:55 'Yasal Bilgiler' -> 'KVKK Aydınlatma Metni' acts=12 calls=0 fatal=0
+ 45 OK  19:15:25 'KVKK Aydınlatma Metni' -> 'Yasal Bilgiler' acts=6 calls=0 fatal=0
+ 46 OK  19:15:52 'Yasal Bilgiler' -> 'Yasal Bilgiler' acts=12 calls=0 fatal=0
+NOPAD 2
+NOPAD 2
+ 47 OK  19:16:34 'Yasal Bilgiler' -> 'Rıza Yönetimi' acts=9 calls=0 fatal=0
+NOPAD 2
+ 48 OK  19:17:43 'Rıza Yönetimi' -> 'KVKK Aydınlatma Metni' acts=11 calls=0 fatal=0
+ 49 OK  19:18:40 'KVKK Aydınlatma Metni' -> 'Acil durum geri sayımı. PIN ile iptal ed' acts=5 calls=0 fatal=0
+ 50 OK  19:18:57 'Acil durum geri sayımı. PIN ile iptal ed' -> 'More options' acts=3 calls=0 fatal=0
+ 51 OK  19:19:12 'More options' -> '?' acts=4 calls=0 fatal=0
+ 52 OK  19:20:55 '?' -> 'Uygulama kilidi. PIN ile açın.' acts=3 calls=0 fatal=0
+NOPAD 2
+ 53 OK  19:21:44 'Uygulama kilidi. PIN ile açın.' -> 'Uygulama kilidi. PIN ile açın.' acts=10 calls=0 fatal=0
+ 54 OK  19:23:11 'Uygulama kilidi. PIN ile açın.' -> 'Acil durum geri sayımı. PIN ile iptal ed' acts=12 calls=0 fatal=0
+ 55 OK  19:24:00 'Acil durum geri sayımı. PIN ile iptal ed' -> '?' acts=3 calls=1 fatal=0
+NOPAD 2
+ 56 OK  19:26:38 '?' -> 'Yasal Bilgiler' acts=7 calls=0 fatal=0
+NOPAD 1
+ 57 OK  19:29:18 'Yasal Bilgiler' -> 'Rıza Yönetimi' acts=12 calls=0 fatal=0
+ 58 OK  19:30:23 'Rıza Yönetimi' -> 'Rızayı Geri Çek' acts=5 calls=0 fatal=0
+ 59 OK  19:30:43 'Rızayı Geri Çek' -> 'Rıza Yönetimi' acts=5 calls=0 fatal=0
+NOPAD 2
+ 60 OK  19:31:08 'Rıza Yönetimi' -> 'Rızayı Geri Çek' acts=3 calls=0 fatal=0
+ 61 OK  19:31:55 'Rızayı Geri Çek' -> 'KVKK Aydınlatma Metni' acts=5 calls=0 fatal=0
+ 62 OK  19:32:21 'KVKK Aydınlatma Metni' -> 'WebView Browser Tester 124.0.6367.219' acts=4 calls=0 fatal=0
+ 63 OK  19:32:37 'WebView Browser Tester 124.0.6367.219' -> 'WebView Browser Tester 124.0.6367.219' acts=6 calls=0 fatal=0
+ 64 OK  19:33:01 'WebView Browser Tester 124.0.6367.219' -> 'KVKK Aydınlatma Metni' acts=10 calls=0 fatal=0

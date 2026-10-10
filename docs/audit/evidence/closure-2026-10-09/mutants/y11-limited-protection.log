@@ -1,0 +1,20 @@
+# counterfactual run 2026-10-09T19:06:23 HEAD=d60e7663804618f9442570a2e0761795cb4d971c
+PA-1 title never limited: KILLED file=lib/core/services/panic_arm_policy.dart sha_orig=9b6fe1ea6a6d7ba2 sha_mut=dd63c3a3184a8dfb restored=True
+    
+    00:03 +11 -2: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/countdown_exact_alarm_required_test.dart: (tearDownAll)                                                                            
+    00:03 +11 -2: Some tests failed.
+PA-2 heading not rebuilt at start: KILLED file=lib/screens/countdown_screen.dart sha_orig=9c7eb041428d593c sha_mut=d35763b635ed005f restored=True
+    
+    00:06 +12 -1: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/countdown_exact_alarm_required_test.dart: (tearDownAll)                                                                            
+    00:06 +12 -1: Some tests failed.
+PA-3 screen keeps fixed heading: KILLED file=lib/screens/countdown_screen.dart sha_orig=9c7eb041428d593c sha_mut=85ba46b6750d043d restored=True
+    
+    00:03 +12 -1: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/countdown_exact_alarm_required_test.dart: (tearDownAll)                                                                            
+    00:03 +12 -1: Some tests failed.
+PA-4 native: CALL_PHONE before exact alarm: KILLED file=android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/EmergencySessionModels.kt sha_orig=91a900661a94dd8b sha_mut=1be07ffe59591a58 restored=True
+    > Run with --scan to get full insights.
+    
+    BUILD FAILED in 6s
+# baseline after restore: exit=0 :: 00:03 +13: All tests passed!
+# survivors=0
+# PA-4 rechecked by hand: 'EmergencySessionCoordinatorTest > missing exact alarm outranks a refused call permission FAILED' (74 tests, 1 failed); runner now logs failing gradle test names

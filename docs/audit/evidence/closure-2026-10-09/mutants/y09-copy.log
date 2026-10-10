@@ -1,0 +1,15 @@
+# counterfactual run 2026-10-10T09:24:00 HEAD=60d28afb7dbf92f18c272dbfe1dc9617f006362b
+Y09-1 TR FAQ asks about a location session again: KILLED file=assets/translations/tr-TR.json sha_orig=5e20bbdd54c96f5a sha_mut=d54d38dbdb703385 restored=True
+    00:01 +0 -1: en-US: no copy the app shows describes a location session                                                                                                                                 
+    00:01 +1 -1: en-US: no copy the app shows describes a location session                                                                                                                                 
+    00:01 +1 -1: Some tests failed.
+Y09-2 EN FAQ asks about a location session again: KILLED file=assets/translations/en-US.json sha_orig=c386dd1753fc4771 sha_mut=9720aeef35ebc5e8 restored=True
+    To run this test again: /opt/homebrew/share/flutter/bin/cache/dart-sdk/bin/dart test /Users/poyrazoncel/Projects/guvenlik_app/test/y09_location_session_copy_test.dart -p vm --plain-name 'en-US: no copy the app shows describes a location session'
+    
+    00:00 +1 -1: Some tests failed.
+Y09-3 permission text before 0353522 (first Y-09 fix): KILLED file=assets/translations/tr-TR.json sha_orig=5e20bbdd54c96f5a sha_mut=385113f4a4a06086 restored=True
+    00:00 +0 -1: en-US: no copy the app shows describes a location session                                                                                                                                 
+    00:00 +1 -1: en-US: no copy the app shows describes a location session                                                                                                                                 
+    00:00 +1 -1: Some tests failed.
+# baseline after restore: exit=0 :: 00:00 +2: All tests passed!
+# survivors=0

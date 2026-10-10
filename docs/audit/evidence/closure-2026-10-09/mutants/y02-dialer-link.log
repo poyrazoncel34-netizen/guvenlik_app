@@ -1,0 +1,35 @@
+# counterfactual run 2026-10-09T19:13:11 HEAD=4529c87f95154556cccdd9b4fd3f36908b1cc371
+DL-1 link on every result: KILLED file=lib/screens/emergency_call_screen.dart sha_orig=2e91c693f5d8a0ec sha_mut=831055725633eed9 restored=True
+    
+    00:02 +6 -1: (tearDownAll)                                                                                                                                                                             
+    00:02 +6 -1: Some tests failed.
+DL-2 link never shown: KILLED file=lib/screens/emergency_call_screen.dart sha_orig=2e91c693f5d8a0ec sha_mut=4bb40e190b994d4e restored=True
+    00:02 +6 -1: Y-02: what each call result is allowed to claim a failed request says so and offers the manual call                                                                                       
+    00:02 +6 -1: (tearDownAll)                                                                                                                                                                             
+    00:02 +6 -1: Some tests failed.
+DL-3 link opens nothing: KILLED file=lib/screens/emergency_call_screen.dart sha_orig=2e91c693f5d8a0ec sha_mut=6f1e8e05e05ba32a restored=True
+    00:02 +6 -1: Y-02: what each call result is allowed to claim a failed request says so and offers the manual call                                                                                       
+    00:02 +6 -1: (tearDownAll)                                                                                                                                                                             
+    00:02 +6 -1: Some tests failed.
+# baseline after restore: exit=0 :: 00:02 +7: All tests passed!
+# survivors=0
+# (rerun: link moved to the fixed bottom area after the device showed it clipped; DL-4 = the old placement)
+# counterfactual run 2026-10-09T19:55:48 HEAD=9c6db0b3a1fdeee09694a61d77aa739c2fdeed36
+DL-1 link on every result: KILLED file=lib/screens/emergency_call_screen.dart sha_orig=3111e71fd08386cb sha_mut=99a8b24ba8d45ca8 restored=True
+    
+    00:03 +6 -2: (tearDownAll)                                                                                                                                                                             
+    00:03 +6 -2: Some tests failed.
+DL-2 link never shown: KILLED file=lib/screens/emergency_call_screen.dart sha_orig=3111e71fd08386cb sha_mut=a0cc030b141f1f4c restored=True
+    00:03 +6 -2: Y-02: what each call result is allowed to claim a failed request says so and offers the manual call                                                                                       
+    00:03 +6 -2: (tearDownAll)                                                                                                                                                                             
+    00:03 +6 -2: Some tests failed.
+DL-3 link opens nothing: KILLED file=lib/screens/emergency_call_screen.dart sha_orig=3111e71fd08386cb sha_mut=e2fe53b771d256f1 restored=True
+    00:03 +7 -1: Y-02: what each call result is allowed to claim a failed request says so and offers the manual call                                                                                       
+    00:03 +7 -1: (tearDownAll)                                                                                                                                                                             
+    00:03 +7 -1: Some tests failed.
+DL-4 link back at the end of the scroll view (6e13bab placement): KILLED file=lib/screens/emergency_call_screen.dart sha_orig=3111e71fd08386cb sha_mut=ef751ea0bd3d0a26 restored=True
+    00:03 +7 -1: Y-02: what each call result is allowed to claim a failed request says so and offers the manual call                                                                                       
+    00:03 +7 -1: (tearDownAll)                                                                                                                                                                             
+    00:03 +7 -1: Some tests failed.
+# baseline after restore: exit=0 :: 00:02 +8: All tests passed!
+# survivors=0

@@ -1,0 +1,358 @@
+# counterfactual run 2026-10-09T18:57:05 HEAD=61d7baad6ed6defcc41ce4339449f4c3a6fb2150
+LK-R1 forget unproven expiry: SURVIVED file=lib/core/services/pin_lockout_service.dart sha_orig=1db8b5ed0d678047 sha_mut=174a14c9f6d9f606 restored=True
+    00:01 +18: reset forgets every lockout key                                                                                                                                                             
+    00:01 +19: reset forgets every lockout key                                                                                                                                                             
+    00:01 +19: All tests passed!
+LK-R2 failed read -> wall decides: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=1db8b5ed0d678047 sha_mut=98a8a7b5df384059 restored=True
+    00:01 +16 -2: reset forgets every lockout key                                                                                                                                                          
+    00:01 +17 -2: reset forgets every lockout key                                                                                                                                                          
+    00:01 +17 -2: Some tests failed.
+LK-R3 bridge-missing ignored: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=1db8b5ed0d678047 sha_mut=d500d7b74f8690ac restored=True
+    00:01 +17 -1: reset forgets every lockout key                                                                                                                                                          
+    00:01 +18 -1: reset forgets every lockout key                                                                                                                                                          
+    00:01 +18 -1: Some tests failed.
+LK-R4 stored duration ignored: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=1db8b5ed0d678047 sha_mut=c0c09f594c91b045 restored=True
+    lib/core/services/pin_lockout_service.dart:248:36: Error: The argument type 'int?' can't be assigned to the parameter type 'int'.
+              ? Duration(milliseconds: storedMs)
+                                       ^
+LK-R5 no serialization: SURVIVED file=lib/core/services/pin_lockout_service.dart sha_orig=1db8b5ed0d678047 sha_mut=d72ebc7ad4adc9bc restored=True
+    00:01 +18: reset forgets every lockout key                                                                                                                                                             
+    00:01 +19: reset forgets every lockout key                                                                                                                                                             
+    00:01 +19: All tests passed!
+LK-R6 duration key not written at lock: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=1db8b5ed0d678047 sha_mut=f17a8079b7189037 restored=True
+    00:01 +17 -1: reset forgets every lockout key                                                                                                                                                          
+    00:01 +18 -1: reset forgets every lockout key                                                                                                                                                          
+    00:01 +18 -1: Some tests failed.
+# baseline after restore: exit=0 :: 00:01 +19: All tests passed!
+# survivors=2
+# (rerun after strengthening the tests: LK-R1/LK-R5 survived, LK-R4 was a compile-level kill)
+# counterfactual run 2026-10-09T18:57:52 HEAD=61d7baad6ed6defcc41ce4339449f4c3a6fb2150
+LK-R1 forget unproven expiry: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=1db8b5ed0d678047 sha_mut=174a14c9f6d9f606 restored=True
+    00:01 +17 -1: reset forgets every lockout key                                                                                                                                                          
+    00:01 +18 -1: reset forgets every lockout key                                                                                                                                                          
+    00:01 +18 -1: Some tests failed.
+LK-R2 failed read -> wall decides: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=1db8b5ed0d678047 sha_mut=98a8a7b5df384059 restored=True
+    00:01 +16 -2: reset forgets every lockout key                                                                                                                                                          
+    00:01 +17 -2: reset forgets every lockout key                                                                                                                                                          
+    00:01 +17 -2: Some tests failed.
+LK-R3 bridge-missing ignored: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=1db8b5ed0d678047 sha_mut=d500d7b74f8690ac restored=True
+    00:01 +17 -1: reset forgets every lockout key                                                                                                                                                          
+    00:01 +18 -1: reset forgets every lockout key                                                                                                                                                          
+    00:01 +18 -1: Some tests failed.
+LK-R4 stored duration ignored: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=1db8b5ed0d678047 sha_mut=eb9e7b92c0e888c4 restored=True
+    00:01 +17 -1: reset forgets every lockout key                                                                                                                                                          
+    00:01 +18 -1: reset forgets every lockout key                                                                                                                                                          
+    00:01 +18 -1: Some tests failed.
+LK-R5 no serialization: SURVIVED file=lib/core/services/pin_lockout_service.dart sha_orig=1db8b5ed0d678047 sha_mut=d72ebc7ad4adc9bc restored=True
+    00:01 +18: reset forgets every lockout key                                                                                                                                                             
+    00:01 +19: reset forgets every lockout key                                                                                                                                                             
+    00:01 +19: All tests passed!
+LK-R6 duration key not written at lock: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=1db8b5ed0d678047 sha_mut=f17a8079b7189037 restored=True
+    00:01 +17 -1: reset forgets every lockout key                                                                                                                                                          
+    00:01 +18 -1: reset forgets every lockout key                                                                                                                                                          
+    00:01 +18 -1: Some tests failed.
+# baseline after restore: exit=0 :: 00:01 +19: All tests passed!
+# survivors=1
+# (rerun: LK-R5 survived -- the race deleted only duration_ms, which the test did not assert)
+# counterfactual run 2026-10-09T18:58:31 HEAD=61d7baad6ed6defcc41ce4339449f4c3a6fb2150
+LK-R1 forget unproven expiry: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=1db8b5ed0d678047 sha_mut=174a14c9f6d9f606 restored=True
+    00:01 +17 -1: reset forgets every lockout key                                                                                                                                                          
+    00:01 +18 -1: reset forgets every lockout key                                                                                                                                                          
+    00:01 +18 -1: Some tests failed.
+LK-R2 failed read -> wall decides: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=1db8b5ed0d678047 sha_mut=98a8a7b5df384059 restored=True
+    00:01 +16 -2: reset forgets every lockout key                                                                                                                                                          
+    00:01 +17 -2: reset forgets every lockout key                                                                                                                                                          
+    00:01 +17 -2: Some tests failed.
+LK-R3 bridge-missing ignored: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=1db8b5ed0d678047 sha_mut=d500d7b74f8690ac restored=True
+    00:01 +17 -1: reset forgets every lockout key                                                                                                                                                          
+    00:01 +18 -1: reset forgets every lockout key                                                                                                                                                          
+    00:01 +18 -1: Some tests failed.
+LK-R4 stored duration ignored: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=1db8b5ed0d678047 sha_mut=eb9e7b92c0e888c4 restored=True
+    00:01 +17 -1: reset forgets every lockout key                                                                                                                                                          
+    00:01 +18 -1: reset forgets every lockout key                                                                                                                                                          
+    00:01 +18 -1: Some tests failed.
+LK-R5 no serialization: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=1db8b5ed0d678047 sha_mut=d72ebc7ad4adc9bc restored=True
+    00:01 +17 -1: reset forgets every lockout key                                                                                                                                                          
+    00:01 +18 -1: reset forgets every lockout key                                                                                                                                                          
+    00:01 +18 -1: Some tests failed.
+LK-R6 duration key not written at lock: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=1db8b5ed0d678047 sha_mut=f17a8079b7189037 restored=True
+    00:01 +16 -2: reset forgets every lockout key                                                                                                                                                          
+    00:01 +17 -2: reset forgets every lockout key                                                                                                                                                          
+    00:01 +17 -2: Some tests failed.
+# baseline after restore: exit=0 :: 00:01 +19: All tests passed!
+# survivors=0
+# (rerun: serialization reimplemented as idle-flag + waiter queue; the future chain hung later widget tests on a dead FakeAsync zone)
+# counterfactual run 2026-10-09T19:01:34 HEAD=61d7baad6ed6defcc41ce4339449f4c3a6fb2150
+LK-R1 forget unproven expiry: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=a4ed95b747f2a53e sha_mut=d2edb384d28ff75d restored=True
+    00:02 +17 -1: reset forgets every lockout key                                                                                                                                                          
+    00:02 +18 -1: reset forgets every lockout key                                                                                                                                                          
+    00:02 +18 -1: Some tests failed.
+LK-R2 failed read -> wall decides: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=a4ed95b747f2a53e sha_mut=ccb9346921963965 restored=True
+    00:01 +16 -2: reset forgets every lockout key                                                                                                                                                          
+    00:01 +17 -2: reset forgets every lockout key                                                                                                                                                          
+    00:01 +17 -2: Some tests failed.
+LK-R3 bridge-missing ignored: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=a4ed95b747f2a53e sha_mut=29a7c96bd27c16e4 restored=True
+    00:01 +17 -1: reset forgets every lockout key                                                                                                                                                          
+    00:01 +18 -1: reset forgets every lockout key                                                                                                                                                          
+    00:01 +18 -1: Some tests failed.
+LK-R4 stored duration ignored: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=a4ed95b747f2a53e sha_mut=e38cbf00cff07cdd restored=True
+    00:01 +17 -1: reset forgets every lockout key                                                                                                                                                          
+    00:01 +18 -1: reset forgets every lockout key                                                                                                                                                          
+    00:01 +18 -1: Some tests failed.
+LK-R5 no serialization: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=a4ed95b747f2a53e sha_mut=3d8a8f77480884ed restored=True
+    00:01 +17 -1: reset forgets every lockout key                                                                                                                                                          
+    00:01 +18 -1: reset forgets every lockout key                                                                                                                                                          
+    00:01 +18 -1: Some tests failed.
+LK-R6 duration key not written at lock: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=a4ed95b747f2a53e sha_mut=841e500097a1571d restored=True
+    00:01 +16 -2: reset forgets every lockout key                                                                                                                                                          
+    00:01 +17 -2: reset forgets every lockout key                                                                                                                                                          
+    00:01 +17 -2: Some tests failed.
+LK-R7 lock never waits: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=a4ed95b747f2a53e sha_mut=5a47681a9a366a74 restored=True
+    00:02 +17 -1: reset forgets every lockout key                                                                                                                                                          
+    00:02 +18 -1: reset forgets every lockout key                                                                                                                                                          
+    00:02 +18 -1: Some tests failed.
+# baseline after restore: exit=0 :: 00:01 +19: All tests passed!
+# survivors=0
+# (rerun: MEDIUM-2 -- wall-only lock tied to the boot by the first monotonic read)
+# counterfactual run 2026-10-09T19:10:29 HEAD=66e2433b2915f53ee51ec682e646b4341720cb45
+LK-R1 forget unproven expiry: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=ef3614b58356ee7d sha_mut=7aace078b887c9d4 restored=True
+    00:01 +18 -1: reset forgets every lockout key                                                                                                                                                          
+    00:01 +19 -1: reset forgets every lockout key                                                                                                                                                          
+    00:01 +19 -1: Some tests failed.
+LK-R2 failed read -> wall decides: SPEC-ERROR snippet count=0
+LK-R3 bridge-missing ignored: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=ef3614b58356ee7d sha_mut=a5769027b3d8c3a5 restored=True
+    00:01 +18 -1: reset forgets every lockout key                                                                                                                                                          
+    00:01 +19 -1: reset forgets every lockout key                                                                                                                                                          
+    00:01 +19 -1: Some tests failed.
+LK-R4 stored duration ignored: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=ef3614b58356ee7d sha_mut=1a6283aaa3014c03 restored=True
+    00:01 +18 -1: reset forgets every lockout key                                                                                                                                                          
+    00:01 +19 -1: reset forgets every lockout key                                                                                                                                                          
+    00:01 +19 -1: Some tests failed.
+LK-R5 no serialization: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=ef3614b58356ee7d sha_mut=c5a4b21a8ea5a7c2 restored=True
+    00:01 +18 -1: reset forgets every lockout key                                                                                                                                                          
+    00:01 +19 -1: reset forgets every lockout key                                                                                                                                                          
+    00:01 +19 -1: Some tests failed.
+LK-R6 duration key not written at lock: SPEC-ERROR snippet count=2
+LK-R7 lock never waits: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=ef3614b58356ee7d sha_mut=0a02d8cd1a2de56c restored=True
+    00:01 +18 -1: reset forgets every lockout key                                                                                                                                                          
+    00:01 +19 -1: reset forgets every lockout key                                                                                                                                                          
+    00:01 +19 -1: Some tests failed.
+LK-M2a no pending marker at wall-only lock: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=ef3614b58356ee7d sha_mut=d90ca2c0600c5f8e restored=True
+    00:01 +18 -1: reset forgets every lockout key                                                                                                                                                          
+    00:01 +19 -1: reset forgets every lockout key                                                                                                                                                          
+    00:01 +19 -1: Some tests failed.
+LK-M2b marker ignored on read: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=ef3614b58356ee7d sha_mut=b3aeaa621008dd00 restored=True
+    00:01 +18 -1: reset forgets every lockout key                                                                                                                                                          
+    00:01 +19 -1: reset forgets every lockout key                                                                                                                                                          
+    00:01 +19 -1: Some tests failed.
+LK-M2c marker read but not anchored: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=ef3614b58356ee7d sha_mut=823bd15dd1b6c939 restored=True
+    00:01 +18 -1: reset forgets every lockout key                                                                                                                                                          
+    00:01 +19 -1: reset forgets every lockout key                                                                                                                                                          
+    00:01 +19 -1: Some tests failed.
+# baseline after restore: exit=0 :: 00:01 +20: All tests passed!
+# survivors=2
+# (rerun: LK-R2/LK-R6 snippets re-anchored after the MEDIUM-2 edit)
+# counterfactual run 2026-10-09T19:10:56 HEAD=66e2433b2915f53ee51ec682e646b4341720cb45
+LK-R1 forget unproven expiry: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=ef3614b58356ee7d sha_mut=7aace078b887c9d4 restored=True
+    00:01 +18 -1: reset forgets every lockout key                                                                                                                                                          
+    00:01 +19 -1: reset forgets every lockout key                                                                                                                                                          
+    00:01 +19 -1: Some tests failed.
+LK-R2 failed read -> wall decides: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=ef3614b58356ee7d sha_mut=7fbd4cba947d6eab restored=True
+    00:01 +17 -2: reset forgets every lockout key                                                                                                                                                          
+    00:01 +18 -2: reset forgets every lockout key                                                                                                                                                          
+    00:01 +18 -2: Some tests failed.
+LK-R3 bridge-missing ignored: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=ef3614b58356ee7d sha_mut=a5769027b3d8c3a5 restored=True
+    00:01 +18 -1: reset forgets every lockout key                                                                                                                                                          
+    00:01 +19 -1: reset forgets every lockout key                                                                                                                                                          
+    00:01 +19 -1: Some tests failed.
+LK-R4 stored duration ignored: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=ef3614b58356ee7d sha_mut=1a6283aaa3014c03 restored=True
+    00:01 +18 -1: reset forgets every lockout key                                                                                                                                                          
+    00:01 +19 -1: reset forgets every lockout key                                                                                                                                                          
+    00:01 +19 -1: Some tests failed.
+LK-R5 no serialization: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=ef3614b58356ee7d sha_mut=c5a4b21a8ea5a7c2 restored=True
+    00:01 +18 -1: reset forgets every lockout key                                                                                                                                                          
+    00:01 +19 -1: reset forgets every lockout key                                                                                                                                                          
+    00:01 +19 -1: Some tests failed.
+LK-R6 duration key not written at lock: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=ef3614b58356ee7d sha_mut=aaea29a3ceb70af8 restored=True
+    00:01 +17 -2: reset forgets every lockout key                                                                                                                                                          
+    00:01 +18 -2: reset forgets every lockout key                                                                                                                                                          
+    00:01 +18 -2: Some tests failed.
+LK-R7 lock never waits: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=ef3614b58356ee7d sha_mut=0a02d8cd1a2de56c restored=True
+    00:01 +18 -1: reset forgets every lockout key                                                                                                                                                          
+    00:01 +19 -1: reset forgets every lockout key                                                                                                                                                          
+    00:01 +19 -1: Some tests failed.
+LK-M2a no pending marker at wall-only lock: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=ef3614b58356ee7d sha_mut=d90ca2c0600c5f8e restored=True
+    00:01 +18 -1: reset forgets every lockout key                                                                                                                                                          
+    00:01 +19 -1: reset forgets every lockout key                                                                                                                                                          
+    00:01 +19 -1: Some tests failed.
+LK-M2b marker ignored on read: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=ef3614b58356ee7d sha_mut=b3aeaa621008dd00 restored=True
+    00:01 +18 -1: reset forgets every lockout key                                                                                                                                                          
+    00:01 +19 -1: reset forgets every lockout key                                                                                                                                                          
+    00:01 +19 -1: Some tests failed.
+LK-M2c marker read but not anchored: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=ef3614b58356ee7d sha_mut=823bd15dd1b6c939 restored=True
+    00:01 +18 -1: reset forgets every lockout key                                                                                                                                                          
+    00:01 +19 -1: reset forgets every lockout key                                                                                                                                                          
+    00:01 +19 -1: Some tests failed.
+# baseline after restore: exit=0 :: 00:01 +20: All tests passed!
+# survivors=0
+# (rerun: security review HIGH/MEDIUM/LOW -- bounded visible hold, lock wait, lone-length cut short, length-first deletes)
+# counterfactual run 2026-10-09T19:29:56 HEAD=70493a28f9851ea07c7e91b264150ebdbffe4406
+LK-R1 forget unproven expiry: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=b8d97b2e921525b5 sha_mut=1f36929b94cefe5f restored=True
+    00:05 +21 -2: reset forgets every lockout key                                                                                                                                                          
+    00:05 +22 -2: reset forgets every lockout key                                                                                                                                                          
+    00:05 +22 -2: Some tests failed.
+LK-R2 failed read -> wall decides: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=b8d97b2e921525b5 sha_mut=a288fa578201af2b restored=True
+    00:04 +19 -4: reset forgets every lockout key                                                                                                                                                          
+    00:04 +20 -4: reset forgets every lockout key                                                                                                                                                          
+    00:04 +20 -4: Some tests failed.
+LK-R3 bridge-missing ignored: SPEC-ERROR snippet count=0
+LK-R4 stored duration ignored: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=b8d97b2e921525b5 sha_mut=e26790852e62a942 restored=True
+    00:04 +21 -2: reset forgets every lockout key                                                                                                                                                          
+    00:04 +22 -2: reset forgets every lockout key                                                                                                                                                          
+    00:04 +22 -2: Some tests failed.
+LK-R5 no serialization: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=b8d97b2e921525b5 sha_mut=f1eba7d6699f4e53 restored=True
+    00:04 +22 -1: reset forgets every lockout key                                                                                                                                                          
+    00:04 +23 -1: reset forgets every lockout key                                                                                                                                                          
+    00:04 +23 -1: Some tests failed.
+LK-R6 duration key not written at lock: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=b8d97b2e921525b5 sha_mut=72194b529ad09b7f restored=True
+    00:04 +21 -2: reset forgets every lockout key                                                                                                                                                          
+    00:04 +22 -2: reset forgets every lockout key                                                                                                                                                          
+    00:04 +22 -2: Some tests failed.
+LK-R7 lock never waits: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=b8d97b2e921525b5 sha_mut=f85ba561e8ce9bff restored=True
+    00:04 +22 -1: reset forgets every lockout key                                                                                                                                                          
+    00:04 +23 -1: reset forgets every lockout key                                                                                                                                                          
+    00:04 +23 -1: Some tests failed.
+LK-M2a no pending marker at wall-only lock: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=b8d97b2e921525b5 sha_mut=ac7434999c7d9527 restored=True
+    00:04 +21 -2: reset forgets every lockout key                                                                                                                                                          
+    00:04 +22 -2: reset forgets every lockout key                                                                                                                                                          
+    00:04 +22 -2: Some tests failed.
+LK-M2b marker ignored on read: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=b8d97b2e921525b5 sha_mut=9caa052d604840cd restored=True
+    00:04 +21 -2: reset forgets every lockout key                                                                                                                                                          
+    00:04 +22 -2: reset forgets every lockout key                                                                                                                                                          
+    00:04 +22 -2: Some tests failed.
+LK-M2c marker read but not anchored: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=b8d97b2e921525b5 sha_mut=16ac082e58eee2ee restored=True
+    00:04 +21 -2: reset forgets every lockout key                                                                                                                                                          
+    00:04 +22 -2: reset forgets every lockout key                                                                                                                                                          
+    00:04 +22 -2: Some tests failed.
+LK-H1 no visible floor (sub-second hold): KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=b8d97b2e921525b5 sha_mut=7b39923af6a2cfba restored=True
+    00:04 +22 -1: reset forgets every lockout key                                                                                                                                                          
+    00:04 +23 -1: reset forgets every lockout key                                                                                                                                                          
+    00:04 +23 -1: Some tests failed.
+LK-H2 hold unbounded: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=b8d97b2e921525b5 sha_mut=090bf5899077cc3d restored=True
+    00:04 +22 -1: reset forgets every lockout key                                                                                                                                                          
+    00:04 +23 -1: reset forgets every lockout key                                                                                                                                                          
+    00:04 +23 -1: Some tests failed.
+LK-H3 hold restarts on every failed read: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=b8d97b2e921525b5 sha_mut=721f117b3136128e restored=True
+    00:04 +22 -1: reset forgets every lockout key                                                                                                                                                          
+    00:04 +23 -1: reset forgets every lockout key                                                                                                                                                          
+    00:04 +23 -1: Some tests failed.
+LK-H4 proven read does not end the episode: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=b8d97b2e921525b5 sha_mut=f7006648bcef09e5 restored=True
+    00:04 +22 -1: reset forgets every lockout key                                                                                                                                                          
+    00:04 +23 -1: reset forgets every lockout key                                                                                                                                                          
+    00:04 +23 -1: Some tests failed.
+LK-W1 waiter never gives up on a stuck holder: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=b8d97b2e921525b5 sha_mut=682678ea0a3f9483 restored=True
+    00:06 +22 -1: reset forgets every lockout key                                                                                                                                                          
+    00:06 +23 -1: reset forgets every lockout key                                                                                                                                                          
+    00:06 +23 -1: Some tests failed.
+LK-C1 lone length not read as cut short: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=b8d97b2e921525b5 sha_mut=dd9944364bd56a4b restored=True
+    00:04 +22 -1: reset forgets every lockout key                                                                                                                                                          
+    00:04 +23 -1: reset forgets every lockout key                                                                                                                                                          
+    00:04 +23 -1: Some tests failed.
+LK-D1 reset deletes the length in parallel: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=b8d97b2e921525b5 sha_mut=93e5839f1cbffb73 restored=True
+    00:04 +22 -1: reset forgets every lockout key                                                                                                                                                          
+    00:04 +23 -1: reset forgets every lockout key                                                                                                                                                          
+    00:04 +23 -1: Some tests failed.
+LK-D2 clear deletes the length last: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=b8d97b2e921525b5 sha_mut=5a772dc8121f45e5 restored=True
+    00:04 +22 -1: reset forgets every lockout key                                                                                                                                                          
+    00:04 +23 -1: reset forgets every lockout key                                                                                                                                                          
+    00:04 +23 -1: Some tests failed.
+# baseline after restore: exit=0 :: 00:04 +24: All tests passed!
+# survivors=1
+# (rerun: flutter review residuals -- stuck-holder mode, hold episode per lockout; LK-R3/R7/W1 re-anchored)
+# counterfactual run 2026-10-09T19:35:18 HEAD=70493a28f9851ea07c7e91b264150ebdbffe4406
+LK-R1 forget unproven expiry: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=4397ee0c30cf2819 sha_mut=b3b46c3de6071774 restored=True
+    00:05 +23 -2: reset forgets every lockout key                                                                                                                                                          
+    00:05 +24 -2: reset forgets every lockout key                                                                                                                                                          
+    00:05 +24 -2: Some tests failed.
+LK-R2 failed read -> wall decides: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=4397ee0c30cf2819 sha_mut=5da32c734d497eac restored=True
+    00:05 +20 -5: reset forgets every lockout key                                                                                                                                                          
+    00:05 +21 -5: reset forgets every lockout key                                                                                                                                                          
+    00:05 +21 -5: Some tests failed.
+LK-R3 bridge-missing ignored: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=4397ee0c30cf2819 sha_mut=95895f6ed9a4898c restored=True
+    00:05 +24 -1: reset forgets every lockout key                                                                                                                                                          
+    00:05 +25 -1: reset forgets every lockout key                                                                                                                                                          
+    00:05 +25 -1: Some tests failed.
+LK-R4 stored duration ignored: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=4397ee0c30cf2819 sha_mut=1098c1ea47f94d26 restored=True
+    00:05 +23 -2: reset forgets every lockout key                                                                                                                                                          
+    00:05 +24 -2: reset forgets every lockout key                                                                                                                                                          
+    00:05 +24 -2: Some tests failed.
+LK-R5 no serialization: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=4397ee0c30cf2819 sha_mut=9d0c60a6b9c61c69 restored=True
+    00:04 +24 -1: reset forgets every lockout key                                                                                                                                                          
+    00:04 +25 -1: reset forgets every lockout key                                                                                                                                                          
+    00:04 +25 -1: Some tests failed.
+LK-R6 duration key not written at lock: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=4397ee0c30cf2819 sha_mut=e937b7d2a06ea589 restored=True
+    00:05 +23 -2: reset forgets every lockout key                                                                                                                                                          
+    00:05 +24 -2: reset forgets every lockout key                                                                                                                                                          
+    00:05 +24 -2: Some tests failed.
+LK-R7 lock never waits: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=4397ee0c30cf2819 sha_mut=289efaae70efc566 restored=True
+    00:04 +24 -1: reset forgets every lockout key                                                                                                                                                          
+    00:04 +25 -1: reset forgets every lockout key                                                                                                                                                          
+    00:04 +25 -1: Some tests failed.
+LK-M2a no pending marker at wall-only lock: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=4397ee0c30cf2819 sha_mut=a6117407ecec25e4 restored=True
+    00:05 +23 -2: reset forgets every lockout key                                                                                                                                                          
+    00:05 +24 -2: reset forgets every lockout key                                                                                                                                                          
+    00:05 +24 -2: Some tests failed.
+LK-M2b marker ignored on read: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=4397ee0c30cf2819 sha_mut=d574390186817479 restored=True
+    00:05 +23 -2: reset forgets every lockout key                                                                                                                                                          
+    00:05 +24 -2: reset forgets every lockout key                                                                                                                                                          
+    00:05 +24 -2: Some tests failed.
+LK-M2c marker read but not anchored: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=4397ee0c30cf2819 sha_mut=541de287ff3567ed restored=True
+    00:05 +23 -2: reset forgets every lockout key                                                                                                                                                          
+    00:05 +24 -2: reset forgets every lockout key                                                                                                                                                          
+    00:05 +24 -2: Some tests failed.
+LK-H1 no visible floor (sub-second hold): KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=4397ee0c30cf2819 sha_mut=60bc4af813c021c4 restored=True
+    00:05 +24 -1: reset forgets every lockout key                                                                                                                                                          
+    00:05 +25 -1: reset forgets every lockout key                                                                                                                                                          
+    00:05 +25 -1: Some tests failed.
+LK-H2 hold unbounded: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=4397ee0c30cf2819 sha_mut=7f1606a1096a3fcb restored=True
+    00:05 +23 -2: reset forgets every lockout key                                                                                                                                                          
+    00:05 +24 -2: reset forgets every lockout key                                                                                                                                                          
+    00:05 +24 -2: Some tests failed.
+LK-H3 hold restarts on every failed read: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=4397ee0c30cf2819 sha_mut=9d2b2cf4bbe22166 restored=True
+    00:05 +23 -2: reset forgets every lockout key                                                                                                                                                          
+    00:05 +24 -2: reset forgets every lockout key                                                                                                                                                          
+    00:05 +24 -2: Some tests failed.
+LK-H4 proven read does not end the episode: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=4397ee0c30cf2819 sha_mut=a629ad4456629043 restored=True
+    00:05 +24 -1: reset forgets every lockout key                                                                                                                                                          
+    00:05 +25 -1: reset forgets every lockout key                                                                                                                                                          
+    00:05 +25 -1: Some tests failed.
+LK-W1 waiter never gives up on a stuck holder: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=4397ee0c30cf2819 sha_mut=78f5105b495bdbf5 restored=True
+    00:09 +23 -2: reset forgets every lockout key                                                                                                                                                          
+    00:09 +24 -2: reset forgets every lockout key                                                                                                                                                          
+    00:09 +24 -2: Some tests failed.
+LK-C1 lone length not read as cut short: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=4397ee0c30cf2819 sha_mut=7dec80952e1b81ed restored=True
+    00:05 +24 -1: reset forgets every lockout key                                                                                                                                                          
+    00:05 +25 -1: reset forgets every lockout key                                                                                                                                                          
+    00:05 +25 -1: Some tests failed.
+LK-D1 reset deletes the length in parallel: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=4397ee0c30cf2819 sha_mut=cb025081a5c0934d restored=True
+    00:05 +24 -1: reset forgets every lockout key                                                                                                                                                          
+    00:05 +25 -1: reset forgets every lockout key                                                                                                                                                          
+    00:05 +25 -1: Some tests failed.
+LK-D2 clear deletes the length last: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=4397ee0c30cf2819 sha_mut=ebc3b35e00fe8ced restored=True
+    00:05 +24 -1: reset forgets every lockout key                                                                                                                                                          
+    00:05 +25 -1: reset forgets every lockout key                                                                                                                                                          
+    00:05 +25 -1: Some tests failed.
+LK-W2 stuck holder never recorded: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=4397ee0c30cf2819 sha_mut=bd85f00c141756b9 restored=True
+    00:05 +24 -1: reset forgets every lockout key                                                                                                                                                          
+    00:05 +25 -1: reset forgets every lockout key                                                                                                                                                          
+    00:05 +25 -1: Some tests failed.
+LK-W3 new callers queue behind a stuck holder: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=4397ee0c30cf2819 sha_mut=5396590d8a3030a6 restored=True
+    00:05 +24 -1: reset forgets every lockout key                                                                                                                                                          
+    00:05 +25 -1: reset forgets every lockout key                                                                                                                                                          
+    00:05 +25 -1: Some tests failed.
+LK-E1 a new lockout inherits the old hold episode: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=4397ee0c30cf2819 sha_mut=940e5f19743f093b restored=True
+    00:05 +24 -1: reset forgets every lockout key                                                                                                                                                          
+    00:05 +25 -1: reset forgets every lockout key                                                                                                                                                          
+    00:05 +25 -1: Some tests failed.
+# baseline after restore: exit=0 :: 00:05 +26: All tests passed!
+# survivors=0

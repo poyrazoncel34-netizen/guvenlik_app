@@ -1,0 +1,16 @@
+# counterfactual run 2026-10-09T19:17:05 HEAD=3128e4804b4da786ae3b4bcde1e185a669eb8759
+M5-a wrapper closes before the notice (NEW test): KILLED file=lib/screens/check_in_screen.dart sha_orig=f038c1ec1d15bed1 sha_mut=6549ce625987ae2d restored=True
+    To run this test again: /opt/homebrew/share/flutter/bin/cache/dart-sdk/bin/dart test /Users/poyrazoncel/Projects/guvenlik_app/test/core/widgets/background_protection_tap_test.dart -p vm --plain-name 'both safety-timer screens wrap their degraded notice in it'
+    
+    00:01 +1 -1: Some tests failed.
+M5-a' same mutant vs the OLD distance test (expected to SURVIVE): SURVIVED file=lib/screens/check_in_screen.dart sha_orig=f038c1ec1d15bed1 sha_mut=6549ce625987ae2d restored=True
+    00:01 +1: both safety-timer screens wrap their degraded notice in it                                                                                                                                   
+    00:01 +2: both safety-timer screens wrap their degraded notice in it                                                                                                                                   
+    00:01 +2: All tests passed!
+M5-b manual call in the exact-alarm refusal opens nothing: KILLED file=lib/core/widgets/emergency_failure_dialog.dart sha_orig=0efa57fec6ba1a0e sha_mut=f487d2fb6defa9d1 restored=True
+    00:04 +1 -1: control: a refused CALL_PHONE keeps the dialer countdown                                                                                                                                  
+    00:04 +1 -1: (tearDownAll)                                                                                                                                                                             
+    00:04 +1 -1: Some tests failed.
+# baseline after restore: exit=0 :: 00:02 +6: All tests passed!
+# survivors=1
+# M5-a' SURVIVED by design: it shows the old distance check passed a wrapper that closes before the notice; the temporary copy of the old test was deleted after the run

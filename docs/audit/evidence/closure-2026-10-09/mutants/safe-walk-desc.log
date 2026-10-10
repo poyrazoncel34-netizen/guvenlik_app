@@ -1,0 +1,11 @@
+# counterfactual run 2026-10-09T19:15:17 HEAD=6e13bab881f6996c6b537bba9a00fb9ff5ddc4f5
+SW-1 code grace changes, copy does not: KILLED file=lib/core/services/check_in_service.dart sha_orig=f32a6d8151ab2e71 sha_mut=a1b15f171db0f6dd restored=True
+    To run this test again: /opt/homebrew/share/flutter/bin/cache/dart-sdk/bin/dart test /Users/poyrazoncel/Projects/guvenlik_app/test/screens/safe_walk_desc_copy_test.dart -p vm --plain-name 'the Safe Walk intro names the grace and the best-effort warning, and no longer ties the flow to an open app'
+    
+    00:00 +0 -1: Some tests failed.
+SW-2 old 'uygulama acikken' copy: KILLED file=assets/translations/tr-TR.json sha_orig=d54d38dbdb703385 sha_mut=b8d94a46a7f4e6fe restored=True
+    To run this test again: /opt/homebrew/share/flutter/bin/cache/dart-sdk/bin/dart test /Users/poyrazoncel/Projects/guvenlik_app/test/screens/safe_walk_desc_copy_test.dart -p vm --plain-name 'the Safe Walk intro names the grace and the best-effort warning, and no longer ties the flow to an open app'
+    
+    00:00 +0 -1: Some tests failed.
+# baseline after restore: exit=0 :: 00:00 +1: All tests passed!
+# survivors=0
