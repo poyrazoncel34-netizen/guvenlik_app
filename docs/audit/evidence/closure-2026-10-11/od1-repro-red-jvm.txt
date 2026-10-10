@@ -1,0 +1,10 @@
+OD-1 REPRODUCTION on HEAD 1b76466 (no source change) -- 5 tests, 3 failures
+
+RED    a wall clock jumped forward does not make a live session overdue
+       java.lang.AssertionError: expected:<ARMED> but was:<MANUAL_ACTION_REQUIRED>
+GREEN  harness sanity -- an un-aged session is not dispatchable
+GREEN  both paths still dial a session only thirty seconds past the deadline
+RED    a wall clock set back does not block a monotonically due dispatch
+       java.lang.AssertionError: expected:<[+905001234567]> but was:<[]>
+RED    reconcile and the alarm receiver agree six minutes past the deadline
+       java.lang.AssertionError: the two paths must not disagree about the same record expected:<MANUAL_ACTION_REQUIRED> but was:<REQUEST_SUBMITTED_UNCONFIRMED>

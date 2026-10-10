@@ -1,0 +1,90 @@
+# counterfactual run 2026-10-10T23:20:58 HEAD=1b764664a2b1fceb45624d903b5ef0c1973ce666
+OD1-M1-claimAndDispatch-gate-removed: KILLED file=android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/EmergencySessionCoordinator.kt sha_orig=4a1a0b7dc00c322b sha_mut=cae89c59d4abe776 restored=True
+    EmergencySessionCoordinatorInterleavingTest > randomized interleavings never break the dispatch invariants FAILED
+    EmergencySessionCoordinatorTest > an unpostable overdue offer ends the session instead of dialling FAILED
+    EmergencySessionCoordinatorTest > clock change long after a missed deadline offers instead of dialling FAILED
+OD1-M2-reconcile-gate-removed: SPEC-ERROR snippet count=0
+OD1-M3-wall-clock-made-authority: KILLED file=android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/SessionClockAuthority.kt sha_orig=4c9f3b9eb68b8c3c sha_mut=7b0c541cf2b00571 restored=True
+    EmergencySessionCoordinatorInterleavingTest > randomized interleavings never break the dispatch invariants FAILED
+    EmergencySessionCoordinatorTest > clock set back at the deadline does not hide a monotonically due dispatch FAILED
+    EmergencySessionCoordinatorTest > clock change long after a missed deadline offers instead of dialling FAILED
+OD1-M4-overdue-still-dispatches: KILLED file=android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/OverdueDispatchPolicy.kt sha_orig=7f2e45cf007a4ba8 sha_mut=aa6837f6c4a1cd63 restored=True
+    EmergencySessionCoordinatorInterleavingTest > randomized interleavings never break the dispatch invariants FAILED
+    EmergencySessionCoordinatorTest > an unpostable overdue offer ends the session instead of dialling FAILED
+    EmergencySessionCoordinatorTest > clock change long after a missed deadline offers instead of dialling FAILED
+OD1-M5-boundary-off-by-one-permissive: KILLED file=android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/OverdueDispatchPolicy.kt sha_orig=7f2e45cf007a4ba8 sha_mut=eaf669c1cefa2cde restored=True
+    EmergencySessionCoordinatorTest > an unpostable overdue offer ends the session instead of dialling FAILED
+    EmergencySessionCoordinatorTest > a throwing notifier cannot make an overdue session dial FAILED
+    EmergencySessionCoordinatorTest > a stale CLAIMED session recovered after process death is offered not dialled FAILED
+OD1-M5b-boundary-off-by-one-restrictive: KILLED file=android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/OverdueDispatchPolicy.kt sha_orig=7f2e45cf007a4ba8 sha_mut=f923292378033a47 restored=True
+    EmergencySessionCoordinatorTest > exactly at the limit still dials FAILED
+    OverdueDispatchParityTest > reboot recovery applies the same limit on the only clock it has FAILED
+    OverdueDispatchParityTest > every path reaches the same verdict at every boundary age FAILED
+OD1-M5c-not-due-collapses-into-dispatch: KILLED file=android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/OverdueDispatchPolicy.kt sha_orig=7f2e45cf007a4ba8 sha_mut=a3f5aac22faac669 restored=True
+    OverdueDispatchParityTest > reboot recovery applies the same limit on the only clock it has FAILED
+    OverdueDispatchParityTest > every path reaches the same verdict at every boundary age FAILED
+    OverdueDispatchPolicyTest > the age boundary is inclusive at the limit FAILED
+OD1-M6-terminal-session-redispatched: KILLED file=android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/EmergencySessionCoordinator.kt sha_orig=4a1a0b7dc00c322b sha_mut=a262f58883eaf545 restored=True
+    EmergencySessionCoordinatorTest > process death after terminal commit does not repeat Telecom request FAILED
+    EmergencySessionCoordinatorTest > duplicate normal delivery submits at most one call request FAILED
+    EmergencySessionCoordinatorTest > race loser reads durable terminal outcome without a second request FAILED
+OD1-M7-duplicate-receiver-suppression-removed: KILLED file=android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/EmergencySessionCoordinator.kt sha_orig=4a1a0b7dc00c322b sha_mut=105090cd4df88550 restored=True
+    EmergencySessionCoordinatorTest > submitted request plus terminal commit failure is not duplicated in process FAILED
+    EmergencySessionCoordinatorInterleavingTest > randomized interleavings never break the dispatch invariants FAILED
+OD1-M8-unpostable-offer-falls-back-to-dialling: KILLED file=android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/EmergencySessionCoordinator.kt sha_orig=4a1a0b7dc00c322b sha_mut=73a7f49653c21139 restored=True
+    EmergencySessionCoordinatorTest > an unpostable overdue offer ends the session instead of dialling FAILED
+    EmergencySessionCoordinatorTest > a throwing notifier cannot make an overdue session dial FAILED
+OD1-M9-stale-wall-projection-not-corrected: KILLED file=android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/EmergencySessionCoordinator.kt sha_orig=4a1a0b7dc00c322b sha_mut=79bdf4c74fbd3122 restored=True
+    OverdueDispatchParityTest > a forward wall jump keeps the session armed, rescheduled and honestly dated FAILED
+OD1-M10-boot-broadcast-rebases-proven-same-boot: SPEC-ERROR snippet count=0
+OD1-M11-same-boot-proof-weakened-to-unknown: SPEC-ERROR snippet count=0
+OD1-M12-same-boot-ignores-backwards-elapsed-clock: SPEC-ERROR snippet count=0
+# baseline after restore: exit=0 :: n/a
+# survivors=4
+# counterfactual run 2026-10-10T23:22:05 HEAD=1b764664a2b1fceb45624d903b5ef0c1973ce666
+OD1-M1-claimAndDispatch-gate-removed: KILLED file=android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/EmergencySessionCoordinator.kt sha_orig=4a1a0b7dc00c322b sha_mut=cae89c59d4abe776 restored=True
+    OverdueDispatchParityTest > process start reconcile after a force stop obeys the limit FAILED
+    OverdueDispatchParityTest > a record without a monotonic stamp still obeys the limit FAILED
+    OverdueDispatchParityTest > repeated delivery of an overdue record offers once and never dials FAILED
+OD1-M2-reconcile-gate-removed: KILLED file=android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/EmergencySessionCoordinator.kt sha_orig=4a1a0b7dc00c322b sha_mut=f38f1893fb6dc18d restored=True
+    OverdueDispatchParityTest > a forward wall jump keeps the session armed, rescheduled and honestly dated FAILED
+OD1-M3-wall-clock-made-authority: KILLED file=android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/SessionClockAuthority.kt sha_orig=4c9f3b9eb68b8c3c sha_mut=7b0c541cf2b00571 restored=True
+    OverdueDispatchParityTest > property -- a wall clock jump inside one boot changes no verdict FAILED
+    OverdueDispatchParityTest > a boot broadcast in the same boot does not rebase a live elapsed deadline FAILED
+    OverdueDispatchParityTest > a wall clock jumped forward does not make a live session overdue FAILED
+OD1-M4-overdue-still-dispatches: KILLED file=android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/OverdueDispatchPolicy.kt sha_orig=7f2e45cf007a4ba8 sha_mut=aa6837f6c4a1cd63 restored=True
+    EmergencySessionCoordinatorInterleavingTest > randomized interleavings never break the dispatch invariants FAILED
+    EmergencySessionCoordinatorTest > an unpostable overdue offer ends the session instead of dialling FAILED
+    EmergencySessionCoordinatorTest > clock change long after a missed deadline offers instead of dialling FAILED
+OD1-M5-boundary-off-by-one-permissive: KILLED file=android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/OverdueDispatchPolicy.kt sha_orig=7f2e45cf007a4ba8 sha_mut=eaf669c1cefa2cde restored=True
+    EmergencySessionCoordinatorTest > an unpostable overdue offer ends the session instead of dialling FAILED
+    EmergencySessionCoordinatorTest > a throwing notifier cannot make an overdue session dial FAILED
+    EmergencySessionCoordinatorTest > a stale CLAIMED session recovered after process death is offered not dialled FAILED
+OD1-M5b-boundary-off-by-one-restrictive: KILLED file=android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/OverdueDispatchPolicy.kt sha_orig=7f2e45cf007a4ba8 sha_mut=f923292378033a47 restored=True
+    EmergencySessionCoordinatorTest > exactly at the limit still dials FAILED
+    OverdueDispatchParityTest > reboot recovery applies the same limit on the only clock it has FAILED
+    OverdueDispatchParityTest > every path reaches the same verdict at every boundary age FAILED
+OD1-M5c-not-due-collapses-into-dispatch: KILLED file=android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/OverdueDispatchPolicy.kt sha_orig=7f2e45cf007a4ba8 sha_mut=a3f5aac22faac669 restored=True
+    OverdueDispatchParityTest > reboot recovery applies the same limit on the only clock it has FAILED
+    OverdueDispatchParityTest > every path reaches the same verdict at every boundary age FAILED
+    OverdueDispatchPolicyTest > the age boundary is inclusive at the limit FAILED
+OD1-M6-terminal-session-redispatched: KILLED file=android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/EmergencySessionCoordinator.kt sha_orig=4a1a0b7dc00c322b sha_mut=a262f58883eaf545 restored=True
+    EmergencySessionCoordinatorTest > process death after terminal commit does not repeat Telecom request FAILED
+    EmergencySessionCoordinatorTest > duplicate normal delivery submits at most one call request FAILED
+    EmergencySessionCoordinatorTest > race loser reads durable terminal outcome without a second request FAILED
+OD1-M7-duplicate-receiver-suppression-removed: KILLED file=android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/EmergencySessionCoordinator.kt sha_orig=4a1a0b7dc00c322b sha_mut=105090cd4df88550 restored=True
+    EmergencySessionCoordinatorTest > submitted request plus terminal commit failure is not duplicated in process FAILED
+    EmergencySessionCoordinatorInterleavingTest > randomized interleavings never break the dispatch invariants FAILED
+OD1-M8-unpostable-offer-falls-back-to-dialling: KILLED file=android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/EmergencySessionCoordinator.kt sha_orig=4a1a0b7dc00c322b sha_mut=73a7f49653c21139 restored=True
+    EmergencySessionCoordinatorTest > an unpostable overdue offer ends the session instead of dialling FAILED
+    EmergencySessionCoordinatorTest > a throwing notifier cannot make an overdue session dial FAILED
+OD1-M9-stale-wall-projection-not-corrected: KILLED file=android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/EmergencySessionCoordinator.kt sha_orig=4a1a0b7dc00c322b sha_mut=79bdf4c74fbd3122 restored=True
+    OverdueDispatchParityTest > a forward wall jump keeps the session armed, rescheduled and honestly dated FAILED
+OD1-M10-boot-broadcast-rebases-proven-same-boot: KILLED file=android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/EmergencySessionCoordinator.kt sha_orig=4a1a0b7dc00c322b sha_mut=8c81fd8955f89905 restored=True
+    OverdueDispatchParityTest > a boot broadcast in the same boot does not rebase a live elapsed deadline FAILED
+OD1-M11-same-boot-proof-weakened-to-unknown: KILLED file=android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/SessionClockAuthority.kt sha_orig=4c9f3b9eb68b8c3c sha_mut=808db8b136bf7bd7 restored=True
+    EmergencySessionCoordinatorInterleavingTest > randomized interleavings never break the dispatch invariants FAILED
+OD1-M12-same-boot-ignores-backwards-elapsed-clock: KILLED file=android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/SessionClockAuthority.kt sha_orig=4c9f3b9eb68b8c3c sha_mut=74d65ba91be93dfe restored=True
+    OverdueDispatchParityTest > a stamp from the future is not proof of the current boot FAILED
+# baseline after restore: exit=0 :: n/a
+# survivors=0

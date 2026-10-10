@@ -1,0 +1,184 @@
+[
+ {
+  "id": "OD1-M1-claimAndDispatch-gate-removed",
+  "file": "android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/EmergencySessionCoordinator.kt",
+  "kind": "gradle",
+  "tests": [
+   "com.poyrazoncel.korubeni.emergency.OverdueDispatchParityTest",
+   "com.poyrazoncel.korubeni.emergency.OverdueDispatchPolicyTest",
+   "com.poyrazoncel.korubeni.emergency.EmergencySessionCoordinatorTest",
+   "com.poyrazoncel.korubeni.emergency.EmergencySessionCoordinatorInterleavingTest"
+  ],
+  "old": "            OverdueDispatchPolicy.Verdict.OFFER_MANUAL -> {\n                offerOverdueInsteadOfDialling(current)",
+  "new": "            OverdueDispatchPolicy.Verdict.OFFER_MANUAL -> if (false) {\n                offerOverdueInsteadOfDialling(current)"
+ },
+ {
+  "id": "OD1-M2-reconcile-gate-removed",
+  "file": "android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/EmergencySessionCoordinator.kt",
+  "kind": "gradle",
+  "tests": [
+   "com.poyrazoncel.korubeni.emergency.OverdueDispatchParityTest",
+   "com.poyrazoncel.korubeni.emergency.OverdueDispatchPolicyTest",
+   "com.poyrazoncel.korubeni.emergency.EmergencySessionCoordinatorTest",
+   "com.poyrazoncel.korubeni.emergency.EmergencySessionCoordinatorInterleavingTest"
+  ],
+  "old": "        val freshness = clocks.deadlineDecision(envelope)\n        if (freshness.verdict != OverdueDispatchPolicy.Verdict.NOT_DUE) {",
+  "new": "        val freshness = clocks.deadlineDecision(envelope)\n        if (wallClockMs() >= envelope.finalDeadlineMs) {"
+ },
+ {
+  "id": "OD1-M3-wall-clock-made-authority",
+  "file": "android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/SessionClockAuthority.kt",
+  "kind": "gradle",
+  "tests": [
+   "com.poyrazoncel.korubeni.emergency.OverdueDispatchParityTest",
+   "com.poyrazoncel.korubeni.emergency.OverdueDispatchPolicyTest",
+   "com.poyrazoncel.korubeni.emergency.EmergencySessionCoordinatorTest",
+   "com.poyrazoncel.korubeni.emergency.EmergencySessionCoordinatorInterleavingTest"
+  ],
+  "old": "        monotonicOverdueMs = if (\n            envelope.elapsedStampMs >= 0L && !isFromAnotherBoot(envelope)\n        ) {\n            elapsedRealtimeMs() - envelope.elapsedRealtimeDeadlineMs\n        } else {\n            null\n        },",
+  "new": "        monotonicOverdueMs = null,"
+ },
+ {
+  "id": "OD1-M4-overdue-still-dispatches",
+  "file": "android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/OverdueDispatchPolicy.kt",
+  "kind": "gradle",
+  "tests": [
+   "com.poyrazoncel.korubeni.emergency.OverdueDispatchParityTest",
+   "com.poyrazoncel.korubeni.emergency.OverdueDispatchPolicyTest",
+   "com.poyrazoncel.korubeni.emergency.EmergencySessionCoordinatorTest",
+   "com.poyrazoncel.korubeni.emergency.EmergencySessionCoordinatorInterleavingTest"
+  ],
+  "old": "            overdueMs <= MAX_OVERDUE_DISPATCH_MS -> Verdict.DISPATCH\n            else -> Verdict.OFFER_MANUAL",
+  "new": "            else -> Verdict.DISPATCH"
+ },
+ {
+  "id": "OD1-M5-boundary-off-by-one-permissive",
+  "file": "android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/OverdueDispatchPolicy.kt",
+  "kind": "gradle",
+  "tests": [
+   "com.poyrazoncel.korubeni.emergency.OverdueDispatchParityTest",
+   "com.poyrazoncel.korubeni.emergency.OverdueDispatchPolicyTest",
+   "com.poyrazoncel.korubeni.emergency.EmergencySessionCoordinatorTest",
+   "com.poyrazoncel.korubeni.emergency.EmergencySessionCoordinatorInterleavingTest"
+  ],
+  "old": "            overdueMs <= MAX_OVERDUE_DISPATCH_MS -> Verdict.DISPATCH",
+  "new": "            overdueMs <= MAX_OVERDUE_DISPATCH_MS + 1L -> Verdict.DISPATCH"
+ },
+ {
+  "id": "OD1-M5b-boundary-off-by-one-restrictive",
+  "file": "android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/OverdueDispatchPolicy.kt",
+  "kind": "gradle",
+  "tests": [
+   "com.poyrazoncel.korubeni.emergency.OverdueDispatchParityTest",
+   "com.poyrazoncel.korubeni.emergency.OverdueDispatchPolicyTest",
+   "com.poyrazoncel.korubeni.emergency.EmergencySessionCoordinatorTest",
+   "com.poyrazoncel.korubeni.emergency.EmergencySessionCoordinatorInterleavingTest"
+  ],
+  "old": "            overdueMs <= MAX_OVERDUE_DISPATCH_MS -> Verdict.DISPATCH",
+  "new": "            overdueMs < MAX_OVERDUE_DISPATCH_MS -> Verdict.DISPATCH"
+ },
+ {
+  "id": "OD1-M5c-not-due-collapses-into-dispatch",
+  "file": "android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/OverdueDispatchPolicy.kt",
+  "kind": "gradle",
+  "tests": [
+   "com.poyrazoncel.korubeni.emergency.OverdueDispatchParityTest",
+   "com.poyrazoncel.korubeni.emergency.OverdueDispatchPolicyTest",
+   "com.poyrazoncel.korubeni.emergency.EmergencySessionCoordinatorTest",
+   "com.poyrazoncel.korubeni.emergency.EmergencySessionCoordinatorInterleavingTest"
+  ],
+  "old": "            overdueMs < 0L -> Verdict.NOT_DUE",
+  "new": "            overdueMs < -1L -> Verdict.NOT_DUE"
+ },
+ {
+  "id": "OD1-M6-terminal-session-redispatched",
+  "file": "android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/EmergencySessionCoordinator.kt",
+  "kind": "gradle",
+  "tests": [
+   "com.poyrazoncel.korubeni.emergency.OverdueDispatchParityTest",
+   "com.poyrazoncel.korubeni.emergency.OverdueDispatchPolicyTest",
+   "com.poyrazoncel.korubeni.emergency.EmergencySessionCoordinatorTest",
+   "com.poyrazoncel.korubeni.emergency.EmergencySessionCoordinatorInterleavingTest"
+  ],
+  "old": "        if (current.lifecycleState.isTerminal) {",
+  "new": "        if (current.lifecycleState == LifecycleState.CORRUPTED) {"
+ },
+ {
+  "id": "OD1-M7-duplicate-receiver-suppression-removed",
+  "file": "android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/EmergencySessionCoordinator.kt",
+  "kind": "gradle",
+  "tests": [
+   "com.poyrazoncel.korubeni.emergency.OverdueDispatchParityTest",
+   "com.poyrazoncel.korubeni.emergency.OverdueDispatchPolicyTest",
+   "com.poyrazoncel.korubeni.emergency.EmergencySessionCoordinatorTest",
+   "com.poyrazoncel.korubeni.emergency.EmergencySessionCoordinatorInterleavingTest"
+  ],
+  "old": "        val processKey = token.processKey()\n        if (processKey in submittedInProcess) {\n            return@synchronized DispatchResult.notAttempted(token, LifecycleState.CLAIMED)\n        }",
+  "new": "        val processKey = token.processKey()"
+ },
+ {
+  "id": "OD1-M8-unpostable-offer-falls-back-to-dialling",
+  "file": "android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/EmergencySessionCoordinator.kt",
+  "kind": "gradle",
+  "tests": [
+   "com.poyrazoncel.korubeni.emergency.OverdueDispatchParityTest",
+   "com.poyrazoncel.korubeni.emergency.OverdueDispatchPolicyTest",
+   "com.poyrazoncel.korubeni.emergency.EmergencySessionCoordinatorTest",
+   "com.poyrazoncel.korubeni.emergency.EmergencySessionCoordinatorInterleavingTest"
+  ],
+  "old": "                lifecycleState = if (posted) {\n                    LifecycleState.MANUAL_ACTION_REQUIRED\n                } else {\n                    LifecycleState.REQUEST_FAILED\n                },",
+  "new": "                lifecycleState = LifecycleState.MANUAL_ACTION_REQUIRED,"
+ },
+ {
+  "id": "OD1-M9-stale-wall-projection-not-corrected",
+  "file": "android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/EmergencySessionCoordinator.kt",
+  "kind": "gradle",
+  "tests": [
+   "com.poyrazoncel.korubeni.emergency.OverdueDispatchParityTest",
+   "com.poyrazoncel.korubeni.emergency.OverdueDispatchPolicyTest",
+   "com.poyrazoncel.korubeni.emergency.EmergencySessionCoordinatorTest",
+   "com.poyrazoncel.korubeni.emergency.EmergencySessionCoordinatorInterleavingTest"
+  ],
+  "old": "            scheduleBestEffort(rebasedWallFromElapsed(envelope) ?: envelope)",
+  "new": "            scheduleBestEffort(envelope)"
+ },
+ {
+  "id": "OD1-M10-boot-broadcast-rebases-proven-same-boot",
+  "file": "android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/EmergencySessionCoordinator.kt",
+  "kind": "gradle",
+  "tests": [
+   "com.poyrazoncel.korubeni.emergency.OverdueDispatchParityTest",
+   "com.poyrazoncel.korubeni.emergency.OverdueDispatchPolicyTest",
+   "com.poyrazoncel.korubeni.emergency.EmergencySessionCoordinatorTest",
+   "com.poyrazoncel.korubeni.emergency.EmergencySessionCoordinatorInterleavingTest"
+  ],
+  "old": "        val keepElapsed = if (alwaysRebaseElapsed) {\n            clocks.isProvenSameBoot(envelope)\n        } else {",
+  "new": "        val keepElapsed = if (alwaysRebaseElapsed) {\n            false\n        } else {"
+ },
+ {
+  "id": "OD1-M11-same-boot-proof-weakened-to-unknown",
+  "file": "android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/SessionClockAuthority.kt",
+  "kind": "gradle",
+  "tests": [
+   "com.poyrazoncel.korubeni.emergency.OverdueDispatchParityTest",
+   "com.poyrazoncel.korubeni.emergency.OverdueDispatchPolicyTest",
+   "com.poyrazoncel.korubeni.emergency.EmergencySessionCoordinatorTest",
+   "com.poyrazoncel.korubeni.emergency.EmergencySessionCoordinatorInterleavingTest"
+  ],
+  "old": "        val current = bootCount()\n        if (current != UNKNOWN_BOOT_COUNT && envelope.elapsedBootCount != UNKNOWN_BOOT_COUNT) {\n            return envelope.elapsedBootCount == current\n        }\n        return false\n    }",
+  "new": "        val current = bootCount()\n        if (current != UNKNOWN_BOOT_COUNT && envelope.elapsedBootCount != UNKNOWN_BOOT_COUNT) {\n            return envelope.elapsedBootCount == current\n        }\n        return true\n    }"
+ },
+ {
+  "id": "OD1-M12-same-boot-ignores-backwards-elapsed-clock",
+  "file": "android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/SessionClockAuthority.kt",
+  "kind": "gradle",
+  "tests": [
+   "com.poyrazoncel.korubeni.emergency.OverdueDispatchParityTest",
+   "com.poyrazoncel.korubeni.emergency.OverdueDispatchPolicyTest",
+   "com.poyrazoncel.korubeni.emergency.EmergencySessionCoordinatorTest",
+   "com.poyrazoncel.korubeni.emergency.EmergencySessionCoordinatorInterleavingTest"
+  ],
+  "old": "        if (envelope.elapsedStampMs < 0L) return false\n        if (elapsedRealtimeMs() < envelope.elapsedStampMs) return false\n        val id = bootId()",
+  "new": "        if (envelope.elapsedStampMs < 0L) return false\n        val id = bootId()"
+ }
+]

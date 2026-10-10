@@ -10,6 +10,19 @@ Surumleme: `pubspec.yaml` 1.0.0+1'de SABITTIR; gercek `versionCode`
 ## Yayinlanmadi
 
 ### Duzeltildi
+- Suresi gecmis bir guvenlik oturumu, hangi yolun once ulastigina gore farkli
+  davraniyordu: uygulamayi acmak 5 dakikadan fazla gecikmis bir oturumu elle
+  aramaya birakirken, alarmin kendisi saatler sonra bile otomatik arama
+  yapabiliyordu. Artik butun yollar ayni kurali uyguluyor: 5 dakikaya kadar
+  gecikmede otomatik arama yapilir, sonrasinda arama size birakilir.
+- Telefonun saati aktif bir Kontrol Noktasi veya Guvenli Yuruyus sirasinda
+  degisirse sure yanlis degerlendirilebiliyordu: saat ileri alininca hala suresi
+  olan bir oturum "cok gecikti" sayilip sonlandiriliyor, geri alininca suresi
+  gercekten dolmus bir oturum hic tetiklenmiyordu. Sure artik telefonun saatine
+  degil, uykuyu da sayan kesintisiz sayaca gore olculuyor.
+- Uygulama zorla kapatildiktan sonra yeniden acilirken telefonun saati de
+  degismisse, hala suren bir oturum aninda "suresi doldu" sayilip acil kisi
+  saatler once aranabiliyordu.
 - Telefonun saati panik geri sayimi sirasinda ileri alinirsa geri sayim aninda
   bitiyor, PIN ile iptal ekrani kayboluyor ve arama ekrani aciliyordu; otomatik
   arama ise yine asil surede gidiyordu. Geri sayim artik saat degisikliklerinden

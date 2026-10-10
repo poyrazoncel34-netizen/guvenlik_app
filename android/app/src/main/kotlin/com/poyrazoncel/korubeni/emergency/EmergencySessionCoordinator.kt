@@ -25,6 +25,14 @@ class EmergencySessionCoordinator(
     /** Kernel boot id: the second identity when [bootCount] is unreadable. */
     private val bootId: () -> String? = { null },
 ) {
+    /** Which clock may be trusted for a record, and what its age means. */
+    private val clocks = SessionClockAuthority(
+        wallClockMs = { wallClockMs() },
+        elapsedRealtimeMs = { elapsedRealtimeMs() },
+        bootCount = { currentBootCount() },
+        bootId = { currentBootId() },
+    )
+
     fun arm(request: ArmRequest): ArmResult = synchronized(PROCESS_LOCK) {
         if (request.protocolVersion != EMERGENCY_PROTOCOL_VERSION) {
             return@synchronized ArmResult.Rejected("unsupportedProtocol")
@@ -283,8 +291,36 @@ class EmergencySessionCoordinator(
         if (current.lifecycleState !in setOf(LifecycleState.ARMED, LifecycleState.CLAIMED)) {
             return@synchronized DispatchResult.notAttempted(token, current.lifecycleState)
         }
-        if (current.lifecycleState == LifecycleState.ARMED && wallClockMs() < current.finalDeadlineMs) {
-            return@synchronized DispatchResult.notAttempted(token, LifecycleState.ARMED)
+        // OD-1: every path that can dial goes through OverdueDispatchPolicy, and
+        // this is the one most Android components reach -- both alarm receivers
+        // and the Dart dispatch channel. It used to ask only "has the wall clock
+        // passed the deadline", which both let an hours-late delivery call the
+        // contact and refused an on-time ELAPSED_REALTIME alarm whenever the
+        // user had set the wall clock back.
+        val freshness = clocks.deadlineDecision(current)
+        when (freshness.verdict) {
+            OverdueDispatchPolicy.Verdict.NOT_DUE ->
+                // CLAIMED is deliberately exempt: claimAndDispatch rewrites the
+                // deadlines to now + DISPATCH_RETRY_DELAY_MS for its one bounded
+                // retry, so a CLAIMED record can legitimately read "not due" and
+                // a receiver arriving early should still finish the dispatch that
+                // already claimed. Refusing it would strand the claim.
+                if (current.lifecycleState == LifecycleState.ARMED) {
+                    return@synchronized DispatchResult.notAttempted(token, LifecycleState.ARMED)
+                }
+            OverdueDispatchPolicy.Verdict.OFFER_MANUAL -> {
+                offerOverdueInsteadOfDialling(current)
+                val offered = (store.read(token.slot) as? SessionRead.Present)?.envelope
+                return@synchronized DispatchResult(
+                    token = token,
+                    callRequestOutcome = offered?.callRequestOutcome
+                        ?: CallRequestOutcome.NOT_ATTEMPTED,
+                    fallbackOutcome = offered?.fallbackOutcome
+                        ?: FallbackOutcome.NOT_ATTEMPTED,
+                    terminalState = offered?.lifecycleState,
+                )
+            }
+            OverdueDispatchPolicy.Verdict.DISPATCH -> Unit
         }
 
         val claimed = if (current.lifecycleState == LifecycleState.ARMED) {
@@ -590,16 +626,14 @@ class EmergencySessionCoordinator(
                     alwaysRebaseElapsed = rebaseElapsedFromWall,
                 )
                 LifecycleState.CLAIMED -> {
-                    if (wallClockMs() - envelope.finalDeadlineMs > MAX_OVERDUE_DISPATCH_MS) {
-                        // CLAIMED is a durable uncertainty boundary, not
-                        // timeless permission to call. A process may die after
-                        // the claim commit but before any external side effect;
-                        // reopening days later must follow the same freshness
-                        // policy as an overdue ARMED session.
-                        offerOverdueInsteadOfDialling(envelope)
-                    } else {
-                        claimAndDispatch(envelope.token)
-                    }
+                    // CLAIMED is a durable uncertainty boundary, not timeless
+                    // permission to call. A process may die after the claim
+                    // commit but before any external side effect; reopening days
+                    // later must follow the same freshness policy as an overdue
+                    // ARMED session. claimAndDispatch now applies that policy
+                    // itself, so this branch no longer repeats the rule -- it
+                    // just hands the record over.
+                    claimAndDispatch(envelope.token)
                 }
                 LifecycleState.PREPARING -> {
                     // An interrupted arm is never promoted after reboot because
@@ -628,20 +662,42 @@ class EmergencySessionCoordinator(
         envelope: EmergencySessionEnvelope,
         alwaysRebaseElapsed: Boolean,
     ) {
-        if (wallClockMs() >= envelope.finalDeadlineMs) {
-            if (wallClockMs() - envelope.finalDeadlineMs > MAX_OVERDUE_DISPATCH_MS) {
-                offerOverdueInsteadOfDialling(envelope)
-            } else {
-                claimAndDispatch(envelope.token)
-            }
+        // OD-1: judged on the clock that may be trusted for THIS record, not
+        // always the wall clock. Inside one boot a wall clock the user moved
+        // forward used to terminate a session that still had time left, and one
+        // moved back used to hide a session that was genuinely due.
+        val freshness = clocks.deadlineDecision(envelope)
+        if (freshness.verdict != OverdueDispatchPolicy.Verdict.NOT_DUE) {
+            // claimAndDispatch applies the same verdict, including OFFER_MANUAL,
+            // so the decision is not restated here.
+            claimAndDispatch(envelope.token)
             return
         }
         // A record older than the boot identities is re-tied to this boot now,
         // while wall time is authoritative, so a later TIME_SET can tell (A-02r).
-        if (!alwaysRebaseElapsed && envelope.elapsedStampMs >= 0L &&
-            !isFromAnotherBoot(envelope)
-        ) {
-            scheduleBestEffort(envelope)
+        //
+        // OD-1c: `alwaysRebaseElapsed` used to mean literally always, so a boot
+        // broadcast rebuilt the elapsed deadline from the wall clock even when
+        // the boot identity proved the record belonged to THIS boot. With a
+        // wall clock that had moved while the app was stopped, that collapsed a
+        // live session's deadline to "due now" and called the contact hours
+        // early -- measured on API 36 against a real 2-hour Check-In, reachable
+        // because Android 15+ re-delivers BOOT_COMPLETED after a force-stop.
+        // A boot broadcast is now a reason to distrust an UNPROVEN stamp, not a
+        // licence to overwrite a proven one; after a real reboot the identity
+        // differs and the rebase below still runs.
+        val keepElapsed = if (alwaysRebaseElapsed) {
+            clocks.isProvenSameBoot(envelope)
+        } else {
+            envelope.elapsedStampMs >= 0L && !clocks.isFromAnotherBoot(envelope)
+        }
+        if (keepElapsed) {
+            // The monotonic clock is the authority for this record, so a wall
+            // deadline that has drifted away from it (a clock change the app was
+            // not running to hear) is stale projection data. Dart reads those
+            // wall deadlines for the countdown, so correct them here instead of
+            // waiting for a TIME_SET that already happened.
+            scheduleBestEffort(rebasedWallFromElapsed(envelope) ?: envelope)
             return
         }
         val elapsedNow = elapsedRealtimeMs()
@@ -673,32 +729,24 @@ class EmergencySessionCoordinator(
         ""
     }
 
+
+
+
+
     /**
-     * Whether [envelope]'s elapsed deadline was written in an earlier boot.
+     * [envelope] with its wall deadlines rebuilt from the monotonic remainder
+     * and durably committed, or null when nothing needed changing.
      *
-     * elapsedRealtime restarts at zero on every boot, so that deadline is then
-     * the previous boot's uptime plus the remaining time. Signals: an elapsed
-     * clock now BELOW the one recorded when the deadline was written (it never
-     * runs backwards within a boot), then the kernel boot id, then BOOT_COUNT.
-     * The kernel id is unique per boot by construction and decides whenever
-     * both sides have one; BOOT_COUNT depends on when Settings increments it
-     * relative to the boot receivers, and a count stamped before that increment
-     * made a later same-boot clock change look foreign (review of A-02r).
-     * With none known the historical same-boot assumption stands rather than a
-     * guess: treating an unknown as "another boot" would apply a same-boot clock
-     * change to the deadline, and which error to prefer is a product decision.
+     * The arithmetic lives in [SessionClockAuthority]; only the write is here,
+     * because that is the part that needs the store. A write failure is not
+     * fatal -- the monotonic deadline still decides, and the alarm is already
+     * scheduled on it.
      */
-    private fun isFromAnotherBoot(envelope: EmergencySessionEnvelope): Boolean {
-        if (envelope.elapsedStampMs >= 0L && elapsedRealtimeMs() < envelope.elapsedStampMs) {
-            return true
-        }
-        val id = currentBootId()
-        if (id.isNotEmpty() && envelope.elapsedBootId.isNotEmpty()) {
-            return envelope.elapsedBootId != id
-        }
-        val current = currentBootCount()
-        return current != UNKNOWN_BOOT_COUNT && envelope.elapsedBootCount != UNKNOWN_BOOT_COUNT &&
-            envelope.elapsedBootCount != current
+    private fun rebasedWallFromElapsed(
+        envelope: EmergencySessionEnvelope,
+    ): EmergencySessionEnvelope? {
+        val rebased = clocks.wallRebasedFromElapsed(envelope) ?: return null
+        return if (store.write(rebased)) rebased else null
     }
 
     /** Preserve elapsed duration when the user/network changes wall time. */
@@ -706,7 +754,7 @@ class EmergencySessionCoordinator(
         SessionSlot.entries.forEach { slot ->
             val envelope = (store.read(slot) as? SessionRead.Present)?.envelope ?: return@forEach
             if (envelope.lifecycleState != LifecycleState.ARMED) return@forEach
-            if (isFromAnotherBoot(envelope)) {
+            if (clocks.isFromAnotherBoot(envelope)) {
                 // TIME_SET of a new boot delivered before that boot's own
                 // reconcile (audit A-02): broadcast order is not guaranteed, so
                 // do here exactly what the boot reconcile would do.
@@ -717,29 +765,21 @@ class EmergencySessionCoordinator(
                 envelope.elapsedRealtimeDeadlineMs - elapsedRealtimeMs()
             ).coerceAtLeast(0L)
             if (remaining == 0L) {
-                if (wallClockMs() >= envelope.finalDeadlineMs) {
-                    claimAndDispatch(envelope.token)
-                    return@forEach
-                }
-                // Due by the monotonic clock, but a backward wall change has put
-                // the wall clock behind finalDeadlineMs, so claimAndDispatch's
-                // wall gate refuses it. When the ELAPSED alarm had already beaten
-                // this broadcast, nothing was left to retry and the session sat
-                // ARMED. Rebase to "due now" -- only on this previously stuck
-                // path -- with the reboot path's freshness policy, judged on the
-                // monotonic clock.
-                val overdueMs = elapsedRealtimeMs() - envelope.elapsedRealtimeDeadlineMs
-                if (overdueMs > MAX_OVERDUE_DISPATCH_MS) {
-                    offerOverdueInsteadOfDialling(envelope)
-                    return@forEach
-                }
+                // Due on the monotonic clock. A backward wall change can leave
+                // the wall deadline in the future, which used to make this the
+                // only path that could dispatch at all; claimAndDispatch now
+                // judges the same record on the same monotonic clock, so the
+                // wall deadline is rebased purely to keep the stored projection
+                // and the Dart countdown honest.
                 val now = wallClockMs()
-                store.write(
-                    envelope.copy(
-                        mainDeadlineMs = minOf(envelope.mainDeadlineMs, now),
-                        finalDeadlineMs = now,
-                    ),
-                )
+                if (now < envelope.finalDeadlineMs) {
+                    store.write(
+                        envelope.copy(
+                            mainDeadlineMs = minOf(envelope.mainDeadlineMs, now),
+                            finalDeadlineMs = now,
+                        ),
+                    )
+                }
                 claimAndDispatch(envelope.token)
                 return@forEach
             }
@@ -824,7 +864,9 @@ class EmergencySessionCoordinator(
          * [offerOverdueInsteadOfDialling] for why this is a balance and not a
          * safety maximum.
          */
-        const val MAX_OVERDUE_DISPATCH_MS = 5L * 60L * 1_000L
+        /** Kept as the historical name; the rule lives in [OverdueDispatchPolicy]. */
+        const val MAX_OVERDUE_DISPATCH_MS = OverdueDispatchPolicy.MAX_OVERDUE_DISPATCH_MS
+
 
         private fun isValidRandomId(value: String): Boolean =
             value.length in 8..128 && value.all {

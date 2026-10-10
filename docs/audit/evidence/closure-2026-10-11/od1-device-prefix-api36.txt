@@ -1,0 +1,153 @@
+# OD-1 DEVICE PROBE -- PRE-FIX (RC 1b76466, no OD-1 fix)
+# API 36  serial=emulator-5558  density=Physical density: 420
+# source HEAD 1b764664a2b1fceb45624d903b5ef0c1973ce666
+# app  apk sha256 5de7b4f67f2e02b8
+# test apk sha256 25fb9c969868f612
+# installed lastUpdateTime=2026-10-10 22:13:24
+# emulator-controlled number only: 05551234567 (emulator modem); no third party dialled
+
+===== mode=parity (telecom before=17) =====
+com.poyrazoncel.korubeni.emergency.OverdueSessionProbeTest:
+com.poyrazoncel.korubeni.emergency.OverdueSessionProbeTest:
+Error in bothPathsAgreeOnAnOverdueRecord(com.poyrazoncel.korubeni.emergency.OverdueSessionProbeTest):
+java.lang.AssertionError: the two paths disagree about the same record expected:<MANUAL_ACTION_REQUIRED> but was:<REQUEST_SUBMITTED_UNCONFIRMED>
+	at org.junit.Assert.fail(Assert.java:89)
+	at org.junit.Assert.failNotEquals(Assert.java:835)
+	at org.junit.Assert.assertEquals(Assert.java:120)
+	at com.poyrazoncel.korubeni.emergency.OverdueSessionProbeTest.bothPathsAgreeOnAnOverdueRecord(OverdueSessionProbeTest.kt:239)
+Time: 0.109
+There was 1 failure:
+1) bothPathsAgreeOnAnOverdueRecord(com.poyrazoncel.korubeni.emergency.OverdueSessionProbeTest)
+java.lang.AssertionError: the two paths disagree about the same record expected:<MANUAL_ACTION_REQUIRED> but was:<REQUEST_SUBMITTED_UNCONFIRMED>
+	at org.junit.Assert.fail(Assert.java:89)
+	at org.junit.Assert.failNotEquals(Assert.java:835)
+	at org.junit.Assert.assertEquals(Assert.java:120)
+	at com.poyrazoncel.korubeni.emergency.OverdueSessionProbeTest.bothPathsAgreeOnAnOverdueRecord(OverdueSessionProbeTest.kt:239)
+FAILURES!!!
+Tests run: 10,  Failures: 1
+telecom after=18 delta=1
+  10-10 22:13:36.713  6180  6205 I OverdueProbe: SEEDED state=armed overdueByMs=3600000 monotonicRemainingMs=null
+  10-10 22:13:36.737  6180  6205 I OverdueProbe: SEEDED state=armed overdueByMs=3600000 monotonicRemainingMs=null
+  10-10 22:13:36.762  6180  6205 I OverdueProbe: PARITY reconcile=manualActionRequired/notAttempted alarm=requestSubmittedUnconfirmed/submittedUnconfirmed
+
+===== mode=alarm (telecom before=18) =====
+com.poyrazoncel.korubeni.emergency.OverdueSessionProbeTest:
+com.poyrazoncel.korubeni.emergency.OverdueSessionProbeTest:
+Error in overdueAlarmDeliveryIsOfferedNotDialled(com.poyrazoncel.korubeni.emergency.OverdueSessionProbeTest):
+java.lang.AssertionError: an hour-late alarm delivery must not reach Telecom expected:<NOT_ATTEMPTED> but was:<SUBMITTED_UNCONFIRMED>
+	at org.junit.Assert.fail(Assert.java:89)
+	at org.junit.Assert.failNotEquals(Assert.java:835)
+	at org.junit.Assert.assertEquals(Assert.java:120)
+	at com.poyrazoncel.korubeni.emergency.OverdueSessionProbeTest.overdueAlarmDeliveryIsOfferedNotDialled(OverdueSessionProbeTest.kt:183)
+Time: 0.338
+There was 1 failure:
+1) overdueAlarmDeliveryIsOfferedNotDialled(com.poyrazoncel.korubeni.emergency.OverdueSessionProbeTest)
+java.lang.AssertionError: an hour-late alarm delivery must not reach Telecom expected:<NOT_ATTEMPTED> but was:<SUBMITTED_UNCONFIRMED>
+	at org.junit.Assert.fail(Assert.java:89)
+	at org.junit.Assert.failNotEquals(Assert.java:835)
+	at org.junit.Assert.assertEquals(Assert.java:120)
+	at com.poyrazoncel.korubeni.emergency.OverdueSessionProbeTest.overdueAlarmDeliveryIsOfferedNotDialled(OverdueSessionProbeTest.kt:183)
+FAILURES!!!
+Tests run: 10,  Failures: 1
+telecom after=19 delta=1
+  10-10 22:13:43.608  6341  6367 I OverdueProbe: SEEDED state=armed overdueByMs=3600000 monotonicRemainingMs=null
+  10-10 22:13:43.662  6341  6367 I OverdueProbe: ALARM_OVERDUE state=requestSubmittedUnconfirmed call=submittedUnconfirmed fallback=posted
+
+===== mode=alarm-control (telecom before=19) =====
+com.poyrazoncel.korubeni.emergency.OverdueSessionProbeTest:
+com.poyrazoncel.korubeni.emergency.OverdueSessionProbeTest:.
+Time: 0.18
+OK (10 tests)
+telecom after=20 delta=1
+  10-10 22:13:50.582  6501  6525 I OverdueProbe: SEEDED state=armed overdueByMs=30000 monotonicRemainingMs=null
+  10-10 22:13:50.626  6501  6525 I OverdueProbe: ALARM_CONTROL state=requestSubmittedUnconfirmed call=submittedUnconfirmed
+
+===== mode=overdue (telecom before=20) =====
+com.poyrazoncel.korubeni.emergency.OverdueSessionProbeTest:
+com.poyrazoncel.korubeni.emergency.OverdueSessionProbeTest:.
+Time: 0.078
+OK (10 tests)
+telecom after=20 delta=0
+  10-10 22:13:57.036  6659  6685 I OverdueProbe: SEEDED state=armed overdueByMs=3600000 monotonicRemainingMs=null
+  10-10 22:13:57.065  6659  6685 I OverdueProbe: OVERDUE state=manualActionRequired call=notAttempted fallback=posted
+
+===== mode=control (telecom before=20) =====
+com.poyrazoncel.korubeni.emergency.OverdueSessionProbeTest:
+com.poyrazoncel.korubeni.emergency.OverdueSessionProbeTest:.
+Time: 0.237
+OK (10 tests)
+telecom after=21 delta=1
+  10-10 22:14:03.109  6816  6829 I OverdueProbe: SEEDED state=armed overdueByMs=30000 monotonicRemainingMs=null
+  10-10 22:14:03.140  6816  6829 I OverdueProbe: CONTROL state=requestSubmittedUnconfirmed call=submittedUnconfirmed
+
+===== mode=claimed (telecom before=21) =====
+com.poyrazoncel.korubeni.emergency.OverdueSessionProbeTest:
+com.poyrazoncel.korubeni.emergency.OverdueSessionProbeTest:.
+Time: 0.116
+OK (10 tests)
+telecom after=21 delta=0
+  10-10 22:14:10.191  6961  6987 I OverdueProbe: SEEDED state=claimed overdueByMs=3600000 monotonicRemainingMs=null
+  10-10 22:14:10.215  6961  6987 I OverdueProbe: CLAIMED_STALE state=manualActionRequired call=notAttempted fallback=posted
+
+===== mode=claimed-control (telecom before=21) =====
+com.poyrazoncel.korubeni.emergency.OverdueSessionProbeTest:
+com.poyrazoncel.korubeni.emergency.OverdueSessionProbeTest:.
+Time: 0.092
+OK (10 tests)
+telecom after=22 delta=1
+  10-10 22:14:16.412  7118  7132 I OverdueProbe: SEEDED state=claimed overdueByMs=30000 monotonicRemainingMs=null
+  10-10 22:14:16.442  7118  7132 I OverdueProbe: CLAIMED_CONTROL state=requestSubmittedUnconfirmed call=submittedUnconfirmed
+
+===== mode=wall-forward (telecom before=22) =====
+com.poyrazoncel.korubeni.emergency.OverdueSessionProbeTest:
+com.poyrazoncel.korubeni.emergency.OverdueSessionProbeTest:
+Error in aForwardWallJumpDoesNotTerminateALiveSession(com.poyrazoncel.korubeni.emergency.OverdueSessionProbeTest):
+java.lang.AssertionError: a live session must not be terminated by a wall-clock jump expected:<ARMED> but was:<MANUAL_ACTION_REQUIRED>
+	at org.junit.Assert.fail(Assert.java:89)
+	at org.junit.Assert.failNotEquals(Assert.java:835)
+	at org.junit.Assert.assertEquals(Assert.java:120)
+	at com.poyrazoncel.korubeni.emergency.OverdueSessionProbeTest.aForwardWallJumpDoesNotTerminateALiveSession(OverdueSessionProbeTest.kt:291)
+Time: 0.108
+There was 1 failure:
+1) aForwardWallJumpDoesNotTerminateALiveSession(com.poyrazoncel.korubeni.emergency.OverdueSessionProbeTest)
+java.lang.AssertionError: a live session must not be terminated by a wall-clock jump expected:<ARMED> but was:<MANUAL_ACTION_REQUIRED>
+	at org.junit.Assert.fail(Assert.java:89)
+	at org.junit.Assert.failNotEquals(Assert.java:835)
+	at org.junit.Assert.assertEquals(Assert.java:120)
+	at com.poyrazoncel.korubeni.emergency.OverdueSessionProbeTest.aForwardWallJumpDoesNotTerminateALiveSession(OverdueSessionProbeTest.kt:291)
+FAILURES!!!
+Tests run: 10,  Failures: 1
+telecom after=22 delta=0
+  10-10 22:14:22.752  7266  7292 I OverdueProbe: SEEDED state=armed overdueByMs=7200000 monotonicRemainingMs=60000
+  10-10 22:14:22.784  7266  7292 I OverdueProbe: WALL_FORWARD state=manualActionRequired call=notAttempted fallback=posted
+
+===== mode=wall-forward-boot (telecom before=22) =====
+com.poyrazoncel.korubeni.emergency.OverdueSessionProbeTest:.
+Time: 0.077
+OK (10 tests)
+telecom after=22 delta=0
+  10-10 22:14:28.799  7423  7436 I OverdueProbe: SEEDED state=armed overdueByMs=7200000 monotonicRemainingMs=null
+  10-10 22:14:28.820  7423  7436 I OverdueProbe: WALL_FORWARD_BOOT state=manualActionRequired call=notAttempted
+
+===== mode=wall-back (telecom before=22) =====
+com.poyrazoncel.korubeni.emergency.OverdueSessionProbeTest:
+com.poyrazoncel.korubeni.emergency.OverdueSessionProbeTest:
+Error in aBackwardWallJumpDoesNotBlockADueDispatch(com.poyrazoncel.korubeni.emergency.OverdueSessionProbeTest):
+java.lang.AssertionError: a monotonically due session must still be dispatched
+	at org.junit.Assert.fail(Assert.java:89)
+	at org.junit.Assert.assertTrue(Assert.java:42)
+	at com.poyrazoncel.korubeni.emergency.OverdueSessionProbeTest.aBackwardWallJumpDoesNotBlockADueDispatch(OverdueSessionProbeTest.kt:354)
+Time: 0.106
+There was 1 failure:
+1) aBackwardWallJumpDoesNotBlockADueDispatch(com.poyrazoncel.korubeni.emergency.OverdueSessionProbeTest)
+java.lang.AssertionError: a monotonically due session must still be dispatched
+	at org.junit.Assert.fail(Assert.java:89)
+	at org.junit.Assert.assertTrue(Assert.java:42)
+	at com.poyrazoncel.korubeni.emergency.OverdueSessionProbeTest.aBackwardWallJumpDoesNotBlockADueDispatch(OverdueSessionProbeTest.kt:354)
+FAILURES!!!
+Tests run: 10,  Failures: 1
+telecom after=22 delta=0
+  10-10 22:14:34.927  7564  7580 I OverdueProbe: SEEDED state=armed overdueByMs=-3600000 monotonicRemainingMs=-30000
+  10-10 22:14:34.932  7564  7580 I OverdueProbe: WALL_BACK state=armed call=notAttempted
+
+# done 2026-10-10 22:14:37

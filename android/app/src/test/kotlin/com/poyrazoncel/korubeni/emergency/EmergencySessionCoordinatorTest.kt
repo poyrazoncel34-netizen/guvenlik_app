@@ -457,48 +457,64 @@ class EmergencySessionCoordinatorTest {
         assertEquals(0, fixture.calls.targets.size)
     }
 
+    /**
+     * REWRITTEN for OD-1, and the previous assertion is the reason.
+     *
+     * This test used to assert that the on-time ELAPSED_REALTIME alarm is
+     * REFUSED after a backward wall-clock change --
+     * `assertEquals(NOT_ATTEMPTED, early.callRequestOutcome)` -- and that the
+     * call is recovered only when TIME_SET later arrives. That encoded the
+     * defect rather than the requirement: measured on this same coordinator, if
+     * the clock moved while the app was not running then no TIME_SET is ever
+     * delivered, and reconcile kept rescheduling the same already-past elapsed
+     * deadline and refusing it again -- 0 calls, session stuck ARMED, for as
+     * long as the clock was set back (one hour here). A missed emergency call.
+     *
+     * The requirement is that the alarm itself dispatches, because
+     * ELAPSED_REALTIME is the clock the session was measured on.
+     */
     @Test
-    fun `clock set back at the deadline still dispatches once elapsed time is up`() {
-        // Independent wall and monotonic clocks: the shared Fixture pins the
-        // monotonic one, which is exactly what hides this race.
-        var wall = now
-        var elapsed = 50_000L
-        val store = FakeStore()
-        val calls = FakeCalls()
-        val coordinator = EmergencySessionCoordinator(
-            store = store,
-            alarmScheduler = FakeAlarms(),
-            fallbackPoster = FakeFallback(),
-            callRequester = calls,
-            capabilityProvider = { request ->
-                readyCapabilities.copy(
-                    pinConfigured = request.pinConfigured,
-                    callableTarget = EmergencyTargetValidator.isCallable(request.target),
-                    entitlementDecision = request.entitlementDecision,
-                )
-            },
-            wallClockMs = { wall },
-            elapsedRealtimeMs = { elapsed },
-        )
-        val armed = coordinator.arm(
+    fun `clock set back at the deadline does not hide a monotonically due dispatch`() {
+        val clocks = IndependentClocks()
+        val armed = clocks.coordinator.arm(
             validArmRequest(randomId = "clock-set-back-at-deadline"),
         ) as ArmResult.Armed
 
         // The full 120 s pass on the monotonic clock, but the wall clock was set
-        // back one hour moments before the deadline...
-        elapsed += 120_000L
-        wall = now + 120_000L - 3_600_000L
-        // ...and the ELAPSED_REALTIME alarm beats the TIME_SET broadcast. The
-        // wall-clock gate refuses it, and that alarm is now spent.
-        val early = coordinator.claimAndDispatch(armed.token)
-        assertEquals(CallRequestOutcome.NOT_ATTEMPTED, early.callRequestOutcome)
+        // back one hour moments before the deadline, and the ELAPSED_REALTIME
+        // alarm beats any TIME_SET broadcast.
+        clocks.elapsed += 120_000L
+        clocks.wall = now + 120_000L - 3_600_000L
+        val onTime = clocks.coordinator.claimAndDispatch(armed.token)
 
-        // TIME_SET arrives. The duration is over by the monotonic clock, which is
-        // the clock this reconciliation exists to honour.
-        coordinator.reconcileAfterClockChange()
+        assertEquals(CallRequestOutcome.SUBMITTED_UNCONFIRMED, onTime.callRequestOutcome)
+        assertEquals(listOf("+905001234567"), clocks.calls.targets)
+        assertEquals(
+            LifecycleState.REQUEST_SUBMITTED_UNCONFIRMED,
+            clocks.store.current?.lifecycleState,
+        )
+    }
 
-        assertEquals(listOf("+905001234567"), calls.targets)
-        assertEquals(LifecycleState.REQUEST_SUBMITTED_UNCONFIRMED, store.current?.lifecycleState)
+    /**
+     * The other half of the original test, kept: when the alarm never reaches
+     * the app at all (Doze dropped it, the process was gone), TIME_SET is still
+     * a recovery point and still dispatches on the monotonic duration.
+     */
+    @Test
+    fun `TIME_SET recovers a due session the alarm never reached`() {
+        val clocks = IndependentClocks()
+        clocks.coordinator.arm(validArmRequest(randomId = "clock-set-back-time-set"))
+
+        clocks.elapsed += 120_000L
+        clocks.wall = now + 120_000L - 3_600_000L
+        // No claimAndDispatch: nothing delivered the alarm.
+        clocks.coordinator.reconcileAfterClockChange()
+
+        assertEquals(listOf("+905001234567"), clocks.calls.targets)
+        assertEquals(
+            LifecycleState.REQUEST_SUBMITTED_UNCONFIRMED,
+            clocks.store.current?.lifecycleState,
+        )
     }
 
     @Test
@@ -534,6 +550,36 @@ class EmergencySessionCoordinatorTest {
         assertEquals(0, calls.targets.size)
         assertEquals(listOf(FallbackReason.OVERDUE_NOT_DISPATCHED), fallback.reasons)
         assertEquals(LifecycleState.MANUAL_ACTION_REQUIRED, store.current?.lifecycleState)
+    }
+
+    /**
+     * Wall and monotonic clocks that move INDEPENDENTLY, for the cases where
+     * that is the point. The shared [Fixture] deliberately moves them together,
+     * because a device cannot do anything else.
+     */
+    private inner class IndependentClocks(
+        var wall: Long = now,
+        var elapsed: Long = baseElapsed,
+    ) {
+        val store = FakeStore()
+        val calls = FakeCalls()
+        val alarms = FakeAlarms()
+        val fallback = FakeFallback()
+        val coordinator = EmergencySessionCoordinator(
+            store = store,
+            alarmScheduler = alarms,
+            fallbackPoster = fallback,
+            callRequester = calls,
+            capabilityProvider = { request ->
+                readyCapabilities.copy(
+                    pinConfigured = request.pinConfigured,
+                    callableTarget = EmergencyTargetValidator.isCallable(request.target),
+                    entitlementDecision = request.entitlementDecision,
+                )
+            },
+            wallClockMs = { wall },
+            elapsedRealtimeMs = { elapsed },
+        )
     }
 
     // Audit A-02. The elapsed-realtime deadline is only meaningful in the boot
@@ -1578,6 +1624,7 @@ class EmergencySessionCoordinatorTest {
         warningPoster: EmergencyWarningPoster = EmergencyWarningPoster { _, _ -> false },
     ) {
         private var currentNow = now
+        private var currentElapsed = baseElapsed
         val coordinator = EmergencySessionCoordinator(
             store = store,
             alarmScheduler = alarms,
@@ -1593,14 +1640,29 @@ class EmergencySessionCoordinatorTest {
             },
             warningPoster = warningPoster,
             wallClockMs = { currentNow },
-            elapsedRealtimeMs = { 50_000L },
+            elapsedRealtimeMs = { currentElapsed },
         )
 
         fun advanceToFinalDeadline() {
-            currentNow = now + 120_000L
+            advanceTo(now + 120_000L)
         }
 
+        /**
+         * Moves BOTH clocks by the same amount, because that is the only thing
+         * a device can do: elapsedRealtime counts sleep and cannot stand still
+         * while the wall clock advances.
+         *
+         * This fixture used to pin elapsedRealtime at a constant while
+         * advanceTo moved only the wall clock. Every test here then described a
+         * physically impossible device, and that is what hid OD-1: the overdue
+         * decision could be read off the wall clock and no test noticed, because
+         * the fixture's monotonic clock never had an opinion. Tests that mean to
+         * DESYNCHRONISE the two clocks build their own coordinator with
+         * independent `wall`/`elapsed` vars (see the clock-change tests below);
+         * desynchronisation must be a deliberate, named act, not the default.
+         */
         fun advanceTo(value: Long) {
+            currentElapsed += (value - currentNow).coerceAtLeast(0L)
             currentNow = value
         }
     }
@@ -1708,6 +1770,9 @@ class EmergencySessionCoordinatorTest {
     private class SimulatedProcessDeath : Error()
 
     companion object {
+        /** Where the fixture's monotonic clock starts; see Fixture.advanceTo. */
+        private const val baseElapsed = 50_000L
+
         private val readyCapabilities = CapabilitySnapshot(
             supportedOs = true,
             telephonyCalling = true,
