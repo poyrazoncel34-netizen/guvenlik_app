@@ -27,9 +27,15 @@ def record(step, ok, detail):
 def band(): return next((ui.label(n).strip('|') for n in ui.nodes() if 'Kilitli:' in ui.label(n)), 'none')
 def text(): return ' / '.join(l for l in rm.labels() if l.strip())
 def alarms():
-    d = sh('shell', 'dumpsys', 'alarm')
-    pending = d.split('Recent problems')[0] if 'Recent problems' in d else d[:len(d) // 2]
-    return len(re.findall(r'tag=\*walarm\*:' + re.escape(PKG) + r'\.EMERGENCY_SESSION_(?:GRACE|DISPATCH)', pending))
+    # Pending section only: API 29 'Pending alarm batches' .. 'App Alarm history'/'Past-due';
+    # API 34+ 'Next alarm clock information' .. 'LazyAlarmStore stats'. The history and
+    # top-alarm sections repeat the tags and over-count.
+    on, n = False, 0
+    for line in sh('shell', 'dumpsys', 'alarm').splitlines():
+        if re.search(r'Pending alarm batches|Next alarm clock information', line): on = True
+        elif re.search(r'App Alarm history|Past-due|LazyAlarmStore stats|Pending user blocked', line): on = False
+        elif on and re.search(r'walarm\*:' + re.escape(PKG) + r'\.EMERGENCY_SESSION_(?:GRACE|DISPATCH)', line): n += 1
+    return n
 def reboot():
     sh('reboot'); sh('wait-for-device')
     while sh('shell', 'getprop', 'sys.boot_completed').strip() != '1': time.sleep(2)

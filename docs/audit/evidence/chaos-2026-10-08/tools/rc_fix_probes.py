@@ -12,6 +12,7 @@ goes only to the emulator-controlled number.
   P2 Help FAQ (Y-09)                      P6 Y-02: accepted request + quiet link
   P3 Y-11c limited-protection heading     P7 Y-14: revoke during Check-In -> notice
   P4 Y-11b both denied -> refusal + dialer P8 A-03: warning fails -> timeline reason
+  P9 force-stop during an armed Check-In -> reopen restores its alarms (API 29-34 defect)
 """
 import os, re, subprocess, sys, time
 _out, _label = sys.argv[1], sys.argv[2]
@@ -217,6 +218,36 @@ def p8_warning_fails():
            f'armed={armed} final={final} graceWarningOutcome={outcome.group(1) if outcome else None} calls+={calls() - c0} timeline_reason={reason}')
 
 
+def pending_alarms():
+    on, n = False, 0
+    for line in sh('shell', 'dumpsys', 'alarm').splitlines():
+        if re.search(r'Pending alarm batches|Next alarm clock information', line): on = True
+        elif re.search(r'App Alarm history|Past-due|LazyAlarmStore stats|Pending user blocked', line): on = False
+        elif on and re.search(r'walarm\*:' + re.escape(PKG) + r'\.EMERGENCY_SESSION_(?:GRACE|DISPATCH)', line): n += 1
+    return n
+
+
+def p9_force_stop_restores_alarms():
+    # 2026-10-10, API 29: force-stop deleted an armed Check-In's alarms and reopening restored none.
+    open_unlocked(); to_home_tile('Kontrol Noktası')
+    if not rm.tap('15 dk', exact=True): rm.tap('5 dk', exact=True)
+    time.sleep(3); rm.tap('Anladım, devam et'); time.sleep(3)
+    armed, a0 = rm.state('long'), pending_alarms()
+    sh('shell', 'am', 'force-stop', PKG); time.sleep(2)
+    a1 = pending_alarms()
+    sh('shell', 'am', 'start', '-n', f'{PKG}/.MainActivity'); time.sleep(12)
+    a2, st = pending_alarms(), rm.state('long')
+    rm.unlock_if_needed(); to_home_tile('Kontrol Noktası')
+    rm.tap('İptal Et'); time.sleep(2)
+    f = rm.fields()
+    if f:
+        x, y = ui.center(f[0]); sh('shell', 'input', 'tap', str(x), str(y)); time.sleep(0.5)
+        sh('shell', 'input', 'text', PIN); time.sleep(0.5); rm.tap('Doğrula', exact=True); time.sleep(3)
+    record('P9 force-stop during an armed Check-In -> reopen restores its alarms',
+           armed == 'armed' and a0 >= 2 and a1 == 0 and a2 == a0 and st == 'armed' and rm.state('long') == 'cancelled',
+           f'armed={armed} pending={a0} -> force-stop {a1} -> reopen {a2}; native after reopen={st}; end={rm.state("long")}')
+
+
 def main():
     lut = re.search(r'lastUpdateTime=(\S+ \S+)', sh('shell', 'dumpsys', 'package', PKG))
     sdk = sh('shell', 'getprop', 'ro.build.version.sdk').strip()
@@ -224,7 +255,7 @@ def main():
     for p in ['CALL_PHONE', 'ACCESS_FINE_LOCATION', 'POST_NOTIFICATIONS']:
         sh('shell', 'pm', 'grant', PKG, f'android.permission.{p}')
     probes = (p1_safe_walk_intro, p2_help_faq, p3_limited_heading, p4_both_denied, p5_exact_only,
-              p6_accepted_request, p7_revoke_during_checkin, p8_warning_fails)
+              p6_accepted_request, p7_revoke_during_checkin, p8_warning_fails, p9_force_stop_restores_alarms)
     only = os.environ.get('PROBES')  # e.g. PROBES=p7,p8 re-runs just those
     if only:
         probes = [p for p in probes if p.__name__.split('_')[0] in only.split(',')]
