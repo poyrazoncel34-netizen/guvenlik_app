@@ -206,6 +206,12 @@ Surumleme: `pubspec.yaml` 1.0.0+1'de SABITTIR; gercek `versionCode`
 - Uygulama ici metinler var olmayan bir "konum oturumu" ozelliginden soz
   ediyordu; kaldirildi. Gizlilik detayi harita karolarinin cihazda
   onbellege alindigini ve verileri silince silindigini soyluyor.
+- Android 10-14'te Check-In veya Guvenli Yuruyus surerken uygulama zorla
+  durdurulursa (Ayarlar'dan "Durmaya zorla" ya da bazi uretici pil
+  temizleyicileri) sure doldugunda tetiklenecek alarmlar siliniyor,
+  uygulama yeniden acildiginda geri kurulmuyordu; ekran oturumu suruyor
+  gosteriyordu. Uygulama acildiginda bu alarmlar artik ayni son tarihle
+  yeniden kuruluyor.
 
 ### Degistirildi
 - Paywall ve magaza metnindeki "Gelismis guvenlik otomasyonlari" faydasi
