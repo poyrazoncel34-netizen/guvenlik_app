@@ -1,0 +1,41 @@
+[
+ {
+  "id": "PS-1 MainActivity no longer reconciles at start",
+  "file": "android/app/src/main/kotlin/com/poyrazoncel/korubeni/MainActivity.kt",
+  "old": "                EmergencySessionRuntime.coordinator(applicationContext).reconcileCurrentBoot()",
+  "new": "                Unit",
+  "tests": [
+   "test/android/main_activity_process_start_reconcile_contract_test.dart"
+  ]
+ },
+ {
+  "id": "PS-2 process-start reconcile never runs",
+  "file": "android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/ProcessStartReconcile.kt",
+  "old": "        if (ran.compareAndSet(false, true)) reconcile()",
+  "new": "        if (false) reconcile()",
+  "tests": [
+   "*ProcessStartReconcileTest*"
+  ],
+  "kind": "gradle"
+ },
+ {
+  "id": "PS-3 reconcile on every activity start",
+  "file": "android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/ProcessStartReconcile.kt",
+  "old": "        if (ran.compareAndSet(false, true)) reconcile()",
+  "new": "        reconcile()",
+  "tests": [
+   "*ProcessStartReconcileTest*"
+  ],
+  "kind": "gradle"
+ },
+ {
+  "id": "PS-4 same-boot reconcile does not reschedule an armed session",
+  "file": "android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/EmergencySessionCoordinator.kt",
+  "old": "            !isFromAnotherBoot(envelope)\n        ) {\n            scheduleBestEffort(envelope)\n            return\n        }",
+  "new": "            !isFromAnotherBoot(envelope)\n        ) {\n            return\n        }",
+  "tests": [
+   "*EmergencySessionCoordinatorTest*"
+  ],
+  "kind": "gradle"
+ }
+]

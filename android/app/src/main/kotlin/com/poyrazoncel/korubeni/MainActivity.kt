@@ -17,6 +17,10 @@ import android.view.WindowManager
 import com.poyrazoncel.korubeni.emergency.EmergencyChannels
 import com.poyrazoncel.korubeni.emergency.EmergencyEventStreamHandler
 import com.poyrazoncel.korubeni.emergency.EmergencyPlatformHandler
+import com.poyrazoncel.korubeni.emergency.EmergencyReceiverGuard
+import com.poyrazoncel.korubeni.emergency.EmergencySessionRuntime
+import com.poyrazoncel.korubeni.emergency.NativeSafetyEventCode
+import com.poyrazoncel.korubeni.emergency.ProcessStartReconcile
 import com.poyrazoncel.korubeni.integrity.DeviceIntegrityChannel
 import com.poyrazoncel.korubeni.quickaccess.PanicLaunch
 import com.poyrazoncel.korubeni.quickaccess.PanicRequestStore
@@ -98,6 +102,16 @@ class MainActivity : FlutterFragmentActivity() {
         // point is not a usable defence.
         super.onCreate(savedInstanceState)
         captureDeepLink(intent)
+        // A force-stop deleted an armed session's alarms and API 29-34 never
+        // gives them back on the next start (see ProcessStartReconcile).
+        ProcessStartReconcile.once {
+            EmergencyReceiverGuard.run(
+                applicationContext,
+                NativeSafetyEventCode.BOOT_RECEIVER_BOUNDARY_FAILURE,
+            ) {
+                EmergencySessionRuntime.coordinator(applicationContext).reconcileCurrentBoot()
+            }
+        }
     }
 
     override fun onNewIntent(intent: Intent) {

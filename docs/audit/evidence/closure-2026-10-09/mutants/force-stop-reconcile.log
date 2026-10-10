@@ -1,0 +1,29 @@
+# counterfactual run 2026-10-10T11:20:04 HEAD=3691017eec28110357207cb250190e765e716fcd
+PS-1 MainActivity no longer reconciles at start: KILLED file=android/app/src/main/kotlin/com/poyrazoncel/korubeni/MainActivity.kt sha_orig=3105439a08d63cce sha_mut=4748a015c639138b restored=True
+    To run this test again: /opt/homebrew/share/flutter/bin/cache/dart-sdk/bin/dart test /Users/poyrazoncel/Projects/guvenlik_app/test/android/main_activity_process_start_reconcile_contract_test.dart -p vm --plain-name 'MainActivity.onCreate reconciles armed sessions once per process'
+    
+    00:01 +0 -1: Some tests failed.
+PS-2 process-start reconcile never runs: KILLED file=android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/ProcessStartReconcile.kt sha_orig=ed78a93c9e7846a2 sha_mut=e6256d45de42dd2f restored=True
+    ProcessStartReconcileTest > later starts in the same process do not reconcile again FAILED
+    ProcessStartReconcileTest > the first UI start of a process reconciles FAILED
+PS-3 reconcile on every activity start: KILLED file=android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/ProcessStartReconcile.kt sha_orig=ed78a93c9e7846a2 sha_mut=1bc4ef29165e703a restored=True
+    ProcessStartReconcileTest > later starts in the same process do not reconcile again FAILED
+PS-4 same-boot reconcile does not reschedule an armed session: KILLED file=android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/EmergencySessionCoordinator.kt sha_orig=93a20c97d34218b5 sha_mut=8458d57f0435b9bc restored=True
+    EmergencySessionCoordinatorTest > a same-boot reconcile reschedules an armed session whose alarms were dropped FAILED
+# baseline after restore: exit=0 :: 00:01 +1: All tests passed!
+# survivors=0
+# (rerun note: MainActivity call moved after captureDeepLink -- deep_link_test pins super.onCreate + captureDeepLink adjacency; PS-1 snippet unchanged)
+# counterfactual run 2026-10-10T11:33:15 HEAD=3691017eec28110357207cb250190e765e716fcd
+PS-1 MainActivity no longer reconciles at start: KILLED file=android/app/src/main/kotlin/com/poyrazoncel/korubeni/MainActivity.kt sha_orig=95387b2a5fd5bc4b sha_mut=05746fbe2cb26ae6 restored=True
+    To run this test again: /opt/homebrew/share/flutter/bin/cache/dart-sdk/bin/dart test /Users/poyrazoncel/Projects/guvenlik_app/test/android/main_activity_process_start_reconcile_contract_test.dart -p vm --plain-name 'MainActivity.onCreate reconciles armed sessions once per process'
+    
+    00:01 +0 -1: Some tests failed.
+PS-2 process-start reconcile never runs: KILLED file=android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/ProcessStartReconcile.kt sha_orig=ed78a93c9e7846a2 sha_mut=e6256d45de42dd2f restored=True
+    ProcessStartReconcileTest > later starts in the same process do not reconcile again FAILED
+    ProcessStartReconcileTest > the first UI start of a process reconciles FAILED
+PS-3 reconcile on every activity start: KILLED file=android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/ProcessStartReconcile.kt sha_orig=ed78a93c9e7846a2 sha_mut=1bc4ef29165e703a restored=True
+    ProcessStartReconcileTest > later starts in the same process do not reconcile again FAILED
+PS-4 same-boot reconcile does not reschedule an armed session: KILLED file=android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/EmergencySessionCoordinator.kt sha_orig=93a20c97d34218b5 sha_mut=8458d57f0435b9bc restored=True
+    EmergencySessionCoordinatorTest > a same-boot reconcile reschedules an armed session whose alarms were dropped FAILED
+# baseline after restore: exit=0 :: 00:01 +1: All tests passed!
+# survivors=0

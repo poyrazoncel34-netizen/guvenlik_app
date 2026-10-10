@@ -665,6 +665,25 @@ class EmergencySessionCoordinatorTest {
         assertEquals(clocks.wall + 50_000L, clocks.store.current!!.finalDeadlineMs)
     }
 
+    // Closure audit 2026-10-10 (API 29): force-stop deletes every alarm of the
+    // package; the session stays ARMED. The process-start reconcile must put
+    // them back for the SAME deadline, without dialling early.
+    @Test
+    fun `a same-boot reconcile reschedules an armed session whose alarms were dropped`() {
+        val clocks = BootClocks()
+        clocks.coordinator.arm(validArmRequest(randomId = "force-stopped"))
+        val armedDeadline = clocks.store.current!!.elapsedRealtimeDeadlineMs
+        clocks.alarms.scheduled.clear()
+        clocks.elapsed += 5_000L
+        clocks.wall += 5_000L
+
+        clocks.coordinator.reconcileCurrentBoot()
+
+        assertEquals(armedDeadline, clocks.alarms.scheduled.last().elapsedRealtimeDeadlineMs)
+        assertEquals(LifecycleState.ARMED, clocks.store.current?.lifecycleState)
+        assertEquals(0, clocks.calls.targets.size)
+    }
+
     @Test
     fun `an unlock-time reconcile in a new boot schedules a rebuilt elapsed deadline`() {
         val clocks = BootClocks()
