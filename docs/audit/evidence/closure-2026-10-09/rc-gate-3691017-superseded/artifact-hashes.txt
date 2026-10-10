@@ -1,0 +1,10 @@
+RELEASE_CANDIDATE_HEAD=3691017eec28110357207cb250190e765e716fcd
+git status (worktree, tracked): 0 changes
+9b019e219a862d488773410e946026f293fd247be0e01330adb2549166c786f5  build/app/outputs/bundle/smokeRelease/app-smoke-release.aab
+edab5243eed17a59a1aa357b8954272e65457f34e1cb8ccad4df27e81fa680a9  build/app/intermediates/merged_manifest/smokeRelease/processSmokeReleaseMainManifest/AndroidManifest.xml
+rc-play-debug.apk 192fc9ae18426f3d60ec019bcb4bda2e99c5efef3f04cf21f205461a736f8ac8
+rc-smoke-release.apk 17b12f9a01106054e47bf732393b6c43488cb783104909ac6031f1ff9a29fdf9
+./build/app/outputs/apk/androidTest/play/debug/app-play-debug-androidTest.apk
+Kotlin unit:
+tests=182 skipped=0 failures+errors=0
+androidTest apk sha256 021e0456a0601c2788ddd219ba2621416a2bda0f62d5989b0431fc94ad65b1b3

@@ -1,0 +1,82 @@
+ANR during RC chaos attempt 1 (API 35 emulator-5554, RC 3691017 debug), file /data/anr/anr_2026-10-10-09-54-31-490
+
+Subject: Input dispatching timed out (f6c4c76 com.poyrazoncel.korubeni/com.poyrazoncel.korubeni.MainActivity (server) is not responding. Waited 5009ms for MotionEvent(deviceId=-1, eventTime=1649480000000, source=TOUCHSCREEN, displayId=0, action=DOWN, actionButton=0x00000000, flags=0x00000000, metaState=0x00000000, buttonState=0x00000000, classification=NONE, edgeFlags=0x00000000, xPrecision=1.0, yPrecision=1.0, xCursorPosition=nan, yCursorPosition=nan, pointers=[0: (151.0, 2165.0)]), policyFlags=0x6b000000).
+RssHwmKb: 573512
+RssKb: 525716
+
+== app main thread (pid 6574) ==
+"main" prio=5 tid=1 Native
+  | group="main" sCount=1 ucsCount=0 flags=1 obj=0x735d3b28 self=0xb40000719a602be0
+  | sysTid=6574 nice=-10 cgrp=top-app sched=0/0 handle=0x7351706d20
+  | state=S schedstat=( 20169295749 5051314991 6801 ) utm=1856 stm=160 core=1 HZ=100
+  | stack=0x7fddc8f000-0x7fddc91000 stackSize=8188KB
+  native: #115 pc 0037f698  /apex/com.android.art/lib64/libart.so (art_quick_to_interpreter_bridge+88) (BuildId: 05bfa63ad29b97d7dde4e764ce193f37)
+  at android.os.BinderProxy.transactNative(Native method)
+  at android.os.BinderProxy.transact(BinderProxy.java:586)
+  at android.location.ILocationManager$Stub$Proxy.unregisterGnssNmeaCallback(ILocationManager.java:1609)
+  at android.location.LocationManager$GnssNmeaTransportManager.unregisterTransport(LocationManager.java:3131)
+  at android.location.LocationManager$GnssNmeaTransportManager.unregisterTransport(LocationManager.java:3113)
+  at com.android.internal.listeners.ListenerTransportManager.removeListener(ListenerTransportManager.java:95)
+  - locked <@addr=0x14335208> (a android.util.ArrayMap)
+  at android.location.LocationManager.removeNmeaListener(LocationManager.java:2636)
+  at com.baseflow.geolocator.location.NmeaClient.stop(NmeaClient.java:91)
+  at com.baseflow.geolocator.location.LocationManagerClient.stopPositionUpdates(LocationManagerClient.java:203)
+  at com.baseflow.geolocator.location.GeolocationManager.stopPositionUpdates(GeolocationManager.java:69)
+  at com.baseflow.geolocator.MethodCallHandlerImpl.lambda$onGetCurrentPosition$5$com-baseflow-geolocator-MethodCallHandlerImpl(MethodCallHandlerImpl.java:250)
+  at com.baseflow.geolocator.MethodCallHandlerImpl$$ExternalSyntheticLambda0.onPositionChanged(D8$$SyntheticClass:0)
+  at com.baseflow.geolocator.location.LocationManagerClient.onLocationChanged(LocationManagerClient.java:214)
+  - locked <0x09e9fe31> (a com.baseflow.geolocator.location.LocationManagerClient)
+  at androidx.core.location.LocationListenerCompat.onLocationChanged(LocationListenerCompat.java:46)
+  at android.location.LocationManager$LocationListenerTransport$1.operate(LocationManager.java:3291)
+  at android.location.LocationManager$LocationListenerTransport$1.operate(LocationManager.java:3288)
+  at com.android.internal.listeners.ListenerExecutor.lambda$executeSafely$0(ListenerExecutor.java:127)
+  at com.android.internal.listeners.ListenerExecutor$$ExternalSyntheticLambda0.run(D8$$SyntheticClass:0)
+
+== system_server binder:550_2 (tid 10) holding the NMEA multiplexer lock, blocked in the GNSS HAL ==
+"binder:550_2" prio=5 tid=10 Native
+  | group="main" sCount=1 ucsCount=0 flags=1 obj=0x1400a888 self=0xb40000719a62c760
+  | sysTid=567 nice=-10 cgrp=foreground sched=0/0 handle=0x70005a0730
+  | state=S schedstat=( 992647066 3000102261 2507 ) utm=75 stm=24 core=1 HZ=100
+  | stack=0x70004a9000-0x70004ab000 stackSize=989KB
+  | held mutexes=
+  native: #00 pc 000bd9a8  /apex/com.android.runtime/lib64/bionic/libc.so (__ioctl+8) (BuildId: 1b9fecf834d610f77e641f026ca7269b)
+  native: #01 pc 000673d0  /apex/com.android.runtime/lib64/bionic/libc.so (ioctl+152) (BuildId: 1b9fecf834d610f77e641f026ca7269b)
+  native: #02 pc 0007abb0  /system/lib64/libbinder.so (android::IPCThreadState::transact+1448) (BuildId: 411becee63c4b563ba569d0205cb0302)
+  native: #03 pc 0007a2c0  /system/lib64/libbinder.so (android::BpBinder::transact+156) (BuildId: 411becee63c4b563ba569d0205cb0302)
+  native: #04 pc 00045db4  /system/lib64/android.hardware.gnss-V3-cpp.so (android::hardware::gnss::BpGnss::stopNmea+376) (BuildId: 50f462be7d7a4488a15a481f827bb070)
+  native: #05 pc 00035c04  /system/lib64/libservices.core-gnss.so (android::gnss::GnssHal::stopNmea+100) (BuildId: 3047e7560cb3e4b1e6ccfe89998a8dea)
+  at com.android.server.location.gnss.hal.GnssNative.native_stop_nmea_message_collection(Native method)
+  at com.android.server.location.gnss.hal.GnssNative.-$$Nest$smnative_stop_nmea_message_collection(GnssNative.java:0)
+  at com.android.server.location.gnss.hal.GnssNative$GnssHal.stopNmeaMessageCollection(GnssNative.java:1489)
+  at com.android.server.location.gnss.hal.GnssNative.stopNmeaMessageCollection(GnssNative.java:841)
+  at com.android.server.location.gnss.GnssNmeaProvider.unregisterWithService(GnssNmeaProvider.java:79)
+  at com.android.server.location.listeners.ListenerMultiplexer.updateService(ListenerMultiplexer.java:437)
+  - locked <0x0bc51ccf> (a java.lang.Object)
+  at com.android.server.location.listeners.ListenerMultiplexer$UpdateServiceBuffer.close(ListenerMultiplexer.java:806)
+  at com.android.server.location.listeners.ListenerMultiplexer.removeRegistration(ListenerMultiplexer.java:410)
+  at com.android.server.location.listeners.ListenerMultiplexer.removeRegistration(ListenerMultiplexer.java:358)
+  - locked <0x0bc51ccf> (a java.lang.Object)
+  at com.android.server.location.gnss.GnssListenerMultiplexer.removeListener(GnssListenerMultiplexer.java:291)
+  at com.android.server.location.gnss.GnssManagerService.unregisterGnssNmeaCallback(GnssManagerService.java:202)
+  at com.android.server.location.LocationManagerService.unregisterGnssNmeaCallback(LocationManagerService.java:1146)
+  at android.location.ILocationManager$Stub.onTransact(ILocationManager.java:797)
+  at android.os.Binder.execTransactInternal(Binder.java:1500)
+  at android.os.Binder.execTransact(Binder.java:1444)
+
+== system_server binder:550_C waiting for that lock inside the HAL's reportNmea callback ==
+"binder:550_C" prio=5 tid=184 Blocked
+  | group="main" sCount=1 ucsCount=0 flags=1 obj=0x14c11940 self=0xb40000719a7a0740
+  | sysTid=1010 nice=0 cgrp=foreground sched=0/0 handle=0x6ead43d730
+  | state=S schedstat=( 441000492 1445593820 2044 ) utm=23 stm=20 core=3 HZ=100
+  | stack=0x6ead346000-0x6ead348000 stackSize=989KB
+  | held mutexes=
+  at com.android.server.location.listeners.ListenerMultiplexer.deliverToListeners(ListenerMultiplexer.java:593)
+  - waiting to lock <0x0bc51ccf> (a java.lang.Object) held by thread 10
+  at com.android.server.location.gnss.GnssNmeaProvider.onReportNmea(GnssNmeaProvider.java:95)
+  at com.android.server.location.gnss.hal.GnssNative.lambda$reportNmea$9(GnssNative.java:1145)
+  at com.android.server.location.gnss.hal.GnssNative.$r8$lambda$Bj5rZqoZJ-b2AHkQN3u3bTtbp4o(GnssNative.java:0)
+  at com.android.server.location.gnss.hal.GnssNative$$ExternalSyntheticLambda25.runOrThrow(R8$$SyntheticClass:0)
+  at android.os.Binder.withCleanCallingIdentity(Binder.java:550)
+  at com.android.server.location.gnss.hal.GnssNative.reportNmea(GnssNative.java:1139)
+DumpLatencyMs: 771.212
+

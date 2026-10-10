@@ -1,0 +1,29 @@
+merged manifest (smokeRelease) sha256 edab5243eed17a59a1aa357b8954272e65457f34e1cb8ccad4df27e81fa680a9
+uses-permission:
+name="android.permission.ACCESS_COARSE_LOCATION"
+name="android.permission.ACCESS_FINE_LOCATION"
+name="android.permission.ACCESS_NETWORK_STATE"
+name="android.permission.CALL_PHONE"
+name="android.permission.INTERNET"
+name="android.permission.POST_NOTIFICATIONS"
+name="android.permission.RECEIVE_BOOT_COMPLETED"
+name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"
+name="android.permission.SCHEDULE_EXACT_ALARM"
+name="android.permission.VIBRATE"
+name="android.permission.WAKE_LOCK"
+name="com.android.vending.BILLING"
+name="com.poyrazoncel.korubeni.smoke.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+
+USE_EXACT_ALARM: 0
+FOREGROUND_SERVICE: 0
+AD_ID: 0
+ACCESS_BACKGROUND_LOCATION: 0
+READ_CONTACTS: 0
+USE_FULL_SCREEN_INTENT: 0
+SEND_SMS: 0
+READ_PHONE_STATE: 0
+
+exported=true components:
+  activity com.poyrazoncel.korubeni.MainActivity permission=-
+  service com.poyrazoncel.korubeni.quickaccess.PanicTileService permission=android.permission.BIND_QUICK_SETTINGS_TILE
+  receiver androidx.profileinstaller.ProfileInstallReceiver permission=android.permission.DUMP

@@ -1,0 +1,40 @@
+lockout matrix 36 serial=emulator-5558 build=RC 3691017 debug sha256 192fc9ae18426f3d lastUpdateTime=2026-10-10 09:45:37 start=09:56:03
+PIN 1357
+PIN 1357
+PIN 1357
+PIN 1357
+PIN 1357
+band after wrong PINs: Kilitli: 26s
+1 lock -> kill -9 -> reopen | band=Kilitli: 17s | correct PIN opened app=False | dev=09:56:48
+--- escalate to 240 s (failures 6, 7, 8 each after the previous lockout ends)
+PIN 1357
+band after wrong PINs: Kilitli: 57s
+PIN 1357
+band after wrong PINs: Kilitli: 117s
+PIN 1357
+band after wrong PINs: Kilitli: 236s
+--- escalated at 10:00:25
+2 lock -> force-stop -> reopen | band=Kilitli: 232s | correct PIN opened app=False | dev=10:00:35
+3 lock -> wall +1 h | band=Kilitli: 220s | correct PIN opened app=False | dev=11:00:47
+4 lock -> wall +1 day (+25 h total) | band=Kilitli: 211s | correct PIN opened app=False | dev=11:00:57
+5 lock -> wall -1 day (from real) | band=Kilitli: 200s | correct PIN opened app=False | dev=10:01:07
+6 lock -> timezone Europe/Istanbul -> America/New_York | band=Kilitli: 190s | correct PIN opened app=False | dev=03:01:18
+7 lock -> automatic time ON | band=Kilitli: 176s | correct PIN opened app=False | dev=10:01:31
+--- reboots
+8 lock -> reboot | band=Kilitli: 236s | correct PIN opened app=False | dev=10:02:10
+9 lock -> reboot -> wall +1 h | band=Kilitli: 237s | correct PIN opened app=False | dev=11:02:45
+10 lock -> reboot -> wall +1 day | band=Kilitli: 237s | correct PIN opened app=False | dev=10:03:20
+11 lock -> reboot -> wall -1 day | band=Kilitli: 237s | correct PIN opened app=False | dev=10:03:54
+12 lock -> reboot -> timezone Asia/Tokyo | band=Kilitli: 237s | correct PIN opened app=False | dev=16:04:29
+13 lock -> reboot -> open -> kill -9 -> reopen | band=Kilitli: 230s | correct PIN opened app=False | dev=10:05:13
+14 lock -> two reboots in a row | band=Kilitli: 236s | correct PIN opened app=False | dev=10:06:15
+--- 15: let the lockout run out on screen in this boot, then reboot
+band none
+15 lockout ran out on screen (same boot) -> reboot: not restarted; correct PIN opens | band=none | correct PIN opened app=False | dev=10:10:43
+end=10:10:44
+--- note (10:12): step 15 "opened app=False" was the PROBE's criterion, not the app: after the correct PIN the app
+    restored its last route (Güvenlik Zaman Çizelgesi) instead of home, and the probe counted only 'Hoş Geldiniz'.
+    Device at 10:12:07: focus com.poyrazoncel.korubeni/.MainActivity, timeline shown, no lock screen.
+    Probe fixed (unlocked = unlock screen and lockout band gone) and re-checked on a cold start in the same boot:
+15b recheck: cold start after step 15 -> correct PIN (fixed probe) | band=none | correct PIN opened app=True | dev=10:12:34
+=> 15/15 PASS (steps 1-14 unaffected: each reported band=Kilitli and the correct PIN refused)

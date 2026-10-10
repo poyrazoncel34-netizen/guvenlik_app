@@ -1,0 +1,17 @@
+RC 3691017 FUZZ_SCALE=13 start 2026-10-10 10:17:01
+06:25 +4038: /private/tmp/claude-501/-Users-poyrazoncel-Projects-guvenlik-app/53dc7a26-0f79-4878-85a0-74d07698c976/scratchpad/wt-rc/test/core/navigation/navigation_safety_fuzz_test.dart: seed 20261340: 120 random user actions keep the navigation-safety invariants
+06:27 +4039: ... seed 20261340: 120 random user actions keep the navigation-safety invariants                                                                                                          
+06:27 +4039: ... seed 20261341: 120 random user actions keep the navigation-safety invariants                                                                                                          
+06:27 +4039: /private/tmp/claude-501/-Users-poyrazoncel-Projects-guvenlik-app/53dc7a26-0f79-4878-85a0-74d07698c976/scratchpad/wt-rc/test/core/navigation/navigation_safety_fuzz_test.dart: seed 20261341: 120 random user actions keep the navigation-safety invariants
+06:29 +4040: ... seed 20261341: 120 random user actions keep the navigation-safety invariants                                                                                                          
+06:29 +4040: ... seed 20261342: 120 random user actions keep the navigation-safety invariants                                                                                                          
+06:29 +4040: /private/tmp/claude-501/-Users-poyrazoncel-Projects-guvenlik-app/53dc7a26-0f79-4878-85a0-74d07698c976/scratchpad/wt-rc/test/core/navigation/navigation_safety_fuzz_test.dart: seed 20261342: 120 random user actions keep the navigation-safety invariants
+06:31 +4041: ... seed 20261342: 120 random user actions keep the navigation-safety invariants                                                                                                          
+06:31 +4041: ... seed 20261343: 120 random user actions keep the navigation-safety invariants                                                                                                          
+06:31 +4041: /private/tmp/claude-501/-Users-poyrazoncel-Projects-guvenlik-app/53dc7a26-0f79-4878-85a0-74d07698c976/scratchpad/wt-rc/test/core/navigation/navigation_safety_fuzz_test.dart: seed 20261343: 120 random user actions keep the navigation-safety invariants
+06:33 +4042: ... seed 20261343: 120 random user actions keep the navigation-safety invariants                                                                                                          
+06:33 +4042: ... seed 20261344: 120 random user actions keep the navigation-safety invariants                                                                                                          
+06:33 +4042: /private/tmp/claude-501/-Users-poyrazoncel-Projects-guvenlik-app/53dc7a26-0f79-4878-85a0-74d07698c976/scratchpad/wt-rc/test/core/navigation/navigation_safety_fuzz_test.dart: seed 20261344: 120 random user actions keep the navigation-safety invariants
+06:35 +4043: ... seed 20261344: 120 random user actions keep the navigation-safety invariants                                                                                                          
+06:35 +4043: All tests passed!                                                                                                                                                                         
+exit=0 end 2026-10-10 10:23:38

@@ -1,0 +1,242 @@
+{
+  "schemaVersion": 1,
+  "sourceHead": "3691017eec28110357207cb250190e765e716fcd",
+  "sourceStatusSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "sourceWasDirty": false,
+  "runnerSha256": "de8954980dd7c4ed0eb7b4dd28519db005e6ae98988d076bcc91888682ccc8fc",
+  "sourceFiles": {
+    "android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/EmergencySessionCoordinator.kt": "93a20c97d34218b59a3d212e448f0052e656135ba3daeb77bcb1e507f9ef6834",
+    "android/app/src/test/kotlin/com/poyrazoncel/korubeni/emergency/EmergencySessionCoordinatorTest.kt": "c8ad3e3419f16f975d3e4f11f464174a5463c6f3bf6a454b5ed27f9b4451c5ac",
+    "lib/core/services/emergency_dispatch_pipeline.dart": "e87f055a2747f0efce119bd3c313ccf0c3a0049f4be71cb14ad2cc0e568284c0",
+    "lib/core/services/pin_verification_service.dart": "99787101e6da154b7bc9246f62f6dcff4331a0d2792b0c88a9ea8a530673eabd",
+    "lib/screens/app_unlock_screen.dart": "027ad67cd2a1729ece41bb67fbe13a08a2c1e051188d64a5e907d1989a7de147",
+    "lib/screens/countdown_screen.dart": "9c7eb041428d593c55301f91d0cf5586dc9f58e2e45b7149b0a8099e3052c4e9",
+    "test/core/services/emergency_dispatch_pipeline_test.dart": "3ecab2750b457bb7d8d8919306abf89d0363391520efef9fa5c0e4193e780f5b",
+    "test/core/services/pin_verification_service_test.dart": "b8c1cdc0cc2b8f696a121b3cdc87556c14d0549e215084b748a088e067b14599",
+    "test/screens/countdown_dispose_lifecycle_test.dart": "3060b3f1bbb544261911a0d01b5a165774e83406c223444964c664061a2e0cb7",
+    "test/screens/unlock_lockout_write_failure_test.dart": "c5e6905c6e1bb5e30bab65e3c39009d6c9cb158f6e6477d362094b040a0f5d54"
+  },
+  "mutations": [
+    {
+      "id": "M01_CANCEL_RESULT_SWALLOWED",
+      "injected": true,
+      "pristineSha256": "9c7eb041428d593c55301f91d0cf5586dc9f58e2e45b7149b0a8099e3052c4e9",
+      "injectedSha256": "ecc72decd40859e93c0be1040ad67f22c6114408ac9758025593047b6d7b1799",
+      "differs": true,
+      "restoredSha256": "9c7eb041428d593c55301f91d0cf5586dc9f58e2e45b7149b0a8099e3052c4e9",
+      "restored": true,
+      "description": "Treat an unconfirmed native cancellation as if it were acknowledged.",
+      "target": "lib/screens/countdown_screen.dart",
+      "status": "KILLED",
+      "result": {
+        "command": [
+          "flutter",
+          "test",
+          "--no-pub",
+          "test/screens/countdown_dispose_lifecycle_test.dart",
+          "--plain-name",
+          "unknown native cancel acknowledgement keeps countdown active"
+        ],
+        "exitCode": 1,
+        "timedOut": false,
+        "durationMs": 3570,
+        "outputSha256": "3ac5d07b9e268ed25bc40587eaf123a67650fed0c285a534815fcbcc062aa5f3"
+      }
+    },
+    {
+      "id": "M02_STALE_GENERATION_ACCEPTED",
+      "injected": true,
+      "pristineSha256": "93a20c97d34218b59a3d212e448f0052e656135ba3daeb77bcb1e507f9ef6834",
+      "injectedSha256": "83b4b21bdd06f562d83944423f4917273c4d83215d1238c9a5e625dd6348652e",
+      "differs": true,
+      "restoredSha256": "93a20c97d34218b59a3d212e448f0052e656135ba3daeb77bcb1e507f9ef6834",
+      "restored": true,
+      "description": "Let a stale token pass the coordinator token equality guard.",
+      "target": "android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/EmergencySessionCoordinator.kt",
+      "status": "KILLED",
+      "result": {
+        "command": [
+          "./gradlew",
+          "app:testPlayDebugUnitTest",
+          "--tests",
+          "com.poyrazoncel.korubeni.emergency.EmergencySessionCoordinatorTest",
+          "--console=plain"
+        ],
+        "exitCode": 1,
+        "timedOut": false,
+        "durationMs": 7633,
+        "outputSha256": "e30dce7cb68f3b699a0dd7c502a2cadc96265d52fee7ab9b66922adacfb09699"
+      }
+    },
+    {
+      "id": "M03_PIN_READ_FAILURE_AS_ABSENT",
+      "injected": true,
+      "pristineSha256": "99787101e6da154b7bc9246f62f6dcff4331a0d2792b0c88a9ea8a530673eabd",
+      "injectedSha256": "8effb2ec5e060d1cdb3d8fea7601ab0b02632844b52d1326da7afa89d5c3ae27",
+      "differs": true,
+      "restoredSha256": "99787101e6da154b7bc9246f62f6dcff4331a0d2792b0c88a9ea8a530673eabd",
+      "restored": true,
+      "description": "Collapse secure-storage read failure into the non-error absent state.",
+      "target": "lib/core/services/pin_verification_service.dart",
+      "status": "KILLED",
+      "result": {
+        "command": [
+          "flutter",
+          "test",
+          "--no-pub",
+          "test/core/services/pin_verification_service_test.dart"
+        ],
+        "exitCode": 1,
+        "timedOut": false,
+        "durationMs": 3203,
+        "outputSha256": "cc3fb5411bdb1a0ea459fc911181fc9e8a0c194fe7ae7a9aff60526069953bae"
+      }
+    },
+    {
+      "id": "M04_LOG_BEFORE_DISPATCH",
+      "injected": true,
+      "pristineSha256": "e87f055a2747f0efce119bd3c313ccf0c3a0049f4be71cb14ad2cc0e568284c0",
+      "injectedSha256": "2b3af78781a21b8f3a32875a3f86131ef1a7ccc697784d80c53d7f09e1242856",
+      "differs": true,
+      "restoredSha256": "e87f055a2747f0efce119bd3c313ccf0c3a0049f4be71cb14ad2cc0e568284c0",
+      "restored": true,
+      "description": "Run non-critical side effects before obtaining the dispatch result.",
+      "target": "lib/core/services/emergency_dispatch_pipeline.dart",
+      "status": "KILLED",
+      "result": {
+        "command": [
+          "flutter",
+          "test",
+          "--no-pub",
+          "test/core/services/emergency_dispatch_pipeline_test.dart"
+        ],
+        "exitCode": 1,
+        "timedOut": false,
+        "durationMs": 1416,
+        "outputSha256": "eb5b7ae1907d3037746e9912c208beffbed3186b1d8b38418feff957c51cdd1f"
+      }
+    },
+    {
+      "id": "M05_NOTIFICATION_RESULT_IGNORED",
+      "injected": true,
+      "pristineSha256": "93a20c97d34218b59a3d212e448f0052e656135ba3daeb77bcb1e507f9ef6834",
+      "injectedSha256": "7b75464bc199ec31467ff4b7ed6d2b844f41e18ac2a3c17dc2de0107cd0ea86d",
+      "differs": true,
+      "restoredSha256": "93a20c97d34218b59a3d212e448f0052e656135ba3daeb77bcb1e507f9ef6834",
+      "restored": true,
+      "description": "Report a posted fallback even when its durable authorization commit failed.",
+      "target": "android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/EmergencySessionCoordinator.kt",
+      "status": "KILLED",
+      "result": {
+        "command": [
+          "./gradlew",
+          "app:testPlayDebugUnitTest",
+          "--tests",
+          "com.poyrazoncel.korubeni.emergency.EmergencySessionCoordinatorTest",
+          "--console=plain"
+        ],
+        "exitCode": 1,
+        "timedOut": false,
+        "durationMs": 4521,
+        "outputSha256": "27248cf8bea63f1273cfe85e4f9cad406b2baf704b16977acba47b5dfea120ba"
+      }
+    },
+    {
+      "id": "M06_DISPOSE_NATIVE_CANCEL",
+      "injected": true,
+      "pristineSha256": "9c7eb041428d593c55301f91d0cf5586dc9f58e2e45b7149b0a8099e3052c4e9",
+      "injectedSha256": "adbffb97298fc13dcb2838eca62190c2952e36963521e46df65ee6a62847a359",
+      "differs": true,
+      "restoredSha256": "9c7eb041428d593c55301f91d0cf5586dc9f58e2e45b7149b0a8099e3052c4e9",
+      "restored": true,
+      "description": "Reintroduce native safety cancellation from widget dispose.",
+      "target": "lib/screens/countdown_screen.dart",
+      "status": "KILLED",
+      "result": {
+        "command": [
+          "flutter",
+          "test",
+          "--no-pub",
+          "test/screens/countdown_dispose_lifecycle_test.dart",
+          "--plain-name",
+          "disposing an armed countdown never sends native cancel"
+        ],
+        "exitCode": 1,
+        "timedOut": false,
+        "durationMs": 3647,
+        "outputSha256": "567f9619cb801339b0427599593a9c7008d7751754672954f1af91b32518af1b"
+      }
+    },
+    {
+      "id": "M07_LOCKOUT_WRITE_FAILURE_IGNORED",
+      "injected": true,
+      "pristineSha256": "027ad67cd2a1729ece41bb67fbe13a08a2c1e051188d64a5e907d1989a7de147",
+      "injectedSha256": "c6c5c8078014ad0b2462a53467cb4a21be7c11c9472f678012cbda83d3c23604",
+      "differs": true,
+      "restoredSha256": "027ad67cd2a1729ece41bb67fbe13a08a2c1e051188d64a5e907d1989a7de147",
+      "restored": true,
+      "description": "Let a failed PIN attempt that could not be debited pass unlocked.",
+      "target": "lib/screens/app_unlock_screen.dart",
+      "status": "KILLED",
+      "result": {
+        "command": [
+          "flutter",
+          "test",
+          "--no-pub",
+          "test/screens/unlock_lockout_write_failure_test.dart",
+          "--plain-name",
+          "a keystore write fault still locks the keypad"
+        ],
+        "exitCode": 1,
+        "timedOut": false,
+        "durationMs": 3471,
+        "outputSha256": "3ac1fb188b7b5d0f4b92150c5a8a802b63d738551f9f4cedc5db9f9fba3f704c"
+      }
+    }
+  ],
+  "preparation": {
+    "command": [
+      "flutter",
+      "pub",
+      "get",
+      "--offline"
+    ],
+    "exitCode": 0,
+    "timedOut": false,
+    "durationMs": 1233,
+    "outputSha256": "6c834cb71e21db0ceb6ce47031ea215281ab554c7763b5ecc8ba9723091f6031"
+  },
+  "baselines": [
+    {
+      "command": [
+        "flutter",
+        "test",
+        "--no-pub",
+        "test/screens/countdown_dispose_lifecycle_test.dart",
+        "test/core/services/pin_verification_service_test.dart",
+        "test/core/services/emergency_dispatch_pipeline_test.dart",
+        "test/screens/unlock_lockout_write_failure_test.dart"
+      ],
+      "exitCode": 0,
+      "timedOut": false,
+      "durationMs": 13718,
+      "outputSha256": "1ceec43e51836e3d252076c3ff98bcda4beb258102fa42033c7f805009ab26dc",
+      "name": "flutter"
+    },
+    {
+      "command": [
+        "./gradlew",
+        "app:testPlayDebugUnitTest",
+        "--tests",
+        "com.poyrazoncel.korubeni.emergency.EmergencySessionCoordinatorTest",
+        "--console=plain"
+      ],
+      "exitCode": 0,
+      "timedOut": false,
+      "durationMs": 22576,
+      "outputSha256": "badc8f4d935ddaa6729ce02b7858a66fa8fc2e8f7d9cc4798e4156c309603ced",
+      "name": "native"
+    }
+  ],
+  "status": "PASS"
+}

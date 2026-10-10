@@ -1,0 +1,152 @@
+  0 OK  10:16:31 'Uygulama kilidi. PIN ile açın.' -> 'Acil durum geri sayımı. PIN ile iptal ed' acts=12 calls=0 fatal=0 anr=-
+  1 OK  10:17:17 'Calling…' -> 'WebView Browser Tester 124.0.6367.219' acts=4 calls=1 fatal=0 anr=-
+  2 OK  10:18:22 'WebView Browser Tester 124.0.6367.219' -> 'Uygulama kilidi. PIN ile açın.' acts=4 calls=0 fatal=0 anr=-
+  3 OK  10:18:40 'Uygulama kilidi. PIN ile açın.' -> 'KVKK Aydınlatma Metni' acts=3 calls=0 fatal=0 anr=-
+  4 OK  10:18:55 'KVKK Aydınlatma Metni' -> 'Yasal Bilgiler' acts=4 calls=0 fatal=0 anr=-
+NOPAD 2
+  5 OK  10:19:13 'Yasal Bilgiler' -> 'Rıza Yönetimi' acts=6 calls=0 fatal=0 anr=-
+  6 OK  10:19:56 'Rıza Yönetimi' -> 'Rıza Yönetimi' acts=6 calls=0 fatal=0 anr=-
+NOPAD 1
+  7 OK  10:20:18 'Rıza Yönetimi' -> 'Yasal Bilgiler' acts=12 calls=0 fatal=0 anr=-
+PIN 1357
+  8 OK  10:21:16 'Yasal Bilgiler' -> 'Uygulama kilidi. PIN ile açın.' acts=6 calls=0 fatal=0 anr=-
+  9 OK  10:21:42 'Uygulama kilidi. PIN ile açın.' -> 'Uygulama kilidi. PIN ile açın.' acts=9 calls=0 fatal=0 anr=-
+NOPAD 2
+ 10 OK  10:22:11 'Uygulama kilidi. PIN ile açın.' -> 'KVKK Aydınlatma Metni' acts=12 calls=0 fatal=0 anr=-
+ 11 OK  10:23:11 'KVKK Aydınlatma Metni' -> 'Uygulama kilidi. PIN ile açın.' acts=9 calls=0 fatal=0 anr=-
+NOPAD 1
+ 12 OK  10:23:48 'Uygulama kilidi. PIN ile açın.' -> 'Rıza Yönetimi' acts=7 calls=0 fatal=0 anr=-
+ 13 OK  10:24:39 'Rıza Yönetimi' -> 'Rızayı Geri Çek' acts=6 calls=0 fatal=0 anr=-
+ 14 OK  10:25:05 'Rızayı Geri Çek' -> 'Rıza Yönetimi' acts=5 calls=0 fatal=0 anr=-
+ 15 OK  10:25:28 'Rıza Yönetimi' -> 'Yasal Bilgiler' acts=5 calls=0 fatal=0 anr=-
+ 16 OK  10:25:52 'Yasal Bilgiler' -> 'Rıza Yönetimi' acts=12 calls=0 fatal=0 anr=-
+NOPAD 1
+ 17 OK  10:26:29 'Rıza Yönetimi' -> 'Rıza Yönetimi' acts=5 calls=0 fatal=0 anr=-
+ 18 OK  10:27:10 'Rıza Yönetimi' -> 'Rızayı Geri Çek' acts=4 calls=0 fatal=0 anr=-
+ 19 OK  10:27:31 'Rızayı Geri Çek' -> 'Rıza Yönetimi' acts=6 calls=0 fatal=0 anr=-
+ 20 OK  10:27:55 'Rıza Yönetimi' -> 'Annem' acts=6 calls=1 fatal=0 anr=-
+ 21 OK  10:28:22 'Annem' -> 'Uygulama kilidi. PIN ile açın.' acts=5 calls=0 fatal=0 anr=-
+ 22 OK  10:30:14 'Uygulama kilidi. PIN ile açın.' -> 'Uygulama kilidi. PIN ile açın.' acts=3 calls=0 fatal=0 anr=-
+ 23 OK  10:30:31 'Uygulama kilidi. PIN ile açın.' -> 'Uygulama kilidi. PIN ile açın.' acts=4 calls=0 fatal=0 anr=-
+ 24 OK  10:30:53 'Uygulama kilidi. PIN ile açın.' -> 'Rıza Yönetimi' acts=3 calls=0 fatal=0 anr=-
+NOPAD 1
+NOPAD 2
+ 25 OK  10:31:10 'Rıza Yönetimi' -> 'Rızayı Geri Çek' acts=9 calls=0 fatal=0 anr=-
+PIN 1357
+ 26 OK  10:32:30 'Rızayı Geri Çek' -> 'Yasal Bilgiler' acts=12 calls=0 fatal=0 anr=-
+ 27 OK  10:33:19 'Yasal Bilgiler' -> 'More options' acts=12 calls=0 fatal=0 anr=-
+ 28 OK  10:34:19 'More options' -> 'Aramayı sizin başlatmanız gerekiyor' acts=7 calls=0 fatal=0 anr=-
+NOPAD 2
+ 29 OK  10:34:49 'Aramayı sizin başlatmanız gerekiyor' -> 'Uygulama kilidi. PIN ile açın.' acts=4 calls=0 fatal=0 anr=-
+NOPAD 1
+ 30 OK  10:35:46 'Uygulama kilidi. PIN ile açın.' -> 'Uygulama kilidi. PIN ile açın.' acts=6 calls=0 fatal=0 anr=-
+ 31 OK  10:36:43 'Uygulama kilidi. PIN ile açın.' -> 'Rızayı Geri Çek' acts=5 calls=0 fatal=0 anr=-
+ 32 OK  10:37:03 'Rızayı Geri Çek' -> '?' acts=7 calls=1 fatal=0 anr=-
+PIN 2468
+NOPAD 1
+ 33 OK  10:40:26 '?' -> 'Annem' acts=8 calls=1 fatal=0 anr=-
+NOPAD 2
+ 34 OK  10:42:12 'Annem' -> 'Rıza Yönetimi' acts=6 calls=0 fatal=0 anr=-
+ 35 OK  10:43:38 'Rıza Yönetimi' -> 'Kullanım Sözleşmesi' acts=7 calls=0 fatal=0 anr=-
+ 36 OK  10:44:04 'Kullanım Sözleşmesi' -> 'Yasal Bilgiler' acts=3 calls=0 fatal=0 anr=-
+NOPAD 2
+ 37 OK  10:44:21 'Yasal Bilgiler' -> 'Yasal Bilgiler' acts=11 calls=0 fatal=0 anr=-
+ 38 OK  10:45:28 'Yasal Bilgiler' -> 'Uygulama kilidi. PIN ile açın.' acts=3 calls=0 fatal=0 anr=-
+ 39 OK  10:45:52 'Uygulama kilidi. PIN ile açın.' -> 'Search' acts=6 calls=0 fatal=0 anr=-
+ 40 OK  10:46:25 'Search' -> 'Annem' acts=5 calls=1 fatal=0 anr=-
+PIN 1357
+NOPAD 2
+ 41 OK  10:46:54 'Annem' -> 'Uygulama kilidi. PIN ile açın.' acts=12 calls=1 fatal=0 anr=-
+ 42 OK  10:50:24 'Uygulama kilidi. PIN ile açın.' -> 'Uygulama kilidi. PIN ile açın.' acts=8 calls=0 fatal=0 anr=-
+ 43 OK  10:51:03 'Uygulama kilidi. PIN ile açın.' -> 'Uygulama kilidi. PIN ile açın.' acts=11 calls=0 fatal=0 anr=-
+ 44 OK  10:51:52 'Uygulama kilidi. PIN ile açın.' -> 'Yasal Bilgiler' acts=4 calls=0 fatal=0 anr=-
+ 45 OK  10:52:15 'Yasal Bilgiler' -> 'More options' acts=9 calls=0 fatal=0 anr=-
+ 46 OK  10:52:47 'More options' -> 'Aramayı sizin başlatmanız gerekiyor' acts=7 calls=0 fatal=0 anr=-
+ 47 OK  10:53:16 'Aramayı sizin başlatmanız gerekiyor' -> 'Aramayı sizin başlatmanız gerekiyor' acts=7 calls=0 fatal=0 anr=-
+ 48 OK  10:53:42 'Aramayı sizin başlatmanız gerekiyor' -> '?' acts=7 calls=0 fatal=0 anr=-
+PIN 1357
+ 49 OK  10:58:32 '?' -> 'Aramayı sizin başlatmanız gerekiyor' acts=11 calls=0 fatal=0 anr=-
+ 50 OK  11:00:00 'Aramayı sizin başlatmanız gerekiyor' -> 'Yasal Bilgiler' acts=5 calls=0 fatal=0 anr=-
+ 51 OK  11:01:49 'Yasal Bilgiler' -> 'Uygulama kilidi. PIN ile açın.' acts=11 calls=1 fatal=0 anr=-
+ 52 OK  11:04:04 'Uygulama kilidi. PIN ile açın.' -> 'Turn off airplane mode to make a call.' acts=12 calls=0 fatal=0 anr=-
+ 53 OK  11:04:51 'Turn off airplane mode to make a call.' -> 'Rızayı Geri Çek' acts=12 calls=0 fatal=0 anr=-
+ 54 OK  11:06:11 'Rızayı Geri Çek' -> 'Rıza Yönetimi' acts=4 calls=0 fatal=0 anr=-
+ 55 OK  11:06:30 'Rıza Yönetimi' -> 'Uygulama kilidi. PIN ile açın.' acts=8 calls=0 fatal=0 anr=-
+NOPAD 2
+ 56 OK  11:07:05 'Uygulama kilidi. PIN ile açın.' -> 'Kullanım Sözleşmesi' acts=5 calls=0 fatal=0 anr=-
+ 57 OK  11:07:46 'Kullanım Sözleşmesi' -> 'WebView Browser Tester 124.0.6367.219' acts=6 calls=0 fatal=0 anr=-
+ 58 OK  11:08:09 'WebView Browser Tester 124.0.6367.219' -> 'KVKK Aydınlatma Metni' acts=3 calls=0 fatal=0 anr=-
+ 59 OK  11:08:25 'KVKK Aydınlatma Metni' -> 'Uygulama kilidi. PIN ile açın.' acts=5 calls=0 fatal=0 anr=-
+NOPAD 2
+ 60 OK  11:08:50 'Uygulama kilidi. PIN ile açın.' -> 'Uygulama kilidi. PIN ile açın.' acts=8 calls=0 fatal=0 anr=-
+ 61 OK  11:09:44 'Uygulama kilidi. PIN ile açın.' -> 'WebView Browser Tester 124.0.6367.219' acts=10 calls=0 fatal=0 anr=-
+NOPAD 2
+NOPAD 2
+ 62 OK  11:10:16 'WebView Browser Tester 124.0.6367.219' -> 'Uygulama kilidi. PIN ile açın.' acts=11 calls=0 fatal=0 anr=-
+ 63 OK  11:11:43 'Uygulama kilidi. PIN ile açın.' -> 'Rıza Yönetimi' acts=11 calls=0 fatal=0 anr=-
+ 64 OK  11:12:22 'Rıza Yönetimi' -> 'Yasal Bilgiler' acts=6 calls=0 fatal=0 anr=-
+ 65 OK  11:12:44 'Yasal Bilgiler' -> 'Rıza Yönetimi' acts=8 calls=0 fatal=0 anr=-
+ 66 OK  11:13:14 'Rıza Yönetimi' -> 'Uygulama kilidi. PIN ile açın.' acts=7 calls=0 fatal=0 anr=-
+NOPAD 1
+ 67 OK  11:13:48 'Uygulama kilidi. PIN ile açın.' -> 'Yasal Bilgiler' acts=8 calls=0 fatal=0 anr=-
+NOPAD 2
+ 68 OK  11:14:37 'Yasal Bilgiler' -> 'Rıza Yönetimi' acts=4 calls=0 fatal=0 anr=-
+NOPAD 2
+ 69 OK  11:15:19 'Rıza Yönetimi' -> 'Uygulama kilidi. PIN ile açın.' acts=6 calls=0 fatal=0 anr=-
+ 70 OK  11:16:09 'Uygulama kilidi. PIN ile açın.' -> 'Uygulama kilidi. PIN ile açın.' acts=10 calls=0 fatal=0 anr=-
+ 71 OK  11:16:41 'Uygulama kilidi. PIN ile açın.' -> 'WebView Browser Tester 124.0.6367.219' acts=9 calls=0 fatal=0 anr=-
+ 72 OK  11:17:13 'WebView Browser Tester 124.0.6367.219' -> 'WebView Browser Tester 124.0.6367.219' acts=9 calls=0 fatal=0 anr=-
+ 73 OK  11:17:47 'WebView Browser Tester 124.0.6367.219' -> 'Yasal Bilgiler' acts=4 calls=0 fatal=0 anr=-
+NOPAD 1
+ 74 OK  11:18:10 'Yasal Bilgiler' -> 'Yasal Bilgiler' acts=3 calls=0 fatal=0 anr=-
+NOPAD 2
+ 75 OK  11:18:48 'Yasal Bilgiler' -> 'Uygulama kilidi. PIN ile açın.' acts=7 calls=0 fatal=0 anr=-
+NOPAD 2
+ 76 OK  11:19:44 'Uygulama kilidi. PIN ile açın.' -> 'Yasal Bilgiler' acts=8 calls=0 fatal=0 anr=-
+NOPAD 1
+ 77 OK  11:20:36 'Yasal Bilgiler' -> 'Rıza Yönetimi' acts=11 calls=0 fatal=0 anr=-
+NOPAD 2
+ 78 OK  11:21:33 'Rıza Yönetimi' -> 'Yasal Bilgiler' acts=4 calls=0 fatal=0 anr=-
+ 79 OK  11:22:11 'Yasal Bilgiler' -> 'Yasal Bilgiler' acts=12 calls=0 fatal=0 anr=-
+NOPAD 2
+ 80 OK  11:22:57 'Yasal Bilgiler' -> 'Yasal Bilgiler' acts=11 calls=1 fatal=0 anr=-
+ 81 OK  11:24:53 'Yasal Bilgiler' -> 'Rıza Yönetimi' acts=6 calls=0 fatal=0 anr=-
+ 82 OK  11:25:23 'Rıza Yönetimi' -> 'Rıza Yönetimi' acts=9 calls=0 fatal=0 anr=-
+ 83 OK  11:25:53 'Rıza Yönetimi' -> 'Uygulama kilidi. PIN ile açın.' acts=5 calls=0 fatal=0 anr=-
+ 84 OK  11:26:27 'Uygulama kilidi. PIN ile açın.' -> 'Rızayı Geri Çek' acts=9 calls=0 fatal=0 anr=-
+NOPAD 1
+NOPAD 2
+ 85 OK  11:27:03 'Rızayı Geri Çek' -> 'Rıza Yönetimi' acts=4 calls=0 fatal=0 anr=-
+ 86 OK  11:28:06 'Rıza Yönetimi' -> 'Yasal Bilgiler' acts=11 calls=0 fatal=0 anr=-
+ 87 OK  11:28:47 'Yasal Bilgiler' -> 'Yasal Bilgiler' acts=4 calls=0 fatal=0 anr=-
+ 88 OK  11:29:05 'Yasal Bilgiler' -> 'Annem' acts=6 calls=1 fatal=0 anr=-
+ 89 OK  11:29:37 'Annem' -> 'Yasal Bilgiler' acts=11 calls=0 fatal=0 anr=-
+NOPAD 2
+ 90 OK  11:31:51 'Yasal Bilgiler' -> 'Yasal Bilgiler' acts=4 calls=0 fatal=0 anr=-
+PIN 2468
+ 91 OK  11:32:33 'Yasal Bilgiler' -> 'Yasal Bilgiler' acts=11 calls=0 fatal=0 anr=-
+NOPAD 2
+ 92 OK  11:33:14 'Yasal Bilgiler' -> 'Uygulama kilidi. PIN ile açın.' acts=6 calls=0 fatal=0 anr=-
+ 93 OK  11:34:05 'Uygulama kilidi. PIN ile açın.' -> 'Uygulama kilidi. PIN ile açın.' acts=7 calls=0 fatal=0 anr=-
+ 94 OK  11:34:53 'Uygulama kilidi. PIN ile açın.' -> 'Yasal Bilgiler' acts=7 calls=0 fatal=0 anr=-
+ 95 OK  11:35:21 'Yasal Bilgiler' -> 'Uygulama kilidi. PIN ile açın.' acts=6 calls=0 fatal=0 anr=-
+ 96 OK  11:35:48 'Uygulama kilidi. PIN ile açın.' -> 'Yasal Bilgiler' acts=8 calls=0 fatal=0 anr=-
+NOPAD 2
+ 97 OK  11:36:16 'Yasal Bilgiler' -> 'Yasal Bilgiler' acts=9 calls=0 fatal=0 anr=-
+ 98 OK  11:37:14 'Yasal Bilgiler' -> 'Yasal Bilgiler' acts=4 calls=0 fatal=0 anr=-
+ 99 OK  11:37:33 'Yasal Bilgiler' -> 'Yasal Bilgiler' acts=7 calls=0 fatal=0 anr=-
+NOPAD 2
+100 OK  11:38:01 'Yasal Bilgiler' -> 'WebView Browser Tester 124.0.6367.219' acts=12 calls=0 fatal=0 anr=-
+NOPAD 2
+NOPAD 2
+101 OK  11:39:05 'WebView Browser Tester 124.0.6367.219' -> 'Yasal Bilgiler' acts=11 calls=0 fatal=0 anr=-
+102 OK  11:40:22 'Yasal Bilgiler' -> 'Uygulama kilidi. PIN ile açın.' acts=4 calls=0 fatal=0 anr=-
+103 OK  11:40:48 'Uygulama kilidi. PIN ile açın.' -> 'Yasal Bilgiler' acts=12 calls=0 fatal=0 anr=-
+104 OK  11:41:33 'Yasal Bilgiler' -> 'Uygulama kilidi. PIN ile açın.' acts=4 calls=0 fatal=0 anr=-
+NOPAD 1
+105 OK  11:41:58 'Uygulama kilidi. PIN ile açın.' -> 'Yasal Bilgiler' acts=3 calls=0 fatal=0 anr=-
+106 OK  11:42:43 'Yasal Bilgiler' -> 'Yasal Bilgiler' acts=8 calls=0 fatal=0 anr=-
+107 OK  11:43:19 'Yasal Bilgiler' -> 'Yasal Bilgiler' acts=10 calls=0 fatal=0 anr=-
+NOPAD 2
+108 OK  11:43:59 'Yasal Bilgiler' -> 'Yasal Bilgiler' acts=8 calls=0 fatal=0 anr=-
+109 OK  11:44:57 'Yasal Bilgiler' -> 'Yasal Bilgiler' acts=11 calls=0 fatal=0 anr=-

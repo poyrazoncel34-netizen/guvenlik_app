@@ -23,7 +23,10 @@ for n in ns:
 if all(c in pos for c in pin):
     ui.sh('shell', ';'.join(f'input tap {pos[c][0]} {pos[c][1]}' for c in pin))
 time.sleep(2.5)
-home = any('Hoş Geldiniz' in ui.label(n) for n in ui.nodes())
+# Unlocked = the unlock screen is gone (the app may restore its last route,
+# e.g. the timeline, instead of home -- 'Hoş Geldiniz' alone undercounted).
+after = [ui.label(n) for n in ui.nodes()]
+home = bool(after) and not any('Uygulama kilidi' in l or 'Kilitli:' in l or 'Giriş yapmak için' in l for l in after)
 dev = subprocess.run([ui.ADB, 'shell', 'date', '+%T'], capture_output=True, text=True).stdout.strip()
 print(f"{label} | band={band.strip('|')} | correct PIN opened app={home} | dev={dev}")
 PY

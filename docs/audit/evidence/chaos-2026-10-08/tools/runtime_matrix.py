@@ -12,6 +12,9 @@ Pro is a TEST-ONLY offline anchor written as root (never a commerce proof).
 """
 import os, re, subprocess, sys, time
 sys.path.insert(0, os.path.dirname(__file__)); import ui
+# Fixed key (PanicLaunch.kt), NOT applicationId-based: the smoke build's
+# '<pkg>.smoke.extra...' was refused (fail-closed) and looked like a failure.
+PANIC_SOURCE_EXTRA = 'com.poyrazoncel.korubeni.extra.PANIC_SOURCE'
 
 APK, PKG, LABEL, OUT = sys.argv[1:5]
 RELEASE = '--release' in sys.argv
@@ -147,7 +150,7 @@ def timer(screen, slot, step):
 def quick(kind):
     sh('shell', 'input', 'keyevent', 'KEYCODE_HOME'); time.sleep(1)
     if kind == 'widget':
-        sh('shell', 'am', 'start', '-n', f'{PKG}/com.poyrazoncel.korubeni.quickaccess.QuickPanicTrampolineActivity', '--es', f'{PKG}.extra.PANIC_SOURCE', 'widget')
+        sh('shell', 'am', 'start', '-n', f'{PKG}/com.poyrazoncel.korubeni.quickaccess.QuickPanicTrampolineActivity', '--es', PANIC_SOURCE_EXTRA, 'widget')
     else:
         comp = f'{PKG}/com.poyrazoncel.korubeni.quickaccess.PanicTileService'
         sh('shell', 'cmd', 'statusbar', 'add-tile', comp); time.sleep(1)

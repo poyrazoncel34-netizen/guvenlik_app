@@ -1,0 +1,2 @@
+RC 3691017 (APK byte-identical to 3c7453e build) debug sha256 192fc9ae18426f3d API35 KoruBeni_A017_API35 emulator-5554 420dpi -no-audio lastUpdateTime=2026-10-10 09:31:20 pro_anchor=1
+attempt 2: seed 20261014, driver with ANR detection/classification/recovery, after emulator reboot 2026-10-10 10:16:23

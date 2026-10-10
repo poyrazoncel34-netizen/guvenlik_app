@@ -1,0 +1,65 @@
+TAP Ana Sayfa 151 2165
+TAP Ana Sayfa 151 2165
+TAP Ana Sayfa 151 2165
+TAP Ana Sayfa 151 2165
+TAP Ana Sayfa 151 2165
+TAP Ana Sayfa 151 2165
+TAP Kontrol Noktası 787 1178
+TAP 15 dk 338 1477
+TAP Anladım, devam et 540 1706
+PIN 2468
+TAP Kontrol Noktası 787 1178
+TAP Arka plan koruması kapalı veya doğrulanamıyor 540 506
+TAP İptal Et 540 1336
+TAP Doğrula 709 1357
+P7 Y-14 revoke during Check-In -> notice -> settings -> re-grant restores exact alarms: PASS armed=armed process_killed=True notice=True settings=True notice_gone=True exact_alarms=2 end=cancelled
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+TAP Kontrol Noktası 540 201
+NOTFOUND 5 dk
+NOTFOUND 5 dk
+NOTFOUND 5 dk
+NOTFOUND 5 dk
+NOTFOUND 5 dk
+NOTFOUND 5 dk
+NOTFOUND Anladım, devam et
+NOTFOUND Anladım, devam et
+NOTFOUND Anladım, devam et
+NOTFOUND Anladım, devam et
+NOTFOUND Anladım, devam et
+NOTFOUND Anladım, devam et
+P8 A-03 final warning fails -> single call at the final deadline + timeline reason: FAIL armed=cancelled final=cancelled graceWarningOutcome=notAttempted calls+=0 timeline_reason=False

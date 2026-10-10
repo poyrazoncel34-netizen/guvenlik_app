@@ -1,0 +1,7 @@
+RC 3691017 OSV start 2026-10-10 10:28:08
+OSV_EVIDENCE_PASS
+pub_queries=195
+maven_queries=203
+Dependency audit complete. Candidate-bound evidence: /private/tmp/claude-501/-Users-poyrazoncel-Projects-guvenlik-app/53dc7a26-0f79-4878-85a0-74d07698c976/scratchpad/rc-artifacts/osv.json
+OSV coverage limitations still apply.
+exit=0 end 2026-10-10 10:28:14

@@ -13,6 +13,9 @@ tapped: they would end the run, not test it.
 """
 import json, os, random, re, subprocess, sys, time
 sys.path.insert(0, os.path.dirname(__file__)); import ui
+# Fixed key (PanicLaunch.kt), NOT applicationId-based: the smoke build's
+# '<pkg>.smoke.extra...' was refused (fail-closed) and looked like a failure.
+PANIC_SOURCE_EXTRA = 'com.poyrazoncel.korubeni.extra.PANIC_SOURCE'
 
 PKG = 'com.poyrazoncel.korubeni'
 SESSION = f'/data/user_de/0/{PKG}/shared_prefs/korubeni_emergency_session_v1.xml'
@@ -85,7 +88,7 @@ def act(rng, log):
     elif kind == 'link':
         l = rng.choice(LINKS); sh('shell', 'am', 'start', '-a', 'android.intent.action.VIEW', '-d', l, PKG); log.append(f'link:{l}')
     elif kind == 'widget':
-        sh('shell', 'am', 'start', '-n', f'{PKG}/.quickaccess.QuickPanicTrampolineActivity', '--es', f'{PKG}.extra.PANIC_SOURCE', 'widget'); log.append('widget')
+        sh('shell', 'am', 'start', '-n', f'{PKG}/.quickaccess.QuickPanicTrampolineActivity', '--es', PANIC_SOURCE_EXTRA, 'widget'); log.append('widget')
     elif kind == 'rotate':
         r = rng.choice(['0', '1', '3']); sh('shell', 'settings', 'put', 'system', 'accelerometer_rotation', '0'); sh('shell', 'settings', 'put', 'system', 'user_rotation', r); log.append(f'rotate:{r}')
     elif kind == 'screen':
@@ -104,6 +107,41 @@ def act(rng, log):
     elif kind in ('pin_right', 'pin_wrong'):
         ui.pin('2468' if kind == 'pin_right' else '1357', delay=0.05); log.append(kind)
     time.sleep(rng.uniform(0.2, 1.2))
+
+_seen_anr = set()
+
+def anr_check():
+    """An ANR dialog or a fresh trace for KoruBeni: classify, dismiss, relaunch.
+
+    The closure RC run (2026-10-10) sat 60+ sequences on an ANR dialog the old
+    checker never saw. An ANR whose stack is the emulator GNSS HAL deadlock
+    (app main thread in NmeaClient.stop -> unregisterGnssNmeaCallback, while
+    system_server holds the NMEA lock inside GnssHal::stopNmea) is recorded as
+    'env-gnss-hal-deadlock'; any other ANR is 'app' and fails the sequence.
+    """
+    labels = [ui.label(n) for n in ui.nodes()]
+    dialog = any("isn't responding" in l for l in labels)
+    newest = sh('shell', 'ls -t /data/anr/ 2>/dev/null | head -1').strip()
+    fresh = bool(newest) and newest not in _seen_anr and newest.startswith('anr_')
+    if not dialog and not fresh:
+        return None
+    kind = 'app'
+    if fresh:
+        _seen_anr.add(newest)
+        subject = sh('shell', f'head -1 /data/anr/{newest}').strip()
+        if PKG not in subject:
+            fresh = False
+        else:
+            sig = sh('shell', f"grep -c -E 'NmeaClient.stop|unregisterGnssNmeaCallback|GnssHal::stopNmea' /data/anr/{newest}").strip()
+            if sig.isdigit() and int(sig) >= 3:
+                kind = 'env-gnss-hal-deadlock'
+    if dialog:
+        ui.tap('Close app', exact=True)
+        time.sleep(1.0)
+        sh('shell', 'am', 'start', '-n', f'{PKG}/.MainActivity'); time.sleep(4)
+    if not dialog and not fresh:
+        return None
+    return {'kind': kind, 'file': newest if fresh else '', 'dialog': dialog}
 
 def session_states():
     xml = sh('shell', 'cat', SESSION)
@@ -146,12 +184,15 @@ def main():
     with open(out, 'a') as f:
         for i in range(count):
             sh('shell', 'logcat', '-c')
+            pre = anr_check()
             ns = ui.nodes(); start = screen_name(ns); log = []
+            if pre: log.append(f"anr_before:{pre['kind']}")
             t0 = now()
             for _ in range(rng.randint(3, 12)):
                 try: act(rng, log)
                 except subprocess.TimeoutExpired: log.append('timeout')
             time.sleep(1.5)
+            anr = anr_check()
             try:
                 bad, calls, dup, states, corrupt, alive = check(0)
             except subprocess.TimeoutExpired:
@@ -162,10 +203,12 @@ def main():
             else: alive_after = True
             rec = {'seq': i, 'seed': seed, 'start': t0, 'end': now(), 'start_screen': start, 'actions': log,
                    'fatal': bad, 'telecom_requests': calls, 'duplicate_dispatch_lt2s': dup, 'sessions': states,
-                   'corrupt': corrupt, 'relaunch_ok': alive_after, 'end_screen': screen_name(ui.nodes())}
-            rec['ok'] = not bad and not dup and not corrupt and alive_after
+                   'corrupt': corrupt, 'relaunch_ok': alive_after, 'end_screen': screen_name(ui.nodes()),
+                   'anr': anr}
+            rec['ok'] = (not bad and not dup and not corrupt and alive_after
+                         and not (anr and anr['kind'] == 'app'))
             f.write(json.dumps(rec, ensure_ascii=False) + '\n'); f.flush()
-            print(f"{i:3d} {'OK ' if rec['ok'] else 'BAD'} {t0} {start!r} -> {rec['end_screen']!r} acts={len(log)} calls={calls} fatal={len(bad)}", flush=True)
+            print(f"{i:3d} {'OK ' if rec['ok'] else 'BAD'} {t0} {start!r} -> {rec['end_screen']!r} acts={len(log)} calls={calls} fatal={len(bad)} anr={anr['kind'] if anr else '-'}", flush=True)
             # restore a sane baseline every so often so the run keeps exploring
             if i % 10 == 9:
                 sh('shell', 'cmd', 'connectivity', 'airplane-mode', 'disable')

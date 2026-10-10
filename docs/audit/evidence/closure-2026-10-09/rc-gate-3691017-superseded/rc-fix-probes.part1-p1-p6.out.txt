@@ -1,0 +1,42 @@
+TAP Güvenli Yürüyüş 292 813
+P1 Safe Walk intro: PASS Bir zamanlayıcı başlatın. Süre dolduğunda
+'Güvendeyim' butonuna basmazsanız 60 saniyelik
+ek süre başlar ve bir uyarı gösterilmeye çalışılır;
+ek süre sonunda aci
+TAP Ana Sayfa 151 2165
+TAP Ana Sayfa 151 2165
+TAP Ana Sayfa 151 2165
+TAP Ayarlar 929 2165
+NOTFOUND Yardım & Destek
+NOTFOUND Yardım & Destek
+TAP Yardım & Destek 540 1385
+P2 Help FAQ (Y-09): PASS S: Konum pil tüketiyor mu?
+C: Konum yalnız harita ekranı açıkken okunur; uygulama konumu arka planda izlemez ve kaydetmez. Harita görüntüleri indirilip cihazda 
+PIN 2468
+PANIC_RELEASED 10:35:09
+TAP Anladım, devam et 540 1742
+PANIC_RELEASED 10:35:23
+P3 Y-11c CALL_PHONE refused -> limited heading: PASS heading=True native=none pin=True calls+=0 focus=com.poyrazoncel.korubeni/com.poyrazoncel.korubeni.MainActivity
+PIN 2468
+PANIC_RELEASED 10:36:29
+TAP Şimdi Ara 540 1498
+P4 Y-11b both refused -> exact-alarm refusal; manual call opens dialer only: PASS refusal=True no_countdown_12s=True dialer=True calls+=0
+TAP Kapat 540 1760
+TAP Ana Sayfa 151 2165
+TAP Ana Sayfa 151 2165
+TAP Ana Sayfa 151 2165
+TAP Ana Sayfa 151 2165
+TAP Ana Sayfa 151 2165
+TAP Ana Sayfa 151 2165
+PANIC_RELEASED 10:38:42
+TAP Arka plan korumasını aç 540 1624
+P5 Y-11 exact alarm refused -> refusal; button opens this app's own toggle: PASS refusal=True focus=com.android.settings/com.android.settings.spa.SpaActivity page=KoruBeni / 1.0.0 / Allow setting alarms and reminders / Allow this app to set 
+TAP Kapat 540 1760
+TAP Ana Sayfa 151 2165
+TAP Ana Sayfa 151 2165
+TAP Ana Sayfa 151 2165
+TAP Ana Sayfa 151 2165
+TAP Ana Sayfa 151 2165
+TAP Ana Sayfa 151 2165
+PANIC_RELEASED 10:40:41
+P6 Y-02 accepted request: one call; quiet link opens dialer, places none: PASS arm=armed native=requestSubmittedUnconfirmed calls_after_dispatch=+1 calls_after_link=+0 focus=com.android.dialer/com.android.dialer.main.impl.MainActivity (sho
