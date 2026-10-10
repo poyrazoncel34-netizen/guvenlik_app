@@ -1,0 +1,61 @@
+# counterfactual run 2026-10-10T09:25:22 HEAD=45ebf8bb1a0c08e8d08c7a377f258248be9932ab
+Y11-1 exactAlarmDenied back in the dialer-only allowlist: KILLED file=lib/core/services/panic_arm_policy.dart sha_orig=9b6fe1ea6a6d7ba2 sha_mut=82472d8b4fb708b6 restored=True
+    00:04 +10 -3: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/countdown_exact_alarm_required_test.dart: control: a refused CALL_PHONE keeps the dialer countdown                                 
+    00:04 +10 -3: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/countdown_exact_alarm_required_test.dart: (tearDownAll)                                                                            
+    00:04 +10 -3: Some tests failed.
+Y11-2 refusal offers no background protection: KILLED file=lib/core/services/emergency_result_policy.dart sha_orig=1f8d8fa5dc03b785 sha_mut=bc64bdc092d934be restored=True
+    00:01 +11 -2: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/countdown_exact_alarm_required_test.dart: control: a refused CALL_PHONE keeps the dialer countdown                                 
+    00:01 +11 -2: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/countdown_exact_alarm_required_test.dart: (tearDownAll)                                                                            
+    00:01 +11 -2: Some tests failed.
+Y11-3 home chip routes missing exact alarm to the battery wizard (pre-fix): KILLED file=lib/core/widgets/background_protection_fix.dart sha_orig=60bd78c1d7d867ef sha_mut=713cc5536108cff9 restored=True
+    00:01 +2 -1: with every alert prerequisite in place it is the battery wizard, as before                                                                                                                
+    00:01 +2 -1: (tearDownAll)                                                                                                                                                                             
+    00:01 +2 -1: Some tests failed.
+Y11-4 settings intent without package URI (generic list): KILLED file=android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/ExactAlarmSettingsIntent.kt sha_orig=85c99cf36362458e sha_mut=12336030c9083483 restored=True
+    ExactAlarmSettingsIntentTest > the request names this package so Settings opens its own toggle FAILED
+Y11-5 no app-details fallback when the toggle screen refuses: KILLED file=android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/ExactAlarmSettingsIntent.kt sha_orig=85c99cf36362458e sha_mut=448ec9222909accd restored=True
+    ExactAlarmSettingsIntentTest > any refusal of the exact-alarm screen falls back to the app details page FAILED
+Y14-1 revoked exact alarm not shown as degraded: KILLED file=lib/core/services/check_in_service.dart sha_orig=f32a6d8151ab2e71 sha_mut=3dc126a1cfa0d63a restored=True
+    To run this test again: /opt/homebrew/share/flutter/bin/cache/dart-sdk/bin/dart test /Users/poyrazoncel/Projects/guvenlik_app/test/core/services/check_in_service_behavior_matrix_test.dart -p vm --plain-name 'an armed session without exact-alarm access is shown degraded, and recovers when access returns'
+    
+    00:06 +12 -1: Some tests failed.
+Y14-2 parser ignores exactAlarmPermitted: KILLED file=lib/core/services/emergency_snapshot_parser.dart sha_orig=d1785b1ea00f9914 sha_mut=46cbb6932f6e312b restored=True
+    To run this test again: /opt/homebrew/share/flutter/bin/cache/dart-sdk/bin/dart test /Users/poyrazoncel/Projects/guvenlik_app/test/core/services/emergency_snapshot_parser_test.dart -p vm --plain-name 'the live exact-alarm permission travels with a present read'
+    
+    00:00 +3 -1: Some tests failed.
+Y14-3 degraded notice tap opens nothing: KILLED file=lib/core/widgets/background_protection_tap.dart sha_orig=b38816c2fcab0b39 sha_mut=1361edf362c8bd88 restored=True
+    00:01 +0 -1: both safety-timer screens wrap their degraded notice in it                                                                                                                                
+    00:01 +1 -1: both safety-timer screens wrap their degraded notice in it                                                                                                                                
+    00:01 +1 -1: Some tests failed.
+Y14-4 native read never reports exact-alarm access: KILLED file=android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/SessionReadWire.kt sha_orig=2f4c85417b776d5b sha_mut=545439a7f32a9d67 restored=True
+    SessionReadWireTest > a read carries the live exact-alarm permission FAILED
+    SessionReadWireTest > a permission query that throws reads as not permitted FAILED
+    SessionReadWireTest > an armed session read carries the flag beside the session FAILED
+Y14-5 a throwing permission query claims protection: KILLED file=android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/SessionReadWire.kt sha_orig=2f4c85417b776d5b sha_mut=fa1daf9b3eaffced restored=True
+    SessionReadWireTest > a permission query that throws reads as not permitted FAILED
+Y02-1 failsafe 'not dispatched' dialog after an accepted request: KILLED file=lib/screens/emergency_call_screen.dart sha_orig=3111e71fd08386cb sha_mut=9cfcbc84ada4589a restored=True
+    00:04 +7 -1: Y-02: what each call result is allowed to claim a failed request says so and offers the manual call                                                                                       
+    00:04 +7 -1: (tearDownAll)                                                                                                                                                                             
+    00:04 +7 -1: Some tests failed.
+Y02-2 accepted request without its own header: KILLED file=lib/screens/emergency_call_screen.dart sha_orig=3111e71fd08386cb sha_mut=56c9e9fb482d5e13 restored=True
+    00:02 +6 -2: Y-02: what each call result is allowed to claim a failed request says so and offers the manual call                                                                                       
+    00:02 +6 -2: (tearDownAll)                                                                                                                                                                             
+    00:02 +6 -2: Some tests failed.
+LK-B1 reboot does not restart an active lockout (pre-576d33e): KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=4397ee0c30cf2819 sha_mut=5d0d4a59c7ba9752 restored=True
+    00:02 +18 -7: reset forgets every lockout key                                                                                                                                                          
+    00:02 +19 -7: reset forgets every lockout key                                                                                                                                                          
+    00:02 +19 -7: Some tests failed.
+A03-1 failed final warning not written to the timeline: KILLED file=lib/core/services/native_emergency_history.dart sha_orig=ab6f45a3d888686e sha_mut=37ac58d7a967cfdd restored=True
+    
+    00:01 +3 -1: a shown warning, a panic and an older native build add nothing                                                                                                                            
+    00:01 +3 -1: Some tests failed.
+A03-2 parser drops graceWarningOutcome: KILLED file=lib/core/services/emergency_snapshot_parser.dart sha_orig=d1785b1ea00f9914 sha_mut=7eff4c001f404786 restored=True
+    
+    00:01 +5 -3: /Users/poyrazoncel/Projects/guvenlik_app/test/core/services/native_history_warning_reason_test.dart: a shown warning, a panic and an older native build add nothing                       
+    00:01 +5 -3: Some tests failed.
+A03-3 panic gets a Check-In warning reason: KILLED file=lib/core/services/native_emergency_history.dart sha_orig=ab6f45a3d888686e sha_mut=496c6128e44fb726 restored=True
+    To run this test again: /opt/homebrew/share/flutter/bin/cache/dart-sdk/bin/dart test /Users/poyrazoncel/Projects/guvenlik_app/test/core/services/native_history_warning_reason_test.dart -p vm --plain-name 'a shown warning, a panic and an older native build add nothing'
+    
+    00:01 +3 -1: Some tests failed.
+# baseline after restore: exit=0 :: 00:05 +73: All tests passed!
+# survivors=0

@@ -1,0 +1,153 @@
+[
+ {
+  "id": "Y11-1 exactAlarmDenied back in the dialer-only allowlist",
+  "file": "lib/core/services/panic_arm_policy.dart",
+  "old": "  static const Set<String> _foregroundDialReasons = <String>{\n    'callPermissionDenied',",
+  "new": "  static const Set<String> _foregroundDialReasons = <String>{\n    'exactAlarmDenied',\n    'callPermissionDenied',",
+  "tests": [
+   "test/core/services/panic_arm_policy_test.dart",
+   "test/screens/countdown_exact_alarm_required_test.dart"
+  ]
+ },
+ {
+  "id": "Y11-2 refusal offers no background protection",
+  "file": "lib/core/services/emergency_result_policy.dart",
+  "old": "  bool get offersBackgroundProtection =>\n      bodyKey == EmergencyResultPolicy.exactAlarmRequiredBodyKey;",
+  "new": "  bool get offersBackgroundProtection =>\n      bodyKey == 'never';",
+  "tests": [
+   "test/core/services/panic_arm_policy_test.dart",
+   "test/screens/countdown_exact_alarm_required_test.dart"
+  ]
+ },
+ {
+  "id": "Y11-3 home chip routes missing exact alarm to the battery wizard (pre-fix)",
+  "file": "lib/core/widgets/background_protection_fix.dart",
+  "old": "    if (known && !readiness.exactAlarmPermission) {",
+  "new": "    if (false) {",
+  "tests": [
+   "test/core/widgets/background_protection_fix_test.dart"
+  ]
+ },
+ {
+  "id": "Y11-4 settings intent without package URI (generic list)",
+  "file": "android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/ExactAlarmSettingsIntent.kt",
+  "old": "        Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM, packageUri(packageName))",
+  "new": "        Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM)",
+  "tests": [
+   "*ExactAlarmSettingsIntentTest*"
+  ],
+  "kind": "gradle"
+ },
+ {
+  "id": "Y11-5 no app-details fallback when the toggle screen refuses",
+  "file": "android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/ExactAlarmSettingsIntent.kt",
+  "old": "        for (intent in listOf(request(context.packageName), appDetails(context.packageName))) {",
+  "new": "        for (intent in listOf(request(context.packageName))) {",
+  "tests": [
+   "*ExactAlarmSettingsIntentTest*"
+  ],
+  "kind": "gradle"
+ },
+ {
+  "id": "Y14-1 revoked exact alarm not shown as degraded",
+  "file": "lib/core/services/check_in_service.dart",
+  "old": "    _nativeScheduleDegraded = !snapshot.exactAlarmPermitted; // Y-14",
+  "new": "    _nativeScheduleDegraded = false; // Y-14",
+  "tests": [
+   "test/core/services/check_in_service_behavior_matrix_test.dart"
+  ]
+ },
+ {
+  "id": "Y14-2 parser ignores exactAlarmPermitted",
+  "file": "lib/core/services/emergency_snapshot_parser.dart",
+  "old": "    exactAlarmPermitted: map['exactAlarmPermitted'] != false,",
+  "new": "    exactAlarmPermitted: true,",
+  "tests": [
+   "test/core/services/emergency_snapshot_parser_test.dart"
+  ]
+ },
+ {
+  "id": "Y14-3 degraded notice tap opens nothing",
+  "file": "lib/core/widgets/background_protection_tap.dart",
+  "old": "      onTap: () => unawaited(\n        (platform ?? EmergencyPlatformService.instance)\n            .requestExactAlarmPermission(),\n      ),",
+  "new": "      onTap: () {},",
+  "tests": [
+   "test/core/widgets/background_protection_tap_test.dart"
+  ]
+ },
+ {
+  "id": "Y14-4 native read never reports exact-alarm access",
+  "file": "android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/SessionReadWire.kt",
+  "old": "        return read.toMap() + (\"exactAlarmPermitted\" to permitted)",
+  "new": "        return read.toMap() + (\"exactAlarmPermitted\" to true)",
+  "tests": [
+   "*SessionReadWireTest*"
+  ],
+  "kind": "gradle"
+ },
+ {
+  "id": "Y14-5 a throwing permission query claims protection",
+  "file": "android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/SessionReadWire.kt",
+  "old": "        } catch (_: RuntimeException) {\n            false\n        }",
+  "new": "        } catch (_: RuntimeException) {\n            true\n        }",
+  "tests": [
+   "*SessionReadWireTest*"
+  ],
+  "kind": "gradle"
+ },
+ {
+  "id": "Y02-1 failsafe 'not dispatched' dialog after an accepted request",
+  "file": "lib/screens/emergency_call_screen.dart",
+  "old": "    if (widget.callResult.isConfirmed ||\n        widget.callResult.requiresVerification) {",
+  "new": "    if (widget.callResult.isConfirmed) {",
+  "tests": [
+   "test/screens/emergency_call_screen_behavior_test.dart"
+  ]
+ },
+ {
+  "id": "Y02-2 accepted request without its own header",
+  "file": "lib/screens/emergency_call_screen.dart",
+  "old": "    if (requestSubmitted && !hasFailure) {",
+  "new": "    if (false) {",
+  "tests": [
+   "test/screens/emergency_call_screen_behavior_test.dart"
+  ]
+ },
+ {
+  "id": "LK-B1 reboot does not restart an active lockout (pre-576d33e)",
+  "file": "lib/core/services/pin_lockout_service.dart",
+  "old": "    if (_fromAnotherBoot(reading, boot, bootId, elapsedUntil - duration.inMilliseconds)) {",
+  "new": "    if (false) {",
+  "tests": [
+   "test/core/services/pin_lockout_monotonic_test.dart"
+  ]
+ },
+ {
+  "id": "A03-1 failed final warning not written to the timeline",
+  "file": "lib/core/services/native_emergency_history.dart",
+  "old": "      'failed' => 'native_history_warning_failed',",
+  "new": "      'failed' => null,",
+  "tests": [
+   "test/core/services/native_history_warning_reason_test.dart"
+  ]
+ },
+ {
+  "id": "A03-2 parser drops graceWarningOutcome",
+  "file": "lib/core/services/emergency_snapshot_parser.dart",
+  "old": "    graceWarningOutcome: session['graceWarningOutcome']?.toString(),",
+  "new": "    graceWarningOutcome: null,",
+  "tests": [
+   "test/core/services/native_history_warning_reason_test.dart",
+   "test/core/services/emergency_snapshot_parser_test.dart"
+  ]
+ },
+ {
+  "id": "A03-3 panic gets a Check-In warning reason",
+  "file": "lib/core/services/native_emergency_history.dart",
+  "old": "    if (kind == EmergencySessionKind.panic) return null;",
+  "new": "",
+  "tests": [
+   "test/core/services/native_history_warning_reason_test.dart"
+  ]
+ }
+]
