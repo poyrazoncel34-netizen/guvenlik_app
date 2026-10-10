@@ -1,0 +1,113 @@
+TAP Ana Sayfa 151 2165
+TAP Ana Sayfa 151 2165
+TAP Ana Sayfa 151 2165
+TAP Ana Sayfa 151 2165
+TAP Ana Sayfa 151 2165
+TAP Ana Sayfa 151 2165
+TAP Kontrol Noktası 787 1178
+NOTFOUND 5 dk
+NOTFOUND 5 dk
+NOTFOUND 5 dk
+NOTFOUND 5 dk
+NOTFOUND 5 dk
+NOTFOUND 5 dk
+NOTFOUND Anladım, devam et
+NOTFOUND Anladım, devam et
+NOTFOUND Anladım, devam et
+NOTFOUND Anladım, devam et
+NOTFOUND Anladım, devam et
+NOTFOUND Anladım, devam et
+P8 A-03 final warning fails -> single call at the final deadline + timeline reason: FAIL armed=none final=none graceWarningOutcome=None calls+=0 timeline_reason=False
+PIN 2468
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Kontrol Noktası
+NOTFOUND Kontrol Noktası
+NOTFOUND Kontrol Noktası
+NOTFOUND Kontrol Noktası
+NOTFOUND Kontrol Noktası
+NOTFOUND Kontrol Noktası
+NOTFOUND 15 dk
+NOTFOUND 15 dk
+NOTFOUND 15 dk
+NOTFOUND 15 dk
+NOTFOUND 15 dk
+NOTFOUND 15 dk
+NOTFOUND 5 dk
+NOTFOUND 5 dk
+NOTFOUND 5 dk
+NOTFOUND 5 dk
+NOTFOUND 5 dk
+NOTFOUND 5 dk
+NOTFOUND Anladım, devam et
+NOTFOUND Anladım, devam et
+NOTFOUND Anladım, devam et
+NOTFOUND Anladım, devam et
+NOTFOUND Anladım, devam et
+NOTFOUND Anladım, devam et
+PIN 2468
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Kontrol Noktası
+NOTFOUND Kontrol Noktası
+NOTFOUND Kontrol Noktası
+NOTFOUND Kontrol Noktası
+NOTFOUND Kontrol Noktası
+NOTFOUND Kontrol Noktası
+NOTFOUND İptal Et
+NOTFOUND İptal Et
+NOTFOUND İptal Et
+NOTFOUND İptal Et
+NOTFOUND İptal Et
+NOTFOUND İptal Et
+P9 force-stop during an armed Check-In -> reopen restores its alarms: FAIL armed=none pending=0 -> force-stop 0 -> reopen 0; native after reopen=none; end=none

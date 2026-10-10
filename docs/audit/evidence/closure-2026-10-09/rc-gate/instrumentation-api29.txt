@@ -1,0 +1,26 @@
+serial=emulator-5556 API 29 RC ff945ee debug sha256 f2e3078eef3f68cf test=021e0456a0601c27 2026-10-10 12:30:29
+Performing Streamed Install
+Success
+Performing Streamed Install
+Success
+
+com.poyrazoncel.korubeni.emergency.BootIdentityInstrumentationTest:.
+com.poyrazoncel.korubeni.emergency.EmergencySessionAlarmInstrumentationTest:..
+com.poyrazoncel.korubeni.emergency.NativeDozeDispatchProbeTest:
+com.poyrazoncel.korubeni.emergency.NativeDozeDispatchProbeTest:
+com.poyrazoncel.korubeni.emergency.OverdueSessionProbeTest:
+com.poyrazoncel.korubeni.emergency.OverdueSessionProbeTest:
+com.poyrazoncel.korubeni.emergency.Phase3RebootProbeTest:
+com.poyrazoncel.korubeni.emergency.Phase3RebootProbeTest:
+com.poyrazoncel.korubeni.emergency.Stage4ReconciliationInstrumentationTest:
+com.poyrazoncel.korubeni.emergency.Stage4ReconciliationInstrumentationTest:
+com.poyrazoncel.korubeni.emergency.SupportedOsBoundaryInstrumentationTest:..
+com.poyrazoncel.korubeni.integrity.DeviceIntegrityEmulatorProbeTest:..
+com.poyrazoncel.korubeni.notifications.ScheduledNotificationManifestInstrumentationTest:..
+
+Time: 0.718
+
+OK (19 tests)
+
+
+end 2026-10-10 12:30:32

@@ -1,0 +1,11 @@
+36 files
+run 1 exit=0 00:52 +186: All tests passed!
+run 2 exit=0 00:52 +186: All tests passed!
+run 3 exit=0 01:16 +186: All tests passed!
+run 4 exit=0 00:46 +186: All tests passed!
+run 5 exit=0 00:53 +186: All tests passed!
+run 6 exit=0 00:59 +186: All tests passed!
+run 7 exit=0 00:47 +186: All tests passed!
+run 8 exit=0 00:41 +186: All tests passed!
+run 9 exit=0 00:43 +186: All tests passed!
+run 10 exit=0 00:43 +186: All tests passed!

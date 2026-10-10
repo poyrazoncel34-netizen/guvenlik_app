@@ -1,0 +1,5 @@
+PIN 2468
+PANIC_RELEASED 12:59:55
+TAP Arka plan korumasını aç 540 1624
+P5 Y-11 exact alarm refused -> refusal; button opens this app's own toggle: PASS refusal=True focus=com.android.settings/com.android.settings.spa.SpaActivity page=KoruBeni / 1.0.0 / Allow setting alarms and reminders / Allow this app to set 
+TAP Kapat 540 1760

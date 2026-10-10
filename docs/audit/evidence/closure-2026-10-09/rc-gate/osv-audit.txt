@@ -1,0 +1,5 @@
+OSV_EVIDENCE_PASS
+pub_queries=195
+maven_queries=203
+Dependency audit complete. Candidate-bound evidence: /Users/poyrazoncel/Projects/guvenlik_app/docs/audit/evidence/closure-2026-10-09/rc-gate/osv.json
+OSV coverage limitations still apply.

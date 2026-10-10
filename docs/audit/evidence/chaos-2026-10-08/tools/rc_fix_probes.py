@@ -54,6 +54,11 @@ def open_unlocked():
     rm.unlock_if_needed()
     if rm.has('Kapat', tries=1) and rm.has('Hiçbir işlem', tries=1):
         rm.tap('Kapat', exact=True); time.sleep(1.5)
+    # The app restores its last route (e.g. the timeline, which has no tab bar).
+    for _ in range(3):
+        if rm.has('Hoş Geldiniz', tries=1): return True
+        sh('shell', 'input', 'keyevent', 'KEYCODE_BACK'); time.sleep(1.5)
+        if rm.home(): return True
     return rm.home()
 
 

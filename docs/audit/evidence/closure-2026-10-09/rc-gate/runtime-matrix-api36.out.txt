@@ -1,0 +1,57 @@
+clean install: PASS API 36; lastUpdateTime 2026-10-10 11:56:13; flags [ DEBUGGABLE HAS_CODE ALLOW_CLEAR_USER_DATA ]
+TAP Devam Et ve Kurulumu 540 2144
+TAP Atla 996 191
+onboarding: consent + carousel: PASS 
+TAP Kişiyi kaydet 540 1725
+TAP beyan ederim 540 1542
+TAP Ekle 734 1759
+onboarding: emergency contact + contact consent: PASS 
+TAP Başla 540 2116
+PIN 2468
+PIN 2468
+TAP Kabul Et 772 1456
+TAP ALLOW 540 1280
+TAP Şimdilik Atla 540 2148
+onboarding: PIN + notification + battery step -> home: PASS 
+PIN 2468
+permissions granted + Pro test anchor -> home: PASS |Acil kişi hazır
+Annem • 05551234567 / |Kurulum tamam / |Arka Plan Hazırlığı / |3 adımda hazır olun
+PANIC_RELEASED 11:59:42
+TAP Anladım, devam et 540 1742
+PANIC_RELEASED 11:59:57
+panic -> countdown -> PIN cancel: PASS countdown seen=True; native panic=cancelled; 11.2s
+TAP Ana Sayfa 151 2165
+TAP Ana Sayfa 151 2165
+TAP Ana Sayfa 151 2165
+TAP Kontrol Noktası 787 1178
+TAP 15 dk 338 1477
+TAP Anladım, devam et 540 1706
+TAP İptal Et 540 1336
+TAP Doğrula 709 1357
+Check-In 15 min -> PIN cancel: PASS armed=True; native long=cancelled
+TAP Ana Sayfa 151 2165
+TAP Ana Sayfa 151 2165
+TAP Ana Sayfa 151 2165
+TAP Güvenli Yürüyüş 292 813
+TAP 15 dk 798 1373
+TAP Yürüyüşe Başla 540 2090
+TAP Anladım, devam et 540 1706
+TAP İptal Et 540 2106
+TAP Doğrula 709 1357
+Safe Walk -> PIN cancel: PASS armed=True; native long=cancelled
+widget quick panic -> countdown -> PIN cancel: PASS countdown seen=True; native panic=cancelled; 11.3s
+tile quick panic -> countdown -> PIN cancel: PASS countdown seen=True; native panic=cancelled; 11.3s
+PIN 2468
+deep link korubeni://open/settings: PASS 
+TAP Ana Sayfa 151 2165
+TAP Ana Sayfa 151 2165
+TAP Ana Sayfa 151 2165
+TAP Harita 410 2165
+map tab opens: PASS |Harita. Konumunuzu gösterir.
+Harita
+Konumunuz
+41.00824, 28.97837, Konumunuzu haritada görüntüleyin / |Harita
+timeline via deep link: PASS 
+PIN 2468
+process kill -> reopen -> lock -> PIN -> app: PASS 
+logcat review (app processes): PASS 0 lines

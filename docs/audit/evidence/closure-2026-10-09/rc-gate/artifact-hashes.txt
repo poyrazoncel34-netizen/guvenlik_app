@@ -1,0 +1,5 @@
+RELEASE_CANDIDATE_HEAD=ff945ee62ecf37a524a2f855cba3ded57fb61297
+3755c57081d9cc95c1caee7ebf18b3b421a25715b1709665534f0032d79cee2d  build/app/outputs/bundle/smokeRelease/app-smoke-release.aab
+edab5243eed17a59a1aa357b8954272e65457f34e1cb8ccad4df27e81fa680a9  build/app/intermediates/merged_manifest/smokeRelease/processSmokeReleaseMainManifest/AndroidManifest.xml
+021e0456a0601c2788ddd219ba2621416a2bda0f62d5989b0431fc94ad65b1b3  build/app/outputs/apk/androidTest/play/debug/app-play-debug-androidTest.apk
+kotlin unit tests=187 failures+errors=0

@@ -1,0 +1,222 @@
+# counterfactual run 2026-10-10T12:19:09 HEAD=ff945ee62ecf37a524a2f855cba3ded57fb61297
+[earlier-fixes] Y11-1 exactAlarmDenied back in the dialer-only allowlist: KILLED file=lib/core/services/panic_arm_policy.dart sha_orig=9b6fe1ea6a6d7ba2 sha_mut=82472d8b4fb708b6 restored=True
+    00:03 +10 -3: ... control: a refused CALL_PHONE keeps the dialer countdown                                                                                                                             
+    00:03 +10 -3: ... (tearDownAll)                                                                                                                                                                        
+    00:03 +10 -3: Some tests failed.
+[earlier-fixes] Y11-2 refusal offers no background protection: KILLED file=lib/core/services/emergency_result_policy.dart sha_orig=1f8d8fa5dc03b785 sha_mut=bc64bdc092d934be restored=True
+    00:03 +11 -2: ... control: a refused CALL_PHONE keeps the dialer countdown                                                                                                                             
+    00:03 +11 -2: ... (tearDownAll)                                                                                                                                                                        
+    00:03 +11 -2: Some tests failed.
+[earlier-fixes] Y11-3 home chip routes missing exact alarm to the battery wizard (pre-fix): KILLED file=lib/core/widgets/background_protection_fix.dart sha_orig=60bd78c1d7d867ef sha_mut=713cc5536108cff9 restored=True
+    00:02 +2 -1: with every alert prerequisite in place it is the battery wizard, as before                                                                                                                
+    00:02 +2 -1: (tearDownAll)                                                                                                                                                                             
+    00:02 +2 -1: Some tests failed.
+[earlier-fixes] Y11-4 settings intent without package URI (generic list): KILLED file=android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/ExactAlarmSettingsIntent.kt sha_orig=85c99cf36362458e sha_mut=12336030c9083483 restored=True
+    ExactAlarmSettingsIntentTest > the request names this package so Settings opens its own toggle FAILED
+[earlier-fixes] Y11-5 no app-details fallback when the toggle screen refuses: KILLED file=android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/ExactAlarmSettingsIntent.kt sha_orig=85c99cf36362458e sha_mut=448ec9222909accd restored=True
+    ExactAlarmSettingsIntentTest > any refusal of the exact-alarm screen falls back to the app details page FAILED
+[earlier-fixes] Y14-1 revoked exact alarm not shown as degraded: KILLED file=lib/core/services/check_in_service.dart sha_orig=f32a6d8151ab2e71 sha_mut=3dc126a1cfa0d63a restored=True
+    To run this test again: /opt/homebrew/share/flutter/bin/cache/dart-sdk/bin/dart test /private/tmp/claude-501/-Users-poyrazoncel-Projects-guvenlik-app/53dc7a26-0f79-4878-85a0-74d07698c976/scratchpad/wt-rc/test/core/services/check_in_service_behavior_matrix_test.dart -p vm --plain-name 'an armed session without exact-alarm access is shown degraded, and recovers when access returns'
+    
+    00:08 +12 -1: Some tests failed.
+[earlier-fixes] Y14-2 parser ignores exactAlarmPermitted: KILLED file=lib/core/services/emergency_snapshot_parser.dart sha_orig=d1785b1ea00f9914 sha_mut=46cbb6932f6e312b restored=True
+    To run this test again: /opt/homebrew/share/flutter/bin/cache/dart-sdk/bin/dart test /private/tmp/claude-501/-Users-poyrazoncel-Projects-guvenlik-app/53dc7a26-0f79-4878-85a0-74d07698c976/scratchpad/wt-rc/test/core/services/emergency_snapshot_parser_test.dart -p vm --plain-name 'the live exact-alarm permission travels with a present read'
+    
+    00:02 +3 -1: Some tests failed.
+[earlier-fixes] Y14-3 degraded notice tap opens nothing: KILLED file=lib/core/widgets/background_protection_tap.dart sha_orig=b38816c2fcab0b39 sha_mut=1361edf362c8bd88 restored=True
+    00:01 +0 -1: both safety-timer screens wrap their degraded notice in it                                                                                                                                
+    00:01 +1 -1: both safety-timer screens wrap their degraded notice in it                                                                                                                                
+    00:01 +1 -1: Some tests failed.
+[earlier-fixes] Y14-4 native read never reports exact-alarm access: KILLED file=android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/SessionReadWire.kt sha_orig=2f4c85417b776d5b sha_mut=545439a7f32a9d67 restored=True
+    SessionReadWireTest > a read carries the live exact-alarm permission FAILED
+    SessionReadWireTest > a permission query that throws reads as not permitted FAILED
+    SessionReadWireTest > an armed session read carries the flag beside the session FAILED
+[earlier-fixes] Y14-5 a throwing permission query claims protection: KILLED file=android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/SessionReadWire.kt sha_orig=2f4c85417b776d5b sha_mut=fa1daf9b3eaffced restored=True
+    SessionReadWireTest > a permission query that throws reads as not permitted FAILED
+[earlier-fixes] Y02-1 failsafe 'not dispatched' dialog after an accepted request: KILLED file=lib/screens/emergency_call_screen.dart sha_orig=3111e71fd08386cb sha_mut=9cfcbc84ada4589a restored=True
+    00:08 +7 -1: Y-02: what each call result is allowed to claim a failed request says so and offers the manual call                                                                                       
+    00:08 +7 -1: (tearDownAll)                                                                                                                                                                             
+    00:08 +7 -1: Some tests failed.
+[earlier-fixes] Y02-2 accepted request without its own header: KILLED file=lib/screens/emergency_call_screen.dart sha_orig=3111e71fd08386cb sha_mut=56c9e9fb482d5e13 restored=True
+    00:03 +6 -2: Y-02: what each call result is allowed to claim a failed request says so and offers the manual call                                                                                       
+    00:03 +6 -2: (tearDownAll)                                                                                                                                                                             
+    00:03 +6 -2: Some tests failed.
+[earlier-fixes] LK-B1 reboot does not restart an active lockout (pre-576d33e): KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=4397ee0c30cf2819 sha_mut=5d0d4a59c7ba9752 restored=True
+    00:03 +18 -7: reset forgets every lockout key                                                                                                                                                          
+    00:03 +19 -7: reset forgets every lockout key                                                                                                                                                          
+    00:03 +19 -7: Some tests failed.
+[earlier-fixes] A03-1 failed final warning not written to the timeline: KILLED file=lib/core/services/native_emergency_history.dart sha_orig=ab6f45a3d888686e sha_mut=37ac58d7a967cfdd restored=True
+    
+    00:02 +3 -1: a shown warning, a panic and an older native build add nothing                                                                                                                            
+    00:02 +3 -1: Some tests failed.
+[earlier-fixes] A03-2 parser drops graceWarningOutcome: KILLED file=lib/core/services/emergency_snapshot_parser.dart sha_orig=d1785b1ea00f9914 sha_mut=7eff4c001f404786 restored=True
+    
+    00:02 +5 -3: ... a shown warning, a panic and an older native build add nothing                                                                                                                        
+    00:02 +5 -3: Some tests failed.
+[earlier-fixes] A03-3 panic gets a Check-In warning reason: KILLED file=lib/core/services/native_emergency_history.dart sha_orig=ab6f45a3d888686e sha_mut=496c6128e44fb726 restored=True
+    To run this test again: /opt/homebrew/share/flutter/bin/cache/dart-sdk/bin/dart test /private/tmp/claude-501/-Users-poyrazoncel-Projects-guvenlik-app/53dc7a26-0f79-4878-85a0-74d07698c976/scratchpad/wt-rc/test/core/services/native_history_warning_reason_test.dart -p vm --plain-name 'a shown warning, a panic and an older native build add nothing'
+    
+    00:02 +3 -1: Some tests failed.
+[lockout-review] LK-R1 forget unproven expiry: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=4397ee0c30cf2819 sha_mut=b3b46c3de6071774 restored=True
+    00:02 +23 -2: reset forgets every lockout key                                                                                                                                                          
+    00:02 +24 -2: reset forgets every lockout key                                                                                                                                                          
+    00:02 +24 -2: Some tests failed.
+[lockout-review] LK-R2 failed read -> wall decides: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=4397ee0c30cf2819 sha_mut=5da32c734d497eac restored=True
+    00:03 +20 -5: reset forgets every lockout key                                                                                                                                                          
+    00:03 +21 -5: reset forgets every lockout key                                                                                                                                                          
+    00:03 +21 -5: Some tests failed.
+[lockout-review] LK-R3 bridge-missing ignored: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=4397ee0c30cf2819 sha_mut=95895f6ed9a4898c restored=True
+    00:02 +24 -1: reset forgets every lockout key                                                                                                                                                          
+    00:02 +25 -1: reset forgets every lockout key                                                                                                                                                          
+    00:02 +25 -1: Some tests failed.
+[lockout-review] LK-R4 stored duration ignored: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=4397ee0c30cf2819 sha_mut=1098c1ea47f94d26 restored=True
+    00:02 +23 -2: reset forgets every lockout key                                                                                                                                                          
+    00:02 +24 -2: reset forgets every lockout key                                                                                                                                                          
+    00:02 +24 -2: Some tests failed.
+[lockout-review] LK-R5 no serialization: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=4397ee0c30cf2819 sha_mut=9d0c60a6b9c61c69 restored=True
+    00:01 +24 -1: reset forgets every lockout key                                                                                                                                                          
+    00:01 +25 -1: reset forgets every lockout key                                                                                                                                                          
+    00:01 +25 -1: Some tests failed.
+[lockout-review] LK-R6 duration key not written at lock: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=4397ee0c30cf2819 sha_mut=e937b7d2a06ea589 restored=True
+    00:02 +23 -2: reset forgets every lockout key                                                                                                                                                          
+    00:02 +24 -2: reset forgets every lockout key                                                                                                                                                          
+    00:02 +24 -2: Some tests failed.
+[lockout-review] LK-R7 lock never waits: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=4397ee0c30cf2819 sha_mut=289efaae70efc566 restored=True
+    00:01 +24 -1: reset forgets every lockout key                                                                                                                                                          
+    00:01 +25 -1: reset forgets every lockout key                                                                                                                                                          
+    00:01 +25 -1: Some tests failed.
+[lockout-review] LK-M2a no pending marker at wall-only lock: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=4397ee0c30cf2819 sha_mut=a6117407ecec25e4 restored=True
+    00:02 +23 -2: reset forgets every lockout key                                                                                                                                                          
+    00:02 +24 -2: reset forgets every lockout key                                                                                                                                                          
+    00:02 +24 -2: Some tests failed.
+[lockout-review] LK-M2b marker ignored on read: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=4397ee0c30cf2819 sha_mut=d574390186817479 restored=True
+    00:02 +23 -2: reset forgets every lockout key                                                                                                                                                          
+    00:02 +24 -2: reset forgets every lockout key                                                                                                                                                          
+    00:02 +24 -2: Some tests failed.
+[lockout-review] LK-M2c marker read but not anchored: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=4397ee0c30cf2819 sha_mut=541de287ff3567ed restored=True
+    00:02 +23 -2: reset forgets every lockout key                                                                                                                                                          
+    00:02 +24 -2: reset forgets every lockout key                                                                                                                                                          
+    00:02 +24 -2: Some tests failed.
+[lockout-review] LK-H1 no visible floor (sub-second hold): KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=4397ee0c30cf2819 sha_mut=60bc4af813c021c4 restored=True
+    00:03 +24 -1: reset forgets every lockout key                                                                                                                                                          
+    00:03 +25 -1: reset forgets every lockout key                                                                                                                                                          
+    00:03 +25 -1: Some tests failed.
+[lockout-review] LK-H2 hold unbounded: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=4397ee0c30cf2819 sha_mut=7f1606a1096a3fcb restored=True
+    00:02 +23 -2: reset forgets every lockout key                                                                                                                                                          
+    00:02 +24 -2: reset forgets every lockout key                                                                                                                                                          
+    00:02 +24 -2: Some tests failed.
+[lockout-review] LK-H3 hold restarts on every failed read: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=4397ee0c30cf2819 sha_mut=9d2b2cf4bbe22166 restored=True
+    00:02 +23 -2: reset forgets every lockout key                                                                                                                                                          
+    00:02 +24 -2: reset forgets every lockout key                                                                                                                                                          
+    00:02 +24 -2: Some tests failed.
+[lockout-review] LK-H4 proven read does not end the episode: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=4397ee0c30cf2819 sha_mut=a629ad4456629043 restored=True
+    00:02 +24 -1: reset forgets every lockout key                                                                                                                                                          
+    00:02 +25 -1: reset forgets every lockout key                                                                                                                                                          
+    00:02 +25 -1: Some tests failed.
+[lockout-review] LK-W1 waiter never gives up on a stuck holder: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=4397ee0c30cf2819 sha_mut=78f5105b495bdbf5 restored=True
+    00:06 +23 -2: reset forgets every lockout key                                                                                                                                                          
+    00:06 +24 -2: reset forgets every lockout key                                                                                                                                                          
+    00:06 +24 -2: Some tests failed.
+[lockout-review] LK-C1 lone length not read as cut short: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=4397ee0c30cf2819 sha_mut=7dec80952e1b81ed restored=True
+    00:02 +24 -1: reset forgets every lockout key                                                                                                                                                          
+    00:02 +25 -1: reset forgets every lockout key                                                                                                                                                          
+    00:02 +25 -1: Some tests failed.
+[lockout-review] LK-D1 reset deletes the length in parallel: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=4397ee0c30cf2819 sha_mut=cb025081a5c0934d restored=True
+    00:02 +24 -1: reset forgets every lockout key                                                                                                                                                          
+    00:02 +25 -1: reset forgets every lockout key                                                                                                                                                          
+    00:02 +25 -1: Some tests failed.
+[lockout-review] LK-D2 clear deletes the length last: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=4397ee0c30cf2819 sha_mut=ebc3b35e00fe8ced restored=True
+    00:02 +24 -1: reset forgets every lockout key                                                                                                                                                          
+    00:02 +25 -1: reset forgets every lockout key                                                                                                                                                          
+    00:02 +25 -1: Some tests failed.
+[lockout-review] LK-W2 stuck holder never recorded: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=4397ee0c30cf2819 sha_mut=bd85f00c141756b9 restored=True
+    00:03 +24 -1: reset forgets every lockout key                                                                                                                                                          
+    00:03 +25 -1: reset forgets every lockout key                                                                                                                                                          
+    00:03 +25 -1: Some tests failed.
+[lockout-review] LK-W3 new callers queue behind a stuck holder: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=4397ee0c30cf2819 sha_mut=5396590d8a3030a6 restored=True
+    00:03 +24 -1: reset forgets every lockout key                                                                                                                                                          
+    00:03 +25 -1: reset forgets every lockout key                                                                                                                                                          
+    00:03 +25 -1: Some tests failed.
+[lockout-review] LK-E1 a new lockout inherits the old hold episode: KILLED file=lib/core/services/pin_lockout_service.dart sha_orig=4397ee0c30cf2819 sha_mut=940e5f19743f093b restored=True
+    00:02 +24 -1: reset forgets every lockout key                                                                                                                                                          
+    00:02 +25 -1: reset forgets every lockout key                                                                                                                                                          
+    00:02 +25 -1: Some tests failed.
+[y11-limited-protection] PA-1 title never limited: KILLED file=lib/core/services/panic_arm_policy.dart sha_orig=9b6fe1ea6a6d7ba2 sha_mut=dd63c3a3184a8dfb restored=True
+    
+    00:04 +11 -2: ... (tearDownAll)                                                                                                                                                                        
+    00:04 +11 -2: Some tests failed.
+[y11-limited-protection] PA-2 heading not rebuilt at start: KILLED file=lib/screens/countdown_screen.dart sha_orig=9c7eb041428d593c sha_mut=d35763b635ed005f restored=True
+    
+    00:03 +12 -1: ... (tearDownAll)                                                                                                                                                                        
+    00:03 +12 -1: Some tests failed.
+[y11-limited-protection] PA-3 screen keeps fixed heading: KILLED file=lib/screens/countdown_screen.dart sha_orig=9c7eb041428d593c sha_mut=85ba46b6750d043d restored=True
+    
+    00:04 +12 -1: ... (tearDownAll)                                                                                                                                                                        
+    00:04 +12 -1: Some tests failed.
+[y11-limited-protection] PA-4 native: CALL_PHONE before exact alarm: KILLED file=android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/EmergencySessionModels.kt sha_orig=91a900661a94dd8b sha_mut=1be07ffe59591a58 restored=True
+    EmergencySessionCoordinatorTest > missing exact alarm outranks a refused call permission FAILED
+[y02-dialer-link] DL-1 link on every result: KILLED file=lib/screens/emergency_call_screen.dart sha_orig=3111e71fd08386cb sha_mut=99a8b24ba8d45ca8 restored=True
+    
+    00:04 +6 -2: (tearDownAll)                                                                                                                                                                             
+    00:04 +6 -2: Some tests failed.
+[y02-dialer-link] DL-2 link never shown: KILLED file=lib/screens/emergency_call_screen.dart sha_orig=3111e71fd08386cb sha_mut=a0cc030b141f1f4c restored=True
+    00:03 +6 -2: Y-02: what each call result is allowed to claim a failed request says so and offers the manual call                                                                                       
+    00:03 +6 -2: (tearDownAll)                                                                                                                                                                             
+    00:03 +6 -2: Some tests failed.
+[y02-dialer-link] DL-3 link opens nothing: KILLED file=lib/screens/emergency_call_screen.dart sha_orig=3111e71fd08386cb sha_mut=e2fe53b771d256f1 restored=True
+    00:02 +7 -1: Y-02: what each call result is allowed to claim a failed request says so and offers the manual call                                                                                       
+    00:02 +7 -1: (tearDownAll)                                                                                                                                                                             
+    00:02 +7 -1: Some tests failed.
+[y02-dialer-link] DL-4 link back at the end of the scroll view (6e13bab placement): KILLED file=lib/screens/emergency_call_screen.dart sha_orig=3111e71fd08386cb sha_mut=ef751ea0bd3d0a26 restored=True
+    00:03 +7 -1: Y-02: what each call result is allowed to claim a failed request says so and offers the manual call                                                                                       
+    00:03 +7 -1: (tearDownAll)                                                                                                                                                                             
+    00:03 +7 -1: Some tests failed.
+[safe-walk-desc] SW-1 code grace changes, copy does not: KILLED file=lib/core/services/check_in_service.dart sha_orig=f32a6d8151ab2e71 sha_mut=a1b15f171db0f6dd restored=True
+    To run this test again: /opt/homebrew/share/flutter/bin/cache/dart-sdk/bin/dart test /private/tmp/claude-501/-Users-poyrazoncel-Projects-guvenlik-app/53dc7a26-0f79-4878-85a0-74d07698c976/scratchpad/wt-rc/test/screens/safe_walk_desc_copy_test.dart -p vm --plain-name 'the Safe Walk intro names the grace and the best-effort warning, and no longer ties the flow to an open app'
+    
+    00:01 +0 -1: Some tests failed.
+[safe-walk-desc] SW-2 old 'uygulama acikken' copy: KILLED file=assets/translations/tr-TR.json sha_orig=5e20bbdd54c96f5a sha_mut=b519d0ea7b5a1bdf restored=True
+    To run this test again: /opt/homebrew/share/flutter/bin/cache/dart-sdk/bin/dart test /private/tmp/claude-501/-Users-poyrazoncel-Projects-guvenlik-app/53dc7a26-0f79-4878-85a0-74d07698c976/scratchpad/wt-rc/test/screens/safe_walk_desc_copy_test.dart -p vm --plain-name 'the Safe Walk intro names the grace and the best-effort warning, and no longer ties the flow to an open app'
+    
+    00:01 +0 -1: Some tests failed.
+[m5-test-quality] M5-a wrapper closes before the notice (NEW test): KILLED file=lib/screens/check_in_screen.dart sha_orig=f038c1ec1d15bed1 sha_mut=6549ce625987ae2d restored=True
+    To run this test again: /opt/homebrew/share/flutter/bin/cache/dart-sdk/bin/dart test /private/tmp/claude-501/-Users-poyrazoncel-Projects-guvenlik-app/53dc7a26-0f79-4878-85a0-74d07698c976/scratchpad/wt-rc/test/core/widgets/background_protection_tap_test.dart -p vm --plain-name 'both safety-timer screens wrap their degraded notice in it'
+    
+    00:02 +1 -1: Some tests failed.
+[m5-test-quality] M5-b manual call in the exact-alarm refusal opens nothing: KILLED file=lib/core/widgets/emergency_failure_dialog.dart sha_orig=0efa57fec6ba1a0e sha_mut=f487d2fb6defa9d1 restored=True
+    00:09 +1 -1: control: a refused CALL_PHONE keeps the dialer countdown                                                                                                                                  
+    00:09 +1 -1: (tearDownAll)                                                                                                                                                                             
+    00:09 +1 -1: Some tests failed.
+[y09-copy] Y09-1 TR FAQ asks about a location session again: KILLED file=assets/translations/tr-TR.json sha_orig=5e20bbdd54c96f5a sha_mut=d54d38dbdb703385 restored=True
+    00:02 +0 -1: en-US: no copy the app shows describes a location session                                                                                                                                 
+    00:02 +1 -1: en-US: no copy the app shows describes a location session                                                                                                                                 
+    00:02 +1 -1: Some tests failed.
+[y09-copy] Y09-2 EN FAQ asks about a location session again: KILLED file=assets/translations/en-US.json sha_orig=c386dd1753fc4771 sha_mut=9720aeef35ebc5e8 restored=True
+    To run this test again: /opt/homebrew/share/flutter/bin/cache/dart-sdk/bin/dart test /private/tmp/claude-501/-Users-poyrazoncel-Projects-guvenlik-app/53dc7a26-0f79-4878-85a0-74d07698c976/scratchpad/wt-rc/test/screens/y09_location_session_copy_test.dart -p vm --plain-name 'en-US: no copy the app shows describes a location session'
+    
+    00:01 +1 -1: Some tests failed.
+[y09-copy] Y09-3 permission text before 0353522 (first Y-09 fix): KILLED file=assets/translations/tr-TR.json sha_orig=5e20bbdd54c96f5a sha_mut=385113f4a4a06086 restored=True
+    00:01 +0 -1: en-US: no copy the app shows describes a location session                                                                                                                                 
+    00:01 +1 -1: en-US: no copy the app shows describes a location session                                                                                                                                 
+    00:01 +1 -1: Some tests failed.
+[force-stop-reconcile] PS-1 MainActivity no longer reconciles at start: KILLED file=android/app/src/main/kotlin/com/poyrazoncel/korubeni/MainActivity.kt sha_orig=1899b9f9cf541851 sha_mut=af00cacca9c311de restored=True
+    To run this test again: /opt/homebrew/share/flutter/bin/cache/dart-sdk/bin/dart test /private/tmp/claude-501/-Users-poyrazoncel-Projects-guvenlik-app/53dc7a26-0f79-4878-85a0-74d07698c976/scratchpad/wt-rc/test/android/main_activity_process_start_reconcile_contract_test.dart -p vm --plain-name 'MainActivity.onCreate reconciles armed sessions once per process'
+    
+    00:01 +0 -1: Some tests failed.
+[force-stop-reconcile] PS-2 process-start reconcile never runs: KILLED file=android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/ProcessStartReconcile.kt sha_orig=8bd13ddb68c64526 sha_mut=b880b393be8d8226 restored=True
+    ProcessStartReconcileTest > later starts in the same process do not reconcile again FAILED
+    ProcessStartReconcileTest > the first UI start of a process reconciles FAILED
+    ProcessStartReconcileTest > a reconcile that failed is tried again at the next start FAILED
+[force-stop-reconcile] PS-3 reconcile on every activity start: KILLED file=android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/ProcessStartReconcile.kt sha_orig=8bd13ddb68c64526 sha_mut=f88a822eafcab8ec restored=True
+    ProcessStartReconcileTest > later starts in the same process do not reconcile again FAILED
+    ProcessStartReconcileTest > a reconcile that failed is tried again at the next start FAILED
+[force-stop-reconcile] PS-4 same-boot reconcile does not reschedule an armed session: KILLED file=android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/EmergencySessionCoordinator.kt sha_orig=93a20c97d34218b5 sha_mut=8458d57f0435b9bc restored=True
+    EmergencySessionCoordinatorTest > a same-boot reconcile reschedules an armed session whose alarms were dropped FAILED
+[force-stop-reconcile] PS-5 a failed reconcile is never retried in this process: KILLED file=android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/ProcessStartReconcile.kt sha_orig=8bd13ddb68c64526 sha_mut=712007c6dc7189ca restored=True
+    ProcessStartReconcileTest > a reconcile that failed is tried again at the next start FAILED
+[force-stop-reconcile] PS-6 MainActivity reports success even when the reconcile threw: KILLED file=android/app/src/main/kotlin/com/poyrazoncel/korubeni/MainActivity.kt sha_orig=1899b9f9cf541851 sha_mut=a7244b91dd954244 restored=True
+    To run this test again: /opt/homebrew/share/flutter/bin/cache/dart-sdk/bin/dart test /private/tmp/claude-501/-Users-poyrazoncel-Projects-guvenlik-app/53dc7a26-0f79-4878-85a0-74d07698c976/scratchpad/wt-rc/test/android/main_activity_process_start_reconcile_contract_test.dart -p vm --plain-name 'MainActivity.onCreate reconciles armed sessions once per process'
+    
+    00:01 +0 -1: Some tests failed.
+# baseline after restore: exit=0 :: 00:15 +77: All tests passed!
+# survivors=0

@@ -1,0 +1,20 @@
+RELEASE_CANDIDATE_HEAD=ff945ee62ecf37a524a2f855cba3ded57fb61297 worktree=/private/tmp/claude-501/-Users-poyrazoncel-Projects-guvenlik-app/53dc7a26-0f79-4878-85a0-74d07698c976/scratchpad/wt-rc
+== verify_release.sh (2026-10-10 11:54:34)
+   -> exit=0 LOCAL_CANDIDATE_PASS
+== artifact hashes (2026-10-10 12:10:22)
+   ->        5 lines
+== merged manifest inspection (2026-10-10 12:10:22)
+   -> 8/8 forbidden permissions absent
+== secrets scan (2026-10-10 12:10:22)
+   -> exit=0 RELEASE_SECRET_SCAN_PASS
+== OSV (2026-10-10 12:10:24)
+   -> exit=0 OSV_EVIDENCE_PASS
+== FUZZ_SCALE=13 (2026-10-10 12:10:28)
+   -> exit=0 06:55 +4043: All tests passed!                                                                                                                                                                         
+== run_safety_mutations.py (2026-10-10 12:17:24)
+   -> exit=0 SAFETY_MUTATION_PASS killed=7 
+== counterfactual mutants (all specs) (2026-10-10 12:19:09)
+   -> exit=0 58 killed, # survivors=0; tree clean: 0 changes
+== critical tests x10 (2026-10-10 12:23:52)
+   -> 10/10 green
+== done 2026-10-10 12:32:45

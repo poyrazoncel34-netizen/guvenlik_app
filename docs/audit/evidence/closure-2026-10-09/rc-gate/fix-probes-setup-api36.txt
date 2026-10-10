@@ -1,0 +1,19 @@
+install: Performing Streamed Install
+Success
+lastUpdateTime 2026-10-10 12:23:10
+TAP Devam Et ve Kurulumu 540 2144
+TAP Atla 996 191
+onboarding: consent + carousel: PASS 
+TAP Kişiyi kaydet 540 1725
+TAP beyan ederim 540 1542
+TAP Ekle 734 1759
+onboarding: emergency contact + contact consent: PASS 
+TAP Başla 540 2116
+PIN 2468
+PIN 2468
+TAP Kabul Et 772 1456
+TAP ALLOW 540 1280
+TAP Şimdilik Atla 540 2148
+onboarding: PIN + notification + battery step -> home: PASS 
+PIN 2468
+home: True

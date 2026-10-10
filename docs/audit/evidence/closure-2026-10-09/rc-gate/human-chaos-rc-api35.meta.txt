@@ -1,0 +1,1 @@
+RC ff945ee debug sha256 f2e3078eef3f68cf API35 KoruBeni_A017_API35 emulator-5554 420dpi -no-audio lastUpdateTime=2026-10-10 11:55:21 seed 20261015, ANR-aware driver

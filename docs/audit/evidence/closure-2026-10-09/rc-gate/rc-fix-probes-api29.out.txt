@@ -1,0 +1,49 @@
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+NOTFOUND Ana Sayfa
+TAP Kontrol Noktası 540 136
+TAP 15 dk 338 1234
+NOTFOUND Anladım, devam et
+NOTFOUND Anladım, devam et
+NOTFOUND Anladım, devam et
+NOTFOUND Anladım, devam et
+NOTFOUND Anladım, devam et
+NOTFOUND Anladım, devam et
+PIN 2468
+TAP Kontrol Noktası 787 1178
+TAP İptal Et 540 1271
+TAP Doğrula 709 990
+P9 force-stop during an armed Check-In -> reopen restores its alarms: PASS armed=armed pending=4 -> force-stop 0 -> reopen 4; native after reopen=armed; end=cancelled

@@ -1,0 +1,54 @@
+clean install: PASS API 29; lastUpdateTime 2026-10-10 12:05:23; flags [ HAS_CODE ALLOW_CLEAR_USER_DATA ]
+TAP Devam Et ve Kurulumu 540 2144
+TAP Atla 996 126
+onboarding: consent + carousel: PASS 
+TAP Kişiyi kaydet 540 1685
+TAP beyan ederim 540 1510
+TAP Ekle 734 1726
+onboarding: emergency contact + contact consent: PASS 
+TAP Başla 540 2116
+PIN 2468
+PIN 2468
+TAP Şimdilik Atla 540 2148
+onboarding: PIN + notification + battery step -> home: PASS 
+PIN 2468
+permissions granted + Pro test anchor -> home: PASS |Acil kişi hazır
+Annem • 05551234567 / |Kurulum tamam / |Arka Plan Hazırlığı / |3 adımda hazır olun
+PANIC_RELEASED 12:07:57
+TAP Anladım, devam et 540 1709
+PANIC_RELEASED 12:08:09
+panic -> countdown -> PIN cancel: PASS countdown seen=True; native panic=cancelled; 10.1s
+TAP Ana Sayfa 151 2165
+TAP Ana Sayfa 151 2165
+TAP Ana Sayfa 151 2165
+TAP Kontrol Noktası 787 1178
+TAP 15 dk 338 1412
+TAP Anladım, devam et 540 1674
+TAP İptal Et 540 1271
+TAP Doğrula 709 990
+Check-In 15 min -> PIN cancel: PASS armed=True; native long=cancelled
+TAP Ana Sayfa 151 2165
+TAP Ana Sayfa 151 2165
+TAP Ana Sayfa 151 2165
+TAP Güvenli Yürüyüş 292 813
+TAP 15 dk 798 1308
+TAP Yürüyüşe Başla 540 2090
+TAP Anladım, devam et 540 1674
+TAP İptal Et 540 2106
+TAP Doğrula 709 990
+Safe Walk -> PIN cancel: PASS armed=True; native long=cancelled
+widget quick panic -> countdown -> PIN cancel: PASS countdown seen=True; native panic=cancelled; 9.8s
+tile quick panic -> countdown -> PIN cancel: PASS countdown seen=True; native panic=cancelled; 11.7s
+deep link korubeni://open/settings: PASS 
+TAP Ana Sayfa 151 2165
+TAP Ana Sayfa 151 2165
+TAP Ana Sayfa 151 2165
+TAP Harita 410 2165
+map tab opens: PASS |Harita. Konumunuzu gösterir.
+Harita
+Konumunuz
+37.42200, -122.08400, Konumunuzu haritada görüntüleyin / |Harita
+timeline via deep link: PASS 
+PIN 2468
+process kill -> reopen -> lock -> PIN -> app: PASS 
+logcat review (app processes): PASS 0 lines

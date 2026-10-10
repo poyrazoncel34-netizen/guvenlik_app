@@ -1,0 +1,36 @@
+{
+  "coverageLimit": "OSV data sources and package mapping are incomplete; PASS means only that these exact queries had no known OSV finding at scan time.",
+  "ecosystems": {
+    "Maven": {
+      "findingCount": 0,
+      "queryCount": 203,
+      "querySha256": "40ae928bd0720d99fd29d1422c8fc903654dae35b7b910db06d8a3909cd4edc7",
+      "responseSha256": "8a7844c9043a966b5d0fbeacf029813fe29bab21b586a1b566d739112b63bb27"
+    },
+    "Pub": {
+      "findingCount": 0,
+      "queryCount": 195,
+      "querySha256": "fe7f214b2ffb66df3395dea216148b45ab716769169d78131f1c6353273b7404",
+      "responseSha256": "ede03347d8552829e70b57b0ab22dbe93a78c00cbb4cc9607b53ef880f75ce36"
+    }
+  },
+  "endpoint": "https://api.osv.dev/v1/querybatch",
+  "findingCount": 0,
+  "findings": [],
+  "inputs": {
+    "generatorSha256": "20c37173b49d550b4ce97b91a3d11c2c0c2d7fa83b4b4f0a4a92ed3314785c6a",
+    "gradleLockSha256": "6f7167cca4679af7c951b9880fb0bbe9d3b1f9b4fef328565fa0a703431dccdb",
+    "pubspecLockSha256": "08ee5d7e44a7144e13390d7bf1f406ba6b06ffe17b2dea4cb25afc71d7900da9",
+    "runnerSha256": "17908dfd21e0f0317324cdfcd6a48b554ecd06da0cd2c456a1eb1d0569add9b4"
+  },
+  "interpretation": "noKnownFindingsAtScanTime",
+  "scannedAt": "2026-10-10T09:10:28Z",
+  "schemaVersion": 1,
+  "source": {
+    "gitCommit": "ff945ee62ecf37a524a2f855cba3ded57fb61297",
+    "gitTree": "3eb1d4a321162e661ddf76d2ddad3c7758f6da4e",
+    "sourceStatusSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sourceWasDirty": false
+  },
+  "status": "PASS"
+}

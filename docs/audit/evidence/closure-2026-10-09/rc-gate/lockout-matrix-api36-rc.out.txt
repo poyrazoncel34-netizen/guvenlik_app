@@ -1,0 +1,35 @@
+lockout matrix 36 serial=emulator-5558 build=RC ff945ee debug sha256 f2e3078eef3f68cf lastUpdateTime=2026-10-10 11:56:13 start=12:07:36
+PIN 1357
+PIN 1357
+PIN 1357
+PIN 1357
+PIN 1357
+band after wrong PINs: Kilitli: 26s
+1 lock -> kill -9 -> reopen | band=Kilitli: 17s | correct PIN opened app=False | dev=12:08:23
+--- escalate to 240 s (failures 6, 7, 8 each after the previous lockout ends)
+PIN 1357
+band after wrong PINs: Kilitli: 58s
+PIN 1357
+band after wrong PINs: Kilitli: 117s
+PIN 1357
+band after wrong PINs: Kilitli: 237s
+--- escalated at 12:12:01
+2 lock -> force-stop -> reopen | band=Kilitli: 229s | correct PIN opened app=False | dev=12:12:15
+3 lock -> wall +1 h | band=Kilitli: 217s | correct PIN opened app=False | dev=13:12:26
+4 lock -> wall +1 day (+25 h total) | band=Kilitli: 205s | correct PIN opened app=False | dev=13:12:40
+5 lock -> wall -1 day (from real) | band=Kilitli: 194s | correct PIN opened app=False | dev=12:12:50
+6 lock -> timezone Europe/Istanbul -> America/New_York | band=Kilitli: 183s | correct PIN opened app=False | dev=05:13:01
+7 lock -> automatic time ON | band=Kilitli: 170s | correct PIN opened app=False | dev=12:13:16
+--- reboots
+8 lock -> reboot | band=Kilitli: 236s | correct PIN opened app=False | dev=12:13:57
+9 lock -> reboot -> wall +1 h | band=Kilitli: 236s | correct PIN opened app=False | dev=13:14:38
+10 lock -> reboot -> wall +1 day | band=Kilitli: 236s | correct PIN opened app=False | dev=12:15:19
+11 lock -> reboot -> wall -1 day | band=Kilitli: 237s | correct PIN opened app=False | dev=12:15:58
+12 lock -> reboot -> timezone Asia/Tokyo | band=Kilitli: 236s | correct PIN opened app=False | dev=18:16:39
+13 lock -> reboot -> open -> kill -9 -> reopen | band=Kilitli: 229s | correct PIN opened app=False | dev=12:17:25
+14 lock -> two reboots in a row | band=Kilitli: 237s | correct PIN opened app=False | dev=12:18:32
+--- 15: let the lockout run out on screen in this boot, then reboot
+Warning: Activity not started, intent has been delivered to currently running top-most instance.
+band none
+15 lockout ran out on screen (same boot) -> reboot: not restarted; correct PIN opens | band=none | correct PIN opened app=True | dev=12:23:05
+end=12:23:05
