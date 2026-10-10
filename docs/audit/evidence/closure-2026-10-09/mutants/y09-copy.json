@@ -5,7 +5,7 @@
   "old": "S: Konum pil tüketiyor mu?\\nC: Konum yalnız harita ekranı açıkken okunur; uygulama konumu arka planda izlemez ve kaydetmez. Harita görüntüleri indirilip cihazda önbelleğe alınır.",
   "new": "S: Konum oturumu pil tüketiyor mu?\\nC: Konum yalnızca siz oturumu başlattığınızda kullanılır. Arka plan davranışı cihaz ve bildirim ayarlarına bağlıdır.",
   "tests": [
-   "test/y09_location_session_copy_test.dart"
+   "test/screens/y09_location_session_copy_test.dart"
   ]
  },
  {
@@ -14,7 +14,7 @@
   "old": "Q: Does location drain the battery?\\nA: Location is read only while the map screen is open; the app does not track it in the background or store it. Map images are downloaded and cached on the device.",
   "new": "Q: Does a location session drain battery?\\nA: Location is only used when you start the session. Background behavior depends on device and notification settings.",
   "tests": [
-   "test/y09_location_session_copy_test.dart"
+   "test/screens/y09_location_session_copy_test.dart"
   ]
  },
  {
@@ -23,7 +23,7 @@
   "old": "KoruBeni, harita ekranında gerçek konumunuzu göstermek için konum iznine ihtiyaç duyar. Konumunuz yalnız harita ekranı açıkken okunur; uygulama onu kaydetmez ve geliştirici sunucusuna göndermez. Harita görüntüleri OpenStreetMap sunucularından indirilir.",
   "new": "KoruBeni, haritada gerçek konumunuzu göstermek ve konum oturumu yürütmek için konum iznine ihtiyaç duyar. Konum verileriniz geliştirici sunucusuna gönderilmez.",
   "tests": [
-   "test/y09_location_session_copy_test.dart"
+   "test/screens/y09_location_session_copy_test.dart"
   ]
  }
 ]
