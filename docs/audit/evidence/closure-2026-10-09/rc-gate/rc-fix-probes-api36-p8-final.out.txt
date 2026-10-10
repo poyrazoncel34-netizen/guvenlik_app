@@ -1,0 +1,11 @@
+PIN 2468
+TAP Kontrol Noktası 787 1178
+TAP 15 dk 338 1477
+NOTFOUND Anladım, devam et
+NOTFOUND Anladım, devam et
+NOTFOUND Anladım, devam et
+NOTFOUND Anladım, devam et
+NOTFOUND Anladım, devam et
+NOTFOUND Anladım, devam et
+PIN 2468
+P8 A-03 final warning fails -> single call at the final deadline + timeline reason: PASS armed=armed final=requestSubmittedUnconfirmed graceWarningOutcome=failed calls+=1 timeline_reason=True

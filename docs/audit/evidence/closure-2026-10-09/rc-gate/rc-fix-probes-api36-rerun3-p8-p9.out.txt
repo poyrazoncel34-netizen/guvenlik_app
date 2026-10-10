@@ -1,0 +1,23 @@
+TAP Kontrol Noktası 787 1178
+NOTFOUND 5 dk
+NOTFOUND 5 dk
+NOTFOUND 5 dk
+NOTFOUND 5 dk
+NOTFOUND 5 dk
+NOTFOUND 5 dk
+NOTFOUND Anladım, devam et
+NOTFOUND Anladım, devam et
+NOTFOUND Anladım, devam et
+NOTFOUND Anladım, devam et
+NOTFOUND Anladım, devam et
+NOTFOUND Anladım, devam et
+P8 A-03 final warning fails -> single call at the final deadline + timeline reason: FAIL armed=none final=none graceWarningOutcome=None calls+=0 timeline_reason=False
+PIN 2468
+TAP Kontrol Noktası 787 1178
+TAP 15 dk 338 1477
+TAP Anladım, devam et 540 1706
+PIN 2468
+TAP Kontrol Noktası 787 1178
+TAP İptal Et 540 1336
+TAP Doğrula 709 1357
+P9 force-stop during an armed Check-In -> reopen restores its alarms: PASS armed=armed pending=4 -> force-stop 0 -> reopen 4; native after reopen=armed; end=cancelled

@@ -55,11 +55,14 @@ def open_unlocked():
     if rm.has('Kapat', tries=1) and rm.has('Hiçbir işlem', tries=1):
         rm.tap('Kapat', exact=True); time.sleep(1.5)
     # The app restores its last route (e.g. the timeline, which has no tab bar).
-    for _ in range(3):
-        if rm.has('Hoş Geldiniz', tries=1): return True
-        sh('shell', 'input', 'keyevent', 'KEYCODE_BACK'); time.sleep(1.5)
+    # BACK from the app's own home would leave the app: relaunch whenever focus left it.
+    for _ in range(4):
+        if PKG not in focus():
+            sh('shell', 'am', 'start', '-n', f'{PKG}/.MainActivity'); time.sleep(4); rm.unlock_if_needed()
+        if rm.has('Hoş Geldiniz', tries=2): return True
         if rm.home(): return True
-    return rm.home()
+        sh('shell', 'input', 'keyevent', 'KEYCODE_BACK'); time.sleep(1.5)
+    return rm.has('Hoş Geldiniz', tries=2)
 
 
 def appops_exact(mode):
@@ -202,11 +205,12 @@ def p7_revoke_during_checkin():
 
 def p8_warning_fails():
     open_unlocked(); c0 = calls(); to_home_tile('Kontrol Noktası')
-    rm.tap('5 dk', exact=True); time.sleep(3); rm.tap('Anladım, devam et'); time.sleep(3)
+    # Check-In offers no 5-minute option (15 dk is the shortest): 15 min + 60 s grace.
+    rm.tap('15 dk', exact=True); time.sleep(3); rm.tap('Anladım, devam et'); time.sleep(3)
     armed = rm.state('long')
     sh('shell', 'input', 'keyevent', 'KEYCODE_HOME')
     sh('shell', 'pm', 'revoke', PKG, 'android.permission.POST_NOTIFICATIONS')
-    deadline = time.time() + 7 * 60
+    deadline = time.time() + 19 * 60
     while time.time() < deadline and rm.state('long') not in ('requestSubmittedUnconfirmed', 'manualActionRequired', 'failed'):
         time.sleep(10)
     final = rm.state('long')

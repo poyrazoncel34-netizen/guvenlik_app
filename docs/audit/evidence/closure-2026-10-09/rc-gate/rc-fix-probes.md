@@ -27,3 +27,14 @@
 |---|---|---|
 | P8 A-03 final warning fails -> single call at the final deadline + timeline reason | FAIL | armed=none final=none graceWarningOutcome=None calls+=0 timeline_reason=False |
 | P9 force-stop during an armed Check-In -> reopen restores its alarms | FAIL | armed=none pending=0 -> force-stop 0 -> reopen 0; native after reopen=none; end=none |
+
+## RC ff945ee debug sha256 f2e3078eef3f68cf (rebuilt 2026-10-10 15:4x, byte-identical) — KoruBeni_API36 emulator-5558 — P8, P9 re-run 3 after machine restart (fresh install 15:50:29) — API 36, lastUpdateTime 2026-10-10 15:50:29
+| Probe | Result | Observed |
+|---|---|---|
+| P8 A-03 final warning fails -> single call at the final deadline + timeline reason | FAIL | armed=none final=none graceWarningOutcome=None calls+=0 timeline_reason=False |
+| P9 force-stop during an armed Check-In -> reopen restores its alarms | PASS | armed=armed pending=4 -> force-stop 0 -> reopen 4; native after reopen=armed; end=cancelled |
+
+## RC ff945ee debug sha256 f2e3078eef3f68cf — KoruBeni_API36 emulator-5558 — P8 with a 15-minute Check-In (the probe's earlier '5 dk' chip does not exist) — API 36, lastUpdateTime 2026-10-10 15:50:29
+| Probe | Result | Observed |
+|---|---|---|
+| P8 A-03 final warning fails -> single call at the final deadline + timeline reason | PASS | armed=armed final=requestSubmittedUnconfirmed graceWarningOutcome=failed calls+=1 timeline_reason=True |

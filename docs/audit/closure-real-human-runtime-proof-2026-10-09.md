@@ -38,6 +38,9 @@ Ham çıktılar: [`evidence/closure-2026-10-09/rc-gate/`](evidence/closure-2026-
 | Instrumentation API 29 | **PASS** OK (19 test) | `instrumentation-api29.txt` |
 | Düzeltme probları API 36 (`rc_fix_probes.py`) | P1 Güvenli Yürüyüş tanıtımı **PASS**; P2 Yardım SSS (Y-09) **PASS**; P3 "Sınırlı koruma" başlığı, native `none`, arama 0 **PASS**; P4 ikisi reddi → kesin alarm reddi, 12 sn geri sayım yok, "Şimdi Ara" yalnız arayıcı, Telecom 0 **PASS**; P5 kesin alarm reddi → "Arka plan korumasını aç" uygulamanın kendi anahtarı **PASS** (ilk koşu: yeniden başlatmada emülatör modeminin yeniden eklediği "bilinmeyen çağrı" — `TSI.aNUC`, çağıran paket yok — üstteydi; modem temizlenip yeniden koşuldu); P6 kabul edilen istek: tek Telecom çağrısı, sessiz bağlantı arayıcıyı açar, ikinci çağrı yok **PASS**; P7 Check-In sırasında izin geri alındı → uyarı → ayarlar → yeniden izin → tam alarmlar geri **PASS** | `rc-fix-probes.md`, `rc-fix-probes-api36*.out.txt` |
 | Instrumentation API 36 | **PASS** OK (19 test) | `instrumentation-api36.txt` |
+| Kaos (insan benzeri), API 35, RC | **PASS** 110/110 (seed 20261015): 0 BAD, koşu sırasında 0 ANR, 7 Telecom isteği (yalnız emülatör numarası), 0 çift gönderim, 0 bozuk oturum, 0 başarısız yeniden açılış; eylemler: 370 dokunma, 83 geri, 43 kaydırma, 34 ev/yeniden aç, 33 bağlantı, 30 çift dokunma, 28 doğru PIN, 17 saat, 16 döndürme, 15 yanlış PIN, 14 izin, 11 uçak modu, 11 ekran kapat/aç, 10 kill+aç, 8 widget. Tek `anr_before` = yeniden başlatma öncesinden kalan 09:54 GNSS-HAL dosyası (ortam) | `human-chaos-rc-api35.jsonl` |
+| Instrumentation API 35 | **PASS** OK (19 test) | `instrumentation-api35.txt` |
+| P9 force-stop → aç, API 36 | **PASS** 4 → 0 → 4 (makine yeniden başlatması sonrası, aynı RC APK baytı baytına yeniden derlendi `f2e3078e…`) | `rc-fix-probes-api36-rerun3-p8-p9.out.txt` |
 <!-- RC-ROWS -->
 
 
@@ -116,5 +119,30 @@ Sütunlar: ID · Önem · Durum · Yeniden üretim · Kök neden · Düzeltme ·
 | Doze/OEM pil yöneticisi altında gerçek cihaz davranışı, gerçek SIM ile arama bağlantısı | — | PHYSICAL DEVICE REQUIRED |
 | Abonelik satın alma / yenileme / iade | — | EXTERNAL SYSTEM REQUIRED |
 
-<!-- AFTER-SECTION-4 -->
+## 5. Hükümler (RC `ff945ee`)
+
+| Alan | Hüküm | Gerekçe / kanıt |
+|---|---|---|
+| CODE | **PASS** | §0 tüm yerel kapılar; 58/58 karşı-olgusal + 7/7 güvenlik mutantı; açık kod kusuru yok — OD-1/OD-2 sahip kararını bekleyen DAVRANIŞLAR (§3) |
+| RUNTIME-HUMAN | <!-- RUNTIME-VERDICT --> | §0 matrisler, kilit matrisi, yükseltme, P1–P9, 110 kaos dizisi |
+| DEVICE | **UNKNOWN — PHYSICAL DEVICE REQUIRED** | emülatör: API 29/35/36 PASS; Doze, OEM öldürme, gerçek SIM ile bağlantı, gerçek uyku (Y-12), GMS'siz donanım → fiziksel cihaz |
+| COMMERCE | **UNKNOWN — EXTERNAL SYSTEM REQUIRED** | RevenueCat / Play Billing satın alma, yenileme, iade test edilmedi (Pro yalnız test çapası) |
+| RELEASE | **PASS (yerel aday) / UNKNOWN (üretim) — EXTERNAL SYSTEM REQUIRED** | smoke AAB imzalı, 16 KB, lint, OSV, gizli anahtar PASS; üretim play AAB'si gerçek `goog_` anahtarı ve Play Console/release.yml sırları ister; yayın imzalı yükseltme derlenemedi |
+| PRIVACY/POLICY | **UNKNOWN — LEGAL REVIEW REQUIRED** | uygulama içi metinler kaynakla uyumlu + ağ yakalaması (yalnız OSM karoları); rıza ekranı konum maddesi kaynakla çelişiyor (LR-1) |
+| PRODUCT | **UNKNOWN — OWNER DECISION REQUIRED** | OD-1 (vade politikası iki yolda farklı + duvar saati kararı), OD-2 (temiz kurulumda ilk panik izin bekliyor, onboarding istemiyor), OD-3 |
+
+## 6. Son soru
+
+**Gerçek bir insan … bugün bildiğimiz KOD KAYNAKLI bir problem kaldı mı?**
+
+**YES**
+
+Bilinen, kod kaynaklı ve bu denetimde düzeltilmemiş (karara bağlı) davranışlar:
+1. **OD-1** — 5 dk vade politikası: yeniden izin yolu vadesi geçmiş oturumu elle aramaya bırakırken alarm alıcısı geç de olsa otomatik arıyor; aynı-açılış uzlaştırması "vadesi geldi"yi duvar saatiyle veriyor (uygulama durdurulmuşken saat değiştiyse erken arama/teklif). A-03 kararı politikayı değiştirmeyi yasaklıyor.
+2. **OD-2** — Android 14+ temiz kurulumda ilk panik "alarm ve hatırlatıcı" izni verilene kadar reddediliyor; onboarding bu izni istemiyor (red diyaloğu anında "Şimdi Ara" sunuyor).
+3. **LR-1** — rıza ekranındaki konum maddesi var olmayan "konum oturumu"nu ve acil durumda konum işlenmesini anlatıyor (hukuki metin).
+4. LOW: `openDialer` Android kanalında `MissingPluginException` yakalanmıyor; v1.0.2'den kalan tek duvar-only kilit; `ArmUnknown` geri sayımı "Sınırlı koruma" başlığı taşımıyor; statik "3 adımda hazır olun" kartı; Android 10–14'te force-stop sonrası uygulama HİÇ açılmazsa oturum tetiklenmez (platform sınırı).
+
+"NO WITHIN PROVEN CODE/EMULATOR BOUNDARY" yazılamaz: yukarıdakiler kanıtlanmış sınırın İÇİNDE bilinen, kod kaynaklı davranışlardır.
+
 
