@@ -684,6 +684,21 @@ class EmergencySessionCoordinatorTest {
         assertEquals(0, clocks.calls.targets.size)
     }
 
+    // Android 15+ re-delivers BOOT_COMPLETED on unstop AND the app now
+    // reconciles at its first start: both may meet one overdue session.
+    @Test
+    fun `boot and process-start reconciles of one overdue session place one call`() {
+        val clocks = BootClocks()
+        clocks.coordinator.arm(validArmRequest(randomId = "double-reconcile"))
+        clocks.wall = clocks.store.current!!.finalDeadlineMs + 60_000L
+        clocks.elapsed += 200_000L
+
+        clocks.coordinator.reconcileAfterBoot()
+        clocks.coordinator.reconcileCurrentBoot()
+
+        assertEquals(1, clocks.calls.targets.size)
+    }
+
     @Test
     fun `an unlock-time reconcile in a new boot schedules a rebuilt elapsed deadline`() {
         val clocks = BootClocks()

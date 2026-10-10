@@ -104,13 +104,18 @@ class MainActivity : FlutterFragmentActivity() {
         captureDeepLink(intent)
         // A force-stop deleted an armed session's alarms and API 29-34 never
         // gives them back on the next start (see ProcessStartReconcile).
+        // The boot receiver's diagnostic code on purpose: it is the same restore
+        // reconcile, and a new code would grow the size-ratcheted Dart allowlist.
         ProcessStartReconcile.once {
+            var reconciled = false
             EmergencyReceiverGuard.run(
                 applicationContext,
                 NativeSafetyEventCode.BOOT_RECEIVER_BOUNDARY_FAILURE,
             ) {
                 EmergencySessionRuntime.coordinator(applicationContext).reconcileCurrentBoot()
+                reconciled = true
             }
+            reconciled
         }
     }
 

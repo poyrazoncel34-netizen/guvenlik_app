@@ -18,14 +18,25 @@ class ProcessStartReconcileTest {
     @Test
     fun `the first UI start of a process reconciles`() {
         var runs = 0
-        ProcessStartReconcile.once { runs++ }
+        ProcessStartReconcile.once { runs++; true }
         assertEquals(1, runs)
     }
 
     @Test
     fun `later starts in the same process do not reconcile again`() {
         var runs = 0
-        repeat(3) { ProcessStartReconcile.once { runs++ } }
+        repeat(3) { ProcessStartReconcile.once { runs++; true } }
         assertEquals(1, runs)
+    }
+
+    // Review (security LOW): the gate latched before the work ran, so one
+    // transient storage failure left the alarms missing for the whole process.
+    @Test
+    fun `a reconcile that failed is tried again at the next start`() {
+        var runs = 0
+        ProcessStartReconcile.once { runs++; false }
+        ProcessStartReconcile.once { runs++; true }
+        ProcessStartReconcile.once { runs++; true }
+        assertEquals(2, runs)
     }
 }

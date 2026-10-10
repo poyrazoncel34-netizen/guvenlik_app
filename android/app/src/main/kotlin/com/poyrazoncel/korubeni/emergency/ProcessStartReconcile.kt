@@ -17,8 +17,9 @@ import java.util.concurrent.atomic.AtomicBoolean
 object ProcessStartReconcile {
     private val ran = AtomicBoolean(false)
 
-    fun once(reconcile: () -> Unit) {
-        if (ran.compareAndSet(false, true)) reconcile()
+    /** [reconcile] returns whether it completed; a failure is retried at the next start. */
+    fun once(reconcile: () -> Boolean) {
+        if (ran.compareAndSet(false, true) && !reconcile()) ran.set(false)
     }
 
     /** A fresh process, for tests only. */

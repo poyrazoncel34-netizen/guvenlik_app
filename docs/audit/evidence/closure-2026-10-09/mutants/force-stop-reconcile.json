@@ -11,8 +11,8 @@
  {
   "id": "PS-2 process-start reconcile never runs",
   "file": "android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/ProcessStartReconcile.kt",
-  "old": "        if (ran.compareAndSet(false, true)) reconcile()",
-  "new": "        if (false) reconcile()",
+  "old": "        if (ran.compareAndSet(false, true) && !reconcile()) ran.set(false)",
+  "new": "        if (false && !reconcile()) ran.set(false)",
   "tests": [
    "*ProcessStartReconcileTest*"
   ],
@@ -21,7 +21,7 @@
  {
   "id": "PS-3 reconcile on every activity start",
   "file": "android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/ProcessStartReconcile.kt",
-  "old": "        if (ran.compareAndSet(false, true)) reconcile()",
+  "old": "        if (ran.compareAndSet(false, true) && !reconcile()) ran.set(false)",
   "new": "        reconcile()",
   "tests": [
    "*ProcessStartReconcileTest*"
@@ -37,5 +37,24 @@
    "*EmergencySessionCoordinatorTest*"
   ],
   "kind": "gradle"
+ },
+ {
+  "id": "PS-5 a failed reconcile is never retried in this process",
+  "file": "android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/ProcessStartReconcile.kt",
+  "old": "        if (ran.compareAndSet(false, true) && !reconcile()) ran.set(false)",
+  "new": "        if (ran.compareAndSet(false, true)) reconcile()",
+  "tests": [
+   "*ProcessStartReconcileTest*"
+  ],
+  "kind": "gradle"
+ },
+ {
+  "id": "PS-6 MainActivity reports success even when the reconcile threw",
+  "file": "android/app/src/main/kotlin/com/poyrazoncel/korubeni/MainActivity.kt",
+  "old": "            reconciled\n        }",
+  "new": "            true\n        }",
+  "tests": [
+   "test/android/main_activity_process_start_reconcile_contract_test.dart"
+  ]
  }
 ]
