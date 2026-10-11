@@ -18,10 +18,23 @@
 //  2. Do NOT let the user believe Panic is fully ready when it is not.
 //
 // So this step is VISIBLE and EXPLAINED but SKIPPABLE: the Next button is never
-// disabled here, and skipping leaves readiness `limited` -- which the home card
-// already shows, from the same [SafetyReadinessLevel] verdict this step reads.
+// disabled here, and skipping leaves readiness `limited`, which the home card
+// shows from [SafetyReadinessLevel].
+//
+// WHAT THE STATUS LINE MAY CLAIM. This step owns exactly ONE Android
+// capability: the exact-alarm special access. The home card's "Arka Plan
+// Hazırlığı" chip is `backgroundAlertReady`, which ALSO needs the notification
+// permission and a high-importance channel -- and in this flow notifications
+// are requested AFTER this step. So the status line names the alarm access
+// specifically rather than "background protection" in general. Widening the
+// signal was the tempting fix and is the wrong one: the CTA opens the
+// exact-alarm screen and cannot grant notifications, so the step would show
+// red for something it is unable to repair. Narrowing the words is the honest
+// half; the card still owns the overall verdict.
 // The emergency-contact gate stays the only step that can block completion.
 // ============================================================================
+
+import 'dart:async';
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -62,13 +75,26 @@ class _OnboardingBackgroundProtectionStepState
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    // Listening, not just probing. EmergencyReadinessService supersedes an
+    // in-flight probe when a newer one starts: the superseded call returns the
+    // PREVIOUS state and does not notify. A step that only awaited its own
+    // probe could therefore paint a stale status and never hear the newer
+    // result -- it happened to work only because the host registers its
+    // lifecycle observer before this one, which is ordering, not a guarantee.
+    // HomePage listens for the same reason.
+    _readinessService.addListener(_onReadinessChanged);
     _refresh();
   }
 
   @override
   void dispose() {
+    _readinessService.removeListener(_onReadinessChanged);
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
+  }
+
+  void _onReadinessChanged() {
+    if (mounted) setState(() {});
   }
 
   @override
@@ -87,9 +113,7 @@ class _OnboardingBackgroundProtectionStepState
     // EmergencyTriggerHost sits above MaterialApp and already re-probes on
     // resume, so this is a second, deliberately cheap read for the case where
     // this step is shown without that host (tests, and any future embedding).
-    _readinessService.checkReadiness().then((_) {
-      if (mounted) setState(() {});
-    });
+    unawaited(_readinessService.checkReadiness());
   }
 
   Future<void> _openSettings() async {

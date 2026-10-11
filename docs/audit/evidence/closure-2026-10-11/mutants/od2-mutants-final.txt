@@ -1,47 +1,63 @@
-# counterfactual run 2026-10-11T10:14:37 HEAD=e4c86682386fc9d2f0985edec1d38a2b076a0bb5
-OD2-M1-step-removed-from-flow: KILLED file=lib/screens/onboarding_screen.dart sha_orig=a0f1611a29fc8884 sha_mut=cdda2fda65b2ed5f restored=True
+# counterfactual run 2026-10-11T18:31:03 HEAD=13972b0bb2465c5f63f6338235f5d3d47c84b149
+OD2-M1-step-removed-from-flow: KILLED file=lib/screens/onboarding_screen.dart sha_orig=df295afebf033bdb sha_mut=c01c033d81323cce restored=True
     
-    00:18 +37 -8: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/onboarding_behavior_test.dart: (tearDownAll)                                                                                       
-    00:18 +37 -8: Some tests failed.
-OD2-M2-skip-jumps-past-the-step: KILLED file=lib/screens/onboarding_screen.dart sha_orig=a0f1611a29fc8884 sha_mut=dd39565fce4cdbfc restored=True
+    00:16 +42 -8: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/onboarding_behavior_test.dart: (tearDownAll)                                                                                       
+    00:16 +42 -8: Some tests failed.
+OD2-M2-skip-jumps-past-the-step: KILLED file=lib/screens/onboarding_screen.dart sha_orig=df295afebf033bdb sha_mut=366321e6f137f5a6 restored=True
     
-    00:20 +36 -9: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/onboarding_behavior_test.dart: (tearDownAll)                                                                                       
-    00:20 +36 -9: Some tests failed.
+    00:16 +41 -9: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/onboarding_behavior_test.dart: (tearDownAll)                                                                                       
+    00:16 +41 -9: Some tests failed.
 OD2-M3-null-snapshot-counts-as-ready: KILLED file=lib/core/services/safety_readiness_level.dart sha_orig=81a4f3c0427a5697 sha_mut=dfd34b66942a48bd restored=True
-    00:12 +41 -4: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/onboarding_behavior_test.dart: ONB-10/ONB-13 consent confirm persists primary contact                                              
-    00:12 +41 -4: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/onboarding_behavior_test.dart: (tearDownAll)                                                                                       
-    00:12 +41 -4: Some tests failed.
+    00:13 +47 -3: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/od2_background_protection_step_test.dart: ... is the single source for readiness copy an unsupported OS is unavailable, not limited
+    00:13 +47 -3: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/od2_background_protection_step_test.dart: (tearDownAll)                                                                            
+    00:13 +47 -3: Some tests failed.
 OD2-M4-limited-reported-as-fully-ready: KILLED file=lib/core/services/safety_readiness_level.dart sha_orig=81a4f3c0427a5697 sha_mut=4e362cce913baf82 restored=True
-    00:11 +43 -2: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/onboarding_behavior_test.dart: ONB-10/ONB-13 consent confirm persists primary contact                                              
-    00:11 +43 -2: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/onboarding_behavior_test.dart: (tearDownAll)                                                                                       
-    00:11 +43 -2: Some tests failed.
+    00:12 +47 -3: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/od2_background_protection_step_test.dart: ... is the single source for readiness copy an unsupported OS is unavailable, not limited
+    00:12 +47 -3: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/od2_background_protection_step_test.dart: (tearDownAll)                                                                            
+    00:12 +47 -3: Some tests failed.
 OD2-M5-unsupported-os-reported-as-limited: KILLED file=lib/core/services/safety_readiness_level.dart sha_orig=81a4f3c0427a5697 sha_mut=6edd9d8b21cec69a restored=True
-    00:11 +44 -1: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/onboarding_behavior_test.dart: ONB-10/ONB-13 consent confirm persists primary contact                                              
-    00:11 +44 -1: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/onboarding_behavior_test.dart: (tearDownAll)                                                                                       
-    00:11 +44 -1: Some tests failed.
-OD2-M6-card-ignores-the-platform-verdict: KILLED file=lib/core/widgets/readiness_card.dart sha_orig=a6aefda50866b405 sha_mut=788505927779b832 restored=True
-    00:11 +44 -1: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/onboarding_behavior_test.dart: ONB-10/ONB-13 consent confirm persists primary contact                                              
-    00:11 +44 -1: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/onboarding_behavior_test.dart: (tearDownAll)                                                                                       
-    00:11 +44 -1: Some tests failed.
-OD2-M7-step-opens-settings-unprompted: KILLED file=lib/screens/onboarding/onboarding_background_protection_step.dart sha_orig=be8b62021153f5b4 sha_mut=f231f07aec992a0e restored=True
-    Try correcting the name to the name of an existing method, or defining a method named 'unawaited'.
-        unawaited(_openSettings());
-        ^^^^^^^^^
-OD2-M8-no-recheck-on-resume: KILLED file=lib/screens/onboarding/onboarding_background_protection_step.dart sha_orig=be8b62021153f5b4 sha_mut=ad6e0e165d1b3926 restored=True
-    00:16 +43 -2: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/onboarding_behavior_test.dart: ONB-10/ONB-13 consent confirm persists primary contact                                              
-    00:16 +43 -2: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/onboarding_behavior_test.dart: (tearDownAll)                                                                                       
-    00:16 +43 -2: Some tests failed.
-OD2-M9-status-claims-on-when-denied: KILLED file=lib/screens/onboarding/onboarding_background_protection_step.dart sha_orig=be8b62021153f5b4 sha_mut=f544c2838c627e22 restored=True
-    00:12 +41 -4: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/onboarding_behavior_test.dart: ONB-10/ONB-13 consent confirm persists primary contact                                              
-    00:12 +41 -4: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/onboarding_behavior_test.dart: (tearDownAll)                                                                                       
-    00:12 +41 -4: Some tests failed.
-OD2-M10-cta-hidden-while-denied: KILLED file=lib/screens/onboarding/onboarding_background_protection_step.dart sha_orig=be8b62021153f5b4 sha_mut=2070d94a7e65617c restored=True
-    00:11 +39 -6: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/onboarding_behavior_test.dart: ONB-10/ONB-13 consent confirm persists primary contact                                              
-    00:11 +39 -6: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/onboarding_behavior_test.dart: (tearDownAll)                                                                                       
-    00:11 +39 -6: Some tests failed.
-OD2-M11-unavailable-headline-removed: KILLED file=lib/core/widgets/readiness_card.dart sha_orig=a6aefda50866b405 sha_mut=3b7dbbfc6ea00ee2 restored=True
-    00:11 +44 -1: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/onboarding_behavior_test.dart: ONB-10/ONB-13 consent confirm persists primary contact                                              
-    00:11 +44 -1: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/onboarding_behavior_test.dart: (tearDownAll)                                                                                       
-    00:11 +44 -1: Some tests failed.
-# baseline after restore: exit=0 :: 00:11 +45: All tests passed!
+    
+    00:12 +49 -1: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/od2_background_protection_step_test.dart: (tearDownAll)                                                                            
+    00:12 +49 -1: Some tests failed.
+OD2-M6-card-ignores-the-platform-verdict: KILLED file=lib/core/widgets/readiness_card.dart sha_orig=dd5bc62481722703 sha_mut=9fe0dcac10be79a4 restored=True
+    00:12 +49 -1: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/od2_background_protection_step_test.dart: ... is the single source for readiness copy an unsupported OS is unavailable, not limited
+    00:12 +49 -1: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/od2_background_protection_step_test.dart: (tearDownAll)                                                                            
+    00:12 +49 -1: Some tests failed.
+OD2-M7-step-opens-settings-unprompted: KILLED file=lib/screens/onboarding/onboarding_background_protection_step.dart sha_orig=6445037e29a48e13 sha_mut=c711e3920754d7d4 restored=True
+    00:12 +48 -2: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/od2_background_protection_step_test.dart: ... is the single source for readiness copy an unsupported OS is unavailable, not limited
+    00:12 +48 -2: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/od2_background_protection_step_test.dart: (tearDownAll)                                                                            
+    00:12 +48 -2: Some tests failed.
+OD2-M8-no-recheck-on-resume: KILLED file=lib/screens/onboarding/onboarding_background_protection_step.dart sha_orig=6445037e29a48e13 sha_mut=a48df36e26ce6ce5 restored=True
+    00:12 +48 -2: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/od2_background_protection_step_test.dart: ... is the single source for readiness copy an unsupported OS is unavailable, not limited
+    00:12 +48 -2: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/od2_background_protection_step_test.dart: (tearDownAll)                                                                            
+    00:12 +48 -2: Some tests failed.
+OD2-M9-status-claims-on-when-denied: KILLED file=lib/screens/onboarding/onboarding_background_protection_step.dart sha_orig=6445037e29a48e13 sha_mut=32a8b32429397d4b restored=True
+    00:12 +45 -5: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/od2_background_protection_step_test.dart: ... is the single source for readiness copy an unsupported OS is unavailable, not limited
+    00:12 +45 -5: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/od2_background_protection_step_test.dart: (tearDownAll)                                                                            
+    00:12 +45 -5: Some tests failed.
+OD2-M10-cta-hidden-while-denied: KILLED file=lib/screens/onboarding/onboarding_background_protection_step.dart sha_orig=6445037e29a48e13 sha_mut=9580b5f28e8ea590 restored=True
+    00:12 +43 -7: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/od2_background_protection_step_test.dart: ... is the single source for readiness copy an unsupported OS is unavailable, not limited
+    00:12 +43 -7: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/od2_background_protection_step_test.dart: (tearDownAll)                                                                            
+    00:12 +43 -7: Some tests failed.
+OD2-M11-unavailable-headline-removed: KILLED file=lib/core/widgets/readiness_card.dart sha_orig=dd5bc62481722703 sha_mut=700abdbeb8fe73f5 restored=True
+    00:12 +49 -1: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/od2_background_protection_step_test.dart: ... is the single source for readiness copy an unsupported OS is unavailable, not limited
+    00:12 +49 -1: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/od2_background_protection_step_test.dart: (tearDownAll)                                                                            
+    00:12 +49 -1: Some tests failed.
+OD2-M12-status-widened-to-background-readiness: KILLED file=lib/screens/onboarding/onboarding_background_protection_step.dart sha_orig=6445037e29a48e13 sha_mut=352df4aa97e0af73 restored=True
+    00:13 +49 -1: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/od2_background_protection_step_test.dart: ... is the single source for readiness copy an unsupported OS is unavailable, not limited
+    00:13 +49 -1: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/od2_background_protection_step_test.dart: (tearDownAll)                                                                            
+    00:13 +49 -1: Some tests failed.
+OD2-M13-step-stops-listening-to-readiness: KILLED file=lib/screens/onboarding/onboarding_background_protection_step.dart sha_orig=6445037e29a48e13 sha_mut=57875386eb9aa8c3 restored=True
+    00:12 +43 -7: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/od2_background_protection_step_test.dart: ... is the single source for readiness copy an unsupported OS is unavailable, not limited
+    00:12 +43 -7: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/od2_background_protection_step_test.dart: (tearDownAll)                                                                            
+    00:12 +43 -7: Some tests failed.
+OD2-M14-unprobed-card-treated-as-failed: KILLED file=lib/core/widgets/readiness_card.dart sha_orig=dd5bc62481722703 sha_mut=8bd2916a621f73db restored=True
+    00:12 +49 -1: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/od2_background_protection_step_test.dart: ... is the single source for readiness copy an unsupported OS is unavailable, not limited
+    00:12 +49 -1: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/od2_background_protection_step_test.dart: (tearDownAll)                                                                            
+    00:12 +49 -1: Some tests failed.
+OD2-M15-failed-probe-hides-contact-guidance: KILLED file=lib/core/widgets/readiness_card.dart sha_orig=dd5bc62481722703 sha_mut=20c1d06ae1cb5868 restored=True
+    00:12 +49 -1: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/od2_background_protection_step_test.dart: ... is the single source for readiness copy an unsupported OS is unavailable, not limited
+    00:12 +49 -1: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/od2_background_protection_step_test.dart: (tearDownAll)                                                                            
+    00:12 +49 -1: Some tests failed.
+# baseline after restore: exit=0 :: 00:13 +50: All tests passed!
 # survivors=0

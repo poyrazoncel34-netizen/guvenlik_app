@@ -1029,9 +1029,9 @@
   "onboarding_background_title": "Arka Plan Koruması",
   "onboarding_background_body": "Süre dolduğunda KoruBeni'nin güvenlik işlemini zamanında başlatabilmesi için Android'in \"alarm ve hatırlatıcı\" erişimi gerekir. Bu erişim olmadan Kontrol Noktası, Güvenli Yürüyüş ve korumalı panik başlatılamaz; yalnızca telefon uygulamasını açan elle arama kalır.",
   "onboarding_background_cta": "Arka plan korumasını aç",
-  "onboarding_background_status_ready": "Arka plan koruması açık.",
-  "onboarding_background_status_missing": "Arka plan koruması kapalı.",
-  "onboarding_background_status_unknown": "Arka plan koruması durumu okunamadı.",
+  "onboarding_background_status_ready": "Alarm ve hatırlatıcı erişimi açık.",
+  "onboarding_background_status_missing": "Alarm ve hatırlatıcı erişimi kapalı.",
+  "onboarding_background_status_unknown": "Alarm ve hatırlatıcı erişiminin durumu okunamadı.",
   "onboarding_background_skip_note": "Şimdi atlayabilirsin. Atladığında kurulum eksik kalır ve ana sayfada \"Arka Plan Hazırlığı\" adımı açık görünür.",
   "readiness_unavailable_title": "Hazırlık durumu okunamadı",
   "readiness_unavailable_desc": "Cihaz bilgisi şu an alınamıyor. Uygulamayı kapatıp yeniden açmayı dene."

@@ -1029,9 +1029,9 @@
   "onboarding_background_title": "Background Protection",
   "onboarding_background_body": "Android's \"alarms & reminders\" access lets KoruBeni start its safety step on time when the timer runs out. Without it, Check-In, Safe Walk and a protected panic cannot be started; only manual dialling through your phone app remains.",
   "onboarding_background_cta": "Turn on background protection",
-  "onboarding_background_status_ready": "Background protection is on.",
-  "onboarding_background_status_missing": "Background protection is off.",
-  "onboarding_background_status_unknown": "Background protection state could not be read.",
+  "onboarding_background_status_ready": "Alarms & reminders access is on.",
+  "onboarding_background_status_missing": "Alarms & reminders access is off.",
+  "onboarding_background_status_unknown": "Alarms & reminders access state could not be read.",
   "onboarding_background_skip_note": "You can skip this for now. If you do, setup stays incomplete and the \"Background Readiness\" step shows as open on the home screen.",
   "readiness_unavailable_title": "Readiness state unavailable",
   "readiness_unavailable_desc": "Device information cannot be read right now. Try closing and reopening the app."

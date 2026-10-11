@@ -43,6 +43,24 @@ class EmergencySessionCoordinator(
         if (request.requestedGeneration <= 0L) {
             return@synchronized ArmResult.Rejected("invalidGeneration")
         }
+        // BOTH clocks are read here, monotonic FIRST, with nothing between them.
+        // These two reads used to sit ~80 lines apart, with a capability
+        // snapshot (several binder calls) and a store read in between, so the
+        // elapsed deadline computed below landed that gap LATER in real time
+        // than the wall deadline.
+        //
+        // Harmless while claimAndDispatch gated on the wall clock. OD-1 made
+        // that gate monotonic, and Dart anchors its dispatch to the WALL
+        // deadline (safety_clock.dart, audit K-03: native must not refuse a
+        // dispatch a microsecond early). So an on-time Dart dispatch read
+        // NOT_DUE for the length of the gap, Dart concluded the request had
+        // failed and opened the dialer, and the exact alarm placed the
+        // automatic call moments later -- a dialer on screen AND a call.
+        //
+        // Monotonic first also puts any residual skew on the safe side: the
+        // native deadline lands a hair EARLIER than the wall one, so an on-time
+        // dispatch is accepted rather than refused.
+        val elapsedNow = elapsedRealtimeMs()
         val now = wallClockMs()
         if (
             request.mainDeadlineMs <= now ||
@@ -123,7 +141,7 @@ class EmergencySessionCoordinator(
             generation = generation,
             kind = request.kind,
         )
-        val elapsedNow = elapsedRealtimeMs()
+        // elapsedNow was captured next to `now` at the top of arm(); see there.
         val elapsedDeadline = elapsedNow +
             (request.finalDeadlineMs - now).coerceAtLeast(0L)
         val preparing = EmergencySessionEnvelope(
@@ -300,11 +318,19 @@ class EmergencySessionCoordinator(
         val freshness = clocks.deadlineDecision(current)
         when (freshness.verdict) {
             OverdueDispatchPolicy.Verdict.NOT_DUE ->
-                // CLAIMED is deliberately exempt: claimAndDispatch rewrites the
-                // deadlines to now + DISPATCH_RETRY_DELAY_MS for its one bounded
-                // retry, so a CLAIMED record can legitimately read "not due" and
-                // a receiver arriving early should still finish the dispatch that
-                // already claimed. Refusing it would strand the claim.
+                // CLAIMED is deliberately exempt, but NOT for the reason first
+                // written here. That comment said the bounded retry rewrites the
+                // deadlines to now + DISPATCH_RETRY_DELAY_MS; it does not --
+                // `retryEnvelope` below is handed to scheduleBestEffort and is
+                // never persisted (security review F5). Inside one boot a
+                // CLAIMED record therefore cannot read NOT_DUE at all.
+                //
+                // The exemption is reachable only when the WALL authority reads
+                // earlier than the deadline across a reboot (an RTC that came
+                // back wrong). Dispatching there is the deliberate choice:
+                // something already claimed this session and may have reached
+                // Telecom, so refusing would strand a call the user is waiting
+                // on, and it matches what reconcile did before OD-1.
                 if (current.lifecycleState == LifecycleState.ARMED) {
                     return@synchronized DispatchResult.notAttempted(token, LifecycleState.ARMED)
                 }
@@ -697,7 +723,20 @@ class EmergencySessionCoordinator(
             // not running to hear) is stale projection data. Dart reads those
             // wall deadlines for the countdown, so correct them here instead of
             // waiting for a TIME_SET that already happened.
-            scheduleBestEffort(rebasedWallFromElapsed(envelope) ?: envelope)
+            // F3 (security review): rebasedWallFromElapsed OVERWRITES
+            // finalDeadlineMs, the only reference that survives a reboot, so it
+            // is a destructive write and takes the proof-grade check rather
+            // than `keepElapsed`'s weaker one. They differ only when NO boot
+            // identity is readable at all; there, treating an unknown boot as
+            // "the same boot" could push the wall deadline out by the previous
+            // boot's uptime. Rescheduling still happens -- only the overwrite
+            // is withheld.
+            val corrected = if (clocks.isProvenSameBoot(envelope)) {
+                rebasedWallFromElapsed(envelope)
+            } else {
+                null
+            }
+            scheduleBestEffort(corrected ?: envelope)
             return
         }
         val elapsedNow = elapsedRealtimeMs()

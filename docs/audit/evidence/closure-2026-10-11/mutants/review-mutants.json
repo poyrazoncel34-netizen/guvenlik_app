@@ -1,0 +1,36 @@
+[
+ {
+  "id": "OD1-M13-arm-reads-clocks-apart-again",
+  "file": "android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/EmergencySessionCoordinator.kt",
+  "kind": "gradle",
+  "tests": [
+   "com.poyrazoncel.korubeni.emergency.OverdueDispatchParityTest",
+   "com.poyrazoncel.korubeni.emergency.OverdueDispatchPolicyTest",
+   "com.poyrazoncel.korubeni.emergency.EmergencySessionCoordinatorTest",
+   "com.poyrazoncel.korubeni.emergency.EmergencySessionCoordinatorInterleavingTest"
+  ],
+  "edits": [
+   [
+    "        val elapsedNow = elapsedRealtimeMs()\n        val now = wallClockMs()",
+    "        val now = wallClockMs()"
+   ],
+   [
+    "        // elapsedNow was captured next to `now` at the top of arm(); see there.\n        val elapsedDeadline = elapsedNow +",
+    "        val elapsedNow = elapsedRealtimeMs()\n        val elapsedDeadline = elapsedNow +"
+   ]
+  ]
+ },
+ {
+  "id": "OD1-M14-wall-overwrite-without-proof",
+  "file": "android/app/src/main/kotlin/com/poyrazoncel/korubeni/emergency/EmergencySessionCoordinator.kt",
+  "kind": "gradle",
+  "tests": [
+   "com.poyrazoncel.korubeni.emergency.OverdueDispatchParityTest",
+   "com.poyrazoncel.korubeni.emergency.OverdueDispatchPolicyTest",
+   "com.poyrazoncel.korubeni.emergency.EmergencySessionCoordinatorTest",
+   "com.poyrazoncel.korubeni.emergency.EmergencySessionCoordinatorInterleavingTest"
+  ],
+  "old": "            val corrected = if (clocks.isProvenSameBoot(envelope)) {\n                rebasedWallFromElapsed(envelope)\n            } else {\n                null\n            }\n            scheduleBestEffort(corrected ?: envelope)",
+  "new": "            scheduleBestEffort(rebasedWallFromElapsed(envelope) ?: envelope)"
+ }
+]

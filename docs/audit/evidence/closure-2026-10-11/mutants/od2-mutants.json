@@ -93,8 +93,8 @@
    "test/screens/onboarding_contact_gate_source_test.dart",
    "test/screens/home_readiness_exact_alarm_test.dart"
   ],
-  "old": "    WidgetsBinding.instance.addObserver(this);\n    _refresh();",
-  "new": "    WidgetsBinding.instance.addObserver(this);\n    _refresh();\n    unawaited(_openSettings());",
+  "old": "    _readinessService.addListener(_onReadinessChanged);\n    _refresh();",
+  "new": "    _readinessService.addListener(_onReadinessChanged);\n    _refresh();\n    unawaited(_openSettings());",
   "kind": "flutter"
  },
  {
@@ -149,8 +149,64 @@
    "test/screens/onboarding_contact_gate_source_test.dart",
    "test/screens/home_readiness_exact_alarm_test.dart"
   ],
-  "old": "    } else if (level == SafetyReadinessLevel.unavailable) {",
+  "old": "    } else if (probeFailed && hasEmergencyContact) {",
   "new": "    } else if (false) {",
   "kind": "flutter"
+ },
+ {
+  "id": "OD2-M12-status-widened-to-background-readiness",
+  "kind": "flutter",
+  "tests": [
+   "test/screens/od2_background_protection_step_test.dart",
+   "test/screens/od2_onboarding_wiring_test.dart",
+   "test/screens/onboarding_behavior_test.dart",
+   "test/screens/onboarding_contact_gate_source_test.dart",
+   "test/screens/home_readiness_exact_alarm_test.dart"
+  ],
+  "file": "lib/screens/onboarding/onboarding_background_protection_step.dart",
+  "old": "    final granted = _readinessService.lastState?.exactAlarmPermission ?? false;",
+  "new": "    final granted = _readinessService.lastState?.backgroundAlertReady ?? false;"
+ },
+ {
+  "id": "OD2-M13-step-stops-listening-to-readiness",
+  "kind": "flutter",
+  "tests": [
+   "test/screens/od2_background_protection_step_test.dart",
+   "test/screens/od2_onboarding_wiring_test.dart",
+   "test/screens/onboarding_behavior_test.dart",
+   "test/screens/onboarding_contact_gate_source_test.dart",
+   "test/screens/home_readiness_exact_alarm_test.dart"
+  ],
+  "file": "lib/screens/onboarding/onboarding_background_protection_step.dart",
+  "old": "    _readinessService.addListener(_onReadinessChanged);\n    _refresh();",
+  "new": "    _refresh();"
+ },
+ {
+  "id": "OD2-M14-unprobed-card-treated-as-failed",
+  "kind": "flutter",
+  "tests": [
+   "test/screens/od2_background_protection_step_test.dart",
+   "test/screens/od2_onboarding_wiring_test.dart",
+   "test/screens/onboarding_behavior_test.dart",
+   "test/screens/onboarding_contact_gate_source_test.dart",
+   "test/screens/home_readiness_exact_alarm_test.dart"
+  ],
+  "file": "lib/core/widgets/readiness_card.dart",
+  "old": "    final probeFailed = readiness?.isKnown == false;",
+  "new": "    final probeFailed = readiness.readinessLevel == SafetyReadinessLevel.unavailable;"
+ },
+ {
+  "id": "OD2-M15-failed-probe-hides-contact-guidance",
+  "kind": "flutter",
+  "tests": [
+   "test/screens/od2_background_protection_step_test.dart",
+   "test/screens/od2_onboarding_wiring_test.dart",
+   "test/screens/onboarding_behavior_test.dart",
+   "test/screens/onboarding_contact_gate_source_test.dart",
+   "test/screens/home_readiness_exact_alarm_test.dart"
+  ],
+  "file": "lib/core/widgets/readiness_card.dart",
+  "old": "    } else if (probeFailed && hasEmergencyContact) {",
+  "new": "    } else if (probeFailed) {"
  }
 ]

@@ -139,7 +139,7 @@
    "com.poyrazoncel.korubeni.emergency.EmergencySessionCoordinatorTest",
    "com.poyrazoncel.korubeni.emergency.EmergencySessionCoordinatorInterleavingTest"
   ],
-  "old": "            scheduleBestEffort(rebasedWallFromElapsed(envelope) ?: envelope)",
+  "old": "            val corrected = if (clocks.isProvenSameBoot(envelope)) {\n                rebasedWallFromElapsed(envelope)\n            } else {\n                null\n            }\n            scheduleBestEffort(corrected ?: envelope)",
   "new": "            scheduleBestEffort(envelope)"
  },
  {

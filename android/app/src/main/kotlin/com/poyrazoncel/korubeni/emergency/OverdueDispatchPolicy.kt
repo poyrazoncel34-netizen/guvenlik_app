@@ -78,7 +78,15 @@ object OverdueDispatchPolicy {
         OFFER_MANUAL,
     }
 
-    /** Which clock [Decision.overdueMs] was measured on, for logging and tests. */
+    /**
+     * Which clock [Decision.overdueMs] was measured on.
+     *
+     * Consumed by the tests, which assert the monotonic clock wins whenever it
+     * has an opinion. NOT written to any log: an earlier comment here said
+     * "for logging" and nothing logged it (security review F6). Stated plainly
+     * rather than left as an aspiration, so nobody hunts for a log that does
+     * not exist.
+     */
     enum class ClockAuthority { MONOTONIC, WALL }
 
     data class Decision(

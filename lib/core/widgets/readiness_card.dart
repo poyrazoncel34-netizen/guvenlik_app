@@ -137,16 +137,26 @@ class ReadinessCard extends StatelessWidget {
     // so a future chip edit cannot quietly widen "complete" either.
     final level = readiness.readinessLevel;
     final allReady = missing.isEmpty && level == SafetyReadinessLevel.fullyReady;
+    // The probe RAN and failed -- distinct from "not probed yet" (null).
+    final probeFailed = readiness?.isKnown == false;
 
     final String title;
     final String subtitle;
     if (allReady) {
       title = 'ready'.tr();
       subtitle = 'system_ready_desc'.tr();
-    } else if (level == SafetyReadinessLevel.unavailable) {
+    } else if (probeFailed && hasEmergencyContact) {
       // There is no step the user can take here, so do not offer a count of
       // them. Saying "2 steps left" when the probe itself failed sends the user
       // hunting through Settings for something that is not the problem.
+      //
+      // Two conditions, both learned in review:
+      //   * `probeFailed`, not `level == unavailable`: a snapshot not taken YET
+      //     is also `unavailable`, and at cold start that made the card flash
+      //     "readiness state unavailable" before the first probe returned.
+      //   * `hasEmergencyContact`: with no contact saved, "add your contact
+      //     first" is the one instruction that matters, and a failed device
+      //     probe must not hide it (audit A-04).
       title = 'readiness_unavailable_title'.tr();
       subtitle = 'readiness_unavailable_desc'.tr();
     } else if (missing.length == 1) {

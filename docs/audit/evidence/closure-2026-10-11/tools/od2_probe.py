@@ -227,7 +227,7 @@ def main():
     # 4. 'Atla' must land ON the new step, not past it.
     tap('Atla', exact=True); time.sleep(5)
     on_step = has('Arka Plan Koruması', tries=6)
-    says_off = any('Arka plan koruması kapalı.' in l for l in labels())
+    says_off = any('Alarm ve hatırlatıcı erişimi kapalı.' in l for l in labels())
     has_cta = any('Arka plan korumasını aç' in l for l in labels())
     if api >= 31:
         # NOT asserted here: the body paragraph and the skip note. Both are
@@ -244,7 +244,7 @@ def main():
         record(f'4. API {api}: no such access exists, step reports it as ON (no regression)',
                on_step and not has_cta,
                f'onStep={on_step} cta={has_cta} '
-               f'lines={[l for l in labels() if "Arka plan" in l]}')
+               f'lines={[l for l in labels() if "Alarm ve" in l or "Arka plan" in l]}')
 
     if api >= 31:
         # 5-6. CTA opens THIS package's own alarms screen, not the generic list.

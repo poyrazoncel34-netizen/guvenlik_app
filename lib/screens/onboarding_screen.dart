@@ -216,6 +216,14 @@ class _OnboardingScreenState extends State<OnboardingScreen>
 
   @override
   Widget build(BuildContext context) {
+    // Computed ONCE: `_pages` is a getter that rebuilds every page and runs a
+    // .tr() per title and body, and this was read four times per build.
+    // The `_isOnContactStep ||` arm also keeps the guard safe if indexWhere
+    // ever returned -1: without it `_currentPage >= -1` is always true, and the
+    // `&& idx >= 0` would flip Skip back ON for every page, gate included.
+    final skipTarget = _skipTargetIndex;
+    final skipDone =
+        _isOnContactStep || (skipTarget >= 0 && _currentPage >= skipTarget);
     return Scaffold(
       backgroundColor: AppColors.background,
       body: Container(
@@ -238,15 +246,9 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                   child: Align(
                     alignment: Alignment.centerRight,
                     child: TextButton(
-                      onPressed: _currentPage >= _skipTargetIndex &&
-                              _skipTargetIndex >= 0
-                          ? null
-                          : _skipToFirstActionableStep,
+                      onPressed: skipDone ? null : _skipToFirstActionableStep,
                       child: Text(
-                        _currentPage >= _skipTargetIndex &&
-                                _skipTargetIndex >= 0
-                            ? ''
-                            : 'btn_skip'.tr(),
+                        skipDone ? '' : 'btn_skip'.tr(),
                         style: const TextStyle(
                           color: AppColors.textSecondary,
                           fontSize: 16,

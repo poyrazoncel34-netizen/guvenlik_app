@@ -26,6 +26,7 @@ import 'accessibility_guidelines_test.dart' show pumpLocalized;
 Map<String, Object?> _readinessMap({
   bool exactAlarm = true,
   bool supportedOs = true,
+  bool notifications = true,
 }) => <String, Object?>{
   'supportedOs': supportedOs,
   'telephonyCalling': true,
@@ -34,8 +35,8 @@ Map<String, Object?> _readinessMap({
   'batteryOptimizationsIgnored': true,
   'canScheduleExactAlarms': exactAlarm,
   'callPermissionGranted': true,
-  'notificationsEnabled': true,
-  'alertChannelHigh': true,
+  'notificationsEnabled': notifications,
+  'alertChannelHigh': notifications,
 };
 
 void main() {
@@ -46,9 +47,13 @@ void main() {
   /// Calls the step saw, so "it opened Settings" is proven, not assumed.
   late List<String> calls;
   late bool exactAlarmGranted;
+  /// Notifications are requested AFTER this step in the real flow, so the
+  /// step must behave correctly while they are still denied.
+  late bool notificationsGranted;
 
   EmergencyReadinessService buildReadiness() {
     calls = <String>[];
+    notificationsGranted = true;
     final platform = EmergencyPlatformService.forTesting(
       methodChannel: channel,
     );
@@ -57,7 +62,10 @@ void main() {
           calls.add(call.method);
           switch (call.method) {
             case 'getDeviceState':
-              return _readinessMap(exactAlarm: exactAlarmGranted);
+              return _readinessMap(
+                exactAlarm: exactAlarmGranted,
+                notifications: notificationsGranted,
+              );
             case 'canScheduleExactAlarms':
               return exactAlarmGranted;
             case 'requestExactAlarmPermission':
@@ -99,7 +107,7 @@ void main() {
       await pumpStep(tester);
 
       expect(find.text('Arka Plan Koruması'), findsOneWidget);
-      expect(find.text('Arka plan koruması kapalı.'), findsOneWidget);
+      expect(find.text('Alarm ve hatırlatıcı erişimi kapalı.'), findsOneWidget);
       expect(find.text('Arka plan korumasını aç'), findsOneWidget);
       // The user must be told skipping is allowed AND what it costs.
       expect(
@@ -115,7 +123,7 @@ void main() {
     exactAlarmGranted = true;
     await pumpStep(tester);
 
-    expect(find.text('Arka plan koruması açık.'), findsOneWidget);
+    expect(find.text('Alarm ve hatırlatıcı erişimi açık.'), findsOneWidget);
     expect(find.text('Arka plan korumasını aç'), findsNothing);
     expect(calls, isNot(contains('requestExactAlarmPermission')));
   });
@@ -138,7 +146,7 @@ void main() {
     (tester) async {
       exactAlarmGranted = false;
       await pumpStep(tester);
-      expect(find.text('Arka plan koruması kapalı.'), findsOneWidget);
+      expect(find.text('Alarm ve hatırlatıcı erişimi kapalı.'), findsOneWidget);
 
       // The user grants it in Android Settings and comes back. Nothing tells
       // the app the toggle changed -- the resume is the only signal.
@@ -155,7 +163,7 @@ void main() {
         greaterThan(probesBefore),
         reason: 'resume must re-probe; an Activity result is not authoritative',
       );
-      expect(find.text('Arka plan koruması açık.'), findsOneWidget);
+      expect(find.text('Alarm ve hatırlatıcı erişimi açık.'), findsOneWidget);
       expect(find.text('Arka plan korumasını aç'), findsNothing);
     },
   );
@@ -184,8 +192,8 @@ void main() {
         ));
     await tester.pump();
 
-    expect(find.text('Arka plan koruması durumu okunamadı.'), findsOneWidget);
-    expect(find.text('Arka plan koruması açık.'), findsNothing);
+    expect(find.text('Alarm ve hatırlatıcı erişiminin durumu okunamadı.'), findsOneWidget);
+    expect(find.text('Alarm ve hatırlatıcı erişimi açık.'), findsNothing);
   });
 
   testWidgets('the CTA is at least 48 dp in GLOBAL coordinates', (
@@ -234,7 +242,7 @@ void main() {
     // what a screen reader walks.
     for (final fragment in <String>[
       'Arka Plan Koruması',
-      'Arka plan koruması kapalı.',
+      'Alarm ve hatırlatıcı erişimi kapalı.',
       'Arka plan korumasını aç',
       // The explanation of WHY the access is needed...
       'alarm ve hatırlatıcı',
@@ -248,6 +256,73 @@ void main() {
       );
     }
     handle.dispose();
+  });
+
+  testWidgets('the status line names the ONE access this step controls', (
+    tester,
+  ) async {
+    // Review MEDIUM: `granted` is exactAlarmPermission, while the home chip is
+    // backgroundAlertReady (also notifications + a high-importance channel),
+    // and notifications are requested LATER in this flow. So the step must not
+    // say "background protection is on" off the narrower signal -- its CTA
+    // cannot grant notifications, so widening the signal would show red for
+    // something it cannot fix. It names the alarm access instead.
+    exactAlarmGranted = true;
+    await pumpStep(tester);
+
+    expect(find.text('Alarm ve hatırlatıcı erişimi açık.'), findsOneWidget);
+    expect(find.textContaining('Arka plan koruması açık'), findsNothing);
+  });
+
+  testWidgets(
+    'with notifications still denied the step reports only the alarm access',
+    (tester) async {
+      // The scenario the narrow signal exists for, and the one that makes
+      // widening it wrong. In this flow the notification permission is
+      // requested AFTER this step, so `backgroundAlertReady` is false here for
+      // a reason this step cannot address: its CTA opens the exact-alarm
+      // screen. Reporting "off" would send the user to a setting that is
+      // already correct; the step reports the access it actually owns.
+      exactAlarmGranted = true;
+      final readiness = buildReadiness();
+      notificationsGranted = false;
+      await pumpLocalized(
+        tester,
+        OnboardingBackgroundProtectionStep(readiness: readiness),
+      );
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 300)),
+      );
+      await tester.pump();
+
+      expect(find.text('Alarm ve hatırlatıcı erişimi açık.'), findsOneWidget);
+      expect(find.text('Alarm ve hatırlatıcı erişimi kapalı.'), findsNothing);
+      expect(find.text('Arka plan korumasını aç'), findsNothing);
+      // ...and the overall verdict is still NOT ready, which the card owns.
+      expect(
+        readiness.lastState.readinessLevel,
+        SafetyReadinessLevel.limited,
+      );
+    },
+  );
+
+  testWidgets('a readiness change from elsewhere repaints the step', (
+    tester,
+  ) async {
+    // Review MEDIUM: the step used to await only its own probe. The service
+    // supersedes an in-flight probe and does NOT notify for the superseded
+    // one, so without a listener the step could paint stale state and never
+    // hear the newer result. Here the service is driven directly, with no
+    // lifecycle event and no probe of the step's own.
+    exactAlarmGranted = false;
+    final readiness = await pumpStep(tester);
+    expect(find.text('Alarm ve hatırlatıcı erişimi kapalı.'), findsOneWidget);
+
+    exactAlarmGranted = true;
+    await tester.runAsync(() => readiness.checkReadiness());
+    await tester.pump();
+
+    expect(find.text('Alarm ve hatırlatıcı erişimi açık.'), findsOneWidget);
   });
 
   group('the home card speaks the same verdict', () {
@@ -296,6 +371,46 @@ void main() {
       expect(find.text('Kurulum tamam'), findsNothing);
       // One chip red -> the "almost there" headline, with a next action.
       expect(find.textContaining('Kurulumun büyük bölümü tamam'), findsOneWidget);
+    });
+
+    testWidgets('a not-yet-probed card does not flash an error headline', (
+      tester,
+    ) async {
+      // Review MEDIUM: null (not probed yet) also maps to `unavailable`, so
+      // the card briefly claimed the readiness state could not be read before
+      // the very first probe returned.
+      await pumpLocalized(tester, card(null));
+
+      expect(find.text('Hazırlık durumu okunamadı'), findsNothing);
+    });
+
+    testWidgets('a failed probe never hides "add your contact first"', (
+      tester,
+    ) async {
+      // Review MEDIUM + audit A-04: with no contact saved that is the only
+      // instruction that matters, and a failed device probe must not outrank
+      // it.
+      await pumpLocalized(
+        tester,
+        ReadinessCard(
+          locationGranted: true,
+          contactsGranted: true,
+          hasEmergencyContact: false,
+          readiness: const PlatformReadinessSnapshot.unavailable(
+            reasonCode: 'timeout',
+          ),
+          lastRehearsalAt: null,
+          onFixEmergencyContact: () {},
+          onFixCallPermission: () {},
+          onFixBackground: () {},
+          onFixLocation: () {},
+          onFixContacts: () {},
+          onRunRehearsal: () {},
+        ),
+      );
+
+      expect(find.text('Hazırlık durumu okunamadı'), findsNothing);
+      expect(find.textContaining('acil kişini'), findsOneWidget);
     });
 
     testWidgets('everything present is the only state that says ready', (

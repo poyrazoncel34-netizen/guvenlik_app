@@ -628,6 +628,118 @@ class OverdueDispatchParityTest {
     /** What a path did, reduced to the only three outcomes that matter. */
     private enum class Expected { NOT_DUE, CALLED, OFFERED }
 
+    /**
+     * F1 (security review of the OD-1 commit, HIGH): a dispatch arriving
+     * EXACTLY on the wall deadline must be accepted.
+     *
+     * `arm()` read the wall clock near the top and the monotonic clock ~80
+     * lines later, after a capability snapshot (several binder calls) and a
+     * store read. The stored elapsed deadline was therefore that gap LATER in
+     * real time than the stored wall deadline.
+     *
+     * Invisible while claimAndDispatch gated on the wall clock. OD-1 made the
+     * gate monotonic, and Dart anchors its dispatch to the WALL deadline
+     * (safety_clock.dart, audit K-03: native must not refuse a dispatch a
+     * microsecond early). So an on-time Dart dispatch read NOT_DUE for the
+     * length of that gap, Dart concluded the request had failed and opened the
+     * dialer, and the exact alarm placed the automatic call moments later --
+     * a dialer on screen AND an automatic call.
+     *
+     * Every other fixture here steps both clocks in lockstep, so the gap is
+     * always zero and none of them can see this. This one makes the monotonic
+     * clock ADVANCE on each read, which is what a real device does while
+     * arm() is doing its binder work.
+     */
+    @Test
+    fun `a dispatch exactly on the wall deadline is not refused by clock skew`() {
+        val harness = Harness(binderWorkMs = 50L)
+        val startElapsed = harness.elapsed
+        val token = harness.arm()
+
+        // Exactly the deadline on the wall clock, and the same real duration
+        // on the monotonic one. Nothing is late; this must dispatch.
+        harness.wall = now + sessionMs
+        harness.elapsed = startElapsed + sessionMs
+        harness.coordinator.claimAndDispatch(token)
+
+        assertEquals(
+            "an on-time dispatch must not be refused because arm() read its " +
+                "two clocks at different moments",
+            listOf(TARGET),
+            harness.calls.targets,
+        )
+        assertEquals(
+            LifecycleState.REQUEST_SUBMITTED_UNCONFIRMED,
+            harness.state(),
+        )
+    }
+
+    /**
+     * The mirror: skew must not make a session due EARLY either.
+     *
+     * The margin is five SECONDS, not one millisecond, and that is a statement
+     * about the harness rather than a weaker assertion. `elapsedStepPerRead`
+     * advances the monotonic clock on every read, so a session placed 1 ms
+     * before its deadline is genuinely carried past it by the handful of reads
+     * one dispatch performs -- dispatching there is correct behaviour, and a
+     * test asserting otherwise would be measuring the fake clock instead of
+     * the code. Five seconds is far larger than any read sequence can consume,
+     * so a dispatch here would be a real "due early" defect.
+     */
+    @Test
+    fun `clock skew does not make a session due early`() {
+        val harness = Harness(binderWorkMs = 50L)
+        val startElapsed = harness.elapsed
+        val token = harness.arm()
+
+        harness.wall = now + sessionMs - 5_000L
+        harness.elapsed = startElapsed + sessionMs - 5_000L
+        harness.coordinator.claimAndDispatch(token)
+
+        assertEquals(emptyList<String>(), harness.calls.targets)
+        assertEquals(LifecycleState.ARMED, harness.state())
+    }
+
+    /**
+     * F3 (security review): with NO readable boot identity, a current-boot
+     * reconcile may reschedule but must NOT overwrite the wall deadline.
+     *
+     * `rebasedWallFromElapsed` rewrites `finalDeadlineMs`, which is the only
+     * reference that survives a reboot. When neither the kernel boot id nor
+     * BOOT_COUNT can be read, "same boot" is an assumption rather than a fact,
+     * and rewriting the surviving reference from an elapsed deadline that may
+     * belong to a previous boot can push the deadline out by that boot's whole
+     * uptime. Scheduling is still fine -- only the destructive write is
+     * withheld, which is the asymmetry SessionClockAuthority documents.
+     */
+    @Test
+    fun `without a readable boot identity reconcile does not rewrite the wall deadline`() {
+        val harness = Harness(knownBootIdentity = false)
+        harness.arm()
+        val armed = harness.store.current!!
+
+        // The wall clock moved an hour while the app was not running, so no
+        // TIME_SET was ever delivered and the two clocks now disagree.
+        harness.elapsed += 30_000L
+        harness.wall += 30_000L + 3_600_000L
+
+        harness.coordinator.reconcileCurrentBoot()
+
+        val after = harness.store.current!!
+        assertEquals(LifecycleState.ARMED, after.lifecycleState)
+        assertEquals(
+            "the only cross-boot reference must survive an unverifiable boot",
+            armed.finalDeadlineMs,
+            after.finalDeadlineMs,
+        )
+        assertEquals(
+            "the session must still be re-armed",
+            2,
+            harness.alarms.scheduled.size,
+        )
+        assertEquals(emptyList<String>(), harness.calls.targets)
+    }
+
     /** Guards the reproduction itself: the harness really does arm and age. */
     @Test
     fun `harness sanity -- an un-aged session is not dispatchable`() {
@@ -641,7 +753,25 @@ class OverdueDispatchParityTest {
         assertEquals(LifecycleState.ARMED, harness.state())
     }
 
-    private inner class Harness {
+    private inner class Harness(
+        /**
+         * Monotonic milliseconds consumed by `capabilityProvider.snapshot()`.
+         *
+         * On a device that call crosses several binder boundaries (package
+         * manager, alarm manager, notification manager, telecom) and takes real
+         * time, and `store.read()` touches disk. arm() reads its two clocks on
+         * either side of that work, so the gap lands in the stored deadlines.
+         *
+         * A per-READ step does NOT model this: arm() performs exactly one
+         * elapsed read whether the reads are adjacent or not, so a per-read
+         * clock produces the same envelope either way and the defect stays
+         * invisible. The time has to be consumed by the work BETWEEN them,
+         * which is what this does.
+         */
+        private val binderWorkMs: Long = 0L,
+        /** False models a device where neither boot id nor BOOT_COUNT reads. */
+        private val knownBootIdentity: Boolean = true,
+    ) {
         var wall = now
         var elapsed = 50_000L
         var boot = 7
@@ -656,6 +786,8 @@ class OverdueDispatchParityTest {
             fallbackPoster = fallback,
             callRequester = calls,
             capabilityProvider = { request ->
+                // The binder work arm() does between its two clock reads.
+                elapsed += binderWorkMs
                 readyCapabilities.copy(
                     pinConfigured = request.pinConfigured,
                     callableTarget = EmergencyTargetValidator.isCallable(request.target),
@@ -664,8 +796,8 @@ class OverdueDispatchParityTest {
             },
             wallClockMs = { wall },
             elapsedRealtimeMs = { elapsed },
-            bootCount = { boot },
-            bootId = { "boot-$boot" },
+            bootCount = { if (knownBootIdentity) boot else UNKNOWN_BOOT_COUNT },
+            bootId = { if (knownBootIdentity) "boot-$boot" else null },
         )
 
         fun arm(): SessionToken = armRequest().also { token = it }
