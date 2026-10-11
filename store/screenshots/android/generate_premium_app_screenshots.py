@@ -63,10 +63,10 @@ SHOTS = [
     ),
     Shot(
         "04_map.png",
-        "04_konum_oturumu.png",
-        "KONUM OTURUMU",
+        "04_harita.png",
+        "HARİTA",
         "Konumunu ekranda net gör",
-        "Harita oturumunu başlat, durumunu takip et.",
+        "Harita ekranını aç, kendi konumunu gör.",
         CYAN,
     ),
 ]

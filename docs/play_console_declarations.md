@@ -158,7 +158,7 @@ Status: CODE_DONE copy prepared; PLAY_CONSOLE / NEEDS_OPERATOR_ACTION to submit 
 Sensitive permissions:
 
 ```text
-KoruBeni requests only permissions needed for user-facing safety features: location for map/location sessions, CALL_PHONE for user-started SOS direct-call attempts with ACTION_DIAL fallback, POST_NOTIFICATIONS for visible timer/session alerts, SCHEDULE_EXACT_ALARM for user-started safety timers with fail-closed arming, and Google Play Billing for optional Pro subscriptions. It does not request an Android foreground-service permission.
+KoruBeni requests only permissions needed for user-facing safety features: location for the Map screen's own-position display, CALL_PHONE for user-started SOS direct-call attempts with ACTION_DIAL fallback, POST_NOTIFICATIONS for visible timer/session alerts, SCHEDULE_EXACT_ALARM for user-started safety timers with fail-closed arming, and Google Play Billing for optional Pro subscriptions. It does not request an Android foreground-service permission.
 ```
 
 No READ_CONTACTS:

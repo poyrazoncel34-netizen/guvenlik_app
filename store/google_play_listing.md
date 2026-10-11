@@ -14,12 +14,12 @@ Panik butonu, sahte çağrı ve siren tek uygulamada. KoruBeni, acil bir durumda
 
 ⚠️ ÖNEMLİ: Bu uygulama profesyonel güvenlik hizmeti yerine geçmez. KoruBeni bağımsız bir uygulamadır; herhangi bir kamu kurumu, kolluk birimi veya resmi acil servisle bağlantılı değildir ve bunları temsil etmez. Acil durumlarda her zaman 112'yi arayın.
 
-Ücretsiz: panik akışının Test Modu provası (gerçek arama yapılmaz), konum oturumu, sahte çağrı, siren, acil kişi yönetimi, plan notu ve güvenlik geçmişi.
+Ücretsiz: panik akışının Test Modu provası (gerçek arama yapılmaz), harita, sahte çağrı, siren, acil kişi yönetimi, plan notu ve güvenlik geçmişi.
 
 KoruBeni Pro ile açılır: gerçek arama başlatan Panik/SOS akışı, güvenli yürüyüş/check-in ve ses tuşu tetikleyici.
 
-📍 KONUM OTURUMU
-Konum alınabilirse haritada gösterilir; alınamazsa açıkça "konum alınamadı" durumu gösterilir.
+📍 HARİTA
+Kendi konumunuz, Harita ekranı açıkken haritada gösterilir; alınamazsa açıkça "konum alınamadı" durumu gösterilir. Panik, check-in ve güvenli yürüyüş konum kullanmaz ve konum paylaşmaz.
 
 📞 SAHTE ÇAĞRI
 Cihaz içinde sahte gelen arama ekranı simüle eder. Gerçek arama başlatmaz, üçüncü kişilere iletişim göndermez.
@@ -57,7 +57,7 @@ KoruBeni Pro isteğe bağlıdır. Satın alma, yenileme, iptal ve geri yükleme 
 • Verilerinizi istediğiniz zaman silebilirsiniz
 
 ⚙️ İZİNLER HAKKINDA
-• Konum: Konum oturumu ve Pro acil akışlarında konum durumunu göstermek için
+• Konum: Yalnızca Harita ekranında kendi konumunuzu göstermek için
 • Telefon: Pro panik akışında seçili numara için arama akışını başlatmak için
 • Pil optimizasyonu: Pro check-in ve güvenli yürüyüş yardımcı zamanlayıcılarını desteklemek için
 İzinler yalnızca ilgili akışta ve kullanıcı bağlamı içinde istenir.
@@ -67,6 +67,6 @@ KoruBeni Pro isteğe bağlıdır. Satın alma, yenileme, iptal ve geri yükleme 
 ## Notlar
 
 - Mesaj gönderimi yoktur; uygulama bu sürümde mesaj uygulaması açmaz.
-- Konum: Yalnızca Pro acil akış veya kullanıcı başlattığı konum oturumu sırasında erişilir.
+- Konum: Yalnızca kullanıcı Harita ekranını açtığında erişilir; acil akışlar konum kullanmaz.
 - Sunucu: Geliştirici backend'i yoktur; harita ve Play servisleri ağ kullanabilir.
 - Kişiler: READ_CONTACTS izni kullanılmaz; ücretsiz acil kişiler sistem seçicisi veya manuel girişle eklenir. Uygulama tüm rehber listesini okumaz.

@@ -15,7 +15,7 @@ KoruBeni offers free basic safety tools. Panic/SOS, Safe Walk, check-in, and the
 
 ★ FREE FEATURES ★
 
-◉ Location Session
+◉ Map
 Show your current location when available; show a clear unavailable state when it cannot be acquired.
 
 ◉ Fake Call
@@ -58,15 +58,15 @@ KoruBeni Pro is optional. Purchases, renewals, cancellations, and restore operat
 
 ★ PRIVACY ★
 
-• Location is processed only during emergency or location sessions
+• Location is processed only while the Map screen is open; Panic, Check-In and Safe Walk do not use it
 • We don’t sell your data to third parties
 • The primary copy of app data stays on device; map and Play Billing providers may have their own technical network behavior
 
-KoruBeni — Free location session and fake call; optional Pro safety tools.
+KoruBeni — Free map and fake call; optional Pro safety tools.
 
 **Category:** Tools / Safety
 **Content Rating:** 18+ intended audience / complete according to Play Console form
 **Contact Email:** korubeni.destek@gmail.com
 **Privacy Policy URL:** https://poyrazoncel34-netizen.github.io/guvenlik_app/privacy_policy.html
 
-**Tags:** safety, emergency, KoruBeni Pro panic button, location session, personal security, Pro SOS, fake call
+**Tags:** safety, emergency, KoruBeni Pro panic button, map, personal security, Pro SOS, fake call

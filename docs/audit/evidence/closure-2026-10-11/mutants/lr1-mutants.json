@@ -1,0 +1,142 @@
+[
+ {
+  "id": "LR1-M1-consent-claims-emergency-location-again",
+  "file": "assets/translations/tr-TR.json",
+  "tests": [
+   "test/screens/y09_location_session_copy_test.dart",
+   "test/screens/unified_consent_behavior_test.dart",
+   "test/release_readiness_policy_test.dart",
+   "test/store_release_docs_test.dart",
+   "test/public_release_overclaim_copy_test.dart"
+  ],
+  "old": "\"legal_consent_location\": \"Konum verimin yaln\u0131zca Harita ekran\u0131nda kendi konumumu g\u00f6rmek i\u00e7in i\u015flenmesine r\u0131za veriyorum\"",
+  "new": "\"legal_consent_location\": \"Konum verilerimin acil durum ve konum oturumlar\u0131nda i\u015flenmesine r\u0131za veriyorum\"",
+  "kind": "flutter"
+ },
+ {
+  "id": "LR1-M2-consent-sub-reintroduces-location-session",
+  "file": "assets/translations/tr-TR.json",
+  "tests": [
+   "test/screens/y09_location_session_copy_test.dart",
+   "test/screens/unified_consent_behavior_test.dart",
+   "test/release_readiness_policy_test.dart",
+   "test/store_release_docs_test.dart",
+   "test/public_release_overclaim_copy_test.dart"
+  ],
+  "old": "ve konum payla\u015fmaz. Koordinatlar\u0131n\u0131z hi\u00e7bir sunucuya",
+  "new": "ve konum oturumu ba\u015flat\u0131r. Koordinatlar\u0131n\u0131z hi\u00e7bir sunucuya",
+  "kind": "flutter"
+ },
+ {
+  "id": "LR1-M3-en-consent-claims-emergency-location",
+  "file": "assets/translations/en-US.json",
+  "tests": [
+   "test/screens/y09_location_session_copy_test.dart",
+   "test/screens/unified_consent_behavior_test.dart",
+   "test/release_readiness_policy_test.dart",
+   "test/store_release_docs_test.dart",
+   "test/public_release_overclaim_copy_test.dart"
+  ],
+  "old": "\"legal_consent_location\": \"I consent to my location being processed only to show my own position on the Map screen\"",
+  "new": "\"legal_consent_location\": \"I consent to my location data being processed during emergency and location sessions\"",
+  "kind": "flutter"
+ },
+ {
+  "id": "LR1-M4-terms-section-renamed-back",
+  "file": "lib/constants/legal_texts.dart",
+  "tests": [
+   "test/screens/y09_location_session_copy_test.dart",
+   "test/screens/unified_consent_behavior_test.dart",
+   "test/release_readiness_policy_test.dart",
+   "test/store_release_docs_test.dart",
+   "test/public_release_overclaim_copy_test.dart"
+  ],
+  "old": "12. KONUM VE HAR\u0130TA",
+  "new": "12. KONUM OTURUMU",
+  "kind": "flutter"
+ },
+ {
+  "id": "LR1-M5-en-terms-section-renamed-back",
+  "file": "lib/constants/legal_texts.dart",
+  "tests": [
+   "test/screens/y09_location_session_copy_test.dart",
+   "test/screens/unified_consent_behavior_test.dart",
+   "test/release_readiness_policy_test.dart",
+   "test/store_release_docs_test.dart",
+   "test/public_release_overclaim_copy_test.dart"
+  ],
+  "old": "12. LOCATION AND MAP",
+  "new": "12. LOCATION SESSION",
+  "kind": "flutter"
+ },
+ {
+  "id": "LR1-M6-published-mirror-reverts",
+  "file": "store/privacy_policy.html",
+  "tests": [
+   "test/screens/y09_location_session_copy_test.dart",
+   "test/screens/unified_consent_behavior_test.dart",
+   "test/release_readiness_policy_test.dart",
+   "test/store_release_docs_test.dart",
+   "test/public_release_overclaim_copy_test.dart"
+  ],
+  "old": "Konum verileriniz yaln\u0131zca Harita ekran\u0131 a\u00e7\u0131kken i\u015flenir.",
+  "new": "Konum verileriniz yaln\u0131zca siz konum oturumu ba\u015flatt\u0131\u011f\u0131n\u0131zda i\u015flenir.",
+  "kind": "flutter"
+ },
+ {
+  "id": "LR1-M7-positive-claim-deleted",
+  "file": "assets/translations/tr-TR.json",
+  "tests": [
+   "test/screens/y09_location_session_copy_test.dart",
+   "test/screens/unified_consent_behavior_test.dart",
+   "test/release_readiness_policy_test.dart",
+   "test/store_release_docs_test.dart",
+   "test/public_release_overclaim_copy_test.dart"
+  ],
+  "old": "Acil durum, Check-in ve G\u00fcvenli Y\u00fcr\u00fcy\u00fc\u015f ak\u0131\u015flar\u0131 konum kullanmaz.",
+  "new": "",
+  "kind": "flutter"
+ },
+ {
+  "id": "LR1-M8-en-positive-claim-deleted",
+  "file": "assets/translations/en-US.json",
+  "tests": [
+   "test/screens/y09_location_session_copy_test.dart",
+   "test/screens/unified_consent_behavior_test.dart",
+   "test/release_readiness_policy_test.dart",
+   "test/store_release_docs_test.dart",
+   "test/public_release_overclaim_copy_test.dart"
+  ],
+  "old": "The emergency, Check-in and Safe Walk flows do not use location.",
+  "new": "",
+  "kind": "flutter"
+ },
+ {
+  "id": "LR1-M9-legal-version-not-bumped",
+  "file": "lib/constants/legal_texts.dart",
+  "tests": [
+   "test/screens/y09_location_session_copy_test.dart",
+   "test/screens/unified_consent_behavior_test.dart",
+   "test/release_readiness_policy_test.dart",
+   "test/store_release_docs_test.dart",
+   "test/public_release_overclaim_copy_test.dart"
+  ],
+  "old": "static const String kvkkVersion = '3.5.0';",
+  "new": "static const String kvkkVersion = '3.4.0';",
+  "kind": "flutter"
+ },
+ {
+  "id": "LR1-M10-terms-version-not-bumped",
+  "file": "lib/constants/legal_texts.dart",
+  "tests": [
+   "test/screens/y09_location_session_copy_test.dart",
+   "test/screens/unified_consent_behavior_test.dart",
+   "test/release_readiness_policy_test.dart",
+   "test/store_release_docs_test.dart",
+   "test/public_release_overclaim_copy_test.dart"
+  ],
+  "old": "static const String termsVersion = '4.1.0';",
+  "new": "static const String termsVersion = '4.0.0';",
+  "kind": "flutter"
+ }
+]

@@ -9,6 +9,17 @@ Surumleme: `pubspec.yaml` 1.0.0+1'de SABITTIR; gercek `versionCode`
 
 ## Yayinlanmadi
 
+### Degisti
+- Yasal metinlerdeki konum aciklamalari uygulamanin gercek davranisiyla
+  eslestirildi. Uygulamada "konum oturumu" diye bir ozellik yok: konum yalnizca
+  Harita ekrani acikken, kendi konumunuzu haritada gostermek icin okunuyor.
+  Panik, Kontrol Noktasi ve Guvenli Yuruyus konum kullanmiyor ve konum
+  paylasmiyor. Rıza ekranindaki konum maddesi, Kullanim Sartlari ve KVKK
+  aydinlatma metni buna gore duzeltildi (Kullanim Sartlari 4.1.0, KVKK 3.5.0).
+  **Surum degistigi icin uygulama acilista yeniden onay isteyecek; istege bagli
+  onaylari (konum, acil kisi, profil, sahte cagri) yeniden isaretlemeniz
+  gerekiyor.**
+
 ### Eklendi
 - Kurulumda yeni bir **Arka Plan Koruması** adimi. Android 14 ve uzerinde "alarm ve
   hatirlatici" erisimi yeni kurulumlarda kapali geliyor ve bu erisim olmadan Kontrol

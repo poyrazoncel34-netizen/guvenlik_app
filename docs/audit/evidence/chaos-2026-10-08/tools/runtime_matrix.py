@@ -64,6 +64,13 @@ def onboarding():
         sh('shell', 'input', 'swipe', '540', '1600', '540', '800', '400'); time.sleep(0.8)
     tap('Devam Et ve Kurulumu'); time.sleep(3)
     tap('Atla', exact=True); time.sleep(3)
+    # OD-2 (2026-10-11): 'Atla' now lands on the "Arka Plan Koruması" step,
+    # which sits one page before the contact gate, so reaching the gate takes
+    # one more 'Ileri'. The step is skipped WITHOUT granting the access on
+    # purpose: a shared setup helper must leave the device in the ordinary
+    # state, and probes that care about exact alarms set that bit themselves.
+    if has('Arka Plan Koruması', tries=4):
+        tap('İleri', exact=True); time.sleep(3)
     ok = has('Acil kişinizi ekleyin')
     record('onboarding: consent + carousel', ok)
     type_into(0, 'Annem'); f = fields(); type_into(1, '05551234567'); sh('shell', 'input', 'keyevent', 'KEYCODE_BACK'); time.sleep(0.8)

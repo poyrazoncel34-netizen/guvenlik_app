@@ -7,15 +7,15 @@
 
 class LegalTexts {
   // ── Sürüm Numaraları ──────────────────────────────────────────────────────
-  static const String termsVersion = '4.0.0';
-  static const String kvkkVersion = '3.4.0';
-  static const String lastUpdated = '25 Ağustos 2026';
-  static const String lastUpdatedEn = 'August 25, 2026';
+  static const String termsVersion = '4.1.0';
+  static const String kvkkVersion = '3.5.0';
+  static const String lastUpdated = '11 Ekim 2026';
+  static const String lastUpdatedEn = 'October 11, 2026';
   // Her belge kendi revizyon tarihini taşır: lastUpdated Kullanım Şartları'na,
   // lastUpdatedKvkk ise KVKK/Aydınlatma belgelerine aittir. v4.0.0'da Kullanım
   // Şartları'nın gövdesi yeniden yazıldığı için lastUpdated de birlikte taşındı.
-  static const String lastUpdatedKvkk = '19 Temmuz 2026';
-  static const String lastUpdatedKvkkEn = 'July 19, 2026';
+  static const String lastUpdatedKvkk = '11 Ekim 2026';
+  static const String lastUpdatedKvkkEn = 'October 11, 2026';
 
   // ── Kullanım Sözleşmesi — Türkçe ─────────────────────────────────────────
   static const String termsOfServiceTr =
@@ -157,9 +157,9 @@ j) Uygulamanın PIN ile korunması ve PIN'in üçüncü kişilerle paylaşılmam
 11.4. Bu yasakların ihlalinden doğan TÜM HUKUKİ VE CEZAİ SORUMLULUK KULLANICIYA AİTTİR.
 
 ──────────────────────────────────────
-12. KONUM OTURUMU
+12. KONUM VE HARİTA
 ──────────────────────────────────────
-• Konum verisi yalnızca Kullanıcının açıkça tetiklemesiyle harita/konum oturumu için kullanılır.
+• Konum verisi yalnızca Kullanıcı Harita ekranını açtığında, kendi konumunu haritada göstermek için kullanılır. Panik, Kontrol Noktası ve Güvenli Yürüyüş konum kullanmaz ve konum paylaşmaz.
 • Gösterilen konumun doğruluğu GPS donanımına bağlıdır ve Geliştirici tarafından garanti edilmez.
 • Konum alınamazsa Uygulama sahte koordinat göstermez. Çevrimiçi harita karoları OpenStreetMap bağlantısı gerektirir.
 
@@ -363,9 +363,9 @@ j) Protecting the Application with a PIN and not sharing that PIN with third par
 11.4. ALL CIVIL AND CRIMINAL LIABILITY arising from a breach of these prohibitions BELONGS TO THE USER.
 
 ──────────────────────────────────────
-12. LOCATION SESSION
+12. LOCATION AND MAP
 ──────────────────────────────────────
-• Location data is used for a map/location session only when expressly triggered by the User.
+• Location data is used only when the User opens the Map screen, to show their own position on the map. Panic, Check-In and Safe Walk do not use or share location.
 • The accuracy of the displayed location depends on GPS hardware and is not guaranteed by the Developer.
 • If location cannot be obtained, the Application does not display fabricated coordinates. Online map tiles require an OpenStreetMap connection.
 
@@ -453,7 +453,7 @@ Kategori          | Veri                              | Amaç                   
 Kimlik            | Ad                                | Uygulama profili                      | Açık rıza
 Görsel            | İsteğe bağlı sahte çağrı avatarı  | Sahte çağrı kişiselleştirme           | Açık rıza
 İletişim          | Acil kişi adı, telefon numarası   | Acil durumda arama akışı              | Açık rıza
-Konum             | GPS koordinatları                 | Harita ve konum oturumu               | Açık rıza
+Konum             | GPS koordinatları                 | Harita ekranında kendi konumunu göstermek | Açık rıza
 Güvenlik          | PIN kodu (şifreli)                | Uygulama erişim kontrolü              | Meşru menfaat
 Cihaz             | Cihaz tipi, OS versiyonu          | Teknik uyumluluk & rıza logu          | Meşru menfaat
 Yasal Rıza Logu   | Rıza türü, tarih, versiyon        | KVKK uyum kaydı                       | Hukuki yükümlülük
@@ -464,7 +464,7 @@ Aktif oturum      | Numara, token, tür ve son tarihler| Alarmı reboot/Doze sı
 ──────────────────────────────────────
 3. VERİLERİN İŞLENME AMACI
 ──────────────────────────────────────
-• Acil arama, harita ve konum oturumu işlevlerinin sağlanması
+• Acil arama ve harita işlevlerinin sağlanması
 • Uygulama güvenliğinin ve erişim kontrolünün sağlanması
 • KVKK kapsamında rıza kayıtlarının tutulması
 • Kullanıcı deneyiminin kişiselleştirilmesi
@@ -484,7 +484,7 @@ Uygulama tüm rehber listesini okumaz. Yalnızca kullanıcının sistem seçicis
 • Profil bilgileri     : Uygulama kullanıldığı sürece; siz silene kadar
 • Sahte çağrı avatarı  : Siz silene veya uygulama verisini temizleyene kadar
 • Acil durum kişileri  : Yalnızca seçtiğiniz veya girdiğiniz kişiler; siz silene kadar
-• Konum bilgisi        : Yalnızca aktif konum oturumu sırasında cihaz belleğinde geçici olarak tutulur; oturum bittiğinde silinir ve kalıcı olarak saklanmaz
+• Konum bilgisi        : Yalnızca Harita ekranı açıkken cihaz belleğinde geçici olarak tutulur; ekrandan çıkıldığında silinir ve kalıcı olarak saklanmaz
 • Harita karoları      : Uygulamaya özel yerel cache'te sağlayıcının HTTP cache talimatları süresince; talimat yoksa yedi gün. Cache 128 MiB ile sınırlıdır; süresi dolan/bozuk karolar açılışta, tüm karolar cihaz verisi silindiğinde temizlenir
 • Rıza logları         : Uygulama kullanıldığı sürece; cihaz verisini silene kadar
 • Abonelik verisi      : Doğrulama amacıyla RevenueCat/Google Play tarafından kendi saklama politikaları süresince işlenir; geliştirici ayrıca saklamaz
@@ -560,7 +560,7 @@ Category          | Data                              | Purpose                 
 Identity          | Name                              | Application profile                   | Explicit consent
 Visual            | Optional fake-call avatar         | Fake call personalization             | Explicit consent
 Contact           | Emergency contact name, phone     | Emergency call flow                   | Explicit consent
-Location          | GPS coordinates                   | Map and location session              | Explicit consent
+Location          | GPS coordinates                   | Show your own position on the Map screen | Explicit consent
 Security          | PIN code (encrypted)              | App access control                    | Legitimate interest
 Device            | Device type, OS version           | Technical compatibility & consent log | Legitimate interest
 Legal Consent Log | Consent type, date, version       | KVKK compliance record                | Legal obligation
@@ -571,7 +571,7 @@ Active session    | Number, token, kind and deadlines | Survive reboot/Doze alar
 ──────────────────────────────────────
 3. PURPOSES OF PROCESSING
 ──────────────────────────────────────
-• Providing emergency call, map and location-session features
+• Providing emergency call and map features
 • Ensuring application security and access control
 • Maintaining consent records under KVKK
 • Personalizing the user experience
@@ -591,7 +591,7 @@ The app does not read the full contacts list. It stores only emergency contacts 
 • Profile information      : While the app is in use; until you delete it
 • Fake call avatar         : Until you delete it or clear app data
 • Emergency contacts       : Only contacts you select or enter; until you delete them
-• Location data            : Held only in device memory while a location session is active; cleared when the session ends and never persisted
+• Location data            : Held only in device memory while the Map screen is open; cleared when you leave the screen and never persisted
 • Map tiles                : In an app-private local cache for the provider's HTTP cache lifetime, or seven days when no usable directive is supplied. The cache is limited to 128 MiB; expired/corrupt tiles are purged at startup and all tiles are removed when app data is cleared
 • Consent logs             : While the app is in use; until device data deletion
 • Subscription data        : Processed by RevenueCat/Google Play under their own retention policies for verification; not additionally stored by the developer

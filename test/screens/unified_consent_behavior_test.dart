@@ -15,7 +15,7 @@ const _tos = 'Kullanım sözleşmesini okudum, anladım ve kabul ediyorum.';
 const _kvkk =
     'KVKK aydınlatma metnini okudum ve kişisel verilerimin yukarıda açıklanan kapsamda işleneceğini anladım.';
 const _location =
-    'Konum verilerimin acil durum ve konum oturumlarında işlenmesine rıza veriyorum';
+    'Konum verimin yalnızca Harita ekranında kendi konumumu görmek için işlenmesine rıza veriyorum';
 const _contacts =
     'Acil durum kişilerime ait bilgilerin saklanmasına ve acil durumda kullanılmasına rıza veriyorum';
 const _profile =
@@ -150,8 +150,8 @@ void main() {
     (tester) async {
       await _pumpConsent(tester);
       expect(find.byType(SelectableText), findsNothing);
-      expect(find.textContaining('4.0.0'), findsOneWidget);
-      expect(find.textContaining('3.4.0'), findsOneWidget);
+      expect(find.textContaining('4.1.0'), findsOneWidget);
+      expect(find.textContaining('3.5.0'), findsOneWidget);
 
       await _tapVisible(tester, find.text('Detayı Gör').first);
       expect(find.byType(SelectableText), findsOneWidget);

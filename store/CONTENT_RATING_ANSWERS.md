@@ -34,7 +34,7 @@ Target audience: adults / 18+. Do not enter Designed for Families unless the pro
 - **Simulated gambling:** None
 - **Unrestricted web access:** No (uygulama harici tarayıcı açmıyor)
 - **User-generated content:** No
-- **Shares location:** No automatic sharing — location is processed for emergency/location session when user triggers it
+- **Shares location:** No automatic sharing — location is read only while the user has the Map screen open; Panic, Check-In and Safe Walk do not use it
 
 ### Diğer
 - **Social interaction:** Yes — emergency contacts / call flow

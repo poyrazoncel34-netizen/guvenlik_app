@@ -1,0 +1,43 @@
+# counterfactual run 2026-10-11T11:30:04 HEAD=ed2885a6c8647de0108d3058d1e52d33d91351b5
+LR1-M1-consent-claims-emergency-location-again: KILLED file=assets/translations/tr-TR.json sha_orig=323ae35f48d1bb59 sha_mut=ee54ca4b7e988d2d restored=True
+    To run this test again: /opt/homebrew/share/flutter/bin/cache/dart-sdk/bin/dart test /Users/poyrazoncel/Projects/guvenlik_app/test/screens/unified_consent_behavior_test.dart -p vm --plain-name 'RIZA-03/RIZA-05/RIZA-06/RIZA-07/RIZA-08/RIZA-09: taps change real controls and persist choices'
+    
+    00:05 +44 -2: Some tests failed.
+LR1-M2-consent-sub-reintroduces-location-session: KILLED file=assets/translations/tr-TR.json sha_orig=323ae35f48d1bb59 sha_mut=9ebcbb66cd9953cf restored=True
+    
+    00:05 +45 -1: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/unified_consent_behavior_test.dart: RIZA-03/RIZA-05/RIZA-06/RIZA-07/RIZA-08/RIZA-09: taps change real controls and persist choices 
+    00:05 +45 -1: Some tests failed.
+LR1-M3-en-consent-claims-emergency-location: KILLED file=assets/translations/en-US.json sha_orig=87140cb0079a6584 sha_mut=22286b34f3b74afd restored=True
+    
+    00:06 +45 -1: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/unified_consent_behavior_test.dart: RIZA-03/RIZA-05/RIZA-06/RIZA-07/RIZA-08/RIZA-09: taps change real controls and persist choices 
+    00:06 +45 -1: Some tests failed.
+LR1-M4-terms-section-renamed-back: KILLED file=lib/constants/legal_texts.dart sha_orig=2d073e88a3c8b0c1 sha_mut=67d287bdf4861131 restored=True
+    
+    00:06 +45 -1: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/unified_consent_behavior_test.dart: RIZA-03/RIZA-05/RIZA-06/RIZA-07/RIZA-08/RIZA-09: taps change real controls and persist choices 
+    00:06 +45 -1: Some tests failed.
+LR1-M5-en-terms-section-renamed-back: KILLED file=lib/constants/legal_texts.dart sha_orig=2d073e88a3c8b0c1 sha_mut=1cbfaebc3433784e restored=True
+    
+    00:06 +45 -1: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/unified_consent_behavior_test.dart: RIZA-03/RIZA-05/RIZA-06/RIZA-07/RIZA-08/RIZA-09: taps change real controls and persist choices 
+    00:06 +45 -1: Some tests failed.
+LR1-M6-published-mirror-reverts: KILLED file=store/privacy_policy.html sha_orig=e2c394d98dc156e4 sha_mut=500aea3b171456fe restored=True
+    
+    00:06 +43 -3: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/unified_consent_behavior_test.dart: RIZA-03/RIZA-05/RIZA-06/RIZA-07/RIZA-08/RIZA-09: taps change real controls and persist choices 
+    00:06 +43 -3: Some tests failed.
+LR1-M7-positive-claim-deleted: KILLED file=assets/translations/tr-TR.json sha_orig=323ae35f48d1bb59 sha_mut=9d94c81b55ee5a69 restored=True
+    
+    00:06 +45 -1: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/unified_consent_behavior_test.dart: RIZA-03/RIZA-05/RIZA-06/RIZA-07/RIZA-08/RIZA-09: taps change real controls and persist choices 
+    00:06 +45 -1: Some tests failed.
+LR1-M8-en-positive-claim-deleted: KILLED file=assets/translations/en-US.json sha_orig=87140cb0079a6584 sha_mut=35ca5a1fd8167a99 restored=True
+    
+    00:06 +45 -1: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/unified_consent_behavior_test.dart: RIZA-03/RIZA-05/RIZA-06/RIZA-07/RIZA-08/RIZA-09: taps change real controls and persist choices 
+    00:06 +45 -1: Some tests failed.
+LR1-M9-legal-version-not-bumped: KILLED file=lib/constants/legal_texts.dart sha_orig=2d073e88a3c8b0c1 sha_mut=221d5d1a3e2fb103 restored=True
+    
+    00:06 +44 -2: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/unified_consent_behavior_test.dart: RIZA-03/RIZA-05/RIZA-06/RIZA-07/RIZA-08/RIZA-09: taps change real controls and persist choices 
+    00:06 +44 -2: Some tests failed.
+LR1-M10-terms-version-not-bumped: KILLED file=lib/constants/legal_texts.dart sha_orig=2d073e88a3c8b0c1 sha_mut=b1d6beab2cc97c58 restored=True
+    
+    00:06 +44 -2: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/unified_consent_behavior_test.dart: RIZA-03/RIZA-05/RIZA-06/RIZA-07/RIZA-08/RIZA-09: taps change real controls and persist choices 
+    00:06 +44 -2: Some tests failed.
+# baseline after restore: exit=0 :: 00:06 +46: All tests passed!
+# survivors=0

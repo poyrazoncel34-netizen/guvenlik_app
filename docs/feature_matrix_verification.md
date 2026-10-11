@@ -9,7 +9,7 @@ Single source of truth: `lib/core/constants/feature_access_matrix.dart`.
 | Siren | Free | Free feature | OK |
 | Emergency contact management | Free | Free feature | OK |
 | Basic profile name | Free | Privacy/settings local profile | OK |
-| Basic map/location view | Free | Free location session | OK |
+| Basic map/location view | Free | Free map (own position) | OK |
 | Legal/privacy/settings access | Free | Legal links and privacy sections | OK |
 | Panic/SOS button | Pro | Explicitly KoruBeni Pro; not available on free plan | OK |
 | Emergency countdown | Pro | Panic/SOS Pro flow includes countdown | OK |

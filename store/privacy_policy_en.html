@@ -136,7 +136,7 @@
 <body>
     <div class="container">
         <h1>KoruBeni Privacy Policy</h1>
-        <p class="subtitle">Last updated: July 19, 2026 &mdash; Version 3.4.0</p>
+        <p class="subtitle">Last updated: October 11, 2026 &mdash; Version 3.5.0</p>
 
         <p>KoruBeni ("App", "we", "our") is a personal safety application designed to support its users. This privacy
             policy explains what data we collect, how we use it, and how we protect it.</p>
@@ -157,7 +157,7 @@
 
         <h3 style="font-size:16px; margin-top:16px; margin-bottom:8px;">b) Automatically Collected Data</h3>
         <ul>
-            <li><strong>Location data:</strong> Only when you actively start a location session or trigger an emergency</li>
+            <li><strong>Location data:</strong> Only while you have the Map screen open</li>
             <li><strong>Device-side runtime state:</strong> Temporary technical state needed for app flows</li>
             <li><strong>Map tile cache:</strong> Default OpenStreetMap tile bytes and validation metadata such as z/x/y, expiry, ETag, and Last-Modified may be kept in app-private local storage</li>
             <li><strong>Legal consent log:</strong> Timestamps and versions of your consent to KVKK and privacy policies, stored on-device only</li>
@@ -190,8 +190,8 @@
         </ul>
 
         <div class="highlight">
-            <strong>Important:</strong> Your location data is only processed when you start a location session or when an
-            emergency is triggered. There is no continuous background location tracking.
+            <strong>Important:</strong> Your location data is only processed while the Map screen is open. Panic,
+            Check-In and Safe Walk do not use or share location. There is no background location tracking.
         </div>
 
         <h2>5. Data Sharing</h2>
@@ -226,7 +226,7 @@
             <li>Emergency contacts: Until the user deletes them on the device</li>
             <li>Map tiles: Kept in an app-private local cache for the provider's HTTP cache lifetime, or seven days when no usable directive is supplied. The cache is limited to 128 MiB; expired/corrupt tiles are purged at startup and the whole cache is removed by app-data reset or uninstall.</li>
             <li>Armed safety target: Retained in device-protected app storage until confirmed cancel/reset or until an actionable fallback ends after terminal dispatch. Fallback access expires on action, dismiss, or a maximum logical 24-hour TTL; if the device is powered off, the physical record is purged at the next boot/reconciliation. The notification and PendingIntent do not carry the phone number.</li>
-            <li>Location data: Used only during active emergency and sharing flows</li>
+            <li>Location data: Used only while the Map screen is open</li>
             <li>Fake call settings and avatar files: Until the user deletes app data on the device</li>
             <li>Legal consent log: Retained on-device for the duration of app usage</li>
         </ul>
@@ -269,7 +269,7 @@
                 </tr>
                 <tr>
                     <td>Location Data</td>
-                    <td>Location status during emergency, map, and location sessions</td>
+                    <td>Showing your own position on the Map screen</td>
                     <td>Explicit consent</td>
                     <td>On-device, transient</td>
                 </tr>
@@ -354,7 +354,7 @@
         </div>
 
         <footer>
-            <p>&copy; 2026 KoruBeni. All rights reserved. &mdash; Version 3.4.0</p>
+            <p>&copy; 2026 KoruBeni. All rights reserved. &mdash; Version 3.5.0</p>
         </footer>
     </div>
 </body>

@@ -58,7 +58,7 @@ Hesap, giris veya gelistirici sunucusu gerekmez. Uygulama offline-first calisir.
    Sonrasinda bildirim izni sorulur; izin verin.
 
 --- FREE FEATURES (no purchase needed) / UCRETSIZ OZELLIKLER ---
-- Map / location session   (tab: Harita)
+- Map (own position only)  (tab: Harita)
 - Fake incoming call       (home: Sahte Arama)
 - Siren                    (home: Siren)
 - Emergency contacts       (tab: Kisiler)

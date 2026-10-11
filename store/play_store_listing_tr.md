@@ -17,7 +17,7 @@ Panik akışının tamamını, gerçek arama yapmayan Test Modu ile ücretsiz pr
 
 ★ ÜCRETSİZ ÖZELLİKLER ★
 
-◉ Konum Oturumu
+◉ Harita
 Konum alınabilirse uygulama içinde gösterin; alınamazsa açık hata durumu görün.
 
 ◉ Sahte Arama

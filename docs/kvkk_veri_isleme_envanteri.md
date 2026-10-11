@@ -4,7 +4,7 @@
 
 **Teknik kapsam:** Android Play, Türkiye/Türkçe ilk sürüm
 
-**Son teknik güncelleme:** 19 Temmuz 2026
+**Son teknik güncelleme:** 11 Ekim 2026
 
 **Veri sorumlusu taslağı:** Poyraz Öncel — bireysel geliştirici
 

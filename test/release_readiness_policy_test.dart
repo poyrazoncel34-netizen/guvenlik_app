@@ -469,12 +469,12 @@ void main() {
     );
 
     test('canonical legal text versions stay pinned', () {
-      expect(LegalTexts.termsVersion, '4.0.0');
-      expect(LegalTexts.kvkkVersion, '3.4.0');
+      expect(LegalTexts.termsVersion, '4.1.0');
+      expect(LegalTexts.kvkkVersion, '3.5.0');
       // Terms date is unchanged (content unchanged); KVKK/privacy carry their
       // own revision date after the first-responder claim removal.
-      expect(LegalTexts.lastUpdated, '25 Ağustos 2026');
-      expect(LegalTexts.lastUpdatedKvkk, '19 Temmuz 2026');
+      expect(LegalTexts.lastUpdated, '11 Ekim 2026');
+      expect(LegalTexts.lastUpdatedKvkk, '11 Ekim 2026');
 
       final disclosure = File('store/aydinlatma_metni.html').readAsStringSync();
       final publishedDisclosure = File(
@@ -486,12 +486,12 @@ void main() {
       final consentScreen = File(
         'lib/screens/legal/unified_consent_screen.dart',
       ).readAsStringSync();
-      expect(disclosure, contains('Sürüm 3.4.0'));
-      expect(disclosure, contains('19 Temmuz 2026'));
-      expect(publishedDisclosure, contains('Sürüm 3.4.0'));
+      expect(disclosure, contains('Sürüm 3.5.0'));
+      expect(disclosure, contains('11 Ekim 2026'));
+      expect(publishedDisclosure, contains('Sürüm 3.5.0'));
       expect(disclosureScreen, contains('LegalTexts.lastUpdatedKvkk'));
       expect(consentScreen, contains('LegalTexts.lastUpdatedKvkk'));
-      expect(publishedDisclosure, contains('19 Temmuz 2026'));
+      expect(publishedDisclosure, contains('11 Ekim 2026'));
     });
   });
 }

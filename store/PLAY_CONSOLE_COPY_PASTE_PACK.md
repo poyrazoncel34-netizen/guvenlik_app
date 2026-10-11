@@ -87,7 +87,7 @@ KoruBeni ücretsiz temel güvenlik araçları sunar. Panik/SOS, güvenli yürüy
 
 ★ ÜCRETSİZ ÖZELLİKLER ★
 
-◉ Konum Oturumu
+◉ Harita
 Konum alınabilirse uygulama içinde gösterin; alınamazsa açık hata durumu görün.
 
 ◉ Sahte Arama
@@ -128,12 +128,12 @@ KoruBeni Pro isteğe bağlı bir aboneliktir. Satın alma, yenileme, iptal ve ge
 ★ GİZLİLİK ★
 
 • KoruBeni'nin geliştirici hesabı veya backend'i yoktur. Kişiler, PIN ve güvenlik geçmişi yerel saklanır; çevrimiçi harita ve abonelik sağlayıcıları teknik veri işler.
-• Arka planda konum izlemiyoruz. Konum yalnızca siz bir oturum başlattığınızda kullanılır.
+• Arka planda konum izlemiyoruz. Konum yalnızca Harita ekranı açıkken kullanılır; panik, check-in ve güvenli yürüyüş konum kullanmaz.
 • Verilerinizi hiçbir reklam ağıyla veya veri komisyoncusuyla paylaşmıyoruz; satmıyoruz.
 • Google Play Billing ve RevenueCat satın alma/üyelik durumu, anonim uygulama kullanıcı kimliği ve teknik cihaz/uygulama bilgilerini işler. Kart bilgileri uygulamada saklanmaz.
 • Harita ve Play Billing sağlayıcılarının kendi teknik ağ davranışları olabilir.
 
-KoruBeni — Ücretsiz konum oturumu ve sahte çağrı; Pro ile ek güvenlik araçları.
+KoruBeni — Ücretsiz harita ve sahte çağrı; Pro ile ek güvenlik araçları.
 ```
 
 ---
@@ -164,7 +164,7 @@ KoruBeni offers free basic safety tools. Panic/SOS, Safe Walk, check-in, and the
 
 ★ FREE FEATURES ★
 
-◉ Location Session
+◉ Map
 Show your current location when available; show a clear unavailable state when it cannot be acquired.
 
 ◉ Fake Call
@@ -204,11 +204,11 @@ KoruBeni Pro is optional. Purchases, renewals, cancellations, and restore operat
 
 ★ PRIVACY ★
 
-• Location is processed only during emergency or location sessions
+• Location is processed only while the Map screen is open; Panic, Check-In and Safe Walk do not use it
 • We don’t sell your data to third parties
 • The primary copy of app data stays on device; map and Play Billing providers may have their own technical network behavior
 
-KoruBeni — Free location session and fake call; optional Pro safety tools.
+KoruBeni — Free map and fake call; optional Pro safety tools.
 ```
 
 ---
@@ -267,7 +267,7 @@ Yes, because optional Pro subscription processing uses Google Play Billing / Rev
 
 ```text
 Location:
-- Conservative disclosure needed for map/location sessions.
+- Conservative disclosure needed for the Map screen's tile requests.
 - Used only when the user opens map/location features or triggers safety flows.
 - No developer backend receives location.
 - Online map tile requests may reveal map viewport/network metadata to the configured tile provider.
@@ -482,7 +482,7 @@ Dangerous activities:
 - Simulated gambling: None
 - External links: the user can open legal/support/subscription links in platform applications; complete the Console questionnaire for this actual behavior.
 - User-generated content: No.
-- Shares location: No automatic sharing. Location is processed for emergency/location session when user triggers it.
+- Shares location: No automatic sharing. Location is read only while the user has the Map screen open; the safety flows do not use it.
 
 Other:
 - Social interaction: Yes — emergency contacts / call flow.

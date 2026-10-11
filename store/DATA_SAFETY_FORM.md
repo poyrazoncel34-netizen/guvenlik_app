@@ -15,7 +15,7 @@ Do not mark local-only data as developer-collected/shared merely because it is s
 
 | Data type | Play Console stance | Notes |
 | --- | --- | --- |
-| Location | Conservative disclosure needed for map/location sessions | Location is used only when the user opens map/location features or triggers safety flows. No developer backend receives it. Online map tile requests may reveal map viewport/network metadata to the tile provider. |
+| Location | Conservative disclosure needed for the Map screen | Location is read only while the user has the Map screen open. Panic, Check-In and Safe Walk do NOT use location (verified at runtime with the permission revoked). No developer backend receives it, and no raw coordinate is transmitted. Online map tile requests do send IP, User-Agent and tile z/x/y to the tile provider; at the zooms the app actually requests (15-16) one tile covers roughly 0.85-0.21 km² at 41°N, which is inside Google Play's PRECISE band (<3 km²), so the viewed area — and with it the user's approximate position while the map is centred on them — is derivable by the tile provider. |
 | Contacts | Local-only unless the user invokes Android call/contact flows | The app does not read the full contacts list. It stores only emergency contacts selected or entered by the user, locally on the device. Do not claim developer collection/sharing if no off-device transfer is introduced. |
 | Optional profile name | Local-only | Device-only personalization. |
 | Optional photos/images | Local-only | User-selected fake-call avatar images stay on device; no cloud upload. |
