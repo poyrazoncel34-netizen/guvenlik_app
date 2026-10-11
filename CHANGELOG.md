@@ -9,7 +9,16 @@ Surumleme: `pubspec.yaml` 1.0.0+1'de SABITTIR; gercek `versionCode`
 
 ## Yayinlanmadi
 
+### Eklendi
+- Kurulumda yeni bir **Arka Plan Koruması** adimi. Android 14 ve uzerinde "alarm ve
+  hatirlatici" erisimi yeni kurulumlarda kapali geliyor ve bu erisim olmadan Kontrol
+  Noktasi, Guvenli Yuruyus ve korumali panik baslatilamiyor. Adim bunu kurulumda
+  anlatiyor ve dokununca ilgili Android ayarini aciyor. Simdilik atlayabilirsin;
+  atladiginda kurulum eksik gorunmeye devam eder.
+
 ### Duzeltildi
+- Hazirlik karti, cihaz durumu hic okunamadiginda artik "Kuruluma N adim kaldi" demiyor;
+  durumun okunamadigini soyluyor. Eskisi, olmayan adimlar icin Ayarlar'da aratiyordu.
 - Suresi gecmis bir guvenlik oturumu, hangi yolun once ulastigina gore farkli
   davraniyordu: uygulamayi acmak 5 dakikadan fazla gecikmis bir oturumu elle
   aramaya birakirken, alarmin kendisi saatler sonra bile otomatik arama

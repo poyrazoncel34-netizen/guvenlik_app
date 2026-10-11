@@ -11,6 +11,7 @@ import '../core/app_colors.dart';
 import '../core/motion.dart';
 import '../core/services/onboarding_contact_gate_service.dart';
 import 'main_navigation.dart';
+import 'onboarding/onboarding_background_protection_step.dart';
 import 'onboarding/onboarding_contact_step.dart';
 import '../core/services/reduced_motion_policy.dart';
 
@@ -97,6 +98,16 @@ class _OnboardingScreenState extends State<OnboardingScreen>
       body: 'onboarding_4_body'.tr(),
       color: AppColors.emergency,
     ),
+    // Owner decision OD-2: the one Android capability a protected session
+    // cannot do without, made visible BEFORE the user meets its refusal while
+    // pressing panic. Skippable on purpose -- see the step's own header.
+    _OnboardingPage(
+      icon: Icons.alarm_on_rounded,
+      title: 'onboarding_background_title'.tr(),
+      body: 'onboarding_background_body'.tr(),
+      color: AppColors.warning,
+      isBackgroundStep: true,
+    ),
     // Gate page. Kept last so every informational page is still reachable, and
     // so 'Skip' has somewhere to land that is not "done".
     _OnboardingPage(
@@ -109,6 +120,16 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   ];
 
   int get _contactStepIndex => _pages.length - 1;
+
+  /// Where 'Skip' lands (OD-2).
+  ///
+  /// It used to jump straight to the contact gate, which would have let a user
+  /// skip past the background-protection step without ever seeing it -- and
+  /// that step exists precisely because the gap is invisible until panic is
+  /// pressed. Landing here keeps the contact gate as the only thing that can
+  /// block completion (one more swipe away) while making the step unskippable
+  /// BY ACCIDENT. It is still skippable on purpose.
+  int get _skipTargetIndex => _pages.indexWhere((p) => p.isBackgroundStep);
 
   bool get _isOnContactStep => _currentPage == _contactStepIndex;
 
@@ -126,13 +147,14 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     )..forward();
   }
 
-  /// Jumps to the gate page instead of completing. 'Skip' used to call
-  /// [_finish] directly, which is precisely how an install reached the home
+  /// Jumps to the first actionable step instead of completing. 'Skip' used to
+  /// call [_finish] directly, which is precisely how an install reached the home
   /// screen with no reachable contact.
-  void _skipToContactStep() {
+  void _skipToFirstActionableStep() {
     HapticFeedback.selectionClick();
+    final target = _skipTargetIndex >= 0 ? _skipTargetIndex : _contactStepIndex;
     _pageController.animateToPage(
-      _contactStepIndex,
+      target,
       duration: const Duration(milliseconds: 400),
       curve: Curves.easeOutCubic,
     );
@@ -216,9 +238,15 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                   child: Align(
                     alignment: Alignment.centerRight,
                     child: TextButton(
-                      onPressed: _isOnContactStep ? null : _skipToContactStep,
+                      onPressed: _currentPage >= _skipTargetIndex &&
+                              _skipTargetIndex >= 0
+                          ? null
+                          : _skipToFirstActionableStep,
                       child: Text(
-                        _isOnContactStep ? '' : 'btn_skip'.tr(),
+                        _currentPage >= _skipTargetIndex &&
+                                _skipTargetIndex >= 0
+                            ? ''
+                            : 'btn_skip'.tr(),
                         style: const TextStyle(
                           color: AppColors.textSecondary,
                           fontSize: 16,
@@ -237,6 +265,12 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                     itemCount: _pages.length,
                     itemBuilder: (context, i) {
                       final p = _pages[i];
+                      if (p.isBackgroundStep) {
+                        // Rendered straight, like the gate page: a live status
+                        // line and a settings button under a parallax transform
+                        // is a button that is hard to hit.
+                        return const OnboardingBackgroundProtectionStep();
+                      }
                       if (p.isContactStep) {
                         // A text form under a parallax transform is unusable;
                         // the gate page renders straight.
@@ -460,11 +494,17 @@ class _OnboardingPage {
   /// Marks the page that carries the emergency-contact gate.
   final bool isContactStep;
 
+  /// Marks the background-protection step (OD-2). Informational pages are
+  /// interchangeable; these two are not, so they are flagged rather than
+  /// identified by index.
+  final bool isBackgroundStep;
+
   const _OnboardingPage({
     required this.icon,
     required this.title,
     required this.body,
     required this.color,
     this.isContactStep = false,
+    this.isBackgroundStep = false,
   });
 }

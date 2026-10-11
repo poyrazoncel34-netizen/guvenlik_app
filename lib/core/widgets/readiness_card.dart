@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../design_tokens.dart';
 import '../app_colors.dart';
 import '../services/emergency_platform_service.dart';
+import '../services/safety_readiness_level.dart';
 import '../services/subscription_access_state.dart';
 import 'minimum_tap_target.dart';
 
@@ -88,7 +89,6 @@ class ReadinessCard extends StatelessWidget {
   /// the card can never report a complete setup the platform cannot honour.
   bool get _automaticCallReady => readiness?.automaticCallReady ?? false;
   bool get _backgroundOk => readiness?.backgroundAlertReady ?? false;
-  bool get _criticalSafetyReady => readiness?.criticalSafetyReady ?? false;
 
   List<ReadinessItem> _items() => [
     ReadinessItem(
@@ -130,15 +130,25 @@ class ReadinessCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final items = _items();
     final missing = items.where((item) => !item.isOk).toList();
-    // Belt and braces: the chips already cover it, but reading the snapshot's
-    // own verdict means a future chip edit cannot quietly widen "complete".
-    final allReady = missing.isEmpty && _criticalSafetyReady;
+    // OD-2: the headline comes from the SAME verdict the dispatch path uses, so
+    // copy and runtime state cannot be derived from two different sources.
+    // `missing.isEmpty` is kept as belt and braces -- the chips cover
+    // permissions the snapshot does not (contacts, location, a saved contact),
+    // so a future chip edit cannot quietly widen "complete" either.
+    final level = readiness.readinessLevel;
+    final allReady = missing.isEmpty && level == SafetyReadinessLevel.fullyReady;
 
     final String title;
     final String subtitle;
     if (allReady) {
       title = 'ready'.tr();
       subtitle = 'system_ready_desc'.tr();
+    } else if (level == SafetyReadinessLevel.unavailable) {
+      // There is no step the user can take here, so do not offer a count of
+      // them. Saying "2 steps left" when the probe itself failed sends the user
+      // hunting through Settings for something that is not the problem.
+      title = 'readiness_unavailable_title'.tr();
+      subtitle = 'readiness_unavailable_desc'.tr();
     } else if (missing.length == 1) {
       title = 'readiness_almost_title'.tr();
       subtitle = 'readiness_almost_desc'.tr(

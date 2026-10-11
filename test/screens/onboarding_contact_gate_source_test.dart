@@ -49,12 +49,35 @@ void main() {
       );
     });
 
-    test('skip lands on the gate page instead of finishing', () {
-      expect(onboarding.contains('_skipToContactStep'), isTrue);
+    test('skip lands on an actionable step instead of finishing', () {
+      // UPDATED for OD-2 (2026-10-11). Skip used to jump straight to the
+      // contact gate; it now lands on the background-protection step, which
+      // sits immediately before the gate. The property this test exists to
+      // protect is unchanged and is asserted below: Skip must NOT call
+      // _finish, and the gate is still the only thing that completes
+      // onboarding. Landing one page earlier means a user who taps Skip still
+      // passes through the step and still cannot finish without the gate.
+      expect(onboarding.contains('_skipToFirstActionableStep'), isTrue);
       expect(
-        onboarding.contains('onPressed: _isOnContactStep ? null : _skipToContactStep'),
+        onboarding.contains('_skipToContactStep'),
+        isFalse,
+        reason: 'the old single-target skip must not come back',
+      );
+      expect(
+        RegExp(r'onPressed:[^;]*_skipToFirstActionableStep').hasMatch(onboarding),
         isTrue,
         reason: 'Skip used to call _finish directly, bypassing the gate.',
+      );
+      expect(
+        RegExp(r'_skipToFirstActionableStep\(\)[^}]*_finish').hasMatch(onboarding),
+        isFalse,
+        reason: 'Skip must never reach completion.',
+      );
+      // Its target is derived from the flagged step, not from an index that a
+      // reordered page list would silently invalidate.
+      expect(
+        onboarding.contains('_pages.indexWhere((p) => p.isBackgroundStep)'),
+        isTrue,
       );
     });
 
@@ -68,11 +91,20 @@ void main() {
       expect(onboarding.contains("'onboarding_contact_required_hint'"), isTrue);
     });
 
-    test('the contact step is the last page', () {
+    test('the contact step is still the last page', () {
+      // OD-2 added a page BEFORE this one; the gate staying last is what keeps
+      // it the only exit from onboarding.
       expect(onboarding.contains('isContactStep: true'), isTrue);
       expect(
         onboarding.contains('int get _contactStepIndex => _pages.length - 1'),
         isTrue,
+      );
+      // And the new page is genuinely before it, not after.
+      expect(
+        onboarding.indexOf('isBackgroundStep: true') <
+            onboarding.indexOf('isContactStep: true'),
+        isTrue,
+        reason: 'the gate must remain the final page',
       );
     });
   });

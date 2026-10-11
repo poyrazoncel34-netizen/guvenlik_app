@@ -1,0 +1,156 @@
+[
+ {
+  "id": "OD2-M1-step-removed-from-flow",
+  "file": "lib/screens/onboarding_screen.dart",
+  "tests": [
+   "test/screens/od2_background_protection_step_test.dart",
+   "test/screens/od2_onboarding_wiring_test.dart",
+   "test/screens/onboarding_behavior_test.dart",
+   "test/screens/onboarding_contact_gate_source_test.dart",
+   "test/screens/home_readiness_exact_alarm_test.dart"
+  ],
+  "old": "      isBackgroundStep: true,\n",
+  "new": "      isBackgroundStep: false,\n",
+  "kind": "flutter"
+ },
+ {
+  "id": "OD2-M2-skip-jumps-past-the-step",
+  "file": "lib/screens/onboarding_screen.dart",
+  "tests": [
+   "test/screens/od2_background_protection_step_test.dart",
+   "test/screens/od2_onboarding_wiring_test.dart",
+   "test/screens/onboarding_behavior_test.dart",
+   "test/screens/onboarding_contact_gate_source_test.dart",
+   "test/screens/home_readiness_exact_alarm_test.dart"
+  ],
+  "old": "  int get _skipTargetIndex => _pages.indexWhere((p) => p.isBackgroundStep);",
+  "new": "  int get _skipTargetIndex => _contactStepIndex;",
+  "kind": "flutter"
+ },
+ {
+  "id": "OD2-M3-null-snapshot-counts-as-ready",
+  "file": "lib/core/services/safety_readiness_level.dart",
+  "tests": [
+   "test/screens/od2_background_protection_step_test.dart",
+   "test/screens/od2_onboarding_wiring_test.dart",
+   "test/screens/onboarding_behavior_test.dart",
+   "test/screens/onboarding_contact_gate_source_test.dart",
+   "test/screens/home_readiness_exact_alarm_test.dart"
+  ],
+  "old": "    if (snapshot == null || !snapshot.isKnown) {\n      return SafetyReadinessLevel.unavailable;\n    }",
+  "new": "    if (snapshot == null || !snapshot.isKnown) {\n      return SafetyReadinessLevel.fullyReady;\n    }",
+  "kind": "flutter"
+ },
+ {
+  "id": "OD2-M4-limited-reported-as-fully-ready",
+  "file": "lib/core/services/safety_readiness_level.dart",
+  "tests": [
+   "test/screens/od2_background_protection_step_test.dart",
+   "test/screens/od2_onboarding_wiring_test.dart",
+   "test/screens/onboarding_behavior_test.dart",
+   "test/screens/onboarding_contact_gate_source_test.dart",
+   "test/screens/home_readiness_exact_alarm_test.dart"
+  ],
+  "old": "    return snapshot.criticalSafetyReady\n        ? SafetyReadinessLevel.fullyReady\n        : SafetyReadinessLevel.limited;",
+  "new": "    return SafetyReadinessLevel.fullyReady;",
+  "kind": "flutter"
+ },
+ {
+  "id": "OD2-M5-unsupported-os-reported-as-limited",
+  "file": "lib/core/services/safety_readiness_level.dart",
+  "tests": [
+   "test/screens/od2_background_protection_step_test.dart",
+   "test/screens/od2_onboarding_wiring_test.dart",
+   "test/screens/onboarding_behavior_test.dart",
+   "test/screens/onboarding_contact_gate_source_test.dart",
+   "test/screens/home_readiness_exact_alarm_test.dart"
+  ],
+  "old": "    if (!snapshot.supportedOs) {\n      return SafetyReadinessLevel.unavailable;\n    }",
+  "new": "",
+  "kind": "flutter"
+ },
+ {
+  "id": "OD2-M6-card-ignores-the-platform-verdict",
+  "file": "lib/core/widgets/readiness_card.dart",
+  "tests": [
+   "test/screens/od2_background_protection_step_test.dart",
+   "test/screens/od2_onboarding_wiring_test.dart",
+   "test/screens/onboarding_behavior_test.dart",
+   "test/screens/onboarding_contact_gate_source_test.dart",
+   "test/screens/home_readiness_exact_alarm_test.dart"
+  ],
+  "old": "    final allReady = missing.isEmpty && level == SafetyReadinessLevel.fullyReady;",
+  "new": "    final allReady = missing.isEmpty;",
+  "kind": "flutter"
+ },
+ {
+  "id": "OD2-M7-step-opens-settings-unprompted",
+  "file": "lib/screens/onboarding/onboarding_background_protection_step.dart",
+  "tests": [
+   "test/screens/od2_background_protection_step_test.dart",
+   "test/screens/od2_onboarding_wiring_test.dart",
+   "test/screens/onboarding_behavior_test.dart",
+   "test/screens/onboarding_contact_gate_source_test.dart",
+   "test/screens/home_readiness_exact_alarm_test.dart"
+  ],
+  "old": "    WidgetsBinding.instance.addObserver(this);\n    _refresh();",
+  "new": "    WidgetsBinding.instance.addObserver(this);\n    _refresh();\n    unawaited(_openSettings());",
+  "kind": "flutter"
+ },
+ {
+  "id": "OD2-M8-no-recheck-on-resume",
+  "file": "lib/screens/onboarding/onboarding_background_protection_step.dart",
+  "tests": [
+   "test/screens/od2_background_protection_step_test.dart",
+   "test/screens/od2_onboarding_wiring_test.dart",
+   "test/screens/onboarding_behavior_test.dart",
+   "test/screens/onboarding_contact_gate_source_test.dart",
+   "test/screens/home_readiness_exact_alarm_test.dart"
+  ],
+  "old": "    if (state == AppLifecycleState.resumed) {\n      _refresh();\n    }",
+  "new": "    if (state == AppLifecycleState.paused) {\n      _refresh();\n    }",
+  "kind": "flutter"
+ },
+ {
+  "id": "OD2-M9-status-claims-on-when-denied",
+  "file": "lib/screens/onboarding/onboarding_background_protection_step.dart",
+  "tests": [
+   "test/screens/od2_background_protection_step_test.dart",
+   "test/screens/od2_onboarding_wiring_test.dart",
+   "test/screens/onboarding_behavior_test.dart",
+   "test/screens/onboarding_contact_gate_source_test.dart",
+   "test/screens/home_readiness_exact_alarm_test.dart"
+  ],
+  "old": "    final String statusKey;\n    if (granted) {",
+  "new": "    final String statusKey;\n    if (true) {",
+  "kind": "flutter"
+ },
+ {
+  "id": "OD2-M10-cta-hidden-while-denied",
+  "file": "lib/screens/onboarding/onboarding_background_protection_step.dart",
+  "tests": [
+   "test/screens/od2_background_protection_step_test.dart",
+   "test/screens/od2_onboarding_wiring_test.dart",
+   "test/screens/onboarding_behavior_test.dart",
+   "test/screens/onboarding_contact_gate_source_test.dart",
+   "test/screens/home_readiness_exact_alarm_test.dart"
+  ],
+  "old": "                if (!granted)\n                  MinimumTapTarget(",
+  "new": "                if (granted)\n                  MinimumTapTarget(",
+  "kind": "flutter"
+ },
+ {
+  "id": "OD2-M11-unavailable-headline-removed",
+  "file": "lib/core/widgets/readiness_card.dart",
+  "tests": [
+   "test/screens/od2_background_protection_step_test.dart",
+   "test/screens/od2_onboarding_wiring_test.dart",
+   "test/screens/onboarding_behavior_test.dart",
+   "test/screens/onboarding_contact_gate_source_test.dart",
+   "test/screens/home_readiness_exact_alarm_test.dart"
+  ],
+  "old": "    } else if (level == SafetyReadinessLevel.unavailable) {",
+  "new": "    } else if (false) {",
+  "kind": "flutter"
+ }
+]

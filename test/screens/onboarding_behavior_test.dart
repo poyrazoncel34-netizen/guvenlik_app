@@ -43,8 +43,29 @@ void main() {
     serviceLocator.registerSingleton<ConsentManager>(consentManager);
   });
 
+  /// 'Atla' now lands on the background-protection step (OD-2), which sits
+  /// immediately before the contact gate, so reaching the gate takes one more
+  /// 'Ileri'. The intermediate stop is ASSERTED rather than skipped past: if a
+  /// future edit removes that step or re-points Skip, this helper must fail
+  /// loudly instead of quietly still arriving at the gate.
   Future<void> skipToContact(WidgetTester tester) async {
     await tester.tap(find.text('Atla'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    for (var round = 0; round < 15; round++) {
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 80)),
+      );
+      await tester.pump();
+      if (find.text('Arka Plan Koruması').evaluate().isNotEmpty) break;
+    }
+    expect(
+      find.text('Arka Plan Koruması'),
+      findsWidgets,
+      reason: 'OD-2: Skip must land on the background-protection step',
+    );
+
+    await tester.tap(find.text('İleri'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 500));
     for (var round = 0; round < 15; round++) {
@@ -94,7 +115,38 @@ void main() {
     expect(find.text('KoruBeni yerel PIN ile korunur'), findsNothing);
   });
 
-  testWidgets('ONB-01/ONB-04 skip lands on contact gate without completing', (
+  testWidgets(
+    'OD-2 skip lands on the background step, which cannot complete onboarding',
+    (tester) async {
+      var completed = false;
+      await pumpLocalized(
+        tester,
+        OnboardingScreen(onCompleted: () => completed = true),
+      );
+
+      await tester.tap(find.text('Atla'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+      for (var round = 0; round < 15; round++) {
+        await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 80)),
+        );
+        await tester.pump();
+        if (find.text('Arka Plan Koruması').evaluate().isNotEmpty) break;
+      }
+
+      expect(find.text('Arka Plan Koruması'), findsWidgets);
+      // Skippable by owner decision: the forward button stays enabled here.
+      final next = tester.widget<ElevatedButton>(
+        find.widgetWithText(ElevatedButton, 'İleri'),
+      );
+      expect(next.onPressed, isNotNull);
+      // But it is not an exit: onboarding is not complete.
+      expect(completed, isFalse);
+    },
+  );
+
+  testWidgets('ONB-01/ONB-04 skip reaches the contact gate without completing', (
     tester,
   ) async {
     var completed = false;

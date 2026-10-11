@@ -1025,5 +1025,14 @@
   "failsafe_dialer_body": "Automatic calling was not possible; the dialer was opened. If you have not pressed the green call button, call the number below now.",
   "native_history_warning_failed": "The final warning notification could not be shown (notifications may be off); the deadline did not change.",
   "native_history_warning_missed": "The final warning could not be shown in time; the deadline did not change.",
-  "native_history_warning_unknown": "Whether the final warning was shown could not be verified; the deadline did not change."
+  "native_history_warning_unknown": "Whether the final warning was shown could not be verified; the deadline did not change.",
+  "onboarding_background_title": "Background Protection",
+  "onboarding_background_body": "Android's \"alarms & reminders\" access lets KoruBeni start its safety step on time when the timer runs out. Without it, Check-In, Safe Walk and a protected panic cannot be started; only manual dialling through your phone app remains.",
+  "onboarding_background_cta": "Turn on background protection",
+  "onboarding_background_status_ready": "Background protection is on.",
+  "onboarding_background_status_missing": "Background protection is off.",
+  "onboarding_background_status_unknown": "Background protection state could not be read.",
+  "onboarding_background_skip_note": "You can skip this for now. If you do, setup stays incomplete and the \"Background Readiness\" step shows as open on the home screen.",
+  "readiness_unavailable_title": "Readiness state unavailable",
+  "readiness_unavailable_desc": "Device information cannot be read right now. Try closing and reopening the app."
 }
