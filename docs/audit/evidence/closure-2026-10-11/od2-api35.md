@@ -1,4 +1,4 @@
-### OD-2 fresh-install runtime proof — API 35 (KoruBeni_A017_API35, emulator-5554, 420 dpi, -no-audio, no GMS)
+### OD-2 fresh-install runtime proof — RC 5aa3fe9 — API 35 (KoruBeni_A017_API35, emulator-5554, 420 dpi, -no-audio, no GMS)
 
 12/12 PASS
 

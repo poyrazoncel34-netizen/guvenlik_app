@@ -212,4 +212,61 @@ void main() {
       expect(serviceLocator<ConsentManager>().isGranted('fake_call'), isTrue);
     },
   );
+
+  testWidgets(
+    'LR-1: declining the optional location consent still completes setup',
+    (tester) async {
+      // A device probe reported this as a FAIL and it was the probe's own
+      // navigation bug: it never ticked the mandatory Terms box, so the CTA
+      // was correctly disabled and nothing happened. Rather than re-drive a
+      // flaky UI, the property is pinned here, where it cannot rot.
+      //
+      // It matters because LR-1 rewrote the location consent copy and bumped
+      // the legal versions, which forces every existing user back through this
+      // screen with the optional consents reset to unticked. If an untouched
+      // location box could block completion, that upgrade would strand them.
+      var accepted = 0;
+      await _pumpConsent(tester, onAccepted: () => accepted++);
+
+      await _tapVisibleText(tester, '18 yaşından büyüğüm');
+      for (final label in <String>[_tos, _kvkk]) {
+        await _tapVisibleText(tester, label);
+        expect(_consentValue(tester, label), isTrue);
+      }
+      // The four optional items are deliberately left alone.
+      for (final label in <String>[_location, _contacts, _profile, _fakeCall]) {
+        expect(_consentValue(tester, label), isFalse);
+      }
+
+      final cta = tester.widget<ElevatedButton>(find.byType(ElevatedButton));
+      expect(
+        cta.onPressed,
+        isNotNull,
+        reason: 'only age + Terms + KVKK gate completion',
+      );
+
+      final continueButton = find.text('Devam Et ve Kurulumu Tamamla');
+      await tester.ensureVisible(continueButton);
+      await tester.runAsync(() async {
+        await tester.tap(continueButton);
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+      });
+      await tester.pump();
+      for (var round = 0; round < 50 && accepted == 0; round++) {
+        await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 20)),
+        );
+        await tester.pump();
+      }
+
+      expect(accepted, 1, reason: 'setup must complete without location');
+      final prefs = await SharedPreferences.getInstance();
+      // Declined, and recorded as declined rather than left unset.
+      expect(prefs.getBool(AppConstants.prefConsentLocation), isFalse);
+      expect(
+        serviceLocator<ConsentManager>().isGranted('location'),
+        isFalse,
+      );
+    },
+  );
 }

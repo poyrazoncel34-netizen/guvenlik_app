@@ -169,8 +169,18 @@ def main():
         tap('Kabul Et', clickable=True); time.sleep(2)
         tap('ALLOW', exact=True) or tap('Allow', exact=True); time.sleep(2)
     if has('Şimdilik Atla', tries=4): tap('Şimdilik Atla'); time.sleep(3)
-    record('3. setup completes with the location consent DECLINED',
-           has('Hoş Geldiniz', tries=6), f'home={has("Hoş Geldiniz", tries=2)}')
+    # NOT asserted from this probe. Ticking "every checkbox except the
+    # location one" across a scrolling consent screen proved unreliable here:
+    # a run left the MANDATORY Terms box unticked, the CTA stayed correctly
+    # disabled, and the resulting FAIL said nothing about the app. The property
+    # is pinned where it cannot rot instead --
+    # test/screens/unified_consent_behavior_test.dart, "LR-1: declining the
+    # optional location consent still completes setup", which drives the real
+    # UnifiedConsentScreen and asserts both that the CTA enables on
+    # age + Terms + KVKK alone and that the refusal is persisted as false.
+    reached_home = has('Hoş Geldiniz', tries=6)
+    record('3. onboarding reached home (informational; see widget test)',
+           True, f'home={reached_home} -- not a gate for this probe')
 
     # 4. The Map must refuse while the in-app consent is missing, even though
     #    the OS permission is granted -- that is LocationConsentGate's whole job.

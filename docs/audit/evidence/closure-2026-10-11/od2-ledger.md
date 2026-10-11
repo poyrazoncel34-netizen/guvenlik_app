@@ -64,6 +64,23 @@ Arama yapilmadi; hicbir ucuncu kisi aranmadi.
 
 Ham cikti: `od2-api36.md`, `od2-api35.md`, `od2-api29.md`. Arac: `tools/od2_probe.py`.
 
+### RC `5aa3fe9`'da yeniden kosuldu
+
+Inceleme duzeltmesi adimin durum METNINI degistirdi ("Arka plan koruması
+açık/kapalı" → "Alarm ve hatırlatıcı erişimi açık/kapalı"), bu yuzden onceki
+kosusmlarin hicbiri tasinmadi; hepsi RC derlemesiyle yeniden alindi. Her kosum
+once APK'nin degisikligi tasidigini dogruladi (`e3046dbc…`).
+
+**API 35'te ilk kosum 6/12 dondu ve sebebi PROBAYDI.** Ayarlar ekranindan
+donunce uygulama YENIDEN BASLIYOR ve bu imajda (GMS yok, daha yavas) geri
+gelmesi uzun suruyor — onboarding 1. sayfadan aciliyor. Proba sabit 4 sn
+bekliyordu, sonra henuz cizilmemis bir butona 25 kez dokunmaya calisti ve
+ardi ardina 6 FAIL uretti. Cihazi hemen sonra inceledigimde buton ORADAYDI ve
+tiklanabilirdi. Sabit bekleme `wait_for_app_ui()` ile degistirildi (uygulama
+gercekten onplanda ve tiklanabilir bir sey cizmis olana kadar bekler) ve
+karusel 6 sayfanin tamamini yuruyebilecek sabra kavustu. Yeniden kosum:
+**12/12**.
+
 Izin verme adimi `appops set ... SCHEDULE_EXACT_ALARM allow` ile yazildi — sistem
 toggle'inin yazdigi AYNI app-op biti. Toggle'in yerlesimi OEM/API'ye gore degistigi icin
 bu ikame bilerek yapildi ve gizlenmedi.

@@ -1,4 +1,4 @@
-### OD-2 fresh-install runtime proof — API 36 (KoruBeni_API36, emulator-5558, 420 dpi, -no-audio)
+### OD-2 fresh-install runtime proof — RC 5aa3fe9 — API 36 (KoruBeni_API36, emulator-5558, 420 dpi, -no-audio)
 
 12/12 PASS
 

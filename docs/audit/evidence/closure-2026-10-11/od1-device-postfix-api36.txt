@@ -1,99 +1,99 @@
-# OD-1 DEVICE PROBE -- POST-EXTRACT (OD-1 + OD-1c, SessionClockAuthority) API 36
+# OD-1 DEVICE PROBE -- RC 5aa3fe9 API 36
 # API 36  serial=emulator-5558  density=Physical density: 420
-# source HEAD 1b764664a2b1fceb45624d903b5ef0c1973ce666
-# app  apk sha256 8fc4c6905cc21929
-# test apk sha256 956ce7d864937c09
-# installed lastUpdateTime=2026-10-10 23:25:02
+# source HEAD 5aa3fe9ae073caee1e2d9c36b8ce79483b7be207
+# app  apk sha256 e3046dbc3da24714
+# test apk sha256 84a6158e210c357b
+# installed lastUpdateTime=2026-10-11 18:46:47
 # emulator-controlled number only: 05551234567 (emulator modem); no third party dialled
 
-===== mode=parity (telecom before=36) =====
+===== mode=parity (telecom before=0) =====
 com.poyrazoncel.korubeni.emergency.OverdueSessionProbeTest:
 com.poyrazoncel.korubeni.emergency.OverdueSessionProbeTest:.
-Time: 0.202
+Time: 0.313
 OK (10 tests)
-telecom after=36 delta=0
-  10-10 23:25:14.942 25933 25958 I OverdueProbe: SEEDED state=armed overdueByMs=3600000 monotonicRemainingMs=null
-  10-10 23:25:15.022 25933 25958 I OverdueProbe: SEEDED state=armed overdueByMs=3600000 monotonicRemainingMs=null
-  10-10 23:25:15.041 25933 25958 I OverdueProbe: PARITY reconcile=manualActionRequired/notAttempted alarm=manualActionRequired/notAttempted
+telecom after=0 delta=0
+  10-11 18:47:02.541  2558  2592 I OverdueProbe: SEEDED state=armed overdueByMs=3600000 monotonicRemainingMs=null
+  10-11 18:47:02.619  2558  2592 I OverdueProbe: SEEDED state=armed overdueByMs=3600000 monotonicRemainingMs=null
+  10-11 18:47:02.669  2558  2592 I OverdueProbe: PARITY reconcile=manualActionRequired/notAttempted alarm=manualActionRequired/notAttempted
 
-===== mode=alarm (telecom before=36) =====
+===== mode=alarm (telecom before=0) =====
 com.poyrazoncel.korubeni.emergency.OverdueSessionProbeTest:
 com.poyrazoncel.korubeni.emergency.OverdueSessionProbeTest:.
-Time: 0.102
+Time: 0.317
 OK (10 tests)
-telecom after=36 delta=0
-  10-10 23:25:21.206 26083 26110 I OverdueProbe: SEEDED state=armed overdueByMs=3600000 monotonicRemainingMs=null
-  10-10 23:25:21.236 26083 26110 I OverdueProbe: ALARM_OVERDUE state=manualActionRequired call=notAttempted fallback=posted
+telecom after=0 delta=0
+  10-11 18:47:13.744  2711  2745 I OverdueProbe: SEEDED state=armed overdueByMs=3600000 monotonicRemainingMs=null
+  10-11 18:47:13.851  2711  2745 I OverdueProbe: ALARM_OVERDUE state=manualActionRequired call=notAttempted fallback=posted
 
-===== mode=alarm-control (telecom before=36) =====
+===== mode=alarm-control (telecom before=0) =====
 com.poyrazoncel.korubeni.emergency.OverdueSessionProbeTest:
 com.poyrazoncel.korubeni.emergency.OverdueSessionProbeTest:.
-Time: 0.148
+Time: 0.36
 OK (10 tests)
-telecom after=37 delta=1
-  10-10 23:25:27.616 26230 26256 I OverdueProbe: SEEDED state=armed overdueByMs=30000 monotonicRemainingMs=null
-  10-10 23:25:27.657 26230 26256 I OverdueProbe: ALARM_CONTROL state=requestSubmittedUnconfirmed call=submittedUnconfirmed
+telecom after=1 delta=1
+  10-11 18:47:24.567  2866  2897 I OverdueProbe: SEEDED state=armed overdueByMs=30000 monotonicRemainingMs=null
+  10-11 18:47:24.693  2866  2897 I OverdueProbe: ALARM_CONTROL state=requestSubmittedUnconfirmed call=submittedUnconfirmed
 
-===== mode=overdue (telecom before=37) =====
+===== mode=overdue (telecom before=1) =====
 com.poyrazoncel.korubeni.emergency.OverdueSessionProbeTest:
 com.poyrazoncel.korubeni.emergency.OverdueSessionProbeTest:.
-Time: 0.112
+Time: 0.332
 OK (10 tests)
-telecom after=37 delta=0
-  10-10 23:25:34.145 26387 26413 I OverdueProbe: SEEDED state=armed overdueByMs=3600000 monotonicRemainingMs=null
-  10-10 23:25:34.171 26387 26413 I OverdueProbe: OVERDUE state=manualActionRequired call=notAttempted fallback=posted
+telecom after=1 delta=0
+  10-11 18:47:38.855  3064  3083 I OverdueProbe: SEEDED state=armed overdueByMs=3600000 monotonicRemainingMs=null
+  10-11 18:47:38.964  3064  3083 I OverdueProbe: OVERDUE state=manualActionRequired call=notAttempted fallback=posted
 
-===== mode=control (telecom before=37) =====
+===== mode=control (telecom before=1) =====
 com.poyrazoncel.korubeni.emergency.OverdueSessionProbeTest:
 com.poyrazoncel.korubeni.emergency.OverdueSessionProbeTest:.
-Time: 0.129
+Time: 0.689
 OK (10 tests)
-telecom after=38 delta=1
-  10-10 23:25:40.366 26533 26559 I OverdueProbe: SEEDED state=armed overdueByMs=30000 monotonicRemainingMs=null
-  10-10 23:25:40.403 26533 26559 I OverdueProbe: CONTROL state=requestSubmittedUnconfirmed call=submittedUnconfirmed
+telecom after=2 delta=1
+  10-11 18:47:50.165  3215  3243 I OverdueProbe: SEEDED state=armed overdueByMs=30000 monotonicRemainingMs=null
+  10-11 18:47:50.296  3215  3243 I OverdueProbe: CONTROL state=requestSubmittedUnconfirmed call=submittedUnconfirmed
 
-===== mode=claimed (telecom before=39) =====
+===== mode=claimed (telecom before=2) =====
 com.poyrazoncel.korubeni.emergency.OverdueSessionProbeTest:
 com.poyrazoncel.korubeni.emergency.OverdueSessionProbeTest:.
-Time: 0.161
+Time: 1.025
 OK (10 tests)
-telecom after=39 delta=0
-  10-10 23:25:47.969 26702 26729 I OverdueProbe: SEEDED state=claimed overdueByMs=3600000 monotonicRemainingMs=null
-  10-10 23:25:48.002 26702 26729 I OverdueProbe: CLAIMED_STALE state=manualActionRequired call=notAttempted fallback=posted
+telecom after=3 delta=1
+  10-11 18:48:11.552  3367  3422 I OverdueProbe: SEEDED state=claimed overdueByMs=3600000 monotonicRemainingMs=null
+  10-11 18:48:11.966  3367  3422 I OverdueProbe: CLAIMED_STALE state=manualActionRequired call=notAttempted fallback=posted
 
-===== mode=claimed-control (telecom before=39) =====
+===== mode=claimed-control (telecom before=3) =====
 com.poyrazoncel.korubeni.emergency.OverdueSessionProbeTest:
 com.poyrazoncel.korubeni.emergency.OverdueSessionProbeTest:.
-Time: 0.126
+Time: 0.291
 OK (10 tests)
-telecom after=40 delta=1
-  10-10 23:25:54.431 26845 26873 I OverdueProbe: SEEDED state=claimed overdueByMs=30000 monotonicRemainingMs=null
-  10-10 23:25:54.479 26845 26873 I OverdueProbe: CLAIMED_CONTROL state=requestSubmittedUnconfirmed call=submittedUnconfirmed
+telecom after=4 delta=1
+  10-11 18:48:26.076  3539  3575 I OverdueProbe: SEEDED state=claimed overdueByMs=30000 monotonicRemainingMs=null
+  10-11 18:48:26.173  3539  3575 I OverdueProbe: CLAIMED_CONTROL state=requestSubmittedUnconfirmed call=submittedUnconfirmed
 
-===== mode=wall-forward (telecom before=41) =====
+===== mode=wall-forward (telecom before=4) =====
 com.poyrazoncel.korubeni.emergency.OverdueSessionProbeTest:
 com.poyrazoncel.korubeni.emergency.OverdueSessionProbeTest:.
-Time: 0.147
+Time: 0.294
 OK (10 tests)
-telecom after=41 delta=0
-  10-10 23:26:01.952 27012 27039 I OverdueProbe: SEEDED state=armed overdueByMs=7200000 monotonicRemainingMs=60000
-  10-10 23:26:01.966 27012 27039 I OverdueProbe: WALL_FORWARD state=armed call=notAttempted fallback=notAttempted
+telecom after=5 delta=1
+  10-11 18:48:40.791  3708  3729 I OverdueProbe: SEEDED state=armed overdueByMs=7200000 monotonicRemainingMs=60000
+  10-11 18:48:40.836  3708  3729 I OverdueProbe: WALL_FORWARD state=armed call=notAttempted fallback=notAttempted
 
-===== mode=wall-forward-boot (telecom before=41) =====
+===== mode=wall-forward-boot (telecom before=5) =====
 com.poyrazoncel.korubeni.emergency.OverdueSessionProbeTest:.
-Time: 0.069
+Time: 1.168
 OK (10 tests)
-telecom after=41 delta=0
-  10-10 23:26:07.016 27168 27182 I OverdueProbe: SEEDED state=armed overdueByMs=7200000 monotonicRemainingMs=null
-  10-10 23:26:07.035 27168 27182 I OverdueProbe: WALL_FORWARD_BOOT state=manualActionRequired call=notAttempted
+telecom after=6 delta=1
+  10-11 18:48:55.998  3872  3937 I OverdueProbe: SEEDED state=armed overdueByMs=7200000 monotonicRemainingMs=null
+  10-11 18:48:56.312  3872  3937 I OverdueProbe: WALL_FORWARD_BOOT state=manualActionRequired call=notAttempted
 
-===== mode=wall-back (telecom before=41) =====
+===== mode=wall-back (telecom before=6) =====
 com.poyrazoncel.korubeni.emergency.OverdueSessionProbeTest:
 com.poyrazoncel.korubeni.emergency.OverdueSessionProbeTest:.
-Time: 0.163
+Time: 0.482
 OK (10 tests)
-telecom after=42 delta=1
-  10-10 23:26:13.753 27339 27366 I OverdueProbe: SEEDED state=armed overdueByMs=-3600000 monotonicRemainingMs=-30000
-  10-10 23:26:13.800 27339 27366 I OverdueProbe: WALL_BACK state=requestSubmittedUnconfirmed call=submittedUnconfirmed
+telecom after=7 delta=1
+  10-11 18:49:08.854  4083  4107 I OverdueProbe: SEEDED state=armed overdueByMs=-3600000 monotonicRemainingMs=-30000
+  10-11 18:49:08.991  4083  4107 I OverdueProbe: WALL_BACK state=requestSubmittedUnconfirmed call=submittedUnconfirmed
 
-# done 2026-10-10 23:26:16
+# done 2026-10-11 18:49:11

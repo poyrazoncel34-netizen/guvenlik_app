@@ -113,6 +113,7 @@ karari duvar saatine geri verir, yani OD-1'i tumden bosa cikarirdi.
 | Sinir matrisi (8 yas x 5 yol) + boot kurtarma + izin yeniden verme + surec basi | PASS | `OverdueDispatchParityTest` |
 | Ozellik testleri (rastgele olay sirasi, rastgele duvar ziplamasi, sinir monotonlugu) | PASS 43k vaka | `OverdueDispatchPolicyTest`, `OverdueDispatchParityTest` |
 | Karsi-olgusal mutantlar | **14/14 OLDURULDU**, agac hash ile geri yuklendi | `mutants/od1-mutants-final.txt` |
+| RC `5aa3fe9`'da tum setler yeniden | **0 survivor** (OD-1, OD-2, LR-1, inceleme setleri) | `mutants/*-final.txt` |
 | Ayni mutantlar, `SessionClockAuthority` cikariminden SONRA | **14/14 OLDURULDU** | `mutants/od1-mutants-postextract.txt` |
 | Android lint (`lintPlayDebug`) | PASS | — |
 | Cihaz probasi API 36, cikarimdan SONRA (10 mod) | **10/10 OK**, 0 FAILURES | `od1-device-postfix-api36.txt` |
@@ -127,9 +128,12 @@ karari duvar saatine geri verir, yani OD-1'i tumden bosa cikarirdi.
 `EmergencySessionCoordinator.kt` 837 → 979 satira cikti; bu deponun kurali "sinirin
 uzerindeki dosya dokunuldugunda mantik verir, almaz" oldugu icin saat yetkisi mantigi
 `SessionClockAuthority.kt`'ye (165 satir, saf, depo/alarm/Telecom yok) cikarildi ve
-koordinator 879 satira indi. Orijinaline gore net +42 satir; bunun neredeyse tamami
-CRITICAL bir guvenlik kararinin gerekcesini yazan yorum. Cikarimdan SONRA butun kapilar
-(216 Kotlin testi, 14/14 mutant, API 36 cihaz probasi) yeniden kosuldu.
+koordinator 879 satira indi. Cikarimdan SONRA butun kapilar yeniden kosuldu.
+
+GUNCELLEME (RC `5aa3fe9`): inceleme duzeltmeleri koordinatoru 918 satira cikardi.
+Artis tamamen yorum: F1'in nasil olustugunu ve neden iki saatin yan yana okunmasi
+gerektigini, F3'un neden kanit-duzeyi kontrol istedigini ve F5'in duzeltilmis
+gerekcesini anlatan bloklar. Kod satiri sayisi degismedi.
 
 ## Kalan risk
 

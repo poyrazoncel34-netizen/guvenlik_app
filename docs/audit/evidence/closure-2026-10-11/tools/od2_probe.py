@@ -123,6 +123,33 @@ def open_app():
     if has('Uygulama kilidi', tries=3): ui.pin(PIN); time.sleep(3)
 def back(): sh('shell', 'input', 'keyevent', 'KEYCODE_BACK'); time.sleep(3)
 
+def foreground_package():
+    m = re.search(r'mCurrentFocus=Window\{[^ ]+ \S+ ([^}/]*)',
+                  sh('shell', 'dumpsys', 'window'))
+    return m.group(1) if m else '?'
+
+def wait_for_app_ui(timeout_s=90):
+    """Block until this app is foreground AND has drawn something tappable.
+
+    Returning from the system Settings screen can RESTART the app, and on a
+    slower image (API 35 here: no GMS) it takes many seconds to come back --
+    reappearing at onboarding page 1, having lost its place. A fixed sleep was
+    not enough: one run spent 25 attempts tapping a button that had not been
+    drawn yet, then reported six cascading FAILs that said nothing about the
+    app. Wait for the UI to exist instead of guessing how long it needs.
+    """
+    deadline = time.time() + timeout_s
+    while time.time() < deadline:
+        if PKG in foreground_package():
+            drawn = [l for l in labels() if l.strip()]
+            if drawn and any(n.get('clickable') == 'true' for n in ui.nodes()):
+                time.sleep(2)
+                return True
+        else:
+            sh('shell', 'am', 'start', '-n', MAIN)
+        time.sleep(3)
+    return False
+
 def scroll_collect(down=True, rounds=3):
     """Labels across a scroll: a step's content can sit under the fold."""
     seen = set(labels())
@@ -150,9 +177,13 @@ def consent_and_carousel():
 
 def complete_onboarding():
     """Remaining steps (contact + PIN) to reach Home."""
-    for _ in range(5):
+    # After a Settings round-trip the app can reappear at page 1, so allow a
+    # full walk of the carousel rather than the two or three steps that suffice
+    # when the flow was never interrupted.
+    wait_for_app_ui()
+    for _ in range(10):
         if has('Acil kişinizi ekleyin', tries=2): break
-        tap('İleri', exact=True); time.sleep(2.5)
+        tap('İleri', exact=True, tries=3); time.sleep(2.5)
     if not has('Acil kişinizi ekleyin', tries=5): return False
     for idx, text in ((0, 'Annem'), (1, '05551234567')):
         fields = [n for n in ui.nodes() if 'EditText' in n.get('class', '')]
@@ -260,7 +291,8 @@ def main():
                f'focus {before_focus} -> {after_focus} :: {settings_screen}')
 
         # 7. Come back WITHOUT granting.
-        back(); time.sleep(4)
+        back()
+        wait_for_app_ui()
         if has('Uygulama kilidi', tries=2): ui.pin(PIN); time.sleep(3)
         record('7. returning without granting leaves the access off',
                not granted(),
