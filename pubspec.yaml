@@ -28,35 +28,35 @@ environment:
 # the latest version available on pub.dev. To see which dependencies have newer
 # versions available, run `flutter pub outdated`.
 dependencies:
-  shared_preferences: ^2.2.2
-  url_launcher: ^6.2.4
-  image_picker: ^1.1.2
+  shared_preferences: ^2.5.6
+  url_launcher: ^6.3.3
+  image_picker: ^1.2.4
   # Pure-Dart decode/encode. Used ONLY at the image import boundary, to emit a
   # metadata-free derivative of a user-selected photo (MP-31-010). No native
   # code, so no R8 keep rules and no 16 KB alignment surface; it was already in
   # the lock file transitively at this version.
-  image: ^4.7.2
-  path_provider: ^2.1.4
+  image: ^4.12.0
+  path_provider: ^2.1.6
   provider: ^6.1.2
   get_it: ^7.7.0
   flutter_secure_storage: ^10.0.0
-  sqflite: ^2.4.1
+  sqflite: ^2.4.5
   # workmanager: ^0.5.2  # Geçici olarak devre dışı - uyumluluk sorunu
   # Pinned to >=19.1.0 to skip the v19.0.x release-mode bug
   # (notifications didn't fire in release builds; fixed in v19.1.0).
   # Lower bound bumped from v17.2.1 for Android 14+ exact alarm API
   # support. Re-test on every minor bump.
-  flutter_local_notifications: ^19.1.0
+  flutter_local_notifications: ^22.3.3
   # Bumped to ^0.10.0 because flutter_local_notifications ^19.1.0 requires it.
-  timezone: ^0.10.0
+  timezone: ^0.11.2
   flutter:
     sdk: flutter
-  audioplayers: ^6.5.1
+  audioplayers: ^6.8.1
   # Map & Location packages
-  flutter_map: ^7.0.2
+  flutter_map: ^8.3.2
   # Direct dependency for the policy-compliant persistent OSM tile cache.
   http: ^1.6.0
-  latlong2: ^0.9.1
+  latlong2: ^0.10.1
   geolocator: ^13.0.2
   # Connectivity check
   connectivity_plus: ^6.1.4
@@ -110,7 +110,7 @@ dev_dependencies:
   audioplayers_platform_interface: ^7.1.1
   # Host-side (in-memory) sqflite for unit-testing DB-backed logic.
   sqflite_common_ffi: ^2.3.3
-  flutter_launcher_icons: ^0.13.1
+  flutter_launcher_icons: ^0.14.4
 
 flutter_launcher_icons:
   android: true
