@@ -1,5 +1,6 @@
 package com.poyrazoncel.korubeni
 
+import android.os.SystemClock
 import android.view.KeyEvent
 import io.flutter.plugin.common.EventChannel
 
@@ -11,8 +12,17 @@ import io.flutter.plugin.common.EventChannel
  * event'i gönderilir.
  *
  * Sadece uygulama ön plandayken (Activity visible) çalışır.
+ *
+ * Tüm çağrılar (tuş olayları, setEnabled, onListen/onCancel) ana iş
+ * parçacığından gelir; durum bu yüzden senkronize edilmez.
  */
-class VolumeButtonDetector : EventChannel.StreamHandler {
+class VolumeButtonDetector(
+    /**
+     * Monotonik saat (ms). Duvar saati ileri/geri alınsa da 2 sn pencere ve
+     * cooldown bozulmaz. Testler sahte saat verir.
+     */
+    private val elapsedRealtimeMs: () -> Long = { SystemClock.elapsedRealtime() },
+) : EventChannel.StreamHandler {
 
     companion object {
         const val CHANNEL = "com.poyrazoncel.korubeni/volume_button"
@@ -35,7 +45,13 @@ class VolumeButtonDetector : EventChannel.StreamHandler {
 
     // Ses tuşu basılma zamanlarını tutan liste
     private val pressTimestamps = mutableListOf<Long>()
-    private var lastTriggerTime = 0L
+    // null = henüz tetiklenmedi. 0L olamaz: elapsedRealtime açılışta 0'dan
+    // başlar ve ilk deseni hayali bir cooldown engellerdi.
+    private var lastTriggerTime: Long? = null
+
+    // KEY_DOWN'u yutulan, KEY_UP'ı henüz gelmemiş tuşlar. UP yalnızca eşi
+    // yutulduysa yutulur.
+    private val consumedKeyCodes = mutableSetOf<Int>()
 
     override fun onListen(arguments: Any?, events: EventChannel.EventSink?) {
         eventSink = events
@@ -59,28 +75,44 @@ class VolumeButtonDetector : EventChannel.StreamHandler {
      * MainActivity onKeyDown/onKeyUp callback'lerinden çağrılır.
      * true dönerse event consume edilmiştir (ses değişikliği engellenir).
      * false dönerse event normal şekilde işlenir.
+     *
+     * Yalnızca tetiklemeyi tamamlayan basış (DOWN'u, otomatik tekrarları ve
+     * UP'ı) consume edilir; diğer bütün basışlarda ses normal değişir.
      */
     fun onKeyEvent(event: KeyEvent): Boolean {
-        if (!isEnabled) return false
-        if (eventSink == null) return false
-
         // Sadece VOLUME_DOWN veya VOLUME_UP tuşlarına tepki ver
         if (event.keyCode != KeyEvent.KEYCODE_VOLUME_DOWN &&
             event.keyCode != KeyEvent.KEYCODE_VOLUME_UP) {
             return false
         }
 
-        // Sadece KEY_DOWN event'lerini say (KEY_UP'ı yoksay)
+        // KEY_UP, eşi KEY_DOWN'un kararını izler. isEnabled/eventSink'ten ÖNCE:
+        // tetiklemeden hemen sonra dinleyici düşebilir (inactive -> onCancel) ve
+        // yutulmuş bir DOWN'un UP'ı sisteme tek başına ulaşmamalı.
         if (event.action != KeyEvent.ACTION_DOWN) {
-            // KEY_UP event'ini de consume et ki ses seviyesi değişmesin
-            return true
+            return consumedKeyCodes.remove(event.keyCode)
         }
 
-        val now = System.currentTimeMillis()
+        // Basılı tutulan tuşun otomatik tekrarları yeni basış değildir: sayılmaz,
+        // ilk DOWN'un kararını izler. Yoksa sesi ayarlamak için tuşu yarım saniye
+        // basılı tutmak paniği tetiklerdi.
+        if (event.repeatCount > 0) {
+            return event.keyCode in consumedKeyCodes
+        }
 
-        // Cooldown kontrolü - son tetiklemeden sonra bekleme süresi
-        if (now - lastTriggerTime < COOLDOWN_MS) {
-            return true // Event'i yut ama tetikleme yapma
+        // Yeni basış: UP'ı kaybolmuş eski bir karar bu basışı yutmasın.
+        consumedKeyCodes.remove(event.keyCode)
+
+        if (!isEnabled) return false
+        if (eventSink == null) return false
+
+        val now = elapsedRealtimeMs()
+
+        // Cooldown kontrolü - son tetiklemeden sonra bekleme süresi.
+        // Basış sayılmaz ama yutulmaz da: ses normal değişir.
+        val lastTrigger = lastTriggerTime
+        if (lastTrigger != null && now - lastTrigger < COOLDOWN_MS) {
+            return false
         }
 
         // Zaman penceresi dışındaki eski basışları temizle
@@ -98,13 +130,15 @@ class VolumeButtonDetector : EventChannel.StreamHandler {
         if (pressTimestamps.size >= REQUIRED_PRESS_COUNT) {
             pressTimestamps.clear()
             lastTriggerTime = now
+            // Yalnızca tetikleyen basış yutulur; eşi KEY_UP da yutulacak.
+            consumedKeyCodes.add(event.keyCode)
 
             // Flutter'a tetikleme event'i gönder
             eventSink?.success("volume_panic")
             return true
         }
 
-        // Event'i consume et (ses seviyesi değişmesin)
-        return true
+        // Tetiklemeyen basış sisteme bırakılır: ses normal değişir.
+        return false
     }
 }

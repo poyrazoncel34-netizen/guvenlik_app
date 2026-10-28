@@ -28,6 +28,11 @@ Surumleme: `pubspec.yaml` 1.0.0+1'de SABITTIR; gercek `versionCode`
   atladiginda kurulum eksik gorunmeye devam eder.
 
 ### Duzeltildi
+- Ses tusu tetikleyicisi acikken uygulama her ses tusu basisini yutuyordu; uygulama
+  acikken ses seviyesi tuslarla hic degistirilemiyordu. Artik yalnizca tetiklemeyi
+  tamamlayan basis (2 saniye icindeki 3. basis) yutuluyor, diger basislarda ses
+  normal sekilde degisiyor. Tusu basili tutmak da artik uc basis sayilmiyor ve acil
+  durumu baslatmiyor; tetikleme icin 2 saniye icinde uc ayri basis gerekiyor.
 - Hazirlik karti, cihaz durumu hic okunamadiginda artik "Kuruluma N adim kaldi" demiyor;
   durumun okunamadigini soyluyor. Eskisi, olmayan adimlar icin Ayarlar'da aratiyordu.
 - Suresi gecmis bir guvenlik oturumu, hangi yolun once ulastigina gore farkli
