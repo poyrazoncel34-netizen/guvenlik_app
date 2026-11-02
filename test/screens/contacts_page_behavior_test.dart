@@ -567,5 +567,88 @@ void main() {
         );
       }
     });
+
+    // Submitting validates before the sheet closes. It used to close first and
+    // validate on the page afterwards: an invalid entry lost what was typed
+    // and left only a snackbar.
+    testWidgets('an uncallable number keeps the sheet and the typed entry on '
+        'submit', (tester) async {
+      final phone = await openManualPhoneField(tester);
+      await tester.enterText(phone, '0532 123 45 67,123');
+      // Also lets the sheet's 300 ms focus-reveal delay run out.
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Yeni Kişi Ekle'), findsOneWidget);
+      expect(
+        find.descendant(of: phone, matching: find.text(invalidPhoneText)),
+        findsOneWidget,
+      );
+      expect(find.byType(SnackBar), findsNothing);
+      expect(
+        tester.widget<TextFormField>(phone).controller?.text,
+        '0532 123 45 67,123',
+      );
+
+      // The kept entry is what gets saved once the number is fixed.
+      await tester.enterText(phone, '0532 123 45 67');
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pumpAndSettle();
+      await confirmConsentAndAdd(tester);
+      expect(repository.records.single.name, 'Anne');
+      expect(repository.records.single.phone, '05321234567');
+    });
+
+    testWidgets('the save button validates before closing too', (
+      tester,
+    ) async {
+      final phone = await openManualPhoneField(tester);
+      final save = find.text('Manuel kaydet');
+      await tester.ensureVisible(save);
+      await tester.tap(save);
+      await tester.pumpAndSettle();
+
+      // The phone field was never touched, so its error can only come from
+      // the tap validating it.
+      expect(find.text('Yeni Kişi Ekle'), findsOneWidget);
+      expect(
+        find.descendant(of: phone, matching: find.text(invalidPhoneText)),
+        findsOneWidget,
+      );
+      expect(find.byType(SnackBar), findsNothing);
+
+      await tester.enterText(phone, '+905551112233');
+      await tester.ensureVisible(save);
+      await tester.tap(save);
+      await tester.pumpAndSettle();
+      await confirmConsentAndAdd(tester);
+      expect(repository.records.single.name, 'Anne');
+      expect(repository.records.single.phone, '+905551112233');
+    });
+
+    testWidgets('a blank name keeps the sheet open with the error under the '
+        'name', (tester) async {
+      final phone = await openManualPhoneField(tester);
+      final name = find.widgetWithText(TextField, 'Ad');
+      await tester.enterText(name, '   ');
+      await tester.enterText(phone, '0532 123 45 67');
+      // Also lets the sheet's 300 ms focus-reveal delay run out.
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Yeni Kişi Ekle'), findsOneWidget);
+      expect(
+        find.descendant(of: name, matching: find.text('Kişi adı girin')),
+        findsOneWidget,
+      );
+      expect(find.byType(SnackBar), findsNothing);
+      expect(find.text('Kişi Ekleme Onayı'), findsNothing);
+      expect(
+        tester.widget<TextFormField>(phone).controller?.text,
+        '0532 123 45 67',
+      );
+    });
   });
 }

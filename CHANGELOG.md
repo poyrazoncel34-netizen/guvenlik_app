@@ -28,6 +28,10 @@ Surumleme: `pubspec.yaml` 1.0.0+1'de SABITTIR; gercek `versionCode`
   atladiginda kurulum eksik gorunmeye devam eder.
 
 ### Duzeltildi
+- Elle kisi eklerken gecersiz bir numara veya bos bir adla kaydedilince ekleme
+  sayfasi kapaniyor, yazilanlar kayboluyor ve geriye yalnizca kisa sureli bir
+  uyari kaliyordu. Artik sayfa acik kaliyor, yazilanlar duruyor ve hata ilgili
+  alanin altinda gosteriliyor.
 - Rehberden secilen kisinin numarasi bolunmez bosluk, yon isareti, "/", sekme
   veya tam genislikli rakam iceriyorsa uygulama "Secilen kiside telefon
   numarasi yok" diyordu; kurulumda acil kisi eklemek bu yuzden takilabiliyordu.

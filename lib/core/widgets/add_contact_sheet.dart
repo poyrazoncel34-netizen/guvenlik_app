@@ -47,6 +47,7 @@ class AddContactSheet extends StatefulWidget {
 }
 
 class _AddContactSheetState extends State<AddContactSheet> {
+  final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
   final _phoneFocusNode = FocusNode();
@@ -83,6 +84,9 @@ class _AddContactSheetState extends State<AddContactSheet> {
   }
 
   void _submitManual() {
+    // Validate before closing: an invalid entry keeps the sheet, what was typed
+    // and the error under its field. The page still re-checks both values.
+    if (!(_formKey.currentState?.validate() ?? false)) return;
     Navigator.pop(
       context,
       AddContactSheetResult.manual(_nameController.text, _phoneController.text),
@@ -102,142 +106,149 @@ class _AddContactSheetState extends State<AddContactSheet> {
             borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
           ),
           padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: AppColors.border,
-                  borderRadius: BorderRadius.circular(2),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: AppColors.border,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 24),
-              Container(
-                width: 70,
-                height: 70,
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.12),
-                  shape: BoxShape.circle,
+                const SizedBox(height: 24),
+                Container(
+                  width: 70,
+                  height: 70,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.12),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.person_add_rounded,
+                    size: IconSizes.feature,
+                    color: AppColors.primary,
+                  ),
                 ),
-                child: const Icon(
-                  Icons.person_add_rounded,
-                  size: IconSizes.feature,
-                  color: AppColors.primary,
+                const SizedBox(height: 20),
+                Text(
+                  "contacts_add_new".tr(),
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.textPrimary,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 20),
-              Text(
-                "contacts_add_new".tr(),
-                style: const TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.textPrimary,
+                const SizedBox(height: 16),
+                Text(
+                  "contacts_add_new_subtitle".tr(),
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: AppColors.textSecondary,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                "contacts_add_new_subtitle".tr(),
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: AppColors.textSecondary,
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    const Expanded(child: Divider(color: AppColors.border)),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: Text(
+                        "contacts_picker_user_selected_only".tr(),
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AppColors.textSecondary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    const Expanded(child: Divider(color: AppColors.border)),
+                  ],
                 ),
-              ),
-              const SizedBox(height: 24),
-              Row(
-                children: [
-                  const Expanded(child: Divider(color: AppColors.border)),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.pop(
+                      context,
+                      const AddContactSheetResult.pickFromDevice(),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
                     child: Text(
-                      "contacts_picker_user_selected_only".tr(),
-                      textAlign: TextAlign.center,
+                      "contacts_pick_from_contacts".tr(),
                       style: const TextStyle(
-                        fontSize: 12,
-                        color: AppColors.textSecondary,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 16,
                       ),
                     ),
                   ),
-                  const Expanded(child: Divider(color: AppColors.border)),
-                ],
-              ),
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () => Navigator.pop(
-                    context,
-                    const AddContactSheetResult.pickFromDevice(),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
+                ),
+                const SizedBox(height: 20),
+                TextFormField(
+                  controller: _nameController,
+                  textInputAction: TextInputAction.next,
+                  textCapitalization: TextCapitalization.words,
+                  autovalidateMode: AutovalidateMode.onUserInteraction,
+                  maxLength: _manualContactNameInputLimit,
+                  inputFormatters: [
+                    LengthLimitingTextInputFormatter(
+                      _manualContactNameInputLimit,
                     ),
+                  ],
+                  validator: (value) => (value ?? '').trim().isEmpty
+                      ? "contacts_manual_name_required".tr()
+                      : null,
+                  decoration: InputDecoration(
+                    labelText: "contacts_manual_name_label".tr(),
+                    prefixIcon: const Icon(Icons.person_rounded),
                   ),
-                  child: Text(
-                    "contacts_pick_from_contacts".tr(),
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 16,
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _phoneController,
+                  focusNode: _phoneFocusNode,
+                  keyboardType: TextInputType.phone,
+                  textInputAction: TextInputAction.done,
+                  autovalidateMode: AutovalidateMode.onUserInteraction,
+                  inputFormatters: [
+                    LengthLimitingTextInputFormatter(
+                      _manualContactPhoneInputLimit,
                     ),
+                  ],
+                  validator: (value) {
+                    final errorKey = manualContactPhoneError(value ?? '');
+                    return errorKey?.tr();
+                  },
+                  decoration: InputDecoration(
+                    labelText: "contacts_manual_phone_label".tr(),
+                    prefixIcon: const Icon(Icons.phone_rounded),
+                  ),
+                  onFieldSubmitted: (_) => _submitManual(),
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: _submitManual,
+                    icon: const Icon(Icons.save_rounded),
+                    label: Text("contacts_manual_save".tr()),
                   ),
                 ),
-              ),
-              const SizedBox(height: 20),
-              TextField(
-                controller: _nameController,
-                textInputAction: TextInputAction.next,
-                textCapitalization: TextCapitalization.words,
-                maxLength: _manualContactNameInputLimit,
-                inputFormatters: [
-                  LengthLimitingTextInputFormatter(
-                    _manualContactNameInputLimit,
-                  ),
-                ],
-                decoration: InputDecoration(
-                  labelText: "contacts_manual_name_label".tr(),
-                  prefixIcon: const Icon(Icons.person_rounded),
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _phoneController,
-                focusNode: _phoneFocusNode,
-                keyboardType: TextInputType.phone,
-                textInputAction: TextInputAction.done,
-                autovalidateMode: AutovalidateMode.onUserInteraction,
-                inputFormatters: [
-                  LengthLimitingTextInputFormatter(
-                    _manualContactPhoneInputLimit,
-                  ),
-                ],
-                validator: (value) {
-                  final errorKey = manualContactPhoneError(value ?? '');
-                  return errorKey?.tr();
-                },
-                decoration: InputDecoration(
-                  labelText: "contacts_manual_phone_label".tr(),
-                  prefixIcon: const Icon(Icons.phone_rounded),
-                ),
-                onFieldSubmitted: (_) => _submitManual(),
-              ),
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: _submitManual,
-                  icon: const Icon(Icons.save_rounded),
-                  label: Text("contacts_manual_save".tr()),
-                ),
-              ),
-              const SizedBox(height: 24),
-            ],
+                const SizedBox(height: 24),
+              ],
+            ),
           ),
         ),
       ),
