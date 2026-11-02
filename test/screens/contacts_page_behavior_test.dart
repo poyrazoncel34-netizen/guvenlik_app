@@ -593,6 +593,7 @@ void main() {
 
       // The kept entry is what gets saved once the number is fixed.
       await tester.enterText(phone, '0532 123 45 67');
+      await tester.pump(const Duration(milliseconds: 400));
       await tester.testTextInput.receiveAction(TextInputAction.done);
       await tester.pumpAndSettle();
       await confirmConsentAndAdd(tester);
@@ -619,6 +620,10 @@ void main() {
       expect(find.byType(SnackBar), findsNothing);
 
       await tester.enterText(phone, '+905551112233');
+      // Focusing the phone field starts the 300 ms focus-reveal delay; let it
+      // and the scroll it starts finish, or the tap lands mid-scroll.
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.pumpAndSettle();
       await tester.ensureVisible(save);
       await tester.tap(save);
       await tester.pumpAndSettle();
@@ -649,6 +654,12 @@ void main() {
         tester.widget<TextFormField>(phone).controller?.text,
         '0532 123 45 67',
       );
+
+      // Like the phone field, the name revalidates as it is typed: the error
+      // clears without another submit.
+      await tester.enterText(name, 'Anne');
+      await tester.pump();
+      expect(find.text('Kişi adı girin'), findsNothing);
     });
   });
 }
