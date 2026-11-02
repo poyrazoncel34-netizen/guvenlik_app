@@ -113,6 +113,64 @@ void main() {
     });
   });
 
+  // Contact books carry no-break spaces, bidi marks, '/', tabs and fullwidth
+  // digits. Onboarding is the only gate that can complete setup, so a real
+  // number must not be refused for formatting the user cannot even see --
+  // while dial strings stay refused exactly as before.
+  group('contact-book formatting (same boundary as the picker)', () {
+    test('accepts numbers that only carry contact-book noise', () {
+      const noisy = <String>[
+        '0532\u00A0123\u00A045\u00A067',
+        '\u202A+90 532 123 45 67\u202C',
+        '0532/123 45 67',
+        '0532\u0009123\u000945\u000967',
+        '\uFF10\uFF15\uFF13\uFF12\uFF11\uFF12\uFF13\uFF14\uFF15\uFF16\uFF17',
+      ];
+      for (final raw in noisy) {
+        expect(
+          OnboardingContactGateService.phoneErrorKey(raw),
+          isNull,
+          reason: raw,
+        );
+      }
+    });
+
+    test('still rejects dial strings, URIs and extensions', () {
+      const hostile = <String>[
+        '*31#05321234567',
+        'tel:+905321234567',
+        '05321234567,123',
+        '05321234567;123',
+        '05321234567p1',
+        '05321234567w1',
+        '0532 123 45 67 ext 12',
+        '\uFF0A\uFF13\uFF11\uFF03\uFF10\uFF15\uFF13\uFF12\uFF11\uFF12\uFF13\uFF14\uFF15\uFF16\uFF17',
+      ];
+      for (final raw in hostile) {
+        expect(
+          OnboardingContactGateService.phoneErrorKey(raw),
+          'onboarding_contact_invalid_phone',
+          reason: raw,
+        );
+      }
+    });
+
+    test('a NBSP-grouped number is stored as the canonical target', () async {
+      final outcome = await OnboardingContactGateService.savePrimaryContact(
+        name: 'Ada',
+        phone: '0532\u00A0123\u00A045\u00A067',
+      );
+
+      expect(outcome, OnboardingContactSaveOutcome.saved);
+      final raw = secure.store[SecureStorageKeys.emergencyContactsV1];
+      expect(raw, isNotNull);
+      final contacts =
+          (jsonDecode(raw!) as Map<String, dynamic>)['contacts'] as List<dynamic>;
+      expect(contacts, hasLength(1));
+      expect((contacts.single as Map)['phone'], '05321234567');
+    });
+  });
+
   group('saving', () {
     test('an invalid number is not written and leaves the gate closed', () async {
       final outcome = await OnboardingContactGateService.savePrimaryContact(

@@ -69,10 +69,11 @@ abstract final class OnboardingContactGateService {
   }
 
   /// Translation key for an unusable number, or null when it is acceptable.
-  /// Same rule the dispatch path applies, so the field cannot accept a number
-  /// that arming would later refuse.
+  /// Same boundary as the contacts page and the picker: contact-book
+  /// formatting is removed, then the dispatch rule decides, so the field
+  /// cannot accept a number that arming would later refuse.
   static String? phoneErrorKey(String raw) {
-    if (EmergencyNumberValidator.normalizedCallableTargetOrNull(raw) == null) {
+    if (EmergencyNumberValidator.normalizedContactInputOrNull(raw) == null) {
       return 'onboarding_contact_invalid_phone';
     }
     return null;
@@ -117,13 +118,18 @@ abstract final class OnboardingContactGateService {
     required String name,
     required String phone,
   }) async {
-    if (phoneErrorKey(phone) != null) {
+    // The canonical target is what gets stored: storage re-validates with the
+    // strict dispatch rule, which still refuses contact-book formatting.
+    final callable = EmergencyNumberValidator.normalizedContactInputOrNull(
+      phone,
+    );
+    if (callable == null) {
       return OnboardingContactSaveOutcome.invalidPhone;
     }
     try {
       await ContactService.savePrimaryEmergencyContact(
         name: name,
-        phone: phone,
+        phone: callable,
       );
     } on Exception catch (e) {
       debugPrint('OnboardingContactGate: contact write failed: $e');

@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:guvenlik_app/core/constants/app_constants.dart';
 import 'package:guvenlik_app/core/di/service_locator.dart';
 import 'package:guvenlik_app/core/services/contact_service.dart';
+import 'package:guvenlik_app/core/services/native_contact_picker_service.dart';
 import 'package:guvenlik_app/domain/repositories/contacts_repository.dart';
 import 'package:guvenlik_app/models/consent_record.dart';
 import 'package:guvenlik_app/presentation/providers/contacts_provider.dart';
@@ -361,5 +362,161 @@ void main() {
 
     expect(repository.records.map((contact) => contact.name), ['Bora', 'Ayşe']);
     expect(repository.primary?.name, 'Ayşe');
+  });
+
+  // Device pick and manual entry share the onboarding boundary: contact-book
+  // noise is sanitized, a missing number and an uncallable number get two
+  // different messages, and dial strings are refused instead of being folded
+  // into the digits by an input filter.
+  group('pick and manual entry boundary', () {
+    final messenger =
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+    const invalidPhoneText =
+        'Geçerli bir telefon numarası veya resmi acil numara girin';
+    const noPhoneText = 'Seçilen kişide telefon numarası yok';
+
+    tearDown(() {
+      messenger.setMockMethodCallHandler(
+        NativeContactPickerService.channel,
+        null,
+      );
+    });
+
+    Future<void> pickFromEmptyState(
+      WidgetTester tester,
+      Map<String, String> nativeReply,
+    ) async {
+      messenger.setMockMethodCallHandler(
+        NativeContactPickerService.channel,
+        (_) async => nativeReply,
+      );
+      await tester.runAsync(configure);
+      await tester.runAsync(
+        () => consentManager.grantConsent(ConsentRecord.typeEmergencyContacts),
+      );
+      await _pumpContacts(tester, provider, home);
+      final addPerson = find.descendant(
+        of: find.byWidgetPredicate((widget) => widget is ElevatedButton),
+        matching: find.text('Kişi Ekle'),
+      );
+      expect(addPerson, findsOneWidget, reason: 'empty-state pick action');
+      await tester.tap(addPerson);
+      await tester.pumpAndSettle();
+    }
+
+    Future<Finder> openManualPhoneField(WidgetTester tester) async {
+      await tester.runAsync(configure);
+      await tester.runAsync(
+        () => consentManager.grantConsent(ConsentRecord.typeEmergencyContacts),
+      );
+      await _pumpContacts(tester, provider, home);
+      await tester.tap(
+        find.descendant(
+          of: find.byType(AppBar),
+          matching: find.byType(IconButton),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Tamam'));
+      await tester.pumpAndSettle();
+      expect(find.text('Yeni Kişi Ekle'), findsOneWidget);
+      await tester.enterText(find.widgetWithText(TextField, 'Ad'), 'Anne');
+      return find.widgetWithText(TextFormField, 'Telefon numarası');
+    }
+
+    Future<void> confirmConsentAndAdd(WidgetTester tester) async {
+      expect(find.text('Kişi Ekleme Onayı'), findsOneWidget);
+      await tester.tap(find.textContaining('Bu kişiyi uygulamaya'));
+      await tester.pump();
+      await tester.tap(find.text('Ekle'));
+      await _settleIo(tester);
+    }
+
+    testWidgets('a NBSP-grouped contact is saved as the canonical number', (
+      tester,
+    ) async {
+      await pickFromEmptyState(tester, {
+        'number': '0532\u00A0123\u00A045\u00A067',
+        'name': 'Anne',
+      });
+
+      expect(find.text(noPhoneText), findsNothing);
+      await confirmConsentAndAdd(tester);
+      expect(repository.records, hasLength(1));
+      expect(repository.records.single.phone, '05321234567');
+    });
+
+    testWidgets('a contact without a number is told so', (tester) async {
+      await pickFromEmptyState(tester, {'number': '', 'name': 'Anne'});
+
+      expect(find.text(noPhoneText), findsOneWidget);
+      expect(find.text('Kişi Ekleme Onayı'), findsNothing);
+      expect(repository.records, isEmpty);
+    });
+
+    testWidgets('a present but uncallable number gets its own message', (
+      tester,
+    ) async {
+      await pickFromEmptyState(tester, {
+        'number': '*31#05321234567',
+        'name': 'Anne',
+      });
+
+      expect(
+        find.text(
+          'Seçilen kişinin numarası aranabilir bir numara değil. '
+          'Numarayı kontrol edip düzeltin veya elle girin.',
+        ),
+        findsOneWidget,
+      );
+      expect(find.text(noPhoneText), findsNothing);
+      expect(find.text('Kişi Ekleme Onayı'), findsNothing);
+      expect(repository.records, isEmpty);
+    });
+
+    testWidgets('a pasted pause/extension is refused, not folded into the '
+        'digits', (tester) async {
+      final phone = await openManualPhoneField(tester);
+      await tester.enterText(phone, '0532 123 45 67,123');
+      // Also lets the sheet's 300 ms focus-reveal delay run out.
+      await tester.pump(const Duration(milliseconds: 400));
+
+      // The old [0-9+] input filter rewrote this into the 14-digit
+      // "05321234567123" and accepted it: the pause became part of the
+      // number. It must stay visible, as typed, and be refused.
+      expect(
+        tester.widget<TextFormField>(phone).controller?.text,
+        '0532 123 45 67,123',
+      );
+      expect(find.text(invalidPhoneText), findsOneWidget);
+    });
+
+    testWidgets('fullwidth digits are accepted and stored canonical', (
+      tester,
+    ) async {
+      final phone = await openManualPhoneField(tester);
+      await tester.enterText(
+        phone,
+        '\uFF10\uFF15\uFF13\uFF12\uFF11\uFF12\uFF13\uFF14\uFF15\uFF16\uFF17',
+      );
+      await tester.pump();
+
+      expect(find.text(invalidPhoneText), findsNothing);
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pumpAndSettle();
+      await confirmConsentAndAdd(tester);
+      expect(repository.records.single.phone, '05321234567');
+    });
+
+    testWidgets('a NBSP-grouped paste still saves without the old digit '
+        'filter', (tester) async {
+      final phone = await openManualPhoneField(tester);
+      await tester.enterText(phone, '0532\u00A0123\u00A045\u00A067');
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pumpAndSettle();
+
+      await confirmConsentAndAdd(tester);
+      expect(repository.records.single.phone, '05321234567');
+    });
   });
 }

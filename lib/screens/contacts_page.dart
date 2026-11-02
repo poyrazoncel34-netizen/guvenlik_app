@@ -23,7 +23,7 @@ const int _manualContactPhoneInputLimit = 32;
 const int _manualContactNameInputLimit = 60;
 
 String? manualContactPhoneError(String raw) {
-  if (EmergencyNumberValidator.normalizedCallableTargetOrNull(raw) == null) {
+  if (EmergencyNumberValidator.normalizedContactInputOrNull(raw) == null) {
     return 'contacts_manual_invalid_phone';
   }
   return null;
@@ -875,7 +875,6 @@ class _ContactsPageState extends State<ContactsPage> {
                     textInputAction: TextInputAction.done,
                     autovalidateMode: AutovalidateMode.onUserInteraction,
                     inputFormatters: [
-                      FilteringTextInputFormatter.allow(RegExp(r'[0-9+]')),
                       LengthLimitingTextInputFormatter(
                         _manualContactPhoneInputLimit,
                       ),
@@ -948,7 +947,7 @@ class _ContactsPageState extends State<ContactsPage> {
       return;
     }
 
-    final phone = EmergencyNumberValidator.normalizedCallableTargetOrNull(
+    final phone = EmergencyNumberValidator.normalizedContactInputOrNull(
       rawPhone,
     );
     if (phone == null) {
@@ -1009,20 +1008,20 @@ class _ContactsPageState extends State<ContactsPage> {
       );
       return;
     }
+    final failureKey = result.failureMessageKey;
+    if (failureKey != null) {
+      // No number vs. an uncallable one: the same verdict onboarding shows.
+      _showSnack(failureKey.tr(), backgroundColor: AppColors.warning);
+      return;
+    }
     final picked = result.contact;
     if (picked == null) {
-      // User cancelled, or the picked contact had no usable number.
+      // User cancelled.
       return;
     }
 
     final name = picked.name.isNotEmpty ? picked.name : "contacts_unknown".tr();
-    final phone = EmergencyNumberValidator.normalizedCallableTargetOrNull(
-      picked.number,
-    );
-    if (phone == null) {
-      _showSnack("contacts_no_phone".tr(), backgroundColor: AppColors.warning);
-      return;
-    }
+    final phone = picked.number; // canonical: the picker service validated it
 
     // KVKK: Kişi ekleme öncesi rıza onayı
     final consentGiven = await EmergencyContactConsentDialog.show(

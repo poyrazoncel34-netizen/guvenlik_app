@@ -18,6 +18,7 @@ import com.poyrazoncel.korubeni.emergency.EmergencyChannels
 import com.poyrazoncel.korubeni.emergency.EmergencyEventStreamHandler
 import com.poyrazoncel.korubeni.emergency.EmergencyPlatformHandler
 import com.poyrazoncel.korubeni.emergency.EmergencyReceiverGuard
+import com.poyrazoncel.korubeni.emergency.ContactInputBoundary
 import com.poyrazoncel.korubeni.emergency.EmergencySessionRuntime
 import com.poyrazoncel.korubeni.emergency.NativeSafetyEventCode
 import com.poyrazoncel.korubeni.emergency.ProcessStartReconcile
@@ -577,16 +578,24 @@ class MainActivity : FlutterFragmentActivity() {
 
     private fun readPickedPhoneContact(uri: Uri): Map<String, String>? {
         val projection = arrayOf(
+            ContactsContract.CommonDataKinds.Phone.NORMALIZED_NUMBER,
             ContactsContract.CommonDataKinds.Phone.NUMBER,
             ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
         )
         contentResolver.query(uri, projection, null, null, null)?.use { cursor ->
             if (cursor.moveToFirst()) {
+                val normalizedIdx =
+                    cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NORMALIZED_NUMBER)
                 val numberIdx =
                     cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)
                 val nameIdx =
                     cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME)
-                val number = if (numberIdx >= 0) cursor.getString(numberIdx) ?: "" else ""
+                // The provider's E.164 form first; the raw NUMBER (no-break
+                // spaces, bidi marks, '/') only when that is absent or unusable.
+                val number = ContactInputBoundary.pickedContactNumber(
+                    normalizedNumber = if (normalizedIdx >= 0) cursor.getString(normalizedIdx) else null,
+                    number = if (numberIdx >= 0) cursor.getString(numberIdx) else null,
+                )
                 val name = if (nameIdx >= 0) cursor.getString(nameIdx) ?: "" else ""
                 return mapOf("number" to number, "name" to name)
             }

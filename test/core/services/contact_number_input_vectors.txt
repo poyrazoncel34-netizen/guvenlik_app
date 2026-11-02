@@ -1,0 +1,126 @@
+# Shared phone-input boundary table -- Dart <-> Kotlin.
+#
+# BOTH sides read THIS file and must reach the same verdict on every line:
+#   test/core/services/contact_number_input_parity_test.dart              (Dart)
+#   android/app/src/test/kotlin/com/poyrazoncel/korubeni/emergency/
+#       ContactNumberInputParityTest.kt                                    (Kotlin)
+#
+# The file is printable ASCII only. Every invisible or non-ASCII character is
+# written as \uXXXX (UTF-16 code unit); a meaningful space at a field edge is
+# written as \u0020 because fields are trimmed.
+#
+# Vector line, five fields separated by " | ":
+#   id | input | sanitized | strict | boundary
+#     sanitized = sanitizeContactInput(input)
+#     strict    = normalizedCallableOrNull(input)      dispatch validator, UNCHANGED
+#     boundary  = normalizedContactInputOrNull(input)  picker + manual entry boundary
+#     REJECT    = null
+#
+# Rule line (starts with @): the COMPLETE definition of the sanitizer. Both
+# sides sweep every code point U+0000..U+FFFF against these rules.
+#   @delete XXXX[-YYYY]  the code point is removed
+#   @space  XXXX[-YYYY]  the code point becomes an ASCII space (U+0020)
+#   @fold   XXXX-YYYY    the code point becomes ASCII (cp - 0xFEE0); a fold
+#                        that yields '/' becomes a space as well
+#   Any code point not listed is kept as-is, so the strict validator still
+#   decides on letters, '*', '#', ',', ';', 'p', 'w', URIs and extensions.
+
+# Invisible formatting: soft hyphen, Arabic letter mark, Mongolian vowel
+# separator, zero-width characters and LRM/RLM, embeddings and overrides,
+# word joiner and invisible operators, isolates and deprecated format
+# characters, BOM.
+@delete 00AD
+@delete 061C
+@delete 180E
+@delete 200B-200F
+@delete 202A-202E
+@delete 2060-2064
+@delete 2066-206F
+@delete FEFF
+
+# Tab, '/', and every Unicode space separator (general category Zs).
+@space 0009
+@space 002F
+@space 00A0
+@space 1680
+@space 2000-200A
+@space 202F
+@space 205F
+@space 3000
+
+# Fullwidth ASCII only. Deliberately NOT a general NFKC: a superscript
+# footnote digit must never join the number.
+@fold FF01-FF5E
+
+# --- Turkish numbers in the formats contact books already use -------------
+tr_mobile_plain | 05321234567 | 05321234567 | 05321234567 | 05321234567
+tr_mobile_spaced | 0532 123 45 67 | 0532 123 45 67 | 05321234567 | 05321234567
+tr_mobile_dashed | 0532-123-45-67 | 0532-123-45-67 | 05321234567 | 05321234567
+tr_mobile_parens_dots | (0532) 123.45.67 | (0532) 123.45.67 | 05321234567 | 05321234567
+tr_e164 | +905321234567 | +905321234567 | +905321234567 | +905321234567
+tr_intl_spaced | +90 532 123 45 67 | +90 532 123 45 67 | +905321234567 | +905321234567
+tr_intl_parens | +90 (532) 123-45-67 | +90 (532) 123-45-67 | +905321234567 | +905321234567
+tr_0090_prefix | 0090 532 123 45 67 | 0090 532 123 45 67 | 00905321234567 | 00905321234567
+edge_spaces | \u0020\u002005321234567\u0020\u0020 | \u0020\u002005321234567\u0020\u0020 | 05321234567 | 05321234567
+
+# --- Contact-book noise: rejected by the strict validator, fixed by the boundary
+nbsp_groups | 0532\u00A0123\u00A045\u00A067 | 0532 123 45 67 | REJECT | 05321234567
+figure_space_u2007 | +90\u2007532\u2007123\u200745\u200767 | +90 532 123 45 67 | REJECT | +905321234567
+narrow_nbsp_u202f | 0532\u202F123\u202F45\u202F67 | 0532 123 45 67 | REJECT | 05321234567
+lrm_rlm_marks | \u200E+90 532 123 45 67\u200F | +90 532 123 45 67 | REJECT | +905321234567
+lre_pdf_wrapper | \u202A+90 532 123 45 67\u202C | +90 532 123 45 67 | REJECT | +905321234567
+rle_pdf_wrapper | \u202B0532 123 45 67\u202C | 0532 123 45 67 | REJECT | 05321234567
+lro_rlo_overrides | \u202D0532\u202E123 45 67\u202C | 0532123 45 67 | REJECT | 05321234567
+bidi_isolates | \u2066+90 532 123 45 67\u2069 | +90 532 123 45 67 | REJECT | +905321234567
+zero_width_and_bom | \uFEFF0532\u200B123\u200C45\u200D67\u2060 | 05321234567 | REJECT | 05321234567
+soft_hyphen | 0532\u00AD123\u00AD4567 | 05321234567 | REJECT | 05321234567
+slash_after_area_code | 0532/123 45 67 | 0532 123 45 67 | REJECT | 05321234567
+slash_landline | 030/1234567 | 030 1234567 | REJECT | 0301234567
+tab_groups | 0532\u0009123\u000945\u000967 | 0532 123 45 67 | REJECT | 05321234567
+ideographic_space | 0532\u3000123\u300045\u300067 | 0532 123 45 67 | REJECT | 05321234567
+fullwidth_digits | \uFF10\uFF15\uFF13\uFF12\uFF11\uFF12\uFF13\uFF14\uFF15\uFF16\uFF17 | 05321234567 | REJECT | 05321234567
+fullwidth_plus_and_punct | \uFF0B\uFF19\uFF10\u3000\uFF08\uFF15\uFF13\uFF12\uFF09\uFF11\uFF12\uFF13\uFF0D\uFF14\uFF15\uFF0E\uFF16\uFF17 | +90 (532)123-45.67 | REJECT | +905321234567
+fullwidth_solidus | \uFF10\uFF15\uFF13\uFF12\uFF0F\uFF11\uFF12\uFF13\uFF14\uFF15\uFF16\uFF17 | 0532 1234567 | REJECT | 05321234567
+mixed_contact_book_noise | \u202A+90\u00A0(532)\u2007123/45\u000967\u202C | +90 (532) 123 45 67 | REJECT | +905321234567
+
+# --- Length boundary: 7..15 digits, unchanged ------------------------------
+min_7_digits | 1234567 | 1234567 | 1234567 | 1234567
+six_digits | 123456 | 123456 | REJECT | REJECT
+six_digits_after_sanitize | 123\u00A0456 | 123 456 | REJECT | REJECT
+max_15_digits | +123456789012345 | +123456789012345 | +123456789012345 | +123456789012345
+sixteen_digits | 1234567890123456 | 1234567890123456 | REJECT | REJECT
+sixteen_digits_plus | +1234567890123456 | +1234567890123456 | REJECT | REJECT
+
+# --- Security boundary: still REJECTED after sanitizing --------------------
+star31hash_clir | *31#05321234567 | *31#05321234567 | REJECT | REJECT
+hash_suffix | 05321234567# | 05321234567# | REJECT | REJECT
+tel_uri | tel:+905321234567 | tel:+905321234567 | REJECT | REJECT
+tel_uri_slashes | tel://05321234567 | tel:  05321234567 | REJECT | REJECT
+comma_pause | 05321234567,123 | 05321234567,123 | REJECT | REJECT
+semicolon_wait | 05321234567;123 | 05321234567;123 | REJECT | REJECT
+p_pause | 05321234567p123 | 05321234567p123 | REJECT | REJECT
+w_wait | 05321234567w123 | 05321234567w123 | REJECT | REJECT
+ext_word | 0532 123 45 67 ext 12 | 0532 123 45 67 ext 12 | REJECT | REJECT
+ext_x | +90 532 123 45 67 x12 | +90 532 123 45 67 x12 | REJECT | REJECT
+ext_rfc3966 | +905321234567;ext=12 | +905321234567;ext=12 | REJECT | REJECT
+letters | 0532 ABC 45 67 | 0532 ABC 45 67 | REJECT | REJECT
+misplaced_plus | 90+5321234567 | 90+5321234567 | REJECT | REJECT
+double_plus | ++905321234567 | ++905321234567 | REJECT | REJECT
+fullwidth_star_hash | \uFF0A\uFF13\uFF11\uFF03\uFF10\uFF15\uFF13\uFF12\uFF11\uFF12\uFF13\uFF14\uFF15\uFF16\uFF17 | *31#05321234567 | REJECT | REJECT
+fullwidth_p_pause | \uFF10\uFF15\uFF13\uFF12\uFF11\uFF12\uFF13\uFF14\uFF15\uFF16\uFF17\uFF50\uFF11 | 05321234567p1 | REJECT | REJECT
+bidi_hidden_extension | \u202A0532 123 45 67\u202C,123 | 0532 123 45 67,123 | REJECT | REJECT
+arabic_indic_digits | +\u0669\u0660\u0665\u0663\u0662\u0661\u0662\u0663\u0664\u0665\u0666\u0667 | +\u0669\u0660\u0665\u0663\u0662\u0661\u0662\u0663\u0664\u0665\u0666\u0667 | REJECT | REJECT
+math_bold_digit | 0532123456\uD835\uDFD5 | 0532123456\uD835\uDFD5 | REJECT | REJECT
+lone_high_surrogate | 0532123456\uD835 | 0532123456\uD835 | REJECT | REJECT
+lone_low_surrogate | \uDFD50532123456 | \uDFD50532123456 | REJECT | REJECT
+split_surrogate_pair | 0532123456\uD835\u200B\uDFD5 | 0532123456\uD835\uDFD5 | REJECT | REJECT
+superscript_footnote | 0532 123 45 67\u00B9 | 0532 123 45 67\u00B9 | REJECT | REJECT
+unicode_hyphen | 0532\u2010123\u201045\u201067 | 0532\u2010123\u201045\u201067 | REJECT | REJECT
+newline | 0532 123\u000A45 67 | 0532 123\u000A45 67 | REJECT | REJECT
+crlf_suffix | +905321234567\u000D\u000A999 | +905321234567\u000D\u000A999 | REJECT | REJECT
+two_numbers_slash | 0532 123 45 67 / 0533 765 43 21 | 0532 123 45 67   0533 765 43 21 | REJECT | REJECT
+
+# --- Nothing to call -------------------------------------------------------
+empty |  |  | REJECT | REJECT
+only_formatting | () - | () - | REJECT | REJECT
+only_invisible | \u200E\u202A\u202C |  | REJECT | REJECT

@@ -28,6 +28,16 @@ Surumleme: `pubspec.yaml` 1.0.0+1'de SABITTIR; gercek `versionCode`
   atladiginda kurulum eksik gorunmeye devam eder.
 
 ### Duzeltildi
+- Rehberden secilen kisinin numarasi bolunmez bosluk, yon isareti, "/", sekme
+  veya tam genislikli rakam iceriyorsa uygulama "Secilen kiside telefon
+  numarasi yok" diyordu; kurulumda acil kisi eklemek bu yuzden takilabiliyordu.
+  Artik numara bu bicimsel karakterlerden temizlenip kaydediliyor. Rehberin
+  standart (+90...) bicimi yalnizca rehberde gorunen numarayla ayni numaraysa
+  kullaniliyor; baska bir uygulamanin gizlice yazdigi farkli bir numara
+  aranmiyor. Numarasi olmayan kisi icin "numara yok", numarasi olup aranamayan
+  kisi icin ayri bir uyari gosteriliyor. Elle giriste ",123" gibi bekleme/dahili
+  ekleri, "*", "#" ve harfler artik sessizce silinip numaraya karistirilmiyor;
+  numara reddediliyor.
 - Ses tusu tetikleyicisi acikken uygulama her ses tusu basisini yutuyordu; uygulama
   acikken ses seviyesi tuslarla hic degistirilemiyordu. Artik yalnizca tetiklemeyi
   tamamlayan basis (2 saniye icindeki 3. basis) yutuluyor, diger basislarda ses

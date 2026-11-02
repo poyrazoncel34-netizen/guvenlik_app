@@ -288,6 +288,7 @@
   "contacts_empty": "Henüz acil durum kişisi eklenmedi.",
   "contacts_message_draft_ready": "Mesaj taslağı hazırlandı",
   "contacts_no_phone": "Seçilen kişide telefon numarası yok",
+  "contacts_picked_invalid_phone": "Seçilen kişinin numarası aranabilir bir numara değil. Numarayı kontrol edip düzeltin veya elle girin.",
   "contacts_already_in_list": "Bu kişi zaten listede",
   "contacts_picker_failed": "Kişi seçici açılamadı",
   "contacts_picker_unavailable_manual": "Bu cihazda geniş rehber erişimi olmadan kişi seçici kullanılamıyor. Acil kişiyi manuel girin.",

@@ -48,6 +48,56 @@ class AndroidIntentService {
     return normalized;
   }
 
+  /// Removes the formatting noise contact books carry -- no-break and other
+  /// Unicode spaces, bidi marks, zero-width characters, '/', tabs, fullwidth
+  /// forms -- WITHOUT widening what is callable: the result still goes
+  /// through [normalizedCallableOrNull], which keeps rejecting letters, '*',
+  /// '#', ',', ';', URIs and extensions.
+  ///
+  /// Mirrors ContactInputBoundary.sanitizeContactInput (Kotlin); both are
+  /// pinned to test/core/services/contact_number_input_vectors.txt.
+  static String sanitizeContactInput(String raw) {
+    final sanitized = StringBuffer();
+    for (final rune in raw.runes) {
+      if (_isInvisibleFormatting(rune)) continue;
+      // Fullwidth ASCII only -- deliberately not a general NFKC, which would
+      // let a superscript footnote digit join the number.
+      final folded = rune >= 0xFF01 && rune <= 0xFF5E ? rune - 0xFEE0 : rune;
+      sanitized.writeCharCode(_isSeparatorSpace(folded) ? 0x20 : folded);
+    }
+    return sanitized.toString();
+  }
+
+  /// The pick and manual-entry boundary: [sanitizeContactInput], then the
+  /// unchanged dispatch rule. What it returns is what gets stored and dialed.
+  static String? normalizedContactInputOrNull(String raw) {
+    return normalizedCallableOrNull(sanitizeContactInput(raw));
+  }
+
+  /// Soft hyphen, Arabic letter mark, Mongolian vowel separator, zero-width
+  /// characters, LRM/RLM, bidi embeddings/overrides/isolates, word joiner,
+  /// invisible operators, deprecated format characters and the BOM.
+  static bool _isInvisibleFormatting(int rune) =>
+      rune == 0x00AD ||
+      rune == 0x061C ||
+      rune == 0x180E ||
+      (rune >= 0x200B && rune <= 0x200F) ||
+      (rune >= 0x202A && rune <= 0x202E) ||
+      (rune >= 0x2060 && rune <= 0x2064) ||
+      (rune >= 0x2066 && rune <= 0x206F) ||
+      rune == 0xFEFF;
+
+  /// Tab, '/' and every Unicode space separator (general category Zs).
+  static bool _isSeparatorSpace(int rune) =>
+      rune == 0x09 ||
+      rune == 0x2F ||
+      rune == 0x00A0 ||
+      rune == 0x1680 ||
+      (rune >= 0x2000 && rune <= 0x200A) ||
+      rune == 0x202F ||
+      rune == 0x205F ||
+      rune == 0x3000;
+
   static Future<bool> openDialer(String number) async {
     final normalized = normalizedCallableOrNull(number);
     if (normalized == null) return false;

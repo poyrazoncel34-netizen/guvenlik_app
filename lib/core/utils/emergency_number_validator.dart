@@ -20,4 +20,17 @@ class EmergencyNumberValidator {
   static String? normalizedCallableTargetOrNull(String number) {
     return AndroidIntentService.normalizedCallableOrNull(number);
   }
+
+  /// Contact-book formatting removed and nothing else; see
+  /// [AndroidIntentService.sanitizeContactInput].
+  static String sanitizeContactInput(String raw) {
+    return AndroidIntentService.sanitizeContactInput(raw);
+  }
+
+  /// The single boundary for a number the user typed or picked: sanitized,
+  /// then held to the same rule as the dispatch path. The contacts page and
+  /// onboarding both store exactly what this returns.
+  static String? normalizedContactInputOrNull(String raw) {
+    return AndroidIntentService.normalizedContactInputOrNull(raw);
+  }
 }

@@ -288,6 +288,7 @@
   "contacts_empty": "No emergency contacts yet",
   "contacts_message_draft_ready": "Message draft ready",
   "contacts_no_phone": "Selected contact has no phone number",
+  "contacts_picked_invalid_phone": "The selected contact's number cannot be called. Check and correct it, or type it in manually.",
   "contacts_already_in_list": "This contact is already in the list",
   "contacts_picker_failed": "Could not open the contact picker",
   "contacts_picker_unavailable_manual": "Contact picker is unavailable without broad contacts access on this device. Enter the emergency contact manually.",

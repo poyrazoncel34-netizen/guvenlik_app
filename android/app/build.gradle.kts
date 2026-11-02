@@ -240,6 +240,9 @@ android {
             isIncludeAndroidResources = true
             all {
                 it.jvmArgs("-noverify", "-Xmx2g")
+                // ContactNumberInputParityTest reads the Dart<->Kotlin table from the
+                // Flutter tree; declared so an edit to the table alone re-runs the task.
+                it.inputs.file(rootProject.file("../test/core/services/contact_number_input_vectors.txt"))
             }
         }
     }

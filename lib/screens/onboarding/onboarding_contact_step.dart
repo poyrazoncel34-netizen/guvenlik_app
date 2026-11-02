@@ -273,16 +273,21 @@ class _OnboardingContactStepState extends State<OnboardingContactStep>
       setState(() => _failureKey = 'onboarding_contact_picker_failed');
       return;
     }
-    final picked = result.contact;
+    if (result.status == ContactPickStatus.noNumber) {
+      setState(() => _failureKey = result.failureMessageKey);
+      return;
+    }
+    // A callable pick arrives canonical. An uncallable one is shown as the
+    // contact book holds it (sanitized) so it can be corrected, with the same
+    // message the contacts page uses -- never "no number".
+    final picked = result.contact ?? result.rejected;
     if (picked == null) return; // cancelled
 
     setState(() {
       _failureKey = null;
       _nameController.value.text = picked.name;
       _phoneController.value.text = picked.number;
-      _setPhoneErrorKey(
-        OnboardingContactGateService.phoneErrorKey(picked.number),
-      );
+      _setPhoneErrorKey(result.failureMessageKey);
     });
   }
 

@@ -33,13 +33,26 @@ void main() {
     });
 
     test('validates and normalizes picker number before addContact', () {
-      final source = File('lib/screens/contacts_page.dart').readAsStringSync();
+      // The picker service classifies every reply through the shared
+      // pick/manual-entry boundary; the page consumes that verdict and never
+      // validates (or forgets to validate) a picked number on its own.
+      final service = File(
+        'lib/core/services/native_contact_picker_service.dart',
+      ).readAsStringSync();
       expect(
-        source.contains('normalizedCallableTargetOrNull('),
+        service.contains('EmergencyNumberValidator.normalizedContactInputOrNull('),
         isTrue,
         reason:
-            '_pickContactFromDevice must reject URI/dial syntax and normalize '
-            'the number before calling addContact',
+            'The picker must reject URI/dial syntax and normalize the number '
+            'before any screen can call addContact with it',
+      );
+      final source = File('lib/screens/contacts_page.dart').readAsStringSync();
+      expect(
+        source.contains('result.failureMessageKey'),
+        isTrue,
+        reason:
+            '_pickContactFromDevice must stop on a missing or uncallable '
+            'number with the shared message, before addContact',
       );
     });
   });
@@ -56,9 +69,10 @@ void main() {
       expect(source, contains('contacts_manual_phone_label'));
       expect(
         source,
-        contains('EmergencyNumberValidator.normalizedCallableTargetOrNull'),
+        contains('EmergencyNumberValidator.normalizedContactInputOrNull'),
         reason:
-            'Manual entries must reject invalid/hostile syntax and normalize '
+            'Manual entries must pass the same sanitize-then-strict boundary '
+            'as picked numbers: reject invalid/hostile syntax and normalize '
             'the accepted target atomically.',
       );
       expect(
@@ -97,9 +111,10 @@ void main() {
 
     test('treats picker cancel as a handled no-op', () {
       final source = File('lib/screens/contacts_page.dart').readAsStringSync();
-      // Cancel / no-number comes back as a typed cancelled outcome, not an
-      // exception — the method returns quietly. An unavailable picker is a
-      // distinct outcome and is the only one that surfaces a failure.
+      // Cancel comes back as a typed cancelled outcome, not an exception —
+      // the method returns quietly. An unavailable picker, a contact without
+      // a number and an uncallable number are distinct outcomes that surface
+      // a message (test/core/services/native_contact_picker_classification_test.dart).
       expect(
         source.contains('if (picked == null)'),
         isTrue,
