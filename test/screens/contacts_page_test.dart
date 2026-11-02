@@ -60,13 +60,18 @@ void main() {
   group('ContactsPage manual entry', () {
     test('contains manual entry UI and validation path', () {
       final source = File('lib/screens/contacts_page.dart').readAsStringSync();
+      // The sheet's fields moved into AddContactSheet; the add flow and its
+      // validation boundary stayed on the page.
+      final sheet = File(
+        'lib/core/widgets/add_contact_sheet.dart',
+      ).readAsStringSync();
       expect(
         source,
         contains('Future<void> _addManualContact'),
         reason:
             'Manual entry is the release-safe fallback when READ_CONTACTS is not requested.',
       );
-      expect(source, contains('contacts_manual_phone_label'));
+      expect(sheet, contains('contacts_manual_phone_label'));
       expect(
         source,
         contains('EmergencyNumberValidator.normalizedContactInputOrNull'),
@@ -76,7 +81,7 @@ void main() {
             'the accepted target atomically.',
       );
       expect(
-        source,
+        sheet,
         contains('LengthLimitingTextInputFormatter'),
         reason: 'Manual phone input must be bounded before validation.',
       );

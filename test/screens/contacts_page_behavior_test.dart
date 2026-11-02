@@ -518,5 +518,54 @@ void main() {
       await confirmConsentAndAdd(tester);
       expect(repository.records.single.phone, '05321234567');
     });
+
+    // The sheet owns its text controllers and the phone focus node. The
+    // route's future resolves at pop while the exit animation still runs, and
+    // focus leaving the closing route rebuilds the fields; disposing them as
+    // soon as that future resolved crashed those last frames in debug builds.
+    testWidgets('the sheet releases its controllers only after it has fully '
+        'closed', (tester) async {
+      final phone = await openManualPhoneField(tester);
+      await tester.enterText(phone, '0532');
+      // Also lets the sheet's 300 ms focus-reveal delay run out.
+      await tester.pump(const Duration(milliseconds: 400));
+      final phoneFocus = tester
+          .widget<EditableText>(
+            find.descendant(of: phone, matching: find.byType(EditableText)),
+          )
+          .focusNode;
+      final owned = <String, ChangeNotifier>{
+        'name controller': tester
+            .widget<TextField>(find.widgetWithText(TextField, 'Ad'))
+            .controller!,
+        'phone controller': tester.widget<TextFormField>(phone).controller!,
+        'phone focus node': phoneFocus,
+      };
+      expect(phoneFocus.hasFocus, isTrue);
+
+      // Android: the first Back only hides the keyboard and the field keeps
+      // focus; the second Back closes the sheet.
+      await tester.binding.handlePopRoute();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(find.text('Yeni Kişi Ekle'), findsOneWidget, reason: 'mid exit');
+      for (final entry in owned.entries) {
+        expect(
+          () => ChangeNotifier.debugAssertNotDisposed(entry.value),
+          returnsNormally,
+          reason: 'the closing route still builds the ${entry.key}',
+        );
+      }
+
+      await tester.pumpAndSettle();
+      expect(find.text('Yeni Kişi Ekle'), findsNothing);
+      for (final entry in owned.entries) {
+        expect(
+          () => ChangeNotifier.debugAssertNotDisposed(entry.value),
+          throwsFlutterError,
+          reason: 'the ${entry.key} is released with the route',
+        );
+      }
+    });
   });
 }

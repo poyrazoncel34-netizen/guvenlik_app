@@ -8,15 +8,18 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   test('add-contact sheet lifts the focused phone field above the keyboard',
       () {
-    final src = File('lib/screens/contacts_page.dart').readAsStringSync();
+    final page = File('lib/screens/contacts_page.dart').readAsStringSync();
+    // The sheet's tree and its focus node live in AddContactSheet; the page
+    // keeps the showModalBottomSheet call.
+    final src = File('lib/core/widgets/add_contact_sheet.dart').readAsStringSync();
     // sheet keeps the proven keyboard-aware base
-    expect(src.contains('isScrollControlled: true'), isTrue);
-    expect(src.contains('MediaQuery.of(sheetContext).viewInsets.bottom'), isTrue);
+    expect(page.contains('isScrollControlled: true'), isTrue);
+    expect(src.contains('MediaQuery.of(context).viewInsets.bottom'), isTrue);
     // phone field has a focus node that drives ensure-visible
-    expect(src.contains('phoneFocusNode'), isTrue);
-    expect(src.contains('focusNode: phoneFocusNode'), isTrue);
+    expect(src.contains('_phoneFocusNode'), isTrue);
+    expect(src.contains('focusNode: _phoneFocusNode'), isTrue);
     expect(src.contains('Scrollable.ensureVisible'), isTrue);
     // focus node is disposed
-    expect(src.contains('phoneFocusNode.dispose()'), isTrue);
+    expect(src.contains('_phoneFocusNode.dispose()'), isTrue);
   });
 }

@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:guvenlik_app/screens/contacts_page.dart';
+import 'package:guvenlik_app/core/widgets/add_contact_sheet.dart';
 
 /// S10b regression: a manually entered emergency-contact phone number must be
 /// validated for length/format. manualContactPhoneError returns an error
