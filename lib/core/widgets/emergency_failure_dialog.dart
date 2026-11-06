@@ -5,8 +5,10 @@ import 'package:flutter/services.dart';
 import '../app_colors.dart';
 import '../design_tokens.dart';
 import '../services/android_intent_service.dart';
-import '../services/emergency_platform_service.dart';
+import '../services/arm_remedy.dart';
 import '../services/emergency_result_policy.dart';
+import 'arm_remedy_button.dart';
+import 'arm_remedy_launcher.dart';
 import 'dispatch_outcome_list.dart';
 import '../navigation/own_route.dart';
 
@@ -30,6 +32,7 @@ abstract final class EmergencyFailureDialog {
     required String phoneNumber,
     String? emergencyMessage,
     bool popHostOnDismiss = false,
+    ArmRemedyLauncher remedyLauncher = const ArmRemedyLauncher(),
   }) {
     return showDialog<void>(
       context: context,
@@ -153,29 +156,10 @@ abstract final class EmergencyFailureDialog {
                   ),
                 ),
               ),
-            // Y-11: the refusal the user can fix here. The dialog stays up;
-            // the panic is pressed again after returning from Settings.
-            if (copy.offersBackgroundProtection)
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: () => EmergencyPlatformService.instance
-                      .requestExactAlarmPermission(),
-                  icon: const Icon(
-                    Icons.settings_rounded,
-                    size: IconSizes.listItem,
-                  ),
-                  label: Text('background_protection_open'.tr()),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.white,
-                    side: const BorderSide(color: Colors.white38),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                ),
-              ),
+            // Y-11, widened 2026-11-02: the fix for the refusal, one tap away.
+            // The dialog stays up; the panic is pressed again afterwards.
+            if (copy.remedy case final ArmRemedy remedy)
+              ArmRemedyButton(remedy: remedy, launcher: remedyLauncher),
             if (emergencyMessage != null)
               SizedBox(
                 width: double.infinity,

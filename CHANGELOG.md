@@ -28,6 +28,18 @@ Surumleme: `pubspec.yaml` 1.0.0+1'de SABITTIR; gercek `versionCode`
   atladiginda kurulum eksik gorunmeye devam eder.
 
 ### Duzeltildi
+- Panik reddedildiginde acilan pencerede cogu durumda yalnizca "Kapat" dugmesi
+  vardi. Ornegin Android 14 ve uzerinde yeni kurulumda kapali gelen alarm
+  erisimi yuzunden yeni bir Pro kullanicinin ilk gercek panigi reddediliyor ve
+  pencere ne yapilacagini gostermiyordu. Artik pencere her ret nedeni icin
+  duzeltmeyi tek dokunusla aciyor (alarm erisimi, arama izni, bildirim
+  ayarlari, "Acil Bildirimler" kanali, acil kisi, PIN, abonelik). Cihaz ya da
+  surum kaynakli retlerde acil kisiyi hemen arama secenegi de sunuluyor.
+  Ayarlardan donunce pencere eksik kalan bir sonraki izni gosteriyor. Ret
+  kurali degismedi: koruma kurulamiyorsa panik yine baslatilmiyor.
+- Ana ekrandaki "Arka Plan Hazirligi" yalnizca "Acil Bildirimler" kanali
+  kisildiginda artik uygulamanin genel bildirim sayfasini degil, dogrudan o
+  kanalin ayarini aciyor.
 - Rehberden secilen kisinin numarasi bolunmez bosluk, yon isareti, "/", sekme
   veya tam genislikli rakam iceriyorsa uygulama "Secilen kiside telefon
   numarasi yok" diyordu; kurulumda acil kisi eklemek bu yuzden takilabiliyordu.

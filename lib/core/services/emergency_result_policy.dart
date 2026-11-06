@@ -56,6 +56,7 @@
 /// apart again without changing a shared rule.
 library;
 
+import 'arm_remedy.dart';
 import 'call_service.dart';
 import 'dispatch_outcome.dart';
 
@@ -107,6 +108,7 @@ class EmergencyFailureCopy {
     required this.bodyKey,
     required this.claimsNothingCompleted,
     required this.ledger,
+    this.remedy,
   });
 
   /// Translation key for the heading.
@@ -128,10 +130,9 @@ class EmergencyFailureCopy {
   /// How many targets the copy is allowed to say were reached.
   int get reachedCount => ledger?.reachedCount ?? 0;
 
-  /// Whether the surface offers the exact-alarm settings: the one refusal the
-  /// user can fix from here (Y-11).
-  bool get offersBackgroundProtection =>
-      bodyKey == EmergencyResultPolicy.exactAlarmRequiredBodyKey;
+  /// What the surface offers to FIX a refused arm (2026-11-02). Only an arm
+  /// refusal has one: after a dispatch the moment to fix settings has passed.
+  final ArmRemedy? remedy;
 }
 
 /// One dispatch's user-facing outcome, decided from the call result AND the
@@ -182,10 +183,15 @@ abstract final class EmergencyResultPolicy {
   /// sentence. It is honoured ONLY while the total-failure claim holds: an
   /// override cannot be used to reintroduce an absolute statement over a ledger
   /// that reached targets.
+  ///
+  /// [refusal] is the arm-rejection path's sentence AND fix in one value; its
+  /// sentence takes the place of [bodyKeyOverride], and its fix is kept for
+  /// [EmergencyFailureReason.armRejected] only.
   static EmergencyFailureCopy failureCopy({
     required EmergencyFailureReason reason,
     DispatchOutcomeLedger? ledger,
     String? bodyKeyOverride,
+    ArmRefusal? refusal,
   }) {
     // armRejected and dispatchThrew both mean "no target was attempted", so a
     // ledger handed in for them is not evidence of anything reaching anyone.
@@ -214,9 +220,12 @@ abstract final class EmergencyResultPolicy {
     }
     return EmergencyFailureCopy._(
       titleKey: totalFailureTitleKey,
-      bodyKey: bodyKeyOverride ?? totalFailureBodyKey,
+      bodyKey: refusal?.bodyKey ?? bodyKeyOverride ?? totalFailureBodyKey,
       claimsNothingCompleted: true,
       ledger: effectiveLedger,
+      remedy: reason == EmergencyFailureReason.armRejected
+          ? refusal?.remedy
+          : null,
     );
   }
 

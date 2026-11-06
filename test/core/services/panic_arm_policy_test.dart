@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:guvenlik_app/core/services/arm_remedy.dart';
 import 'package:guvenlik_app/core/services/emergency_result_policy.dart';
 import 'package:guvenlik_app/core/services/emergency_session_contract.dart';
 import 'package:guvenlik_app/core/services/panic_arm_policy.dart';
@@ -72,14 +73,19 @@ void main() {
       );
     });
 
+    // Built exactly the way the countdown builds it.
     EmergencyFailureCopy copyFor(ArmResult result) =>
         EmergencyResultPolicy.failureCopy(
           reason: EmergencyFailureReason.armRejected,
-          bodyKeyOverride: PanicArmPolicy.blockedMessageKey(result),
+          refusal: PanicArmPolicy.refusalFor(result),
         );
 
     test('offers background protection and a call to the armed target', () {
-      expect(copyFor(denied).offersBackgroundProtection, isTrue);
+      expect(copyFor(denied).remedy, ArmRemedy.exactAlarm);
+      expect(
+        copyFor(denied).bodyKey,
+        EmergencyResultPolicy.exactAlarmRequiredBodyKey,
+      );
       expect(
         PanicArmPolicy.manualDialNumber(denied, '+905001234567'),
         '+905001234567',
@@ -94,10 +100,8 @@ void main() {
         'platformBridgeMissing',
       }) {
         expect(
-          copyFor(
-            ArmRejected(reason, rejectedToken: token),
-          ).offersBackgroundProtection,
-          isFalse,
+          copyFor(ArmRejected(reason, rejectedToken: token)).remedy,
+          isNot(ArmRemedy.exactAlarm),
           reason: reason,
         );
       }
@@ -180,6 +184,10 @@ void main() {
       expect(PanicArmPolicy.manualDialNumber(bridgeMissing, null), '');
     });
 
+    // unsupportedOs left this list on 2026-11-02 (owner decision): the system
+    // dialer works on any Android, and a refusal nothing can fix must not end
+    // on a dialog with nothing to press. invalidTarget joined it: the native
+    // side rejected the number itself.
     test('never offers a call for authorization or target refusals', () {
       for (final reason in <String>{
         'entitlementDenied',
@@ -188,7 +196,7 @@ void main() {
         'pinReadFailed',
         'targetNotCallable',
         'callableTargetMissing',
-        'unsupportedOs',
+        'invalidTarget',
       }) {
         expect(
           PanicArmPolicy.manualDialNumber(

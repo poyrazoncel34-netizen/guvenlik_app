@@ -281,7 +281,7 @@ class _CountdownScreenState extends State<CountdownScreen>
         context,
         copy: EmergencyResultPolicy.failureCopy(
           reason: EmergencyFailureReason.armRejected,
-          bodyKeyOverride: PanicArmPolicy.blockedMessageKey(armResult),
+          refusal: PanicArmPolicy.refusalFor(armResult),
         ),
         phoneNumber: PanicArmPolicy.manualDialNumber(armResult, _armedTargetNumber),
         popHostOnDismiss: true,

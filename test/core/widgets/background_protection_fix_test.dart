@@ -41,10 +41,25 @@ void main() {
 
   late List<String> nativeCalls;
   late int notificationSettingsOpened;
+  late List<MethodCall> settingsCalls;
 
   Future<BuildContext> pumpHost(WidgetTester tester) async {
     nativeCalls = <String>[];
     notificationSettingsOpened = 0;
+    settingsCalls = <MethodCall>[];
+    const settings = MethodChannel('com.poyrazoncel.korubeni/settings');
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(settings, (
+      call,
+    ) async {
+      settingsCalls.add(call);
+      return true;
+    });
+    addTearDown(
+      () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        settings,
+        null,
+      ),
+    );
     const channel = MethodChannel('background-protection-fix');
     tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(channel, (
       call,
@@ -107,14 +122,39 @@ void main() {
     expect(find.byType(BatteryOptimizationWizard), findsNothing);
   });
 
-  testWidgets('missing notifications or alert channel opens notification '
-      'settings', (tester) async {
+  testWidgets('missing notifications opens the app notification settings', (
+    tester,
+  ) async {
     final context = await pumpHost(tester);
     await open(tester, context, _readiness(notifications: false));
-    await open(tester, context, _readiness(alertChannel: false));
+    // Both off: notifications first, as native refuses them first.
+    await open(
+      tester,
+      context,
+      _readiness(notifications: false, alertChannel: false),
+    );
 
     expect(notificationSettingsOpened, 2);
     expect(nativeCalls, isEmpty);
+    expect(settingsCalls, isEmpty);
+  });
+
+  // 2026-11-02: with notifications on, the app page is one screen short of
+  // the switch that is off; the channel's own screen
+  // (ACTION_CHANNEL_NOTIFICATION_SETTINGS) is where it is.
+  testWidgets('a lowered alert channel opens that channel, not the app page', (
+    tester,
+  ) async {
+    final context = await pumpHost(tester);
+    await open(tester, context, _readiness(alertChannel: false));
+
+    expect(notificationSettingsOpened, 0);
+    expect(nativeCalls, isEmpty);
+    expect(settingsCalls, hasLength(1));
+    expect(settingsCalls.single.method, 'openNotificationChannelSettings');
+    expect(settingsCalls.single.arguments, <String, Object?>{
+      'channelId': 'emergency_alerts',
+    });
   });
 
   testWidgets('with every alert prerequisite in place it is the battery '
