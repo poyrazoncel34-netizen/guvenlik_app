@@ -443,6 +443,8 @@
   "perm_location_prominent_msg": "KoruBeni needs location access to show your real location on the map screen. Your location is read only while the map screen is open; the app does not store it or send it to developer servers. Map images are downloaded from OpenStreetMap servers.",
   "perm_call_prominent_title": "Phone Call Permission Required",
   "perm_call_prominent_msg": "KoruBeni needs phone call permission to initiate a call to your emergency contact during a panic alert. On dual-SIM phones, the same permission lets KoruBeni choose the SIM so the call does not wait in the SIM picker; your phone number and device ID are not read. Without this permission, the dialer opens and you must press the green call button.",
+  "perm_sim_prominent_title": "SIM Selection Permission",
+  "perm_sim_prominent_msg": "On dual-SIM phones, KoruBeni chooses which SIM places the emergency call so the call does not wait in the SIM picker. This needs the phone state permission; your phone number and device ID are not read. If you decline, the call is still started, but your phone may wait for you to choose a SIM.",
   "perm_call_denied_title": "Phone permission is off",
   "perm_call_denied_msg": "Automatic call-request submission is disabled in Android settings. KoruBeni will open the dialer instead; you must press the call button manually. Enable phone permission in Settings to allow Telecom requests for user-armed safety flows.",
   "perm_battery_prominent_title": "Optional Battery Optimization Exemption",

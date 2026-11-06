@@ -26,6 +26,9 @@ class AppConstants {
   // channel) has run with a readable device state on this install.
   static const String prefPanicReadinessSetupOffered =
       'pref_panic_readiness_setup_offered';
+  // Set once the READ_PHONE_STATE (emergency-call SIM choice) disclosure has
+  // been offered to an install that already had CALL_PHONE.
+  static const String prefSimSelectionOffered = 'pref_sim_selection_offered';
   static const String prefVolumeTrigger = 'pref_volume_trigger';
 
   // One-time cleanup flag for the removed medical-profile feature (KVKK Md.7).

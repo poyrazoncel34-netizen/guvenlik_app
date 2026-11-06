@@ -443,6 +443,8 @@
   "perm_location_prominent_msg": "KoruBeni, harita ekranında gerçek konumunuzu göstermek için konum iznine ihtiyaç duyar. Konumunuz yalnız harita ekranı açıkken okunur; uygulama onu kaydetmez ve geliştirici sunucusuna göndermez. Harita görüntüleri OpenStreetMap sunucularından indirilir.",
   "perm_call_prominent_title": "Telefon Arama İzni Gerekli",
   "perm_call_prominent_msg": "KoruBeni, panik durumunda acil durum kişiniz için arama başlatabilmek amacıyla telefon arama iznine ihtiyaç duyar. Çift SIM'li telefonlarda arama SIM seçme penceresinde beklemesin diye, hangi hattan aranacağı da bu izinle belirlenir; telefon numaranız veya cihaz kimliğiniz okunmaz. Bu izin verilmezse arama ekranı açılır ve yeşil tuşa basmanız gerekir.",
+  "perm_sim_prominent_title": "SIM Seçimi İzni",
+  "perm_sim_prominent_msg": "Çift SIM'li telefonlarda acil arama SIM seçme penceresinde beklemesin diye KoruBeni aramanın hangi hattan yapılacağını belirler. Bunun için telefon durumu iznine ihtiyaç duyar; telefon numaranız veya cihaz kimliğiniz okunmaz. İzin vermezseniz arama yine başlatılır, ancak telefonunuz SIM seçmenizi bekleyebilir.",
   "perm_call_denied_title": "Telefon izni kapalı",
   "perm_call_denied_msg": "Otomatik arama isteği Android ayarlarında kapalı. KoruBeni bunun yerine arama ekranını açar; aramayı manuel başlatmak için arama tuşuna basmanız gerekir. Kullanıcı tarafından arm edilen güvenlik akışlarında Telecom isteğine izin vermek için Ayarlar'dan telefon iznini açın.",
   "perm_battery_prominent_title": "Opsiyonel Pil Optimizasyonu Muafiyeti",

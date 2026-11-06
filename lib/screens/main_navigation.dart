@@ -15,6 +15,7 @@ import '../core/services/reduced_motion_policy.dart';
 import '../core/constants/app_constants.dart';
 import '../core/utils/permission_helper.dart';
 import '../core/widgets/panic_readiness_setup.dart';
+import '../core/widgets/sim_selection_offer.dart';
 import '../presentation/providers/subscription_provider.dart';
 // Firebase and notification services removed (offline-first)
 import '../widgets/connectivity_banner.dart';
@@ -296,6 +297,11 @@ class _MainNavigationState extends State<MainNavigation>
     }
     if (!mounted) return;
     await PanicReadinessSetup.offerOnce(
+      context,
+      emergencyAuthorized: subscription.canUseEmergencyFeature,
+    );
+    if (!mounted) return;
+    await SimSelectionOffer.offerOnce(
       context,
       emergencyAuthorized: subscription.canUseEmergencyFeature,
     );

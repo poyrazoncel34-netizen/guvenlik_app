@@ -146,6 +146,23 @@ class PermissionHelper {
     return result.isGranted;
   }
 
+  /// The rest of the phone group (READ_PHONE_STATE) for an install that
+  /// already holds CALL_PHONE: lets native place the emergency call on an
+  /// explicit SIM. Prominent disclosure first; a decline is final here (no
+  /// Settings detour) because the call still goes out without it.
+  static Future<void> requestSimSelectionPermission(
+    BuildContext context,
+  ) async {
+    if (!Platform.isAndroid) return;
+    final accepted = await _showProminentDisclosure(
+      context,
+      title: 'perm_sim_prominent_title'.tr(),
+      message: 'perm_sim_prominent_msg'.tr(),
+    );
+    if (accepted != true) return;
+    await Permission.phone.request();
+  }
+
   static Future<bool> hasNotificationPermission() async {
     if (kIsWeb) return true;
     if (!Platform.isAndroid && !Platform.isIOS) return true;
