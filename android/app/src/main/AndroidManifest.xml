@@ -27,6 +27,14 @@
          a Telecom call request. Connection is never claimed; denied permission
          is handled as an explicit not-ready/manual-dial outcome. -->
     <uses-permission android:name="android.permission.CALL_PHONE" />
+    <!-- READ_PHONE_STATE: read-only, used solely to choose the SIM account an
+         emergency call is placed on. On dual-SIM phones set to "ask every
+         time", a call without an explicit account waits in Telecom's SIM
+         picker, which a locked or pocketed phone never answers. No phone
+         number, device ID or call state is read. Requested in the same
+         runtime dialog as CALL_PHONE; if denied, the call is placed without an
+         explicit account exactly as before. -->
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-feature
         android:name="android.hardware.telephony"
         android:required="true" />

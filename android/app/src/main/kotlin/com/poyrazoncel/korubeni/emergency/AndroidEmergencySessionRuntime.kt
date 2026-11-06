@@ -108,10 +108,16 @@ class AndroidEmergencyCallRequester(
         }
         val telecom = context.getSystemService(Context.TELECOM_SERVICE) as? TelecomManager
             ?: return CallRequestOutcome.FAILED
+        // Dual-SIM "ask every time" would park the call in Telecom's SIM
+        // picker, which a locked or pocketed phone never answers. Selection
+        // failure is absorbed: the call then goes out without an account.
+        val extras = Bundle()
+        PhoneAccountSelector.select(AndroidPhoneAccountSource(context, telecom)).handle
+            ?.let { extras.putParcelable(TelecomManager.EXTRA_PHONE_ACCOUNT_HANDLE, it) }
         return try {
             // This proves only that the request was submitted to Android's
             // Telecom service. Ringing/connection state remains unknowable.
-            telecom.placeCall(Uri.fromParts("tel", cleaned, null), Bundle())
+            telecom.placeCall(Uri.fromParts("tel", cleaned, null), extras)
             CallRequestOutcome.SUBMITTED_UNCONFIRMED
         } catch (_: SecurityException) {
             CallRequestOutcome.FAILED

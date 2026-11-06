@@ -217,8 +217,14 @@ If exact alarm access is denied or unavailable, Check-In, Safe Walk, and schedul
 KoruBeni requests battery optimization exemption only as an optional reliability improvement for active user-started safety sessions such as Safe Walk and check-in. Android and OEM battery settings may still affect behavior. The user can decline, and the app explains that timer/background reliability may be degraded.
 ```
 
-> Not: `READ_CONTACTS` istenmez (sistem seçici/manuel giriş), `READ_PHONE_STATE`
-> yok, `ACCESS_BACKGROUND_LOCATION` yok, SMS izni yok.
+> Not: `READ_CONTACTS` istenmez (sistem seçici/manuel giriş),
+> `ACCESS_BACKGROUND_LOCATION` yok, SMS izni yok. `READ_PHONE_STATE` YALNIZCA
+> acil aramanın hangi SIM'den çıkacağını seçmek için var (çift SIM + "her
+> seferinde sor" iken arama SIM seçme penceresinde bekliyordu); numara, cihaz
+> kimliği veya arama durumu okunmaz, cihaz dışına veri çıkmaz. Beyan formu
+> listesinde değil (yalnız SMS/Call Log grupları); Data safety'de veri
+> toplama/paylaşım yok olarak kalır — Console'da yeni izin uyarısı görülürse
+> bu gerekçeyi kullan.
 
 ### 3.9 Diğer App content kalemleri
 

@@ -33,6 +33,11 @@ Surumleme: `pubspec.yaml` 1.0.0+1'de SABITTIR; gercek `versionCode`
   kalan izinlerle devam ediyor.
 
 ### Duzeltildi
+- Cift SIM'li ve "her seferinde sor" ayarli telefonlarda acil arama artik SIM
+  secme penceresinde beklemiyor: arama varsayilan hatta, varsayilan yoksa aktif
+  bir SIM'e yonlendiriliyor. Bunun icin telefon izni penceresi, hangi hattan
+  aranacagini okuma iznini de (READ_PHONE_STATE) istiyor; telefon numaraniz veya
+  cihaz kimliginiz okunmuyor. Izin verilmezse arama eskisi gibi baslatiliyor.
 - Panik reddedildiginde acilan pencerede cogu durumda yalnizca "Kapat" dugmesi
   vardi. Ornegin Android 14 ve uzerinde yeni kurulumda kapali gelen alarm
   erisimi yuzunden yeni bir Pro kullanicinin ilk gercek panigi reddediliyor ve

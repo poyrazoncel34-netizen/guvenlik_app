@@ -75,6 +75,7 @@ EXPECTED_ANDROID_PERMISSIONS = {
     "android.permission.CALL_PHONE",
     "android.permission.INTERNET",
     "android.permission.POST_NOTIFICATIONS",
+    "android.permission.READ_PHONE_STATE",
     "android.permission.RECEIVE_BOOT_COMPLETED",
     "android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS",
     "android.permission.SCHEDULE_EXACT_ALARM",

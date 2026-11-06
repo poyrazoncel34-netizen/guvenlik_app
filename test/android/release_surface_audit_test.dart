@@ -22,6 +22,7 @@ String _validManifest({
   <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
   <uses-permission android:name="android.permission.VIBRATE" />
   <uses-permission android:name="android.permission.CALL_PHONE" />
+  <uses-permission android:name="android.permission.READ_PHONE_STATE" />
   <uses-permission android:name="android.permission.WAKE_LOCK" />
   <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
   <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
@@ -154,7 +155,7 @@ void main() {
     expect(report['status'], 'PASS');
     expect(report['expectedPackage'], _packageName);
     expect(report['manifestSha256'], matches(RegExp(r'^[0-9a-f]{64}$')));
-    expect(report['permissionCount'], 13);
+    expect(report['permissionCount'], 14);
     expect(report['unprotectedExportedComponents'], isEmpty);
   });
 

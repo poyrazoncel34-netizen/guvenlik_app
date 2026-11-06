@@ -13,7 +13,7 @@ Dashboard completion is PLAY_CONSOLE / NEEDS_OPERATOR_ACTION. This file only pre
 | `USE_FULL_SCREEN_INTENT` | Not requested; urgent events use heads-up notifications | NOT_APPLICABLE; remove stale Console declaration |
 | `POST_NOTIFICATIONS` | User-visible safety notifications/reminders | CODE_DONE copy prepared |
 | Message/SMS permissions | Not present in this Android Play release | CODE_DONE |
-| `READ_PHONE_STATE` | Not present; fake call is an on-device simulation | CODE_DONE |
+| `READ_PHONE_STATE` | Read-only SIM account choice for the emergency call (dual-SIM "ask every time" would otherwise park the call in the SIM picker); no phone number, device ID or call state is read; fake call stays an on-device simulation | CODE_DONE; not on the Play declaration-form list (SMS/Call Log groups); review Data safety |
 | `ACCESS_BACKGROUND_LOCATION` | Not present | CODE_DONE |
 
 ## Foreground Service — NOT APPLICABLE

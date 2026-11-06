@@ -71,6 +71,9 @@ void main() {
         'android.permission.POST_NOTIFICATIONS',
         'android.permission.VIBRATE',
         'android.permission.CALL_PHONE',
+        // SIM account choice for the emergency call (dual-SIM "ask every
+        // time"); see phone_state_disclosure_test.dart.
+        'android.permission.READ_PHONE_STATE',
         'android.permission.WAKE_LOCK',
         'android.permission.RECEIVE_BOOT_COMPLETED',
         'android.permission.SCHEDULE_EXACT_ALARM',

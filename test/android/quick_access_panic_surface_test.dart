@@ -289,7 +289,9 @@ void main() {
           .map((m) => m.group(1))
           .toSet();
 
-      expect(permissions, hasLength(13));
+      // 14 since READ_PHONE_STATE (emergency-call SIM choice); the tile
+      // itself still adds none.
+      expect(permissions, hasLength(14));
       expect(
         permissions.any((p) => p!.contains('QUICK_SETTINGS')),
         isFalse,
