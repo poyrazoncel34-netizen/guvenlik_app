@@ -78,7 +78,12 @@ enum LocalWarningCode {
   /// attempts. Previously this failure reached nothing but `debugPrint`, which
   /// release compiles out, so the one surface enforcing the lockout silently
   /// stopped enforcing it. Carries no PIN material and no counter value.
-  pinLockoutRegisterFailed('pin_lockout_register_failed');
+  pinLockoutRegisterFailed('pin_lockout_register_failed'),
+
+  /// A step of the panic readiness setup failed on the platform side -- a
+  /// permission request already running, a Settings screen that would not
+  /// open -- and was skipped. Carries no step and no device state.
+  panicSetupStepFailed('panic_setup_step_failed');
 
   const LocalWarningCode(this.wireCode);
   final String wireCode;

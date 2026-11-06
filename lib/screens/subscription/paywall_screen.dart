@@ -11,6 +11,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../core/app_colors.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/constants/feature_access_matrix.dart';
+import '../../core/widgets/panic_readiness_setup.dart';
 import '../../presentation/providers/subscription_provider.dart';
 import '../../core/design_tokens.dart';
 
@@ -27,6 +28,12 @@ class _PaywallScreenState extends State<PaywallScreen> {
   String? _purchasingPackageId;
   bool _restoringPurchases = false;
 
+  /// Up from a successful activation until the paywall closes. The panic
+  /// setup runs in between with the paywall in front between its prompts,
+  /// and a second purchase or restore tapped then started a second setup on
+  /// top of the first (review 2026-11-06).
+  bool _activated = false;
+
   @override
   void initState() {
     super.initState();
@@ -37,7 +44,9 @@ class _PaywallScreenState extends State<PaywallScreen> {
   }
 
   Future<void> _purchase(Package package) async {
-    if (_purchasingPackageId != null || _restoringPurchases) return;
+    if (_activated || _purchasingPackageId != null || _restoringPurchases) {
+      return;
+    }
     setState(() => _purchasingPackageId = package.identifier);
     final provider = context.read<SubscriptionProvider>();
     final errorKey = await provider.purchasePackage(package);
@@ -46,7 +55,11 @@ class _PaywallScreenState extends State<PaywallScreen> {
 
     if (errorKey == null && provider.isPro) {
       _showSnack('subscription_purchase_success'.tr(), AppColors.success);
-      Navigator.of(context).pop();
+      // What a protected panic needs, asked before the paywall closes.
+      _activated = true;
+      await PanicReadinessSetup.run(context);
+      if (!mounted) return;
+      _closeOwnRoute();
       return;
     }
 
@@ -56,7 +69,9 @@ class _PaywallScreenState extends State<PaywallScreen> {
   }
 
   Future<void> _restorePurchases() async {
-    if (_restoringPurchases || _purchasingPackageId != null) return;
+    if (_activated || _restoringPurchases || _purchasingPackageId != null) {
+      return;
+    }
     setState(() => _restoringPurchases = true);
     final provider = context.read<SubscriptionProvider>();
     final errorKey = await provider.restorePurchases();
@@ -70,9 +85,25 @@ class _PaywallScreenState extends State<PaywallScreen> {
 
     if (provider.isPro) {
       _showSnack('subscription_restore_success'.tr(), AppColors.success);
-      Navigator.of(context).pop();
+      _activated = true;
+      await PanicReadinessSetup.run(context);
+      if (!mounted) return;
+      _closeOwnRoute();
     } else {
       _showSnack('subscription_restore_no_purchase'.tr(), AppColors.warning);
+    }
+  }
+
+  /// Closes THIS route, not the top one. The setup can outlast a panic
+  /// countdown or the resume PIN lock pushed above the paywall, and pop()
+  /// would have dismissed that instead, with no PIN (review 2026-11-06).
+  void _closeOwnRoute() {
+    final route = ModalRoute.of(context);
+    if (route == null) return;
+    if (route.isCurrent) {
+      Navigator.of(context).pop();
+    } else if (route.isActive) {
+      Navigator.of(context).removeRoute(route);
     }
   }
 

@@ -7,12 +7,15 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/app_colors.dart';
 import '../core/motion.dart';
 import '../core/services/reduced_motion_policy.dart';
 import '../core/constants/app_constants.dart';
 import '../core/utils/permission_helper.dart';
+import '../core/widgets/panic_readiness_setup.dart';
+import '../presentation/providers/subscription_provider.dart';
 // Firebase and notification services removed (offline-first)
 import '../widgets/connectivity_banner.dart';
 import 'home_page.dart';
@@ -26,6 +29,7 @@ import '../core/services/connectivity_service.dart';
 import '../core/services/emergency_session_contract.dart';
 import '../core/services/panic_countdown_guard.dart';
 import '../core/services/pin_verification_service.dart';
+import '../core/services/subscription_gate.dart';
 import '../core/services/timeline_resume_service.dart';
 import '../core/navigation/deep_link_channel.dart';
 import '../core/navigation/destination_router.dart';
@@ -271,6 +275,30 @@ class _MainNavigationState extends State<MainNavigation>
   Future<void> _runStartupChecks() async {
     await _ensurePinSetup();
     await _ensureNotificationPermission();
+    await _offerPanicReadiness();
+  }
+
+  /// An install that is already Pro meets the panic setup once (2026-11-02).
+  /// After the notification prompt, so the setup does not repeat it.
+  Future<void> _offerPanicReadiness() async {
+    if (!mounted) return;
+    final subscription = context.read<SubscriptionProvider>();
+    // The stored Pro anchor is what authorizes an install with no signal, and
+    // storage hands it back after start: read before it, the install was
+    // decided "not allowed to panic" (review 2026-11-06). Local only, on the
+    // panic press's own budget; never the store.
+    try {
+      await subscription.ensureOfflineGraceLoaded().timeout(
+        SubscriptionGate.offlineAnchorLoadTimeout,
+      );
+    } on TimeoutException {
+      // Unread: not offered now, and still eligible next start.
+    }
+    if (!mounted) return;
+    await PanicReadinessSetup.offerOnce(
+      context,
+      emergencyAuthorized: subscription.canUseEmergencyFeature,
+    );
   }
 
   /// Same single verification path as SplashScreen: one owner for the legacy

@@ -26,6 +26,11 @@ Surumleme: `pubspec.yaml` 1.0.0+1'de SABITTIR; gercek `versionCode`
   Noktasi, Guvenli Yuruyus ve korumali panik baslatilamiyor. Adim bunu kurulumda
   anlatiyor ve dokununca ilgili Android ayarini aciyor. Simdilik atlayabilirsin;
   atladiginda kurulum eksik gorunmeye devam eder.
+- Pro etkinlestiginde (satin alma ya da geri yukleme) ve zaten Pro olan bir
+  kurulumun ilk acilisinda, korumali panigin ihtiyac duydugu eksik izinler
+  sirayla isteniyor: alarm ve hatirlatici erisimi, arama izni, bildirimler ve
+  "Acil Bildirimler" kanali. Her adim atlanabilir; Ayarlardan donunce kurulum
+  kalan izinlerle devam ediyor.
 
 ### Duzeltildi
 - Panik reddedildiginde acilan pencerede cogu durumda yalnizca "Kapat" dugmesi

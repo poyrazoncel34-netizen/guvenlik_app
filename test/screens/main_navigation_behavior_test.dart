@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:easy_localization/easy_localization.dart';
@@ -9,6 +10,7 @@ import 'package:guvenlik_app/core/constants/app_constants.dart';
 import 'package:guvenlik_app/core/di/service_locator.dart';
 import 'package:guvenlik_app/core/security/secure_storage.dart';
 import 'package:guvenlik_app/core/security/secure_storage_keys.dart';
+import 'package:guvenlik_app/core/services/emergency_platform_service.dart';
 import 'package:guvenlik_app/core/services/local_database_service.dart';
 import 'package:guvenlik_app/core/services/location_service.dart';
 import 'package:guvenlik_app/core/services/rehearsal_record_service.dart';
@@ -106,9 +108,31 @@ class _MemoryDatabaseService extends LocalDatabaseService {
   Future<Database> get database async => db;
 }
 
+/// An account the panic may run for: what the startup panic setup asks.
+class _EmergencyAuthorizedProvider extends SubscriptionProvider {
+  @override
+  bool get canUseEmergencyFeature => true;
+}
+
+/// An account authorized by its stored Pro anchor, which storage hands back a
+/// moment after start: the order a cold start with no signal has.
+class _AnchorAuthorizedProvider extends SubscriptionProvider {
+  bool _anchorRead = false;
+
+  @override
+  Future<void> ensureOfflineGraceLoaded() async {
+    await Future<void>.delayed(const Duration(milliseconds: 50));
+    _anchorRead = true;
+  }
+
+  @override
+  bool get canUseEmergencyFeature => _anchorRead;
+}
+
 Future<void> _pumpMainNavigation(
   WidgetTester tester, {
   HomeProvider? homeProvider,
+  SubscriptionProvider? subscriptionProvider,
 }) async {
   await pumpLocalized(
     tester,
@@ -124,7 +148,7 @@ Future<void> _pumpMainNavigation(
           create: (_) => SettingsProvider(),
         ),
         ChangeNotifierProvider<SubscriptionProvider>(
-          create: (_) => SubscriptionProvider(),
+          create: (_) => subscriptionProvider ?? SubscriptionProvider(),
         ),
       ],
       child: Navigator(
@@ -663,5 +687,115 @@ void main() {
     await tester.pump(const Duration(milliseconds: 300));
 
     expect(find.byType(FakeCallScreen), findsOneWidget);
+  });
+  // 2026-11-02: an install that is already Pro (activated on another device,
+  // restored by the store, bought before the paywall asked) meets the panic
+  // setup once, at its first start. Without it the first real panic of a new
+  // Pro user on Android 14+ was refused for exact-alarm access.
+  group('panic setup at first start', () {
+    const platformChannel = MethodChannel(EmergencyPlatformService.channelName);
+    const offeredKey = 'pref_panic_readiness_setup_offered';
+
+    String trValue(String key) =>
+        (jsonDecode(File('assets/translations/tr-TR.json').readAsStringSync())
+                as Map<String, dynamic>)[key]
+            as String;
+
+    void mockExactAlarmMissing(WidgetTester tester) {
+      final messenger = tester.binding.defaultBinaryMessenger;
+      messenger.setMockMethodCallHandler(platformChannel, (call) async {
+        return switch (call.method) {
+          'getDeviceState' => <String, Object?>{
+            'supportedOs': true,
+            'telephonyCalling': true,
+            'telecomAvailable': true,
+            'dialHandlerAvailable': true,
+            'batteryOptimizationsIgnored': true,
+            'canScheduleExactAlarms': false,
+            'callPermissionGranted': true,
+            'notificationsEnabled': true,
+            'alertChannelHigh': true,
+          },
+          'canScheduleExactAlarms' => false,
+          _ => null,
+        };
+      });
+      addTearDown(
+        () => messenger.setMockMethodCallHandler(platformChannel, null),
+      );
+    }
+
+    Finder prompt() => find.text(trValue('panic_setup_exact_alarm_body'));
+
+    testWidgets('a Pro install is asked for exact-alarm access, once', (
+      tester,
+    ) async {
+      _useTallView(tester);
+      mockExactAlarmMissing(tester);
+
+      await _pumpMainNavigation(
+        tester,
+        subscriptionProvider: _EmergencyAuthorizedProvider(),
+      );
+
+      expect(prompt(), findsOneWidget);
+      await tester.tap(find.text(trValue('exact_alarm_degraded_cancel')));
+      for (var i = 0; i < 6; i++) {
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+      expect(prompt(), findsNothing);
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getBool(offeredKey), isTrue);
+    });
+
+    // Review 2026-11-06: the authorization was read before the stored Pro
+    // anchor had been, so this install was decided "not allowed to panic".
+    testWidgets('an install authorized by its stored Pro anchor is asked once '
+        'the anchor is read', (tester) async {
+      _useTallView(tester);
+      mockExactAlarmMissing(tester);
+
+      await _pumpMainNavigation(
+        tester,
+        subscriptionProvider: _AnchorAuthorizedProvider(),
+      );
+      for (var i = 0; i < 6; i++) {
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+
+      expect(prompt(), findsOneWidget);
+    });
+
+    testWidgets('an install that was already asked is not asked again', (
+      tester,
+    ) async {
+      _useTallView(tester);
+      mockExactAlarmMissing(tester);
+      SharedPreferences.setMockInitialValues(<String, Object>{
+        AppConstants.prefNotifications: false,
+        'battery_optimization_wizard_seen': true,
+        offeredKey: true,
+      });
+
+      await _pumpMainNavigation(
+        tester,
+        subscriptionProvider: _EmergencyAuthorizedProvider(),
+      );
+
+      expect(prompt(), findsNothing);
+    });
+
+    testWidgets('a free install is not asked, and stays eligible', (
+      tester,
+    ) async {
+      _useTallView(tester);
+      mockExactAlarmMissing(tester);
+
+      await _pumpMainNavigation(tester);
+
+      expect(prompt(), findsNothing);
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getBool(offeredKey), isNull);
+    });
   });
 }

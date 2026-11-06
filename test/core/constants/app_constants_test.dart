@@ -38,6 +38,7 @@ void main() {
         AppConstants.prefLegalDisclaimerAccepted,
         AppConstants.prefTermsVersion,
         AppConstants.prefNotificationPermissionPrompted,
+        AppConstants.prefPanicReadinessSetupOffered,
         AppConstants.prefVolumeTrigger,
         // Deprecated legacy medical keys retained for one-time cleanup only.
         // ignore: deprecated_member_use_from_same_package

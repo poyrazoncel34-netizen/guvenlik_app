@@ -22,6 +22,10 @@ class AppConstants {
   static const String prefTermsVersion = 'pref_terms_version';
   static const String prefNotificationPermissionPrompted =
       'pref_notification_permission_prompted';
+  // Set once the panic setup (exact alarm, CALL_PHONE, notifications, alert
+  // channel) has run with a readable device state on this install.
+  static const String prefPanicReadinessSetupOffered =
+      'pref_panic_readiness_setup_offered';
   static const String prefVolumeTrigger = 'pref_volume_trigger';
 
   // One-time cleanup flag for the removed medical-profile feature (KVKK Md.7).

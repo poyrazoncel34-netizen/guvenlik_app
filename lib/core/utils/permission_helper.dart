@@ -9,6 +9,7 @@ import 'package:permission_handler/permission_handler.dart';
 import '../app_colors.dart';
 import '../services/app_settings_service.dart';
 import '../services/battery_optimization_service.dart';
+import '../services/notification_preferences_service.dart';
 import '../widgets/escape_dismissible.dart';
 
 enum NotificationPermissionRequestStatus { granted, denied, permanentlyDenied }
@@ -225,6 +226,42 @@ class PermissionHelper {
     return result.isPermanentlyDenied
         ? NotificationPermissionRequestStatus.permanentlyDenied
         : NotificationPermissionRequestStatus.denied;
+  }
+
+  /// The notification step of the panic setup (2026-11-02): say why, then
+  /// the app's notification settings. Not the runtime prompt: by now the user
+  /// has met it (MainNavigation asks on first start), and a second prompt
+  /// right after a denial is what tips Android into "don't ask again".
+  /// True when Settings was opened.
+  static Future<bool> requestNotificationSettings(BuildContext context) async {
+    final shouldOpen = await _showDialog(
+      context,
+      icon: Icons.notifications_off_rounded,
+      title: 'perm_notifications_denied'.tr(),
+      message: 'perm_notifications_denied_msg'.tr(),
+      actionText: 'perm_go_settings'.tr(),
+    );
+    if (shouldOpen != true) return false;
+    return openNotificationSettings();
+  }
+
+  /// The emergency alert channel below high importance (2026-11-02): the
+  /// panic alert would neither pop up nor sound. Opens that channel's own
+  /// settings, not the app page. True when Settings was opened.
+  static Future<bool> requestAlertChannelHigh(
+    BuildContext context, {
+    NotificationPreferencesService? preferences,
+  }) async {
+    final shouldOpen = await _showDialog(
+      context,
+      icon: Icons.notifications_off_rounded,
+      title: 'perm_alert_channel_title'.tr(),
+      message: 'perm_alert_channel_msg'.tr(),
+      actionText: 'perm_go_settings'.tr(),
+    );
+    if (shouldOpen != true) return false;
+    return (preferences ?? NotificationPreferencesService.instance)
+        .openSettingsFor(NotificationCategory.emergencyAlert);
   }
 
   /// Open the system notification settings page for KoruBeni.
