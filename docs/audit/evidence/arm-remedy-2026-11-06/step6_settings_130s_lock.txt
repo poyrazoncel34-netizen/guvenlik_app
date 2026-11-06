@@ -1,0 +1,26 @@
+BACK at 13:25:44 (left at 13:23:21)
+--- after return (expect lock, no new prompt)
+'|KoruBeni güvenlik uygulaması, Acil durumlarda yardım çağırın ve konumunuzu görün' (0, 0, 1080, 2400) 
+'|Uygulama kilidi. PIN ile açın.' (0, 0, 1080, 2400) 
+'|Yasal Bilgiler' (954, 139, 1080, 265) C
+'|KoruBeni' (385, 611, 695, 716) 
+'|Giriş yapmak için doğrulayın' (285, 737, 795, 792) 
+'|1' (63, 1002, 353, 1244) C
+'|2' (395, 1002, 685, 1244) C
+'|3' (727, 1002, 1017, 1244) C
+'|4' (63, 1286, 353, 1527) C
+'|5' (395, 1286, 685, 1527) C
+'|6' (727, 1286, 1017, 1527) C
+'|7' (63, 1569, 353, 1811) C
+'|8' (395, 1569, 685, 1811) C
+'|9' (727, 1569, 1017, 1811) C
+PIN 2468
+--- after unlock (expect the next prompt)
+'|KoruBeni güvenlik uygulaması, Acil durumlarda yardım çağırın ve konumunuzu görün' (0, 0, 1080, 2400) 
+'|Telefon Arama İzni Gerekli. KoruBeni, panik durumunda acil durum kişiniz için arama başlatabilmek amacıyla telefon arama iznine ihtiyaç duyar. Bu izin verilmezse arama ekranı açılır ve ye�
+'|Telefon Arama İzni Gerekli' (257, 1013, 823, 1079) 
+'|KoruBeni, panik durumunda acil durum kişiniz için arama başlatabilmek amacıyla telefon arama iznine ihtiyaç duyar. Bu izin verilmezse arama ekranı açılır ve yeşil tuşa basmanız gerekir.'
+'|Reddet' (431, 1448, 612, 1574) C
+'|Kabul Et' (633, 1444, 912, 1578) 
+'|Kabul Et' (633, 1444, 912, 1578) C
+DONE

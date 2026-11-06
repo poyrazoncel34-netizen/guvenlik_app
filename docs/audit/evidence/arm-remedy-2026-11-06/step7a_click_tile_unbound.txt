@@ -1,0 +1,32 @@
+TAP Ayarlara Git 740 1428
+IN-SETTINGS 13:32:57 com.android.settings/.Settings$AppNotificationSettingsActivity t15}
+TILE-CLICK 13:32:57
+--- dump 1 at 13:32:59
+'|KoruBeni' (0, 63, 1080, 533) 
+'|Navigate up' (0, 63, 147, 210) C
+'KoruBeni' (432, 743, 648, 814) 
+'All KoruBeni notifications' (116, 961, 785, 1032) 
+"You haven't allowed notifications from this app" (63, 1179, 1038, 1312) 
+--- dump 2 at 13:33:02
+'|KoruBeni' (0, 63, 1080, 533) 
+'|Navigate up' (0, 63, 147, 210) C
+'KoruBeni' (432, 743, 648, 814) 
+'All KoruBeni notifications' (116, 961, 785, 1032) 
+"You haven't allowed notifications from this app" (63, 1179, 1038, 1312) 
+--- dump 3 at 13:33:06
+'|KoruBeni' (0, 63, 1080, 533) 
+'|Navigate up' (0, 63, 147, 210) C
+'KoruBeni' (432, 743, 648, 814) 
+'All KoruBeni notifications' (116, 961, 785, 1032) 
+"You haven't allowed notifications from this app" (63, 1179, 1038, 1312) 
+SESSION string name="session_panic_lifecycleState">cancelled
+NOPAD
+--- 5 s after PIN at 13:33:28
+'|KoruBeni' (0, 63, 1080, 533) 
+'|Navigate up' (0, 63, 147, 210) C
+'KoruBeni' (432, 743, 648, 814) 
+'All KoruBeni notifications' (116, 961, 785, 1032) 
+"You haven't allowed notifications from this app" (63, 1179, 1038, 1312) 
+SESSION string name="session_panic_lifecycleState">cancelled
+PREF 0
+DONE

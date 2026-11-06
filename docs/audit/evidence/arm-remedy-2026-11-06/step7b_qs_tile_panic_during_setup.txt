@@ -1,0 +1,21 @@
+PIN 2468
+PROMPT-1 13:35:30: Bildirim izni kapalı
+TAP Ayarlara Git 740 1428
+IN-SETTINGS 13:35:36 com.android.settings/.Settings$AppNotificationSettingsActivity t15}
+TILE-NODE (42, 525, 529, 735) 'KoruBeni panik|KoruBeni panik'
+TILE-TAP 13:35:41
+SHOT-16 13:35:44
+LIVEPIN 13:35:47 |8 saniye kaldı
+--- 5 s after PIN at 13:35:52
+'|Acil Bildirimler sessiz' (308, 1068, 772, 1134) 
+'|Reddet' (368, 1393, 548, 1519) C
+'|Ayarlara Git' (569, 1389, 912, 1523) 
+'|Ayarlara Git' (569, 1389, 912, 1523) C
+'|Kapat' (0, 0, 1080, 2400) C
+PREF 0
+CALLS 0
+11-06 13:35:19.453 I/ActivityTaskManager(  548): START u0 {flg=0x10000000 cmp=com.poyrazoncel.korubeni/.MainActivity} with LAUNCH_SINGLE_TOP from uid 2000 (BAL_ALLOW_PERM
+11-06 13:35:34.466 I/ActivityTaskManager(  548): START u0 {act=android.settings.APP_NOTIFICATION_SETTINGS flg=0x10000000 cmp=com.android.settings/.Settings$AppNotificatio
+11-06 13:35:41.701 I/ActivityTaskManager(  548): START u0 {act=android.intent.action.MAIN cat=[android.intent.category.LAUNCHER] flg=0x14000000 cmp=com.poyrazoncel.korube
+11-06 13:35:41.728 I/ActivityTaskManager(  548): START u0 {act=android.intent.action.MAIN cat=[android.intent.category.LAUNCHER] flg=0x14000000 cmp=com.poyrazoncel.korube
+DONE
