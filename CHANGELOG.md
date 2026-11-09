@@ -21,6 +21,11 @@ Surumleme: `pubspec.yaml` 1.0.0+1'de SABITTIR; gercek `versionCode`
   gerekiyor.**
 
 ### Eklendi
+- Harita karolari yuklenemediginde (sunucu reddi 403/429, zaman asimi, baglanti
+  hatasi) harita artik sessizce bos kalmiyor: "Harita su an yuklenemiyor" uyarisi
+  gosteriliyor. Sunucu reddettiginde uygulama karo istemeyi bir sure (Retry-After'a
+  gore, en fazla 1 saat) durduruyor; bu surede onbellekteki karolar gosterilmeye
+  devam ediyor. OpenStreetMap atfi yukleme ve uyari katmanlarinin ustunde kaliyor.
 - Kurulumda yeni bir **Arka Plan Koruması** adimi. Android 14 ve uzerinde "alarm ve
   hatirlatici" erisimi yeni kurulumlarda kapali geliyor ve bu erisim olmadan Kontrol
   Noktasi, Guvenli Yuruyus ve korumali panik baslatilamiyor. Adim bunu kurulumda

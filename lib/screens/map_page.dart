@@ -8,9 +8,11 @@ import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:http/http.dart' as http;
 import '../core/app_colors.dart';
 import '../core/config/app_environment.dart';
 import '../core/di/service_locator.dart';
+import '../core/network/map_tile_availability.dart';
 import '../core/network/osm_tile_cache_client.dart';
 import '../core/services/connectivity_service.dart';
 import '../core/services/location_consent_gate.dart';
@@ -20,12 +22,23 @@ import '../domain/repositories/location_repository.dart';
 import '../core/widgets/escape_dismissible.dart';
 import '../core/design_tokens.dart';
 import '../core/services/reduced_motion_policy.dart';
-import '../core/utils/formatters.dart';
+import '../widgets/map_tile_overlays.dart';
 
 class MapPage extends StatefulWidget {
   final bool isActive;
 
-  const MapPage({super.key, this.isActive = true});
+  /// Test seams: the tile HTTP client and the health notifier it reports to.
+  @visibleForTesting
+  final http.BaseClient? tileHttpClient;
+  @visibleForTesting
+  final MapTileAvailability? tileAvailability;
+
+  const MapPage({
+    super.key,
+    this.isActive = true,
+    this.tileHttpClient,
+    this.tileAvailability,
+  });
 
   @override
   State<MapPage> createState() => _MapPageState();
@@ -39,6 +52,7 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
   // Map controller
   final MapController _mapController = MapController();
   late final NetworkTileProvider _osmTileProvider;
+  late final MapTileAvailability _tileAvailability;
 
   // State
   LatLng? _currentLocation;
@@ -55,7 +69,19 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
   void initState() {
     super.initState();
 
-    _osmTileProvider = NetworkTileProvider(httpClient: OsmTileCacheClient());
+    _tileAvailability = widget.tileAvailability ?? MapTileAvailability();
+    _tileAvailability.addListener(_onTileAvailabilityChanged);
+    _osmTileProvider = NetworkTileProvider(
+      // Mutable on purpose: TileLayer putIfAbsent()s into it.
+      headers: <String, String>{'User-Agent': kMapTileUserAgent},
+      // A failed tile shows as transparent instead of being rethrown. Rethrown
+      // failures of tiles already pruned (pan/zoom) have no listener left and
+      // reach FlutterError.onError, i.e. one flutterFrameworkUnhandled crash
+      // row per tile. Outages are reported by MapTileAvailability instead.
+      silenceExceptions: true,
+      httpClient: widget.tileHttpClient ??
+          OsmTileCacheClient(availability: _tileAvailability),
+    );
 
     _pulseController = AnimationController(
       vsync: this,
@@ -94,8 +120,14 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
   @override
   void dispose() {
     _pulseController.dispose();
+    _tileAvailability.removeListener(_onTileAvailabilityChanged);
+    if (widget.tileAvailability == null) _tileAvailability.dispose();
     unawaited(_osmTileProvider.dispose());
     super.dispose();
+  }
+
+  void _onTileAvailabilityChanged() {
+    if (mounted) setState(() {});
   }
 
   Future<void> _initLocation() async {
@@ -362,6 +394,9 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
+    // The offline surface already explains itself; no tile banner on top.
+    final tileOutage =
+        _shouldUseOfflineMapFallback ? null : _tileAvailability.value;
     return Semantics(
       label: "semantics_map_page".tr(),
       hint: "semantics_map_page_hint".tr(),
@@ -372,33 +407,6 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
             _shouldUseOfflineMapFallback
                 ? _buildOfflineMapSurface()
                 : _buildMap(),
-            if (!_shouldUseOfflineMapFallback)
-              Positioned(
-                left: 12,
-                bottom: 130,
-                child: Semantics(
-                  label: 'OpenStreetMap copyright link',
-                  button: true,
-                  child: GestureDetector(
-                    onTap: openOsmCopyrightPage,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.6),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: const Text(
-                        "© OpenStreetMap contributors",
-                        style: TextStyle(fontSize: 10, color: Colors.white70),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-
             // Top gradient for status bar
             Positioned(
               top: 0,
@@ -430,68 +438,30 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
             // Loading overlay
             if (_isLoading) _buildLoadingOverlay(),
 
-            // Fallback location warning
-            if (_usingFallbackLocation)
-              Positioned(
-                bottom: 220,
-                left: 16,
-                right: 16,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 10,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.warning.withValues(alpha: 0.95),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(
-                        Icons.warning_amber_rounded,
-                        color: Colors.white,
-                        size: IconSizes.action,
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              (_currentLocation == null ? "map_location_unavailable" : "map_fallback_location").tr(),
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 13,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                            if (_fallbackCheckedAt != null)
-                              Text(
-                                'map_fallback_location_time'.tr(
-                                  namedArgs: {
-                                    'time': '${_fallbackCheckedAt!.toLocal().day}.${_fallbackCheckedAt!.toLocal().month}.${_fallbackCheckedAt!.toLocal().year} ${Formatters.clockHm(_fallbackCheckedAt!)}',
-                                  },
-                                ),
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-            // Bottom controls
+            // Warnings, attribution and controls, stacked upwards so the
+            // attribution is never painted beneath other UI (OSMF).
             Positioned(
               bottom: 24,
-              left: 16,
+              left: 12,
               right: 16,
-              child: _buildBottomControls(),
+              child: MapBottomStack(
+                banners: [
+                  if (tileOutage != null)
+                    MapTilesUnavailableBanner(outage: tileOutage),
+                  if (_usingFallbackLocation)
+                    MapFallbackLocationBanner(
+                      hasLocation: _currentLocation != null,
+                      checkedAt: _fallbackCheckedAt,
+                    ),
+                ],
+                attribution: _shouldUseOfflineMapFallback
+                    ? null
+                    : MapTileAttribution(
+                        text: AppEnvironment.mapTileAttribution,
+                        url: AppEnvironment.mapTileAttributionUrl,
+                      ),
+                controls: _buildBottomControls(),
+              ),
             ),
 
             // My location FAB
@@ -530,10 +500,6 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
             userAgentPackageName: kOsmUserAgentPackageName,
             tileProvider: _osmTileProvider,
             maxZoom: 19,
-            errorTileCallback: (tile, error, stack) {
-              // Silently ignore individual tile load failures (offline tolerance)
-              debugPrint('MAP_TILE_LOAD_FAILED_REDACTED');
-            },
           ),
 
         // My location marker

@@ -22,6 +22,9 @@ network-capture review before release.
 Current mitigation:
 - OSM attribution is shown in the map UI.
 - `userAgentPackageName` includes a contact channel (`com.poyrazoncel.korubeni; +korubeni.destek@gmail.com`) per OSMF "highly recommended" guidance.
+- The sent User-Agent is set explicitly as `KoruBeni (com.poyrazoncel.korubeni; +korubeni.destek@gmail.com)`, so it leads with the app rather than flutter_map's library-first default.
+- A 401/403/429 suspends ALL upstream tile traffic (Retry-After honored, bounded 30 s to 1 h); every upstream request is bounded by a 15 s timeout. The map shows a "map can't be loaded right now" banner instead of going silently blank, and the attribution is painted above every overlay.
+- Switching provider is a build-time define change (`MAP_TILE_URL_TEMPLATE`, `MAP_TILE_ATTRIBUTION`, `MAP_TILE_ATTRIBUTION_URL`); release validation refuses a non-OSM template that still carries the bare OSM credit. It is NOT a config-only change legally: the KVKK/privacy texts name OpenStreetMap as the tile recipient (see `docs/audit/osm-tile-policy-2026-11-09.md`).
 - The app only requests tiles for the map viewport the user actively opens.
 - The app must not bulk download, scrape, pre-seed, cache as an offline archive, or package OpenStreetMap public tiles.
 - Provider HTTP lifetimes are honored; absent usable directives, cached tiles

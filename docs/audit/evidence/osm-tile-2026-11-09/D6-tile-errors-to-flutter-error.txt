@@ -1,0 +1,16 @@
+# D6-tile-errors-to-flutter-error
+# Kusur: HEAD: silenceExceptions yoktu; budanan karo hatalari FlutterError.onError e gidiyordu
+# Komut: flutter test --no-pub test/screens/map_tile_outage_widget_test.dart --plain-name stalled tile server
+
+## KIRMIZI (HEAD davranisi geri yuklendi) exit=1
+00:00 +0: stalled tile server: times out into the network banner
+══╡ EXCEPTION CAUGHT BY IMAGE RESOURCE SERVICE ╞════════════════════════════════════════════════════
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+Expected: null
+  Actual: 'Multiple exceptions (24) were detected during the running of the current test, and at
+00:00 +0 -1: stalled tile server: times out into the network banner [E]
+00:00 +0 -1: Some tests failed.
+
+## YESIL (duzeltme yerinde) exit=0
+00:00 +0: stalled tile server: times out into the network banner
+00:00 +1: All tests passed!

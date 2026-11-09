@@ -1,0 +1,14 @@
+# D7-body-stall-leak
+# Kusur: Inceleme H1: govde zaman asimi Future uzerindeydi, abonelik/baglanti birakilmiyordu
+# Komut: flutter test --no-pub test/core/network/tile_outage_handling_test.dart --plain-name stalled body is bounded AND its connection released
+
+## KIRMIZI (HEAD davranisi geri yuklendi) exit=1
+00:00 +0: timeout: a stalled body is bounded AND its connection released
+00:00 +0 -1: timeout: a stalled body is bounded AND its connection released [E]
+  Expected: true
+    Actual: <false>
+00:00 +0 -1: Some tests failed.
+
+## YESIL (duzeltme yerinde) exit=0
+00:00 +0: timeout: a stalled body is bounded AND its connection released
+00:00 +1: All tests passed!

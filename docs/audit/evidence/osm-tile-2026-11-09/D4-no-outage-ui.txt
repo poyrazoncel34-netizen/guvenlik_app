@@ -1,0 +1,19 @@
+# D4-no-outage-ui
+# Kusur: HEAD: hata durumunda bant yoktu, harita sessizce bos
+# Komut: flutter test --no-pub test/screens/map_tile_outage_widget_test.dart --plain-name from the tile server
+
+## KIRMIZI (HEAD davranisi geri yuklendi) exit=1
+00:00 +0: 403 from the tile server: explains, keeps attribution, no crash
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+Expected: exactly one matching candidate
+  Actual: _TextWidgetFinder:<Found 0 widgets with text "Harita şu an yüklenemiyor": []>
+   Which: means none were found but one was expected
+00:00 +0 -1: 403 from the tile server: explains, keeps attribution, no crash [E]
+00:00 +0 -1: 429 from the tile server: explains, keeps attribution, no crash
+00:00 +0 -2: 429 from the tile server: explains, keeps attribution, no crash [E]
+00:00 +0 -2: Some tests failed.
+
+## YESIL (duzeltme yerinde) exit=0
+00:00 +0: 403 from the tile server: explains, keeps attribution, no crash
+00:00 +1: 429 from the tile server: explains, keeps attribution, no crash
+00:00 +2: All tests passed!

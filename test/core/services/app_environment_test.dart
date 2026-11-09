@@ -48,6 +48,63 @@ void main() {
     });
   });
 
+  group('AppEnvironment map tile attribution policy', () {
+    const osm = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+    const mapTiler =
+        'https://api.maptiler.com/maps/streets-v2/256/{z}/{x}/{y}.png?key=k';
+
+    test('default OSM template and default attribution pass', () {
+      expect(
+        AppEnvironment.isSafeMapTileAttribution(
+          urlTemplate: AppEnvironment.defaultMapTileUrlTemplate,
+          attribution: AppEnvironment.defaultMapTileAttribution,
+          attributionUrl: AppEnvironment.defaultMapTileAttributionUrl,
+        ),
+        isTrue,
+      );
+    });
+
+    test('a provider switch passes only with its own credit line', () {
+      expect(
+        AppEnvironment.isSafeMapTileAttribution(
+          urlTemplate: mapTiler,
+          attribution: AppEnvironment.defaultMapTileAttribution,
+          attributionUrl: AppEnvironment.defaultMapTileAttributionUrl,
+        ),
+        isFalse,
+        reason: 'shipping MapTiler tiles under the bare OSM line omits '
+            "MapTiler's required credit",
+      );
+      expect(
+        AppEnvironment.isSafeMapTileAttribution(
+          urlTemplate: mapTiler,
+          attribution: '© MapTiler © OpenStreetMap contributors',
+          attributionUrl: 'https://www.maptiler.com/copyright/',
+        ),
+        isTrue,
+      );
+    });
+
+    test('rejects credit lines without OSM or with an unsafe link', () {
+      for (final (text, url) in <(String, String)>[
+        ('', AppEnvironment.defaultMapTileAttributionUrl),
+        ('© MapTiler', 'https://www.maptiler.com/copyright/'),
+        (AppEnvironment.defaultMapTileAttribution, 'http://osm.org/copyright'),
+        (AppEnvironment.defaultMapTileAttribution, 'not a url'),
+      ]) {
+        expect(
+          AppEnvironment.isSafeMapTileAttribution(
+            urlTemplate: osm,
+            attribution: text,
+            attributionUrl: url,
+          ),
+          isFalse,
+          reason: '$text / $url',
+        );
+      }
+    });
+  });
+
   group('AppEnvironment map tile URL policy', () {
     test('accepts HTTPS templates with one z x and y placeholder', () {
       expect(

@@ -1,0 +1,18 @@
+# D2-no-backoff
+# Kusur: HEAD: 403/429 sonrasi istekler sunucuya gitmeye devam ediyordu
+# Komut: flutter test --no-pub test/core/network/tile_outage_handling_test.dart --plain-name suspends ALL upstream traffic
+
+## KIRMIZI (HEAD davranisi geri yuklendi) exit=1
+00:00 +0: 403: suspends ALL upstream traffic until the backoff expires
+00:00 +0 -1: 403: suspends ALL upstream traffic until the backoff expires [E]
+  Expected: throws <Instance of 'ClientException'> with `message`: 'MAP_TILE_UPSTREAM_BACKOFF'
+    Actual: <Instance of 'Future<StreamedResponse>'>
+     Which: emitted <Instance of 'StreamedResponse'>
+00:00 +0 -1: 429: suspends ALL upstream traffic until the backoff expires
+00:00 +0 -2: 429: suspends ALL upstream traffic until the backoff expires [E]
+00:00 +0 -2: Some tests failed.
+
+## YESIL (duzeltme yerinde) exit=0
+00:00 +0: 403: suspends ALL upstream traffic until the backoff expires
+00:00 +1: 429: suspends ALL upstream traffic until the backoff expires
+00:00 +2: All tests passed!

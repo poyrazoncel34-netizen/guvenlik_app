@@ -7,11 +7,19 @@ import 'package:http/http.dart' as http;
 import 'package:http/retry.dart';
 import 'package:path_provider/path_provider.dart';
 
+import 'map_tile_availability.dart';
+import 'tile_upstream_guard.dart';
+
 /// Persistent HTTP cache dedicated to OSM's public raster tile endpoint.
 ///
 /// Only exact HTTPS tile URLs are cached. Server cache directives are honored;
 /// responses without usable directives receive OSMF's required seven-day
 /// fallback lifetime. The cache is app-private, bounded, and never prefetches.
+///
+/// Every upstream request (OSM or a configured provider) goes through a
+/// [TileUpstreamGuard]: bounded by [defaultRequestTimeout], suspended after a
+/// 401/403/429, and reported to an optional [MapTileAvailability] so the map
+/// can say it cannot load instead of going silently blank.
 class OsmTileCacheClient extends http.BaseClient {
   OsmTileCacheClient({
     Future<Directory>? cacheDirectory,
@@ -19,11 +27,19 @@ class OsmTileCacheClient extends http.BaseClient {
     DateTime Function()? now,
     int cacheByteLimit = maxCacheBytes,
     int tileByteLimit = maxTileBytes,
+    MapTileAvailability? availability,
+    Duration requestTimeout = defaultRequestTimeout,
   }) : _cacheDirectory = cacheDirectory ?? _defaultCacheDirectory(),
-       _innerClient = innerClient ?? buildRetryClient(),
+       _upstream = TileUpstreamGuard(
+         inner: innerClient ?? buildRetryClient(),
+         now: now ?? DateTime.now,
+         availability: availability,
+         timeout: requestTimeout,
+       ),
        _now = now ?? DateTime.now,
        _cacheByteLimit = cacheByteLimit,
        _tileByteLimit = tileByteLimit,
+       assert(requestTimeout > Duration.zero),
        assert(cacheByteLimit > 0),
        assert(tileByteLimit > 0),
        assert(tileByteLimit <= cacheByteLimit);
@@ -67,8 +83,15 @@ class OsmTileCacheClient extends http.BaseClient {
   static const int maxTileBytes = 2 * 1024 * 1024;
   static const int metadataVersion = 1;
 
+  /// dart:io has no default response timeout: without this a stalled tile
+  /// request keeps its spinner forever and never counts as a failure.
+  static const Duration defaultRequestTimeout = Duration(seconds: 15);
+  static const String timeoutMessage = TileUpstreamGuard.timeoutMessage;
+  static const String backoffMessage = TileUpstreamGuard.backoffMessage;
+  static const String tooLargeMessage = TileUpstreamGuard.tooLargeMessage;
+
   final Future<Directory> _cacheDirectory;
-  final http.BaseClient _innerClient;
+  final TileUpstreamGuard _upstream;
   final DateTime Function() _now;
   final int _cacheByteLimit;
   final int _tileByteLimit;
@@ -104,6 +127,10 @@ class OsmTileCacheClient extends http.BaseClient {
   int _tileServedLocally = 0;
   int _tileUpstream = 0;
 
+  /// Until when upstream traffic is suspended after a refusal; `null` if the
+  /// server never refused us.
+  DateTime? get upstreamSuspendedUntil => _upstream.suspendedUntil;
+
   /// Zeroes the counters so a measured session starts from a known point.
   void resetTileCounters() {
     _tileRequests = 0;
@@ -116,7 +143,7 @@ class OsmTileCacheClient extends http.BaseClient {
     if (_closed) throw StateError('OSM tile cache client is closed');
 
     final address = _TileAddress.tryParse(request);
-    if (address == null) return _innerClient.send(request);
+    if (address == null) return _upstream.passthrough(request);
     _tileRequests++;
 
     final existing = _inFlight[address.key];
@@ -150,7 +177,11 @@ class OsmTileCacheClient extends http.BaseClient {
     }
 
     final now = _now().toUtc();
-    if (cached != null && now.isBefore(cached.metadata.expiresAt)) {
+    final suspended = _upstream.isSuspended();
+    // While the server has told us to stop, an expired copy beats a blank
+    // tile -- and costs the server nothing.
+    if (cached != null &&
+        (suspended || now.isBefore(cached.metadata.expiresAt))) {
       _tileServedLocally++;
       return _ResponseSnapshot.cached(cached.body, cached.metadata.contentType);
     }
@@ -162,10 +193,33 @@ class OsmTileCacheClient extends http.BaseClient {
       request.headers['if-modified-since'] = modified;
     }
 
+    if (suspended) throw _upstream.suspendedException(request);
+
     _tileUpstream++;
-    final upstream = await _innerClient.send(request);
-    final body = await _readBoundedTileBody(upstream.stream);
+    final http.StreamedResponse upstream;
+    final List<int> body;
+    try {
+      upstream = await _upstream.send(request);
+      body = await _upstream.readBody(
+        request,
+        upstream.stream,
+        _readBoundedTileBody,
+      );
+      _upstream.recordSuccess(upstream.statusCode);
+    } on http.ClientException {
+      if (cached != null) return _staleCopy(cached);
+      rethrow;
+    } on IOException {
+      if (cached != null) return _staleCopy(cached);
+      rethrow;
+    }
     final headers = Map<String, String>.from(upstream.headers);
+    // Revalidation refused or failed: the expired copy in hand beats a blank
+    // tile, and the outage itself is already reported.
+    if (cached != null &&
+        TileUpstreamGuard.isServerFailure(upstream.statusCode)) {
+      return _staleCopy(cached);
+    }
 
     if (upstream.statusCode == HttpStatus.notModified && cached != null) {
       final policy = _cachePolicy(headers, now);
@@ -223,11 +277,14 @@ class OsmTileCacheClient extends http.BaseClient {
     return snapshot;
   }
 
+  _ResponseSnapshot _staleCopy(_CacheEntry cached) =>
+      _ResponseSnapshot.cached(cached.body, cached.metadata.contentType);
+
   Future<List<int>> _readBoundedTileBody(Stream<List<int>> stream) async {
     final body = <int>[];
     await for (final chunk in stream) {
       if (body.length + chunk.length > _tileByteLimit) {
-        throw http.ClientException('OSM_TILE_RESPONSE_TOO_LARGE');
+        throw http.ClientException(tooLargeMessage);
       }
       body.addAll(chunk);
     }
@@ -437,7 +494,7 @@ class OsmTileCacheClient extends http.BaseClient {
   void close() {
     if (_closed) return;
     _closed = true;
-    _innerClient.close();
+    _upstream.close();
     super.close();
   }
 }

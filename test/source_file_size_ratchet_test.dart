@@ -32,7 +32,7 @@ void main() {
     'lib/screens/home_page.dart': 1276,
     'lib/screens/countdown_screen.dart': 1008,
     'lib/screens/contacts_page.dart': 1153,
-    'lib/screens/map_page.dart': 885,
+    'lib/screens/map_page.dart': 845,
     'lib/core/services/contact_service.dart': 810,
   };
 

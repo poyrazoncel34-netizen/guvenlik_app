@@ -1,0 +1,13 @@
+# D3-no-timeout
+# Kusur: HEAD: istek zaman asimi yoktu
+# Komut: flutter test --no-pub test/core/network/tile_outage_handling_test.dart --plain-name timeout: a stalled server --timeout 15s
+
+## KIRMIZI (HEAD davranisi geri yuklendi) exit=1
+00:00 +0: timeout: a stalled server yields a bounded ClientException
+00:15 +0 -1: timeout: a stalled server yields a bounded ClientException [E]
+  TimeoutException after 0:00:15.000000: Test timed out after 15 seconds.
+00:15 +0 -1: Some tests failed.
+
+## YESIL (duzeltme yerinde) exit=0
+00:00 +0: timeout: a stalled server yields a bounded ClientException
+00:00 +1: All tests passed!

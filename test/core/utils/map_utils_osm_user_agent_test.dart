@@ -45,6 +45,25 @@ void main() {
     // production with every other test still green. The wire-level half of
     // this contract lives in
     // test/core/network/osm_tile_cache_client_test.dart.
+    // OSMF: library default User-Agents "will be blocked". flutter_map's own
+    // header is `flutter_map (<package>)` -- it leads with the library name.
+    test('sent User-Agent leads with the app, not the library', () {
+      expect(kMapTileUserAgent, startsWith('KoruBeni ('));
+      expect(kMapTileUserAgent, isNot(contains('flutter_map')));
+      expect(kMapTileUserAgent, contains(kOsmUserAgentPackageName));
+    });
+
+    test('map_page sends kMapTileUserAgent as an explicit header', () {
+      final source = File('lib/screens/map_page.dart').readAsStringSync();
+      expect(
+        source,
+        contains("headers: <String, String>{'User-Agent': kMapTileUserAgent}"),
+        reason:
+            'Without an explicit header TileLayer putIfAbsent()s its own '
+            'flutter_map-prefixed User-Agent.',
+      );
+    });
+
     test('map_page wires the identifier into TileLayer', () {
       final source = File('lib/screens/map_page.dart').readAsStringSync();
       expect(

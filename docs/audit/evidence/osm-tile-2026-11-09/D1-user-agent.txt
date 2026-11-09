@@ -1,0 +1,18 @@
+# D1-user-agent
+# Kusur: HEAD: TileLayer default UA flutter_map (...)
+# Komut: flutter test --no-pub test/screens/map_tile_outage_widget_test.dart --plain-name tiles loading normally
+
+## KIRMIZI (HEAD davranisi geri yuklendi) exit=1
+00:00 +0: tiles loading normally: no banner, attribution on top, app UA
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+Expected: 'KoruBeni (com.poyrazoncel.korubeni; +korubeni.destek@gmail.com)'
+  Actual: 'flutter_map (com.poyrazoncel.korubeni; +korubeni.destek@gmail.com)'
+   Which: is different.
+          Expected: KoruBeni ( ...
+            Actual: flutter_ma ...
+00:00 +0 -1: tiles loading normally: no banner, attribution on top, app UA [E]
+00:00 +0 -1: Some tests failed.
+
+## YESIL (duzeltme yerinde) exit=0
+00:00 +0: tiles loading normally: no banner, attribution on top, app UA
+00:00 +1: All tests passed!

@@ -143,7 +143,13 @@ void main() {
         File('store/PLAY_CONSOLE_COPY_PASTE_PACK.md'),
       ].map((file) => file.readAsStringSync()).join('\n');
 
-      expect(source, contains('© OpenStreetMap contributors'));
+      // The credit line moved into AppEnvironment so a provider switch carries
+      // its own attribution; the default must still be OSM's.
+      expect(
+        File('lib/core/config/app_environment.dart').readAsStringSync(),
+        contains("defaultMapTileAttribution = '© OpenStreetMap contributors'"),
+      );
+      expect(source, contains('text: AppEnvironment.mapTileAttribution'));
       expect(source, contains('user actively views'));
       expect(source, contains('Do not bulk download'));
       expect(source, isNot(contains('.mbtiles')));

@@ -1,0 +1,7 @@
+D1-user-agent: red_exit=1 green_exit=0
+D2-no-backoff: red_exit=1 green_exit=0
+D3-no-timeout: red_exit=1 green_exit=0
+D4-no-outage-ui: red_exit=1 green_exit=0
+D5-attribution-hidden: red_exit=1 green_exit=0
+D6-tile-errors-to-flutter-error: red_exit=1 green_exit=0
+D7-body-stall-leak: red_exit=1 green_exit=0
