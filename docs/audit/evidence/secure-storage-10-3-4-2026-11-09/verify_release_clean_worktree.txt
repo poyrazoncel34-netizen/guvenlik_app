@@ -1,0 +1,40 @@
+# scripts/verify_release.sh — temiz worktree: git worktree add --detach 5b73db9 (flutter_secure_storage 10.3.4 + lisans kaniti + 22 Gradle dogrulama bileseni)
+# izlenmeyen marketing/ YOK; android/key.properties + jks symlink, local.properties kopya
+# tarih: 2026-11-09 21:32 +0300
+# onceki iki kosu (itilmemis ara commit'ler): 60a7b01 -> 3/6 AAB dependency verification FAIL; 4fdd413 -> 4/6 lint dependency verification FAIL (robolectric 4.16.1)
+=== KoruBeni yayin dogrulama zinciri ===
+  ✓ PASS  temiz yerel build zemini hazir
+[1/6] flutter analyze (sifir sorun sarti)
+No issues found! (ran in 5.0s)
+  ✓ PASS  analyze temiz
+[2/6] flutter test + kritik safety coverage (tam paket)
+Contact picker channel error: PICK_FAILED
+03:44 +2834: All tests passed!
+PASS lib/core/services/emergency_session_contract.dart: 100.00% (LH=122, LF=122, min=90%)
+PASS lib/core/services/emergency_platform_service.dart: 97.18% (LH=310, LF=319, min=90%)
+PASS lib/core/services/emergency_snapshot_parser.dart: 100.00% (LH=50, LF=50, min=90%)
+PASS lib/core/services/pin_verification_service.dart: 96.43% (LH=81, LF=84, min=90%)
+PASS lib/core/services/check_in_service.dart: 95.22% (LH=339, LF=356, min=90%)
+PASS lib/core/services/check_in_projection_store.dart: 96.30% (LH=26, LF=27, min=90%)
+PASS lib/core/services/contact_service.dart: 93.08% (LH=296, LF=318, min=90%)
+CRITICAL_COVERAGE_PASS
+  ✓ PASS  tum testler yesil; kritik safety coverage kapisi gecti
+[3/6] imzali NON_RELEASE_SMOKE AAB (registrant'i yeniler; gradle'dan ONCE)
+  ✓ PASS  AAB, imza ve birlesik Android release yuzeyi dogrulandi: build/app/outputs/bundle/smokeRelease/app-smoke-release.aab
+[4/6] Android lint + Kotlin unit + instrumentation derleme (build'den SONRA)
+  ✓ PASS  lint + Kotlin unit + instrumentation derlemesi yesil
+[5/6] 16KB sayfa boyutu hizalamasi
+  ✓ PASS  tum native kutuphaneler 16KB uyumlu
+[6/6] etiketli-yayin blocker durumu (SBOM lisans kanidi + notices paritesi)
+  ✓ PASS  etiketli yayin lisans/notices kapisi yesil
+=== KOD/SMOKE DOGRULAMA YESIL — 5/5 kod+smoke kapisi gecti ===
+LOCAL_CANDIDATE_PASS
+TAGGED_RELEASE_GATES_LOCAL_PASS
+exit=0
+
+# ek: soguk onbellek bagimlilik dogrulamasi (STRICT_RELEASE_GATES olmadan zincir bunu atlar; ayni worktree, 5b73db9)
+# komut: ./gradlew <gorev> --refresh-dependencies --console=plain
+:app:assemblePlayDebug refresh_exit=0 dogrulama_hatasi=0 BUILD SUCCESSFUL in 4m
+app:lintSmokeRelease refresh_exit=0 dogrulama_hatasi=0 BUILD SUCCESSFUL in 4m 28s
+app:testPlayDebugUnitTest app:assemblePlayDebugAndroidTest refresh_exit=0 dogrulama_hatasi=0 BUILD SUCCESSFUL in 3m 40s
+# worktree kosu sonrasi temiz (git status bos)
