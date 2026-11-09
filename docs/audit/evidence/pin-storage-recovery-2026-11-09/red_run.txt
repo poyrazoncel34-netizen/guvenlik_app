@@ -1,0 +1,250 @@
+08173c0
+00:00 +0: loading /Users/poyrazoncel/Projects/guvenlik_app/test/core/services/pin_storage_bootstrap_recovery_test.dart
+00:00 +0: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/bootstrap_recovery_no_dead_end_test.dart: (setUpAll)
+[90m[🌎 Easy Localization] [DEBUG] Localization initialized[0m
+00:00 +0: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/bootstrap_recovery_no_dead_end_test.dart: pinFailed: both exits are present and enabled, no raw keys
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded tr_TR[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+00:00 +0 -1: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/bootstrap_recovery_no_dead_end_test.dart: pinFailed: both exits are present and enabled, no raw keys
+00:00 +0 -1: /Users/poyrazoncel/Projects/guvenlik_app/test/core/services/pin_storage_bootstrap_recovery_test.dart: transient secure-storage failures are retried with backoff a single keystore error followed by a good read is ready [E]
+  Expected: true
+    Actual: <false>
+  reason=pinFailed
+  
+  package:matcher                                                    expect
+  package:flutter_test/src/widget_tester.dart 473:18                 expect
+  test/core/services/pin_storage_bootstrap_recovery_test.dart 101:7  main.<fn>.<fn>
+  
+00:00 +1 -1: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/bootstrap_recovery_no_dead_end_test.dart: pinFailed: both exits are present and enabled, no raw keys
+00:00 +2 -1: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/bootstrap_recovery_no_dead_end_test.dart: pinFailed: both exits are present and enabled, no raw keys
+00:00 +2 -2: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/bootstrap_recovery_no_dead_end_test.dart: pinFailed: both exits are present and enabled, no raw keys
+00:00 +2 -2: /Users/poyrazoncel/Projects/guvenlik_app/test/core/services/pin_storage_bootstrap_recovery_test.dart: transient secure-storage failures are retried with backoff a slow (timed-out) keystore read followed by a good read is ready [E]
+  Expected: true
+    Actual: <false>
+  reason=pinFailed
+  
+  package:matcher                                                    expect
+  package:flutter_test/src/widget_tester.dart 473:18                 expect
+  test/core/services/pin_storage_bootstrap_recovery_test.dart 113:9  main.<fn>.<fn>
+  
+00:00 +2 -3: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/bootstrap_recovery_no_dead_end_test.dart: pinFailed: both exits are present and enabled, no raw keys
+00:00 +2 -3: /Users/poyrazoncel/Projects/guvenlik_app/test/core/services/pin_storage_bootstrap_recovery_test.dart: transient secure-storage failures are retried with backoff recovery on the last allowed attempt is still ready [E]
+  Expected: true
+    Actual: <false>
+  reason=pinFailed
+  
+  package:matcher                                                    expect
+  package:flutter_test/src/widget_tester.dart 473:18                 expect
+  test/core/services/pin_storage_bootstrap_recovery_test.dart 127:7  main.<fn>.<fn>
+  
+00:00 +2 -4: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/bootstrap_recovery_no_dead_end_test.dart: pinFailed: both exits are present and enabled, no raw keys
+00:00 +2 -4: /Users/poyrazoncel/Projects/guvenlik_app/test/core/services/pin_storage_bootstrap_recovery_test.dart: persistent failures are bounded and classified a keystore error on every attempt is pinFailed after 3 reads [E]
+  Expected: <3>
+    Actual: <1>
+  bounded: exactly 3 attempts
+  
+  package:matcher                                                    expect
+  package:flutter_test/src/widget_tester.dart 473:18                 expect
+  test/core/services/pin_storage_bootstrap_recovery_test.dart 142:9  main.<fn>.<fn>
+  
+00:00 +2 -5: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/bootstrap_recovery_no_dead_end_test.dart: pinFailed: both exits are present and enabled, no raw keys
+00:00 +2 -5: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/hardcoded_strings_test.dart: release-blocker hardcoded strings are localized audited user-facing strings are not hardcoded in Dart sources [E]
+  Expected: empty
+    Actual: [
+              'lib/screens/bootstrap_recovery_screen.dart:Güvenli başlatma tamamlanamadı',
+              'lib/screens/bootstrap_recovery_screen.dart:PIN güvenli depodan okunamadığı için',
+              'lib/screens/bootstrap_recovery_screen.dart:Yeniden Dene',
+              'lib/screens/bootstrap_recovery_screen.dart:Yerel Verileri Sıfırla',
+              'lib/screens/bootstrap_recovery_screen.dart:Güvenli depolama hâlâ okunamıyor',
+              'lib/screens/bootstrap_recovery_screen.dart:Aktif bir güvenlik oturumu varken sıfırlama yapılamaz',
+              'lib/screens/bootstrap_recovery_screen.dart:Veriler güvenli biçimde silinemedi',
+              'lib/screens/bootstrap_recovery_screen.dart:Sıfırlama tamamlandı ancak güvenli başlatma başarısız',
+              'lib/screens/bootstrap_recovery_screen.dart:Yerel verileri sıfırla',
+              'lib/screens/bootstrap_recovery_screen.dart:Bu işlem PIN, kişiler ve ayarlar dahil',
+              'lib/screens/bootstrap_recovery_screen.dart:SIFIRLA yazarak onaylayın',
+              'lib/screens/bootstrap_recovery_screen.dart:\'Vazgeç\'',
+              'lib/screens/bootstrap_recovery_screen.dart:\'Sıfırla\''
+            ]
+  
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test/screens/hardcoded_strings_test.dart 75:7       main.<fn>.<fn>
+  
+00:00 +3 -5: /Users/poyrazoncel/Projects/guvenlik_app/test/core/services/pin_storage_bootstrap_recovery_test.dart: persistent failures are bounded and classified a read that keeps timing out is classified as pinTimeout
+00:00 +3 -5: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/bootstrap_recovery_no_dead_end_test.dart: pinTimeout: both exits are present and enabled, no raw keys
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded tr_TR[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+00:00 +4 -5: /Users/poyrazoncel/Projects/guvenlik_app/test/core/services/pin_storage_bootstrap_recovery_test.dart: persistent failures are bounded and classified a read that keeps timing out is classified as pinTimeout
+00:00 +4 -5: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/bootstrap_recovery_no_dead_end_test.dart: contactFailed: both exits are present and enabled, no raw keys
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded tr_TR[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+00:00 +5 -5: /Users/poyrazoncel/Projects/guvenlik_app/test/core/services/pin_storage_bootstrap_recovery_test.dart: persistent failures are bounded and classified a read that keeps timing out is classified as pinTimeout
+00:00 +5 -5: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/bootstrap_recovery_no_dead_end_test.dart: contactTimeout: both exits are present and enabled, no raw keys
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded tr_TR[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+00:00 +6 -5: /Users/poyrazoncel/Projects/guvenlik_app/test/core/services/pin_storage_bootstrap_recovery_test.dart: persistent failures are bounded and classified a read that keeps timing out is classified as pinTimeout
+00:00 +6 -5: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/bootstrap_recovery_no_dead_end_test.dart: a slow keystore (pinTimeout) keeps the original body text
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded tr_TR[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+00:00 +6 -6: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/bootstrap_recovery_no_dead_end_test.dart: a slow keystore (pinTimeout) keeps the original body text
+00:00 +6 -6: /Users/poyrazoncel/Projects/guvenlik_app/test/core/services/pin_storage_bootstrap_recovery_test.dart: persistent failures are bounded and classified a read that keeps timing out is classified as pinTimeout [E]
+  Expected: 'pinTimeout'
+    Actual: 'pinFailed'
+     Which: is different.
+            Expected: pinTimeout
+              Actual: pinFailed
+                         ^
+             Differ at offset 3
+  a slow keystore is not evidence of corruption
+  
+  package:matcher                                                    expect
+  package:flutter_test/src/widget_tester.dart 473:18                 expect
+  test/core/services/pin_storage_bootstrap_recovery_test.dart 152:7  main.<fn>.<fn>
+  
+00:00 +7 -6: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/bootstrap_recovery_no_dead_end_test.dart: a slow keystore (pinTimeout) keeps the original body text
+00:00 +7 -7: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/bootstrap_recovery_no_dead_end_test.dart: a slow keystore (pinTimeout) keeps the original body text
+00:00 +7 -7: /Users/poyrazoncel/Projects/guvenlik_app/test/core/services/pin_storage_bootstrap_recovery_test.dart: no storage failure dead-ends every secure-storage failure reason offers the recovery surface [E]
+  Expected: true
+    Actual: <false>
+  contactFailed must not fall through to the fatal ErrorWidget
+  
+  package:matcher                                                    expect
+  package:flutter_test/src/widget_tester.dart 473:18                 expect
+  test/core/services/pin_storage_bootstrap_recovery_test.dart 184:9  main.<fn>.<fn>
+  
+00:00 +8 -7: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/bootstrap_recovery_no_dead_end_test.dart: a slow keystore (pinTimeout) keeps the original body text
+00:00 +9 -7: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/bootstrap_recovery_no_dead_end_test.dart: persistent PIN failure states the data loss before any reset
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded tr_TR[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: not null
+  Actual: <null>
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file:///Users/poyrazoncel/Projects/guvenlik_app/test/screens/bootstrap_recovery_no_dead_end_test.dart:141:5)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1059:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///Users/poyrazoncel/Projects/guvenlik_app/test/screens/bootstrap_recovery_no_dead_end_test.dart line 141
+The test description was:
+  persistent PIN failure states the data loss before any reset
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:00 +9 -8: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/bootstrap_recovery_no_dead_end_test.dart: persistent PIN failure states the data loss before any reset [E]
+  Test failed. See exception logs above.
+  The test description was: persistent PIN failure states the data loss before any reset
+  
+00:00 +9 -8: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/bootstrap_recovery_no_dead_end_test.dart: contact store failure names the contacts, not the PIN
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded tr_TR[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: not null
+  Actual: <null>
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file:///Users/poyrazoncel/Projects/guvenlik_app/test/screens/bootstrap_recovery_no_dead_end_test.dart:159:5)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1059:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///Users/poyrazoncel/Projects/guvenlik_app/test/screens/bootstrap_recovery_no_dead_end_test.dart line 159
+The test description was:
+  contact store failure names the contacts, not the PIN
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:00 +9 -9: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/bootstrap_recovery_no_dead_end_test.dart: contact store failure names the contacts, not the PIN [E]
+  Test failed. See exception logs above.
+  The test description was: contact store failure names the contacts, not the PIN
+  
+00:00 +9 -9: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/bootstrap_recovery_no_dead_end_test.dart: transient: a successful retry leaves the recovery screen
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded tr_TR[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+00:00 +10 -9: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/bootstrap_recovery_no_dead_end_test.dart: persistent: retry keeps failing, typed reset still exits
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded tr_TR[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+00:00 +11 -9: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/bootstrap_recovery_no_dead_end_test.dart: (tearDownAll)
+00:00 +11 -9: Some tests failed.
+exit=1

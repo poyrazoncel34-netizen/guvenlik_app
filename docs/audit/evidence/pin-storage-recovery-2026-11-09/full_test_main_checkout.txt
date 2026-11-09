@@ -1,0 +1,7 @@
+# Ana kopyada tam paket (izlenmeyen marketing/ mevcutken), duzeltmeden sonra, reviewer duzeltmelerinden once
+# Sonuc satiri ve kirmizi testler (ilerleme satirlari ayiklandi):
+test/release_change_classification_test.dart: dirty release source is completely classified and fail-closed [E]
+test/release_change_classification_test.dart: --all-tracked every tracked path in this repository is classified [E]
+# UNCLASSIFIED_PATH satirlari: 926 adet, hepsi marketing/ altinda; marketing/ disinda: 0
+03:45 +2830 -2: Some tests failed.
+exit=1

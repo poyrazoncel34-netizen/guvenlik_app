@@ -1,0 +1,182 @@
+base=08173c0 + working tree (fix applied)
+00:00 +0: loading /Users/poyrazoncel/Projects/guvenlik_app/test/core/services/pin_storage_bootstrap_recovery_test.dart
+00:00 +0: /Users/poyrazoncel/Projects/guvenlik_app/test/core/services/pin_storage_bootstrap_recovery_test.dart: transient secure-storage failures are retried with backoff a single keystore error followed by a good read is ready
+00:00 +0: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/bootstrap_recovery_no_dead_end_test.dart: (setUpAll)
+[90m[🌎 Easy Localization] [DEBUG] Localization initialized[0m
+00:00 +0: /Users/poyrazoncel/Projects/guvenlik_app/test/core/services/pin_storage_bootstrap_recovery_test.dart: transient secure-storage failures are retried with backoff a single keystore error followed by a good read is ready
+00:00 +0: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/bootstrap_recovery_no_dead_end_test.dart: pinFailed: both exits are present and enabled, no raw keys
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded tr_TR[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+00:00 +1: /Users/poyrazoncel/Projects/guvenlik_app/test/core/services/pin_storage_bootstrap_recovery_test.dart: transient secure-storage failures are retried with backoff a single keystore error followed by a good read is ready
+00:00 +2: /Users/poyrazoncel/Projects/guvenlik_app/test/core/services/pin_storage_bootstrap_recovery_test.dart: transient secure-storage failures are retried with backoff a single keystore error followed by a good read is ready
+00:00 +3: /Users/poyrazoncel/Projects/guvenlik_app/test/core/services/pin_storage_bootstrap_recovery_test.dart: transient secure-storage failures are retried with backoff a single keystore error followed by a good read is ready
+00:00 +4: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/bootstrap_recovery_no_dead_end_test.dart: pinFailed: both exits are present and enabled, no raw keys
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+00:00 +4: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/bootstrap_recovery_screen_test.dart: (setUpAll)
+[90m[🌎 Easy Localization] [DEBUG] Localization initialized[0m
+00:00 +4: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/bootstrap_recovery_no_dead_end_test.dart: pinFailed: both exits are present and enabled, no raw keys
+00:00 +4: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/bootstrap_recovery_screen_test.dart: retry can recover without exposing the application
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded tr_TR[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+00:00 +5: /Users/poyrazoncel/Projects/guvenlik_app/test/core/services/pin_storage_bootstrap_recovery_test.dart: transient secure-storage failures are retried with backoff a slow (timed-out) keystore read followed by a good read is ready
+00:00 +5: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/bootstrap_recovery_no_dead_end_test.dart: pinTimeout: both exits are present and enabled, no raw keys
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded tr_TR[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+00:00 +5: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/bootstrap_recovery_screen_test.dart: retry can recover without exposing the application
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+00:00 +6: /Users/poyrazoncel/Projects/guvenlik_app/test/core/services/pin_storage_bootstrap_recovery_test.dart: transient secure-storage failures are retried with backoff a slow (timed-out) keystore read followed by a good read is ready
+00:00 +6: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/bootstrap_recovery_no_dead_end_test.dart: contactFailed: both exits are present and enabled, no raw keys
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded tr_TR[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+00:00 +7: /Users/poyrazoncel/Projects/guvenlik_app/test/core/services/pin_storage_bootstrap_recovery_test.dart: transient secure-storage failures are retried with backoff a slow (timed-out) keystore read followed by a good read is ready
+00:00 +7: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/bootstrap_recovery_no_dead_end_test.dart: contactTimeout: both exits are present and enabled, no raw keys
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded tr_TR[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+00:00 +8: /Users/poyrazoncel/Projects/guvenlik_app/test/core/services/pin_storage_bootstrap_recovery_test.dart: transient secure-storage failures are retried with backoff a slow (timed-out) keystore read followed by a good read is ready
+00:00 +8: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/bootstrap_recovery_no_dead_end_test.dart: a slow keystore (pinTimeout) keeps the original body text
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded tr_TR[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+00:00 +9: /Users/poyrazoncel/Projects/guvenlik_app/test/core/services/pin_storage_bootstrap_recovery_test.dart: transient secure-storage failures are retried with backoff a slow (timed-out) keystore read followed by a good read is ready
+00:00 +9: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/bootstrap_recovery_no_dead_end_test.dart: persistent PIN failure states the data loss before any reset
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded tr_TR[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+00:00 +10: /Users/poyrazoncel/Projects/guvenlik_app/test/core/services/pin_storage_bootstrap_recovery_test.dart: transient secure-storage failures are retried with backoff a slow (timed-out) keystore read followed by a good read is ready
+00:00 +10: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/bootstrap_recovery_no_dead_end_test.dart: contact store failure names the contacts, not the PIN
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded tr_TR[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+00:00 +11: /Users/poyrazoncel/Projects/guvenlik_app/test/core/services/pin_storage_bootstrap_recovery_test.dart: transient secure-storage failures are retried with backoff a slow (timed-out) keystore read followed by a good read is ready
+00:00 +11: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/bootstrap_recovery_no_dead_end_test.dart: transient: a successful retry leaves the recovery screen
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded tr_TR[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+00:00 +12: /Users/poyrazoncel/Projects/guvenlik_app/test/core/services/pin_storage_bootstrap_recovery_test.dart: transient secure-storage failures are retried with backoff a slow (timed-out) keystore read followed by a good read is ready
+00:00 +12: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/bootstrap_recovery_no_dead_end_test.dart: persistent: retry keeps failing, typed reset still exits
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded tr_TR[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+00:00 +13: /Users/poyrazoncel/Projects/guvenlik_app/test/core/services/pin_storage_bootstrap_recovery_test.dart: transient secure-storage failures are retried with backoff a slow (timed-out) keystore read followed by a good read is ready
+00:00 +13: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/bootstrap_recovery_screen_test.dart: active-session uncertainty blocks unauthenticated reset
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded tr_TR[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+00:00 +14: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/bootstrap_recovery_no_dead_end_test.dart: persistent: retry keeps failing, typed reset still exits
+00:00 +15: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/bootstrap_recovery_no_dead_end_test.dart: persistent: retry keeps failing, typed reset still exits
+00:00 +15: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/bootstrap_recovery_screen_test.dart: reset requires typed confirmation and retries bootstrap
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded tr_TR[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+00:00 +16: /Users/poyrazoncel/Projects/guvenlik_app/test/core/services/pin_storage_bootstrap_recovery_test.dart: transient secure-storage failures are retried with backoff recovery on the last allowed attempt is still ready
+00:00 +17: /Users/poyrazoncel/Projects/guvenlik_app/test/core/services/pin_storage_bootstrap_recovery_test.dart: transient secure-storage failures are retried with backoff recovery on the last allowed attempt is still ready
+00:00 +17: /Users/poyrazoncel/Projects/guvenlik_app/test/screens/bootstrap_recovery_screen_test.dart: failed reset remains fail-closed and visible
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded tr_TR[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+00:00 +18: /Users/poyrazoncel/Projects/guvenlik_app/test/core/services/pin_storage_bootstrap_recovery_test.dart: transient secure-storage failures are retried with backoff recovery on the last allowed attempt is still ready
+00:01 +19: /Users/poyrazoncel/Projects/guvenlik_app/test/core/services/pin_storage_bootstrap_recovery_test.dart: persistent failures are bounded and classified a keystore error on every attempt is pinFailed after 3 reads
+00:03 +20: /Users/poyrazoncel/Projects/guvenlik_app/test/core/services/pin_storage_bootstrap_recovery_test.dart: persistent failures are bounded and classified a read that keeps timing out is classified as pinTimeout
+00:04 +21: /Users/poyrazoncel/Projects/guvenlik_app/test/core/services/pin_storage_bootstrap_recovery_test.dart: persistent failures are bounded and classified persistent failure never becomes "no PIN" and never touches the stored record (no PIN bypass)
+00:05 +22: /Users/poyrazoncel/Projects/guvenlik_app/test/core/services/pin_storage_bootstrap_recovery_test.dart: no storage failure dead-ends every secure-storage failure reason offers the recovery surface
+00:05 +23: /Users/poyrazoncel/Projects/guvenlik_app/test/core/services/pin_storage_bootstrap_recovery_test.dart: no storage failure dead-ends persistent failure -> recovery surface -> confirmed wipe -> ready
+00:07 +24: /Users/poyrazoncel/Projects/guvenlik_app/test/core/services/pin_storage_bootstrap_recovery_test.dart: backoff policy waits 300 ms then 900 ms between exactly 3 attempts
+00:07 +25: /Users/poyrazoncel/Projects/guvenlik_app/test/core/services/pin_storage_bootstrap_recovery_test.dart: backoff policy a clean read stops immediately without waiting
+00:07 +26: /Users/poyrazoncel/Projects/guvenlik_app/test/core/services/pin_storage_bootstrap_recovery_test.dart: backoff policy a mix of error and timeout is transient, not persistent
+00:07 +27: /Users/poyrazoncel/Projects/guvenlik_app/test/core/services/pin_storage_bootstrap_recovery_test.dart: backoff policy the worst case fits inside the PIN step budget
+00:07 +28: All tests passed!
+exit=0
