@@ -11,8 +11,25 @@ class SecureStorage {
   // PIN" and the app opened on PIN setup instead of the lock (reproduced on an
   // API 35 emulator); contacts and lockout counters vanished the same way.
   // Thrown, the error reaches the fail-closed paths built for it.
+  //
+  // migrateWithBackup (>= 10.1): a cipher migration copies the encrypted
+  // entries to *_BACKUP first, so a crash between "old key deleted" and "data
+  // re-encrypted" no longer loses the PIN and contacts. On 10.x it also skips
+  // re-initialising the deprecated EncryptedSharedPreferences master key on
+  // every cold start. This app never wrote EncryptedSharedPreferences data
+  // (10.0.0 with migrateOnAlgorithmChange=true always used custom ciphers), so
+  // that skip strands nothing.
+  //
+  // Every FlutterSecureStorage instance that opens this store MUST pass these
+  // exact options: the plugin keeps one native store per process.
+  static const AndroidOptions androidOptions = AndroidOptions(
+    resetOnError: false,
+    migrateOnAlgorithmChange: true,
+    migrateWithBackup: true,
+  );
+
   static const _storage = FlutterSecureStorage(
-    aOptions: AndroidOptions(resetOnError: false),
+    aOptions: androidOptions,
     iOptions: IOSOptions(
       accessibility: KeychainAccessibility.first_unlock_this_device,
     ),

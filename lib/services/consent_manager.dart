@@ -15,6 +15,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/constants/app_constants.dart';
+import '../core/security/secure_storage.dart';
 import '../core/security/secure_storage_keys.dart';
 import '../models/consent_record.dart';
 import '../constants/legal_texts.dart';
@@ -332,8 +333,9 @@ class ConsentManager {
     try {
       const legacy = FlutterSecureStorage(
         // Read-only means read-only: the plugin's default resetOnError=true
-        // would DELETE the entry when the read fails.
-        aOptions: AndroidOptions(resetOnError: false),
+        // would DELETE the entry when the read fails. Same Android options as
+        // the app store, which opens the same native store.
+        aOptions: SecureStorage.androidOptions,
         iOptions: IOSOptions(accessibility: KeychainAccessibility.first_unlock),
       );
       final old = await legacy.read(key: SecureStorageKeys.consentLog);

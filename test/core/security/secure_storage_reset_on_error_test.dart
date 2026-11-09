@@ -63,4 +63,52 @@ void main() {
       expect(resetOnError(call), 'false');
     }
   });
+
+  // flutter_secure_storage >= 10.1 can back up the encrypted entries before a
+  // cipher migration, so a crash between "old key deleted" and "data
+  // re-encrypted" no longer loses the PIN and the contacts. On 10.x it also
+  // skips re-initialising the deprecated EncryptedSharedPreferences master key
+  // on every cold start. This app never wrote EncryptedSharedPreferences data
+  // (10.0.0 with migrateOnAlgorithmChange=true always used the custom
+  // ciphers), so that skip strands nothing.
+  Map<String, String> androidOptions(MethodCall call) =>
+      Map<String, String>.from((call.arguments as Map)['options'] as Map);
+
+  test('the app store migrates ciphers with a backup', () async {
+    final storage = SecureStorage();
+    await storage.read(key: SecureStorageKeys.userPin);
+    await storage.write(key: SecureStorageKeys.userPin, value: 'x');
+
+    for (final call in calls) {
+      final options = androidOptions(call);
+      expect(options['migrateWithBackup'], 'true', reason: call.method);
+      expect(options['migrateOnAlgorithmChange'], 'true', reason: call.method);
+    }
+  });
+
+  test('every instance opening the shared store sends the same Android '
+      'options', () async {
+    SharedPreferences.setMockInitialValues(<String, Object>{});
+    await SecureStorage().read(key: SecureStorageKeys.userPin);
+    await ConsentManager().initialize();
+
+    final optionSets = calls.map(androidOptions).toList();
+    expect(optionSets.length, greaterThanOrEqualTo(2));
+    const androidKeys = <String>[
+      'resetOnError',
+      'migrateOnAlgorithmChange',
+      'migrateWithBackup',
+      'keyCipherAlgorithm',
+      'storageCipherAlgorithm',
+      'sharedPreferencesName',
+      'preferencesKeyPrefix',
+      'storageNamespace',
+    ];
+    Map<String, String?> androidPart(Map<String, String> o) => {
+      for (final k in androidKeys) k: o[k],
+    };
+    for (final options in optionSets.skip(1)) {
+      expect(androidPart(options), androidPart(optionSets.first));
+    }
+  });
 }
