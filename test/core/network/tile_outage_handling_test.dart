@@ -337,19 +337,28 @@ void main() {
   });
 
   test('a success already in flight does not clear an active block', () async {
+    // Routed by URL, not by arrival index: each tile reads the disk cache
+    // before it goes upstream, so two concurrent tiles reach the upstream in
+    // either order. The refusal is sent only once the slow request is really
+    // in flight -- otherwise it would be suspended instead of in flight.
     final slowSuccess = Completer<http.StreamedResponse>();
-    final upstream = _MockUpstream((r, i) {
-      if (i == 0) return slowSuccess.future;
+    final slowRequestSent = Completer<http.BaseRequest>();
+    final upstream = _MockUpstream((r, _) {
+      if (r.url.toString() == kTileUrl) {
+        slowRequestSent.complete(r);
+        return slowSuccess.future;
+      }
       return Future.value(_status(r, 429));
     });
     final client = makeClient(upstream, timeout: const Duration(seconds: 5));
     addTearDown(client.close);
 
     final inFlight = get(client, kTileUrl);
+    final slowRequest = await slowRequestSent.future;
     await (await get(client, kOtherTileUrl)).stream.drain<void>(); // 429
     expect(availability.value, MapTileOutage.blocked);
 
-    slowSuccess.complete(_status(upstream.requests.first, 200));
+    slowSuccess.complete(_status(slowRequest, 200));
     await (await inFlight).stream.drain<void>();
     expect(
       availability.value,
