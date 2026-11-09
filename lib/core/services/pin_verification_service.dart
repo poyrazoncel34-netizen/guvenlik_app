@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../di/service_locator.dart';
@@ -5,6 +7,17 @@ import '../security/pin_hasher.dart';
 import '../security/secure_storage.dart';
 import '../security/secure_storage_keys.dart';
 import 'emergency_session_contract.dart';
+
+/// Why the last [PinVerificationService.loadState] ended in
+/// [PinState.readFailed]. Carries no PIN material -- only the failure shape,
+/// so a caller can tell a slow keystore from one that refuses to decrypt.
+enum PinReadFailure {
+  /// A storage operation did not answer within its bound.
+  timeout,
+
+  /// The storage answered with an error (keystore, cipher, platform channel).
+  storageError,
+}
 
 class PinVerificationResult {
   const PinVerificationResult({required this.state, required this.matches});
@@ -19,7 +32,7 @@ class PinVerificationService {
   PinVerificationService._({
     SecureStorage? secureStorage,
     Future<SharedPreferences> Function()? preferencesLoader,
-    Duration operationTimeout = const Duration(seconds: 2),
+    Duration operationTimeout = defaultOperationTimeout,
   }) : _injectedStorage = secureStorage,
        _preferencesLoader = preferencesLoader ?? SharedPreferences.getInstance,
        _operationTimeout = operationTimeout;
@@ -36,6 +49,9 @@ class PinVerificationService {
 
   static final PinVerificationService instance = PinVerificationService._();
 
+  /// Bound on every single storage operation in production.
+  static const Duration defaultOperationTimeout = Duration(seconds: 2);
+
   final SecureStorage? _injectedStorage;
   final Future<SharedPreferences> Function() _preferencesLoader;
   final Duration _operationTimeout;
@@ -45,8 +61,13 @@ class PinVerificationService {
 
   PinState _state = PinState.loading;
   Future<PinState>? _loadInProgress;
+  PinReadFailure? _lastReadFailure;
 
   PinState get state => _state;
+
+  /// Shape of the failure behind the most recent [loadState] that returned
+  /// [PinState.readFailed]; null after a load that read the store cleanly.
+  PinReadFailure? get lastReadFailure => _lastReadFailure;
 
   Future<PinState> loadState() {
     return _loadInProgress ??= _loadStateOnce().whenComplete(() {
@@ -56,6 +77,7 @@ class PinVerificationService {
 
   Future<PinState> _loadStateOnce() async {
     _state = PinState.loading;
+    _lastReadFailure = null;
     try {
       final securePin = await _storage
           .read(key: SecureStorageKeys.userPin)
@@ -84,7 +106,13 @@ class PinVerificationService {
           .remove(SecureStorageKeys.userPin)
           .timeout(_operationTimeout);
       return _state = PinState.configured;
+    } on TimeoutException {
+      _lastReadFailure = PinReadFailure.timeout;
+      return _state = PinState.readFailed;
     } catch (_) {
+      // Fail closed on ANY storage failure: a platform-channel error, a
+      // keystore error, or a malformed reply must never read as "no PIN".
+      _lastReadFailure = PinReadFailure.storageError;
       return _state = PinState.readFailed;
     }
   }

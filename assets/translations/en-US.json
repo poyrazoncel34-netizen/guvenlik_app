@@ -1046,5 +1046,19 @@
   "onboarding_background_status_unknown": "Alarms & reminders access state could not be read.",
   "onboarding_background_skip_note": "You can skip this for now. If you do, setup stays incomplete and the \"Background Readiness\" step shows as open on the home screen.",
   "readiness_unavailable_title": "Readiness state unavailable",
-  "readiness_unavailable_desc": "Device information cannot be read right now. Try closing and reopening the app."
+  "readiness_unavailable_desc": "Device information cannot be read right now. Try closing and reopening the app.",
+  "bootstrap_recovery_title": "Secure startup could not be completed",
+  "bootstrap_recovery_body": "The app is kept locked because the PIN could not be read from secure storage. You can try again or reset the local data on this device with explicit confirmation.",
+  "bootstrap_recovery_body_persistent": "The PIN could not be read from secure storage after several attempts. This can happen when the device's security keys change, and it may not resolve on its own. Try again first. If the problem persists, the only way out is to reset local data: all KoruBeni data on this device, including your PIN, emergency contacts and settings, is permanently deleted and cannot be recovered. After the reset you will need to add your PIN and contacts again.",
+  "bootstrap_recovery_body_contacts": "The app is kept locked because emergency contacts could not be read from secure storage. You can try again or reset the local data on this device with explicit confirmation.",
+  "bootstrap_recovery_retry": "Try Again",
+  "bootstrap_recovery_reset": "Reset Local Data",
+  "bootstrap_recovery_retry_failed": "Secure storage still cannot be read. Try again.",
+  "bootstrap_recovery_reset_blocked_active_session": "Reset is not possible while a safety session is active.",
+  "bootstrap_recovery_wipe_failed": "The data could not be deleted securely. Try again.",
+  "bootstrap_recovery_reset_done_bootstrap_failed": "Reset completed, but secure startup failed.",
+  "bootstrap_recovery_reset_dialog_title": "Reset local data",
+  "bootstrap_recovery_reset_dialog_body": "This permanently deletes the KoruBeni data on this device, including the PIN, contacts and settings.",
+  "bootstrap_recovery_reset_dialog_hint": "Type RESET to confirm",
+  "bootstrap_recovery_reset_dialog_cancel": "Cancel"
 }

@@ -102,21 +102,36 @@ void main() async {
   final criticalBootstrap = await _runCriticalBootstrap();
   if (!criticalBootstrap.isReady) {
     final reasonCode = criticalBootstrap.reasonCode ?? 'unknown';
-    if (reasonCode == 'pinFailed' || reasonCode == 'pinTimeout') {
+    if (AppBootstrapService.offersLocalRecovery(reasonCode)) {
       runApp(
-        MaterialApp(
-          debugShowCheckedModeBanner: false,
-          theme: AppTheme.darkTheme,
-          home: BootstrapRecoveryScreen(
-            reasonCode: reasonCode,
-            retryBootstrap: () async => (await _runCriticalBootstrap()).isReady,
-            hasActiveSafetySession:
-                SafetySessionActivityProbe.instance.hasActiveSession,
-            resetLocalData: AppResetService.clearLocalData,
-            // Re-enter the normal bootstrap from the process root. No recovery
-            // callback can construct KoruBeniApp directly and bypass a critical
-            // check that may have changed since the last attempt.
-            onRecovered: main,
+        // The recovery copy is translated; without this wrapper `.tr()` has no
+        // loaded catalogue and renders raw keys. Same locale setup as the app.
+        EasyLocalization(
+          supportedLocales: const [Locale('tr', 'TR')],
+          path: 'assets/translations',
+          startLocale: const Locale('tr', 'TR'),
+          fallbackLocale: const Locale('tr', 'TR'),
+          child: Builder(
+            builder: (context) => MaterialApp(
+              debugShowCheckedModeBanner: false,
+              theme: AppTheme.darkTheme,
+              localizationsDelegates: context.localizationDelegates,
+              supportedLocales: context.supportedLocales,
+              locale: context.locale,
+              home: BootstrapRecoveryScreen(
+                reasonCode: reasonCode,
+                retryBootstrap: () async =>
+                    (await _runCriticalBootstrap()).isReady,
+                hasActiveSafetySession:
+                    SafetySessionActivityProbe.instance.hasActiveSession,
+                resetLocalData: AppResetService.clearLocalData,
+                // Re-enter the normal bootstrap from the process root. No
+                // recovery callback can construct KoruBeniApp directly and
+                // bypass a critical check that may have changed since the last
+                // attempt.
+                onRecovered: main,
+              ),
+            ),
           ),
         ),
       );

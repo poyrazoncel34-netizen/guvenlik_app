@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 import '../core/app_colors.dart';
@@ -14,6 +15,10 @@ typedef LocalDataReset = Future<WipeResult> Function();
 /// This widget deliberately has no route into the normal application. The only
 /// successful exit is a fresh critical-bootstrap pass, either directly or
 /// after an explicitly confirmed local reset.
+///
+/// The body is worded from [reasonCode]: `pinFailed` means every bounded
+/// retry hit a storage error, so the user is told plainly that the way out may
+/// cost every local record; `contact*` names the contact store.
 class BootstrapRecoveryScreen extends StatefulWidget {
   const BootstrapRecoveryScreen({
     super.key,
@@ -48,7 +53,7 @@ class _BootstrapRecoveryScreenState extends State<BootstrapRecoveryScreen> {
       return;
     }
     setState(() => _busy = false);
-    _showMessage('Güvenli depolama hâlâ okunamıyor. Yeniden deneyin.');
+    _showMessage('bootstrap_recovery_retry_failed'.tr());
   }
 
   Future<void> _requestReset() async {
@@ -59,7 +64,7 @@ class _BootstrapRecoveryScreenState extends State<BootstrapRecoveryScreen> {
     // unauthenticated attacker cannot cancel an uncertain ARMED session.
     if (await widget.hasActiveSafetySession()) {
       if (!mounted) return;
-      _showMessage('Aktif bir güvenlik oturumu varken sıfırlama yapılamaz.');
+      _showMessage('bootstrap_recovery_reset_blocked_active_session'.tr());
       return;
     }
     if (!mounted) return;
@@ -76,7 +81,7 @@ class _BootstrapRecoveryScreenState extends State<BootstrapRecoveryScreen> {
     if (!mounted) return;
     if (result != WipeResult.completed) {
       setState(() => _busy = false);
-      _showMessage('Veriler güvenli biçimde silinemedi. Yeniden deneyin.');
+      _showMessage('bootstrap_recovery_wipe_failed'.tr());
       return;
     }
 
@@ -87,8 +92,14 @@ class _BootstrapRecoveryScreenState extends State<BootstrapRecoveryScreen> {
       return;
     }
     setState(() => _busy = false);
-    _showMessage('Sıfırlama tamamlandı ancak güvenli başlatma başarısız.');
+    _showMessage('bootstrap_recovery_reset_done_bootstrap_failed'.tr());
   }
+
+  String get _bodyKey => switch (widget.reasonCode) {
+    'pinFailed' => 'bootstrap_recovery_body_persistent',
+    'contactFailed' || 'contactTimeout' => 'bootstrap_recovery_body_contacts',
+    _ => 'bootstrap_recovery_body',
+  };
 
   void _showMessage(String message) {
     ScaffoldMessenger.of(context)
@@ -121,10 +132,10 @@ class _BootstrapRecoveryScreenState extends State<BootstrapRecoveryScreen> {
                     // reader announces has to be marked explicitly.
                     Semantics(
                       header: true,
-                      child: const Text(
-                        'Güvenli başlatma tamamlanamadı',
+                      child: Text(
+                        'bootstrap_recovery_title'.tr(),
                         textAlign: TextAlign.center,
-                        style: TextStyle(
+                        style: const TextStyle(
                           color: Colors.white,
                           fontSize: 20,
                           fontWeight: FontWeight.w700,
@@ -132,12 +143,10 @@ class _BootstrapRecoveryScreenState extends State<BootstrapRecoveryScreen> {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    const Text(
-                      'PIN güvenli depodan okunamadığı için uygulama kilitli '
-                      'tutuluyor. Yeniden deneyebilir veya cihazdaki yerel '
-                      'verileri açık onayla sıfırlayabilirsiniz.',
+                    Text(
+                      _bodyKey.tr(),
                       textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.white70),
+                      style: const TextStyle(color: Colors.white70),
                     ),
                     const SizedBox(height: 24),
                     SizedBox(
@@ -152,7 +161,7 @@ class _BootstrapRecoveryScreenState extends State<BootstrapRecoveryScreen> {
                                   strokeWidth: 2,
                                 ),
                               )
-                            : const Text('Yeniden Dene'),
+                            : Text('bootstrap_recovery_retry'.tr()),
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -160,7 +169,7 @@ class _BootstrapRecoveryScreenState extends State<BootstrapRecoveryScreen> {
                       width: double.infinity,
                       child: OutlinedButton(
                         onPressed: _busy ? null : _requestReset,
-                        child: const Text('Yerel Verileri Sıfırla'),
+                        child: Text('bootstrap_recovery_reset'.tr()),
                       ),
                     ),
                   ],
@@ -193,18 +202,15 @@ class _TypedResetDialogState extends State<_TypedResetDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Yerel verileri sıfırla'),
+      title: Text('bootstrap_recovery_reset_dialog_title'.tr()),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Bu işlem PIN, kişiler ve ayarlar dahil cihazdaki KoruBeni '
-              'verilerini kalıcı olarak siler.',
-            ),
+            Text('bootstrap_recovery_reset_dialog_body'.tr()),
             const SizedBox(height: 16),
-            const Text('SIFIRLA yazarak onaylayın'),
+            Text('bootstrap_recovery_reset_dialog_hint'.tr()),
             const SizedBox(height: 8),
             TextField(
               controller: _controller,
@@ -218,13 +224,14 @@ class _TypedResetDialogState extends State<_TypedResetDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context, false),
-          child: const Text('Vazgeç'),
+          child: Text('bootstrap_recovery_reset_dialog_cancel'.tr()),
         ),
         ElevatedButton(
-          onPressed: _controller.text == 'SIFIRLA'
+          // Same typed token as "PIN'imi unuttum": one reset policy.
+          onPressed: _controller.text == 'forgot_pin_reset_token'.tr()
               ? () => Navigator.pop(context, true)
               : null,
-          child: const Text('Sıfırla'),
+          child: Text('forgot_pin_reset_button'.tr()),
         ),
       ],
     );

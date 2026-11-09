@@ -9,6 +9,16 @@ Surumleme: `pubspec.yaml` 1.0.0+1'de SABITTIR; gercek `versionCode`
 
 ## Yayinlanmadi
 
+### Duzeltildi
+- Guvenli depodan PIN okunurken gelen gecici bir hata (ozellikle guncellemeden
+  sonraki ilk acilista yavas calisan cihaz anahtar deposu) artik uygulamayi
+  dogrudan "Guvenli baslatma tamamlanamadi" ekranina dusurmuyor: okuma kisa
+  araliklarla en fazla 3 kez deneniyor. Okuma her denemede hata verirse ekran
+  bunu acikca soyluyor; tek cikisin PIN, acil durum kisileri ve ayarlar dahil tum
+  yerel verileri silen sifirlama oldugunu sifirlamadan once anlatiyor (PIN'imi
+  unuttum ile ayni kural). Acil durum kisileri okunamadiginda da uygulama artik
+  cikissiz bir hata ekraninda kalmiyor; ayni kurtarma ekrani aciliyor.
+
 ### Degisti
 - Yasal metinlerdeki konum aciklamalari uygulamanin gercek davranisiyla
   eslestirildi. Uygulamada "konum oturumu" diye bir ozellik yok: konum yalnizca

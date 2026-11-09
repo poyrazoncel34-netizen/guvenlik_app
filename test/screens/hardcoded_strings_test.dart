@@ -35,6 +35,7 @@ void main() {
         File('lib/screens/settings_legal/data_export_screen.dart'),
         File('lib/screens/settings_detail_page.dart'),
         File('lib/main.dart'),
+        File('lib/screens/bootstrap_recovery_screen.dart'),
       ];
       const forbidden = [
         'Sahte çağrı hazır',
@@ -49,6 +50,19 @@ void main() {
         'Uygulama bu ekrani yukleyemedi',
         'KoruBeni güvenlik uygulaması',
         'Acil durumlarda yardım çağırın',
+        'Güvenli başlatma tamamlanamadı',
+        'PIN güvenli depodan okunamadığı için',
+        'Yeniden Dene',
+        'Yerel Verileri Sıfırla',
+        'Güvenli depolama hâlâ okunamıyor',
+        'Aktif bir güvenlik oturumu varken sıfırlama yapılamaz',
+        'Veriler güvenli biçimde silinemedi',
+        'Sıfırlama tamamlandı ancak güvenli başlatma başarısız',
+        'Yerel verileri sıfırla',
+        'Bu işlem PIN, kişiler ve ayarlar dahil',
+        'SIFIRLA yazarak onaylayın',
+        "'Vazgeç'",
+        "'Sıfırla'",
       ];
 
       final violations = <String>[];

@@ -1046,5 +1046,19 @@
   "onboarding_background_status_unknown": "Alarm ve hatırlatıcı erişiminin durumu okunamadı.",
   "onboarding_background_skip_note": "Şimdi atlayabilirsin. Atladığında kurulum eksik kalır ve ana sayfada \"Arka Plan Hazırlığı\" adımı açık görünür.",
   "readiness_unavailable_title": "Hazırlık durumu okunamadı",
-  "readiness_unavailable_desc": "Cihaz bilgisi şu an alınamıyor. Uygulamayı kapatıp yeniden açmayı dene."
+  "readiness_unavailable_desc": "Cihaz bilgisi şu an alınamıyor. Uygulamayı kapatıp yeniden açmayı dene.",
+  "bootstrap_recovery_title": "Güvenli başlatma tamamlanamadı",
+  "bootstrap_recovery_body": "PIN güvenli depodan okunamadığı için uygulama kilitli tutuluyor. Yeniden deneyebilir veya cihazdaki yerel verileri açık onayla sıfırlayabilirsiniz.",
+  "bootstrap_recovery_body_persistent": "PIN güvenli depodan birkaç denemeye rağmen okunamadı. Bu durum cihazın güvenlik anahtarları değiştiğinde oluşabilir ve kendiliğinden düzelmeyebilir. Önce yeniden deneyin. Sorun sürerse tek çıkış yerel verileri sıfırlamaktır: PIN, acil durum kişileri ve ayarlar dahil bu cihazdaki tüm KoruBeni verileri kalıcı olarak silinir ve geri getirilemez. Sıfırlamadan sonra PIN'inizi ve kişilerinizi yeniden eklemeniz gerekir.",
+  "bootstrap_recovery_body_contacts": "Acil durum kişileri güvenli depodan okunamadığı için uygulama kilitli tutuluyor. Yeniden deneyebilir veya cihazdaki yerel verileri açık onayla sıfırlayabilirsiniz.",
+  "bootstrap_recovery_retry": "Yeniden Dene",
+  "bootstrap_recovery_reset": "Yerel Verileri Sıfırla",
+  "bootstrap_recovery_retry_failed": "Güvenli depolama hâlâ okunamıyor. Yeniden deneyin.",
+  "bootstrap_recovery_reset_blocked_active_session": "Aktif bir güvenlik oturumu varken sıfırlama yapılamaz.",
+  "bootstrap_recovery_wipe_failed": "Veriler güvenli biçimde silinemedi. Yeniden deneyin.",
+  "bootstrap_recovery_reset_done_bootstrap_failed": "Sıfırlama tamamlandı ancak güvenli başlatma başarısız.",
+  "bootstrap_recovery_reset_dialog_title": "Yerel verileri sıfırla",
+  "bootstrap_recovery_reset_dialog_body": "Bu işlem PIN, kişiler ve ayarlar dahil cihazdaki KoruBeni verilerini kalıcı olarak siler.",
+  "bootstrap_recovery_reset_dialog_hint": "SIFIRLA yazarak onaylayın",
+  "bootstrap_recovery_reset_dialog_cancel": "Vazgeç"
 }
