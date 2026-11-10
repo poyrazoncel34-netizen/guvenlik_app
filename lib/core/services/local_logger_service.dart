@@ -83,7 +83,12 @@ enum LocalWarningCode {
   /// A step of the panic readiness setup failed on the platform side -- a
   /// permission request already running, a Settings screen that would not
   /// open -- and was skipped. Carries no step and no device state.
-  panicSetupStepFailed('panic_setup_step_failed');
+  panicSetupStepFailed('panic_setup_step_failed'),
+
+  /// One or more offline-queue entries could not be decoded while building the
+  /// user's data export, so the export left them out. Carries no entry text
+  /// and no count -- an entry can hold event details.
+  exportOfflineEventUnreadable('export_offline_event_unreadable');
 
   const LocalWarningCode(this.wireCode);
   final String wireCode;

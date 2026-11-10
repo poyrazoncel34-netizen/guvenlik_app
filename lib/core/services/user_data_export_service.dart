@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../services/consent_manager.dart';
@@ -11,6 +12,7 @@ import 'contact_service.dart';
 import 'database_integrity_service.dart';
 import 'emergency_platform_service.dart';
 import 'local_database_service.dart';
+import 'local_logger_service.dart';
 
 class UserDataExportService {
   UserDataExportService._();
@@ -52,7 +54,7 @@ class UserDataExportService {
       },
       'fakeCall': await _fakeCallData(secure),
       'activityEvents': activityEvents,
-      'offlineEvents': _offlineEvents(prefs),
+      'offlineEvents': await offlineEventsForExport(prefs),
       'nativeSafetyDiagnostics': await EmergencyPlatformService.instance
           .readNativeSafetyDiagnostics(),
       'consentState': await consentManager.exportConsentLog(),
@@ -83,20 +85,34 @@ class UserDataExportService {
     };
   }
 
-  static List<Map<String, dynamic>> _offlineEvents(SharedPreferences prefs) {
+  @visibleForTesting
+  static Future<List<Map<String, dynamic>>> offlineEventsForExport(
+    SharedPreferences prefs,
+  ) async {
     final raw = prefs.getStringList(_offlineQueueKey) ?? const [];
-    return raw
+    var unreadable = false;
+    final events = raw
         .map((value) {
           try {
             final decoded = jsonDecode(value);
             if (decoded is Map) {
               return decoded.map((key, data) => MapEntry(key.toString(), data));
             }
-          } catch (_) {}
+          } on FormatException {
+            unreadable = true;
+          }
           return <String, dynamic>{};
         })
         .where((event) => event.isNotEmpty)
         .toList(growable: false);
+    if (unreadable) {
+      // Recorded once per export, as a code only: the raw entry can hold
+      // event details and must not reach the diagnostics file.
+      await LocalLoggerService.instance.warningCode(
+        LocalWarningCode.exportOfflineEventUnreadable,
+      );
+    }
+    return events;
   }
 
   static String _fileName(String? path) {
