@@ -98,6 +98,9 @@ class UserDataExportService {
             if (decoded is Map) {
               return decoded.map((key, data) => MapEntry(key.toString(), data));
             }
+            // Valid JSON but not an event object: dropped just the same, so
+            // recorded just the same.
+            unreadable = true;
           } on FormatException {
             unreadable = true;
           }

@@ -54,6 +54,24 @@ void main() {
     },
   );
 
+  test('a valid-JSON entry that is not an object is also recorded', () async {
+    SharedPreferences.setMockInitialValues({
+      'offline_event_queue': <String>[
+        '{"type":"check_in","timestamp":1}',
+        '[1,2]',
+      ],
+    });
+    final prefs = await SharedPreferences.getInstance();
+
+    final events = await UserDataExportService.offlineEventsForExport(prefs);
+
+    expect(events, hasLength(1));
+    expect(
+      await LocalLoggerService.instance.readLogs(),
+      contains('export_offline_event_unreadable'),
+    );
+  });
+
   test('a clean queue writes no warning', () async {
     SharedPreferences.setMockInitialValues({
       'offline_event_queue': <String>['{"type":"check_in","timestamp":1}'],
