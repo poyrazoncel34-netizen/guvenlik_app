@@ -146,7 +146,7 @@ class _ContactBackupScreenState extends State<ContactBackupScreen>
           backgroundColor: AppColors.success,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(Radii.md),
           ),
         ),
       );
@@ -192,7 +192,7 @@ class _ContactBackupScreenState extends State<ContactBackupScreen>
         content: Text(key.tr()),
         backgroundColor: AppColors.emergency,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(Radii.md)),
       ),
     );
   }
@@ -213,7 +213,7 @@ class _ContactBackupScreenState extends State<ContactBackupScreen>
         child: AlertDialog(
           backgroundColor: AppColors.surface,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(Radii.xl),
           ),
           title: Text(
             'contact_backup_restore_confirm_title'.tr(),
@@ -247,7 +247,7 @@ class _ContactBackupScreenState extends State<ContactBackupScreen>
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(Radii.md),
                 ),
               ),
               child: Text('contact_backup_restore_confirm_button'.tr()),
@@ -300,7 +300,7 @@ class _ContactBackupScreenState extends State<ContactBackupScreen>
             margin: const EdgeInsets.only(bottom: 20),
             decoration: BoxDecoration(
               color: AppColors.info.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(Radii.lg),
               border: Border.all(color: AppColors.info.withValues(alpha: 0.4)),
             ),
             child: Column(
@@ -344,7 +344,7 @@ class _ContactBackupScreenState extends State<ContactBackupScreen>
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: AppColors.warning.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(Radii.md),
               border: Border.all(
                 color: AppColors.warning.withValues(alpha: 0.4),
               ),
@@ -404,7 +404,7 @@ class _ContactBackupScreenState extends State<ContactBackupScreen>
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(vertical: 16),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(Radii.input),
           ),
           elevation: 0,
         ),
@@ -480,7 +480,7 @@ class _BackupPasswordDialogState extends State<_BackupPasswordDialog> {
       autofocus: false,
       child: AlertDialog(
         backgroundColor: AppColors.surface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(Radii.xl)),
         title: Text(
           (widget.confirm
                   ? 'contact_backup_password_title_export'
@@ -527,7 +527,7 @@ class _BackupPasswordDialogState extends State<_BackupPasswordDialog> {
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(Radii.md),
               ),
             ),
             child: Text('contact_backup_continue'.tr()),

@@ -20,6 +20,13 @@ Future<void> _pumpLegalSettings(WidgetTester tester) async {
 
 Future<void> _tapVisibleText(WidgetTester tester, String text) async {
   final finder = find.text(text);
+  // The list is lazy: a tile below the cache extent has no element yet, so
+  // ensureVisible alone cannot reach it. Scroll until it is built.
+  await tester.scrollUntilVisible(
+    finder,
+    200,
+    scrollable: find.byType(Scrollable).first,
+  );
   await tester.ensureVisible(finder);
   await tester.pump();
   await tester.tap(finder);
