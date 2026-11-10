@@ -1617,6 +1617,13 @@
       "sourceUrl": "https://pub.dev/packages/crypto/versions/3.0.7/license",
       "spdxId": "BSD-3-Clause"
     },
+    "pkg:pub/cryptography@2.9.0": {
+      "reviewedAt": "2026-11-10",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "59899c6091b540582ed617e8eeaac4919dc985ccfc35459ee9752b699be5205b",
+      "sourceUrl": "https://pub.dev/packages/cryptography/versions/2.9.0/license",
+      "spdxId": "Apache-2.0"
+    },
     "pkg:pub/dart_earcut@1.2.0": {
       "reviewedAt": "2026-07-31",
       "reviewedBy": "korubenidestek@gmail.com",
@@ -1687,6 +1694,27 @@
       "sourceUrl": "https://pub.dev/packages/file/versions/7.0.1/license",
       "spdxId": "BSD-3-Clause"
     },
+    "pkg:pub/file_selector@1.1.0": {
+      "reviewedAt": "2026-11-10",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "420f7739f169097f0aad1242045169cd643c8f1d94e62866fad265ae4c369b7d",
+      "sourceUrl": "https://pub.dev/packages/file_selector/versions/1.1.0/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/file_selector_android@0.5.2+6": {
+      "reviewedAt": "2026-11-10",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "8e139d4c7faa5e7a76752e743a745113f46e658071733bfae4914a04da12ae0e",
+      "sourceUrl": "https://pub.dev/packages/file_selector_android/versions/0.5.2+6/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/file_selector_ios@0.5.3+6": {
+      "reviewedAt": "2026-11-10",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "420f7739f169097f0aad1242045169cd643c8f1d94e62866fad265ae4c369b7d",
+      "sourceUrl": "https://pub.dev/packages/file_selector_ios/versions/0.5.3+6/license",
+      "spdxId": "BSD-3-Clause"
+    },
     "pkg:pub/file_selector_linux@0.9.4": {
       "reviewedAt": "2026-07-31",
       "reviewedBy": "korubenidestek@gmail.com",
@@ -1706,6 +1734,13 @@
       "reviewedBy": "korubenidestek@gmail.com",
       "sha256": "420f7739f169097f0aad1242045169cd643c8f1d94e62866fad265ae4c369b7d",
       "sourceUrl": "https://pub.dev/packages/file_selector_platform_interface/versions/2.7.0/license",
+      "spdxId": "BSD-3-Clause"
+    },
+    "pkg:pub/file_selector_web@0.9.5": {
+      "reviewedAt": "2026-11-10",
+      "reviewedBy": "korubenidestek@gmail.com",
+      "sha256": "420f7739f169097f0aad1242045169cd643c8f1d94e62866fad265ae4c369b7d",
+      "sourceUrl": "https://pub.dev/packages/file_selector_web/versions/0.9.5/license",
       "spdxId": "BSD-3-Clause"
     },
     "pkg:pub/file_selector_windows@0.9.3+5": {

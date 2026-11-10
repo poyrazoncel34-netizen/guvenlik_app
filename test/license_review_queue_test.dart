@@ -91,7 +91,7 @@ void main() {
     expect(unreviewed['reviewedAt'], isNull);
   });
 
-  test('exact 398-purl review queue mirrors the accountable evidence', () async {
+  test('exact 403-purl review queue mirrors the accountable evidence', () async {
     final directory = await Directory.systemTemp.createTemp(
       'korubeni-license-review-',
     );
@@ -130,16 +130,19 @@ void main() {
         jsonDecode(queue.readAsStringSync()) as Map<String, dynamic>;
     final entries = (payload['entries'] as List<dynamic>)
         .cast<Map<String, dynamic>>();
+    // 403 = 398 + 5: cryptography 2.9.0 and file_selector 1.1.0 (with its
+    // _android/_ios/_web federated parts) arrived with the contact backup and
+    // were reviewed 2026-11-10. Before that:
     // 398, not 399: safe_device 1.3.10 was removed (audit F-06) once A-017
     // replaced it at runtime with the native integrity probe and nothing called
     // it any more. The number is pinned ON PURPOSE rather than derived from the
     // evidence file -- deriving it would let the queue and the evidence drift
     // together silently, which is the one failure this test exists to catch.
-    expect(payload['componentCount'], 398);
-    expect(payload['reviewedCount'], 398);
+    expect(payload['componentCount'], 403);
+    expect(payload['reviewedCount'], 403);
     expect(payload['unreviewedCount'], 0);
-    expect(entries, hasLength(398));
-    expect(entries.map((entry) => entry['purl']).toSet(), hasLength(398));
+    expect(entries, hasLength(403));
+    expect(entries.map((entry) => entry['purl']).toSet(), hasLength(403));
     expect(entries.every((entry) => entry['status'] == 'REVIEWED'), isTrue);
 
     // The queue tool must only carry evidence forward, never invent it: every
@@ -154,7 +157,7 @@ void main() {
                 )
                 as Map<String, dynamic>)['entries']
             as Map<String, dynamic>;
-    expect(evidence, hasLength(398));
+    expect(evidence, hasLength(403));
     for (final entry in entries) {
       final purl = entry['purl'] as String;
       final reviewed = evidence[purl] as Map<String, dynamic>;

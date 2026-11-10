@@ -157,7 +157,7 @@ durum üretmez. Placeholder reviewer kimliğiyle oluşturulan dry-run çıktıs�
 release evidence'a alınmaz. Mevcut insan inceleme sayısı bu alanlar gerçek
 kişilerce tamamlanana kadar `0/400` kalır.
 
-All 400 records are complete only after generating the shipped notice:
+All 403 records are complete only after generating the shipped notice:
 
 ```sh
 python3 scripts/generate_third_party_notices.py \
