@@ -82,6 +82,15 @@ dependencies:
   # Already resolved transitively; declared directly because PinHasher depends
   # on it for the PBKDF2-HMAC-SHA256 derivation of the stored PIN record.
   crypto: ^3.0.6
+  # Contact backup file (lib/core/services/contact_backup_service.dart):
+  # AES-256-GCM + PBKDF2-HMAC-SHA256. Pure Dart only -- cryptography_flutter is
+  # deliberately NOT added, so there is no native code, no R8 keep rule and no
+  # 16 KB alignment surface. No network.
+  cryptography: ^2.9.0
+  # Picks the backup file to restore through the system document picker
+  # (ACTION_OPEN_DOCUMENT). Flutter-team plugin; its Android manifest declares
+  # no permission, so the app's permission set is unchanged.
+  file_selector: ^1.1.0
 
 dev_dependencies:
   flutter_test:
