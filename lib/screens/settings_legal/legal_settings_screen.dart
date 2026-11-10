@@ -14,6 +14,7 @@ import '../../screens/legal/terms_of_service_screen.dart';
 import '../../screens/legal/kvkk_disclosure_screen.dart';
 import '../../screens/legal/consent_management_screen.dart';
 import 'data_export_screen.dart';
+import 'contact_backup_screen.dart';
 import 'data_deletion_screen.dart';
 
 class LegalSettingsScreen extends StatelessWidget {
@@ -138,6 +139,18 @@ class LegalSettingsScreen extends StatelessWidget {
               onTap: () => Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => const DataExportScreen()),
+              ),
+            ),
+            _buildDivider(),
+            _buildTile(
+              context,
+              icon: Icons.phonelink_erase_rounded,
+              color: AppColors.info,
+              titleKey: 'contact_backup_title',
+              subtitleKey: 'legal_settings_contact_backup_subtitle',
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const ContactBackupScreen()),
               ),
             ),
           ]),

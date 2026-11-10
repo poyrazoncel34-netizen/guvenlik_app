@@ -177,6 +177,30 @@ class ContactsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Re-reads contacts after the store was replaced outside this provider
+  /// (contact backup restore), so open screens show the restored list.
+  ///
+  /// If the read fails the provider DROPS its list and marks itself
+  /// uninitialised rather than keeping the pre-restore one: a stale list here
+  /// is not harmless, because the next add or reorder persists this provider's
+  /// whole list and would write the old contacts back over the restored ones.
+  Future<void> reloadFromStorage() async {
+    _initialized = true;
+    _isLoading = true;
+    notifyListeners();
+    try {
+      await _loadContactsFromStorage();
+      await _loadEmergencySelection();
+    } on Exception {
+      _emergencyContacts.clear();
+      _selectedEmergencyPhone = null;
+      _initialized = false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
   void resetAfterDataDeletion() {
     _emergencyContacts.clear();
     _selectedEmergencyPhone = null;

@@ -11,6 +11,10 @@ class SensitiveTempFileService {
   static const String exportPrefix = 'korubeni_data_export_';
   static const String legacyExportName = 'korubeni_verilerim.json';
 
+  /// Encrypted contact backup (ContactBackupScreen). Encrypted, but still the
+  /// user's contact list, so a share killed mid-way is purged like the rest.
+  static const String contactBackupPrefix = 'KoruBeni_kisi_yedegi_';
+
   static Future<void> purgeStaleExports() async {
     try {
       final directory = await getTemporaryDirectory();
@@ -51,7 +55,9 @@ class SensitiveTempFileService {
       if (entity is! File) continue;
       final name = entity.uri.pathSegments.last;
       if (name == legacyExportName ||
-          (name.startsWith(exportPrefix) && name.endsWith('.json'))) {
+          ((name.startsWith(exportPrefix) ||
+                  name.startsWith(contactBackupPrefix)) &&
+              name.endsWith('.json'))) {
         try {
           await entity.delete();
         } catch (_) {}

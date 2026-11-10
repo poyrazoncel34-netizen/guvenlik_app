@@ -53,6 +53,32 @@ void main() {
     expect(await pluginUnrelated.exists(), isTrue);
   });
 
+  test('purge also removes a contact backup left behind by a killed share',
+      () async {
+    // Encrypted, but still the user's contact list: a share interrupted by
+    // process death must not leave it in the cache until the next reset.
+    final backup = File(
+      '${sandbox.path}/KoruBeni_kisi_yedegi_2026-11-10.json',
+    );
+    final sharePlusDirectory = Directory('${sandbox.path}/share_plus');
+    await sharePlusDirectory.create();
+    final pluginCopy = File(
+      '${sharePlusDirectory.path}/KoruBeni_kisi_yedegi_2026-11-10.json',
+    );
+    final lookalike = File('${sandbox.path}/KoruBeni_kisi_yedegi_notes.txt');
+    await Future.wait(<Future<File>>[
+      backup.writeAsString('{"format":"korubeni-contact-backup"}'),
+      pluginCopy.writeAsString('{"format":"korubeni-contact-backup"}'),
+      lookalike.writeAsString('keep'),
+    ]);
+
+    await SensitiveTempFileService.purgeStaleExportsInDirectory(sandbox);
+
+    expect(await backup.exists(), isFalse);
+    expect(await pluginCopy.exists(), isFalse);
+    expect(await lookalike.exists(), isTrue);
+  });
+
   test('purge never follows a matching-name symlink', () async {
     if (Platform.isWindows) return;
     final outside = File('${sandbox.parent.path}/korubeni-export-target.txt');

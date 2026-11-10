@@ -9,6 +9,17 @@ Surumleme: `pubspec.yaml` 1.0.0+1'de SABITTIR; gercek `versionCode`
 
 ## Yayinlanmadi
 
+### Eklendi
+- Kisi Yedegi (Ayarlar > Yasal Bilgiler > Kisi Yedegi): guvenliginiz icin bulut
+  yedegi ve cihazlar arasi aktarim kapali oldugundan, telefon degistirdiginizde
+  ya da uygulamayi sildiginizde acil durum kisileriniz geri gelmez. Bu ekran
+  bunu acikca soyluyor ve kisilerinizi sizin belirlediginiz ayri bir sifreyle
+  (uygulama PIN'inden bagimsiz, en az 8 karakter) sifrelenmis bir dosyaya
+  yedeklemenizi, yeni telefonda bu dosyadan geri yuklemenizi sagliyor. Dosyada
+  yalnizca kisilerin adi, telefonu ve birincil kisi bilgisi bulunur; PIN ve
+  guvenlik ayarlari asla dosyaya yazilmaz. Yanlis sifre, bozuk ya da baska bir
+  dosya mevcut kisilerinizi degistirmez. Ayarlar ve gecmis yedeklenmez.
+
 ### Duzeltildi
 - Guvenli depodan PIN okunurken gelen gecici bir hata (ozellikle guncellemeden
   sonraki ilk acilista yavas calisan cihaz anahtar deposu) artik uygulamayi

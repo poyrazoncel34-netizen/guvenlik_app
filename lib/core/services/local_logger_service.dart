@@ -88,7 +88,11 @@ enum LocalWarningCode {
   /// One or more offline-queue entries could not be decoded while building the
   /// user's data export, so the export left them out. Carries no entry text
   /// and no count -- an entry can hold event details.
-  exportOfflineEventUnreadable('export_offline_event_unreadable');
+  exportOfflineEventUnreadable('export_offline_event_unreadable'),
+
+  /// Restoring a contact backup could not be confirmed against secure storage;
+  /// the previous list was written back. Carries no contact and no file data.
+  contactBackupRestoreWriteFailed('contact_backup_restore_write_failed');
 
   const LocalWarningCode(this.wireCode);
   final String wireCode;
